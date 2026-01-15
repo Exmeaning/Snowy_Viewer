@@ -1,0 +1,142 @@
+"use client";
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import MainLayout from "@/components/MainLayout";
+
+export default function AboutPage() {
+    // Tech Stack Data
+    const techStack = [
+        { name: "Golang", color: "bg-blue-100 text-blue-600" },
+        { name: "Next.js 16", color: "bg-black text-white" },
+        { name: "Tailwind CSS", color: "bg-sky-100 text-sky-600" },
+        { name: "PostgreSQL", color: "bg-blue-200 text-blue-800" },
+        { name: "Docker", color: "bg-sky-100 text-sky-600" },
+        { name: "Cloudflare", color: "bg-orange-100 text-orange-600" },
+    ];
+
+    return (
+        <MainLayout activeNav="关于" showLoader={true}>
+            <div className="container mx-auto px-6 py-12 max-w-5xl flex-grow z-10">
+                {/* Page Title */}
+                <div className="mb-10 animate-fade-in-up">
+                    <h1 className="text-4xl font-black text-primary-text mb-2">关于 SnowyBot Viewer</h1>
+                    <p className="text-slate-500 max-w-2xl text-lg font-medium">
+                        SnowyBot Viewer 是一个粉丝制作的PROJECT SEKAI 游戏数据查看器
+                    </p>
+                </div>
+
+                {/* Main Content: Bento Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    {/* Card 1: Non-Profit */}
+                    <div className="md:col-span-2 p-6 rounded-xl shadow-md border border-slate-100 bg-white/80 backdrop-blur-sm flex flex-col hover:shadow-xl transition-shadow">
+                        <div className="flex gap-4 items-center mb-4">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-miku to-miku-dark flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-miku/20">
+                                ❤️
+                            </div>
+                            <div className="flex flex-col justify-center">
+                                <p className="text-lg font-bold text-primary-text">非盈利声明 (Non-Profit)</p>
+                                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Powered by Love</p>
+                            </div>
+                        </div>
+                        <hr className="border-slate-100 mb-4" />
+                        <div className="text-slate-600 leading-relaxed space-y-4">
+                            <p>
+                                SnowyBot 是一个完全由个人开发者维护的非盈利项目。开发者承诺 <b>永久免费</b>，且 <b>不接受任何形式的捐赠</b>。
+                            </p>
+                            <p>
+                                服务器成本由开发者自行承担。如果您喜欢这个项目，欢迎参与 Snowybot主站的 <Link href="/creator" className="text-miku font-bold">创作者计划</Link>，为社区贡献更多优质的 2D 角色chibi小人，这就是对开发者最大的支持。
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Card 2: Developer */}
+                    <div className="p-6 rounded-xl shadow-md border-none bg-primary-text text-white flex flex-col items-center justify-center text-center hover:shadow-xl transition-shadow">
+                        <p className="w-full text-left text-xs font-bold opacity-80 uppercase tracking-widest mb-4">Developer</p>
+                        <div className="w-24 h-24 rounded-full border-4 border-white/10 shadow-2xl mb-4 overflow-hidden relative">
+                            <Image
+                                src="https://github.com/Exmeaning.png"
+                                alt="Exmeaning"
+                                fill
+                                className="object-cover"
+                            />
+                        </div>
+                        <h3 className="text-2xl font-bold">Exmeaning (東雪)</h3>
+                        <p className="text-miku text-sm font-bold mt-1">AI Architect & Director</p>
+                        <div className="mt-6 flex flex-col items-center gap-1 opacity-50 text-xs text-white">
+                            <span>"99% Code by AI"</span>
+                            <span>"1% Soul by HelloWorld"</span>
+                        </div>
+                    </div>
+
+                    {/* Card 3: Tech Stack */}
+                    <div className="p-6 rounded-xl shadow-md border border-slate-100 bg-white/80 backdrop-blur-sm hover:shadow-xl transition-shadow flex flex-col">
+                        <div className="mb-4">
+                            <p className="text-md font-bold text-primary-text">Tech Stack</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2 content-start flex-grow">
+                            {techStack.map((tech) => (
+                                <span key={tech.name} className={`px-2 py-1 rounded-full text-xs font-bold ${tech.color}`}>
+                                    {tech.name}
+                                </span>
+                            ))}
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-slate-100">
+                            <p className="text-xs text-slate-400 font-medium">
+                                构建于现代微服务架构，以极低成本承载海量并发。
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Card 4: Credits & Copyright (Updated with specific authors) */}
+                    <div className="md:col-span-2 p-6 rounded-xl shadow-md border border-slate-100 bg-white/80 backdrop-blur-sm hover:shadow-xl transition-shadow">
+                        <p className="text-md font-bold text-primary-text mb-4">Credits & Copyright</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h4 className="text-xs font-bold text-miku mb-3 uppercase tracking-wide border-b border-miku/20 pb-1">Data & Asset Source</h4>
+                                <ul className="text-sm text-slate-500 space-y-2">
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-miku mt-1">●</span>
+                                        <span>
+                                            <a href="https://sekai.best" target="_blank" className="hover:text-miku font-bold transition-colors underline decoration-dotted">Sekai.best</a>
+                                        </span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-miku mt-1">●</span>
+                                        <span>
+                                            <a href="https://github.com/MejiroRina" target="_blank" className="hover:text-miku font-bold transition-colors underline decoration-dotted">Haruki（希凪）</a> (Data)
+                                        </span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-miku mt-1">●</span>
+                                        <span>
+                                            <a href="https://github.com/watagashi-uni" target="_blank" className="hover:text-miku font-bold transition-colors underline decoration-dotted">Uni/Haruki</a> (Assets Hosting)
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-bold text-luka mb-3 uppercase tracking-wide border-b border-luka/20 pb-1">License</h4>
+                                <p className="text-sm text-slate-500 leading-relaxed">
+                                    本站所有游戏素材（图片、音频、文本）版权均归 <b>SEGA</b> 及 <b>Colorful Palette</b> 所有。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {/* Card 5: Special Thanks */}
+                    <div className="md:col-span-3 p-6 rounded-xl shadow-md border border-slate-100 bg-white/80 backdrop-blur-sm hover:shadow-xl transition-shadow">
+                        <div className="flex items-center gap-2 mb-4">
+                            <p className="text-md font-bold text-primary-text">感谢支持snowy的名单（不分先后）</p>
+                        </div>
+                        <p className="text-sm text-slate-600 leading-7 text-justify">
+                            深海 Luna茶 Kazuhira 灵潜 咖啡不甜 郁郁葱葱 TONY_ALL# M氏 大梦 Hakuchumu 不解 旭光 阳子 弥佑瑶 サクラかぜ 陈睿ガチ恋势 猫尾草 笨牛奶 霞綾 木口 沧溟 Belos 兔兔 明日天気に シラ
+                            偶像大师希罗酱 性价比……（以上为部分名单 感谢所有默默支持snowybot的人）
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </MainLayout>
+    );
+}

@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+:root {
+  /* Colors from archive_web */
+  --theme-light: #f0fbf9;
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-bg: rgba(255, 255, 255, 0.35);
+
+  /* Brand Colors */
+  --color-miku: #33ccbb;
+  --color-miku-dark: #2da89b;
+  --color-luka: #ff6699;
+  --color-primary-text: #334455;
+}
+
+@theme {
+  --color-miku: var(--color-miku);
+  --color-miku-dark: var(--color-miku-dark);
+  --color-luka: var(--color-luka);
+  --color-primary-text: var(--color-primary-text);
+
+  --animate-pulse-fast: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+}
+
+body {
+  color: var(--color-primary-text);
+  background: linear-gradient(135deg, white 0%, var(--theme-light) 100%);
+  min-height: 100vh;
+}
+
+/* Loading spinner with theme color transition */
+.loading-spinner {
+  width: 4rem;
+  height: 4rem;
+  border-width: 4px;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--color-miku) 30%, transparent);
+  border-top-color: var(--color-miku);
+  border-radius: 9999px;
+  animation: spin 1s linear infinite;
+  transition: border-color 0.3s ease;
+}
+
+.loading-spinner-sm {
+  width: 3rem;
+  height: 3rem;
+}
+
+.loading-spinner-lg {
+  width: 4rem;
+  height: 4rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Glassmorphism Card Utility */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 8px 32px 0 rgba(31, 38, 135, 0.15),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Loading animation keyframes */
+@keyframes miku-load-fast {
+  0% {
+    width: 0%;
+  }
+
+  100% {
+    width: 90%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}

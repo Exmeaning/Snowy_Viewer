@@ -1,0 +1,29 @@
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Go
+bin/
+*.exe
+*.exe~
+*.test
+*.prof
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+.env
+.env*.local
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+screenshot-generator/run-local-full.ps1

@@ -1,0 +1,143 @@
+# ============================================================
+# Screenshot Generator - GitHub Actions Workflow
+# ============================================================
+# 
+# Triggers:
+#   - Push to main (data/master_version.txt): Incremental update on master data change
+#   - Manual dispatch: Full regeneration or incremental update available manually
+#
+# Saves screenshots to: Exmeaning/Snowy_Viewer_Hub repository
+#
+# Required Secrets:
+#   - HUB_DEPLOY_TOKEN: GitHub PAT with repo scope for Snowy_Viewer_Hub
+# ============================================================
+
+name: Generate Screenshots
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/master_version.txt'
+  workflow_dispatch:
+    inputs:
+      force_regenerate:
+        description: 'Force regenerate all screenshots'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  HUB_REPO: Exmeaning/Snowy_Viewer_Hub
+  SCREENSHOTS_PATH: screenshots
+
+jobs:
+  generate-screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v4
+
+      - name: Checkout Hub repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.HUB_REPO }}
+          token: ${{ secrets.HUB_DEPLOY_TOKEN }}
+          path: hub-repo
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Chromium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
+
+      - name: Install web dependencies
+        run: |
+          cd web
+          npm ci
+
+      - name: Start web app (dev mode)
+        run: |
+          cd web
+          npm run dev &
+          echo "Waiting for web app to start..."
+          sleep 30
+          curl -s --retry 10 --retry-delay 5 --retry-connrefused http://localhost:3000 > /dev/null
+          echo "Web app is ready!"
+
+      - name: Install screenshot generator dependencies
+        run: |
+          cd screenshot-generator
+          npm ci
+
+      - name: Copy existing screenshots
+        run: |
+          mkdir -p screenshots-output
+          if [ -d "hub-repo/${{ env.SCREENSHOTS_PATH }}" ]; then
+            cp -r hub-repo/${{ env.SCREENSHOTS_PATH }}/* screenshots-output/ || true
+          fi
+
+      - name: Generate screenshots
+        run: |
+          cd screenshot-generator
+          FORCE_FLAG=""
+          if [ "${{ github.event.inputs.force_regenerate }}" == "true" ]; then
+            FORCE_FLAG="--force"
+          fi
+          PUPPETEER_EXECUTABLE_PATH=$(which chromium-browser) \
+          WEB_URL=http://localhost:3000 \
+          OUTPUT_DIR=../screenshots-output \
+          CONCURRENCY=4 \
+          BUILD_VERSION=${{ github.sha }} \
+          node index.js $FORCE_FLAG
+        env:
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
+
+      - name: Commit screenshots to Hub repo
+        run: |
+          cd hub-repo
+          
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Copy new screenshots
+          rm -rf ${{ env.SCREENSHOTS_PATH }}
+          mkdir -p ${{ env.SCREENSHOTS_PATH }}
+          cp -r ../screenshots-output/* ${{ env.SCREENSHOTS_PATH }}/
+          
+          # Check for changes
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          
+          # Commit and push
+          COMMIT_MSG="🖼️ Update screenshots"
+          if [ "${{ github.event.inputs.force_regenerate }}" == "true" ]; then
+            COMMIT_MSG="🖼️ Full screenshot regeneration"
+          fi
+          COMMIT_MSG="$COMMIT_MSG - $(date -u '+%Y-%m-%d %H:%M UTC')"
+          
+          git commit -m "$COMMIT_MSG"
+          git push
+
+      - name: Summary
+        run: |
+          echo "## Screenshot Generation Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f "screenshots-output/metadata.json" ]; then
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat screenshots-output/metadata.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Screenshots saved to: https://github.com/${{ env.HUB_REPO }}/tree/main/${{ env.SCREENSHOTS_PATH }}" >> $GITHUB_STEP_SUMMARY

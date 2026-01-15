@@ -1,0 +1,40 @@
+# Screenshot Generator for Snowy Viewer
+#
+# Build: docker build -f Dockerfile.screenshot -t snowy-screenshot-generator .
+# Run:   docker run -v screenshots:/screenshots snowy-screenshot-generator
+
+FROM node:20-alpine
+
+# Install Chromium and dependencies
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Set Puppeteer to use installed Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
+WORKDIR /app
+
+# Copy package files
+COPY screenshot-generator/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source
+COPY screenshot-generator/index.js ./
+
+# Create output directory mount point
+VOLUME /screenshots
+
+# Default environment variables
+ENV WEB_URL=http://host.docker.internal:3000
+ENV OUTPUT_DIR=/screenshots
+ENV CONCURRENCY=3
+
+ENTRYPOINT ["node", "index.js"]
