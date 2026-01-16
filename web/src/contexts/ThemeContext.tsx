@@ -7,8 +7,8 @@ const DEFAULT_THEME_CHAR = "21";
 const DEFAULT_COLOR = "#33ccbb";
 
 // Asset source type
-export type AssetSourceType = "uni" | "haruki";
-const DEFAULT_ASSET_SOURCE: AssetSourceType = "uni";
+export type AssetSourceType = "uni" | "haruki" | "snowyassets";
+const DEFAULT_ASSET_SOURCE: AssetSourceType = "snowyassets";
 
 interface ThemeContextType {
     themeCharId: string;
@@ -64,7 +64,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         }
         // Load asset source setting
         const savedAssetSource = localStorage.getItem("asset-source");
-        if (savedAssetSource === "uni" || savedAssetSource === "haruki") {
+        if (savedAssetSource === "uni" || savedAssetSource === "haruki" || savedAssetSource === "snowyassets") {
             setAssetSourceState(savedAssetSource);
         }
     }, []);

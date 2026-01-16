@@ -193,7 +193,16 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">assets源</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
+                        <button
+                            onClick={() => setAssetSource("snowyassets")}
+                            className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${assetSource === "snowyassets"
+                                ? "bg-sky-500 text-white shadow-md ring-2 ring-sky-300"
+                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                }`}
+                        >
+                            Snowy
+                        </button>
                         <button
                             onClick={() => setAssetSource("uni")}
                             className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${assetSource === "uni"
