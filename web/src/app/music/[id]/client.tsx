@@ -28,6 +28,60 @@ import { fetchMasterData } from "@/lib/fetch";
 // Difficulty order for tabs
 const DIFFICULTY_ORDER: MusicDifficultyType[] = ["easy", "normal", "hard", "expert", "master", "append"];
 
+// External data URLs
+const MUSIC_META_API = "https://assets.exmeaning.com/musicmeta/music_metas.json";
+const RANKINGS_API = "https://assets.exmeaning.com/musicmeta/rankings_best.json";
+
+// Music meta data structure
+interface MusicMetaData {
+    music_id: number;
+    difficulty: string;
+    music_time: number;
+}
+
+// Rankings raw data structure  
+interface RankingItem {
+    rank: number;
+    music_id: number;
+    difficulty: string;
+    value: number;
+    pspi?: number;
+}
+
+interface RankingsRawData {
+    total_songs: number;
+    rankings: {
+        [key: string]: RankingItem[];
+    };
+}
+
+// Ranking category definitions
+type RankingCategoryKey =
+    | "pt_per_hour_multi" | "pt_per_hour_auto"
+    | "multi_pt_max" | "solo_pt_max" | "auto_pt_max"
+    | "multi_score" | "solo_score" | "auto_score";
+
+const RANKING_CATEGORIES: { key: RankingCategoryKey; label: string; shortLabel: string; group: string }[] = [
+    // 时速榜 (PT per hour)
+    { key: "pt_per_hour_multi", label: "协力时速榜", shortLabel: "协力时速", group: "时速" },
+    { key: "pt_per_hour_auto", label: "自动时速榜", shortLabel: "自动时速", group: "时速" },
+    // 单局PT榜
+    { key: "multi_pt_max", label: "协力单局PT榜", shortLabel: "协力PT", group: "单局PT" },
+    { key: "solo_pt_max", label: "单人单局PT榜", shortLabel: "单人PT", group: "单局PT" },
+    { key: "auto_pt_max", label: "自动单局PT榜", shortLabel: "自动PT", group: "单局PT" },
+    // 得分榜
+    { key: "multi_score", label: "协力得分榜", shortLabel: "协力得分", group: "得分" },
+    { key: "solo_score", label: "单人得分榜", shortLabel: "单人得分", group: "得分" },
+    { key: "auto_score", label: "自动得分榜", shortLabel: "自动得分", group: "得分" },
+];
+
+// Ranking info per category
+interface MusicRankings {
+    total: number;
+    categories: Record<string, { rank: number; difficulty: string; value: number; pspi?: number } | null>;
+    bestCategory: RankingCategoryKey | null;
+}
+
 
 
 export default function MusicDetailPage() {
@@ -46,6 +100,11 @@ export default function MusicDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
+
+    // Duration and ranking states
+    const [musicDuration, setMusicDuration] = useState<number | null>(null);
+    const [rankings, setRankings] = useState<MusicRankings | null>(null);
+    const [selectedRankingCategory, setSelectedRankingCategory] = useState<RankingCategoryKey>("pt_per_hour_multi");
 
     // View states
     const [selectedDifficulty, setSelectedDifficulty] = useState<MusicDifficultyType>("master");
@@ -108,6 +167,71 @@ export default function MusicDetailPage() {
         }
         if (musicId) {
             fetchData();
+
+            // Fetch optional meta and rankings data (don't block main content)
+            async function fetchMetaData() {
+                try {
+                    const metaRes = await fetch(MUSIC_META_API);
+                    if (metaRes.ok) {
+                        const metaData: MusicMetaData[] = await metaRes.json();
+                        const thisMusicMeta = metaData.find(m => m.music_id === musicId);
+                        if (thisMusicMeta) {
+                            setMusicDuration(thisMusicMeta.music_time);
+                        }
+                    }
+                } catch (err) {
+                    console.warn("Failed to fetch music duration:", err);
+                }
+
+                try {
+                    const rankingsRes = await fetch(RANKINGS_API);
+                    if (rankingsRes.ok) {
+                        const rankingsData: RankingsRawData = await rankingsRes.json();
+
+                        // Collect rankings for all categories
+                        const categories: Record<string, { rank: number; difficulty: string; value: number; pspi: number } | null> = {};
+                        let bestRank = Infinity;
+                        let bestCategory: RankingCategoryKey | null = null;
+
+                        for (const cat of RANKING_CATEGORIES) {
+                            const categoryRankings = rankingsData.rankings[cat.key];
+                            if (categoryRankings) {
+                                const thisRanking = categoryRankings.find(item => item.music_id === musicId);
+                                if (thisRanking) {
+                                    categories[cat.key] = {
+                                        rank: thisRanking.rank,
+                                        difficulty: thisRanking.difficulty,
+                                        value: thisRanking.value,
+                                        pspi: thisRanking.pspi ?? 0,
+                                    };
+                                    // Track best (lowest) rank
+                                    if (thisRanking.rank < bestRank) {
+                                        bestRank = thisRanking.rank;
+                                        bestCategory = cat.key;
+                                    }
+                                } else {
+                                    categories[cat.key] = null;
+                                }
+                            }
+                        }
+
+                        setRankings({
+                            total: rankingsData.total_songs,
+                            categories,
+                            bestCategory,
+                        });
+
+                        // Default to best category if available
+                        if (bestCategory) {
+                            setSelectedRankingCategory(bestCategory);
+                        }
+                    }
+                } catch (err) {
+                    console.warn("Failed to fetch ranking:", err);
+                }
+            }
+
+            fetchMetaData();
         }
     }, [musicId]);
 
@@ -287,6 +411,13 @@ export default function MusicDetailPage() {
                                 <InfoRow label="作曲" value={music.composer} />
                                 <InfoRow label="编曲" value={music.arranger} />
                                 <InfoRow label="作词" value={music.lyricist} />
+                                {/* Duration */}
+                                {musicDuration != null && (
+                                    <InfoRow
+                                        label="歌曲时长"
+                                        value={`${Math.floor(musicDuration / 60)}:${Math.floor(musicDuration % 60).toString().padStart(2, "0")}`}
+                                    />
+                                )}
                                 <InfoRow
                                     label="发布时间"
                                     value={mounted && music.publishedAt
@@ -303,6 +434,69 @@ export default function MusicDetailPage() {
                                 />
                             </div>
                         </div>
+
+                        {/* Ranking Card */}
+                        {rankings && (
+                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
+                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                        META排行
+                                    </h2>
+                                </div>
+
+                                {/* Category Tabs */}
+                                <div className="px-3 py-2 border-b border-slate-100 flex flex-wrap gap-1">
+                                    {RANKING_CATEGORIES.map((cat) => {
+                                        const catRanking = rankings.categories[cat.key];
+                                        const isSelected = selectedRankingCategory === cat.key;
+                                        return (
+                                            <button
+                                                key={cat.key}
+                                                onClick={() => setSelectedRankingCategory(cat.key)}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isSelected
+                                                    ? "bg-miku text-white shadow-sm"
+                                                    : catRanking
+                                                        ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                                        : "bg-slate-50 text-slate-300 cursor-not-allowed"
+                                                    }`}
+                                                disabled={!catRanking}
+                                            >
+                                                {cat.shortLabel}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Compact Horizontal Rank Display */}
+                                {rankings.categories[selectedRankingCategory] && (
+                                    <div className="p-4 flex items-center justify-between">
+                                        {/* Left: PSPI */}
+                                        <div className="flex items-center gap-3">
+                                            <div>
+                                                <div className="text-xs text-slate-400 mb-0.5">PSPI</div>
+                                                <div className="text-2xl font-black text-miku">
+                                                    {(rankings.categories[selectedRankingCategory]!.pspi ?? 0).toFixed(1)}
+                                                </div>
+                                            </div>
+                                            <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs rounded uppercase font-mono">
+                                                {rankings.categories[selectedRankingCategory]!.difficulty}
+                                            </span>
+                                        </div>
+
+                                        {/* Right: Rank */}
+                                        <div className="text-right">
+                                            <span className="text-4xl sm:text-5xl font-black text-miku">
+                                                #{rankings.categories[selectedRankingCategory]!.rank}
+                                            </span>
+                                            <span className="text-slate-400 text-sm ml-1">/{rankings.total}</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Difficulty Card */}
                         <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">

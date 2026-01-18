@@ -25,7 +25,13 @@ const isDropdown = (item: NavItem): item is DropdownItem => {
 const menuItems: NavItem[] = [
     { name: "首页", href: "/" },
     { name: "卡牌", href: "/cards" },
-    { name: "音乐", href: "/music" },
+    {
+        name: "音乐",
+        children: [
+            { name: "音乐图鉴", href: "/music" },
+            { name: "歌曲Meta", href: "/music/meta" },
+        ]
+    },
     {
         name: "活动",
         children: [
@@ -80,7 +86,7 @@ export default function MainNavbar({ activeItem = "首页" }: MainNavbarProps) {
                     />
                     <div className="flex items-center gap-1.5 h-full">
                         <span className="text-[10px] text-miku font-bold tracking-widest uppercase leading-none mt-1">Sekai Viewer</span>
-                        <span className="text-[8px] px-1.5 py-0.5 bg-amber-400 text-white font-bold rounded-full leading-none">BETA1.39</span>
+                        <span className="text-[8px] px-1.5 py-0.5 bg-amber-400 text-white font-bold rounded-full leading-none">BETA1.43</span>
                     </div>
                 </Link>
 

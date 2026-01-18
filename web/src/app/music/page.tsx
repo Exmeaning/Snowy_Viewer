@@ -13,6 +13,7 @@ import {
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 
+
 function MusicContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -24,6 +25,7 @@ function MusicContent() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filtersInitialized, setFiltersInitialized] = useState(false);
+
 
     // Filter states
     const [selectedTag, setSelectedTag] = useState<MusicTagType>("all");
@@ -115,6 +117,8 @@ function MusicContent() {
         async function fetchData() {
             try {
                 setIsLoading(true);
+
+                // Fetch essential data first
                 const [musicsData, tagsData, eventMusicsData] = await Promise.all([
                     fetchMasterData<IMusicInfo[]>("musics.json"),
                     fetchMasterData<IMusicTagInfo[]>("musicTags.json"),
@@ -125,6 +129,7 @@ function MusicContent() {
                 setMusicTags(tagsData);
                 setEventMusicIds(new Set(eventMusicsData.map((em) => em.musicId)));
                 setError(null);
+
             } catch (err) {
                 console.error("Error fetching music data:", err);
                 setError(err instanceof Error ? err.message : "Unknown error");
@@ -132,6 +137,7 @@ function MusicContent() {
                 setIsLoading(false);
             }
         }
+
         fetchData();
     }, []);
 

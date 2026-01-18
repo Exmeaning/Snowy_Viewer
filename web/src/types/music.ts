@@ -123,6 +123,33 @@ export const DIFFICULTY_COLORS: Record<MusicDifficultyType, string> = {
     append: "#EE92BC",
 };
 
+// Music Meta interface for external API data
+export interface IMusicMeta {
+    music_id: number;
+    difficulty: string;
+    music_time: number;
+    event_rate: number;
+    base_score: number;
+    fever_score: number;
+    cycles_auto: number;
+    cycles_multi: number;
+    pspi_auto_score: number;
+    pspi_solo_score: number;
+    pspi_multi_score: number;
+    pspi_auto_pt_max: number;
+    pspi_solo_pt_max: number;
+    pspi_multi_pt_max: number;
+    pspi_pt_per_hour_auto: number;
+    pspi_pt_per_hour_multi: number;
+}
+
+// Ranking info for display in music items
+export interface IRankingInfo {
+    rank: number;
+    total: number;
+}
+
 // Re-export asset URL functions from centralized assets.ts
 export { getChartSvgUrl, getMusicJacketUrl, getMusicVocalAudioUrl } from "@/lib/assets";
+
 
