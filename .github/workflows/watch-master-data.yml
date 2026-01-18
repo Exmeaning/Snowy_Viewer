@@ -16,38 +16,28 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Check External Master Data Version
-        id: check
+      - name: Download and Update Master Data
         run: |
-          # Fetch the latest commit SHA for the 'master' path in the target repo
-          # Use GITHUB_TOKEN to avoid rate limits and generic errors
-          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/Team-Haruki/haruki-sekai-master/commits?path=master&per_page=1")
+          mkdir -p data/master
           
-          # Check if response is valid JSON array
-          if ! echo "$RESPONSE" | jq -e '.[0].sha' > /dev/null; then
-            echo "Error parsing response from GitHub API:"
-            echo "$RESPONSE"
-            exit 1
-          fi
-
-          LATEST_SHA=$(echo "$RESPONSE" | jq -r '.[0].sha')
-          echo "Latest SHA: $LATEST_SHA"
-          echo "latest_sha=$LATEST_SHA" >> $GITHUB_OUTPUT
-
-      - name: Compare and Update
-        run: |
-          LATEST_SHA="${{ steps.check.outputs.latest_sha }}"
-          CURRENT_SHA=$(cat data/master_version.txt || echo "none")
+          # Download files from sekaimaster
+          curl -s "https://sekaimaster.exmeaning.com/master/events.json" -o data/master/events.json
+          curl -s "https://sekaimaster.exmeaning.com/master/eventCards.json" -o data/master/eventCards.json
+          curl -s "https://sekaimaster.exmeaning.com/master/eventMusics.json" -o data/master/eventMusics.json
           
-          if [ "$LATEST_SHA" != "$CURRENT_SHA" ]; then
-            echo "New version detected: $LATEST_SHA"
-            echo "$LATEST_SHA" > data/master_version.txt
+          # Download files from haruki-sekai-master (GitHub Raw)
+          curl -s "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/virtualLives.json" -o data/master/virtualLives.json
+          curl -s "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/gachas.json" -o data/master/gachas.json
+          
+          # Check for changes
+          if [[ -n $(git status --porcelain data/master) ]]; then
+            echo "Changes detected in master data."
             
             git config --global user.name 'Snowy Bot'
             git config --global user.email 'bot@snowy.viewer'
-            git add data/master_version.txt
-            git commit -m "chore: update master data version to $LATEST_SHA"
+            git add data/master/*.json
+            git commit -m "chore: update master data json files"
             git push
           else
-            echo "No updates found."
+            echo "No changes in master data."
           fi

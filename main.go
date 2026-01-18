@@ -126,6 +126,10 @@ const (
 	GachasURL       = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/gachas.json"
 )
 
+const (
+	LocalMasterDataPath = "./data/master"
+)
+
 func fetchJSON(url string, target interface{}) error {
 	client := &http.Client{Timeout: 60 * time.Second}
 	resp, err := client.Get(url)
@@ -144,31 +148,52 @@ func fetchJSON(url string, target interface{}) error {
 	return json.Unmarshal(body, target)
 }
 
+func loadOrFetch(filename string, url string, target interface{}) error {
+	localPath := filepath.Join(LocalMasterDataPath, filename)
+	if _, err := os.Stat(localPath); err == nil {
+		content, err := os.ReadFile(localPath)
+		if err == nil {
+			if err := json.Unmarshal(content, target); err == nil {
+				fmt.Printf("Loaded %s from local file\n", filename)
+				return nil
+			} else {
+				fmt.Printf("Warning: failed to unmarshal local %s: %v. Falling back to remote.\n", filename, err)
+			}
+		} else {
+			fmt.Printf("Warning: failed to read local %s: %v. Falling back to remote.\n", filename, err)
+		}
+	} else {
+		// fmt.Printf("Local file %s not found. Falling back to remote.\n", filename)
+	}
+
+	return fetchJSON(url, target)
+}
+
 func fetchData() error {
-	fmt.Println("Fetching master data...")
+	fmt.Println("Updating master data...")
 
 	var events []Event
-	if err := fetchJSON(EventsURL, &events); err != nil {
+	if err := loadOrFetch("events.json", EventsURL, &events); err != nil {
 		return fmt.Errorf("fetch events: %v", err)
 	}
 
 	var eventCards []EventCard
-	if err := fetchJSON(EventCardsURL, &eventCards); err != nil {
+	if err := loadOrFetch("eventCards.json", EventCardsURL, &eventCards); err != nil {
 		return fmt.Errorf("fetch eventCards: %v", err)
 	}
 
 	var eventMusics []EventMusic
-	if err := fetchJSON(EventMusicsURL, &eventMusics); err != nil {
+	if err := loadOrFetch("eventMusics.json", EventMusicsURL, &eventMusics); err != nil {
 		return fmt.Errorf("fetch eventMusics: %v", err)
 	}
 
 	var virtualLives []VirtualLive
-	if err := fetchJSON(VirtualLivesURL, &virtualLives); err != nil {
+	if err := loadOrFetch("virtualLives.json", VirtualLivesURL, &virtualLives); err != nil {
 		fmt.Printf("Warning: failed to fetch virtualLives: %v\n", err)
 	}
 
 	var gachas []Gacha
-	if err := fetchJSON(GachasURL, &gachas); err != nil {
+	if err := loadOrFetch("gachas.json", GachasURL, &gachas); err != nil {
 		fmt.Printf("Warning: failed to fetch gachas: %v\n", err)
 	}
 
