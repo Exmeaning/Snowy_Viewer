@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { fetchVersionInfoNoCache, MASTERDATA_VERSION_KEY, clearCacheBypassFlag } from "@/lib/fetch";
+import { fetchVersionInfoNoCache, MASTERDATA_VERSION_KEY, clearCacheBypassFlag, setCacheBypassFlag } from "@/lib/fetch";
 
 interface MasterDataContextType {
     cloudVersion: string | null;
@@ -24,9 +24,11 @@ export function MasterDataProvider({ children }: { children: React.ReactNode }) 
                 const url = new URL(window.location.href);
                 const justRefreshed = url.searchParams.has('_refresh');
 
-                // Clean up the _refresh param from URL (visual cleanup only)
-                // The sessionStorage flag will persist for data fetching
+                // IMPORTANT: Set sessionStorage flag BEFORE cleaning URL
+                // This ensures other components can detect cache bypass mode
                 if (justRefreshed) {
+                    setCacheBypassFlag();
+                    // Now clean up the URL (visual cleanup only)
                     url.searchParams.delete('_refresh');
                     window.history.replaceState({}, '', url.toString());
                 }

@@ -46,21 +46,21 @@ export async function fetchWithCompression(
 const CACHE_BYPASS_KEY = "masterdata-cache-bypass";
 
 /**
+ * Set the cache bypass flag (call when _refresh param is detected)
+ * This must be called BEFORE cleaning the URL param
+ */
+export function setCacheBypassFlag(): void {
+    if (typeof window !== "undefined") {
+        sessionStorage.setItem(CACHE_BYPASS_KEY, 'true');
+    }
+}
+
+/**
  * Check if we should bypass cache
- * Uses sessionStorage to persist the flag across component renders during refresh
+ * Uses sessionStorage flag that was set by MasterDataContext
  */
 function shouldBypassCache(): boolean {
     if (typeof window === "undefined") return false;
-
-    // Check URL param first (initial detection)
-    const url = new URL(window.location.href);
-    if (url.searchParams.has('_refresh')) {
-        // Set session flag for subsequent requests
-        sessionStorage.setItem(CACHE_BYPASS_KEY, 'true');
-        return true;
-    }
-
-    // Check session flag (for requests after URL was cleaned)
     return sessionStorage.getItem(CACHE_BYPASS_KEY) === 'true';
 }
 
