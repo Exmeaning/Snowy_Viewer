@@ -3,14 +3,44 @@
  * Ensures requests include Accept-Encoding: gzip, deflate, br, zstd
  * 
  * Build-time (SSG): Uses GitHub raw for large file stability
- * Runtime (Client): Uses sekaimaster.exmeaning.com
+ * Runtime (Client): Uses selected master server (jp or cn)
  */
 
-// Runtime URL (for client-side fetching)
-const MASTER_BASE_URL = "https://sekaimaster.exmeaning.com/master";
+// Server source type
+export type ServerSourceType = "jp" | "cn";
+
+// Server domain configurations
+const SERVER_DOMAINS: Record<ServerSourceType, string> = {
+    jp: "sekaimaster.exmeaning.com",
+    cn: "sekaimaster-cn.exmeaning.com",
+};
+
+/**
+ * Get current server from localStorage (client-side only)
+ */
+function getCurrentServer(): ServerSourceType {
+    if (typeof window === "undefined") return "jp";
+    const saved = localStorage.getItem("server-source");
+    if (saved === "jp" || saved === "cn") return saved;
+    return "jp";
+}
+
+/**
+ * Get master base URL for runtime (respects server selection)
+ */
+function getMasterBaseUrl(): string {
+    return `https://${SERVER_DOMAINS[getCurrentServer()]}/master`;
+}
+
+/**
+ * Get version URL for runtime (respects server selection)
+ */
+function getVersionUrl(): string {
+    return `https://${SERVER_DOMAINS[getCurrentServer()]}/versions/current_version.json`;
+}
+
 // Build-time URL (for static generation - more stable for large files >3MB)
 const MASTER_BUILD_URL = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master";
-const VERSION_URL = "https://sekaimaster.exmeaning.com/versions/current_version.json";
 
 /**
  * Detect if we're in a build/SSG context (server-side, no window)
@@ -81,7 +111,7 @@ export function clearCacheBypassFlag(): void {
  * @param noCache - If true, bypass browser cache by adding timestamp
  */
 export async function fetchMasterData<T>(path: string, noCache: boolean = false): Promise<T> {
-    const baseUrl = isBuildTime() ? MASTER_BUILD_URL : MASTER_BASE_URL;
+    const baseUrl = isBuildTime() ? MASTER_BUILD_URL : getMasterBaseUrl();
     let url = `${baseUrl}/${path}`;
 
     // Auto-detect if we need to bypass cache (after version sync refresh)
@@ -122,7 +152,7 @@ export async function fetchMultipleMasterData<T extends unknown[]>(
  * Fetch current version info
  */
 export async function fetchVersionInfo(): Promise<VersionInfo> {
-    const response = await fetchWithCompression(VERSION_URL);
+    const response = await fetchWithCompression(getVersionUrl());
     if (!response.ok) {
         throw new Error("Failed to fetch version info");
     }
@@ -135,7 +165,7 @@ export async function fetchVersionInfo(): Promise<VersionInfo> {
  */
 export async function fetchVersionInfoNoCache(): Promise<VersionInfo> {
     // Add timestamp to URL to bypass CDN and browser cache
-    const noCacheUrl = `${VERSION_URL}?_t=${Date.now()}`;
+    const noCacheUrl = `${getVersionUrl()}?_t=${Date.now()}`;
     // Use simple fetch without custom headers to avoid CORS preflight issues
     const response = await fetch(noCacheUrl, {
         cache: "no-store",

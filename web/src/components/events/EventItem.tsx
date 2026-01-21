@@ -4,6 +4,7 @@ import Image from "next/image";
 import { IEventInfo, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS, getEventStatus, EVENT_STATUS_DISPLAY, EventType } from "@/types/events";
 import { getEventLogoUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
+import { TranslatedText } from "@/components/common/TranslatedText";
 
 interface EventItemProps {
     event: IEventInfo;
@@ -72,8 +73,14 @@ export default function EventItem({ event, isSpoiler }: EventItemProps) {
                     </div>
 
                     {/* Event Name */}
-                    <h3 className="font-bold text-slate-800 text-sm line-clamp-2 mb-2 group-hover:text-miku transition-colors">
-                        {event.name}
+                    <h3 className="font-bold text-slate-800 text-sm mb-2 group-hover:text-miku transition-colors">
+                        <TranslatedText
+                            original={event.name}
+                            category="events"
+                            field="name"
+                            originalClassName="line-clamp-2"
+                            translationClassName="text-xs font-medium text-slate-400 mt-0.5 line-clamp-1"
+                        />
                     </h3>
 
                     {/* Date Range */}

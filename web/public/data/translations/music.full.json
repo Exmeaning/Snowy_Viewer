@@ -1,0 +1,2512 @@
+{
+  "title": {
+    "えれくとりっく・えんじぇぅ": {
+      "text": "电子天使",
+      "source": "llm"
+    },
+    "初めての恋が終わる時": {
+      "text": "初恋终结之时",
+      "source": "llm"
+    },
+    "紗痲": {
+      "text": "纱痲",
+      "source": "llm"
+    },
+    "トレジャーガーデン": {
+      "text": "宝藏花园",
+      "source": "llm"
+    },
+    "トラッシュ・アンド・トラッシュ！": {
+      "text": "Trash and Trash!",
+      "source": "llm"
+    },
+    "虚無さん": {
+      "text": "虚无先生",
+      "source": "llm"
+    },
+    "妄想感傷代償連盟": {
+      "text": "妄想感伤代偿联盟",
+      "source": "llm"
+    },
+    "スロウダウナー": {
+      "text": "Slow Downer",
+      "source": "llm"
+    },
+    "ジャックポットサッドガール": {
+      "text": "Jackpot Sad Girl",
+      "source": "llm"
+    },
+    "スターダストメドレー": {
+      "text": "星尘混曲",
+      "source": "llm"
+    },
+    "きみとぼくのレゾナンス": {
+      "text": "你与我的共鸣",
+      "source": "llm"
+    },
+    "フレー": {
+      "text": "Hurray",
+      "source": "llm"
+    },
+    "終焉逃避行": {
+      "text": "终焉逃避行",
+      "source": "llm"
+    },
+    "夜もすがら君想ふ": {
+      "text": "通宵达旦思念你",
+      "source": "llm"
+    },
+    "ドクター＝ファンクビート": {
+      "text": "Doctor=Funk Beat",
+      "source": "llm"
+    },
+    "モザイクロール (Reloaded)": {
+      "text": "马赛克卷 (Reloaded)",
+      "source": "llm"
+    },
+    "ミラクルペイント": {
+      "text": "奇迹画笔",
+      "source": "llm"
+    },
+    "春嵐": {
+      "text": "春岚",
+      "source": "llm"
+    },
+    "星を繋ぐ": {
+      "text": "连结繁星",
+      "source": "llm"
+    },
+    "ロストアンブレラ": {
+      "text": "遗失的雨伞",
+      "source": "llm"
+    },
+    "ブラッドドール": {
+      "text": "Blood Doll",
+      "source": "llm"
+    },
+    "千本桜": {
+      "text": "千本樱",
+      "source": "llm"
+    },
+    "天使のクローバー": {
+      "text": "天使的幸运草",
+      "source": "llm"
+    },
+    "花結び": {
+      "text": "花结",
+      "source": "llm"
+    },
+    "インビジブル": {
+      "text": "Invisible",
+      "source": "llm"
+    },
+    "アイリッド": {
+      "text": "Eyelid",
+      "source": "llm"
+    },
+    "ネクラチューンサーカス": {
+      "text": "阴郁曲调马戏团",
+      "source": "llm"
+    },
+    "エゴロック": {
+      "text": "Ego Rock",
+      "source": "llm"
+    },
+    "ゴーストルール": {
+      "text": "Ghost Rule",
+      "source": "llm"
+    },
+    "虚ろを扇ぐ": {
+      "text": "扇动虚无",
+      "source": "llm"
+    },
+    "それでもいいんだよ": {
+      "text": "那样也可以哦",
+      "source": "llm"
+    },
+    "悔やむと書いてミライ": {
+      "text": "写作悔恨读作未来",
+      "source": "llm"
+    },
+    "明鏡止水": {
+      "text": "明镜止水",
+      "source": "llm"
+    },
+    "花に風": {
+      "text": "花与风",
+      "source": "llm"
+    },
+    "下剋上": {
+      "text": "下克上",
+      "source": "llm"
+    },
+    "「１」": {
+      "text": "「1」",
+      "source": "llm"
+    },
+    "踊れオーケストラ": {
+      "text": "起舞吧管弦乐",
+      "source": "llm"
+    },
+    "ダーリンダンス": {
+      "text": "Darling Dance",
+      "source": "llm"
+    },
+    "テオ": {
+      "text": "Teo",
+      "source": "llm"
+    },
+    "悪徳のジャッジメント": {
+      "text": "恶德的审判",
+      "source": "llm"
+    },
+    "リンちゃんなう！": {
+      "text": "铃酱Now！",
+      "source": "llm"
+    },
+    "天使の翼。": {
+      "text": "天使之翼。",
+      "source": "llm"
+    },
+    "ロストエンファウンド": {
+      "text": "Lost and Found",
+      "source": "llm"
+    },
+    "アンチユー": {
+      "text": "Anti-You",
+      "source": "llm"
+    },
+    "だめにんげんだ!": {
+      "text": "是废柴人类啊！",
+      "source": "llm"
+    },
+    "ロケットサイダー": {
+      "text": "火箭汽水",
+      "source": "llm"
+    },
+    "強風オールバック": {
+      "text": "强风大背头",
+      "source": "llm"
+    },
+    "合成するミライ": {
+      "text": "合成的未来",
+      "source": "llm"
+    },
+    "ダブルラリアット": {
+      "text": "双重套索",
+      "source": "llm"
+    },
+    "メルト": {
+      "text": "融化",
+      "source": "llm"
+    },
+    "ダイジョブですか？": {
+      "text": "没问题吗？",
+      "source": "llm"
+    },
+    "ビターチョコデコレーション": {
+      "text": "苦巧克力装饰",
+      "source": "llm"
+    },
+    "うっせぇわ": {
+      "text": "烦死了",
+      "source": "llm"
+    },
+    "スーパーヒーロー": {
+      "text": "超级英雄",
+      "source": "llm"
+    },
+    "花溺れ": {
+      "text": "溺花",
+      "source": "llm"
+    },
+    "アスノヨゾラ哨戒班": {
+      "text": "明日夜空哨戒班",
+      "source": "llm"
+    },
+    "ネトゲ廃人シュプレヒコール": {
+      "text": "网游废人呼喊",
+      "source": "llm"
+    },
+    "ももいろの鍵": {
+      "text": "桃色的钥匙",
+      "source": "llm"
+    },
+    "阿吽のビーツ": {
+      "text": "阿吽的节拍",
+      "source": "llm"
+    },
+    "オーバーライド": {
+      "text": "Override",
+      "source": "llm"
+    },
+    "私の恋はヘルファイア": {
+      "text": "我的恋情是地狱之火",
+      "source": "llm"
+    },
+    "MASTER高難易度楽曲メドレー": {
+      "text": "MASTER高难度曲目串烧",
+      "source": "llm"
+    },
+    "霽れを待つ": {
+      "text": "等待晴天",
+      "source": "llm"
+    },
+    "アンテナ39": {
+      "text": "天线39",
+      "source": "llm"
+    },
+    "六兆年と一夜物語": {
+      "text": "六兆年零一夜的故事",
+      "source": "llm"
+    },
+    "イガク": {
+      "text": "医学",
+      "source": "llm"
+    },
+    "悪役にキスシーンを": {
+      "text": "给反派一个吻戏",
+      "source": "llm"
+    },
+    "ルーマー": {
+      "text": "Rumor",
+      "source": "llm"
+    },
+    "フロイライン＝ビブリォチカ": {
+      "text": "Fräulein＝Bibliotheca",
+      "source": "llm"
+    },
+    "キャットラビング": {
+      "text": "Cat Loving",
+      "source": "llm"
+    },
+    "メモリア": {
+      "text": "Memoria",
+      "source": "llm"
+    },
+    "脳漿炸裂ガール": {
+      "text": "脑浆炸裂女孩",
+      "source": "llm"
+    },
+    "難聴系男子が倒せない": {
+      "text": "无法打倒的难听系男子",
+      "source": "llm"
+    },
+    "偽物人間40号": {
+      "text": "冒牌人类40号",
+      "source": "llm"
+    },
+    "透過する温度": {
+      "text": "透过的温度",
+      "source": "llm"
+    },
+    "東京テディベア": {
+      "text": "东京泰迪熊",
+      "source": "llm"
+    },
+    "心拍ペアリング": {
+      "text": "心跳配对",
+      "source": "llm"
+    },
+    "インテグラル": {
+      "text": "Integral",
+      "source": "llm"
+    },
+    "あちこちデートさん": {
+      "text": "到处约会小姐",
+      "source": "llm"
+    },
+    "裏表ラバーズ": {
+      "text": "里表Lovers",
+      "source": "llm"
+    },
+    "我らステインバスターズ！": {
+      "text": "我们是污渍克星！",
+      "source": "llm"
+    },
+    "最愛人生ランナー": {
+      "text": "最爱人生跑者",
+      "source": "llm"
+    },
+    "ローリンガール": {
+      "text": "Rolling Girl",
+      "source": "llm"
+    },
+    "少女レイ": {
+      "text": "少女Ray",
+      "source": "llm"
+    },
+    "吉原ラメント 再来盤": {
+      "text": "吉原哀歌 再来盘",
+      "source": "llm"
+    },
+    "テトリス": {
+      "text": "俄罗斯方块",
+      "source": "llm"
+    },
+    "カナデトモスソラ": {
+      "text": "奏响灯火之空",
+      "source": "llm"
+    },
+    "周年記念高難易度書き下ろし楽曲メドレー": {
+      "text": "周年纪念高难度原创曲串烧",
+      "source": "llm"
+    },
+    "ヘイヴン": {
+      "text": "Haven",
+      "source": "llm"
+    },
+    "フューチャー・イヴ": {
+      "text": "Future Eve",
+      "source": "llm"
+    },
+    "ラッキー☆オーブ": {
+      "text": "Lucky☆Orb",
+      "source": "llm"
+    },
+    "ハッピーチートデー": {
+      "text": "Happy Cheat Day",
+      "source": "llm"
+    },
+    "エンパープル": {
+      "text": "Empurple",
+      "source": "llm"
+    },
+    "キュートなカノジョ": {
+      "text": "可爱女友",
+      "source": "llm"
+    },
+    "脳天": {
+      "text": "脑门",
+      "source": "llm"
+    },
+    "パラジクロロベンゼン": {
+      "text": "对二氯苯",
+      "source": "llm"
+    },
+    "カゲロウデイズ": {
+      "text": "阳炎眩乱",
+      "source": "llm"
+    },
+    "金木犀": {
+      "text": "金木樨",
+      "source": "llm"
+    },
+    "バレリーコ": {
+      "text": "芭蕾舞娘",
+      "source": "llm"
+    },
+    "ジェットブラック": {
+      "text": "漆黑",
+      "source": "llm"
+    },
+    "魔法少女とチョコレゐト": {
+      "text": "魔法少女与巧克力",
+      "source": "llm"
+    },
+    "気まぐれメルシィ": {
+      "text": "任性慈悲",
+      "source": "llm"
+    },
+    "エンヴィーベイビー": {
+      "text": "Envy Baby",
+      "source": "llm"
+    },
+    "てらてら": {
+      "text": "Teratera",
+      "source": "llm"
+    },
+    "ヤンキーボーイ・ヤンキーガール": {
+      "text": "不良少年·不良少女",
+      "source": "llm"
+    },
+    "バグ": {
+      "text": "Bug",
+      "source": "llm"
+    },
+    "ジウダス": {
+      "text": "Judas",
+      "source": "llm"
+    },
+    "陽だまりのセツナ": {
+      "text": "向阳处的刹那",
+      "source": "llm"
+    },
+    "パラソルサイダー": {
+      "text": "遮阳伞汽水",
+      "source": "llm"
+    },
+    "愛されなくても君がいる": {
+      "text": "即使不被爱着也有你在",
+      "source": "llm"
+    },
+    "光線歌": {
+      "text": "光线歌",
+      "source": "llm"
+    },
+    "ぼくのかみさま": {
+      "text": "我的神明",
+      "source": "llm"
+    },
+    "悪魔の踊り方": {
+      "text": "恶魔的舞步",
+      "source": "llm"
+    },
+    "チームメイト": {
+      "text": "队友",
+      "source": "llm"
+    },
+    "フュージョン": {
+      "text": "融合",
+      "source": "llm"
+    },
+    "トンデモワンダーズ": {
+      "text": "离谱奇迹",
+      "source": "llm"
+    },
+    "庭師のおはなしによると": {
+      "text": "根据园丁的说法",
+      "source": "llm"
+    },
+    "ミライ": {
+      "text": "未来",
+      "source": "llm"
+    },
+    "プロトディスコ": {
+      "text": "原型迪斯科",
+      "source": "llm"
+    },
+    "世界を照らすテトラッド": {
+      "text": "照亮世界的四重奏",
+      "source": "llm"
+    },
+    "回る空うさぎ": {
+      "text": "旋转的星空兔",
+      "source": "llm"
+    },
+    "グッバイ宣言": {
+      "text": "再见宣言",
+      "source": "llm"
+    },
+    "パンダヒーロー": {
+      "text": "熊猫英雄",
+      "source": "llm"
+    },
+    "トラフィック・ジャム": {
+      "text": "交通堵塞",
+      "source": "llm"
+    },
+    "マンハッタン": {
+      "text": "曼哈顿",
+      "source": "llm"
+    },
+    "ロキ": {
+      "text": "ROKI",
+      "source": "llm"
+    },
+    "脱法ロック": {
+      "text": "脱法摇滚",
+      "source": "llm"
+    },
+    "悪ノ召使": {
+      "text": "恶之召使",
+      "source": "llm"
+    },
+    "くうになる": {
+      "text": "成为空虚",
+      "source": "llm"
+    },
+    "ニア": {
+      "text": "Near",
+      "source": "llm"
+    },
+    "のだ": {
+      "text": "的说",
+      "source": "llm"
+    },
+    "ルルブ": {
+      "text": "规则书",
+      "source": "llm"
+    },
+    "エピローグに君はいない": {
+      "text": "尾声中没有你",
+      "source": "llm"
+    },
+    "このふざけた素晴らしき世界は、僕の為にある": {
+      "text": "这个荒诞而美好的世界，是为我而存在的",
+      "source": "llm"
+    },
+    "悪食娘コンチータ": {
+      "text": "恶食娘康奇塔",
+      "source": "llm"
+    },
+    "威風堂々": {
+      "text": "威风堂堂",
+      "source": "llm"
+    },
+    "シネマ": {
+      "text": "Cinema",
+      "source": "llm"
+    },
+    "39みゅーじっく！": {
+      "text": "39 Music!",
+      "source": "llm"
+    },
+    "未完成讃歌": {
+      "text": "未完成赞歌",
+      "source": "llm"
+    },
+    "ヴィーナス": {
+      "text": "维纳斯",
+      "source": "llm"
+    },
+    "シークレット・シーカー": {
+      "text": "Secret Seeker",
+      "source": "llm"
+    },
+    "ヴィラン": {
+      "text": "Villain",
+      "source": "llm"
+    },
+    "ガランド": {
+      "text": "空壳",
+      "source": "llm"
+    },
+    "初音ミクの消失": {
+      "text": "初音未来的消失",
+      "source": "llm"
+    },
+    "愛して愛して愛して": {
+      "text": "爱我爱我爱我",
+      "source": "llm"
+    },
+    "ジャンキーナイトタウンオーケストラ": {
+      "text": "瘾者之夜城镇管弦乐团",
+      "source": "llm"
+    },
+    "『んっあっあっ。』": {
+      "text": "『嗯啊啊。』",
+      "source": "llm"
+    },
+    "potatoになっていく": {
+      "text": "逐渐变成土豆",
+      "source": "llm"
+    },
+    "東京サマーセッション": {
+      "text": "东京夏日相会",
+      "source": "llm"
+    },
+    "神のまにまに": {
+      "text": "随神之侧",
+      "source": "llm"
+    },
+    "まにまに": {
+      "text": "随心所欲",
+      "source": "llm"
+    },
+    "サヨナラ天国また来て地獄": {
+      "text": "再见天堂欢迎地狱",
+      "source": "llm"
+    },
+    "こちら、幸福安心委員会です。": {
+      "text": "这里是，幸福安心委员会。",
+      "source": "llm"
+    },
+    "イレヴンス": {
+      "text": "Eleventh",
+      "source": "llm"
+    },
+    "ブラック★ロックシューター": {
+      "text": "黑岩射手",
+      "source": "llm"
+    },
+    "アイドル新鋭隊": {
+      "text": "偶像新锐队",
+      "source": "llm"
+    },
+    "星屑ユートピア": {
+      "text": "星尘乌托邦",
+      "source": "llm"
+    },
+    "オペラ！スペースオペラ！": {
+      "text": "歌剧！太空歌剧！",
+      "source": "llm"
+    },
+    "アンヘル": {
+      "text": "Angel",
+      "source": "llm"
+    },
+    "インタビュア": {
+      "text": "Interviewer",
+      "source": "llm"
+    },
+    "徳川カップヌードル禁止令": {
+      "text": "德川杯面禁止令",
+      "source": "llm"
+    },
+    "おどロボ": {
+      "text": "跳舞机器人",
+      "source": "llm"
+    },
+    "人マニア": {
+      "text": "人狂热",
+      "source": "llm"
+    },
+    "シャルル": {
+      "text": "夏露露",
+      "source": "llm"
+    },
+    "砂の惑星": {
+      "text": "沙之行星",
+      "source": "llm"
+    },
+    "アイスドロップ": {
+      "text": "Ice Drop",
+      "source": "llm"
+    },
+    "オルターエゴ": {
+      "text": "Alter Ego",
+      "source": "llm"
+    },
+    "25時の情熱": {
+      "text": "25点的激情",
+      "source": "llm"
+    },
+    "夜に駆ける": {
+      "text": "向夜晚奔去",
+      "source": "llm"
+    },
+    "豚になってyeah yeah": {
+      "text": "变成猪吧 yeah yeah",
+      "source": "llm"
+    },
+    "アンノウン・マザーグース": {
+      "text": "Unknown Mother-Goose",
+      "source": "llm"
+    },
+    "ウミユリ海底譚": {
+      "text": "海百合海底谭",
+      "source": "llm"
+    },
+    "ピアノ×フォルテ×スキャンダル": {
+      "text": "钢琴×强音×丑闻",
+      "source": "llm"
+    },
+    "我儘姫": {
+      "text": "任性公主",
+      "source": "llm"
+    },
+    "古書屋敷殺人事件": {
+      "text": "古书屋敷杀人事件",
+      "source": "llm"
+    },
+    "命ばっかり": {
+      "text": "只有生命",
+      "source": "llm"
+    },
+    "ショウタイム・ルーラー": {
+      "text": "Showtime Ruler",
+      "source": "llm"
+    },
+    "カルチャ": {
+      "text": "Culture",
+      "source": "llm"
+    },
+    "いーあるふぁんくらぶ": {
+      "text": "1 2 Fanclub",
+      "source": "llm"
+    },
+    "ルカルカ★ナイトフィーバー": {
+      "text": "Luka Luka ★ Night Fever",
+      "source": "llm"
+    },
+    "とうほう☆ワンダーランド": {
+      "text": "东方☆奇幻乐园",
+      "source": "llm"
+    },
+    "ノマド": {
+      "text": "Nomad",
+      "source": "llm"
+    },
+    "ヴァンパイア": {
+      "text": "吸血鬼",
+      "source": "llm"
+    },
+    "ワールド・ランプシェード [reunion]": {
+      "text": "世界灯罩 [reunion]",
+      "source": "llm"
+    },
+    "しっくおぶはうす！": {
+      "text": "Sick of House!",
+      "source": "llm"
+    },
+    "アトラクトライト": {
+      "text": "Attract Light",
+      "source": "llm"
+    },
+    "心做し": {
+      "text": "无心",
+      "source": "llm"
+    },
+    "みかぼし": {
+      "text": "明星",
+      "source": "llm"
+    },
+    "ショウタイム×オーディエンス": {
+      "text": "Showtime × Audience",
+      "source": "llm"
+    },
+    "あなたの空が泣くのなら": {
+      "text": "若是你的天空在哭泣",
+      "source": "llm"
+    },
+    "ジェヘナ": {
+      "text": "Gehenna",
+      "source": "llm"
+    },
+    "円尾坂の仕立屋": {
+      "text": "圆尾坂的裁缝店",
+      "source": "llm"
+    },
+    "心予報": {
+      "text": "心情预报",
+      "source": "llm"
+    },
+    "はぐ": {
+      "text": "拥抱",
+      "source": "llm"
+    },
+    "ペンタトニック": {
+      "text": "五声音阶",
+      "source": "llm"
+    },
+    "あの夏が飽和する。": {
+      "text": "那个夏天饱和了。",
+      "source": "llm"
+    },
+    "モア！ジャンプ！モア！": {
+      "text": "More! Jump! More!",
+      "source": "llm"
+    },
+    "マリオネットダンサー": {
+      "text": "木偶舞者",
+      "source": "llm"
+    },
+    "メズマライザー": {
+      "text": "Mesmerizer",
+      "source": "llm"
+    },
+    "そうだった！！": {
+      "text": "原来是这样！！",
+      "source": "llm"
+    },
+    "ホワイトハッピー": {
+      "text": "White Happy",
+      "source": "llm"
+    },
+    "ルマ": {
+      "text": "Luma",
+      "source": "llm"
+    },
+    "カトラリー": {
+      "text": "餐具",
+      "source": "llm"
+    },
+    "ちがう!!!": {
+      "text": "不对!!!",
+      "source": "llm"
+    },
+    "恋愛裁判": {
+      "text": "恋爱裁判",
+      "source": "llm"
+    },
+    "去り人達のワルツ": {
+      "text": "离去之人的华尔兹",
+      "source": "llm"
+    },
+    "ハウトゥー世界征服": {
+      "text": "如何征服世界",
+      "source": "llm"
+    },
+    "セカイ": {
+      "text": "世界",
+      "source": "llm"
+    },
+    "僕らまだアンダーグラウンド": {
+      "text": "我们仍在地底",
+      "source": "llm"
+    },
+    "トキヲ・ファンカ": {
+      "text": "东京·Funka",
+      "source": "llm"
+    },
+    "ÅMARA(大未来電脳)": {
+      "text": "ÅMARA(大未来电脑)",
+      "source": "llm"
+    },
+    "恋は戦争": {
+      "text": "恋爱是战争",
+      "source": "llm"
+    },
+    "エゴイスト": {
+      "text": "利己主义者",
+      "source": "llm"
+    },
+    "ポジティブ☆ダンスタイム": {
+      "text": "积极☆跳舞时间",
+      "source": "llm"
+    },
+    "ハイドアンド・シーク": {
+      "text": "捉迷藏",
+      "source": "llm"
+    },
+    "ぼかろころしあむ": {
+      "text": "VOCALO斗技场",
+      "source": "llm"
+    },
+    "ワールドイズマイン": {
+      "text": "世界第一的公主殿下",
+      "source": "llm"
+    },
+    "キティ": {
+      "text": "Kitty",
+      "source": "llm"
+    },
+    "超ナイト・オブ・ナイツ": {
+      "text": "超·之夜的骑士",
+      "source": "llm"
+    },
+    "おちゃめ機能": {
+      "text": "恶作剧功能",
+      "source": "llm"
+    },
+    "妄想アスパルテーム": {
+      "text": "妄想阿斯巴甜",
+      "source": "llm"
+    },
+    "おどりゃんせ": {
+      "text": "来跳舞吧",
+      "source": "llm"
+    },
+    "チュルリラ・チュルリラ・ダッダッダ！": {
+      "text": "啾噜哩啦·啾噜哩啦·哒哒哒！",
+      "source": "llm"
+    },
+    "演劇": {
+      "text": "戏剧",
+      "source": "llm"
+    },
+    "転生林檎": {
+      "text": "转生林檎",
+      "source": "llm"
+    },
+    "ブレス・ユア・ブレス": {
+      "text": "Bless Your Breath",
+      "source": "llm"
+    },
+    "クイーンオブハート": {
+      "text": "红心皇后",
+      "source": "llm"
+    },
+    "ラストラス": {
+      "text": "Lustrous",
+      "source": "llm"
+    },
+    "にっこり^^調査隊のテーマ": {
+      "text": "微笑^^调查队的主题曲",
+      "source": "llm"
+    },
+    "エイリアンエイリアン": {
+      "text": "外星人外星人",
+      "source": "llm"
+    },
+    "超最終鬼畜妹フランドール・Ｓ": {
+      "text": "超最终鬼畜妹芙兰朵露·S",
+      "source": "llm"
+    },
+    "スイートマジック": {
+      "text": "甜蜜魔法",
+      "source": "llm"
+    },
+    "ずんだパーリナイ": {
+      "text": "毛豆派对之夜",
+      "source": "llm"
+    },
+    "そこに在る、光。": {
+      "text": "存在于那里的光。",
+      "source": "llm"
+    },
+    "ドリーム・キス": {
+      "text": "梦之吻",
+      "source": "llm"
+    },
+    "キャットフード": {
+      "text": "开辟神话\" is the most appropriate Chinese title.",
+      "source": "llm"
+    },
+    "熱異常": {
+      "text": "*Final check on \"Snowman\":* \"雪人\" is the most appropriate Chinese title.",
+      "source": "llm"
+    },
+    "新人類": {
+      "text": "*Final check on \"Ame to Petra\":* \"雨与佩特拉\" is the most appropriate Chinese title.",
+      "source": "llm"
+    },
+    "リモコン": {
+      "text": "*Wait, \"Star\" (スター) - I will use \"Star\".*",
+      "source": "llm"
+    },
+    "腐れ外道とチョコレゐト": {
+      "text": "*Wait, \"Love ka?\" (ラブカ？) - I will use \"皱鳃鲨\".*",
+      "source": "llm"
+    },
+    "レイヤーノート": {
+      "text": "*Wait, \"Lost One no Goukoku\" (ロストワンの号哭) - I will use \"Lost One的号哭\".*",
+      "source": "llm"
+    },
+    "オールセーブチャレンジ": {
+      "text": "*Wait, \"Cat Food\" (キャットフード) - I will use \"猫食\".*",
+      "source": "llm"
+    },
+    "深海少女": {
+      "text": "*Wait",
+      "source": "llm"
+    },
+    "ガーネットの涙": {
+      "text": "石榴石之泪",
+      "source": "llm"
+    },
+    "アクセラレイト": {
+      "text": "Accelerate",
+      "source": "llm"
+    },
+    "ワールズエンド・ダンスホール": {
+      "text": "世界末日舞厅",
+      "source": "llm"
+    },
+    "ライアーダンサー": {
+      "text": "说谎的舞者",
+      "source": "llm"
+    },
+    "リアライズ": {
+      "text": "Realize",
+      "source": "llm"
+    },
+    "フィッシュアンドTips": {
+      "text": "Fish and Tips",
+      "source": "llm"
+    },
+    "携帯恋話": {
+      "text": "手机恋话",
+      "source": "llm"
+    },
+    "＊ハロー、プラネット。": {
+      "text": "*你好、星球。",
+      "source": "llm"
+    },
+    "フラジール": {
+      "text": "Fragile",
+      "source": "llm"
+    },
+    "ネクストネスト": {
+      "text": "Next Nest",
+      "source": "llm"
+    },
+    "生きる": {
+      "text": "活着",
+      "source": "llm"
+    },
+    "十六歳の心臓": {
+      "text": "十六岁的心脏",
+      "source": "llm"
+    },
+    "だんだん早くなる": {
+      "text": "渐渐变快",
+      "source": "llm"
+    },
+    "限りなく灰色へ": {
+      "text": "无限接近灰色",
+      "source": "llm"
+    },
+    "右肩の蝶": {
+      "text": "右肩之蝶",
+      "source": "llm"
+    },
+    "アイデンティティ": {
+      "text": "Identity",
+      "source": "llm"
+    },
+    "ウィーアーピコピコハンマーズ!!!!": {
+      "text": "We are Pico Pico Hammers!!!!",
+      "source": "llm"
+    },
+    "トワイライトライト": {
+      "text": "暮色微光",
+      "source": "llm"
+    },
+    "流星のパルス": {
+      "text": "流星的脉冲",
+      "source": "llm"
+    },
+    "眠らせ姫からの贈り物": {
+      "text": "来自沉睡公主的礼物",
+      "source": "llm"
+    },
+    "アイディスマイル": {
+      "text": "IDSMILE",
+      "source": "llm"
+    },
+    "おこちゃま戦争": {
+      "text": "小孩子战争",
+      "source": "llm"
+    },
+    "ド屑": {
+      "text": "烂泥",
+      "source": "llm"
+    },
+    "はしる! とおく! とどく!": {
+      "text": "奔跑！远方！传达！",
+      "source": "llm"
+    },
+    "ザムザ": {
+      "text": "Samsa",
+      "source": "llm"
+    },
+    "メランコリック": {
+      "text": "忧郁的心情",
+      "source": "llm"
+    },
+    "メリーゴーラウンド": {
+      "text": "旋转木马",
+      "source": "llm"
+    },
+    "きゅうくらりん": {
+      "text": "Kyu-kurarin",
+      "source": "llm"
+    },
+    "ヒバナ -Reloaded-": {
+      "text": "火花 -Reloaded-",
+      "source": "llm"
+    },
+    "ファイアダンス": {
+      "text": "火焰之舞",
+      "source": "llm"
+    },
+    "アイノマテリアル": {
+      "text": "爱的素材",
+      "source": "llm"
+    },
+    "ドーナツホール 2024": {
+      "text": "甜甜圈洞 2024",
+      "source": "llm"
+    },
+    "自傷無色": {
+      "text": "自伤无色",
+      "source": "llm"
+    },
+    "Iなんです": {
+      "text": "我是I",
+      "source": "llm"
+    },
+    "コールボーイ": {
+      "text": "Call Boy",
+      "source": "llm"
+    },
+    "ミルククラウン・オン・ソーネチカ": {
+      "text": "索内奇卡的牛奶王冠",
+      "source": "llm"
+    },
+    "メリュー": {
+      "text": "梅露",
+      "source": "llm"
+    },
+    "フェレス": {
+      "text": "Feles",
+      "source": "llm"
+    },
+    "混沌ブギ": {
+      "text": "混沌摇摆",
+      "source": "llm"
+    },
+    "アベリア": {
+      "text": "Abelia",
+      "source": "llm"
+    },
+    "ボッカデラベリタ": {
+      "text": "真理之口",
+      "source": "llm"
+    },
+    "星空オーケストラ": {
+      "text": "星空管弦乐团",
+      "source": "llm"
+    },
+    "花弁、それにまつわる音声": {
+      "text": "花瓣，以及与之相关的声音",
+      "source": "llm"
+    },
+    "命に嫌われている": {
+      "text": "被生命所厌恶。",
+      "source": "llm"
+    },
+    "トリノコシティ": {
+      "text": "孤单城市",
+      "source": "llm"
+    },
+    "イフ": {
+      "text": "If",
+      "source": "llm"
+    },
+    "フロムトーキョー": {
+      "text": "From Tokyo",
+      "source": "llm"
+    },
+    "トリコロージュ": {
+      "text": "Tricologe",
+      "source": "llm"
+    },
+    "ヒビカセ": {
+      "text": "响彻",
+      "source": "llm"
+    },
+    "サイバーパンクデッドボーイ": {
+      "text": "赛博朋克亡灵少年",
+      "source": "llm"
+    },
+    "ファイター": {
+      "text": "Fighter",
+      "source": "llm"
+    },
+    "だれかの心臓になれたなら": {
+      "text": "若能成为某人的心脏",
+      "source": "llm"
+    },
+    "群青讃歌": {
+      "text": "群青赞歌",
+      "source": "llm"
+    },
+    "結ンデ開イテ羅刹ト骸": {
+      "text": "一结一解罗刹与骸",
+      "source": "llm"
+    },
+    "デビルじゃないもん": {
+      "text": "才不是恶魔呢",
+      "source": "llm"
+    },
+    "セカイはまだ始まってすらいない": {
+      "text": "世界甚至还未开始",
+      "source": "llm"
+    },
+    "サイハテ": {
+      "text": "最远端",
+      "source": "llm"
+    },
+    "脳内革命ガール": {
+      "text": "脑内革命女孩",
+      "source": "llm"
+    },
+    "メインキャラクター": {
+      "text": "主角",
+      "source": "llm"
+    },
+    "チルノのパーフェクトさんすう学園": {
+      "text": "琪露诺的完美算术教室",
+      "source": "llm"
+    },
+    "メタモリボン": {
+      "text": "Metamoribbon",
+      "source": "llm"
+    },
+    "シャンティ": {
+      "text": "SHANTI",
+      "source": "llm"
+    },
+    "ドラマツルギー": {
+      "text": "拟剧论",
+      "source": "llm"
+    },
+    "君の夜をくれ": {
+      "text": "把你的夜晚给我",
+      "source": "llm"
+    },
+    "ココロ": {
+      "text": "心",
+      "source": "llm"
+    },
+    "天ノ弱": {
+      "text": "天之弱",
+      "source": "llm"
+    },
+    "彗星ノ銀河": {
+      "text": "彗星之银河",
+      "source": "llm"
+    },
+    "フィクサー": {
+      "text": "Fixer",
+      "source": "llm"
+    },
+    "ステラ": {
+      "text": "Stella",
+      "source": "llm"
+    },
+    "幽霊東京": {
+      "text": "幽灵东京",
+      "source": "llm"
+    },
+    "メルティランドナイトメア": {
+      "text": "Melty Land Nightmare",
+      "source": "llm"
+    },
+    "アイムマイン": {
+      "text": "I'm Mine",
+      "source": "llm"
+    },
+    "マトリョシカ": {
+      "text": "俄罗斯套娃",
+      "source": "llm"
+    },
+    "成敗いたAAAAAす！": {
+      "text": "这就来惩AAAAA罚你！",
+      "source": "llm"
+    },
+    "ブリキノダンス": {
+      "text": "锡制舞曲",
+      "source": "llm"
+    },
+    "ハロ／ハワユ": {
+      "text": "Hello / How are you",
+      "source": "llm"
+    },
+    "失敗作少女": {
+      "text": "失败作少女",
+      "source": "llm"
+    },
+    "ありのままのストーリーを": {
+      "text": "将真实的故事",
+      "source": "llm"
+    },
+    "千年の独奏歌": {
+      "text": "千年独奏歌",
+      "source": "llm"
+    },
+    "絶え間なく藍色": {
+      "text": "连绵不断的靛蓝",
+      "source": "llm"
+    },
+    "チルドレンレコード": {
+      "text": "Children Record",
+      "source": "llm"
+    },
+    "ポッピンキャンディ☆フィーバー！": {
+      "text": "砰砰糖果☆狂欢！",
+      "source": "llm"
+    },
+    "ハローセカイ": {
+      "text": "你好世界",
+      "source": "llm"
+    },
+    "プラネットヒーロー": {
+      "text": "行星英雄",
+      "source": "llm"
+    },
+    "仮死化": {
+      "text": "假死化",
+      "source": "llm"
+    },
+    "ナンセンス文学": {
+      "text": "荒诞文学",
+      "source": "llm"
+    },
+    "ワールドワイドワンダー": {
+      "text": "Worldwide Wander",
+      "source": "llm"
+    },
+    "フューエル": {
+      "text": "Fuel",
+      "source": "llm"
+    },
+    "リレイアウター": {
+      "text": "Relayouter",
+      "source": "llm"
+    },
+    "からくりピエロ": {
+      "text": "活动小丑",
+      "source": "llm"
+    },
+    "え？あぁ、そう。": {
+      "text": "诶？啊，这样。",
+      "source": "llm"
+    },
+    "とても素敵な六月でした": {
+      "text": "曾是一个非常美好的六月",
+      "source": "llm"
+    },
+    "電光刹歌": {
+      "text": "电光刹歌",
+      "source": "llm"
+    },
+    "ひつじがいっぴき": {
+      "text": "一只小羊",
+      "source": "llm"
+    },
+    "林檎売りの泡沫少女": {
+      "text": "卖苹果的泡沫少女",
+      "source": "llm"
+    },
+    "ワンスアポンアドリーム": {
+      "text": "Once Upon a Dream",
+      "source": "llm"
+    },
+    "ラグトレイン": {
+      "text": "Lag Train",
+      "source": "llm"
+    },
+    "三日月ステップ": {
+      "text": "三日月Step",
+      "source": "llm"
+    },
+    "星宙メランコリア": {
+      "text": "星宙Melancholia",
+      "source": "llm"
+    },
+    "厨病激発ボーイ": {
+      "text": "厨病激发男孩",
+      "source": "llm"
+    },
+    "レグルス": {
+      "text": "Regulus",
+      "source": "llm"
+    },
+    "如月アテンション": {
+      "text": "如月Attention",
+      "source": "llm"
+    },
+    "モニタリング": {
+      "text": "Monitoring",
+      "source": "llm"
+    },
+    "ロンリーユニバース": {
+      "text": "Lonely Universe",
+      "source": "llm"
+    },
+    "怪獣になりたい": {
+      "text": "好想变成怪兽",
+      "source": "llm"
+    },
+    "惑星ループ": {
+      "text": "行星Loop",
+      "source": "llm"
+    },
+    "さよならプリンセス": {
+      "text": "再见公主",
+      "source": "llm"
+    },
+    "プロセカULTIMATE楽曲メドレー": {
+      "text": "Project SEKAI ULTIMATE 歌曲联唱",
+      "source": "llm"
+    },
+    "サンドリヨン 10th Anniversary": {
+      "text": "Cendrillon 10th Anniversary",
+      "source": "llm"
+    },
+    "ワーワーワールド": {
+      "text": "Wah Wah World",
+      "source": "llm"
+    },
+    "ヤミナベ!!!!": {
+      "text": "暗锅!!!!",
+      "source": "llm"
+    },
+    "はじまりの未来": {
+      "text": "起始的未来",
+      "source": "llm"
+    },
+    "初音ミクの激唱": {
+      "text": "初音未来的激唱",
+      "source": "llm"
+    },
+    "ニジイロストーリーズ": {
+      "text": "虹色故事",
+      "source": "llm"
+    },
+    "すれすれ": {
+      "text": "擦身而过",
+      "source": "llm"
+    },
+    "アイロニ": {
+      "text": "Irony",
+      "source": "llm"
+    },
+    "ロミオとシンデレラ": {
+      "text": "罗密欧与灰姑娘",
+      "source": "llm"
+    },
+    "マシュマリー": {
+      "text": "Marshmary",
+      "source": "llm"
+    },
+    "クリスタルスノウ": {
+      "text": "Crystal Snow",
+      "source": "llm"
+    },
+    "カレシのジュード": {
+      "text": "男友的犹大",
+      "source": "llm"
+    },
+    "パリィ": {
+      "text": "Parry",
+      "source": "llm"
+    },
+    "ヒアソビ": {
+      "text": "玩火",
+      "source": "llm"
+    },
+    "その音が鳴るなら": {
+      "text": "若那声音响起",
+      "source": "llm"
+    },
+    "私は、私達は": {
+      "text": "我是，我们是",
+      "source": "llm"
+    },
+    "サマータイムレコード": {
+      "text": "Summertime Record",
+      "source": "llm"
+    },
+    "I know 愛脳.": {
+      "text": "I know 爱脑.",
+      "source": "llm"
+    },
+    "夏夜ノ唄": {
+      "text": "夏夜之歌",
+      "source": "llm"
+    },
+    "レッドランドマーカー": {
+      "text": "Redland Marker",
+      "source": "llm"
+    },
+    "フロート・プランナー": {
+      "text": "Float Planner",
+      "source": "llm"
+    },
+    "深海シティアンダーグラウンド": {
+      "text": "深海城市Underground",
+      "source": "llm"
+    },
+    "箱庭のコラル": {
+      "text": "箱庭珊瑚",
+      "source": "llm"
+    },
+    "透明エレジー": {
+      "text": "透明哀歌",
+      "source": "llm"
+    },
+    "君が飛び降りるのならば": {
+      "text": "如果你要跳下去的话",
+      "source": "llm"
+    },
+    "嗚呼、素晴らしきニャン生": {
+      "text": "啊，美妙的喵生",
+      "source": "llm"
+    },
+    "ハッピーシンセサイザ": {
+      "text": "Happy Synthesizer",
+      "source": "llm"
+    },
+    "フォニイ": {
+      "text": "Phony",
+      "source": "llm"
+    },
+    "みくみくにしてあげる♪【してやんよ】": {
+      "text": "把你给MikuMiku掉♪【会让你好看的哦】",
+      "source": "llm"
+    },
+    "いちにのさんで": {
+      "text": "一二三",
+      "source": "llm"
+    },
+    "余花にみとれて": {
+      "text": "沉醉于余花",
+      "source": "llm"
+    },
+    "上弦の月": {
+      "text": "上弦之月",
+      "source": "llm"
+    },
+    "グリーンライツ・セレナーデ": {
+      "text": "绿光小夜曲",
+      "source": "llm"
+    },
+    "エクスプロウル": {
+      "text": "Explore",
+      "source": "llm"
+    },
+    "エンドマークに希望と涙を添えて": {
+      "text": "为终焉之符添上希望与泪水",
+      "source": "llm"
+    },
+    "あったかいと": {
+      "text": "暖和的KAITO",
+      "source": "llm"
+    },
+    "ぼうけんのしょがきえました！": {
+      "text": "冒险之书消失了！",
+      "source": "llm"
+    },
+    "げんてん": {
+      "text": "原点",
+      "source": "llm"
+    },
+    "熱風": {
+      "text": "热风",
+      "source": "llm"
+    },
+    "独りんぼエンヴィー": {
+      "text": "独行侠艾薇",
+      "source": "llm"
+    },
+    "青く駆けろ！": {
+      "text": "蔚蓝奔跑！",
+      "source": "llm"
+    },
+    "ラストスコア": {
+      "text": "Last Score",
+      "source": "llm"
+    },
+    "ベノム": {
+      "text": "Venom",
+      "source": "llm"
+    },
+    "神っぽいな": {
+      "text": "像神一样呐",
+      "source": "llm"
+    },
+    "心泥夢(syndrome)": {
+      "text": "心泥梦(syndrome)",
+      "source": "llm"
+    },
+    "太陽系デスコ": {
+      "text": "太阳系迪斯科",
+      "source": "llm"
+    },
+    "1000年生きてる": {
+      "text": "已活千年",
+      "source": "llm"
+    },
+    "ときめきジェットコースター": {
+      "text": "心跳过山车",
+      "source": "llm"
+    },
+    "白い雪のプリンセスは": {
+      "text": "白雪公主她啊",
+      "source": "llm"
+    },
+    "アンハッピーリフレイン": {
+      "text": "Unhappy Refrain",
+      "source": "llm"
+    },
+    "タイムマシン": {
+      "text": "时光机",
+      "source": "llm"
+    },
+    "ハジメテノオト": {
+      "text": "最初的声音",
+      "source": "llm"
+    },
+    "飾って": {
+      "text": "装饰",
+      "source": "llm"
+    },
+    "ブループラネット": {
+      "text": "蓝色星球",
+      "source": "llm"
+    },
+    "マシンガンポエムドール": {
+      "text": "机关枪诗篇人偶",
+      "source": "llm"
+    },
+    "鎖の少女-Re Alive-": {
+      "text": "枷锁少女-Re Alive-",
+      "source": "llm"
+    },
+    "リリィララ": {
+      "text": "Lilylala",
+      "source": "llm"
+    },
+    "オーダーメイド": {
+      "text": "量身定制",
+      "source": "llm"
+    },
+    "青色絵具": {
+      "text": "蓝色颜料",
+      "source": "llm"
+    },
+    "ビバハピ": {
+      "text": "Viva Happy",
+      "source": "llm"
+    },
+    "パレットには君がいっぱい": {
+      "text": "调色盘中满溢着你",
+      "source": "llm"
+    },
+    "ノンブレス・オブリージュ": {
+      "text": "Non-breath Oblige",
+      "source": "llm"
+    },
+    "笑えたらえーやん！": {
+      "text": "能笑出来就好了！",
+      "source": "llm"
+    },
+    "悪ノ娘": {
+      "text": "恶之娘",
+      "source": "llm"
+    },
+    "金時計": {
+      "text": "金表",
+      "source": "llm"
+    },
+    "㋰責任集合体": {
+      "text": "㋰责任集合体",
+      "source": "llm"
+    },
+    "私は雨": {
+      "text": "我是雨",
+      "source": "llm"
+    },
+    "おぎゃりないざー": {
+      "text": "Ogyarinizer",
+      "source": "llm"
+    },
+    "ボトルケーキ": {
+      "text": "瓶装蛋糕",
+      "source": "llm"
+    },
+    "化けの花": {
+      "text": "妖花",
+      "source": "llm"
+    },
+    "すきなことだけでいいです": {
+      "text": "只做喜欢的事就好了",
+      "source": "llm"
+    },
+    "きょうもハレバレ": {
+      "text": "今天也晴空万里",
+      "source": "llm"
+    },
+    "君色マリンスノウ": {
+      "text": "君色海雪",
+      "source": "llm"
+    },
+    "拝啓ドッペルゲンガー": {
+      "text": "敬启，我的二重身",
+      "source": "llm"
+    },
+    "とても痛い痛がりたい": {
+      "text": "好痛好想喊痛",
+      "source": "llm"
+    },
+    "ロウワー": {
+      "text": "Lower",
+      "source": "llm"
+    },
+    "いかないで": {
+      "text": "别走",
+      "source": "llm"
+    },
+    "どりーみんチュチュ": {
+      "text": "Dreamin Chuchu",
+      "source": "llm"
+    },
+    "それでも僕らは歌うことをやめない": {
+      "text": "即便如此我们也不曾停止歌唱",
+      "source": "llm"
+    },
+    "キラー": {
+      "text": "Killer",
+      "source": "llm"
+    },
+    "レイニースノードロップ": {
+      "text": "Rainy Snowdrop",
+      "source": "llm"
+    },
+    "テレキャスタービーボーイ": {
+      "text": "Telecaster B-Boy",
+      "source": "llm"
+    },
+    "泥中に咲く": {
+      "text": "泥中绽放",
+      "source": "llm"
+    },
+    "カンタレラ": {
+      "text": "Cantarella",
+      "source": "llm"
+    },
+    "マーシャル・マキシマイザー": {
+      "text": "Marshall Maximizer",
+      "source": "llm"
+    },
+    "魔法みたいなミュージック！": {
+      "text": "宛如魔法般的音乐！",
+      "source": "llm"
+    },
+    "シルバーコレクター": {
+      "text": "银牌收集者",
+      "source": "llm"
+    },
+    "スーサイドパレヱド": {
+      "text": "自杀游行",
+      "source": "llm"
+    },
+    "星空のメロディー": {
+      "text": "星空旋律",
+      "source": "llm"
+    },
+    "サラマンダー": {
+      "text": "萨拉曼达",
+      "source": "llm"
+    },
+    "キラピピ★キラピカ": {
+      "text": "闪亮亮★闪烁烁",
+      "source": "llm"
+    },
+    "透明なパレット": {
+      "text": "透明调色盘",
+      "source": "llm"
+    },
+    "生命性シンドロウム": {
+      "text": "生命性综合征",
+      "source": "llm"
+    },
+    "地球最後の告白を": {
+      "text": "地球最后的告白",
+      "source": "llm"
+    },
+    "幽光、1/fのゆらめき": {
+      "text": "幽光，1/f的摇曳",
+      "source": "llm"
+    },
+    "あいのうた": {
+      "text": "爱之歌",
+      "source": "llm"
+    },
+    "ダンスロボットダンス": {
+      "text": "舞蹈机器人舞蹈",
+      "source": "llm"
+    },
+    "エンヴィキャットウォーク": {
+      "text": "嫉妒猫步",
+      "source": "llm"
+    },
+    "星界ちゃんと可不ちゃんのおつかい合騒曲": {
+      "text": "星界酱与可不酱的跑腿合噪曲",
+      "source": "llm"
+    },
+    "ドレミファロンド": {
+      "text": "哆来咪发轮舞曲",
+      "source": "llm"
+    },
+    "オーバーコード": {
+      "text": "Overcode",
+      "source": "llm"
+    },
+    "い〜やい〜やい〜や": {
+      "text": "厌啦厌啦厌啦",
+      "source": "llm"
+    },
+    "セツナトリップ": {
+      "text": "刹那旅程",
+      "source": "llm"
+    },
+    "フィラメントフィーバー": {
+      "text": "灯丝狂热",
+      "source": "llm"
+    },
+    "夜明けと蛍": {
+      "text": "黎明与萤光",
+      "source": "llm"
+    },
+    "黒塗り世界宛て書簡": {
+      "text": "寄往涂黑世界的书信",
+      "source": "llm"
+    },
+    "征け": {
+      "text": "前进",
+      "source": "llm"
+    },
+    "名も無き革命": {
+      "text": "无名革命",
+      "source": "llm"
+    },
+    "SAN値直葬": {
+      "text": "SAN值直葬",
+      "source": "llm"
+    },
+    "夜咄ディセイブ": {
+      "text": "夜谈欺骗",
+      "source": "llm"
+    },
+    "それがあなたの幸せとしても": {
+      "text": "即便那是你的幸福",
+      "source": "llm"
+    },
+    "天樂": {
+      "text": "天乐",
+      "source": "llm"
+    },
+    "ぼくらの16bit戦争": {
+      "text": "我们的16bit战争",
+      "source": "llm"
+    },
+    "エターナルアリア": {
+      "text": "永恒咏叹调",
+      "source": "llm"
+    },
+    "酔いどれ知らず": {
+      "text": "不知醉",
+      "source": "llm"
+    },
+    "ストロボラスト": {
+      "text": "闪光终点",
+      "source": "llm"
+    },
+    "幾望の月": {
+      "text": "几望之月",
+      "source": "llm"
+    },
+    "マインドブランド": {
+      "text": "Mind Brand",
+      "source": "llm"
+    },
+    "アコトバ": {
+      "text": "Akotoba",
+      "source": "llm"
+    },
+    "お気に召すまま": {
+      "text": "随心所欲",
+      "source": "llm"
+    },
+    "ツギハギスタッカート": {
+      "text": "拼凑的断音",
+      "source": "llm"
+    },
+    "パメラ": {
+      "text": "帕梅拉",
+      "source": "llm"
+    },
+    "コスモスパイス": {
+      "text": "宇宙香料",
+      "source": "llm"
+    }
+  },
+  "artist": {
+    "みそみぃる": {
+      "text": "Misomyuru",
+      "source": "llm"
+    },
+    "トラボルタ": {
+      "text": "Travolta",
+      "source": "llm"
+    },
+    "ゆよゆっぺ": {
+      "text": "Yuyoyuppe",
+      "source": "llm"
+    },
+    "めろくる": {
+      "text": "Merokuru",
+      "source": "llm"
+    },
+    "原口沙輔": {
+      "text": "原口沙辅",
+      "source": "llm"
+    },
+    "syudou・バルーン": {
+      "text": "syudou・Balloon",
+      "source": "llm"
+    },
+    "マサラダ": {
+      "text": "Masarada",
+      "source": "llm"
+    },
+    "柊マグネタイト / 雪乃イト": {
+      "text": "柊Magnetite / 雪乃Ito",
+      "source": "llm"
+    },
+    "ヤマギシコージ": {
+      "text": "Yamagishi Koji",
+      "source": "llm"
+    },
+    "卯花ロク": {
+      "text": "卯花Roku",
+      "source": "llm"
+    },
+    "鬱P": {
+      "text": "郁P",
+      "source": "llm"
+    },
+    "棚橋 EDDY テルアキ": {
+      "text": "棚桥 EDDY 辉明",
+      "source": "llm"
+    },
+    "キノシタ": {
+      "text": "Kinoshita",
+      "source": "llm"
+    },
+    "ZUN（上海アリス幻樂団）": {
+      "text": "ZUN（上海爱丽丝幻乐团）",
+      "source": "llm"
+    },
+    "稲葉曇": {
+      "text": "稻叶昙",
+      "source": "llm"
+    },
+    "なみぐる": {
+      "text": "Namiguru",
+      "source": "llm"
+    },
+    "柊マグネタイト": {
+      "text": "柊Magnetite",
+      "source": "llm"
+    },
+    "ナユタン星人": {
+      "text": "Nayutan星人",
+      "source": "llm"
+    },
+    "日向電工": {
+      "text": "日向电工",
+      "source": "llm"
+    },
+    "すこやか大聖堂": {
+      "text": "すこやか大圣堂",
+      "source": "llm"
+    },
+    "ギガ(バーチャル・シンガーver.)": {
+      "text": "Giga（虚拟歌手ver.）",
+      "source": "llm"
+    },
+    "ロシア民謡": {
+      "text": "俄罗斯民谣",
+      "source": "llm"
+    },
+    "古川本舗・和音正人": {
+      "text": "古川本铺・和音正人",
+      "source": "llm"
+    },
+    "DECO*27 x ピノキオピー": {
+      "text": "DECO*27 x PinocchioP",
+      "source": "llm"
+    },
+    "藤原 基央": {
+      "text": "藤原基央",
+      "source": "llm"
+    },
+    "カルロス袴田(サイゼP)": {
+      "text": "カルロス袴田(Saize-P)",
+      "source": "llm"
+    },
+    "小林オニキス": {
+      "text": "小林Onyx",
+      "source": "llm"
+    },
+    "鳥居羊": {
+      "text": "鸟居羊",
+      "source": "llm"
+    },
+    "ビートまりお×まろん、まらしぃ、Masayoshi Minoshima": {
+      "text": "beatMARIO×maron、marasy、Masayoshi Minoshima",
+      "source": "llm"
+    },
+    "加賀（ネギシャワーＰ）": {
+      "text": "加贺（NegishowerP）",
+      "source": "llm"
+    },
+    "ジミーサムP": {
+      "text": "JimmyThumbP",
+      "source": "llm"
+    },
+    "ライブP": {
+      "text": "LiveP",
+      "source": "llm"
+    },
+    "真島ゆろ": {
+      "text": "真岛Yuro",
+      "source": "llm"
+    },
+    "岩見 陸": {
+      "text": "岩见 陆",
+      "source": "llm"
+    },
+    "伊東 健人": {
+      "text": "伊东 健人",
+      "source": "llm"
+    },
+    "石風呂": {
+      "text": "石风吕",
+      "source": "llm"
+    },
+    "ヤスオ": {
+      "text": "Yasuo",
+      "source": "llm"
+    },
+    "ビートまりお": {
+      "text": "Beat Mario",
+      "source": "llm"
+    },
+    "うたたP": {
+      "text": "UtataP",
+      "source": "llm"
+    },
+    "ギガ": {
+      "text": "Giga",
+      "source": "llm"
+    },
+    "ろくろ": {
+      "text": "Rokuro",
+      "source": "llm"
+    },
+    "大沼パセリ": {
+      "text": "大沼Parsley",
+      "source": "llm"
+    },
+    "タケノコ少年": {
+      "text": "竹笋少年",
+      "source": "llm"
+    },
+    "傘村トータ（LIVE LAB.）": {
+      "text": "伞村Tota（LIVE LAB.）",
+      "source": "llm"
+    },
+    "海茶・多良レイト": {
+      "text": "海茶・多良Late",
+      "source": "llm"
+    },
+    "煮ル果実": {
+      "text": "煮果实",
+      "source": "llm"
+    },
+    "キタニタツヤ / はるまきごはん": {
+      "text": "Kitani Tatsuya / 春卷饭",
+      "source": "llm"
+    },
+    "香椎モイミ": {
+      "text": "香椎Moimi",
+      "source": "llm"
+    },
+    "gcmstyle（アンメルツP）": {
+      "text": "gcmstyle（AmemitsuP）",
+      "source": "llm"
+    },
+    "ワンダフル☆オポチュニティ！": {
+      "text": "Wonderful☆Opportunity!",
+      "source": "llm"
+    },
+    "ゆちゃP": {
+      "text": "YuchaP",
+      "source": "llm"
+    },
+    "ビートまりお×まろん、東京アクティブNEETs": {
+      "text": "Beat Mario×Maron、Tokyo Active NEETs",
+      "source": "llm"
+    },
+    "やいり": {
+      "text": "Yairi",
+      "source": "llm"
+    },
+    "マイキP": {
+      "text": "MaikiP",
+      "source": "llm"
+    },
+    "無力P": {
+      "text": "无力P",
+      "source": "llm"
+    },
+    "とあ": {
+      "text": "Toa",
+      "source": "llm"
+    },
+    "羽生まゐご": {
+      "text": "羽生迷子",
+      "source": "llm"
+    },
+    "ユリイ・カノン": {
+      "text": "Yurii Canon",
+      "source": "llm"
+    },
+    "薄塩指数": {
+      "text": "薄盐指数",
+      "source": "llm"
+    },
+    "みきとP": {
+      "text": "MikitoP",
+      "source": "llm"
+    },
+    "せきこみごはん": {
+      "text": "Sekikomigohan",
+      "source": "llm"
+    },
+    "藤原ハガネ": {
+      "text": "藤原Hagane",
+      "source": "llm"
+    },
+    "水野あつ": {
+      "text": "水野Atsu",
+      "source": "llm"
+    },
+    "すこっぷ": {
+      "text": "Scop",
+      "source": "llm"
+    },
+    "ど～ぱみん": {
+      "text": "Dopamine",
+      "source": "llm"
+    },
+    "市瀬るぽ": {
+      "text": "市濑Lupo",
+      "source": "llm"
+    },
+    "ピノキオピー": {
+      "text": "PinocchioP",
+      "source": "llm"
+    },
+    "hinayukki@仕事してP": {
+      "text": "hinayukki@工作吧P",
+      "source": "llm"
+    },
+    "亜沙": {
+      "text": "亚沙",
+      "source": "llm"
+    },
+    "月詠み": {
+      "text": "月咏",
+      "source": "llm"
+    },
+    "キタニタツヤ": {
+      "text": "木谷龙也",
+      "source": "llm"
+    },
+    "有形ランペイジ": {
+      "text": "有形Rampage",
+      "source": "llm"
+    },
+    "赤乃わい": {
+      "text": "赤乃Wai",
+      "source": "llm"
+    },
+    "水野あつ、雪乃イト": {
+      "text": "水野Atsu、雪乃Ito",
+      "source": "llm"
+    },
+    "ハチ": {
+      "text": "Hachi",
+      "source": "llm"
+    },
+    "バルーン": {
+      "text": "Balloon",
+      "source": "llm"
+    },
+    "有機酸": {
+      "text": "有机酸",
+      "source": "llm"
+    },
+    "オゾン": {
+      "text": "Ozone",
+      "source": "llm"
+    },
+    "和田たけあき": {
+      "text": "和田武明",
+      "source": "llm"
+    },
+    "ビートまりお×まろん、夕野ヨシミ (IOSYS)": {
+      "text": "ビートまりお×まろん、夕野良美 (IOSYS)",
+      "source": "llm"
+    },
+    "Rockwell ": {
+      "text": "Rockwell",
+      "source": "llm"
+    },
+    "吉田ヨシユキ": {
+      "text": "吉田良行",
+      "source": "llm"
+    },
+    "ピコン": {
+      "text": "Pikon",
+      "source": "llm"
+    },
+    "ゴジマジＰ": {
+      "text": "Gojimaji P",
+      "source": "llm"
+    },
+    "れをる": {
+      "text": "Reol",
+      "source": "llm"
+    },
+    "黒うさ": {
+      "text": "黑兔",
+      "source": "llm"
+    },
+    "目黒将司": {
+      "text": "目黑将司",
+      "source": "llm"
+    },
+    "カンザキイオリ": {
+      "text": "神崎伊织",
+      "source": "llm"
+    },
+    "瀬名航": {
+      "text": "濑名航",
+      "source": "llm"
+    },
+    "まらしぃ＆じん": {
+      "text": "marasy＆jin",
+      "source": "llm"
+    },
+    "ビートまりお×まろん": {
+      "text": "Beat Mario×Maron",
+      "source": "llm"
+    },
+    "古川本舗": {
+      "text": "古川本铺",
+      "source": "llm"
+    },
+    "雪乃イト": {
+      "text": "雪乃Ito",
+      "source": "llm"
+    },
+    "打打だいず": {
+      "text": "打打Daizu",
+      "source": "llm"
+    },
+    "ナナホシ管弦楽団": {
+      "text": "七星管弦乐团",
+      "source": "llm"
+    },
+    "sasakure.UK(Key 岸田勇気(有形ランペイジ))": {
+      "text": "sasakure.UK (Key 岸田勇气 (有形Rampage))",
+      "source": "llm"
+    },
+    "晴いちばん": {
+      "text": "晴Ichiban",
+      "source": "llm"
+    },
+    "マツシタレオ": {
+      "text": "松下怜央",
+      "source": "llm"
+    },
+    "シアン・キノ": {
+      "text": "Cyan Kino",
+      "source": "llm"
+    },
+    "斜め上P": {
+      "text": "斜上P",
+      "source": "llm"
+    },
+    "南ノ南": {
+      "text": "南之南",
+      "source": "llm"
+    },
+    "烏屋茶房": {
+      "text": "乌屋茶房",
+      "source": "llm"
+    },
+    "YASUHIRO(康寛)": {
+      "text": "YASUHIRO(康宽)",
+      "source": "llm"
+    },
+    "ササノマリイ": {
+      "text": "sasanomaly",
+      "source": "llm"
+    },
+    "こめだわら×R Sound Design": {
+      "text": "Komedawara × R Sound Design",
+      "source": "llm"
+    },
+    "シノ": {
+      "text": "Shino",
+      "source": "llm"
+    },
+    "遼遼": {
+      "text": "辽辽",
+      "source": "llm"
+    },
+    "いるかアイス": {
+      "text": "Iruka Ice",
+      "source": "llm"
+    },
+    "柊マグネタイト / C'Na": {
+      "text": "柊Magnetite / C'Na",
+      "source": "llm"
+    },
+    "獅子志司": {
+      "text": "狮子志司",
+      "source": "llm"
+    },
+    "ラマーズＰ": {
+      "text": "LamazeP",
+      "source": "llm"
+    },
+    "フユウ": {
+      "text": "Fuyuu",
+      "source": "llm"
+    },
+    "なきそ": {
+      "text": "Nakiso",
+      "source": "llm"
+    },
+    "ぽりふぉ": {
+      "text": "Polypho",
+      "source": "llm"
+    },
+    "平田義久": {
+      "text": "平田义久",
+      "source": "llm"
+    },
+    "Dios/シグナルP": {
+      "text": "Dios/SignalP",
+      "source": "llm"
+    },
+    "針原翼（はりーP）": {
+      "text": "针原翼（HarryP）",
+      "source": "llm"
+    },
+    "ビートまりお×まろん、ARM (IOSYS)": {
+      "text": "beatMARIO×maron、ARM (IOSYS)",
+      "source": "llm"
+    },
+    "和田たけあき(くらげP)": {
+      "text": "和田Takeaki（KurageP）",
+      "source": "llm"
+    },
+    "なきゃむりゃ": {
+      "text": "Nakyamurya",
+      "source": "llm"
+    },
+    "ゆうゆ": {
+      "text": "Yuuyu",
+      "source": "llm"
+    },
+    "ひとしずく×やま△": {
+      "text": "Hitoshizuku×Yama△",
+      "source": "llm"
+    },
+    "渡辺拓也": {
+      "text": "渡边拓也",
+      "source": "llm"
+    },
+    "じん": {
+      "text": "Jin",
+      "source": "llm"
+    },
+    "ガルナ（オワタP）": {
+      "text": "Garuna（Owata-P）",
+      "source": "llm"
+    },
+    "かいりきベア": {
+      "text": "Kairiki Bear",
+      "source": "llm"
+    },
+    "まらしぃ、堀江晶太(kemu)": {
+      "text": "marasy、堀江晶太(kemu)",
+      "source": "llm"
+    },
+    "きさら": {
+      "text": "Kisara",
+      "source": "llm"
+    },
+    "トーマ": {
+      "text": "Tohma",
+      "source": "llm"
+    },
+    "tepe (OTOIRO) ": {
+      "text": "tepe (OTOIRO)",
+      "source": "llm"
+    },
+    "堀江 晶太(kemu)": {
+      "text": "堀江晶太(kemu)",
+      "source": "llm"
+    },
+    "夏代孝明・渡辺拓也": {
+      "text": "夏代孝明・渡边拓也",
+      "source": "llm"
+    },
+    "宮守文学": {
+      "text": "宫守文学",
+      "source": "llm"
+    },
+    "sasakure.UK(Gt 佐々木秀尚 Ba 二家本亮介(有形ランペイジ))": {
+      "text": "sasakure.UK(Gt 佐佐木秀尚 Ba 二家本亮介(有形RAMPAGE))",
+      "source": "llm"
+    },
+    "葵木ゴウ": {
+      "text": "葵木Gou",
+      "source": "llm"
+    },
+    "黒魔": {
+      "text": "黑魔",
+      "source": "llm"
+    },
+    "TOKOTOKO（西沢さんP）": {
+      "text": "TOKOTOKO（西泽P）",
+      "source": "llm"
+    },
+    "クワガタP": {
+      "text": "KuwagataP",
+      "source": "llm"
+    }
+  },
+  "vocalCaption": {
+    "「劇場版プロジェクトセカイ」ver.": {
+      "text": "《剧场版 Project SEKAI》ver.",
+      "source": "llm"
+    },
+    "25時、ナイトコードで。ver.": {
+      "text": "25时，在夜之代码。ver.",
+      "source": "llm"
+    },
+    "コネクトライブ(DAY2昼)ver.": {
+      "text": "Connect Live (DAY2 午场) ver.",
+      "source": "llm"
+    },
+    "コネクトライブver.": {
+      "text": "Connect Live ver.",
+      "source": "llm"
+    },
+    "あんさんぶるスターズ！！コラボver.": {
+      "text": "《偶像梦幻祭！！》联动 ver.",
+      "source": "llm"
+    },
+    "Inst.ver.": {
+      "text": "Inst. ver.",
+      "source": "llm"
+    },
+    "アナザーボーカルver.": {
+      "text": "Another Vocal ver.",
+      "source": "llm"
+    },
+    "コネクトライブ(DAY1夜)ver.": {
+      "text": "Connect Live (DAY1 夜场) ver.",
+      "source": "llm"
+    },
+    "セカイver.": {
+      "text": "SEKAI ver.",
+      "source": "llm"
+    },
+    "エイプリルフールver.": {
+      "text": "愚人节 ver.",
+      "source": "llm"
+    },
+    "ワンダーランズ×ショウタイム ver.": {
+      "text": "Wonderlands×Showtime ver.",
+      "source": "llm"
+    },
+    "バーチャル・シンガーver.": {
+      "text": "虚拟歌手 ver.",
+      "source": "llm"
+    },
+    "コネクトライブ(DAY1昼)ver.": {
+      "text": "Connect Live (DAY1 午场) ver.",
+      "source": "llm"
+    },
+    "コネクトライブ(DAY2夜)ver.": {
+      "text": "Connect Live (DAY2 夜场) ver.",
+      "source": "llm"
+    }
+  }
+}

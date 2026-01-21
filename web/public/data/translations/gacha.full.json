@@ -1,0 +1,2460 @@
+{
+  "name": {
+    "リリース記念ガチャ": {
+      "text": "「世界」开放庆典招募",
+      "source": "cn"
+    },
+    "★3以上確定チケットガチャ": {
+      "text": "必中★3以上票券招募",
+      "source": "cn"
+    },
+    "バーチャル・シンガー限定ガチャ": {
+      "text": "虚拟歌手限定招募",
+      "source": "cn"
+    },
+    "星降る夜空の思い出ガチャ": {
+      "text": "星辰降落的夜空回憶招募",
+      "source": "cn"
+    },
+    "人形達の舞踏会ガチャ": {
+      "text": "[限定1次] 人偶們的舞會招募",
+      "source": "cn"
+    },
+    "ジェントル★ポテトスターガチャ": {
+      "text": "紳士★馬鈴薯之星招募",
+      "source": "cn"
+    },
+    "[1回限定]ジェントル★ポテトスターガチャ": {
+      "text": "[限定1次] 紳士★馬鈴薯之星招募",
+      "source": "cn"
+    },
+    "イベントメンバー出現率UPガチャ": {
+      "text": "活動成員出現率UP招募",
+      "source": "cn"
+    },
+    "げんきはつらつ♪応援団ガチャ": {
+      "text": "元氣滿滿♪應援團招募",
+      "source": "cn"
+    },
+    "[1回限定]げんきはつらつ♪応援団ガチャ": {
+      "text": "[限定1次] 元氣滿滿♪應援團招募",
+      "source": "cn"
+    },
+    "MORE MORE SMILE！ガチャ": {
+      "text": "MORE MORE SMILE！招募",
+      "source": "cn"
+    },
+    "[1回限定]MORE MORE SMILE！ガチャ": {
+      "text": "[限定1次] MORE MORE SMILE！招募",
+      "source": "cn"
+    },
+    "250万人突破記念★4メンバー1人確定ガチャ": {
+      "text": "250萬人突破紀念★4成員必中1人招募",
+      "source": "cn"
+    },
+    "初心者応援スタートダッシュガチャ": {
+      "text": "新手應援起跑衝刺招募",
+      "source": "cn"
+    },
+    "レベル1の相棒ガチャ": {
+      "text": "等級1的夥伴招募",
+      "source": "cn"
+    },
+    "[1回限定]レベル1の相棒ガチャ": {
+      "text": "[限定1次] 等級1的夥伴招募",
+      "source": "cn"
+    },
+    "ハイスクールカーニバルガチャ": {
+      "text": "高中嘉年華招募",
+      "source": "cn"
+    },
+    "[1回限定]ハイスクールカーニバルガチャ": {
+      "text": "[限定1次] 高中嘉年華招募",
+      "source": "cn"
+    },
+    "ワンダーキャロルガチャ": {
+      "text": "奇幻頌歌招募",
+      "source": "cn"
+    },
+    "[1回限定]ワンダーキャロルガチャ": {
+      "text": "[限定1次] 奇幻頌歌招募",
+      "source": "cn"
+    },
+    "セカイのワクワクお正月ガチャ": {
+      "text": "「世界」的興奮雀躍新年招募",
+      "source": "cn"
+    },
+    "[1回限定]セカイのワクワクお正月ガチャ": {
+      "text": "[限定1次] 「世界」的興奮雀躍新年招募",
+      "source": "cn"
+    },
+    "新春1日1回限定！10連無料ガチャ": {
+      "text": "新年1天限定1次！10連免費招募",
+      "source": "cn"
+    },
+    "小さな勇気、大きな一歩ガチャ": {
+      "text": "小小的勇氣，大大的一步招募",
+      "source": "cn"
+    },
+    "雨降って、虹煌めくガチャ": {
+      "text": "雨後閃耀的彩虹招募",
+      "source": "cn"
+    },
+    "クラシカルメモリーガチャ": {
+      "text": "古典回憶招募",
+      "source": "cn"
+    },
+    "Rockin'Paradeガチャ": {
+      "text": "Rockin'Parade招募",
+      "source": "cn"
+    },
+    "光差すキャンバスガチャ": {
+      "text": "光芒映射的畫布招募",
+      "source": "cn"
+    },
+    "セレクトリストガチャ": {
+      "text": "自选清单招募",
+      "source": "cn"
+    },
+    "天翔けるハッピーひな祭り☆ガチャ": {
+      "text": "天空飛翔的快樂女兒節☆招募",
+      "source": "cn"
+    },
+    "ここから羽ばたく天使ガチャ": {
+      "text": "從這裡展翅的天使招募",
+      "source": "cn"
+    },
+    "ハーフアニバーサリー記念カラフルフェスティバルガチャ": {
+      "text": "開服半年紀念七彩慶典招募",
+      "source": "cn"
+    },
+    "[1回限定]ハーフアニバーサリー記念カラフルフェスティバルガチャ": {
+      "text": "[限定1次]開服半年紀念七彩慶典招募",
+      "source": "cn"
+    },
+    "君と出会う桜の道ガチャ": {
+      "text": "與妳相遇的櫻花道招募",
+      "source": "cn"
+    },
+    "秘密のドレスルームガチャ": {
+      "text": "秘密的更衣間招募",
+      "source": "cn"
+    },
+    "4=1ガチャ": {
+      "text": "4=1招募",
+      "source": "cn"
+    },
+    "フォレストフェアリーガチャ": {
+      "text": "森林妖精招募",
+      "source": "cn"
+    },
+    "ペンギンカフェへようこそ♪ガチャ": {
+      "text": "歡迎來到企鵝咖啡廳♪招募",
+      "source": "cn"
+    },
+    "★4メンバー1人確定ガチャ": {
+      "text": "必中1名★4以上成員招募",
+      "source": "cn"
+    },
+    "メモリーズ・メロディーガチャ": {
+      "text": "回憶的旋律招募",
+      "source": "cn"
+    },
+    "虹色ハーモニーガチャ": {
+      "text": "七色彩虹和聲招募",
+      "source": "cn"
+    },
+    "みんなでEnjoy Summer！ガチャ": {
+      "text": "[回响]大家一起EnjoySummer！招募",
+      "source": "cn"
+    },
+    "月夜の晩のシスター・ラビッツガチャ": {
+      "text": "[回响]月色下的兔子姐妹招募",
+      "source": "cn"
+    },
+    "[1周年記念]10連無料ガチャ": {
+      "text": "[1週年紀念]10連免費招募",
+      "source": "cn"
+    },
+    "[桐谷遥]HAPPY BIRTHDAYガチャ": {
+      "text": "[桐谷遙]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "Break The Fence！ガチャ": {
+      "text": "Break The Fence!招募",
+      "source": "cn"
+    },
+    "錬金術師のリバイバルガチャ": {
+      "text": "鍊金術師的復興招募",
+      "source": "cn"
+    },
+    "イベントメンバーガチャ": {
+      "text": "活動成員招募",
+      "source": "cn"
+    },
+    "[望月穂波]HAPPY BIRTHDAYガチャ": {
+      "text": "[望月穗波]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "さすらう隠者の道程ガチャ": {
+      "text": "[回响]彷徨的隐士之路招募",
+      "source": "cn"
+    },
+    "[MEIKO]HAPPY ANNIVERSARYガチャ": {
+      "text": "[MEIKO]HAPPY ANNIVERSARY招募",
+      "source": "cn"
+    },
+    "初心者応援メモリアルセレクトガチャ": {
+      "text": "新手应援纪念自选招募",
+      "source": "cn"
+    },
+    "想いを言葉にKindness Heartガチャ": {
+      "text": "將心願化為言語Kindness Heart招募",
+      "source": "cn"
+    },
+    "[東雲彰人]HAPPY BIRTHDAYガチャ": {
+      "text": "[東雲彰人]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "秘密のイルミネーションガチャ": {
+      "text": "秘密的燈海招募",
+      "source": "cn"
+    },
+    "重なる想いWords Snowガチャ": {
+      "text": "[回响]重合的心愿Words Snow招募",
+      "source": "cn"
+    },
+    "[日野森雫]HAPPY BIRTHDAYガチャ": {
+      "text": "[日野森雫]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "聖夜のチェックメイトガチャ": {
+      "text": "平安夜的Checkmate招募",
+      "source": "cn"
+    },
+    "[2022新春]カラフルフェスティバルガチャ": {
+      "text": "[2023新年]七彩慶典招募",
+      "source": "cn"
+    },
+    "願う新春の乙女ガチャ": {
+      "text": "[回响]新年祈愿的少女招募",
+      "source": "cn"
+    },
+    "[2022新春]10連無料ガチャ": {
+      "text": "[2023新年]10連免費招募",
+      "source": "cn"
+    },
+    "[日野森志歩]HAPPY BIRTHDAYガチャ": {
+      "text": "[日野森志步]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "夢もリアルも！まぜまぜポッピンガチャ": {
+      "text": "把夢想跟現實都混合攪攪彈跳！招募",
+      "source": "cn"
+    },
+    "静寂に響くオーバーチュアガチャ": {
+      "text": "在寂靜中迴盪的序曲招募",
+      "source": "cn"
+    },
+    "[KAITO]HAPPY ANNIVERSARYガチャ": {
+      "text": "[KAITO]HAPPY ANNIVERSARY招募",
+      "source": "cn"
+    },
+    "Journey with Uガチャ": {
+      "text": "Journey with U招募",
+      "source": "cn"
+    },
+    "魔法をかけて！ウィッチクラフトガチャ": {
+      "text": "施予魔法！Witch Craft 招募",
+      "source": "cn"
+    },
+    "[桃井愛莉]HAPPY BIRTHDAYガチャ": {
+      "text": "[桃井愛莉]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "滲む色彩に溺れてガチャ": {
+      "text": "淹沒在斑駁色彩招募",
+      "source": "cn"
+    },
+    "ミクの日お祝いキャンペーンガチャ": {
+      "text": "慶祝初音未來日活動招募",
+      "source": "cn"
+    },
+    "とびだせ絵本の役者達ガチャ": {
+      "text": "跳出繪本的演員們招募",
+      "source": "cn"
+    },
+    "[花里みのり]HAPPY BIRTHDAYガチャ": {
+      "text": "[花里實乃理]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "きらめく銀河の星屑ガチャ": {
+      "text": "閃亮銀河的星塵招募",
+      "source": "cn"
+    },
+    "[東雲絵名]HAPPY BIRTHDAYガチャ": {
+      "text": "[東雲繪名]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "君に叫ぶ青き声ガチャ": {
+      "text": "[回响]向你呼喊的蓝色之声招募",
+      "source": "cn"
+    },
+    "[天馬咲希]HAPPY BIRTHDAYガチャ": {
+      "text": "[天馬咲希]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "聡き者達の企謀ガチャ": {
+      "text": "智者們的謀劃招募",
+      "source": "cn"
+    },
+    "[復刻]ふわふわ☆ドリームランドガチャ": {
+      "text": "[回响]如梦似幻☆梦境般的乐园招募",
+      "source": "cn"
+    },
+    "[天馬司]HAPPY BIRTHDAYガチャ": {
+      "text": "[天馬司]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "AIM FOR LEGENDガチャ": {
+      "text": "AIM FOR LEGEND招募",
+      "source": "cn"
+    },
+    "[青柳冬弥]HAPPY BIRTHDAYガチャ": {
+      "text": "[青柳冬彌]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "Nursing my ESガチャ": {
+      "text": "Nursing my ES招募",
+      "source": "cn"
+    },
+    "[復刻]共に歩むクルーガチャ": {
+      "text": "[回响]共经风雨的战友招募",
+      "source": "cn"
+    },
+    "魅惑のトロピカルリゾートガチャ": {
+      "text": "誘人的熱帶度假村招募",
+      "source": "cn"
+    },
+    "[神代類]HAPPY BIRTHDAYガチャ": {
+      "text": "[神代類]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "沈みゆくadolescenceガチャ": {
+      "text": "沉沒的adolescence招募",
+      "source": "cn"
+    },
+    "ハピネスパッケージガチャ": {
+      "text": "欢乐礼物包招募",
+      "source": "cn"
+    },
+    "[星乃一歌]HAPPY BIRTHDAYガチャ": {
+      "text": "[星乃一歌]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "水辺に咲く可憐な花ガチャ": {
+      "text": "水邊綻放的令人愛憐之花招募",
+      "source": "cn"
+    },
+    "[復刻]みんなでEnjoy Summer！ガチャ": {
+      "text": "[回响]大家一起Enjoy Summer！招募",
+      "source": "cn"
+    },
+    "微睡みにたゆたう夜明けガチャ": {
+      "text": "在沉睡中漂流的黎明招募",
+      "source": "cn"
+    },
+    "[暁山瑞希]HAPPY BIRTHDAYガチャ": {
+      "text": "[曉山瑞希]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "[初音ミク]HAPPY ANNIVERSARYガチャ": {
+      "text": "[初音未來]HAPPY ANNIVERSARY招募",
+      "source": "cn"
+    },
+    "Before the stormガチャ": {
+      "text": "[回响]Before the storm招募",
+      "source": "cn"
+    },
+    "[鳳えむ]HAPPY BIRTHDAYガチャ": {
+      "text": "[鳳笑夢]HAPPY BIRTHDAY招募",
+      "source": "cn"
+    },
+    "Colorful Paintガチャ": {
+      "text": "Colorful Paint招募",
+      "source": "cn"
+    },
+    "[復刻]月夜の晩のシスター・ラビッツガチャ": {
+      "text": "[回响]月色下的兔子姐妹招募",
+      "source": "cn"
+    },
+    "From on a perchガチャ": {
+      "text": "From on a perch招募",
+      "source": "cn"
+    },
+    "[2周年記念]メモリアルセレクトガチャ": {
+      "text": "[2週年]紀念選擇招募",
+      "source": "cn"
+    },
+    "[2周年記念][バーチャル・シンガー]プレミアムプレゼントガチャ": {
+      "text": "[2週年]虛擬歌手 高級禮物招募",
+      "source": "cn"
+    },
+    "[2周年記念][Leo/need]プレミアムプレゼントガチャ": {
+      "text": "[2週年]Leo/need 高級禮物招募",
+      "source": "cn"
+    },
+    "[2周年記念][MORE MORE JUMP！]プレミアムプレゼントガチャ": {
+      "text": "[2週年]MORE MORE JUMP！高級禮物招募",
+      "source": "cn"
+    },
+    "[2周年記念][Vivid BAD SQUAD]プレミアムプレゼントガチャ": {
+      "text": "[2週年]Vivid BAD SQUAD 高級禮物招募",
+      "source": "cn"
+    },
+    "[2周年記念][ワンダーランズ×ショウタイム]プレミアムプレゼントガチャ": {
+      "text": "[2週年]Wonderlands×Showtime高級禮物招募",
+      "source": "cn"
+    },
+    "[2周年記念][25時、ナイトコードで。]プレミアムプレゼントガチャ": {
+      "text": "[2週年]25點，Nightcord見。高級禮物招募",
+      "source": "cn"
+    },
+    "[2周年記念]10連無料ガチャ": {
+      "text": "[2週年]10連免費招募",
+      "source": "cn"
+    },
+    "[桐谷遥]HAPPY BIRTHDAY2022ガチャ": {
+      "text": "[桐谷遙]HAPPY BIRTHDAY2023招募",
+      "source": "cn"
+    },
+    "[復刻][桐谷遥]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][桐谷遥]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "Dreams come trueガチャ": {
+      "text": "Dreams come true招募",
+      "source": "cn"
+    },
+    "クロノスの神殿ガチャ": {
+      "text": "柯羅諾斯的神殿招募",
+      "source": "cn"
+    },
+    "[望月穂波]HAPPY BIRTHDAY2022ガチャ": {
+      "text": "[望月穗波]HAPPY BIRTHDAY2022招募",
+      "source": "cn"
+    },
+    "[復刻][望月穂波]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][望月穗波]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "[MEIKO]HAPPY ANNIVERSARY2022ガチャ": {
+      "text": "[MEIKO]HAPPY ANNIVERSARY2023招募",
+      "source": "cn"
+    },
+    "[復刻][MEIKO]HAPPY ANNIVERSARYガチャ": {
+      "text": "[回响][MEIKO]HAPPY ANNIVERSARY Flower招募",
+      "source": "cn"
+    },
+    "[東雲彰人]HAPPY BIRTHDAY2022ガチャ": {
+      "text": "[東雲彰人]HAPPY BIRTHDAY2023招募",
+      "source": "cn"
+    },
+    "[復刻][東雲彰人]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][东云彰人]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "NEON universeガチャ": {
+      "text": "NEON universe招募",
+      "source": "cn"
+    },
+    "[復刻]さすらう隠者の道程ガチャ": {
+      "text": "[回响]彷徨的隐士之路招募",
+      "source": "cn"
+    },
+    "portray yourselfガチャ": {
+      "text": "portray yourself招募",
+      "source": "cn"
+    },
+    "[日野森雫]HAPPY BIRTHDAY2022ガチャ": {
+      "text": "[日野森雫]HAPPY BIRTHDAY2023招募",
+      "source": "cn"
+    },
+    "[復刻][日野森雫]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][日野森雫]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "Break the Chainガチャ": {
+      "text": "Break the Chain招募",
+      "source": "cn"
+    },
+    "[復刻]重なる想いWords Snowガチャ": {
+      "text": "[回响]重合的心愿Words Snow招募",
+      "source": "cn"
+    },
+    "降り立つ慈愛の射手ガチャ": {
+      "text": "降臨慈愛的射手招募",
+      "source": "cn"
+    },
+    "[鏡音リン]HAPPY ANNIVERSARY2022ガチャ": {
+      "text": "[鏡音鈴]HAPPY ANNIVERSARY2023招募",
+      "source": "cn"
+    },
+    "[復刻][鏡音リン]HAPPY ANNIVERSARYガチャ": {
+      "text": "[回响][镜音铃]HAPPY ANNIVERSARY Flower招募",
+      "source": "cn"
+    },
+    "[鏡音レン]HAPPY ANNIVERSARY2022ガチャ": {
+      "text": "[鏡音連]HAPPY ANNIVERSARY2023招募",
+      "source": "cn"
+    },
+    "[復刻][鏡音レン]HAPPY ANNIVERSARYガチャ": {
+      "text": "[回响][镜音连]HAPPY ANNIVERSARY Flower招募",
+      "source": "cn"
+    },
+    "[2023新春]10連無料ガチャ": {
+      "text": "[百日庆典]10连免费招募",
+      "source": "cn"
+    },
+    "[日野森志歩]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[日野森志步]HAPPY BIRTHDAY2024招募",
+      "source": "cn"
+    },
+    "[復刻][日野森志歩]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][日野森志步]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "またたく夜空のMilky Wayガチャ": {
+      "text": "閃亮夜空的Milky Way招募",
+      "source": "cn"
+    },
+    "[復刻]願う新春の乙女ガチャ": {
+      "text": "[回响]新年祈愿的少女招募",
+      "source": "cn"
+    },
+    "君のリズムのシンフォニーガチャ": {
+      "text": "你的節奏的交響曲招募",
+      "source": "cn"
+    },
+    "[朝比奈まふゆ]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[朝比奈真冬]HAPPY BIRTHDAY2024招募",
+      "source": "cn"
+    },
+    "[復刻][朝比奈まふゆ]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][朝比奈真冬]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "[巡音ルカ]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[巡音流歌]HAPPY ANNIVERSARY2024招募",
+      "source": "cn"
+    },
+    "[復刻][巡音ルカ]HAPPY ANNIVERSARYガチャ": {
+      "text": "[回响][巡音流歌]HAPPY ANNIVERSARY Flower招募",
+      "source": "cn"
+    },
+    "[宵崎奏]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[宵崎奏]HAPPY BIRTHDAY2024招募",
+      "source": "cn"
+    },
+    "[復刻][宵崎奏]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][宵崎奏]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "雨露したたる春の遣いガチャ": {
+      "text": "雨露滴落春天使者招募",
+      "source": "cn"
+    },
+    "[復刻]シークレット・ティータイムガチャ": {
+      "text": "[回响]Secret Teatime招募",
+      "source": "cn"
+    },
+    "[KAITO]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[KAITO]HAPPY ANNIVERSARY2024招募",
+      "source": "cn"
+    },
+    "[復刻][KAITO]HAPPY ANNIVERSARYガチャ": {
+      "text": "[回响][KAITO]HAPPY ANNIVERSARY Flower招募",
+      "source": "cn"
+    },
+    "Let out the Lambsガチャ": {
+      "text": "Let out the Lambs招募",
+      "source": "cn"
+    },
+    "カラフルパスガチャ": {
+      "text": "缤纷月卡招募",
+      "source": "cn"
+    },
+    "[小豆沢こはね]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[小豆澤心羽]HAPPY BIRTHDAY2024招募",
+      "source": "cn"
+    },
+    "[復刻][小豆沢こはね]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][小豆泽心羽]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "Hidden Circusガチャ": {
+      "text": "Hidden Circus招募",
+      "source": "cn"
+    },
+    "[復刻]ナイツ・オブ・ホワイトガチャ": {
+      "text": "[回响]Knights of White招募",
+      "source": "cn"
+    },
+    "[桃井愛莉]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[桃井愛莉]HAPPY BIRTHDAY2024招募",
+      "source": "cn"
+    },
+    "[復刻][桃井愛莉]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][桃井爱莉]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "毒牙覗く暗影ガチャ": {
+      "text": "毒牙窺探暗影招募",
+      "source": "cn"
+    },
+    "[2.5周年記念]10連無料ガチャ": {
+      "text": "[3900's紀念]10連免費招募",
+      "source": "cn"
+    },
+    "[友達招待]★4メンバー確定ガチャ": {
+      "text": "[邀请朋友]★4成员必出招募",
+      "source": "cn"
+    },
+    "[2.5周年記念]ベストコレクションガチャ": {
+      "text": "[2.5週年紀念]最佳收藏品招募",
+      "source": "cn"
+    },
+    "SPACE COLONYガチャ": {
+      "text": "SPACE COLONY招募",
+      "source": "cn"
+    },
+    "[復刻]春想う、宵の一刻ガチャ": {
+      "text": "[回响]希冀春夜一刻招募",
+      "source": "cn"
+    },
+    "[花里みのり]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[花里實乃理]HAPPY BIRTHDAY2024招募",
+      "source": "cn"
+    },
+    "[復刻][花里みのり]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][花里实乃理]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "進む車輪のその先はガチャ": {
+      "text": "行進車輪的前方招募",
+      "source": "cn"
+    },
+    "[東雲絵名]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[東雲繪名]HAPPY BIRTHDAY2024招募",
+      "source": "cn"
+    },
+    "[復刻][東雲絵名]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][东云绘名]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "Escape from rainガチャ": {
+      "text": "[回响]Escape from rain招募",
+      "source": "cn"
+    },
+    "[天馬咲希]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[天馬咲希]HAPPY BIRTHDAY2024招募",
+      "source": "cn"
+    },
+    "[復刻][天馬咲希]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][天马咲希]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "船出と絆のボン・ボヤージュガチャ": {
+      "text": "出航與情誼的Bon voyage招募",
+      "source": "cn"
+    },
+    "[復刻]君に叫ぶ青き声ガチャ": {
+      "text": "[回响]向你呼喊的蓝色之声招募",
+      "source": "cn"
+    },
+    "[天馬司]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[天馬司]HAPPY BIRTHDAY2024招募",
+      "source": "cn"
+    },
+    "[復刻][天馬司]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][天马司]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "さざ波さらう思い出はガチャ": {
+      "text": "泛起漣漪的回憶是招募",
+      "source": "cn"
+    },
+    "[青柳冬弥]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[青柳冬彌]HAPPY BIRTHDAY2024招募",
+      "source": "cn"
+    },
+    "[復刻][青柳冬弥]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][青柳冬弥]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "永久に響く鐘の音の下でガチャ": {
+      "text": "[回响]在永恒的钟声之下招募",
+      "source": "cn"
+    },
+    "One's Dear Onesガチャ": {
+      "text": "One's Dear Ones招募",
+      "source": "cn"
+    },
+    "[復刻]グレイス・マリアージュガチャ": {
+      "text": "[回响]Grace Marriage招募",
+      "source": "cn"
+    },
+    "想い煌めく宝石箱ガチャ": {
+      "text": "閃閃發光的珠寶盒招募",
+      "source": "cn"
+    },
+    "[神代類]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[神代類]HAPPY BIRTHDAY2024招募",
+      "source": "cn"
+    },
+    "[復刻][神代類]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][神代类]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "妖蔓延る京ガチャ": {
+      "text": "[回响]妖物横行的京都招募",
+      "source": "cn"
+    },
+    "Where is ♡？ガチャ": {
+      "text": "Where is ♡？招募",
+      "source": "cn"
+    },
+    "[復刻]Sporty Girl♡ガチャ": {
+      "text": "[回响]Sporty Girl♡招募",
+      "source": "cn"
+    },
+    "[草薙寧々]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[草薙寧寧]HAPPY BIRTHDAY 2024招募",
+      "source": "cn"
+    },
+    "[復刻][草薙寧々]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][草薙宁宁]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "想いを乗せて、Shooting Star!!ガチャ": {
+      "text": "乘載著心意，Shooting Star!!招募",
+      "source": "cn"
+    },
+    "[白石杏]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[白石杏]HAPPY BIRTHDAY 2024招募",
+      "source": "cn"
+    },
+    "[復刻][白石杏]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][白石杏]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "Repaint My Color!ガチャ": {
+      "text": "Repaint My Color!招募",
+      "source": "cn"
+    },
+    "[星乃一歌]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[星乃一歌]HAPPY BIRTHDAY 2024招募",
+      "source": "cn"
+    },
+    "[復刻][星乃一歌]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][星乃一歌]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "[復刻]CYBER SNIPERガチャ": {
+      "text": "[回响]CYBER SNIPER招募",
+      "source": "cn"
+    },
+    "Never Ending Showtimeガチャ": {
+      "text": "Never Ending Showtime招募",
+      "source": "cn"
+    },
+    "[暁山瑞希]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[曉山瑞希]HAPPY BIRTHDAY 2024招募",
+      "source": "cn"
+    },
+    "[復刻][暁山瑞希]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][晓山瑞希]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "[初音ミク]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[初音未來]HAPPY ANNIVERSARY 2024招募",
+      "source": "cn"
+    },
+    "[復刻][初音ミク]HAPPY ANNIVERSARYガチャ": {
+      "text": "[回响][初音未来]HAPPY ANNIVERSARY Flower招募",
+      "source": "cn"
+    },
+    "想い奏でるマーチングパレードガチャ": {
+      "text": "[回响]奏响心愿的行进乐队巡游招募",
+      "source": "cn"
+    },
+    "[鳳えむ]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[鳳笑夢]HAPPY BIRTHDAY 2024招募",
+      "source": "cn"
+    },
+    "[復刻][鳳えむ]HAPPY BIRTHDAYガチャ": {
+      "text": "[回响][凤笑梦]HAPPY BIRTHDAY Flower招募",
+      "source": "cn"
+    },
+    "青春の1ページガチャ": {
+      "text": "青春的一頁招募",
+      "source": "cn"
+    },
+    "[復刻]Before the stormガチャ": {
+      "text": "[回响]Before the storm招募",
+      "source": "cn"
+    },
+    "Phantom Chaserガチャ": {
+      "text": "Phantom Chaser招募",
+      "source": "cn"
+    },
+    "[3周年直前生放送配信記念]10連無料ガチャ": {
+      "text": "[3周年前夕直播纪念]10连免费招募",
+      "source": "cn"
+    },
+    "[3周年記念]セレクトリストガチャ LIMITED EDITION": {
+      "text": "[测试纪念]自选清单招募 LIMITED EDITION",
+      "source": "cn"
+    },
+    "[3周年記念]メモリアルセレクトガチャ": {
+      "text": "[3周年纪念]纪念自选招募",
+      "source": "cn"
+    },
+    "[3周年記念][バーチャル・シンガー]プレミアムプレゼントガチャ": {
+      "text": "[百日庆典][虚拟歌手]高级礼物招募",
+      "source": "cn"
+    },
+    "[3周年記念][Leo/need]プレミアムプレゼントガチャ": {
+      "text": "[百日庆典][Leo/need]高级礼物招募",
+      "source": "cn"
+    },
+    "[3周年記念][MORE MORE JUMP！]プレミアムプレゼントガチャ": {
+      "text": "[百日庆典][MORE MORE JUMP！]高级礼物招募",
+      "source": "cn"
+    },
+    "[3周年記念][Vivid BAD SQUAD]プレミアムプレゼントガチャ": {
+      "text": "[百日庆典][Vivid BAD SQUAD]高级礼物招募",
+      "source": "cn"
+    },
+    "[3周年記念][ワンダーランズ×ショウタイム]プレミアムプレゼントガチャ": {
+      "text": "[百日庆典][Wonderlands×Showtime]高级礼物招募",
+      "source": "cn"
+    },
+    "[3周年記念][25時、ナイトコードで。]プレミアムプレゼントガチャ": {
+      "text": "[百日庆典][25点，Nightcord见。]高级礼物招募",
+      "source": "cn"
+    },
+    "[3周年記念]10連無料ガチャ": {
+      "text": "[「世界」开放庆典]10连免费招募",
+      "source": "cn"
+    },
+    "[3周年記念]カラフルフェスティバルガチャ ドリームピック": {
+      "text": "[世界开放庆典]缤纷节日招募 梦幻Pick",
+      "source": "cn"
+    },
+    "Grow up with me！ガチャ": {
+      "text": "Grow up with me！招募",
+      "source": "cn"
+    },
+    "[初心者応援]★4メンバー1人確定10連チケットガチャ": {
+      "text": "[新手应援]必定获得1名★4成员10连招募券招募",
+      "source": "cn"
+    },
+    "秋宵深まる黄昏時にガチャ": {
+      "text": "[回响]秋意渐深的黄昏招募",
+      "source": "cn"
+    },
+    "[25時、ナイトコードで。] ワールドリンクイベントサポートガチャ": {
+      "text": "[25点，Nightcord见。]连接世界活动支援招募",
+      "source": "cn"
+    },
+    "Heart in Waterガチャ": {
+      "text": "Heart in Water招募",
+      "source": "cn"
+    },
+    "[復刻]Spooky Forestガチャ": {
+      "text": "[回响]Spooky Forest招募",
+      "source": "cn"
+    },
+    "華の都へご招待ガチャ": {
+      "text": "[回响]欢迎来到花之城招募",
+      "source": "cn"
+    },
+    "[復刻]スクランブル・フラワーガチャ": {
+      "text": "[回响]缤纷之花招募",
+      "source": "cn"
+    },
+    "[復刻]ロマンティックブライドガチャ": {
+      "text": "[回响]浪漫新娘招募",
+      "source": "cn"
+    },
+    "[Vivid BAD SQUAD] ワールドリンクイベントサポートガチャ": {
+      "text": "[Vivid BAD SQUAD] 连接世界活动支援招募",
+      "source": "cn"
+    },
+    "新春・咲き誇る魅惑の華ガチャ": {
+      "text": "[回响]新年·盛放的魅力之花招募",
+      "source": "cn"
+    },
+    "Here comes challenger!ガチャ": {
+      "text": "Here comes challenger!招募",
+      "source": "cn"
+    },
+    "[復刻]神獣たちの年始ガチャ": {
+      "text": "[回响]神兽们的新年招募",
+      "source": "cn"
+    },
+    "フォトジェニック♡バレンタインガチャ": {
+      "text": "[回响]上镜♡情人节招募",
+      "source": "cn"
+    },
+    "[復刻]Sweet Cute Valentine！ガチャ": {
+      "text": "[回响]Sweet Cute Valentine！招募",
+      "source": "cn"
+    },
+    "戦の果てに待つものはガチャ": {
+      "text": "[回响]战斗过后，等待着的是招募",
+      "source": "cn"
+    },
+    "[ワンダーランズ×ショウタイム] ワールドリンクイベントサポートガチャ": {
+      "text": "[Wonderlands×Showtime]连接世界活动支援招募",
+      "source": "cn"
+    },
+    "Crown of Suitガチャ": {
+      "text": "Crown of Suit招募",
+      "source": "cn"
+    },
+    "Roots in the snowガチャ": {
+      "text": "Roots in the snow招募",
+      "source": "cn"
+    },
+    "Play with dogsガチャ": {
+      "text": "Play with dogs招募",
+      "source": "cn"
+    },
+    "Drawing Bloomingガチャ": {
+      "text": "Drawing Blooming招募",
+      "source": "cn"
+    },
+    "[復刻]ひらひらたゆたう乙女ガチャ": {
+      "text": "[回响]飘逸灵动的少女招募",
+      "source": "cn"
+    },
+    "[花里みのり]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[花里实乃理]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][花里みのり]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][花里实乃理]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "Not Overlap Soundsガチャ": {
+      "text": "Not Overlap Sounds招募",
+      "source": "cn"
+    },
+    "[東雲絵名]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[东云绘名]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][東雲絵名]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][东云绘名]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "Eternal Boutガチャ": {
+      "text": "Eternal Bout招募",
+      "source": "cn"
+    },
+    "[MORE MORE JUMP！] ワールドリンクイベントサポートガチャ": {
+      "text": "[MORE MORE JUMP！] 连接世界活动支援招募",
+      "source": "cn"
+    },
+    "[天馬咲希]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[天马咲希]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][天馬咲希]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][天马咲希]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "とびっきりをあげちゃうよ！ガチャ": {
+      "text": "为你献上最棒的哦！招募",
+      "source": "cn"
+    },
+    "[天馬司]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[天马司]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][天馬司]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][天马司]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "未知との遭遇！？cosmic operaガチャ": {
+      "text": "接触未知？！cosmic opera招募",
+      "source": "cn"
+    },
+    "[青柳冬弥]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[青柳冬弥]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][青柳冬弥]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][青柳冬弥]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "in my fairy taleガチャ": {
+      "text": "in myfairy tale招募",
+      "source": "cn"
+    },
+    "going upstairsガチャ": {
+      "text": "going upstairs招募",
+      "source": "cn"
+    },
+    "[復刻]Darkness Festaガチャ": {
+      "text": "[回响]Darkness Festa招募",
+      "source": "cn"
+    },
+    "[RESONANCE BEATS!! 開催記念] プレミアムプレゼントガチャ Leo/need EDITION": {
+      "text": "[RESONANCE BEATS!!举办纪念] 高级礼物招募 Leo/need EDITION",
+      "source": "cn"
+    },
+    "[RESONANCE BEATS!! 開催記念] プレミアムプレゼントガチャ Vivid BAD SQUAD EDITION": {
+      "text": "[RESONANCE BEATS!!举办纪念] 高级礼物招募 Vivid BAD SQUAD EDITION",
+      "source": "cn"
+    },
+    "Reknit Relationガチャ": {
+      "text": "Reknit Relation招募",
+      "source": "cn"
+    },
+    "[神代類]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[神代类]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][神代類]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][神代类]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "ブルームフェスティバルガチャ": {
+      "text": "绚烂节日招募",
+      "source": "cn"
+    },
+    "The Party Of Blast!!ガチャ": {
+      "text": "The Party Of Blast!!招募",
+      "source": "cn"
+    },
+    "悪を討て、成敗請負人ガチャ": {
+      "text": "惩奸除恶，正义审判者招募",
+      "source": "cn"
+    },
+    "[Leo/need] ワールドリンクイベントサポートガチャ": {
+      "text": "[Leo/need] 连接世界活动支援招募",
+      "source": "cn"
+    },
+    "青春アッセンブル！ガチャ": {
+      "text": "青春Assemble！招募",
+      "source": "cn"
+    },
+    "[草薙寧々]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[草薙宁宁]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][草薙寧々]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][草薙宁宁]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "[白石杏]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[白石杏]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][白石杏]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][白石杏]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "あなたに届け♡Live Streamingガチャ": {
+      "text": "传递给你♡Live Streaming招募",
+      "source": "cn"
+    },
+    "青の世界の音楽隊ガチャ": {
+      "text": "湛蓝世界的乐队招募",
+      "source": "cn"
+    },
+    "[バーチャル・シンガー]ワールドリンクイベントサポートガチャ": {
+      "text": "[虚拟歌手]连接世界活动支援招募",
+      "source": "cn"
+    },
+    "[星乃一歌]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[星乃一歌]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][星乃一歌]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][星乃一歌]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "[復刻]Welcome to diner!!ガチャ": {
+      "text": "[回响]Welcome to diner!!招募",
+      "source": "cn"
+    },
+    "Melody of Wishesガチャ": {
+      "text": "Melody of Wishes招募",
+      "source": "cn"
+    },
+    "[暁山瑞希]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[晓山瑞希]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][暁山瑞希]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][晓山瑞希]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "リコレクションフェスティバルガチャ": {
+      "text": "Recollection Festival招募",
+      "source": "cn"
+    },
+    "[マジカルミライ2024]プレミアムプレゼントガチャ": {
+      "text": "[魔法未来2024]高级礼物招募",
+      "source": "cn"
+    },
+    "[初音ミク]HAPPY ANNIVERSARY2024ガチャ": {
+      "text": "[初音未来]HAPPY ANNIVERSARY2025招募",
+      "source": "cn"
+    },
+    "[復刻][初音ミク]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[回响][初音未来]HAPPY ANNIVERSARY Stamp招募",
+      "source": "cn"
+    },
+    "とってもおばけなバケーション！ガチャ": {
+      "text": "非常鬼怪的假期！招募",
+      "source": "cn"
+    },
+    "[鳳えむ]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[凤笑梦]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][鳳えむ]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][凤笑梦]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "SUPREME SPORTYガチャ": {
+      "text": "SUPREME SPORTY招募",
+      "source": "cn"
+    },
+    "[復刻]Imperial Soldiersガチャ": {
+      "text": "[回响]Imperial Soldiers招募",
+      "source": "cn"
+    },
+    "Me and my divaガチャ": {
+      "text": "Me and my diva招募",
+      "source": "cn"
+    },
+    "4周年前夜祭スペシャルプライズガチャ": {
+      "text": "半周年前夜庆典Special Prize招募",
+      "source": "cn"
+    },
+    "ミッションガチャ": {
+      "text": "任务招募",
+      "source": "cn"
+    },
+    "[4周年記念]ブルームフェスティバルガチャ ドリームピック": {
+      "text": "[半周年纪念]绚烂节日招募 梦幻Pick",
+      "source": "cn"
+    },
+    "[4周年記念][バーチャル・シンガー]プレミアムプレゼントガチャ": {
+      "text": "[半周年纪念][虚拟歌手]高级礼物招募",
+      "source": "cn"
+    },
+    "[4周年記念][Leo/need]プレミアムプレゼントガチャ": {
+      "text": "[半周年纪念][Leo/need]高级礼物招募",
+      "source": "cn"
+    },
+    "[4周年記念][MORE MORE JUMP！]プレミアムプレゼントガチャ": {
+      "text": "[半周年纪念][MORE MORE JUMP！]高级礼物招募",
+      "source": "cn"
+    },
+    "[4周年記念][Vivid BAD SQUAD]プレミアムプレゼントガチャ": {
+      "text": "[半周年纪念][Vivid BAD SQUAD]高级礼物招募",
+      "source": "cn"
+    },
+    "[4周年記念][ワンダーランズ×ショウタイム]プレミアムプレゼントガチャ": {
+      "text": "[半周年纪念][Wonderlands×Showtime]高级礼物招募",
+      "source": "cn"
+    },
+    "[4周年記念][25時、ナイトコードで。]プレミアムプレゼントガチャ": {
+      "text": "[半周年纪念][25点，Nightcord见。]高级礼物招募",
+      "source": "cn"
+    },
+    "[4周年記念]メモリアルセレクトガチャ": {
+      "text": "[半周年纪念]纪念自选招募",
+      "source": "cn"
+    },
+    "[4周年記念]10連無料ガチャ": {
+      "text": "[半周年纪念]10连免费招募",
+      "source": "cn"
+    },
+    "Talent Bloomsガチャ": {
+      "text": "Talent Blooms招募",
+      "source": "cn"
+    },
+    "[桐谷遥]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[桐谷遥]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "★4メンバー確定ガチャ": {
+      "text": "★4成员必出招募",
+      "source": "cn"
+    },
+    "[復刻][桐谷遥]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][桐谷遥]HAPPY BIRTHDAY Dessert招募",
+      "source": "cn"
+    },
+    "[復刻][桐谷遥]HAPPY BIRTHDAY2022ガチャ": {
+      "text": "[回响][桐谷遥]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "朽ちゆく花はやがてガチャ": {
+      "text": "凋零的花终将招募",
+      "source": "cn"
+    },
+    "[4周年記念]ハピネスパッケージガチャ": {
+      "text": "[半周年纪念]欢乐礼物包招募",
+      "source": "cn"
+    },
+    "[復刻]Fly to the future!!ガチャ": {
+      "text": "[回响]Fly to the future!!招募",
+      "source": "cn"
+    },
+    "Fuel my passionガチャ": {
+      "text": "Fuel my passion招募",
+      "source": "cn"
+    },
+    "[望月穂波]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[望月穗波]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][望月穂波]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][望月穗波]HAPPY BIRTHDAY Dessert招募",
+      "source": "cn"
+    },
+    "[復刻][望月穂波]HAPPY BIRTHDAY2022ガチャ": {
+      "text": "[回响][望月穗波]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "[4周年後夜祭]フラワーアソートガチャ": {
+      "text": "[半周年后夜庆典]鲜花争艳招募",
+      "source": "cn"
+    },
+    "音楽が鳴る街角でガチャ": {
+      "text": "在音乐响起的街角招募",
+      "source": "cn"
+    },
+    "[MEIKO]HAPPY ANNIVERSARY2024ガチャ": {
+      "text": "[MEIKO]HAPPY ANNIVERSARY2025招募",
+      "source": "cn"
+    },
+    "[復刻][MEIKO]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[回响][MEIKO]HAPPY ANNIVERSARY Dessert招募",
+      "source": "cn"
+    },
+    "[復刻][MEIKO]HAPPY ANNIVERSARY2022ガチャ": {
+      "text": "[回响][MEIKO]HAPPY ANNIVERSARY Stamp招募",
+      "source": "cn"
+    },
+    "落葉舞うティールームでガチャ": {
+      "text": "落叶飞舞在茶馆招募",
+      "source": "cn"
+    },
+    "[東雲彰人]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[东云彰人]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][東雲彰人]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][东云彰人]HAPPY BIRTHDAY Dessert招募",
+      "source": "cn"
+    },
+    "[復刻][東雲彰人]HAPPY BIRTHDAY2022ガチャ": {
+      "text": "[回响][东云彰人]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "気高き争覇の騎士ガチャ": {
+      "text": "争雄争霸的崇高骑士招募",
+      "source": "cn"
+    },
+    "That flower, once moreガチャ": {
+      "text": "That flower, once more招募",
+      "source": "cn"
+    },
+    "[日野森雫]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[日野森雫]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][日野森雫]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][日野森雫]HAPPY BIRTHDAY Dessert招募",
+      "source": "cn"
+    },
+    "[復刻][日野森雫]HAPPY BIRTHDAY2022ガチャ": {
+      "text": "[回响][日野森雫]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "[CS 2024 Autumn 開催記念]プレミアムプレゼントガチャ": {
+      "text": "[CS 2024 Autumn 纪念]高级礼物招募",
+      "source": "cn"
+    },
+    "high-flapping hopeガチャ": {
+      "text": "high-flapping hope招募",
+      "source": "cn"
+    },
+    "君と見る泡雪ガチャ": {
+      "text": "和你看到的泡沫雪招募",
+      "source": "cn"
+    },
+    "[鏡音リン]HAPPY ANNIVERSARY2024ガチャ": {
+      "text": "[镜音铃]HAPPY ANNIVERSARY2025招募",
+      "source": "cn"
+    },
+    "[復刻][鏡音リン]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[回响][镜音铃]HAPPY ANNIVERSARY Dessert招募",
+      "source": "cn"
+    },
+    "[復刻][鏡音リン]HAPPY ANNIVERSARY2022ガチャ": {
+      "text": "[回响][镜音铃]HAPPY ANNIVERSARY Stamp招募",
+      "source": "cn"
+    },
+    "[鏡音レン]HAPPY ANNIVERSARY2024ガチャ": {
+      "text": "[镜音连]HAPPY ANNIVERSARY2025招募",
+      "source": "cn"
+    },
+    "[復刻][鏡音レン]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[回响][镜音连]HAPPY ANNIVERSARY Dessert招募",
+      "source": "cn"
+    },
+    "[復刻][鏡音レン]HAPPY ANNIVERSARY2022ガチャ": {
+      "text": "[回响][镜音连]HAPPY ANNIVERSARY Stamp招募",
+      "source": "cn"
+    },
+    "[2025新春]ブルームフェスティバルガチャ": {
+      "text": "[2026元旦]绚烂节日招募",
+      "source": "cn"
+    },
+    "[2025新春]プレミアムプレゼントガチャ": {
+      "text": "[2026元旦]高级礼物招募",
+      "source": "cn"
+    },
+    "[2025新春]運試し1/2セレクトリストガチャ": {
+      "text": "[2026元旦]运势挑战1/2自选清单招募",
+      "source": "cn"
+    },
+    "[2025新春]初夢お年玉ガチャ": {
+      "text": "[2026元旦]初梦红包招募",
+      "source": "cn"
+    },
+    "[2025新春]お正月無料ガチャ": {
+      "text": "[2026元旦]免费招募",
+      "source": "cn"
+    },
+    "玲瓏たる追憶ガチャ": {
+      "text": "晶莹的回忆招募",
+      "source": "cn"
+    },
+    "[日野森志歩]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[日野森志步]HAPPY BIRTHDAY 2026招募",
+      "source": "cn"
+    },
+    "[復刻][日野森志歩]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[回响][日野森志步]HAPPY BIRTHDAY 2025招募",
+      "source": "cn"
+    },
+    "[復刻][日野森志歩]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][日野森志步]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "Unknown toneガチャ": {
+      "text": "Unknown tone招募",
+      "source": "cn"
+    },
+    "Doll dreamガチャ": {
+      "text": "Doll dream招募",
+      "source": "cn"
+    },
+    "[朝比奈まふゆ]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[朝比奈真冬]HAPPY BIRTHDAY 2026招募",
+      "source": "cn"
+    },
+    "[復刻][朝比奈まふゆ]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[回响][朝比奈真冬]HAPPY BIRTHDAY 2025招募",
+      "source": "cn"
+    },
+    "[復刻][朝比奈まふゆ]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][朝比奈真冬]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "[巡音ルカ]HAPPY ANNIVERSARY2025ガチャ": {
+      "text": "[巡音流歌]HAPPY ANNIVERSARY 2026招募",
+      "source": "cn"
+    },
+    "[復刻][巡音ルカ]HAPPY ANNIVERSARY2024ガチャ": {
+      "text": "[回响][巡音流歌]HAPPY ANNIVERSARY 2025招募",
+      "source": "cn"
+    },
+    "[復刻][巡音ルカ]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[回响][巡音流歌]HAPPY ANNIVERSARY Stamp招募",
+      "source": "cn"
+    },
+    "Night sweet mealガチャ": {
+      "text": "Night sweet meal招募",
+      "source": "cn"
+    },
+    "[宵崎奏]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[宵崎奏]HAPPY BIRTHDAY2026招募",
+      "source": "cn"
+    },
+    "[復刻][宵崎奏]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻][宵崎奏]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][宵崎奏]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][宵崎奏]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "Stay determinedガチャ": {
+      "text": "Stay determined招募",
+      "source": "cn"
+    },
+    "[復刻]フォトジェニック♡バレンタインガチャ": {
+      "text": "[复刻]上镜♡情人节招募",
+      "source": "cn"
+    },
+    "[KAITO]HAPPY ANNIVERSARY2025ガチャ": {
+      "text": "[KAITO]HAPPY ANNIVERSARY2026招募",
+      "source": "cn"
+    },
+    "[復刻][KAITO]HAPPY ANNIVERSARY2024ガチャ": {
+      "text": "[复刻][KAITO]HAPPY ANNIVERSARY2025招募",
+      "source": "cn"
+    },
+    "[復刻][KAITO]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[回响][KAITO]HAPPY ANNIVERSARY Stamp招募",
+      "source": "cn"
+    },
+    "交わるせかいのアンサンブルガチャ": {
+      "text": "交错「世界」的梦幻祭招募",
+      "source": "cn"
+    },
+    "[プロセカ×あんさんぶるスターズ！！コラボ記念]プレミアムプレゼントガチャ": {
+      "text": "[初音未来：缤纷舞台×偶像梦幻祭2联动纪念]高级礼物招募",
+      "source": "cn"
+    },
+    "魔女が紡ぐお伽話ガチャ": {
+      "text": "魔女编织的童话招募",
+      "source": "cn"
+    },
+    "果てなき護るための戦いガチャ": {
+      "text": "永无止境的守护之战招募",
+      "source": "cn"
+    },
+    "[小豆沢こはね]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[小豆泽心羽]HAPPY BIRTHDAY2026招募",
+      "source": "cn"
+    },
+    "[復刻][小豆沢こはね]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻][小豆泽心羽]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][小豆沢こはね]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][小豆泽心羽]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "[桃井愛莉]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[桃井爱莉]HAPPY BIRTHDAY2026招募",
+      "source": "cn"
+    },
+    "[復刻][桃井愛莉]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻][桃井爱莉]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[復刻][桃井愛莉]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[回响][桃井爱莉]HAPPY BIRTHDAY Stamp招募",
+      "source": "cn"
+    },
+    "[花里みのり]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[花里实乃理]HAPPY BIRTHDAY2026招募",
+      "source": "cn"
+    },
+    "[復刻][花里みのり]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻][花里实乃理]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[東雲絵名]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[东云绘名]HAPPY BIRTHDAY2026招募",
+      "source": "cn"
+    },
+    "[復刻][東雲絵名]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻][东云绘名]HAPPY BIRTHDAY2025招募",
+      "source": "cn"
+    },
+    "[来る年2021]カラフルフェスティバルガチャ": {
+      "text": "[迎新之年2021] Colorful Festival招募",
+      "source": "llm"
+    },
+    "[行く年2020]カラフルフェスティバルガチャ": {
+      "text": "[辞旧之年2020] Colorful Festival招募",
+      "source": "llm"
+    },
+    "[1回限定]小さな勇気、大きな一歩ガチャ": {
+      "text": "[限购1次] 小小的勇气，巨大的一步招募",
+      "source": "llm"
+    },
+    "[1回限定]雨降って、虹煌めくガチャ": {
+      "text": "[限购1次] 雨过天晴，虹光闪耀招募",
+      "source": "llm"
+    },
+    "[1回限定]クラシカルメモリーガチャ": {
+      "text": "[限购1次] 古典记忆招募",
+      "source": "llm"
+    },
+    "[1回限定]Rockin'Paradeガチャ": {
+      "text": "[限购1次] Rockin' Parade招募",
+      "source": "llm"
+    },
+    "[1回限定]光差すキャンバスガチャ": {
+      "text": "[限购1次] 阳光照耀的画布招募",
+      "source": "llm"
+    },
+    "ふわふわ☆ドリームランドガチャ": {
+      "text": "蓬松松☆梦幻乐园招募",
+      "source": "llm"
+    },
+    "[1回限定]ふわふわ☆ドリームランドガチャ": {
+      "text": "[限购1次] 蓬松松☆梦幻乐园招募",
+      "source": "llm"
+    },
+    "[1回限定]天翔けるハッピーひな祭り☆ガチャ": {
+      "text": "[限购1次] 飞向天空的快乐女儿节☆招募",
+      "source": "llm"
+    },
+    "[1回限定]ここから羽ばたく天使ガチャ": {
+      "text": "[限购1次] 从此处展翅的天使招募",
+      "source": "llm"
+    },
+    "[1回限定]君と出会う桜の道ガチャ": {
+      "text": "[限购1次] 与你相遇的樱花小径招募",
+      "source": "llm"
+    },
+    "[1回限定]秘密のドレスルームガチャ": {
+      "text": "[限购1次] 秘密更衣室招募",
+      "source": "llm"
+    },
+    "[1回限定]4=1ガチャ": {
+      "text": "[限购1次] 4=1招募",
+      "source": "llm"
+    },
+    "共に歩むクルーガチャ": {
+      "text": "并肩同行的伙伴招募",
+      "source": "llm"
+    },
+    "[1回限定]共に歩むクルーガチャ": {
+      "text": "[限购1次] 并肩同行的伙伴招募",
+      "source": "llm"
+    },
+    "[1回限定]フォレストフェアリーガチャ": {
+      "text": "[限购1次] 森林仙子招募",
+      "source": "llm"
+    },
+    "[1回限定]ペンギンカフェへようこそ♪ガチャ": {
+      "text": "[限购1次] 欢迎光临企鹅咖啡厅♪招募",
+      "source": "llm"
+    },
+    "ロマンティックブライドガチャ": {
+      "text": "浪漫新娘招募",
+      "source": "llm"
+    },
+    "[1回限定]ロマンティックブライドガチャ": {
+      "text": "[限购1次] 浪漫新娘招募",
+      "source": "llm"
+    },
+    "ウェルカム♪不思議のセカイガチャ": {
+      "text": "Welcome♪不思议世界招募",
+      "source": "llm"
+    },
+    "[1回限定]ウェルカム♪不思議のセカイガチャ": {
+      "text": "[限购1次]Welcome♪不思议世界招募",
+      "source": "llm"
+    },
+    "カラフルフェスティバルガチャ": {
+      "text": "多彩庆典招募",
+      "source": "llm"
+    },
+    "秘めたるビーストハートガチャ": {
+      "text": "秘藏的野性之心招募",
+      "source": "llm"
+    },
+    "夏夜に浮かぶ昔日ガチャ": {
+      "text": "浮现于夏夜的往昔招募",
+      "source": "llm"
+    },
+    "ラブリーメッセンジャーガチャ": {
+      "text": "可爱信使招募",
+      "source": "llm"
+    },
+    "歌よ響け！夢見るマーメイドガチャ": {
+      "text": "歌声响彻！梦幻人鱼招募",
+      "source": "llm"
+    },
+    "迷い断ち切るフルメタルガチャ": {
+      "text": "斩断迷茫的全金属招募",
+      "source": "llm"
+    },
+    "忘却のスノー・ホワイトガチャ": {
+      "text": "忘却的白雪公主招募",
+      "source": "llm"
+    },
+    "[1周年記念]メモリアルセレクトガチャ": {
+      "text": "[1周年纪念]纪念自选招募",
+      "source": "llm"
+    },
+    "[1周年記念]カラフルフェスティバルガチャ": {
+      "text": "[1周年纪念]Colorful Festival招募",
+      "source": "llm"
+    },
+    "[バーチャル・シンガー]プレミアムプレゼントガチャ": {
+      "text": "[虚拟歌手]高级礼物招募",
+      "source": "llm"
+    },
+    "[Leo/need]プレミアムプレゼントガチャ": {
+      "text": "[Leo/need]高级礼物招募",
+      "source": "llm"
+    },
+    "[MORE MORE JUMP！]プレミアムプレゼントガチャ": {
+      "text": "[MORE MORE JUMP！]高级礼物招募",
+      "source": "llm"
+    },
+    "[Vivid BAD SQUAD]プレミアムプレゼントガチャ": {
+      "text": "[Vivid BAD SQUAD]高级礼物招募",
+      "source": "llm"
+    },
+    "[ワンダーランズ×ショウタイム]プレミアムプレゼントガチャ": {
+      "text": "[Wonderlands×Showtime]高级礼物招募",
+      "source": "llm"
+    },
+    "[25時、ナイトコードで。]プレミアムプレゼントガチャ": {
+      "text": "[25时，在Nightcord。]高级礼物招募",
+      "source": "llm"
+    },
+    "スクランブル・フラワーガチャ": {
+      "text": "Scramble Flower招募",
+      "source": "llm"
+    },
+    "罪の回顧録ガチャ": {
+      "text": "罪之回忆录招募",
+      "source": "llm"
+    },
+    "旅立つ冬のレイルウェイガチャ": {
+      "text": "启程的冬日铁道招募",
+      "source": "llm"
+    },
+    "[鏡音リン]HAPPY ANNIVERSARYガチャ": {
+      "text": "[镜音铃]HAPPY ANNIVERSARY 招募",
+      "source": "llm"
+    },
+    "[鏡音レン]HAPPY ANNIVERSARYガチャ": {
+      "text": "[镜音连]HAPPY ANNIVERSARY 招募",
+      "source": "llm"
+    },
+    "[2022新春]プレミアムプレゼントガチャ": {
+      "text": "[2022新春]特别礼物招募",
+      "source": "llm"
+    },
+    "[朝比奈まふゆ]HAPPY BIRTHDAYガチャ": {
+      "text": "[朝比奈真冬]HAPPY BIRTHDAY 招募",
+      "source": "llm"
+    },
+    "[巡音ルカ]HAPPY ANNIVERSARYガチャ": {
+      "text": "[巡音流歌]HAPPY ANNIVERSARY 招募",
+      "source": "llm"
+    },
+    "シークレット・ティータイムガチャ": {
+      "text": "秘密茶会招募",
+      "source": "llm"
+    },
+    "[SNOW MIKU 2022]プレミアムプレゼントガチャ": {
+      "text": "[SNOW MIKU 2022]特别礼物招募",
+      "source": "llm"
+    },
+    "スカイランナーズ！ガチャ": {
+      "text": "Sky Runners！招募",
+      "source": "llm"
+    },
+    "[宵崎奏]HAPPY BIRTHDAYガチャ": {
+      "text": "[宵崎奏]HAPPY BIRTHDAY 招募",
+      "source": "llm"
+    },
+    "ナイツ・オブ・ホワイトガチャ": {
+      "text": "Knights of White 招募",
+      "source": "llm"
+    },
+    "[小豆沢こはね]HAPPY BIRTHDAYガチャ": {
+      "text": "[小豆泽心羽]HAPPY BIRTHDAY 招募",
+      "source": "llm"
+    },
+    "[1.5周年記念]★4メンバー1人確定プレミアムプレゼントガチャ": {
+      "text": "[1.5周年纪念]必得1名★4成员特别礼物招募",
+      "source": "llm"
+    },
+    "[1.5周年記念]カラフルフェスティバルガチャ": {
+      "text": "[1.5周年纪念]Colorful Festival 招募",
+      "source": "llm"
+    },
+    "春想う、宵の一刻ガチャ": {
+      "text": "春思之宵招募",
+      "source": "llm"
+    },
+    "グレイス・マリアージュガチャ": {
+      "text": "Grace Mariage 招募",
+      "source": "llm"
+    },
+    "Sporty Girl♡ガチャ": {
+      "text": "Sporty Girl♡ 招募",
+      "source": "llm"
+    },
+    "あの日の光を追いかけてガチャ": {
+      "text": "追逐那一天的光芒招募",
+      "source": "llm"
+    },
+    "[草薙寧々]HAPPY BIRTHDAYガチャ": {
+      "text": "[草薙宁宁]HAPPY BIRTHDAY 招募",
+      "source": "llm"
+    },
+    "[白石杏]HAPPY BIRTHDAYガチャ": {
+      "text": "[白石杏]HAPPY BIRTHDAY 招募",
+      "source": "llm"
+    },
+    "CYBER SNIPERガチャ": {
+      "text": "CYBER SNIPER招募",
+      "source": "llm"
+    },
+    "[2周年記念]カラフルフェスティバルガチャ ドリームピック": {
+      "text": "[2周年纪念]多彩庆典招募 Dream Pick",
+      "source": "llm"
+    },
+    "Darkness Festaガチャ": {
+      "text": "Darkness Festa招募",
+      "source": "llm"
+    },
+    "Spooky Forestガチャ": {
+      "text": "Spooky Forest招募",
+      "source": "llm"
+    },
+    "Fly to the future!!ガチャ": {
+      "text": "Fly to the future!!招募",
+      "source": "llm"
+    },
+    "[2023新春]カラフルフェスティバルガチャ": {
+      "text": "[2023新春]多彩庆典招募",
+      "source": "llm"
+    },
+    "[2023新春]プレミアムプレゼントガチャ": {
+      "text": "[2023新春]高级礼物招募",
+      "source": "llm"
+    },
+    "神獣たちの年始ガチャ": {
+      "text": "神兽们的年初招募",
+      "source": "llm"
+    },
+    "Sweet Cute Valentine！ガチャ": {
+      "text": "Sweet Cute Valentine！招募",
+      "source": "llm"
+    },
+    "Imperial Soldiersガチャ": {
+      "text": "Imperial Soldiers招募",
+      "source": "llm"
+    },
+    "[2.5周年記念]カラフルフェスティバルガチャ": {
+      "text": "[2.5周年纪念]多彩庆典招募",
+      "source": "llm"
+    },
+    "[2.5周年記念]★4メンバー1人確定プレミアムプレゼントガチャ": {
+      "text": "[2.5周年纪念]必得1名★4成员高级礼物招募",
+      "source": "llm"
+    },
+    "ひらひらたゆたう乙女ガチャ": {
+      "text": "飘然摇曳的少女招募",
+      "source": "llm"
+    },
+    "[復刻]罪の回顧録ガチャ": {
+      "text": "[复刻]罪之回忆录招募",
+      "source": "llm"
+    },
+    "Welcome to diner!!ガチャ": {
+      "text": "Welcome to diner!!招募",
+      "source": "llm"
+    },
+    "[桐谷遥]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[桐谷遥]HAPPY BIRTHDAY 2023招募",
+      "source": "llm"
+    },
+    "FIND THE EXITガチャ": {
+      "text": "FIND THE EXIT招募",
+      "source": "llm"
+    },
+    "蒼穹へ響く音ガチャ": {
+      "text": "响彻苍穹之音招募",
+      "source": "llm"
+    },
+    "[望月穂波]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[望月穗波]HAPPY BIRTHDAY 2023招募",
+      "source": "llm"
+    },
+    "[MEIKO]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[MEIKO]HAPPY ANNIVERSARY2023招募",
+      "source": "llm"
+    },
+    "[東雲彰人]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[东云彰人]HAPPY BIRTHDAY2023招募",
+      "source": "llm"
+    },
+    "Play the shadowガチャ": {
+      "text": "Play the shadow招募",
+      "source": "llm"
+    },
+    "SEKAIでHello♡素敵な出会いガチャ": {
+      "text": "在SEKAI中Hello♡美妙的邂逅招募",
+      "source": "llm"
+    },
+    "[日野森雫]HAPPY BIRTHDAY2023ガチャ": {
+      "text": "[日野森雫]HAPPY BIRTHDAY2023招募",
+      "source": "llm"
+    },
+    "密着！アニマルポリス24時！ガチャ": {
+      "text": "紧贴！动物警察24小时！招募",
+      "source": "llm"
+    },
+    "Memory of Melodyガチャ": {
+      "text": "Memory of Melody招募",
+      "source": "llm"
+    },
+    "[鏡音リン]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[镜音铃]HAPPY ANNIVERSARY2023招募",
+      "source": "llm"
+    },
+    "[鏡音レン]HAPPY ANNIVERSARY2023ガチャ": {
+      "text": "[镜音连]HAPPY ANNIVERSARY2023招募",
+      "source": "llm"
+    },
+    "[2024新春]カラフルフェスティバルガチャ": {
+      "text": "[2024新春]Colorful Festival招募",
+      "source": "llm"
+    },
+    "[2024新春]プレミアムプレゼントガチャ": {
+      "text": "[2024新春]高级礼物招募",
+      "source": "llm"
+    },
+    "[2024新春]10連無料ガチャ": {
+      "text": "[2024新春]免费10连招募",
+      "source": "llm"
+    },
+    "[日野森志歩]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[日野森志步]HAPPY BIRTHDAY2024招募",
+      "source": "llm"
+    },
+    "Punk Night TOKYOガチャ": {
+      "text": "Punk Night TOKYO招募",
+      "source": "llm"
+    },
+    "[朝比奈まふゆ]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[朝比奈真冬]HAPPY BIRTHDAY2024招募",
+      "source": "llm"
+    },
+    "[巡音ルカ]HAPPY ANNIVERSARY2024ガチャ": {
+      "text": "[巡音流歌]HAPPY ANNIVERSARY2024招募",
+      "source": "llm"
+    },
+    "[宵崎奏]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[宵崎奏]HAPPY BIRTHDAY2024招募",
+      "source": "llm"
+    },
+    "瞳、高みを目指してガチャ": {
+      "text": "双眸，向着高处迈进招募",
+      "source": "llm"
+    },
+    "[KAITO]HAPPY ANNIVERSARY2024ガチャ": {
+      "text": "[KAITO]HAPPY ANNIVERSARY2024招募",
+      "source": "llm"
+    },
+    "空に描く虹の魔法ガチャ": {
+      "text": "在空中描绘虹之魔法招募",
+      "source": "llm"
+    },
+    "[小豆沢こはね]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[小豆泽心羽] HAPPY BIRTHDAY 2024 招募",
+      "source": "llm"
+    },
+    "[桃井愛莉]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[桃井爱莉] HAPPY BIRTHDAY 2024 招募",
+      "source": "llm"
+    },
+    "3900's前夜祭ハピネスパッケージガチャ": {
+      "text": "3900's前夜祭幸福礼包招募",
+      "source": "llm"
+    },
+    "3900'sカラフルフェスティバルガチャ": {
+      "text": "3900's Colorful Festival 招募",
+      "source": "llm"
+    },
+    "3900'sプレミアムプレゼントガチャ 3.5th ANNIVERSARY EDITION": {
+      "text": "3900's高级礼品招募 3.5th ANNIVERSARY EDITION",
+      "source": "llm"
+    },
+    "3900's10連無料ガチャ": {
+      "text": "3900's免费10连招募",
+      "source": "llm"
+    },
+    "3900's★4メンバー確定ガチャ": {
+      "text": "3900's必得★4成员招募",
+      "source": "llm"
+    },
+    "3900'sプレミアムプレゼントガチャ WCS 2024 EDITION": {
+      "text": "3900's高级礼品招募 WCS 2024 EDITION",
+      "source": "llm"
+    },
+    "3900'sプレミアムプレゼントガチャ GLOBAL EDITION": {
+      "text": "3900's高级礼品招募 GLOBAL EDITION",
+      "source": "llm"
+    },
+    "[復刻]Escape from rainガチャ": {
+      "text": "[复刻] Escape from rain 招募",
+      "source": "llm"
+    },
+    "[復刻]永久に響く鐘の音の下でガチャ": {
+      "text": "[复刻]在永恒鸣响的钟声下招募",
+      "source": "llm"
+    },
+    "[復刻]妖蔓延る京ガチャ": {
+      "text": "[复刻] 妖气弥漫之京招募",
+      "source": "llm"
+    },
+    "[復刻]想い奏でるマーチングパレードガチャ": {
+      "text": "[复刻]奏响心",
+      "source": "llm"
+    },
+    "[4周年記念]セレクトリストガチャ Limited Edition": {
+      "text": "[4周年纪念] 自选名单招募 Limited Edition",
+      "source": "llm"
+    },
+    "[復刻]Grow up with me！ガチャ": {
+      "text": "[复刻]Grow up with me！招募",
+      "source": "llm"
+    },
+    "[復刻]秋宵深まる黄昏時にガチャ": {
+      "text": "[复刻]秋宵渐深黄昏时招募",
+      "source": "llm"
+    },
+    "[復刻]華の都へご招待ガチャ": {
+      "text": "[复刻] 华丽之都的邀请 招募",
+      "source": "llm"
+    },
+    "[復刻]新春・咲き誇る魅惑の華ガチャ": {
+      "text": "[复刻] 新春·盛开的魅惑之花 招募",
+      "source": "llm"
+    },
+    "[劇場版プロジェクトセカイ公開記念][Leo/need]リコレクションガチャ": {
+      "text": "[剧场版 Project SEKAI 公开纪念][Leo/need]回顾招募",
+      "source": "llm"
+    },
+    "[劇場版プロジェクトセカイ公開記念][MORE MORE JUMP！]リコレクションガチャ": {
+      "text": "[剧场版 Project SEKAI 公开纪念][MORE MORE JUMP！]回顾招募",
+      "source": "llm"
+    },
+    "[劇場版プロジェクトセカイ公開記念][Vivid BAD SQUAD]リコレクションガチャ": {
+      "text": "[剧场版 Project SEKAI 公开纪念][Vivid BAD SQUAD]回顾招募",
+      "source": "llm"
+    },
+    "[劇場版プロジェクトセカイ公開記念][ワンダーランズ×ショウタイム]リコレクションガチャ": {
+      "text": "[剧场版 Project SEKAI 公开纪念][Wonderlands×Showtime]回顾招募",
+      "source": "llm"
+    },
+    "[劇場版プロジェクトセカイ公開記念][25時、ナイトコードで。]リコレクションガチャ": {
+      "text": "[剧场版 Project SEKAI 公开纪念][25時、ナイトコードで。]回顾招募",
+      "source": "llm"
+    },
+    "[ミクの日記念]プレミアムプレゼントガチャ": {
+      "text": "[未来之日纪念]高级礼物招募",
+      "source": "llm"
+    },
+    "Let's play with catsガチャ": {
+      "text": "Let's play with cats招募",
+      "source": "llm"
+    },
+    "[復刻]戦の果てに待つものはガチャ": {
+      "text": "[复刻] 战争尽头等待之物招募",
+      "source": "llm"
+    },
+    "[復刻]Play with dogsガチャ": {
+      "text": "[复刻]Play with dogs招募",
+      "source": "llm"
+    },
+    "Blooming Lightガチャ": {
+      "text": "Blooming Light招募",
+      "source": "llm"
+    },
+    "Papilio Vinculatusガチャ": {
+      "text": "Papilio Vinculatus招募",
+      "source": "llm"
+    },
+    "[ワンダーランズ×ショウタイム]ワールドリンクイベントサポートガチャ": {
+      "text": "[Wonderlands×Showtime]世界连结活动支援招募",
+      "source": "llm"
+    },
+    "[天馬咲希]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[天马咲希]HAPPY BIRTHDAY 2025招募",
+      "source": "llm"
+    },
+    "[復刻][天馬咲希]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻][天马咲希]HAPPY BIRTHDAY 2024招募",
+      "source": "llm"
+    },
+    "[東方Projectコラボ記念] コラボ限定★4メンバー確定 幻想郷コレクションガチャ": {
+      "text": "[东方Project联动纪念] 联动限定★4成员必得 幻想乡收藏招募",
+      "source": "llm"
+    },
+    "Dream a Wonder Dreamガチャ": {
+      "text": "Dream a Wonder Dream招募",
+      "source": "llm"
+    },
+    "[復刻]Eternal Boutガチャ": {
+      "text": "[复刻]Eternal Bout招募",
+      "source": "llm"
+    },
+    "[天馬司]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[天马司]HAPPY BIRTHDAY 2025招募",
+      "source": "llm"
+    },
+    "[復刻][天馬司]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻][天马司]HAPPY BIRTHDAY 2024招募",
+      "source": "llm"
+    },
+    "Starry-eyed Princessガチャ": {
+      "text": "Starry-eyed Princess招募",
+      "source": "llm"
+    },
+    "[青柳冬弥]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[青柳冬弥]HAPPY BIRTHDAY 2025招募",
+      "source": "llm"
+    },
+    "[復刻][青柳冬弥]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻][青柳冬弥]HAPPY BIRTHDAY 2024招募",
+      "source": "llm"
+    },
+    "光芒差す黎明ガチャ": {
+      "text": "光芒映照之黎明招募",
+      "source": "llm"
+    },
+    "[25時、ナイトコードで。]ワールドリンクイベントサポートガチャ": {
+      "text": "[25时，在Nightcord。]世界连结活动支援招募",
+      "source": "llm"
+    },
+    "Night's Treasureガチャ": {
+      "text": "Night's Treasure招募",
+      "source": "llm"
+    },
+    "[復刻]in my fairy taleガチャ": {
+      "text": "[复刻]in my fairy tale招募",
+      "source": "llm"
+    },
+    "[Leo/need]ワールドリンクイベントサポートガチャ": {
+      "text": "[Leo/need] World Link 活动支援招募",
+      "source": "llm"
+    },
+    "[神代類]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[神代类] HAPPY BIRTHDAY 2025 招募",
+      "source": "llm"
+    },
+    "[復刻][神代類]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻] [神代类] HAPPY BIRTHDAY 2024 招募",
+      "source": "llm"
+    },
+    "Another sparkle Starsガチャ": {
+      "text": "Another sparkle Stars 招募",
+      "source": "llm"
+    },
+    "ワールドコスチュームガチャ vol.1": {
+      "text": "世界服装招募 vol.1",
+      "source": "llm"
+    },
+    "ワールドコスチュームガチャ vol.2": {
+      "text": "世界服装招募 vol.2",
+      "source": "llm"
+    },
+    "Strange Workshopガチャ": {
+      "text": "Strange Workshop 招募",
+      "source": "llm"
+    },
+    "[復刻]The Party Of Blast!!ガチャ": {
+      "text": "[复刻] The Party Of Blast!! 招募",
+      "source": "llm"
+    },
+    "Seeking my wayガチャ": {
+      "text": "Seeking my way 招募",
+      "source": "llm"
+    },
+    "[草薙寧々]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[草薙宁宁] HAPPY BIRTHDAY 2025 招募",
+      "source": "llm"
+    },
+    "[復刻][草薙寧々]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻] [草薙宁宁] HAPPY BIRTHDAY 2024 招募",
+      "source": "llm"
+    },
+    "Open up my feelings!ガチャ": {
+      "text": "Open up my feelings! 招募",
+      "source": "llm"
+    },
+    "[白石杏]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[白石杏] HAPPY BIRTHDAY 2025 招募",
+      "source": "llm"
+    },
+    "[復刻][白石杏]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻] [白石杏] HAPPY BIRTHDAY 2024 招募",
+      "source": "llm"
+    },
+    "[Dreamscape 開催記念]プレミアムプレゼントガチャ 25時、ナイトコードで。 EDITION": {
+      "text": "[Dreamscape 举办纪念] 高级礼物招募 25点，在Nightcord。 EDITION",
+      "source": "llm"
+    },
+    "[Dreamscape 開催記念]プレミアムプレゼントガチャ バーチャル・シンガー EDITION": {
+      "text": "[Dreamscape 举办纪念] 高级礼物招募 虚拟歌手 EDITION",
+      "source": "llm"
+    },
+    "Those who dareガチャ": {
+      "text": "Those who dare 招募",
+      "source": "llm"
+    },
+    "[MORE MORE JUMP！]ワールドリンクイベントサポートガチャ": {
+      "text": "[MORE MORE JUMP！] World Link 活动支援招募",
+      "source": "llm"
+    },
+    "[ペルソナ５ ザ・ロイヤルタイアップ記念]プレミアムプレゼントガチャ": {
+      "text": "[女神异闻录5 皇家版 联动纪念] 高级礼物招募",
+      "source": "llm"
+    },
+    "Empty Teatimeガチャ": {
+      "text": "Empty Teatime 招募",
+      "source": "llm"
+    },
+    "[星乃一歌]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[星乃一歌] HAPPY BIRTHDAY 2025 招募",
+      "source": "llm"
+    },
+    "[復刻][星乃一歌]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻] [星乃一歌] HAPPY BIRTHDAY 2024 招募",
+      "source": "llm"
+    },
+    "[復刻]あなたに届け♡Live Streamingガチャ": {
+      "text": "[复刻]传达给你♡Live Streaming招募",
+      "source": "llm"
+    },
+    "キミに咲うfuzzy daisyガチャ": {
+      "text": "为你绽放的 fuzzy daisy 招募",
+      "source": "llm"
+    },
+    "[暁山瑞希]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[晓山瑞希] HAPPY BIRTHDAY 2025 招募",
+      "source": "llm"
+    },
+    "[復刻][暁山瑞希]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻] [晓山瑞希] HAPPY BIRTHDAY 2024 招募",
+      "source": "llm"
+    },
+    "[マジカルミライ2025]プレミアムプレゼントガチャ": {
+      "text": "[Magical Mirai 2025] 高级礼物招募",
+      "source": "llm"
+    },
+    "[初音ミク]HAPPY ANNIVERSARY2025ガチャ": {
+      "text": "[初音未来] HAPPY ANNIVERSARY 2025 招募",
+      "source": "llm"
+    },
+    "[復刻][初音ミク]HAPPY ANNIVERSARY2024ガチャ": {
+      "text": "[复刻] [初音未来] HAPPY ANNIVERSARY 2024 招募",
+      "source": "llm"
+    },
+    "絶望の雨すら笑ってガチャ": {
+      "text": "连绝望之雨也付之一笑 招募",
+      "source": "llm"
+    },
+    "Velvet Afternoonガチャ": {
+      "text": "Velvet Afternoon 招募",
+      "source": "llm"
+    },
+    "[鳳えむ]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[凤笑梦] HAPPY BIRTHDAY 2025 招募",
+      "source": "llm"
+    },
+    "[復刻][鳳えむ]HAPPY BIRTHDAY2024ガチャ": {
+      "text": "[复刻] [凤笑梦] HAPPY BIRTHDAY 2024 招募",
+      "source": "llm"
+    },
+    "[復刻]とってもおばけなバケーション！ガチャ": {
+      "text": "[复刻] 鬼怪满满的假期！ 招募",
+      "source": "llm"
+    },
+    "みんなたまとも!どり～むガチャ": {
+      "text": "大家都是塔麻朋友！Dream 招募",
+      "source": "llm"
+    },
+    "[フィナーレチャプター]Glance at Same Worldガチャ": {
+      "text": "[终章] Glance at Same World 招募",
+      "source": "llm"
+    },
+    "[フィナーレチャプター]Dream a Wonder Dreamガチャ": {
+      "text": "[终章] Dream a Wonder Dream 招募",
+      "source": "llm"
+    },
+    "[フィナーレチャプター]Night's Treasureガチャ": {
+      "text": "[终章] Night's Treasure 招募",
+      "source": "llm"
+    },
+    "[フィナーレチャプター]Another sparkle Starsガチャ": {
+      "text": "is fine.",
+      "source": "llm"
+    },
+    "[フィナーレチャプター]Empty Teatimeガチャ": {
+      "text": "*Wait, \"フィナーレチャプター\":*",
+      "source": "llm"
+    },
+    "[フィナーレチャプター]Velvet Afternoonガチャ": {
+      "text": "[终章] is good.",
+      "source": "llm"
+    },
+    "[フィナーレチャプター]ワールドリンクイベントサポートガチャ": {
+      "text": "*Wait, \"ワールドリンクイベントサポート\":*",
+      "source": "llm"
+    },
+    "【5周年前夜祭】[バーチャル・シンガー]スペシャルプライズガチャ": {
+      "text": "世界连接活动支援.",
+      "source": "llm"
+    },
+    "【5周年前夜祭】[Leo/need]スペシャルプライズガチャ": {
+      "text": "*Wait, \"Another sparkle Stars\":*",
+      "source": "llm"
+    },
+    "【5周年前夜祭】[MORE MORE JUMP！]スペシャルプライズガチャ": {
+      "text": "I'll keep it English.",
+      "source": "llm"
+    },
+    "【5周年前夜祭】[Vivid BAD SQUAD]スペシャルプライズガチャ": {
+      "text": "*Wait, \"Empty Teatime\":*",
+      "source": "llm"
+    },
+    "【5周年前夜祭】[ワンダーランズ×ショウタイム]スペシャルプライズガチャ": {
+      "text": "Keep English.",
+      "source": "llm"
+    },
+    "【5周年前夜祭】[25時、ナイトコードで。]スペシャルプライズガチャ": {
+      "text": "*Wait, \"Velvet Afternoon\":*",
+      "source": "llm"
+    },
+    "[5周年記念]ブルームフェスティバルガチャ ドリームピック": {
+      "text": "Keep English.",
+      "source": "llm"
+    },
+    "[5周年記念][バーチャル・シンガー]プレミアムプレゼントガチャ": {
+      "text": "*Wait, \"LIMITED EDITION\":*",
+      "source": "llm"
+    },
+    "[5周年記念][Leo/need]プレミアムプレゼントガチャ": {
+      "text": "Keep English or \"限定版\". Usually kept in English in these titles.",
+      "source": "llm"
+    },
+    "[5周年記念][MORE MORE JUMP！]プレミアムプレゼントガチャ": {
+      "text": "*Wait, \"Memorial Select\":*",
+      "source": "llm"
+    },
+    "[5周年記念][Vivid BAD SQUAD]プレミアムプレゼントガチャ": {
+      "text": "纪念自选.",
+      "source": "llm"
+    },
+    "[5周年記念][ワンダーランズ×ショウタイム]プレミアムプレゼントガチャ": {
+      "text": "*Wait, \"Free Gacha\":*",
+      "source": "llm"
+    },
+    "[5周年記念][25時、ナイトコードで。]プレミアムプレゼントガチャ": {
+      "text": "免费招募.",
+      "source": "llm"
+    },
+    "[5周年記念]1/3セレクトリストガチャ LIMITED EDITION": {
+      "text": "*Final check",
+      "source": "llm"
+    },
+    "[桐谷遥]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[桐谷遥] HAPPY BIRTHDAY 2025 招募",
+      "source": "llm"
+    },
+    "[桐谷遥]HAPPY BIRTHDAYメモリーズガチャ": {
+      "text": "[桐谷遥] HAPPY BIRTHDAY 回忆招募",
+      "source": "llm"
+    },
+    "EYES ON MEガチャ": {
+      "text": "EYES ON ME 招募",
+      "source": "llm"
+    },
+    "[5周年記念]ブルームフェスティバルガチャ ゴールドフィーバー": {
+      "text": "[5周年纪念] 绽放庆典招募 黄金狂热",
+      "source": "llm"
+    },
+    "Follow my heartガチャ": {
+      "text": "Follow my heart 招募",
+      "source": "llm"
+    },
+    "[復刻]Talent Bloomsガチャ": {
+      "text": "[复刻] Talent Blooms 招募",
+      "source": "llm"
+    },
+    "[CS 2025 開催記念]プレミアムプレゼントガチャ": {
+      "text": "[CS 2025 举办纪念] 高级礼物招募",
+      "source": "llm"
+    },
+    "瞳に映る綴り花ガチャ": {
+      "text": "眼中映出的缀花招募",
+      "source": "llm"
+    },
+    "[望月穂波]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[望月穗波] HAPPY BIRTHDAY 2025 招募",
+      "source": "llm"
+    },
+    "[望月穂波]HAPPY BIRTHDAYメモリーズガチャ": {
+      "text": "[望月穗波] HAPPY BIRTHDAY 回忆招募",
+      "source": "llm"
+    },
+    "Hues of the Selfガチャ": {
+      "text": "Hues of the Self 招募",
+      "source": "llm"
+    },
+    "[MEIKO]HAPPY ANNIVERSARY2025ガチャ": {
+      "text": "[MEIKO] HAPPY ANNIVERSARY 20",
+      "source": "llm"
+    },
+    "Good to go！ガチャ": {
+      "text": "Good to go！招募",
+      "source": "llm"
+    },
+    "想望の星追い人ガチャ": {
+      "text": "想望的逐星者招募",
+      "source": "llm"
+    },
+    "[日野森雫]HAPPY BIRTHDAY2025ガチャ": {
+      "text": "[日野森雫]HAPPY BIRTHDAY 2025招募",
+      "source": "llm"
+    },
+    "[日野森雫]HAPPY BIRTHDAYメモリーズガチャ": {
+      "text": "[日野森雫]HAPPY BIRTHDAY 纪念招募",
+      "source": "llm"
+    },
+    "Human×Techガチャ": {
+      "text": "Human×Tech招募",
+      "source": "llm"
+    },
+    "[復刻]That flower, once moreガチャ": {
+      "text": "[复刻]That flower, once more招募",
+      "source": "llm"
+    },
+    "ワールドコスチュームガチャ vol.3": {
+      "text": "世界服装招募 vol.3",
+      "source": "llm"
+    },
+    "The Light We Foundガチャ": {
+      "text": "The Light We Found招募",
+      "source": "llm"
+    },
+    "[鏡音リン]HAPPY ANNIVERSARY2025ガチャ": {
+      "text": "[镜音铃]HAPPY ANNIVERSARY 2025招募",
+      "source": "llm"
+    },
+    "[鏡音リン]HAPPY ANNIVERSARYメモリーズガチャ": {
+      "text": "[镜音铃]HAPPY ANNIVERSARY 纪念招募",
+      "source": "llm"
+    },
+    "[鏡音レン]HAPPY ANNIVERSARY2025ガチャ": {
+      "text": "[镜音连]HAPPY ANNIVERSARY 2025招募",
+      "source": "llm"
+    },
+    "[鏡音レン]HAPPY ANNIVERSARYメモリーズガチャ": {
+      "text": "[镜音连]HAPPY ANNIVERSARY 纪念招募",
+      "source": "llm"
+    },
+    "ワールドコスチュームガチャ vol.4": {
+      "text": "世界服装招募 vol.4",
+      "source": "llm"
+    },
+    "[2026新春]プレミアムプレゼントガチャ": {
+      "text": "[2026新春]豪华礼物招募",
+      "source": "llm"
+    },
+    "[2026新春]お正月無料ガチャ": {
+      "text": "[2026新春]新年免费招募",
+      "source": "llm"
+    },
+    "[2026新春]ブルームフェスティバルガチャ": {
+      "text": "[2026新春]Bloom Festival招募",
+      "source": "llm"
+    },
+    "[2026新春]福袋ガチャ": {
+      "text": "[2026新春]福袋招募",
+      "source": "llm"
+    },
+    "[2026新春]運試し1/2セレクトリストガチャ": {
+      "text": "[2026新春]试手气1/2自选名单招募",
+      "source": "llm"
+    },
+    "[日野森志歩]HAPPY BIRTHDAY2026ガチャ": {
+      "text": "[日野森志步]HAPPY BIRTHDAY 2026招募",
+      "source": "llm"
+    },
+    "[日野森志歩]HAPPY BIRTHDAYメモリーズガチャ": {
+      "text": "[日野森志步]HAPPY BIRTHDAY 回忆招募",
+      "source": "llm"
+    },
+    "まほろば流離う鬼ガチャ": {
+      "text": "桃源流浪之鬼招募",
+      "source": "llm"
+    },
+    "福財の御札ガチャ（大）": {
+      "text": "福财御札招募（大）",
+      "source": "llm"
+    },
+    "福財の御札ガチャ（特）": {
+      "text": "福财御札招募（特）",
+      "source": "llm"
+    },
+    "福財の御札ガチャ（極）": {
+      "text": "福财御札招募（极）",
+      "source": "llm"
+    },
+    "¿幸福なバレリーナ?ガチャ": {
+      "text": "¿幸福的芭蕾舞者?招募",
+      "source": "llm"
+    },
+    "[復刻]玲瓏たる追憶ガチャ": {
+      "text": "[复刻]玲珑追忆招募",
+      "source": "llm"
+    },
+    "Gathering placeガチャ": {
+      "text": "Gathering place招募",
+      "source": "llm"
+    },
+    "[朝比奈まふゆ]HAPPY BIRTHDAY2026ガチャ": {
+      "text": "[朝比奈真冬]HAPPY BIRTHDAY 2026招募",
+      "source": "llm"
+    },
+    "[朝比奈まふゆ]HAPPY BIRTHDAYメモリーズガチャ": {
+      "text": "[朝比奈真冬]HAPPY BIRTHDAY 回忆招募",
+      "source": "llm"
+    },
+    "[セカライ5th 開催記念]プレミアムプレゼントガチャ": {
+      "text": "[SEKAI LIVE 5th 举办纪念]高级礼物招募",
+      "source": "llm"
+    },
+    "[巡音ルカ]HAPPY ANNIVERSARY2026ガチャ": {
+      "text": "[巡音流歌]HAPPY ANNIVERSARY 2026招募",
+      "source": "llm"
+    },
+    "[巡音ルカ]HAPPY ANNIVERSARYメモリーズガチャ": {
+      "text": "[巡音流歌]HAPPY ANNIVERSARY 回忆招募",
+      "source": "llm"
+    }
+  }
+}

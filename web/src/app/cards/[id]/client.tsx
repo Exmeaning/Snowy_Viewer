@@ -20,6 +20,7 @@ import { useRef } from "react";
 import { formatSkillDescription } from "@/lib/skill";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData, fetchWithCompression } from "@/lib/fetch";
+import { TranslatedText, useTranslatedText } from "@/components/common/TranslatedText";
 
 // Max levels by rarity
 const MAX_LEVELS: Record<string, { normal: number; trained?: number }> = {
@@ -400,7 +401,13 @@ export default function CardDetailPage() {
                         </div>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-slate-800 mb-2">
-                        {card.prefix}
+                        <TranslatedText
+                            original={card.prefix}
+                            category="cards"
+                            field="prefix"
+                            originalClassName=""
+                            translationClassName="block text-base font-medium text-slate-400 mt-1"
+                        />
                     </h1>
                     <div className="flex items-center gap-3">
                         <span className="text-lg text-slate-600">{characterName}</span>
@@ -759,7 +766,15 @@ export default function CardDetailPage() {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-lg font-bold text-slate-800 mb-2">{card.cardSkillName}</p>
+                                    <p className="text-lg font-bold text-slate-800 mb-2">
+                                        <TranslatedText
+                                            original={card.cardSkillName}
+                                            category="cards"
+                                            field="skillName"
+                                            originalClassName=""
+                                            translationClassName="block text-sm font-medium text-slate-400 mt-0.5"
+                                        />
+                                    </p>
                                     <div className="p-4 bg-slate-50 rounded-xl">
                                         <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
                                             {skillDescription || "加载技能详情中..."}
@@ -776,7 +791,15 @@ export default function CardDetailPage() {
                                                 开花后
                                             </span>
                                         </div>
-                                        <p className="text-lg font-bold text-slate-800 mb-2">{card.specialTrainingSkillName}</p>
+                                        <p className="text-lg font-bold text-slate-800 mb-2">
+                                            <TranslatedText
+                                                original={card.specialTrainingSkillName}
+                                                category="cards"
+                                                field="skillName"
+                                                originalClassName=""
+                                                translationClassName="block text-sm font-medium text-slate-400 mt-0.5"
+                                            />
+                                        </p>
                                         <div className="p-4 bg-gradient-to-br from-amber-50 to-slate-50 rounded-xl ring-1 ring-amber-200/50">
                                             <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
                                                 {trainedSkillDescription || "加载技能详情中..."}

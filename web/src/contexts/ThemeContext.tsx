@@ -10,6 +10,10 @@ const DEFAULT_COLOR = "#33ccbb";
 export type AssetSourceType = "uni" | "haruki" | "snowyassets";
 const DEFAULT_ASSET_SOURCE: AssetSourceType = "snowyassets";
 
+// Server source type
+export type ServerSourceType = "jp" | "cn";
+const DEFAULT_SERVER_SOURCE: ServerSourceType = "jp";
+
 interface ThemeContextType {
     themeCharId: string;
     themeColor: string;
@@ -22,6 +26,10 @@ interface ThemeContextType {
     setUseTrainedThumbnail: (enabled: boolean) => void;
     assetSource: AssetSourceType;
     setAssetSource: (source: AssetSourceType) => void;
+    useLLMTranslation: boolean;
+    setUseLLMTranslation: (enabled: boolean) => void;
+    serverSource: ServerSourceType;
+    setServerSource: (source: ServerSourceType) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -37,6 +45,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const [isPowerSaving, setIsPowerSaving] = useState(false);
     const [useTrainedThumbnailState, setUseTrainedThumbnailState] = useState(false);
     const [assetSourceState, setAssetSourceState] = useState<AssetSourceType>(DEFAULT_ASSET_SOURCE);
+    const [useLLMTranslationState, setUseLLMTranslationState] = useState(true); // Default ON
+    const [serverSourceState, setServerSourceState] = useState<ServerSourceType>(DEFAULT_SERVER_SOURCE);
     const [mounted, setMounted] = useState(false);
 
     // Load saved settings from localStorage on mount
@@ -66,6 +76,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         const savedAssetSource = localStorage.getItem("asset-source");
         if (savedAssetSource === "uni" || savedAssetSource === "haruki" || savedAssetSource === "snowyassets") {
             setAssetSourceState(savedAssetSource);
+        }
+        // Load LLM translation setting (default ON, so only turn off if explicitly "false")
+        const savedLLMTranslation = localStorage.getItem("use-llm-translation");
+        if (savedLLMTranslation === "false") {
+            setUseLLMTranslationState(false);
+        }
+        // Load server source setting
+        const savedServerSource = localStorage.getItem("server-source");
+        if (savedServerSource === "jp" || savedServerSource === "cn") {
+            setServerSourceState(savedServerSource);
         }
     }, []);
 
@@ -133,8 +153,26 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         }
     };
 
+    const setUseLLMTranslation = (enabled: boolean) => {
+        setUseLLMTranslationState(enabled);
+        try {
+            localStorage.setItem("use-llm-translation", enabled ? "true" : "false");
+        } catch (e) {
+            console.error("Failed to save LLM translation setting to localStorage:", e);
+        }
+    };
+
+    const setServerSource = (source: ServerSourceType) => {
+        setServerSourceState(source);
+        try {
+            localStorage.setItem("server-source", source);
+        } catch (e) {
+            console.error("Failed to save server source setting to localStorage:", e);
+        }
+    };
+
     return (
-        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, isShowSpoiler, setShowSpoiler, isPowerSaving, setPowerSaving, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource }}>
+        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, isShowSpoiler, setShowSpoiler, isPowerSaving, setPowerSaving, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource, useLLMTranslation: useLLMTranslationState, setUseLLMTranslation, serverSource: serverSourceState, setServerSource }}>
             {children}
         </ThemeContext.Provider>
     );

@@ -19,7 +19,7 @@ const unitGroups = [
 ];
 
 export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
-    const { themeCharId, setThemeCharacter, isShowSpoiler, setShowSpoiler, isPowerSaving, setPowerSaving, useTrainedThumbnail, setUseTrainedThumbnail, assetSource, setAssetSource } = useTheme();
+    const { themeCharId, setThemeCharacter, isShowSpoiler, setShowSpoiler, isPowerSaving, setPowerSaving, useTrainedThumbnail, setUseTrainedThumbnail, assetSource, setAssetSource, useLLMTranslation, setUseLLMTranslation, serverSource, setServerSource } = useTheme();
     const { cloudVersion, isLoading, isRefreshing, forceRefreshData } = useMasterData();
     const panelRef = useRef<HTMLDivElement>(null);
 
@@ -159,6 +159,27 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
                         开启后列表页3★及以上卡牌将默认显示花后缩略图
                     </p>
+
+                    {/* LLM Translation Toggle */}
+                    <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                            </svg>
+                            <span className="text-sm text-slate-700">使用LLM翻译文本（实验性）</span>
+                        </div>
+                        <button
+                            onClick={() => setUseLLMTranslation(!useLLMTranslation)}
+                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useLLMTranslation ? 'bg-blue-500' : 'bg-slate-200'}`}
+                        >
+                            <span
+                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${useLLMTranslation ? 'translate-x-5' : 'translate-x-0'}`}
+                            />
+                        </button>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                        开启后将显示日文内容的中文翻译
+                    </p>
                 </div>
 
                 {/* Power Saving Mode */}
@@ -226,6 +247,57 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </div>
                     <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
                         选择游戏素材的来源服务器，切换后立即生效
+                    </p>
+                </div>
+
+                {/* Server Source */}
+                <div className="border-t border-slate-100 mt-4 pt-4">
+                    <div className="mb-3">
+                        <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">数据服务器</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            onClick={() => {
+                                if (serverSource !== "jp") {
+                                    setServerSource("jp");
+                                    // Trigger page refresh to reload data from new server
+                                    setTimeout(() => {
+                                        const url = new URL(window.location.href);
+                                        url.searchParams.set('_refresh', Date.now().toString());
+                                        window.location.href = url.toString();
+                                    }, 100);
+                                }
+                            }}
+                            className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${serverSource === "jp"
+                                ? "bg-rose-500 text-white shadow-md ring-2 ring-rose-300"
+                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                }`}
+                        >
+                            日服
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (serverSource !== "cn") {
+                                    setServerSource("cn");
+                                    // Trigger page refresh to reload data from new server
+                                    setTimeout(() => {
+                                        const url = new URL(window.location.href);
+                                        url.searchParams.set('_refresh', Date.now().toString());
+                                        window.location.href = url.toString();
+                                    }, 100);
+                                }
+                            }}
+                            className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${serverSource === "cn"
+                                ? "bg-red-600 text-white shadow-md ring-2 ring-red-400"
+                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                }`}
+                        >
+                            简体中文
+                        </button>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                        选择数据来源服务器，切换后页面将自动刷新（实验性）
                     </p>
                 </div>
 

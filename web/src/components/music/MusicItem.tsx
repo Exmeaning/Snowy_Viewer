@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { IMusicInfo, getMusicJacketUrl, MUSIC_CATEGORY_NAMES, MUSIC_CATEGORY_COLORS, MusicCategoryType } from "@/types/music";
 import { useTheme } from "@/contexts/ThemeContext";
+import { TranslatedText } from "@/components/common/TranslatedText";
 
 interface MusicItemProps {
     music: IMusicInfo;
@@ -55,8 +56,14 @@ export default function MusicItem({ music, isSpoiler }: MusicItemProps) {
 
                 {/* Info */}
                 <div className="p-3">
-                    <h3 className="text-sm font-bold text-primary-text truncate group-hover:text-miku transition-colors">
-                        {music.title}
+                    <h3 className="text-sm font-bold text-primary-text group-hover:text-miku transition-colors">
+                        <TranslatedText
+                            original={music.title}
+                            category="music"
+                            field="title"
+                            originalClassName="truncate block"
+                            translationClassName="text-xs font-medium text-slate-400 truncate block"
+                        />
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">
                         {music.composer}

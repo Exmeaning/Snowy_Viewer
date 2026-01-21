@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { IVirtualLiveInfo, VIRTUAL_LIVE_TYPE_NAMES, VIRTUAL_LIVE_TYPE_COLORS, getVirtualLiveStatus, VIRTUAL_LIVE_STATUS_DISPLAY, VirtualLiveType } from "@/types/virtualLive";
 import { getVirtualLiveBannerUrl } from "@/lib/assets";
+import { TranslatedText } from "@/components/common/TranslatedText";
 
 interface VirtualLiveItemProps {
     virtualLive: IVirtualLiveInfo;
@@ -70,8 +71,14 @@ export default function VirtualLiveItem({ virtualLive, isSpoiler }: VirtualLiveI
                     </div>
 
                     {/* Name */}
-                    <h3 className="font-bold text-slate-800 text-sm line-clamp-2 mb-2 group-hover:text-miku transition-colors">
-                        {virtualLive.name}
+                    <h3 className="font-bold text-slate-800 text-sm mb-2 group-hover:text-miku transition-colors">
+                        <TranslatedText
+                            original={virtualLive.name}
+                            category="virtualLive"
+                            field="name"
+                            originalClassName="line-clamp-2"
+                            translationClassName="text-xs font-medium text-slate-400 mt-0.5 line-clamp-1"
+                        />
                     </h3>
 
                     {/* Date Range */}

@@ -1,0 +1,1724 @@
+{
+  "name": {
+    "記念ライブ バーチャル・シンガー再公演": {
+      "text": "纪念演唱会 虚拟歌手再次公演",
+      "source": "cn"
+    },
+    "記念ライブ Leo/need": {
+      "text": "纪念演唱会 Leo/need",
+      "source": "cn"
+    },
+    "記念ライブ MORE MORE JUMP！": {
+      "text": "纪念演唱会 MORE MORE JUMP！",
+      "source": "cn"
+    },
+    "記念ライブ Vivid BAD SQUAD": {
+      "text": "纪念演唱会 Vivid BAD SQUAD",
+      "source": "cn"
+    },
+    "記念ライブ ワンダーランズ×ショウタイム": {
+      "text": "纪念演唱会 Wonderlands×Showtime",
+      "source": "cn"
+    },
+    "記念ライブ 25時、ナイトコードで。": {
+      "text": "纪念演唱会 25点，Nightcord见。",
+      "source": "cn"
+    },
+    "記念ライブ 最終公演": {
+      "text": "纪念演唱会 最终公演",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 遥 2020": {
+      "text": "HAPPY BIRTHDAY演唱会 遥",
+      "source": "cn"
+    },
+    "雨上がりの一番星 アフターライブ": {
+      "text": "雨过天晴的启明星 后日谈·演唱会",
+      "source": "cn"
+    },
+    "囚われのマリオネット アフターライブ": {
+      "text": "被囚禁的提线木偶 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 穂波 2020": {
+      "text": "HAPPY BIRTHDAY演唱会 穗波",
+      "source": "cn"
+    },
+    "ハロウィン2020ライブ": {
+      "text": "2021万圣节演唱会",
+      "source": "cn"
+    },
+    "全力！ワンダーハロウィン！ アフターライブ": {
+      "text": "全力以赴！奇幻万圣节！后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ MEIKO 2020": {
+      "text": "HAPPY ANNIVERSARY演唱会 MEIKO",
+      "source": "cn"
+    },
+    "ウェルカムライブ バーチャル・シンガー": {
+      "text": "迎新演唱会 虚拟歌手",
+      "source": "cn"
+    },
+    "ウェルカムライブ Leo/need": {
+      "text": "迎新演唱会 Leo/need",
+      "source": "cn"
+    },
+    "ウェルカムライブ MORE MORE JUMP！": {
+      "text": "迎新演唱会 MORE MORE JUMP！",
+      "source": "cn"
+    },
+    "ウェルカムライブ Vivid BAD SQUAD": {
+      "text": "迎新演唱会 Vivid BAD SQUAD",
+      "source": "cn"
+    },
+    "ウェルカムライブ ワンダーランズ×ショウタイム": {
+      "text": "迎新演唱会 Wonderlands×Showtime",
+      "source": "cn"
+    },
+    "ウェルカムライブ 25時、ナイトコードで。": {
+      "text": "迎新演唱会 25点，Nightcord见。",
+      "source": "cn"
+    },
+    "ウェルカムライブ オールスター": {
+      "text": "迎新演唱会 群星璀璨",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 彰人 2020": {
+      "text": "HAPPY BIRTHDAY演唱会 彰人",
+      "source": "cn"
+    },
+    "ここからRE:START！ アフターライブ": {
+      "text": "此时此地再次启程！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "いつか、背中あわせのリリックを アフターライブ": {
+      "text": "总有一天为你献上心连心的抒情诗 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 雫 2020": {
+      "text": "HAPPY BIRTHDAY演唱会 雫",
+      "source": "cn"
+    },
+    "聖なる夜に、この歌声を アフターライブ": {
+      "text": "让歌声响彻，神圣之夜 后日谈·演唱会",
+      "source": "cn"
+    },
+    "クリスマス2020ライブ": {
+      "text": "圣诞节2021演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ リン 2020": {
+      "text": "HAPPY ANNIVERSARY演唱会 镜音铃",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ レン 2020": {
+      "text": "HAPPY ANNIVERSARY演唱会 镜音连",
+      "source": "cn"
+    },
+    "2021カウントダウンライブ": {
+      "text": "跨年倒计时2022演唱会",
+      "source": "cn"
+    },
+    "2021ハッピーニューイヤーライブ Leo/need": {
+      "text": "2022 HAPPY NEW YEAR演唱会 Leo/need",
+      "source": "cn"
+    },
+    "2021ハッピーニューイヤーライブ MORE MORE JUMP！": {
+      "text": "2022 HAPPY NEW YEAR演唱会 MORE MORE JUMP！",
+      "source": "cn"
+    },
+    "2021ハッピーニューイヤーライブ Vivid BAD SQUAD": {
+      "text": "2022 HAPPY NEW YEAR演唱会 Vivid BAD SQUAD",
+      "source": "cn"
+    },
+    "2021ハッピーニューイヤーライブ ワンダーランズ×ショウタイム": {
+      "text": "2022 HAPPY NEW YEAR演唱会 Wonderlands×Showtime",
+      "source": "cn"
+    },
+    "2021ハッピーニューイヤーライブ 25時、ナイトコードで。": {
+      "text": "2022 HAPPY NEW YEAR演唱会 25点，Nightcord见。",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 志歩 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 志步",
+      "source": "cn"
+    },
+    "揺れるまま、でも君は前へ アフターライブ": {
+      "text": "即使摇摆不定，但毅然勇往直前 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Color of Myself！ アフターライブ": {
+      "text": "Color of Myself! 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ まふゆ 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 真冬",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ ルカ 2021": {
+      "text": "HAPPY ANNIVERSARY演唱会 巡音流歌",
+      "source": "cn"
+    },
+    "Period of NOCTURNE アフターライブ": {
+      "text": "Period of NOCTURNE 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 奏 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 奏",
+      "source": "cn"
+    },
+    "バレンタイン2021ライブ": {
+      "text": "情人节2022演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ KAITO 2021": {
+      "text": "HAPPY ANNIVERSARY演唱会 KAITO",
+      "source": "cn"
+    },
+    "満たされないペイルカラー アフターライブ": {
+      "text": "饱和不了的黯淡色彩 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ こはね 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 心羽",
+      "source": "cn"
+    },
+    "スマイルオブドリーマー アフターライブ": {
+      "text": "梦想家的笑容 后日谈·演唱会",
+      "source": "cn"
+    },
+    "天馬さんちのひな祭り アフターライブ": {
+      "text": "天马家的女儿节 后日谈·演唱会",
+      "source": "cn"
+    },
+    "ホワイトデー2021ライブ": {
+      "text": "白色情人节2022演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 愛莉 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 爱莉",
+      "source": "cn"
+    },
+    "届け！HOPEFUL STAGE♪ アフターライブ": {
+      "text": "传递心声！充满希望的舞台♪ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "君と歌う、桜舞う世界で アフターライブ": {
+      "text": "在樱花烂漫的世界中与你高歌 后日谈·演唱会",
+      "source": "cn"
+    },
+    "シークレット・ディスタンス アフターライブ": {
+      "text": "Secret Distance 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ みのり 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 实乃理",
+      "source": "cn"
+    },
+    "Resonate with you アフターライブ": {
+      "text": "Resonate with you 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 絵名 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 绘名",
+      "source": "cn"
+    },
+    "STRAY BAD DOG アフターライブ": {
+      "text": "STRAY BAD DOG 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 咲希 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 咲希",
+      "source": "cn"
+    },
+    "お悩み聞かせて！わくわくピクニック アフターライブ": {
+      "text": "让我分担你的烦恼！心跳雀跃的郊游 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 司 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 司",
+      "source": "cn"
+    },
+    "頑張るあなたにBreak Time！ アフターライブ": {
+      "text": "为努力的你营造闲暇时光！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 冬弥 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 冬弥",
+      "source": "cn"
+    },
+    "純白の貴方へ、誓いの歌を！ アフターライブ": {
+      "text": "为纯白的你唱响誓言之歌！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "ワンダーマジカルショウタイム！ アフターライブ": {
+      "text": "奇幻魔法表演时间！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "カーネーション・リコレクション アフターライブ": {
+      "text": "珍藏在心中的康乃馨 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 類 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 类",
+      "source": "cn"
+    },
+    "Unnamed Harmony アフターライブ": {
+      "text": "Unnamed Harmony 后日谈·演唱会",
+      "source": "cn"
+    },
+    "七夕2021ライブ": {
+      "text": "七夕2022演唱会",
+      "source": "cn"
+    },
+    "Awakening Beat アフターライブ": {
+      "text": "Awakening Beat 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 寧々 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 宁宁",
+      "source": "cn"
+    },
+    "夏祭り、鳴り響く音は アフターライブ": {
+      "text": "夏日庆典，那响彻云霄的声音 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 杏 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 杏",
+      "source": "cn"
+    },
+    "きっと最高のsummer！ アフターライブ": {
+      "text": "这一定是最棒的summer！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 一歌 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 一歌",
+      "source": "cn"
+    },
+    "ハッピー・ラブリー・エブリデイ！ アフターライブ": {
+      "text": "Happy lovely everyday! 后日谈·演唱会",
+      "source": "cn"
+    },
+    "マーメイドにあこがれて アフターライブ": {
+      "text": "对美人鱼充满憧憬 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 瑞希 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 瑞希",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ ミク 2021": {
+      "text": "HAPPY ANNIVERSARY演唱会 初音未来",
+      "source": "cn"
+    },
+    "ふたり、月うさぎ アフターライブ": {
+      "text": "两人与月兔 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ えむ 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 笑梦",
+      "source": "cn"
+    },
+    "Knock the Future!! アフターライブ": {
+      "text": "Knock the Future!! 后日谈·演唱会",
+      "source": "cn"
+    },
+    "灯のミラージュ アフターライブ": {
+      "text": "光之幻影 后日谈·演唱会",
+      "source": "cn"
+    },
+    "1周年記念スペシャルライブ": {
+      "text": "1周年纪念特别演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 遥 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 遥 Flower",
+      "source": "cn"
+    },
+    "スクランブル・ファンフェスタ！ アフターライブ": {
+      "text": "缤纷粉丝节！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Bout for Beside You アフターライブ": {
+      "text": "Bout for Beside You 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Revival my dream アフターライブ": {
+      "text": "重燃的梦想 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 穂波 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 穗波 Flower",
+      "source": "cn"
+    },
+    "ハロウィン2021ライブ": {
+      "text": "万圣节2022演唱会",
+      "source": "cn"
+    },
+    "ボクのあしあと キミのゆくさき アフターライブ": {
+      "text": "我的足迹 你的止境 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ MEIKO 2021": {
+      "text": "HAPPY ANNIVERSARY演唱会 MEIKO Flower",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 彰人 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 彰人 Flower",
+      "source": "cn"
+    },
+    "揺るがぬ想い、今言葉にして アフターライブ": {
+      "text": "矢志不摇的心愿，此刻以话语传达 后日谈·演唱会",
+      "source": "cn"
+    },
+    "バディ・ファニー・スペンドタイム♪ アフターライブ": {
+      "text": "搭档·趣事·欢乐时刻♪ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "交わる旋律 灯るぬくもり アフターライブ": {
+      "text": "交织的旋律 点亮的温暖 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 雫 2021": {
+      "text": "HAPPY BIRTHDAY演唱会 雫 Flower",
+      "source": "cn"
+    },
+    "MOREMOREMakingXmas アフターライブ": {
+      "text": "MOREMOREMakingXmas 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Same Dreams,Same Colors アフターライブ": {
+      "text": "Same Dreams,Same Colors 后日谈·演唱会",
+      "source": "cn"
+    },
+    "クリスマス2021ライブ": {
+      "text": "圣诞节2022演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ リン 2021": {
+      "text": "HAPPY ANNIVERSARY演唱会 镜音铃 Flower",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ レン 2021": {
+      "text": "HAPPY ANNIVERSARY演唱会 镜音连 Flower",
+      "source": "cn"
+    },
+    "カウントダウン2022ライブ": {
+      "text": "跨年倒计时2023演唱会",
+      "source": "cn"
+    },
+    "祈りの先 願う明日は アフターライブ": {
+      "text": "祈愿的未来憧憬的明天 后日谈·演唱会",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2022ライブ Leo/need": {
+      "text": "HAPPY NEW YEAR 2023 演唱会 Leo/need",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2022ライブ MORE MORE JUMP！": {
+      "text": "HAPPY NEW YEAR 2023 演唱会 MORE MORE JUMP！",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2022ライブ Vivid BAD SQUAD": {
+      "text": "HAPPY NEW YEAR 2023 演唱会 Vivid BAD SQUAD",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2022ライブ ワンダーランズ×ショウタイム": {
+      "text": "HAPPY NEW YEAR 2023 演唱会 Wonderlands×Showtime",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2022ライブ 25時、ナイトコードで。": {
+      "text": "HAPPY NEW YEAR 2023 演唱会25点，Nightcord见。",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 志歩 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 志步 Flower",
+      "source": "cn"
+    },
+    "POP IN MY HEART!! アフターライブ": {
+      "text": "POP IN MY HEART!! 后日谈·演唱会",
+      "source": "cn"
+    },
+    "いつか、絶望の底から アフターライブ": {
+      "text": "总有一天，会从绝望的深渊 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ まふゆ 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 真冬 Flower",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ ルカ 2022": {
+      "text": "HAPPY ANNIVERSARY演唱会 巡音流歌 Flower",
+      "source": "cn"
+    },
+    "秘密の♡バレンタイン大作戦！ アフターライブ": {
+      "text": "秘密♡情人节大作战！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 奏 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 奏 Flower",
+      "source": "cn"
+    },
+    "Legend still vivid アフターライブ": {
+      "text": "Legend still vivid 后日谈·演唱会",
+      "source": "cn"
+    },
+    "バレンタイン2022ライブ": {
+      "text": "情人节2023演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ KAITO 2022": {
+      "text": "HAPPY ANNIVERSARY演唱会 KAITO Flower",
+      "source": "cn"
+    },
+    "あの日、空は遠かった アフターライブ": {
+      "text": "那一天，天空遥不可及 后日谈·演唱会",
+      "source": "cn"
+    },
+    "怪盗紳士のハラハラ！？ホワイトデー アフターライブ": {
+      "text": "慌慌张张？！怪盗绅士的白色情人节 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ こはね 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 心羽 Flower",
+      "source": "cn"
+    },
+    "Cast Spell on You アフターライブ": {
+      "text": "Cast Spell on You 后日谈·演唱会",
+      "source": "cn"
+    },
+    "ホワイトデー2022ライブ": {
+      "text": "白色情人节2023演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 愛莉 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 爱莉 Flower",
+      "source": "cn"
+    },
+    "空白のキャンバスに描く私は アフターライブ": {
+      "text": "在空白的画布上描绘自我 后日谈·演唱会",
+      "source": "cn"
+    },
+    "セカイの桜、つながる想い アフターライブ": {
+      "text": "「世界」之樱，相连的心愿 后日谈·演唱会",
+      "source": "cn"
+    },
+    "まばゆい光のステージで アフターライブ": {
+      "text": "在璀璨耀眼的舞台上 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ みのり 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 实乃理 Flower",
+      "source": "cn"
+    },
+    "Live with memories アフターライブ": {
+      "text": "Live with memories 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 絵名 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 绘名 Flower",
+      "source": "cn"
+    },
+    "つなぐPainful Hope アフターライブ": {
+      "text": "连接Painful Hope 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 咲希 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 咲希 Flower",
+      "source": "cn"
+    },
+    "白熱！神高応援団！ アフターライブ": {
+      "text": "白热！神高应援团！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 司 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 司 Flower",
+      "source": "cn"
+    },
+    "THE POWER OF UNITY アフターライブ": {
+      "text": "THE POWER OF UNITY 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 冬弥 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 冬弥 Flower",
+      "source": "cn"
+    },
+    "青空に願うユア・ハピネス！ アフターライブ": {
+      "text": "向晴空许愿Your Happiness! 后日谈·演唱会",
+      "source": "cn"
+    },
+    "迷い子の手を引く、そのさきは アフターライブ": {
+      "text": "牵起迷失的孩子，前方等待的是 后日谈·演唱会",
+      "source": "cn"
+    },
+    "絶体絶命！？アイランドパニック！ アフターライブ": {
+      "text": "危在旦夕？！无人岛绝处逢生！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 類 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 类 Flower",
+      "source": "cn"
+    },
+    "みんなでエンジョイ！スポジョイパーク アフターライブ": {
+      "text": "大家一起欢享！SPOJOYPARK 后日谈·演唱会",
+      "source": "cn"
+    },
+    "七夕2022ライブ": {
+      "text": "七夕2023演唱会",
+      "source": "cn"
+    },
+    "The Vivid Old Tale アフターライブ": {
+      "text": "The Vivid Old Tale 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 寧々 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 宁宁 Flower",
+      "source": "cn"
+    },
+    "No seek No find アフターライブ": {
+      "text": "No seek No find 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 杏 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 杏 Flower",
+      "source": "cn"
+    },
+    "close game/OFFLINE アフターライブ": {
+      "text": "close game/OFFLINE 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 一歌 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 一歌 Flower",
+      "source": "cn"
+    },
+    "青空の先、輝きを追いかけて アフターライブ": {
+      "text": "在蓝天下追逐光芒 后日谈·演唱会",
+      "source": "cn"
+    },
+    "そしていま、リボンを結んで アフターライブ": {
+      "text": "现在再次绑上蝴蝶结 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 瑞希 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 瑞希 Flower",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ ミク 2022": {
+      "text": "HAPPY ANNIVERSARY演唱会 初音未来 Flower",
+      "source": "cn"
+    },
+    "Don't lose faith! アフターライブ": {
+      "text": "Don't lose faith! 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ えむ 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 笑梦 Flower",
+      "source": "cn"
+    },
+    "好きを描いて♪レインボーキャンバス アフターライブ": {
+      "text": "绘出自我♪RAINBOW CANVAS 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Walk on and on アフターライブ": {
+      "text": "Walk on and on 后日谈·演唱会",
+      "source": "cn"
+    },
+    "この祭に 夕闇色も アフターライブ": {
+      "text": "逢此庆典 暮色亦染 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 遥 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 遥 Stamp",
+      "source": "cn"
+    },
+    "拝啓、あの頃のわたしへ アフターライブ": {
+      "text": "致过去的我 后日谈·演唱会",
+      "source": "cn"
+    },
+    "カーテンコールに惜別を アフターライブ": {
+      "text": "惜别谢幕 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 穂波 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 穗波 Stamp",
+      "source": "cn"
+    },
+    "ハロウィン2022ライブ": {
+      "text": "万圣节2023演唱会",
+      "source": "cn"
+    },
+    "絶叫！？ オオカミの森へようこそ！ アフターライブ": {
+      "text": "尖叫？！欢迎来到大灰狼森林！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ MEIKO 2022": {
+      "text": "HAPPY ANNIVERSARY演唱会 MEIKO Stamp",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 彰人 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 彰人 Stamp",
+      "source": "cn"
+    },
+    "Echo my melody アフターライブ": {
+      "text": "Echo my melody 后日谈·演唱会",
+      "source": "cn"
+    },
+    "願いは、いつか朝をこえて アフターライブ": {
+      "text": "祈愿，终有一天跨越黎明 后日谈·演唱会",
+      "source": "cn"
+    },
+    "あの日の夢の、彼方向こうへ アフターライブ": {
+      "text": "昨日梦想的延续 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 雫 2022": {
+      "text": "HAPPY BIRTHDAY演唱会 雫 Stamp",
+      "source": "cn"
+    },
+    "Find A Way Out アフターライブ": {
+      "text": "Find A Way Out 后日谈·演唱会",
+      "source": "cn"
+    },
+    "弓引け、白の世界で アフターライブ": {
+      "text": "在纯白世界拉弓引箭 后日谈·演唱会",
+      "source": "cn"
+    },
+    "クリスマス2022ライブ": {
+      "text": "圣诞节2023演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ リン 2022": {
+      "text": "HAPPY ANNIVERSARY演唱会 镜音铃 Stamp",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ レン 2022": {
+      "text": "HAPPY ANNIVERSARY演唱会 镜音连 Stamp",
+      "source": "cn"
+    },
+    "カウントダウン2023ライブ": {
+      "text": "跨年倒计时2024演唱会",
+      "source": "cn"
+    },
+    "新春！ 獅子舞ロボのお正月ショー！ アフターライブ": {
+      "text": "新春！舞狮机器人的新年演出！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2023ライブ Leo/need": {
+      "text": "HAPPY NEW YEAR 2024 演唱会 Leo/need",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2023ライブ MORE MORE JUMP！": {
+      "text": "HAPPY NEW YEAR 2024 演唱会 MORE MORE JUMP！",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2023ライブ Vivid BAD SQUAD": {
+      "text": "HAPPY NEW YEAR 2024 演唱会 Vivid BAD SQUAD",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2023ライブ ワンダーランズ×ショウタイム": {
+      "text": "HAPPY NEW YEAR 2024 演唱会 Wonderlands×Showtime",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2023ライブ 25時、ナイトコードで。": {
+      "text": "HAPPY NEW YEAR 2024 演唱会25点，Nightcord见。",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 志歩 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 志步 Stamp",
+      "source": "cn"
+    },
+    "夢の途中、輝く星たちへ アフターライブ": {
+      "text": "梦想的旅途，奔向闪耀的群星 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Little Bravers！ アフターライブ": {
+      "text": "Little Bravers！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ まふゆ 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 真冬 Stamp",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ ルカ 2023": {
+      "text": "HAPPY ANNIVERSARY演唱会 巡音流歌 Stamp",
+      "source": "cn"
+    },
+    "キャンドルの香りは思い出と共に アフターライブ": {
+      "text": "蜡烛的芬芳萦绕于往昔的回忆 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 奏 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 奏 Stamp",
+      "source": "cn"
+    },
+    "ほどかれた糸のその先に アフターライブ": {
+      "text": "解开的心结之后 后日谈·演唱会",
+      "source": "cn"
+    },
+    "バレンタイン2023ライブ": {
+      "text": "情人节2024演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ KAITO 2023": {
+      "text": "HAPPY ANNIVERSARY演唱会 KAITO Stamp",
+      "source": "cn"
+    },
+    "Kick it up a notch アフターライブ": {
+      "text": "Kick it up a notch 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Never Give Up Cooking！ アフターライブ": {
+      "text": "Never Give Up Cooking！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ こはね 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 心羽 Stamp",
+      "source": "cn"
+    },
+    "天の果てのフェニックスへ アフターライブ": {
+      "text": "追寻翱翔于天际的凤凰 后日谈·演唱会",
+      "source": "cn"
+    },
+    "ホワイトデー2023ライブ": {
+      "text": "白色情人节2024演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 愛莉 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 爱莉 Stamp",
+      "source": "cn"
+    },
+    "イミシブル・ディスコード アフターライブ": {
+      "text": "难以弥合·分歧 后日谈·演唱会",
+      "source": "cn"
+    },
+    "交響する街の片隅で アフターライブ": {
+      "text": "在乐声共鸣的街角 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Get over it. アフターライブ": {
+      "text": "Get over it. 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ みのり 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 实乃理 Stamp",
+      "source": "cn"
+    },
+    "Re-tie Friendship アフターライブ": {
+      "text": "Re-tie Friendship 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 絵名 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 绘名 Stamp",
+      "source": "cn"
+    },
+    "ボク達の生存逃走 アフターライブ": {
+      "text": "我们为了生存而逃避 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 咲希 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 咲希 Stamp",
+      "source": "cn"
+    },
+    "船出の前のワンデイトリップ アフターライブ": {
+      "text": "启航前的一日游 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 司 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 司 Stamp",
+      "source": "cn"
+    },
+    "カナリアは窮境に歌う アフターライブ": {
+      "text": "金丝雀于绝境中高歌 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 冬弥 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 冬弥 Stamp",
+      "source": "cn"
+    },
+    "隣に立つ、優しいあなたへ アフターライブ": {
+      "text": "给在我身边温柔的你 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Light Up the Fire アフターライブ": {
+      "text": "Light Up the Fire 后日谈·演唱会",
+      "source": "cn"
+    },
+    "STEP by STEP！ アフターライブ": {
+      "text": "STEP by STEP！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 類 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 类 Stamp",
+      "source": "cn"
+    },
+    "一期一会な百鬼夜行！？ アフターライブ": {
+      "text": "一期一会的百鬼夜行？！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "七夕2023ライブ": {
+      "text": "七夕2024演唱会",
+      "source": "cn"
+    },
+    "仮面の私にさよならを アフターライブ": {
+      "text": "向戴着面具的我告别 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 寧々 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 宁宁 Stamp",
+      "source": "cn"
+    },
+    "つなぐ、星の歌 アフターライブ": {
+      "text": "相联的，星星之歌 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 杏 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 杏 Stamp",
+      "source": "cn"
+    },
+    "ドタバタ cafe ●REC!! アフターライブ": {
+      "text": "手忙脚乱 cafe ●REC!! 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 一歌 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 一歌 Stamp",
+      "source": "cn"
+    },
+    "On Your Feet アフターライブ": {
+      "text": "On Your Feet 后日谈·演唱会",
+      "source": "cn"
+    },
+    "あたしたちのハッピーエンド アフターライブ": {
+      "text": "我们的圆满结局 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 瑞希 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 瑞希 Stamp",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ ミク 2023": {
+      "text": "HAPPY ANNIVERSARY演唱会 初音未来 Stamp",
+      "source": "cn"
+    },
+    "セカイに響け！Your Song アフターライブ": {
+      "text": "响彻「世界」！Your Song 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ えむ 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 笑梦 Stamp",
+      "source": "cn"
+    },
+    "君と紡ぐPrecious memories アフターライブ": {
+      "text": "和你创造的Precious memories 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Let's study hard！ アフターライブ": {
+      "text": "Let's study hard！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "ハロー・グッド・デイ！ アフターライブ": {
+      "text": "Hello·Good·Day！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 遥 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 遥 Dessert",
+      "source": "cn"
+    },
+    "BURN MY SOUL アフターライブ": {
+      "text": "BURN MY SOUL 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Stick to your faith アフターライブ": {
+      "text": "Stick to your faith 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 穂波 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 穗波 Dessert",
+      "source": "cn"
+    },
+    "ハロウィン2023ライブ": {
+      "text": "万圣节2024演唱会",
+      "source": "cn"
+    },
+    "その手導くぬくもりは アフターライブ": {
+      "text": "那双手所引向的温暖 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ MEIKO 2023": {
+      "text": "HAPPY ANNIVERSARY演唱会 MEIKO Dessert",
+      "source": "cn"
+    },
+    "水底に影を探して アフターライブ": {
+      "text": "水底寻影 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 彰人 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 彰人 Dessert",
+      "source": "cn"
+    },
+    "君が主役の物語を アフターライブ": {
+      "text": "以你为主角的故事 后日谈·演唱会",
+      "source": "cn"
+    },
+    "最高のクランクアップ！ アフターライブ": {
+      "text": "最棒的杀青！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 雫 2023": {
+      "text": "HAPPY BIRTHDAY演唱会 雫 Dessert",
+      "source": "cn"
+    },
+    "あっちこっち飼育員体験！ アフターライブ": {
+      "text": "东奔西走的饲养员体验！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "あの日、奏でた音色を アフターライブ": {
+      "text": "将那天，演奏的音乐 后日谈·演唱会",
+      "source": "cn"
+    },
+    "クリスマス2023ライブ": {
+      "text": "圣诞节2024演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ リン 2023": {
+      "text": "HAPPY ANNIVERSARY演唱会 镜音铃 Dessert",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ レン 2023": {
+      "text": "HAPPY ANNIVERSARY演唱会 镜音连 Dessert",
+      "source": "cn"
+    },
+    "カウントダウン2024ライブ": {
+      "text": "跨年倒计时2025演唱会",
+      "source": "cn"
+    },
+    "変わらぬあたたかさの隣で アフターライブ": {
+      "text": "在不变的温暖旁 后日谈·演唱会",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2024ライブ": {
+      "text": "HAPPY NEW YEAR 2025演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 志歩 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 志步 2025",
+      "source": "cn"
+    },
+    "BREAK DOWN THE WALL アフターライブ": {
+      "text": "BREAK DOWN THE WALL 后日谈·演唱会",
+      "source": "cn"
+    },
+    "逆光のレンズフレア アフターライブ": {
+      "text": "背光的镜头光晕 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ まふゆ 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 真冬 2025",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ ルカ 2024": {
+      "text": "HAPPY ANNIVERSARY演唱会 巡音流歌 2025",
+      "source": "cn"
+    },
+    "Take the Best Shot！ アフターライブ": {
+      "text": "Take the Best Shot！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 奏 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 奏 2025",
+      "source": "cn"
+    },
+    "導く勇気、優しさを胸に アフターライブ": {
+      "text": "勇敢引导，温柔在心 后日谈·演唱会",
+      "source": "cn"
+    },
+    "バレンタイン2024ライブ": {
+      "text": "情人节2025演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ KAITO 2024": {
+      "text": "HAPPY ANNIVERSARY演唱会 KAITO 2025",
+      "source": "cn"
+    },
+    "刻まれた傷は、やがて アフターライブ": {
+      "text": "刻下的伤痕，总有一天 后日谈·演唱会",
+      "source": "cn"
+    },
+    "リラックスティータイム アフターライブ": {
+      "text": "Relax Teatime 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ こはね 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 心羽 2025",
+      "source": "cn"
+    },
+    "星を目指して、ヨーソロー！ アフターライブ": {
+      "text": "向着星星，启航！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "ホワイトデー2024ライブ": {
+      "text": "白色情人节2025演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 愛莉 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 爱莉 2025",
+      "source": "cn"
+    },
+    "The first concerto アフターライブ": {
+      "text": "The first concerto 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Rise as ONE！ アフターライブ": {
+      "text": "Rise as ONE！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Knowing the Unseen アフターライブ": {
+      "text": "Knowing the Unseen 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ みのり 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 实乃理 2025",
+      "source": "cn"
+    },
+    "Parallel Harmonies アフターライブ": {
+      "text": "Parallel Harmonies 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 絵名 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 绘名 2025",
+      "source": "cn"
+    },
+    "Whip the wimp girl!! アフターライブ": {
+      "text": "Whip the wimp girl!! 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 咲希 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 咲希 2025",
+      "source": "cn"
+    },
+    "いつか花咲くステージへ アフターライブ": {
+      "text": "总有一日，登上鲜花盛放的舞台 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 司 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 司 2025",
+      "source": "cn"
+    },
+    "perspective for smile アフターライブ": {
+      "text": "perspective for smile 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 冬弥 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 冬弥 2025",
+      "source": "cn"
+    },
+    "みんなで配信♡WEDDING LIVE！ アフターライブ": {
+      "text": "大家来直播♡WEDDING LIVE！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Lead to shine more アフターライブ": {
+      "text": "Lead to shine more 后日谈·演唱会",
+      "source": "cn"
+    },
+    "灯を手繰りよせて アフターライブ": {
+      "text": "揽灯近前 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 類 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 类 2025",
+      "source": "cn"
+    },
+    "OVER RAD SQUAD!! アフターライブ": {
+      "text": "OVER RAD SQUAD!! 后日谈·演唱会",
+      "source": "cn"
+    },
+    "七夕2024ライブ": {
+      "text": "七夕2025演唱会",
+      "source": "cn"
+    },
+    "お縄を頂戴！？天馬捕物帳 アフターライブ": {
+      "text": "捉拿归案？！天马捕物帐 后日谈·演唱会",
+      "source": "cn"
+    },
+    "あの日見た夜空は、いつかの未来へ アフターライブ": {
+      "text": "那天仰望的夜空，将通向我们的未来 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 寧々 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 宁宁 2025",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 杏 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 杏 2025",
+      "source": "cn"
+    },
+    "Chase my IDEAL IDOL！ アフターライブ": {
+      "text": "Chase my IDEAL IDOL！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "鳴らせビューティフルサウンド！ アフターライブ": {
+      "text": "奏响美妙乐音！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 一歌 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 一歌 2025",
+      "source": "cn"
+    },
+    "キミと、セカイの始まりで アフターライブ": {
+      "text": "和你在「世界」的起点 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 瑞希 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 瑞希 2025",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ ミク 2024": {
+      "text": "HAPPY ANNIVERSARY演唱会 初音未来 2025",
+      "source": "cn"
+    },
+    "わんだほら～！？な肝だめし！ アフターライブ": {
+      "text": "Wonderhorror～？！的试胆！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ えむ 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 笑梦 2025",
+      "source": "cn"
+    },
+    "鍛えてFLY！Muscle Training！ アフターライブ": {
+      "text": "锻炼后FLY！Muscle Training！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "This moment with you！ アフターライブ": {
+      "text": "This moment with you！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 遥 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 遥 2025",
+      "source": "cn"
+    },
+    "想いをのせて！Dream Stage アフターライブ": {
+      "text": "承载心愿！Dream Stage 后日谈·演唱会",
+      "source": "cn"
+    },
+    "荊棘の道は何処へ アフターライブ": {
+      "text": "荆棘之路通往何处 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Rekindle the flame アフターライブ": {
+      "text": "Rekindle the flame 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 穂波 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 穗波 2025",
+      "source": "cn"
+    },
+    "ハロウィン2024ライブ": {
+      "text": "万圣节2025演唱会",
+      "source": "cn"
+    },
+    "Happy Enjoy Music！ アフターライブ": {
+      "text": "Happy Enjoy Music！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ MEIKO 2024": {
+      "text": "HAPPY ANNIVERSARY演唱会 MEIKO 2025",
+      "source": "cn"
+    },
+    "また、木の葉の色づく頃に アフターライブ": {
+      "text": "又到秋叶染色之时 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 彰人 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 彰人 2025",
+      "source": "cn"
+    },
+    "The Power Of Regret アフターライブ": {
+      "text": "The Power Of Regret 后日谈·演唱会",
+      "source": "cn"
+    },
+    "傷だらけの手で、私達は アフターライブ": {
+      "text": "用我们，布满伤痕的双手 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 雫 2024": {
+      "text": "HAPPY BIRTHDAY演唱会 雫 2025",
+      "source": "cn"
+    },
+    "Grow glorious glow アフターライブ": {
+      "text": "Grow glorious glow 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Special present for YOU！ アフターライブ": {
+      "text": "Special present for YOU！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "クリスマス2024ライブ": {
+      "text": "圣诞节2025演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ リン 2024": {
+      "text": "HAPPY ANNIVERSARY演唱会 镜音铃 2025",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ レン 2024": {
+      "text": "HAPPY ANNIVERSARY演唱会 镜音连 2025",
+      "source": "cn"
+    },
+    "カウントダウン2025ライブ": {
+      "text": "【复刻】跨年倒计时2026演唱会",
+      "source": "cn"
+    },
+    "ハッピーニューイヤー2025ライブ": {
+      "text": "【复刻】HAPPY NEW YEAR 2026演唱会",
+      "source": "cn"
+    },
+    "Unfading wishing アフターライブ": {
+      "text": "Unfading wishing 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 志歩 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 志步 2026",
+      "source": "cn"
+    },
+    "Time to take off！ アフターライブ": {
+      "text": "Time to take off！ 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Show your shine アフターライブ": {
+      "text": "Show your shine 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ まふゆ 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 真冬 2026",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ ルカ 2025": {
+      "text": "HAPPY ANNIVERSARY演唱会 巡音流歌 2026",
+      "source": "cn"
+    },
+    "このひと針に想いを込めて アフターライブ": {
+      "text": "在这针线中寄托心意 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 奏 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 奏 2026",
+      "source": "cn"
+    },
+    "バレンタイン2025ライブ": {
+      "text": "情人节2026演唱会",
+      "source": "cn"
+    },
+    "HAPPY ANNIVERSARYライブ KAITO 2025": {
+      "text": "HAPPY ANNIVERSARY演唱会 KAITO 2026",
+      "source": "cn"
+    },
+    "Rise and Strive アフターライブ": {
+      "text": "Rise and Strive 后日谈·演唱会",
+      "source": "cn"
+    },
+    "昔日のRead-aloud アフターライブ": {
+      "text": "昔日的Read-aloud 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ こはね 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 心羽 2026",
+      "source": "cn"
+    },
+    "Connect hearts message アフターライブ": {
+      "text": "Connect hearts message 后日谈·演唱会",
+      "source": "cn"
+    },
+    "ホワイトデー2025ライブ": {
+      "text": "白色情人节2026演唱会",
+      "source": "cn"
+    },
+    "You are my HERO!! アフターライブ": {
+      "text": "You are my HERO!! 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 愛莉 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 爱莉 2026",
+      "source": "cn"
+    },
+    "Unreliable Notes アフターライブ": {
+      "text": "Unreliable Notes 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Find the dream view アフターライブ": {
+      "text": "Find the dream view 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ みのり 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 实乃理 2026",
+      "source": "cn"
+    },
+    "Turning Pain into Drive アフターライブ": {
+      "text": "Turning Pain into Drive 后日谈·演唱会",
+      "source": "cn"
+    },
+    "Choices for the future アフターライブ": {
+      "text": "Choices for the future 后日谈·演唱会",
+      "source": "cn"
+    },
+    "HAPPY BIRTHDAYライブ 絵名 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 绘名 2026",
+      "source": "cn"
+    },
+    "コネクトライブ リハーサル公演": {
+      "text": "Connect Live 彩排公演",
+      "source": "llm"
+    },
+    "第2回 コネクトライブ リハーサル公演": {
+      "text": "第2届 Connect Live 彩排公演",
+      "source": "llm"
+    },
+    "コネクトライブ Vivid BAD SQUAD 1st CRASH": {
+      "text": "Connect Live Vivid BAD SQUAD 1st CRASH",
+      "source": "llm"
+    },
+    "コネクトライブ テクニカルテスト": {
+      "text": "Connect Live 技术测试",
+      "source": "llm"
+    },
+    "コネクトライブ 2nd ANNIVERSARY SPECIAL STAGE": {
+      "text": "Connect Live 2nd ANNIVERSARY SPECIAL STAGE",
+      "source": "llm"
+    },
+    "コネクトライブ MORE MORE JUMP！ 1st JUMPIN！": {
+      "text": "Connect Live MORE MORE JUMP！ 1st JUMPIN！",
+      "source": "llm"
+    },
+    "コネクトライブ Leo/need 1st SPARKLE": {
+      "text": "Connect Live Leo/need 1st SPARKLE",
+      "source": "llm"
+    },
+    "コネクトライブ 25時、ナイトコードで。 1st moment": {
+      "text": "Connect Live 25时，在夜之代码。 1st moment",
+      "source": "llm"
+    },
+    "コネクトライブ ワンダーランズ×ショウタイム 1st STORIES": {
+      "text": "Connect Live Wonderlands×Showtime 1st STORIES",
+      "source": "llm"
+    },
+    "コネクトライブ 3rd ANNIVERSARY Memorial Stage": {
+      "text": "Connect Live 3rd ANNIVERSARY Memorial Stage",
+      "source": "llm"
+    },
+    "コネクトライブ Leo/need & Vivid BAD SQUAD　Resonance Beats!!": {
+      "text": "Connect Live Leo/need & Vivid BAD SQUAD Resonance Beats!!",
+      "source": "llm"
+    },
+    "コネクトライブ 4th ANNIVERSARY Brilliant Stage": {
+      "text": "Connect Live 4th ANNIVERSARY Brilliant Stage",
+      "source": "llm"
+    },
+    "コネクトライブ 特別版 プロジェクトセカイ×あんさんぶるスターズ！！Ensemble in SEKAI プレライブ": {
+      "text": "Connect Live 特别版 世界计划×偶像梦幻祭！！Ensemble in SEKAI 前置LIVE",
+      "source": "llm"
+    },
+    "コネクトライブ 特別版 プロジェクトセカイ×あんさんぶるスターズ！！Ensemble in SEKAI DAY1": {
+      "text": "Connect Live 特别版 世界计划×偶像梦幻祭！！Ensemble in SEKAI DAY1",
+      "source": "llm"
+    },
+    "コネクトライブ 特別版 プロジェクトセカイ×あんさんぶるスターズ！！Ensemble in SEKAI DAY2": {
+      "text": "Connect Live 特别版 世界计划×偶像梦幻祭！！Ensemble in SEKAI DAY2",
+      "source": "llm"
+    },
+    "そして、針は動き出す アフターライブ": {
+      "text": "于是，指针开始转动 After Live",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 咲希 2025": {
+      "text": "HAPPY BIRTHDAY LIVE 咲希 2025",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 司 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 司 2025",
+      "source": "llm"
+    },
+    "Dear my fellows アフターライブ": {
+      "text": "Dear my fellows 赛后演唱会",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 冬弥 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 冬弥 2025",
+      "source": "llm"
+    },
+    "Cheer with my Heart! アフターライブ": {
+      "text": "Cheer with my Heart! 赛后演唱会",
+      "source": "llm"
+    },
+    "Aim higher and higher！ アフターライブ": {
+      "text": "Aim higher and higher！ 赛后演唱会",
+      "source": "llm"
+    },
+    "泡沫に抱かれて アフターライブ": {
+      "text": "拥抱泡沫 赛后演唱会",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 類 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 类 2025",
+      "source": "llm"
+    },
+    "ordinary,yet special us アフターライブ": {
+      "text": "ordinary,yet special us 赛后演唱会",
+      "source": "llm"
+    },
+    "七夕2025ライブ": {
+      "text": "七夕2025演唱会",
+      "source": "llm"
+    },
+    "Deeper and deeper アフターライブ": {
+      "text": "Deeper and deeper 赛后演唱会",
+      "source": "llm"
+    },
+    "Unsteady, still steady step アフターライブ": {
+      "text": "Unsteady, still steady step 赛后演唱会",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 寧々 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 宁宁 2025",
+      "source": "llm"
+    },
+    "コネクトライブ 25時、ナイトコードで。×バーチャル・シンガー Dreamscape": {
+      "text": "Connect Live 25点，在Nightcord。×虚拟歌手 Dreamscape",
+      "source": "llm"
+    },
+    "start rolling! stars' crossing アフターライブ": {
+      "text": "start rolling! stars' crossing 赛后演唱会",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 杏 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 杏 2025",
+      "source": "llm"
+    },
+    "Competitive fire！ アフターライブ": {
+      "text": "Competitive fire！ 赛后演唱会",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 一歌 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 一歌 2025",
+      "source": "llm"
+    },
+    "All ways Jump! with you アフターライブ": {
+      "text": "All ways Jump! with you 赛后演唱会",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 瑞希 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 瑞希 2025",
+      "source": "llm"
+    },
+    "ほどけぬ明日に手を伸ばして アフターライブ": {
+      "text": "向无法解开的明日伸出双手 赛后演唱会",
+      "source": "llm"
+    },
+    "HAPPY ANNIVERSARYライブ ミク 2025": {
+      "text": "HAPPY ANNIVERSARY演唱会 初音未来 2025",
+      "source": "llm"
+    },
+    "Deep Dark For Light アフターライブ": {
+      "text": "Deep Dark For Light 赛后演唱会",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ えむ 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 笑梦 2025",
+      "source": "llm"
+    },
+    "Link the Beats！ アフターライブ": {
+      "text": "Link the Beats！ 赛后演唱会",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（一歌）": {
+      "text": "5周年特别致辞（一歌）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（咲希）": {
+      "text": "5周年特别致辞（咲希）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（穂波）": {
+      "text": "5周年特别致辞（穗波）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（志歩）": {
+      "text": "5周年特别致辞（志步）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（みのり）": {
+      "text": "5周年特别致辞（实乃里）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（遥）": {
+      "text": "5周年特别致辞（遥）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（愛莉）": {
+      "text": "5周年特别致辞（爱莉）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（雫）": {
+      "text": "5周年特别致辞（雫）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（こはね）": {
+      "text": "5周年特别致辞（心羽）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（杏）": {
+      "text": "5周年特别致辞（杏）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（彰人）": {
+      "text": "5周年特别致辞（彰人）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（冬弥）": {
+      "text": "5周年特别致辞（冬弥）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（司）": {
+      "text": "5周年特别致辞（司）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（えむ）": {
+      "text": "5周年特别致辞（笑梦）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（寧々）": {
+      "text": "5周年特别致辞（宁宁）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（類）": {
+      "text": "5周年特别致辞（类）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（奏）": {
+      "text": "5周年纪念特别留言（奏）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（まふゆ）": {
+      "text": "5周年纪念特别留言（真冬）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（絵名）": {
+      "text": "5周年纪念特别留言（绘名）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（瑞希）": {
+      "text": "5周年纪念特别留言（瑞希）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（ミク）": {
+      "text": "5周年纪念特别留言（未来）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（リン）": {
+      "text": "5周年纪念特别留言（铃）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（レン）": {
+      "text": "5周年纪念特别留言（连）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（ルカ）": {
+      "text": "5周年纪念特别留言（流歌）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（MEIKO）": {
+      "text": "5周年纪念特别留言（MEIKO）",
+      "source": "llm"
+    },
+    "5th Anniversary Special Message（KAITO）": {
+      "text": "5周年纪念特别留言（KAITO）",
+      "source": "llm"
+    },
+    "5周年記念スペシャルライブ": {
+      "text": "5周年纪念特别演唱会",
+      "source": "llm"
+    },
+    "Our Golden Days アフターライブ": {
+      "text": "Our Golden Days 赛后演唱会",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 遥 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 遥 2025",
+      "source": "llm"
+    },
+    "君と繋ぐHeart Beat アフターライブ": {
+      "text": "与你相连的Heart Beat 赛后演唱会",
+      "source": "llm"
+    },
+    "交わる色はあの日のままに アフターライブ": {
+      "text": "交汇之色一如往昔 赛后演唱会",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 穂波 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 穗波 202",
+      "source": "llm"
+    },
+    "超克のプロタゴニスタ アフターライブ": {
+      "text": "超越自我的主角 After Live",
+      "source": "llm"
+    },
+    "Overcome one's limits アフターライブ": {
+      "text": "Overcome one's limits After Live",
+      "source": "llm"
+    },
+    "仰ぐ夜空に、星は紛れて アフターライブ": {
+      "text": "仰望的夜空，繁星隐没 After Live",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 雫 2025": {
+      "text": "HAPPY BIRTHDAY演唱会 雫 2025",
+      "source": "llm"
+    },
+    "ともに、トゥルールートを目指して アフターライブ": {
+      "text": "共同指向，真实结局 After Live",
+      "source": "llm"
+    },
+    "この物語は希望をのせて アフターライブ": {
+      "text": "载着希望的这篇故事 After Live",
+      "source": "llm"
+    },
+    "HAPPY ANNIVERSARYライブ リン 2025": {
+      "text": "HAPPY ANNIVERSARY演唱会 铃 2025",
+      "source": "llm"
+    },
+    "HAPPY ANNIVERSARYライブ レン 2025": {
+      "text": "HAPPY ANNIVERSARY演唱会 连 2025",
+      "source": "llm"
+    },
+    "ハッピーニューイヤー2026ライブ前編": {
+      "text": "2026新年快乐演唱会 前篇",
+      "source": "llm"
+    },
+    "新年言祝ぐ、祈りの舞 アフターライブ": {
+      "text": "庆贺新春，祈愿之舞 After Live",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ 志歩 2026": {
+      "text": "HAPPY BIRTHDAY演唱会 志步 2026",
+      "source": "llm"
+    },
+    "ハッピーニューイヤー2026ライブ後編": {
+      "text": "2026新年快乐演唱会 后篇",
+      "source": "llm"
+    },
+    "覚めない幻想をノックして アフターライブ": {
+      "text": "敲响不醒的幻想 After Live",
+      "source": "llm"
+    },
+    "GO ALL OUT アフターライブ": {
+      "text": "GO ALL OUT After Live",
+      "source": "llm"
+    },
+    "HAPPY BIRTHDAYライブ まふゆ 2026": {
+      "text": "HAPPY BIRTHDAY演唱会 真冬 2026",
+      "source": "llm"
+    },
+    "HAPPY ANNIVERSARYライブ ルカ 2026": {
+      "text": "HAPPY ANNIVERSARY演唱会 流歌 2026",
+      "source": "llm"
+    }
+  }
+}

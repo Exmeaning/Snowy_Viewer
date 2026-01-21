@@ -5,6 +5,7 @@ import Image from "next/image";
 import { IGachaInfo } from "@/types/types";
 import { getGachaLogoUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
+import { TranslatedText } from "@/components/common/TranslatedText";
 
 interface GachaItemProps {
     gacha: IGachaInfo;
@@ -63,8 +64,14 @@ export default function GachaItem({ gacha }: GachaItemProps) {
 
                 {/* Content */}
                 <div className="p-3">
-                    <h3 className="text-sm font-bold text-primary-text truncate group-hover:text-miku transition-colors">
-                        {gacha.name}
+                    <h3 className="text-sm font-bold text-primary-text group-hover:text-miku transition-colors">
+                        <TranslatedText
+                            original={gacha.name}
+                            category="gacha"
+                            field="name"
+                            originalClassName="truncate block"
+                            translationClassName="text-xs font-medium text-slate-400 truncate block"
+                        />
                     </h3>
                     <div className="mt-1 text-xs text-slate-400 space-y-0.5">
                         <p>{formatDate(gacha.startAt)} ~ {formatDate(gacha.endAt)}</p>

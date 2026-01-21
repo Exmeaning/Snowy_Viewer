@@ -27,3 +27,4 @@ dist/
 .DS_Store
 Thumbs.db
 screenshot-generator/run-local-full.ps1
+scripts/translate_secret.py
