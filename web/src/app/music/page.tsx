@@ -12,6 +12,7 @@ import {
 } from "@/types/music";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
+import { loadTranslations, TranslationData } from "@/lib/translations";
 
 
 function MusicContent() {
@@ -22,6 +23,7 @@ function MusicContent() {
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
     const [musicTags, setMusicTags] = useState<IMusicTagInfo[]>([]);
     const [eventMusicIds, setEventMusicIds] = useState<Set<number>>(new Set());
+    const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filtersInitialized, setFiltersInitialized] = useState(false);
@@ -118,16 +120,18 @@ function MusicContent() {
             try {
                 setIsLoading(true);
 
-                // Fetch essential data first
-                const [musicsData, tagsData, eventMusicsData] = await Promise.all([
+                // Fetch essential data and translations
+                const [musicsData, tagsData, eventMusicsData, translationsData] = await Promise.all([
                     fetchMasterData<IMusicInfo[]>("musics.json"),
                     fetchMasterData<IMusicTagInfo[]>("musicTags.json"),
                     fetchMasterData<{ musicId: number }[]>("eventMusics.json"),
+                    loadTranslations(),
                 ]);
 
                 setMusics(musicsData);
                 setMusicTags(tagsData);
                 setEventMusicIds(new Set(eventMusicsData.map((em) => em.musicId)));
+                setTranslations(translationsData);
                 setError(null);
 
             } catch (err) {
@@ -167,20 +171,25 @@ function MusicContent() {
             result = result.filter((m) => eventMusicIds.has(m.id));
         }
 
-        // Apply search query (supports both name and ID)
+        // Apply search query (supports both name, ID, and Chinese translations)
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase().trim();
             const queryAsNumber = parseInt(query, 10);
-            const isNumericQuery = !isNaN(queryAsNumber);
 
-            result = result.filter(
-                (m) =>
-                    m.id === queryAsNumber ||
-                    m.title.toLowerCase().includes(query) ||
-                    m.composer.toLowerCase().includes(query) ||
-                    m.lyricist.toLowerCase().includes(query) ||
-                    m.arranger.toLowerCase().includes(query)
-            );
+            result = result.filter((m) => {
+                // Match by ID
+                if (m.id === queryAsNumber) return true;
+                // Match by Japanese title
+                if (m.title.toLowerCase().includes(query)) return true;
+                // Match by Chinese title translation
+                const chineseTitle = translations?.music?.title?.[m.title];
+                if (chineseTitle && chineseTitle.toLowerCase().includes(query)) return true;
+                // Match by composer/lyricist/arranger
+                if (m.composer.toLowerCase().includes(query)) return true;
+                if (m.lyricist.toLowerCase().includes(query)) return true;
+                if (m.arranger.toLowerCase().includes(query)) return true;
+                return false;
+            });
         }
 
         // Spoiler filter
@@ -203,7 +212,7 @@ function MusicContent() {
         });
 
         return result;
-    }, [musics, musicTags, eventMusicIds, selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, isShowSpoiler]);
+    }, [musics, musicTags, eventMusicIds, selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
 
     // Displayed musics (with pagination)
     const displayedMusics = useMemo(() => {

@@ -7,6 +7,7 @@ import CardFilters from "@/components/cards/CardFilters";
 import { ICardInfo, CardRarityType, CardAttribute, getRarityNumber, SupportUnit } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
+import { loadTranslations, TranslationData } from "@/lib/translations";
 
 interface ICardSupply {
     id: number;
@@ -21,6 +22,7 @@ function CardsContent() {
     const { isShowSpoiler } = useTheme();
 
     const [cards, setCards] = useState<ICardInfo[]>([]);
+    const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filtersInitialized, setFiltersInitialized] = useState(false);
@@ -139,9 +141,10 @@ function CardsContent() {
                 setIsLoading(true);
 
                 // Fetch both cards and supplies in parallel with compression headers
-                const [cardsData, suppliesData] = await Promise.all([
+                const [cardsData, suppliesData, translationsData] = await Promise.all([
                     fetchMasterData<ICardInfo[]>("cards.json"),
-                    fetchMasterData<ICardSupply[]>("cardSupplies.json").catch(() => [] as ICardSupply[])
+                    fetchMasterData<ICardSupply[]>("cardSupplies.json").catch(() => [] as ICardSupply[]),
+                    loadTranslations(),
                 ]);
 
                 // Create a map of supply ID to supply type
@@ -157,6 +160,7 @@ function CardsContent() {
                 }));
 
                 setCards(enhancedCards);
+                setTranslations(translationsData);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching cards:", err);
@@ -204,16 +208,23 @@ function CardsContent() {
             });
         }
 
-        // Apply search query (supports both name and ID)
+        // Apply search query (supports both name, ID, and Chinese translations)
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase().trim();
             const queryAsNumber = parseInt(query, 10);
 
-            result = result.filter(card =>
-                card.id === queryAsNumber ||
-                card.prefix.toLowerCase().includes(query) ||
-                card.cardSkillName.toLowerCase().includes(query)
-            );
+            result = result.filter(card => {
+                // Match by ID
+                if (card.id === queryAsNumber) return true;
+                // Match by Japanese prefix
+                if (card.prefix.toLowerCase().includes(query)) return true;
+                // Match by Chinese prefix translation
+                const chinesePrefix = translations?.cards?.prefix?.[card.prefix];
+                if (chinesePrefix && chinesePrefix.toLowerCase().includes(query)) return true;
+                // Match by skill name
+                if (card.cardSkillName.toLowerCase().includes(query)) return true;
+                return false;
+            });
         }
 
         // Spoiler filter
@@ -242,7 +253,7 @@ function CardsContent() {
         });
 
         return result;
-    }, [cards, selectedCharacters, selectedAttrs, selectedRarities, selectedSupplyTypes, selectedSupportUnits, searchQuery, sortBy, sortOrder, isShowSpoiler]);
+    }, [cards, selectedCharacters, selectedAttrs, selectedRarities, selectedSupplyTypes, selectedSupportUnits, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
 
 
     // Displayed cards (with pagination)

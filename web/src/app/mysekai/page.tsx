@@ -16,6 +16,7 @@ import {
 } from "@/types/mysekai";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
+import { loadTranslations, TranslationData } from "@/lib/translations";
 
 // Genre name translation map (Japanese -> Chinese)
 const GENRE_NAME_MAP: Record<string, string> = {
@@ -213,6 +214,7 @@ function MysekaiContent() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filtersInitialized, setFiltersInitialized] = useState(false);
+    const [translations, setTranslations] = useState<TranslationData | null>(null);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("");
@@ -309,24 +311,25 @@ function MysekaiContent() {
         router.replace(newUrl, { scroll: false });
     }, [selectedGenre, selectedSubGenre, selectedTag, selectedCharacters, searchQuery, sortBy, sortOrder, router, filtersInitialized]);
 
-    // Fetch data
     useEffect(() => {
         document.title = "Snowy SekaiViewer 家具图鉴";
         async function fetchData() {
             try {
                 setIsLoading(true);
 
-                const [fixturesData, genresData, subGenresData, tagsData] = await Promise.all([
+                const [fixturesData, genresData, subGenresData, tagsData, translationsData] = await Promise.all([
                     fetchMasterData<IMysekaiFixtureInfo[]>("mysekaiFixtures.json"),
                     fetchMasterData<IMysekaiFixtureGenre[]>("mysekaiFixtureMainGenres.json"),
                     fetchMasterData<IMysekaiFixtureSubGenre[]>("mysekaiFixtureSubGenres.json"),
-                    fetchMasterData<IMysekaiFixtureTag[]>("mysekaiFixtureTags.json")
+                    fetchMasterData<IMysekaiFixtureTag[]>("mysekaiFixtureTags.json"),
+                    loadTranslations(),
                 ]);
 
                 setFixtures(fixturesData);
                 setGenres(genresData);
                 setSubGenres(subGenresData);
                 setTags(tagsData);
+                setTranslations(translationsData);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching mysekai data:", err);
@@ -367,10 +370,17 @@ function MysekaiContent() {
     const filteredFixtures = useMemo(() => {
         let result = [...fixtures];
 
-        // Search query
+        // Search query (supports Japanese and Chinese names)
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
-            result = result.filter(f => f.name.toLowerCase().includes(query));
+            result = result.filter(f => {
+                // Match by Japanese name
+                if (f.name.toLowerCase().includes(query)) return true;
+                // Match by Chinese name translation
+                const chineseName = translations?.mysekai?.fixtureName?.[f.name];
+                if (chineseName && chineseName.toLowerCase().includes(query)) return true;
+                return false;
+            });
         }
 
         // Genre filter
@@ -415,7 +425,7 @@ function MysekaiContent() {
         });
 
         return result;
-    }, [fixtures, searchQuery, selectedGenre, selectedSubGenre, selectedTag, selectedCharacters, characterTags, sortBy, sortOrder]);
+    }, [fixtures, searchQuery, selectedGenre, selectedSubGenre, selectedTag, selectedCharacters, characterTags, sortBy, sortOrder, translations]);
 
     // Displayed fixtures
     const displayedFixtures = useMemo(() => {

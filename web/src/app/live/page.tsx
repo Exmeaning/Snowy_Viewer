@@ -7,6 +7,7 @@ import VirtualLiveFilters from "@/components/live/VirtualLiveFilters";
 import { IVirtualLiveInfo, VirtualLiveType } from "@/types/virtualLive";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
+import { loadTranslations, TranslationData } from "@/lib/translations";
 
 function VirtualLiveContent() {
     const router = useRouter();
@@ -14,6 +15,7 @@ function VirtualLiveContent() {
     const { isShowSpoiler } = useTheme();
 
     const [virtualLives, setVirtualLives] = useState<IVirtualLiveInfo[]>([]);
+    const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filtersInitialized, setFiltersInitialized] = useState(false);
@@ -96,8 +98,12 @@ function VirtualLiveContent() {
         async function fetchVirtualLives() {
             try {
                 setIsLoading(true);
-                const data = await fetchMasterData<IVirtualLiveInfo[]>("virtualLives.json");
+                const [data, translationsData] = await Promise.all([
+                    fetchMasterData<IVirtualLiveInfo[]>("virtualLives.json"),
+                    loadTranslations(),
+                ]);
                 setVirtualLives(data);
+                setTranslations(translationsData);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching virtual lives:", err);
@@ -118,15 +124,21 @@ function VirtualLiveContent() {
             result = result.filter(vl => selectedTypes.includes(vl.virtualLiveType as VirtualLiveType));
         }
 
-        // Apply search query (supports both name and ID)
+        // Apply search query (supports both name, ID, and Chinese translations)
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase().trim();
             const queryAsNumber = parseInt(query, 10);
 
-            result = result.filter(vl =>
-                vl.id === queryAsNumber ||
-                vl.name.toLowerCase().includes(query)
-            );
+            result = result.filter(vl => {
+                // Match by ID
+                if (vl.id === queryAsNumber) return true;
+                // Match by Japanese name
+                if (vl.name.toLowerCase().includes(query)) return true;
+                // Match by Chinese name translation
+                const chineseName = translations?.virtualLive?.name?.[vl.name];
+                if (chineseName && chineseName.toLowerCase().includes(query)) return true;
+                return false;
+            });
         }
 
         // Spoiler filter
@@ -149,7 +161,7 @@ function VirtualLiveContent() {
         });
 
         return result;
-    }, [virtualLives, selectedTypes, searchQuery, sortBy, sortOrder, isShowSpoiler]);
+    }, [virtualLives, selectedTypes, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
 
     // Displayed virtual lives (with pagination)
     const displayedVirtualLives = useMemo(() => {

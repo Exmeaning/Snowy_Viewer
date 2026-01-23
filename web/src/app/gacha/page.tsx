@@ -7,6 +7,7 @@ import GachaFilters from "@/components/gacha/GachaFilters";
 import { useTheme } from "@/contexts/ThemeContext";
 import { IGachaInfo } from "@/types/types";
 import { fetchMasterData } from "@/lib/fetch";
+import { loadTranslations, TranslationData } from "@/lib/translations";
 
 function GachaContent() {
     const router = useRouter();
@@ -14,6 +15,7 @@ function GachaContent() {
     const { isShowSpoiler } = useTheme();
 
     const [allGachas, setAllGachas] = useState<IGachaInfo[]>([]);
+    const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filtersInitialized, setFiltersInitialized] = useState(false);
@@ -89,8 +91,12 @@ function GachaContent() {
         async function fetchGachas() {
             try {
                 setIsLoading(true);
-                const data = await fetchMasterData<IGachaInfo[]>("gachas.json");
+                const [data, translationsData] = await Promise.all([
+                    fetchMasterData<IGachaInfo[]>("gachas.json"),
+                    loadTranslations(),
+                ]);
                 setAllGachas(data);
+                setTranslations(translationsData);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching gachas:", err);
@@ -106,15 +112,21 @@ function GachaContent() {
     const filteredGachas = useMemo(() => {
         let result = [...allGachas];
 
-        // Apply search query (supports both name and ID)
+        // Apply search query (supports both name, ID, and Chinese translations)
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase().trim();
             const queryAsNumber = parseInt(query, 10);
 
-            result = result.filter(gacha =>
-                gacha.id === queryAsNumber ||
-                gacha.name.toLowerCase().includes(query)
-            );
+            result = result.filter(gacha => {
+                // Match by ID
+                if (gacha.id === queryAsNumber) return true;
+                // Match by Japanese name
+                if (gacha.name.toLowerCase().includes(query)) return true;
+                // Match by Chinese name translation
+                const chineseName = translations?.gacha?.name?.[gacha.name];
+                if (chineseName && chineseName.toLowerCase().includes(query)) return true;
+                return false;
+            });
         }
 
         // Spoiler filter
@@ -137,7 +149,7 @@ function GachaContent() {
         });
 
         return result;
-    }, [allGachas, searchQuery, sortBy, sortOrder, isShowSpoiler]);
+    }, [allGachas, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
 
     // Displayed gachas (with pagination)
     const displayedGachas = useMemo(() => {

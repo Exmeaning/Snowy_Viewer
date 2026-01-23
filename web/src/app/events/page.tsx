@@ -7,6 +7,7 @@ import EventFilters from "@/components/events/EventFilters";
 import { IEventInfo, EventType } from "@/types/events";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
+import { loadTranslations, TranslationData } from "@/lib/translations";
 
 function EventsContent() {
     const router = useRouter();
@@ -14,6 +15,7 @@ function EventsContent() {
     const { isShowSpoiler } = useTheme();
 
     const [events, setEvents] = useState<IEventInfo[]>([]);
+    const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filtersInitialized, setFiltersInitialized] = useState(false);
@@ -96,8 +98,12 @@ function EventsContent() {
         async function fetchEvents() {
             try {
                 setIsLoading(true);
-                const data = await fetchMasterData<IEventInfo[]>("events.json");
+                const [data, translationsData] = await Promise.all([
+                    fetchMasterData<IEventInfo[]>("events.json"),
+                    loadTranslations(),
+                ]);
                 setEvents(data);
+                setTranslations(translationsData);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching events:", err);
@@ -118,15 +124,21 @@ function EventsContent() {
             result = result.filter(event => selectedTypes.includes(event.eventType as EventType));
         }
 
-        // Apply search query (supports both name and ID)
+        // Apply search query (supports both name, ID, and Chinese translations)
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase().trim();
             const queryAsNumber = parseInt(query, 10);
 
-            result = result.filter(event =>
-                event.id === queryAsNumber ||
-                event.name.toLowerCase().includes(query)
-            );
+            result = result.filter(event => {
+                // Match by ID
+                if (event.id === queryAsNumber) return true;
+                // Match by Japanese name
+                if (event.name.toLowerCase().includes(query)) return true;
+                // Match by Chinese name translation
+                const chineseName = translations?.events?.name?.[event.name];
+                if (chineseName && chineseName.toLowerCase().includes(query)) return true;
+                return false;
+            });
         }
 
         // Spoiler filter
@@ -149,7 +161,7 @@ function EventsContent() {
         });
 
         return result;
-    }, [events, selectedTypes, searchQuery, sortBy, sortOrder, isShowSpoiler]);
+    }, [events, selectedTypes, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
 
     // Displayed events (with pagination)
     const displayedEvents = useMemo(() => {
