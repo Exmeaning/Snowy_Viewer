@@ -42,6 +42,18 @@ export interface TranslationData {
     comic: {
         title: TranslationMap;       // Comic title translations
     };
+    characters: {
+        hobby: TranslationMap;
+        specialSkill: TranslationMap;
+        favoriteFood: TranslationMap;
+        hatedFood: TranslationMap;
+        weak: TranslationMap;
+        introduction: TranslationMap;
+    };
+    units: {
+        unitName: TranslationMap;
+        profileSentence: TranslationMap;
+    };
 }
 
 // Default empty translation data
@@ -54,6 +66,8 @@ const emptyTranslationData: TranslationData = {
     gacha: { name: {} },
     sticker: { name: {} },
     comic: { title: {} },
+    characters: { hobby: {}, specialSkill: {}, favoriteFood: {}, hatedFood: {}, weak: {}, introduction: {} },
+    units: { unitName: {}, profileSentence: {} },
 };
 
 // Cache for loaded translations
@@ -81,7 +95,7 @@ export async function loadTranslations(): Promise<TranslationData> {
             const baseUrl = "/data/translations";
 
             // Load all translation files in parallel
-            const [cards, events, music, virtualLive, mysekai, gacha, sticker, comic] = await Promise.all([
+            const [cards, events, music, virtualLive, mysekai, gacha, sticker, comic, characters, units] = await Promise.all([
                 fetchTranslationFile<TranslationData["cards"]>(`${baseUrl}/cards.json`),
                 fetchTranslationFile<TranslationData["events"]>(`${baseUrl}/events.json`),
                 fetchTranslationFile<TranslationData["music"]>(`${baseUrl}/music.json`),
@@ -90,6 +104,8 @@ export async function loadTranslations(): Promise<TranslationData> {
                 fetchTranslationFile<TranslationData["gacha"]>(`${baseUrl}/gacha.json`),
                 fetchTranslationFile<TranslationData["sticker"]>(`${baseUrl}/sticker.json`),
                 fetchTranslationFile<TranslationData["comic"]>(`${baseUrl}/comic.json`),
+                fetchTranslationFile<TranslationData["characters"]>(`${baseUrl}/characters.json`),
+                fetchTranslationFile<TranslationData["units"]>(`${baseUrl}/units.json`),
             ]);
 
             const result: TranslationData = {
@@ -101,6 +117,8 @@ export async function loadTranslations(): Promise<TranslationData> {
                 gacha: gacha ?? emptyTranslationData.gacha,
                 sticker: sticker ?? emptyTranslationData.sticker,
                 comic: comic ?? emptyTranslationData.comic,
+                characters: characters ?? emptyTranslationData.characters,
+                units: units ?? emptyTranslationData.units,
             };
 
             translationCache = result;

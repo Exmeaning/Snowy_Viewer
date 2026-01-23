@@ -168,3 +168,41 @@ export function getMysekaiMaterialThumbnailUrl(iconAssetbundleName: string, sour
     return `${ASSET_BASE_URL_HARUKI}/ondemand/mysekai/thumbnail/material/${iconAssetbundleName}.png`;
 }
 
+// ==================== Character Asset URLs ====================
+
+// Character trim image (main display image)
+export function getCharacterTrimUrl(characterId: number, source: AssetSourceType = "uni"): string {
+    if (source === "snowyassets") {
+        return `${ASSET_BASE_URL_SNOWY}/startapp/character/character_trim/chr_trim_${characterId}.png`;
+    }
+    const baseUrl = getAssetBaseUrl(source);
+    return `${baseUrl}/startapp/character/character_trim/chr_trim_${characterId}.png`;
+}
+
+// Character horizontal label
+export function getCharacterLabelHUrl(characterId: number, source: AssetSourceType = "uni"): string {
+    if (source === "snowyassets") {
+        return `${ASSET_BASE_URL_SNOWY}/startapp/character/label/chr_h_lb_${characterId}.png`;
+    }
+    const baseUrl = getAssetBaseUrl(source);
+    return `${baseUrl}/startapp/character/label/chr_h_lb_${characterId}.png`;
+}
+
+// Character vertical label
+export function getCharacterLabelVUrl(characterId: number, source: AssetSourceType = "uni"): string {
+    if (source === "snowyassets") {
+        return `${ASSET_BASE_URL_SNOWY}/startapp/character/label_vertical/chr_v_lb_${characterId}.png`;
+    }
+    const baseUrl = getAssetBaseUrl(source);
+    return `${baseUrl}/startapp/character/label_vertical/chr_v_lb_${characterId}.png`;
+}
+
+// Character select thumbnail (for list view)
+export function getCharacterSelectUrl(characterId: number, source: AssetSourceType = "uni"): string {
+    if (source === "snowyassets") {
+        return `${ASSET_BASE_URL_SNOWY}/startapp/character/character_select/chr_tl_${characterId}.png`;
+    }
+    const baseUrl = getAssetBaseUrl(source);
+    return `${baseUrl}/startapp/character/character_select/chr_tl_${characterId}.png`;
+}
+

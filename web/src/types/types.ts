@@ -91,6 +91,42 @@ export interface IGameChara {
     supportUnitType: string;
 }
 
+// Character profile data from characterProfiles.json
+export interface ICharaProfile {
+    characterId: number;
+    height: string;
+    school: string;
+    schoolYear: string;
+    birthday: string;
+    introduction: string;
+    hobby?: string;
+    specialSkill?: string;
+    favoriteFood?: string;
+    hatedFood?: string;
+    weak?: string;
+    scenarioId?: string;
+}
+
+// Character unit information from gameCharacterUnits.json
+export interface ICharaUnitInfo {
+    id: number;
+    gameCharacterId: number;
+    unit: string;
+    colorCode: string;
+    skinColorCode: string;
+    skinShadowColorCode1: string;
+    skinShadowColorCode2: string;
+}
+
+// Unit profile data from unitProfiles.json
+export interface IUnitProfile {
+    unit: string;
+    unitName: string;
+    seq: number;
+    profileSentence: string;
+    colorCode: string;
+}
+
 // Skill data structure
 export interface ISkillEffectDetail {
     level: number;

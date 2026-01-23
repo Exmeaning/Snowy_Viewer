@@ -555,6 +555,81 @@ def extract_mysekai_with_cn() -> Tuple[Dict[str, Dict[str, str]], Dict[str, List
     return cn_translations, jp_only
 
 
+def extract_characters_with_cn() -> Tuple[Dict[str, Dict[str, str]], Dict[str, List[str]]]:
+    """
+    Extract character profile translations from CN server (characterProfiles.json).
+    Fields: hobby, specialSkill, favoriteFood, hatedFood, weak, introduction
+    """
+    jp_profiles = fetch_masterdata("characterProfiles.json", "jp")
+    cn_profiles = fetch_masterdata("characterProfiles.json", "cn")
+    
+    fields = ["hobby", "specialSkill", "favoriteFood", "hatedFood", "weak", "introduction"]
+    cn_translations = {f: {} for f in fields}
+    jp_only = {f: [] for f in fields}
+    
+    if not jp_profiles:
+        return cn_translations, jp_only
+        
+    cn_by_id = {p["characterId"]: p for p in (cn_profiles or [])}
+    
+    for profile in jp_profiles:
+        char_id = profile["characterId"]
+        cn_profile = cn_by_id.get(char_id)
+        
+        for field in fields:
+            jp_text = profile.get(field, "")
+            # Skip empty or placeholder texts
+            if not jp_text or jp_text == "-":
+                continue
+                
+            if cn_profile and cn_profile.get(field) and cn_profile[field] != jp_text:
+                cn_translations[field][jp_text] = cn_profile[field]
+            else:
+                jp_only[field].append(jp_text)
+                
+    for key in jp_only:
+        jp_only[key] = list(set(jp_only[key]))
+        
+    return cn_translations, jp_only
+
+
+def extract_units_with_cn() -> Tuple[Dict[str, Dict[str, str]], Dict[str, List[str]]]:
+    """
+    Extract unit profile translations from CN server (unitProfiles.json).
+    Fields: unitName, profileSentence
+    """
+    jp_units = fetch_masterdata("unitProfiles.json", "jp")
+    cn_units = fetch_masterdata("unitProfiles.json", "cn")
+    
+    fields = ["unitName", "profileSentence"]
+    cn_translations = {f: {} for f in fields}
+    jp_only = {f: [] for f in fields}
+    
+    if not jp_units:
+        return cn_translations, jp_only
+        
+    cn_by_unit = {u["unit"]: u for u in (cn_units or [])}
+    
+    for unit in jp_units:
+        unit_id = unit["unit"]
+        cn_unit = cn_by_unit.get(unit_id)
+        
+        for field in fields:
+            jp_text = unit.get(field, "")
+            if not jp_text:
+                continue
+                
+            if cn_unit and cn_unit.get(field) and cn_unit[field] != jp_text:
+                cn_translations[field][jp_text] = cn_unit[field]
+            else:
+                jp_only[field].append(jp_text)
+                
+    for key in jp_only:
+        jp_only[key] = list(set(jp_only[key]))
+        
+    return cn_translations, jp_only
+
+
 # ============================================================================
 # Main translation logic with source tracking
 # ============================================================================
@@ -699,9 +774,11 @@ def main():
         "mysekai": extract_mysekai_with_cn,
         "sticker": extract_sticker_with_cn,
         "comic": extract_comic_with_cn,
+        "characters": extract_characters_with_cn,
+        "units": extract_units_with_cn,
     }
     
-    priority_order = ["cards", "events", "gacha", "virtualLive", "mysekai", "sticker", "comic", "music"]
+    priority_order = ["cards", "events", "gacha", "virtualLive", "mysekai", "sticker", "comic", "characters", "units", "music"]
     
     if args.category:
         translate_category_enhanced(api_key, args.category, categories[args.category], args.llm, args.dry_run, args.cn_only)
