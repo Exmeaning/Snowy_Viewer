@@ -20,7 +20,7 @@ const unitGroups = [
 
 export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     const { themeCharId, setThemeCharacter, isShowSpoiler, setShowSpoiler, isPowerSaving, setPowerSaving, useTrainedThumbnail, setUseTrainedThumbnail, assetSource, setAssetSource, useLLMTranslation, setUseLLMTranslation, serverSource, setServerSource } = useTheme();
-    const { cloudVersion, isLoading, isRefreshing, forceRefreshData } = useMasterData();
+    const { cloudVersion, localVersion, isLoading, isRefreshing, forceRefreshData } = useMasterData();
     const panelRef = useRef<HTMLDivElement>(null);
 
     // Close on click outside
@@ -311,6 +311,12 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                             <span className="text-xs text-slate-500">SnowyViewer云端最新版本:</span>
                             <span className="text-xs font-mono text-slate-700">
                                 {isLoading ? "检测中..." : (cloudVersion || "加载失败")}
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-500">本地缓存版本:</span>
+                            <span className={`text-xs font-mono ${(localVersion && localVersion !== cloudVersion) ? "text-amber-500 font-bold" : "text-slate-700"}`}>
+                                {localVersion || "未缓存 (使用默认源)"}
                             </span>
                         </div>
                         <button

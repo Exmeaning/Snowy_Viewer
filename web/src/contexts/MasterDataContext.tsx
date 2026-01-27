@@ -4,6 +4,7 @@ import { fetchVersionInfoNoCache, MASTERDATA_VERSION_KEY, clearCacheBypassFlag, 
 
 interface MasterDataContextType {
     cloudVersion: string | null;
+    localVersion: string | null;
     isLoading: boolean;
     isRefreshing: boolean;
     forceRefreshData: () => void;
@@ -13,6 +14,7 @@ const MasterDataContext = createContext<MasterDataContextType | undefined>(undef
 
 export function MasterDataProvider({ children }: { children: React.ReactNode }) {
     const [cloudVersion, setCloudVersion] = useState<string | null>(null);
+    const [localVersion, setLocalVersion] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -41,6 +43,10 @@ export function MasterDataProvider({ children }: { children: React.ReactNode }) 
                 // Store the version after successful refresh
                 if (justRefreshed) {
                     localStorage.setItem(MASTERDATA_VERSION_KEY, cloud);
+                    setLocalVersion(cloud);
+                } else {
+                    // Otherwise load from local storage
+                    setLocalVersion(localStorage.getItem(MASTERDATA_VERSION_KEY));
                 }
             } catch (e) {
                 console.warn("Failed to fetch cloud version:", e);
@@ -80,6 +86,7 @@ export function MasterDataProvider({ children }: { children: React.ReactNode }) 
         <MasterDataContext.Provider
             value={{
                 cloudVersion,
+                localVersion,
                 isLoading,
                 isRefreshing,
                 forceRefreshData,
