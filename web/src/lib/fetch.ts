@@ -9,10 +9,16 @@
 // Server source type
 export type ServerSourceType = "jp" | "cn";
 
-// Server domain configurations
+// Server domain configurations (primary)
 const SERVER_DOMAINS: Record<ServerSourceType, string> = {
     jp: "sekaimaster.exmeaning.com",
     cn: "sekaimaster-cn.exmeaning.com",
+};
+
+// Fallback server domains (used when primary fails, e.g., ISP blocking)
+const FALLBACK_DOMAINS: Record<ServerSourceType, string> = {
+    jp: "sk.exmeaning.com",
+    cn: "sk-cn.exmeaning.com",
 };
 
 /**
@@ -33,10 +39,26 @@ function getMasterBaseUrl(): string {
 }
 
 /**
+ * Get fallback master base URL for runtime (respects server selection)
+ * Used when primary server fails (e.g., ISP blocking)
+ */
+function getFallbackMasterBaseUrl(): string {
+    return `https://${FALLBACK_DOMAINS[getCurrentServer()]}/master`;
+}
+
+/**
  * Get version URL for runtime (respects server selection)
  */
 function getVersionUrl(): string {
     return `https://${SERVER_DOMAINS[getCurrentServer()]}/versions/current_version.json`;
+}
+
+/**
+ * Get fallback version URL for runtime (respects server selection)
+ * Used when primary server fails (e.g., ISP blocking)
+ */
+function getFallbackVersionUrl(): string {
+    return `https://${FALLBACK_DOMAINS[getCurrentServer()]}/versions/current_version.json`;
 }
 
 // Build-time URL (for static generation - more stable for large files >3MB)
@@ -106,33 +128,49 @@ export function clearCacheBypassFlag(): void {
 /**
  * Fetch master data from appropriate source based on environment
  * - Build-time (SSG): Uses GitHub raw for large file stability (>3MB files)
- * - Runtime (Client): Uses sekaimaster.exmeaning.com
+ * - Runtime (Client): Uses sekaimaster.exmeaning.com with fallback to sk.exmeaning.com
  * @param path - Path relative to master directory (e.g., "gachas.json", "cards.json")
  * @param noCache - If true, bypass browser cache by adding timestamp
  */
 export async function fetchMasterData<T>(path: string, noCache: boolean = false): Promise<T> {
-    const baseUrl = isBuildTime() ? MASTER_BUILD_URL : getMasterBaseUrl();
-    let url = `${baseUrl}/${path}`;
-
     // Auto-detect if we need to bypass cache (after version sync refresh)
     const shouldNoCache = noCache || shouldBypassCache();
-
-    // Add cache buster for client-side no-cache requests
-    if (shouldNoCache && !isBuildTime()) {
-        url += `?_t=${Date.now()}`;
-    }
-
-    // Log which source is being used during build
-    if (isBuildTime()) {
-        console.log(`[Build] Fetching ${path} from GitHub raw...`);
-    }
-
     const fetchOptions: RequestInit = shouldNoCache ? { cache: "no-store" } : {};
-    const response = await fetchWithCompression(url, fetchOptions);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch master data: ${path} from ${baseUrl}`);
+    const cacheBuster = shouldNoCache && !isBuildTime() ? `?_t=${Date.now()}` : "";
+
+    // Build-time: use GitHub raw (no fallback needed)
+    if (isBuildTime()) {
+        const url = `${MASTER_BUILD_URL}/${path}`;
+        console.log(`[Build] Fetching ${path} from GitHub raw...`);
+        const response = await fetchWithCompression(url, fetchOptions);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch master data: ${path} from ${MASTER_BUILD_URL}`);
+        }
+        return response.json();
     }
-    return response.json();
+
+    // Runtime: try primary server first, then fallback
+    const primaryUrl = `${getMasterBaseUrl()}/${path}${cacheBuster}`;
+    try {
+        const response = await fetchWithCompression(primaryUrl, fetchOptions);
+        if (response.ok) {
+            return response.json();
+        }
+        // Primary failed with non-ok status, try fallback
+        console.warn(`[MasterData] Primary server failed for ${path}, trying fallback...`);
+    } catch (error) {
+        // Primary failed with network error (e.g., ISP blocking), try fallback
+        console.warn(`[MasterData] Primary server unreachable for ${path}, trying fallback...`, error);
+    }
+
+    // Try fallback server
+    const fallbackUrl = `${getFallbackMasterBaseUrl()}/${path}${cacheBuster}`;
+    const fallbackResponse = await fetchWithCompression(fallbackUrl, fetchOptions);
+    if (!fallbackResponse.ok) {
+        throw new Error(`Failed to fetch master data: ${path} (both primary and fallback servers failed)`);
+    }
+    console.log(`[MasterData] Successfully fetched ${path} from fallback server`);
+    return fallbackResponse.json();
 }
 
 /**
@@ -149,31 +187,63 @@ export async function fetchMultipleMasterData<T extends unknown[]>(
 }
 
 /**
- * Fetch current version info
+ * Fetch current version info with fallback support
  */
 export async function fetchVersionInfo(): Promise<VersionInfo> {
-    const response = await fetchWithCompression(getVersionUrl());
-    if (!response.ok) {
-        throw new Error("Failed to fetch version info");
+    // Try primary server first
+    try {
+        const response = await fetchWithCompression(getVersionUrl());
+        if (response.ok) {
+            return response.json();
+        }
+        console.warn(`[VersionInfo] Primary server failed, trying fallback...`);
+    } catch (error) {
+        console.warn(`[VersionInfo] Primary server unreachable, trying fallback...`, error);
     }
-    return response.json();
+
+    // Try fallback server
+    const fallbackResponse = await fetchWithCompression(getFallbackVersionUrl());
+    if (!fallbackResponse.ok) {
+        throw new Error("Failed to fetch version info (both primary and fallback servers failed)");
+    }
+    console.log(`[VersionInfo] Successfully fetched from fallback server`);
+    return fallbackResponse.json();
 }
 
 /**
  * Fetch current version info with no cache (bypasses browser cache entirely)
  * Used for version comparisons to detect data updates
+ * Includes fallback support for ISP blocking scenarios
  */
 export async function fetchVersionInfoNoCache(): Promise<VersionInfo> {
     // Add timestamp to URL to bypass CDN and browser cache
-    const noCacheUrl = `${getVersionUrl()}?_t=${Date.now()}`;
-    // Use simple fetch without custom headers to avoid CORS preflight issues
-    const response = await fetch(noCacheUrl, {
+    const cacheBuster = `?_t=${Date.now()}`;
+
+    // Try primary server first
+    try {
+        const noCacheUrl = `${getVersionUrl()}${cacheBuster}`;
+        // Use simple fetch without custom headers to avoid CORS preflight issues
+        const response = await fetch(noCacheUrl, {
+            cache: "no-store",
+        });
+        if (response.ok) {
+            return response.json();
+        }
+        console.warn(`[VersionInfo] Primary server failed (no-cache), trying fallback...`);
+    } catch (error) {
+        console.warn(`[VersionInfo] Primary server unreachable (no-cache), trying fallback...`, error);
+    }
+
+    // Try fallback server
+    const fallbackUrl = `${getFallbackVersionUrl()}${cacheBuster}`;
+    const fallbackResponse = await fetch(fallbackUrl, {
         cache: "no-store",
     });
-    if (!response.ok) {
-        throw new Error("Failed to fetch version info (no-cache)");
+    if (!fallbackResponse.ok) {
+        throw new Error("Failed to fetch version info (no-cache) (both primary and fallback servers failed)");
     }
-    return response.json();
+    console.log(`[VersionInfo] Successfully fetched (no-cache) from fallback server`);
+    return fallbackResponse.json();
 }
 
 // Local storage key for cached version
