@@ -212,6 +212,10 @@ export interface IProcessedAction {
     };
     body?: string;
     voice?: string;
+    // CN Translation (from event story translation files)
+    cnBody?: string;
+    cnDisplayName?: string;
+    translationSource?: 'official_cn' | 'llm';
     // SpecialEffect specific
     seType?: string;
     resource?: string;

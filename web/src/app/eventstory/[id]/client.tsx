@@ -15,11 +15,13 @@ import { IStoryAdminResponse, IStoryAdminEvent, IStoryAdminChapter } from "@/typ
 function ChapterItem({
     chapter,
     eventId,
-    assetBundleName
+    assetBundleName,
+    showImage
 }: {
     chapter: IStoryAdminChapter;
     eventId: number;
     assetBundleName: string;
+    showImage: boolean;
 }) {
     // Generate image URL
     // Note: fallback chapters might handle assetBundleName differently if not provided, 
@@ -32,27 +34,38 @@ function ChapterItem({
             className="block mb-4 last:mb-0"
         >
             <div className="bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 backdrop-blur-sm rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-md transition-all group overflow-hidden">
-                <div className="flex gap-4">
-                    {/* Episode Image */}
-                    <div className="relative w-32 aspect-[16/9] rounded-lg overflow-hidden shrink-0 bg-slate-200 dark:bg-slate-700">
-                        <Image
-                            src={imageUrl}
-                            alt={`Episode ${chapter.chapter_no}`}
-                            fill
-                            className="object-cover transition-transform"
-                            unoptimized
-                        />
-                        <div className="absolute top-1 left-1 bg-black/50 backdrop-blur-[2px] text-white text-[10px] px-1.5 py-0.5 rounded">
-                            #{chapter.chapter_no}
+                <div className="flex flex-col sm:flex-row gap-4">
+                    {/* Episode Image - Responsive behavior */}
+                    {showImage && (
+                        <div className="relative w-full sm:w-64 aspect-video sm:aspect-[16/9] rounded-lg overflow-hidden shrink-0 bg-slate-200 dark:bg-slate-700 self-center sm:self-start">
+                            <Image
+                                src={imageUrl}
+                                alt={`Episode ${chapter.chapter_no}`}
+                                fill
+                                className="object-contain"
+                                unoptimized
+                            />
+                            <div className="absolute top-1 left-1 bg-black/50 backdrop-blur-[2px] text-white text-[10px] px-1.5 py-0.5 rounded">
+                                #{chapter.chapter_no}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="flex-1 min-w-0 py-1">
-                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 group-hover:text-miku transition-colors line-clamp-1">
-                            {chapter.title_cn || chapter.title_jp}
-                        </h3>
+                        <div className="flex items-center justify-between gap-2">
+                            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 group-hover:text-miku transition-colors line-clamp-1">
+                                {chapter.title_cn || chapter.title_jp}
+                            </h3>
+                            {/* Mobile arrow indicator */}
+                            <div className="sm:hidden text-slate-400 group-hover:text-miku transition-colors">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </div>
+                        </div>
+
                         {chapter.summary_cn ? (
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed line-clamp-3 sm:line-clamp-none">
                                 {chapter.summary_cn}
                             </p>
                         ) : (
@@ -62,7 +75,7 @@ function ChapterItem({
                         )}
                     </div>
 
-                    <div className="text-slate-400 group-hover:text-miku transition-colors self-center">
+                    <div className="hidden sm:block text-slate-400 group-hover:text-miku transition-colors self-center">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
@@ -82,6 +95,7 @@ export default function EventStorySummaryClient() {
     const [adminData, setAdminData] = useState<IStoryAdminResponse | null>(null);
     const [eventInfo, setEventInfo] = useState<IEventInfo | null>(null);
     const [fallbackChapters, setFallbackChapters] = useState<{ chapter_no: number; title: string, scenarioId: string }[]>([]);
+    const [showEpImages, setShowEpImages] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -258,9 +272,34 @@ export default function EventStorySummaryClient() {
                                 </svg>
                                 章节列表
                             </h2>
-                            <span className="text-sm text-slate-500 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
-                                共 {adminData?.chapters?.length || fallbackChapters.length || 0} 话
-                            </span>
+                            <div className="flex items-center gap-4">
+                                {/* Toggle Images Button (Visible mostly on mobile but useful everywhere) */}
+                                <button
+                                    onClick={() => setShowEpImages(!showEpImages)}
+                                    className="text-xs sm:text-sm px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5"
+                                >
+                                    {showEpImages ? (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span className="hidden sm:inline">隐藏图片</span>
+                                            <span className="sm:hidden">无图</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span className="hidden sm:inline">显示图片</span>
+                                            <span className="sm:hidden">有图</span>
+                                        </>
+                                    )}
+                                </button>
+                                <span className="text-sm text-slate-500 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
+                                    共 {adminData?.chapters?.length || fallbackChapters.length || 0} 话
+                                </span>
+                            </div>
                         </div>
 
                         <div className="space-y-4">
@@ -272,6 +311,7 @@ export default function EventStorySummaryClient() {
                                         chapter={chapter}
                                         eventId={eventId}
                                         assetBundleName={eventInfo.assetbundleName}
+                                        showImage={showEpImages}
                                     />
                                 ))
                             ) : fallbackChapters.length > 0 ? (
@@ -294,6 +334,7 @@ export default function EventStorySummaryClient() {
                                         }}
                                         eventId={eventId}
                                         assetBundleName={eventInfo.assetbundleName}
+                                        showImage={showEpImages}
                                     />
                                 ))
                             ) : (

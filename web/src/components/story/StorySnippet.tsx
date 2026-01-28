@@ -2,21 +2,31 @@
 import { useState } from "react";
 import { IProcessedAction, SnippetAction } from "@/types/story";
 import { getCharacterIconUrl } from "@/lib/assets";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface TalkSnippetProps {
     characterId: number;
     characterName: string;
     text: string;
     voiceUrl?: string;
+    cnText?: string;
+    cnDisplayName?: string;
+    translationSource?: 'official_cn' | 'llm';
 }
 
-export function TalkSnippet({ characterId, characterName, text, voiceUrl }: TalkSnippetProps) {
+export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText, cnDisplayName, translationSource }: TalkSnippetProps) {
+    const { useLLMTranslation } = useTheme();
     const iconUrl = characterId > 0 && characterId <= 26
         ? getCharacterIconUrl(characterId)
         : null;
 
+    // Use CN display name when translation is enabled and available
+    const displayName = (useLLMTranslation && cnDisplayName) ? cnDisplayName : characterName;
+    // Show CN text when translation is enabled
+    const showCnText = useLLMTranslation && !!cnText;
+
     return (
-        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 my-3 shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 my-3 shadow-sm border border-slate-200/50 dark:border-slate-700/50 relative">
             <div className="flex items-start gap-3">
                 {/* Character Avatar */}
                 <div className="shrink-0">
@@ -29,7 +39,7 @@ export function TalkSnippet({ characterId, characterName, text, voiceUrl }: Talk
                     ) : (
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center border-2 border-slate-300 dark:border-slate-600">
                             <span className="text-white text-sm font-bold">
-                                {characterName.charAt(0)}
+                                {displayName.charAt(0)}
                             </span>
                         </div>
                     )}
@@ -40,7 +50,7 @@ export function TalkSnippet({ characterId, characterName, text, voiceUrl }: Talk
                     {/* Character Name Badge */}
                     <div className="flex items-center gap-2 mb-2">
                         <span className="inline-block px-2.5 py-0.5 bg-miku/10 text-miku text-sm font-medium rounded-full border border-miku/20">
-                            {characterName}
+                            {displayName}
                         </span>
                     </div>
 
@@ -48,6 +58,13 @@ export function TalkSnippet({ characterId, characterName, text, voiceUrl }: Talk
                     <p className="text-primary-text text-base leading-relaxed whitespace-pre-wrap">
                         {text}
                     </p>
+
+                    {/* CN Translation */}
+                    {showCnText && (
+                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed whitespace-pre-wrap mt-1.5 pt-1.5 border-t border-slate-200/50 dark:border-slate-700/50">
+                            {cnText}
+                        </p>
+                    )}
                 </div>
 
                 {/* Voice Button */}
@@ -159,8 +176,8 @@ export function SoundSnippet({ hasBgm, hasSe, audioUrl }: SoundSnippetProps) {
         <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 my-2 border border-slate-200/50 dark:border-slate-700/50">
             <div className="flex items-center gap-3">
                 <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${hasBgm
-                        ? "bg-green-500/20 text-green-600 dark:text-green-400"
-                        : "bg-orange-500/20 text-orange-600 dark:text-orange-400"
+                    ? "bg-green-500/20 text-green-600 dark:text-green-400"
+                    : "bg-orange-500/20 text-orange-600 dark:text-orange-400"
                     }`}>
                     {hasBgm ? "BGM" : hasSe ? "SE" : "音效"}
                 </span>
@@ -204,8 +221,8 @@ function AudioPlayButton({ url, className = "" }: AudioPlayButtonProps) {
         <button
             onClick={handlePlay}
             className={`p-2 rounded-full transition-colors ${isPlaying
-                    ? "bg-miku/20 text-miku"
-                    : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-miku/10 hover:text-miku"
+                ? "bg-miku/20 text-miku"
+                : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-miku/10 hover:text-miku"
                 } ${className}`}
             title={isPlaying ? "停止" : "播放"}
         >
@@ -237,6 +254,9 @@ export function StorySnippet({ action }: StorySnippetProps) {
                     characterName={action.chara?.name || "???"}
                     text={action.body || ""}
                     voiceUrl={action.voice}
+                    cnText={action.cnBody}
+                    cnDisplayName={action.cnDisplayName}
+                    translationSource={action.translationSource}
                 />
             );
 

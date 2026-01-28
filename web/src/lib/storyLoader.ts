@@ -201,3 +201,57 @@ export async function processScenarioForDisplay(
 
     return { characters, actions };
 }
+
+/**
+ * Merge CN translations into processed actions
+ * For each Talk action, looks up the CN translation for body and display name
+ * 
+ * @param actions - The processed actions from JP scenario
+ * @param translation - The event story translation data (or null if not available)
+ * @param episodeNo - The episode number to look up
+ * @returns Actions with CN translation fields populated
+ */
+import { IEventStoryTranslation, getStoryTranslation } from "./eventStoryTranslation";
+
+export function mergeTranslations(
+    actions: IProcessedAction[],
+    translation: IEventStoryTranslation | null,
+    episodeNo: number
+): IProcessedAction[] {
+    if (!translation) return actions;
+
+    const episodeTranslation = getStoryTranslation(translation, episodeNo);
+    if (!episodeTranslation) return actions;
+
+    return actions.map(action => {
+        if (action.type === SnippetAction.Talk && action.body) {
+            // Find translation for body
+            const cnBody = episodeTranslation.talkData[action.body];
+
+            // Find translation for Display Name
+            const cnDisplayName = action.chara?.name
+                ? episodeTranslation.talkData[action.chara.name]
+                : undefined;
+
+            if (cnBody || cnDisplayName) {
+                return {
+                    ...action,
+                    cnBody,
+                    cnDisplayName: cnDisplayName || action.chara?.name,
+                    translationSource: translation.meta?.source
+                };
+            }
+        }
+        return action;
+    });
+}
+
+export function mergeStoryTitle(
+    originalTitle: string,
+    translation: IEventStoryTranslation | null,
+    episodeNo: number
+): string {
+    if (!translation) return originalTitle;
+    const episodeTranslation = getStoryTranslation(translation, episodeNo);
+    return episodeTranslation?.title || originalTitle;
+}

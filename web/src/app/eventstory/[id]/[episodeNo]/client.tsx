@@ -4,13 +4,14 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { StorySnippet } from "@/components/story/StorySnippet";
-import { fetchScenarioData, processScenarioForDisplay } from "@/lib/storyLoader";
+import { fetchScenarioData, processScenarioForDisplay, mergeTranslations, mergeStoryTitle } from "@/lib/storyLoader";
 import { fetchMasterData } from "@/lib/fetch";
 import { getEventLogoUrl, getAssetBaseUrl, getScenarioJsonUrl } from "@/lib/assets";
 import { IProcessedScenarioData, IEventStory } from "@/types/story";
 import { IEventInfo } from "@/types/events";
 import { useTheme } from "@/contexts/ThemeContext";
 import { loadTranslations, TranslationData } from "@/lib/translations";
+import { loadEventStoryTranslation } from "@/lib/eventStoryTranslation";
 
 export default function StoryReaderClient() {
     const params = useParams();
@@ -26,7 +27,10 @@ export default function StoryReaderClient() {
     const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [translatedEpisodeTitle, setTranslatedEpisodeTitle] = useState<string | null>(null);
+    const [translationSource, setTranslationSource] = useState<'official_cn' | 'llm' | undefined>(undefined);
 
+    const { useLLMTranslation } = useTheme();
     // Load story data
     useEffect(() => {
         async function loadStory() {
@@ -34,11 +38,12 @@ export default function StoryReaderClient() {
                 setIsLoading(true);
                 setError(null);
 
-                // Fetch master data
-                const [storiesData, eventsData, translationsData] = await Promise.all([
+                // Fetch master data and event story translation in parallel
+                const [storiesData, eventsData, translationsData, eventStoryTranslation] = await Promise.all([
                     fetchMasterData<IEventStory[]>("eventStories.json"),
                     fetchMasterData<IEventInfo[]>("events.json"),
                     loadTranslations(),
+                    loadEventStoryTranslation(eventId),
                 ]);
                 setEvents(eventsData);
                 setTranslations(translationsData);
@@ -63,14 +68,28 @@ export default function StoryReaderClient() {
                 // Fetch and process scenario
                 const rawData = await fetchScenarioData(scenarioUrl);
                 const processedData = await processScenarioForDisplay(rawData);
-                setScenarioData(processedData);
 
-                // Update title
+                // Merge CN translations into actions
+                const actionsWithTranslation = mergeTranslations(
+                    processedData.actions,
+                    eventStoryTranslation,
+                    episodeNo
+                );
+                setScenarioData({
+                    ...processedData,
+                    actions: actionsWithTranslation,
+                });
+
+                // Update title and source
+                const episodeTitle = mergeStoryTitle(episode.title, eventStoryTranslation, episodeNo);
+                setTranslatedEpisodeTitle(episodeTitle);
+                setTranslationSource(eventStoryTranslation?.meta?.source);
+
                 const event = eventsData.find(e => e.id === eventId);
                 const eventName = translationsData?.events?.name?.[event?.name || ""] || event?.name || `活动 ${eventId}`;
-                document.title = `${episode.title} - ${eventName} - Snowy SekaiViewer`;
+                document.title = `${episodeTitle} - ${eventName} - Snowy SekaiViewer`;
 
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error loading story:", err);
                 setError(err instanceof Error ? err.message : "Failed to load story");
             } finally {
@@ -124,17 +143,34 @@ export default function StoryReaderClient() {
                         )}
                         <div className="flex-1">
                             <p className="text-slate-500 text-sm">{getEventName()}</p>
-                            <h1 className="text-xl font-bold text-primary-text">
+                            <div className="flex items-center gap-2">
                                 {currentEpisode ? (
-                                    <>
-                                        <span className="text-miku">第 {episodeNo} 话</span>
-                                        {" - "}
-                                        {currentEpisode.title}
-                                    </>
+                                    <div className="min-w-0 flex items-center gap-2">
+                                        <div className="min-w-0">
+                                            <h1 className="font-bold truncate text-slate-900 dark:text-slate-100">
+                                                <span className="text-miku">第 {episodeNo} 话</span>
+                                                {" - "}
+                                                {useLLMTranslation && translatedEpisodeTitle ? translatedEpisodeTitle : currentEpisode?.title}
+                                            </h1>
+                                            <p className="text-sm text-slate-500 truncate">
+                                                {events?.find(e => e.id === Number(params.id))?.name}
+                                            </p>
+                                        </div>
+                                        {useLLMTranslation && translationSource && (
+                                            <span className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded border ${translationSource === 'official_cn'
+                                                ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700/50'
+                                                : 'bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700'
+                                                }`}>
+                                                {translationSource === 'official_cn' ? '官方CN' : 'AI翻译'}
+                                            </span>
+                                        )}
+                                    </div>
                                 ) : (
-                                    `第 ${episodeNo} 话`
+                                    <h1 className="text-xl font-bold text-primary-text">
+                                        `第 ${episodeNo} 话`
+                                    </h1>
                                 )}
-                            </h1>
+                            </div>
                         </div>
                     </div>
                 </div>
