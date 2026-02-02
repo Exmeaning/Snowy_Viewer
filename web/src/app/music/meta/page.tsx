@@ -375,9 +375,7 @@ function MusicMetaContent() {
 
     const totalPages = Math.ceil(filteredMetas.length / pageSize);
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery, pageSize]);
+
 
     const handleSort = (field: keyof IMusicMeta) => {
         if (sortField === field) {
@@ -562,7 +560,10 @@ function MusicMetaContent() {
         <div className="flex flex-wrap items-center justify-between gap-4 mt-4 px-2">
             <div className="flex items-center gap-2 text-sm text-slate-600">
                 <span>每页</span>
-                <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="px-2 py-1 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-miku/50">
+                <select value={pageSize} onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                }} className="px-2 py-1 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-miku/50">
                     {PAGE_SIZE_OPTIONS.map((size) => (<option key={size} value={size}>{size}</option>))}
                 </select>
                 <span>条</span>
@@ -709,7 +710,10 @@ function MusicMetaContent() {
                                 type="text"
                                 placeholder="搜索歌曲ID或名称..."
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(1);
+                                }}
                                 className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-miku/50"
                             />
                         </div>

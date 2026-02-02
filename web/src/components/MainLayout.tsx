@@ -2,6 +2,7 @@
 import React from "react";
 import MainNavbar from "./MainNavbar";
 import MainFooter from "./MainFooter";
+import ScrollToTop from "./ScrollToTop";
 import SekaiLoader from "./SekaiLoader";
 import BackgroundPattern from "./BackgroundPattern";
 
@@ -34,6 +35,9 @@ export default function MainLayout({
 
             {/* Footer */}
             <MainFooter />
+            {/* Scroll To Top */}
+            <ScrollToTop />
+
         </main>
     );
 }
