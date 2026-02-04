@@ -65,6 +65,11 @@ export function getEventLogoUrl(assetbundleName: string, source: AssetSourceType
     return `${baseUrl}/ondemand/event/${assetbundleName}/logo/logo.png`;
 }
 
+export function getEventBgmUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
+    const baseUrl = source === "uni" ? ASSET_BASE_URL_HARUKI : getAssetBaseUrl(source);
+    return `${baseUrl}/ondemand/event/${assetbundleName}/bgm/${assetbundleName}_top.mp3`;
+}
+
 // ==================== Gacha Asset URLs ====================
 
 export function getGachaLogoUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {

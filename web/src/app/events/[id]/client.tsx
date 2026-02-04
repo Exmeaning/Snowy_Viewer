@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,7 +13,7 @@ import {
     EVENT_STATUS_DISPLAY,
     EventType
 } from "@/types/events";
-import { getEventLogoUrl, getCharacterIconUrl, getCardThumbnailUrl, getEventBannerUrl, getEventCharacterUrl, getMusicJacketUrl, getVirtualLiveBannerUrl } from "@/lib/assets";
+import { getEventLogoUrl, getCharacterIconUrl, getCardThumbnailUrl, getEventBannerUrl, getEventCharacterUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
 import { CHARACTER_NAMES, getRarityNumber, RARITY_DISPLAY, isTrainableCard } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData, fetchWithCompression } from "@/lib/fetch";
@@ -463,6 +463,19 @@ export default function EventDetailPage() {
                             </div>
                         </div>
 
+                        {/* Event Theme Song Card */}
+                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
+                                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                    </svg>
+                                    活动BGM
+                                </h2>
+                            </div>
+                            <EventBgmPlayer event={event} assetSource={assetSource} />
+                        </div>
+
                         {/* Bonus Info Card */}
                         <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
                             <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
@@ -752,6 +765,140 @@ export default function EventDetailPage() {
                 </div>
             </div>
         </MainLayout>
+    );
+}
+
+
+function EventBgmPlayer({ event, assetSource }: { event: IEventInfo; assetSource: any }) {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    // Use useRef to keep track of the current audio URL to handle changes if needed, 
+    // though usually event ID doesn't change without remount.
+    // We get the URL directly in the render to ensure reactivity to assetSource changes
+    const audioUrl = getEventBgmUrl(event.assetbundleName, assetSource);
+
+    const togglePlay = () => {
+        if (!audioRef.current) {
+            audioRef.current = new Audio(audioUrl);
+            audioRef.current.volume = 0.5; // Default volume
+            audioRef.current.onended = () => setIsPlaying(false);
+            audioRef.current.onplay = () => setIsPlaying(true);
+            audioRef.current.onpause = () => setIsPlaying(false);
+            audioRef.current.onloadedmetadata = () => {
+                if (audioRef.current) setDuration(audioRef.current.duration);
+            };
+            audioRef.current.ontimeupdate = () => {
+                if (audioRef.current) {
+                    setProgress(audioRef.current.currentTime);
+                }
+            };
+        }
+
+        if (isPlaying) {
+            audioRef.current.pause();
+        } else {
+            audioRef.current.play().catch(console.error);
+        }
+    };
+
+    const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const time = parseFloat(e.target.value);
+        setProgress(time);
+        if (audioRef.current) {
+            audioRef.current.currentTime = time;
+        }
+    };
+
+    const formatTime = (time: number) => {
+        const mins = Math.floor(time / 60);
+        const secs = Math.floor(time % 60);
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
+
+    // Clean up on unmount
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
+    }, []);
+
+    // Also restart/reset if audioUrl changes (e.g. source change)
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current = null;
+            setIsPlaying(false);
+            setProgress(0);
+        }
+    }, [audioUrl]);
+
+    return (
+        <div className="px-5 py-4 hover:bg-slate-50 transition-colors group">
+            <div className="flex items-center gap-4">
+                {/* Play Button */}
+                <button
+                    onClick={togglePlay}
+                    className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all ${isPlaying
+                        ? "bg-slate-800 text-white"
+                        : "bg-miku text-white shadow-md shadow-miku/20 hover:scale-105 active:scale-95"
+                        }`}
+                >
+                    {isPlaying ? (
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                        </svg>
+                    ) : (
+                        <svg className="w-6 h-6 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    )}
+                </button>
+
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="text-sm font-bold text-slate-700 truncate">
+                            <span className="mr-2">活动主题曲</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {/* Download Button */}
+                            <a
+                                href={audioUrl}
+                                download={`${event.assetbundleName}_top.mp3`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 text-slate-400 hover:text-miku hover:bg-miku/5 rounded-lg transition-colors"
+                                title="下载音频"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Progress Bar & Time */}
+                    <div className="flex items-center gap-3">
+                        <input
+                            type="range"
+                            min="0"
+                            max={duration || 100}
+                            value={progress}
+                            onChange={handleSeek}
+                            className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-miku hover:bg-slate-300 transition-colors"
+                        />
+                        <span className="text-[10px] font-mono text-slate-400 shrink-0 min-w-[60px] text-right">
+                            {formatTime(progress)} / {formatTime(duration)}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 
