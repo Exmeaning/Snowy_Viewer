@@ -15,7 +15,7 @@ import {
     CardAttribute,
     SUPPORT_UNIT_NAMES,
 } from "@/types/types";
-import { getCardFullUrl, getCardThumbnailUrl, getEventBannerUrl, getGachaBannerUrl, getGachaLogoUrl, getCardGachaVoiceUrl } from "@/lib/assets";
+import { getCardFullUrl, getCardThumbnailUrl, getEventBannerUrl, getGachaBannerUrl, getGachaLogoUrl, getCardGachaVoiceUrl, getCostumeThumbnailUrl } from "@/lib/assets";
 import { useRef } from "react";
 import { formatSkillDescription } from "@/lib/skill";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -40,6 +40,19 @@ const SUPPLY_TYPE_NAMES: Record<string, string> = {
     "unit_event_limited": "WorldLink限定",
     "collaboration_limited": "联动限定",
 };
+
+interface Costume3d {
+    id: number;
+    costume3dGroupId: number;
+    name: string;
+    assetbundleName: string;
+    costume3dRarity: string;
+    costume3dType: string;
+    partType: string; // "head", "body", "hair"
+    characterId: number;
+    colorId: number;
+    colorName: string; // e.g. "Original", "Another 1"
+}
 
 export default function CardDetailPage() {
     const params = useParams();
@@ -66,6 +79,7 @@ export default function CardDetailPage() {
     const [imageViewerOpen, setImageViewerOpen] = useState(false);
     const [relatedEvent, setRelatedEvent] = useState<{ id: number; name: string; assetbundleName: string } | null>(null);
     const [relatedGachas, setRelatedGachas] = useState<{ id: number; name: string; assetbundleName: string }[]>([]);
+    const [relatedCostumes, setRelatedCostumes] = useState<Costume3d[]>([]);
 
 
     // Set mounted state
@@ -266,9 +280,21 @@ export default function CardDetailPage() {
             }
         }
 
+        async function fetchCostumes() {
+            try {
+                const res = await fetch(`${API_BASE}/api/cards/${cardId}/costumes`);
+                if (!res.ok) return;
+                const data = await res.json();
+                setRelatedCostumes(data);
+            } catch (e) {
+                console.log("Could not fetch costumes");
+            }
+        }
+
         if (cardId) {
             fetchEventMap();
             fetchGachaMap();
+            fetchCostumes();
         }
     }, [cardId]);
 
@@ -799,6 +825,7 @@ export default function CardDetailPage() {
                                     </div>
                                 </div>
 
+
                                 {/* Trained Skill (After Blooming) */}
                                 {trainedSkillData && card.specialTrainingSkillName && (
                                     <div>
@@ -826,6 +853,23 @@ export default function CardDetailPage() {
                                 )}
                             </div>
                         </div>
+
+                        {/* Costumes Card */}
+                        {relatedCostumes.length > 0 && (
+                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
+                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        卡片服装
+                                    </h2>
+                                </div>
+                                <div className="p-5">
+                                    <CostumeGrid costumes={relatedCostumes} assetSource={assetSource} />
+                                </div>
+                            </div>
+                        )}
 
                         {/* Related Event Card */}
                         {relatedEvent && (
@@ -936,8 +980,8 @@ export default function CardDetailPage() {
                         返回卡牌列表
                     </button>
                 </div>
-            </div>
-        </MainLayout>
+            </div >
+        </MainLayout >
     );
 }
 
@@ -1025,6 +1069,133 @@ function GachaPhraseRow({ phrase, assetbundleName }: { phrase: string; assetbund
                     onEnded={() => setIsPlaying(false)}
                     className="hidden"
                 />
+            </div>
+        </div>
+    );
+}
+
+// Costume Grid Component
+// Costume Grid Component
+function CostumeGrid({ costumes, assetSource }: { costumes: Costume3d[], assetSource: any }) {
+
+    // Group variants
+    const groups = useMemo(() => {
+        const map = new Map<string, Costume3d[]>();
+        costumes.forEach(c => {
+            // Group by GroupID (and PartType just to be safe, though GroupID should be unique enough)
+            const key = `${c.costume3dGroupId}-${c.partType}`;
+            if (!map.has(key)) map.set(key, []);
+            map.get(key)!.push(c);
+        });
+
+        const result: { key: string, partType: string, variants: Costume3d[] }[] = [];
+        map.forEach((variants, key) => {
+            variants.sort((a, b) => a.colorId - b.colorId);
+            result.push({ key, partType: variants[0].partType, variants });
+        });
+
+        // Sort groups: Body -> Hair -> Head
+        // For multiple heads, they just appear after Hair.
+        result.sort((a, b) => {
+            const order = { "body": 1, "hair": 2, "head": 3 };
+            const scoreA = order[a.partType as keyof typeof order] || 99;
+            const scoreB = order[b.partType as keyof typeof order] || 99;
+
+            if (scoreA !== scoreB) return scoreA - scoreB;
+            // Secondary sort by GroupID for stability
+            return a.variants[0].costume3dGroupId - b.variants[0].costume3dGroupId;
+        });
+
+        return result;
+    }, [costumes]);
+
+    // Determine available colors (union of all colorIds)
+    const availableColors = useMemo(() => {
+        const colors = new Set<number>();
+        costumes.forEach(c => colors.add(c.colorId));
+        return Array.from(colors).sort((a, b) => a - b);
+    }, [costumes]);
+
+    const [activeColorId, setActiveColorId] = useState(1);
+
+    // Initial effect: If ID 1 doesn't exist (unlikely), pick first available
+    useEffect(() => {
+        if (availableColors.length > 0 && !availableColors.includes(1)) {
+            setActiveColorId(availableColors[0]);
+        }
+    }, [availableColors]);
+
+    return (
+        <div className="flex flex-col gap-4">
+            {/* Unified Color Switcher */}
+            {availableColors.length > 1 && (
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                    <span className="text-xs font-bold text-slate-500">颜色切换</span>
+                    <div className="flex flex-wrap gap-2">
+                        {availableColors.map(colorId => (
+                            <button
+                                key={colorId}
+                                onClick={() => setActiveColorId(colorId)}
+                                className={`px-3 py-1 rounded-full text-xs font-mono transition-all border
+                                    ${activeColorId === colorId
+                                        ? "bg-miku text-white border-miku shadow-sm"
+                                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                                    }
+                                `}
+                            >
+                                Color {colorId}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                {groups.map(group => (
+                    <CostumeGroupItem
+                        key={group.key}
+                        variants={group.variants}
+                        targetColorId={activeColorId}
+                        assetSource={assetSource}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function CostumeGroupItem({ variants, targetColorId, assetSource }: { variants: Costume3d[], targetColorId: number, assetSource: any }) {
+    // Find exact color match, or fallback to first (usually color 1)
+    const displayVariant = variants.find(v => v.colorId === targetColorId) || variants[0];
+
+    const partTypeName = {
+        "head": "发饰",
+        "hair": "发型",
+        "body": "服装"
+    }[displayVariant.partType] || displayVariant.partType;
+
+    return (
+        <div className="flex flex-col items-center bg-slate-50 rounded-xl p-2 border border-slate-100 transition-all duration-300">
+            <div className="group relative w-full aspect-square mb-2 bg-white rounded-lg border border-slate-200 overflow-hidden">
+                <Image
+                    key={displayVariant.assetbundleName}
+                    src={getCostumeThumbnailUrl(displayVariant.assetbundleName, assetSource)}
+                    alt={displayVariant.name}
+                    fill
+                    className="object-cover transition-opacity duration-300"
+                    unoptimized
+                />
+                {/* Tooltip */}
+                <div className="absolute bottom-0 left-0 w-full bg-black/60 backdrop-blur-[1px] p-1 translate-y-full group-hover:translate-y-0 transition-transform z-10">
+                    <p className="text-[10px] text-white text-center truncate">{displayVariant.name}</p>
+                </div>
+            </div>
+
+            <div className="flex items-center justify-between w-full px-0.5">
+                <span className="text-xs font-bold text-slate-600">{partTypeName}</span>
+                <span className="text-[10px] text-slate-400 font-mono">
+                    {displayVariant.colorId === targetColorId ? `Color ${displayVariant.colorId}` : `(Color ${displayVariant.colorId})`}
+                </span>
             </div>
         </div>
     );

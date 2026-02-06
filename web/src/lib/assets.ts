@@ -39,6 +39,14 @@ export function getCardThumbnailUrl(
     return `${baseUrl}/startapp/thumbnail/chara/${assetbundleName}_${status}.png`;
 }
 
+export function getCostumeThumbnailUrl(
+    assetbundleName: string,
+    source: AssetSourceType = "uni"
+): string {
+    const baseUrl = getAssetBaseUrl(source);
+    return `${baseUrl}/startapp/thumbnail/costume/${assetbundleName}.png`;
+}
+
 export function getCardFullUrl(
     characterId: number,
     assetbundleName: string,

@@ -88,6 +88,25 @@ type GachaPickup struct {
 	CardID  int `json:"cardId"`
 }
 
+// Costume Structs
+type CardCostume3d struct {
+	CardID      int `json:"cardId"`
+	Costume3dID int `json:"costume3dId"`
+}
+
+type Costume3d struct {
+	ID                 int    `json:"id"`
+	Costume3dGroupId   int    `json:"costume3dGroupId"`
+	Name               string `json:"name"`
+	AssetbundleName    string `json:"assetbundleName"`
+	Costume3dRarity    string `json:"costume3dRarity"`
+	Costume3dType      string `json:"costume3dType"` // "normal"
+	PartType           string `json:"partType"`      // "head", "body", "hair"
+	CharacterId        int    `json:"characterId"`
+	ColorId            int    `json:"colorId"`
+	ArchivePublishedAt int64  `json:"archivePublishedAt"`
+}
+
 // Response Structs
 type GachaListItem struct {
 	ID              int    `json:"id"`
@@ -110,6 +129,11 @@ var (
 	cardEventMap  = make(map[int]EventInfo)
 	musicEventMap = make(map[int][]EventInfo)
 	cardGachaMap  = make(map[int][]GachaInfo)
+
+	// Costume Maps
+	cardCostume3dMap    = make(map[int][]int)       // cardId -> []costume3dId
+	costume3dGroupIdMap = make(map[int]int)         // costume3dId -> costume3dGroupId
+	costume3dGroupMap   = make(map[int][]Costume3d) // costume3dGroupId -> []Costume3d (all variants)
 
 	// Event <-> VirtualLive mappings
 	eventVirtualLiveMap = make(map[int]VirtualLiveInfo) // eventId -> VirtualLiveInfo
@@ -309,8 +333,10 @@ const (
 	EventCardsURL  = "https://sekaimaster.exmeaning.com/master/eventCards.json"
 	EventMusicsURL = "https://sekaimaster.exmeaning.com/master/eventMusics.json"
 	// Use GitHub raw content for large data files to avoid stream errors on the mirror
-	VirtualLivesURL = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/virtualLives.json"
-	GachasURL       = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/gachas.json"
+	VirtualLivesURL   = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/virtualLives.json"
+	GachasURL         = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/gachas.json"
+	CardCostume3dsURL = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/cardCostume3ds.json"
+	Costume3dsURL     = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/costume3ds.json"
 )
 
 const (
@@ -382,6 +408,16 @@ func fetchData() error {
 	var gachas []Gacha
 	if err := loadOrFetch("gachas.json", GachasURL, &gachas); err != nil {
 		fmt.Printf("Warning: failed to fetch gachas: %v\n", err)
+	}
+
+	var cardCostume3ds []CardCostume3d
+	if err := loadOrFetch("cardCostume3ds.json", CardCostume3dsURL, &cardCostume3ds); err != nil {
+		fmt.Printf("Warning: failed to fetch cardCostume3ds: %v\n", err)
+	}
+
+	var costume3ds []Costume3d
+	if err := loadOrFetch("costume3ds.json", Costume3dsURL, &costume3ds); err != nil {
+		fmt.Printf("Warning: failed to fetch costume3ds: %v\n", err)
 	}
 
 	// Build Maps
@@ -457,6 +493,23 @@ func fetchData() error {
 		}
 	}
 
+	// Build Costume Maps
+	newCardCostume3dMap := make(map[int][]int)
+	newCostume3dGroupIdMap := make(map[int]int)
+	newCostume3dGroupMap := make(map[int][]Costume3d)
+
+	// 1. Map Card -> Costume3dIDs
+	for _, cc := range cardCostume3ds {
+		newCardCostume3dMap[cc.CardID] = append(newCardCostume3dMap[cc.CardID], cc.Costume3dID)
+	}
+
+	// 2. Process Costumes
+	// We want to group by GroupID.
+	for _, c := range costume3ds {
+		newCostume3dGroupIdMap[c.ID] = c.Costume3dGroupId
+		newCostume3dGroupMap[c.Costume3dGroupId] = append(newCostume3dGroupMap[c.Costume3dGroupId], c)
+	}
+
 	mutex.Lock()
 	cardEventMap = newCardEventMap
 	musicEventMap = newMusicEventMap
@@ -465,9 +518,12 @@ func fetchData() error {
 	virtualLiveEventMap = newVirtualLiveEventMap
 	gachaList = gachas
 	gachaPickups = newGachaPickups
+	cardCostume3dMap = newCardCostume3dMap
+	costume3dGroupIdMap = newCostume3dGroupIdMap
+	costume3dGroupMap = newCostume3dGroupMap
 	mutex.Unlock()
 
-	fmt.Printf("Data updated. Mapped %d cards, %d musics, %d event-vl, loaded %d gachas.\n", len(newCardEventMap), len(newMusicEventMap), len(newEventVirtualLiveMap), len(gachas))
+	fmt.Printf("Data updated. Mapped %d cards, %d musics, %d event-vl, loaded %d gachas, %d costumes.\n", len(newCardEventMap), len(newMusicEventMap), len(newEventVirtualLiveMap), len(gachas), len(costume3ds))
 	return nil
 }
 
@@ -757,6 +813,62 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
+	})
+
+	// Get Card Costumes
+	mux.HandleFunc("/api/cards/", func(w http.ResponseWriter, r *http.Request) {
+		// Expects /api/cards/{id}/costumes
+		parts := strings.Split(r.URL.Path, "/")
+		if len(parts) < 5 || parts[4] != "costumes" {
+			http.NotFound(w, r)
+			return
+		}
+		cardIdStr := parts[3]
+		cardId, err := strconv.Atoi(cardIdStr)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+
+		mutex.RLock()
+		defer mutex.RUnlock()
+
+		w.Header().Set("Content-Type", "application/json")
+
+		// 1. Get Costume3dIDs for this card
+		costumeIds, ok := cardCostume3dMap[cardId]
+		if !ok || len(costumeIds) == 0 {
+			json.NewEncoder(w).Encode([]Costume3d{}) // Empty array
+			return
+		}
+
+		// 2. Find Groups and Collect all Variants
+		// We use a map to deduplicate groups (though usually a card refers to a specific costume ID which belongs to a group, and we want the WHOLE group)
+		// Wait, if a card has multiple costumes (e.g. hair and body?), we want all of them.
+
+		seenGroupIds := make(map[int]bool)
+		var result []Costume3d
+
+		for _, cid := range costumeIds {
+			groupId, exists := costume3dGroupIdMap[cid]
+			if exists {
+				if !seenGroupIds[groupId] {
+					seenGroupIds[groupId] = true
+					// Append all items from this group
+					if groupItems, ok := costume3dGroupMap[groupId]; ok {
+						result = append(result, groupItems...)
+					}
+				}
+			}
+		}
+
+		// Sort result? Maybe by ID or Seq (if available).
+		// For now just return as is.
+		if result == nil {
+			result = []Costume3d{}
+		}
+
+		json.NewEncoder(w).Encode(result)
 	})
 
 	// Bilibili Dynamic Proxy

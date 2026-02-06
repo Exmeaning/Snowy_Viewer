@@ -29,6 +29,8 @@ jobs:
           curl -sS --fail --retry 5 "$GITHUB_BASE/eventMusics.json" -o data/master/eventMusics.json
           curl -sS --fail --retry 5 "$GITHUB_BASE/virtualLives.json" -o data/master/virtualLives.json
           curl -sS --fail --retry 5 "$GITHUB_BASE/gachas.json" -o data/master/gachas.json
+          curl -sS --fail --retry 5 "$GITHUB_BASE/cardCostume3ds.json" -o data/master/cardCostume3ds.json
+          curl -sS --fail --retry 5 "$GITHUB_BASE/costume3ds.json" -o data/master/costume3ds.json
           
           # Validate JSON files
           echo "Validating downloaded JSON files..."
