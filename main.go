@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 
 	"snowy_viewer/internal/bilibili"
 	"snowy_viewer/internal/cache"
@@ -30,9 +29,6 @@ func main() {
 	if err := store.Fetch(); err != nil {
 		fmt.Printf("Initial fetch error: %v\n", err)
 	}
-
-	// Start periodic data updates (every hour)
-	store.StartPeriodicUpdate(1 * time.Hour)
 
 	// Create router and register handlers
 	mux := http.NewServeMux()
