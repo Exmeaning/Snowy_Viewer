@@ -1,17 +1,21 @@
-"use client";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "SnowyBot Viewer - 关于",
+};
 
 export default function AboutPage() {
     // Tech Stack Data
     const techStack = [
         { name: "Golang", color: "bg-blue-100 text-blue-600" },
         { name: "Next.js 16", color: "bg-black text-white" },
+        { name: "React 19", color: "bg-cyan-100 text-cyan-600" },
+        { name: "TypeScript", color: "bg-blue-100 text-blue-700" },
         { name: "Tailwind CSS", color: "bg-sky-100 text-sky-600" },
-        { name: "PostgreSQL", color: "bg-blue-200 text-blue-800" },
-        { name: "Docker", color: "bg-sky-100 text-sky-600" },
         { name: "Cloudflare", color: "bg-orange-100 text-orange-600" },
     ];
 

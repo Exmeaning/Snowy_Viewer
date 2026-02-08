@@ -221,7 +221,7 @@ export default function PredictionClient() {
                 </div>
 
                 {/* Controls */}
-                <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                <div className="flex flex-col sm:flex-row gap-4 mb-8 items-center sm:items-stretch">
                     {/* Server Toggle */}
                     <div className="flex bg-white rounded-xl border border-slate-200 p-1">
                         <button
@@ -265,6 +265,32 @@ export default function PredictionClient() {
                             )}
                         </select>
                     </div>
+                    {/* Warning for >99% progress */}
+                    {eventState && eventState.isActive && eventState.banner.progressPercent >= 99 && (
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm w-full sm:w-auto justify-center sm:justify-start shrink-0"
+                            style={{
+                                borderColor: `${themeColor}40`,
+                                backgroundColor: `${themeColor}10`,
+                            }}>
+                            <div
+                                className="w-6 h-6 shrink-0"
+                                style={{
+                                    backgroundColor: themeColor,
+                                    maskImage: `url(/miku.webp)`,
+                                    maskSize: 'contain',
+                                    maskRepeat: 'no-repeat',
+                                    maskPosition: 'center',
+                                    WebkitMaskImage: `url(/miku.webp)`,
+                                    WebkitMaskSize: 'contain',
+                                    WebkitMaskRepeat: 'no-repeat',
+                                    WebkitMaskPosition: 'center',
+                                }}
+                            />
+                            <span className="text-sm font-medium whitespace-nowrap" style={{ color: themeColor }}>
+                                活动结束前数小时 Snowy停止预测
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Error Message */}
@@ -378,6 +404,7 @@ export default function PredictionClient() {
                                             </div>
                                         </div>
                                     </Link>
+
 
                                     {/* Row 1: PGAI + Activity Stats (Only if Active) */}
                                     {isActive && (
