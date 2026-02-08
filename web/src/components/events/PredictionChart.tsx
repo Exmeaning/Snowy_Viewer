@@ -10,6 +10,8 @@ interface PredictionChartProps {
 }
 
 export default function PredictionChart({ data, height, className }: PredictionChartProps) {
+    const showPrediction = data.Rank <= 10000;
+
     const option = useMemo(() => {
         const historyTimes = data.HistoryPoints.map(p => {
             const date = new Date(p.t);
@@ -39,7 +41,7 @@ export default function PredictionChart({ data, height, className }: PredictionC
                 }
             },
             legend: {
-                data: ['实际分数', '预测分数'],
+                data: showPrediction ? ['实际分数', '预测分数'] : ['实际分数'],
                 top: 0,
                 textStyle: { color: '#64748b' }
             },
@@ -112,7 +114,7 @@ export default function PredictionChart({ data, height, className }: PredictionC
                         }
                     }
                 },
-                {
+                ...(showPrediction ? [{
                     name: '预测分数',
                     type: 'line',
                     data: predictScores,
@@ -129,10 +131,10 @@ export default function PredictionChart({ data, height, className }: PredictionC
                             ]
                         }
                     }
-                }
+                }] : [])
             ]
         };
-    }, [data]);
+    }, [data, showPrediction]);
 
     return (
         <div
@@ -147,16 +149,19 @@ export default function PredictionChart({ data, height, className }: PredictionC
                         <div className="font-bold text-slate-700">{data.CurrentScore.toLocaleString()}</div>
                     </div>
                 </div>
-                <div className="text-right">
-                    <div className="text-sm text-slate-500">预测分数</div>
-                    <div className="text-lg font-bold text-amber-500">{data.PredictedScore.toLocaleString()}</div>
-                </div>
+                {showPrediction && (
+                    <div className="text-right">
+                        <div className="text-sm text-slate-500">预测分数</div>
+                        <div className="text-lg font-bold text-amber-500">{data.PredictedScore.toLocaleString()}</div>
+                    </div>
+                )}
             </div>
             <div className="flex-1 min-h-0">
                 <ReactECharts
                     option={option}
                     style={{ height: '100%', width: '100%' }}
                     opts={{ renderer: 'svg' }}
+                    notMerge={true}
                 />
             </div>
         </div>

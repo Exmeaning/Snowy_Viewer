@@ -453,10 +453,10 @@ export default function PredictionPage() {
                                                                 {isActive && (
                                                                     <>
                                                                         <td className="px-4 py-3 text-right text-amber-600 font-mono font-bold">
-                                                                            {chart.PredictedScore.toLocaleString()}
+                                                                            {chart.Rank > 10000 ? '-' : chart.PredictedScore.toLocaleString()}
                                                                         </td>
                                                                         <td className="px-4 py-3 text-right text-slate-500 font-mono">
-                                                                            +{(chart.PredictedScore - chart.CurrentScore).toLocaleString()}
+                                                                            {chart.Rank > 10000 ? '-' : `+${(chart.PredictedScore - chart.CurrentScore).toLocaleString()}`}
                                                                         </td>
                                                                         <td className="px-4 py-3 text-right font-mono">
                                                                             {tierStats ? (
@@ -472,7 +472,7 @@ export default function PredictionPage() {
                                                                             <div className="flex justify-center items-center">
                                                                                 <Sparkline
                                                                                     data={historyData}
-                                                                                    prediction={predictData.length > 0 ? predictData : undefined}
+                                                                                    prediction={(predictData.length > 0 && chart.Rank <= 10000) ? predictData : undefined}
                                                                                     color={trendColor}
                                                                                     width={100}
                                                                                     height={30}
