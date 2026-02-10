@@ -1130,13 +1130,13 @@ function CostumeGrid({ costumes, assetSource }: { costumes: Costume3d[], assetSo
             {/* Unified Color Switcher */}
             {availableColors.length > 1 && (
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                    <span className="text-xs font-bold text-slate-500">颜色切换</span>
-                    <div className="flex flex-wrap gap-2">
+                    <span className="text-xs font-bold text-slate-500 flex-shrink-0">颜色切换</span>
+                    <div className="flex overflow-x-auto gap-2 pb-2 -mx-1 px-1 custom-scrollbar w-full">
                         {availableColors.map(colorId => (
                             <button
                                 key={colorId}
                                 onClick={() => setActiveColorId(colorId)}
-                                className={`px-3 py-1 rounded-full text-xs font-mono transition-all border
+                                className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-mono transition-all border whitespace-nowrap
                                     ${activeColorId === colorId
                                         ? "bg-miku text-white border-miku shadow-sm"
                                         : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"

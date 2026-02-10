@@ -4,13 +4,18 @@ import { fetchMasterData } from "@/lib/fetch";
 import { IGachaInfo } from "@/types/types";
 
 // Static params for SSG
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
+    console.log("Generating static params for gacha/[id]...");
     try {
         const gachas = await fetchMasterData<IGachaInfo[]>("gachas.json");
+        console.log(`Found ${gachas.length} gachas.`);
         return gachas.map((gacha) => ({
             id: gacha.id.toString(),
         }));
-    } catch {
+    } catch (e) {
+        console.error("Error generating static params for gacha:", e);
         return [];
     }
 }

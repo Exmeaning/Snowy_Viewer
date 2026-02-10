@@ -115,8 +115,11 @@ export function useScrollRestore({
         // Track scroll position in ref (this always reflects current scroll)
         const handleScroll = () => {
             lastScrollY.current = window.scrollY;
-            // Also save periodically (debounced effectively by the scroll event rate)
-            saveScrollPosition();
+            // Only save periodically AFTER scroll restoration is complete
+            // This prevents overwriting the saved position with 0 during initial mount
+            if (hasRestoredScroll.current) {
+                saveScrollPosition();
+            }
         };
 
         // Initialize with current scroll position
@@ -134,6 +137,8 @@ export function useScrollRestore({
             const link = target.closest('a');
             if (link && link.href && !link.target && !link.download) {
                 // This is an internal link click - save immediately
+                // Always save here even during restore, because user is actively navigating away
+                lastScrollY.current = window.scrollY;
                 saveScrollPosition();
             }
         };
@@ -144,7 +149,11 @@ export function useScrollRestore({
             window.removeEventListener("scroll", handleScroll);
             document.removeEventListener("click", handleClick, { capture: true });
             // Save on cleanup (route change) - use ref value
-            saveScrollPosition();
+            // Only save if scroll restoration is already complete, to avoid
+            // overwriting the saved position with 0 during re-mounts
+            if (hasRestoredScroll.current) {
+                saveScrollPosition();
+            }
         };
     }, [SCROLL_KEY]);
 
