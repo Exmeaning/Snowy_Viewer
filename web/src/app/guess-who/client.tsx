@@ -598,40 +598,147 @@ function GuessWhoContent() {
                                             <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
                                                 <CanvasImage image={activeImagesRef.current[res.round]} objectFit="cover" />
                                             </div>
-                                            <div className="relative z-10 flex gap-4 w-full">
-                                                <div className="w-16 h-16 relative shrink-0">
-                                                    <div className="absolute inset-0 rounded-lg overflow-hidden shadow-sm ring-1 ring-black/10">
-                                                        <Image src={getCharacterIconUrl(res.card.characterId)} alt="char" fill className="object-cover" />
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-xs text-slate-500 font-bold uppercase tracking-wide mb-0.5">Round {res.round + 1}</div>
-                                                    <div className={`font-black text-lg leading-tight mb-1 ${res.isCorrect ? "text-green-700" : "text-red-700"}`}>
-                                                        {res.isCorrect ? "正确" : `错误`}
-                                                    </div>
-                                                    {!res.isCorrect && <div className="text-xs text-red-600 font-bold bg-white/50 inline-block px-1 rounded">选了: {res.userGuess ? CHARACTER_NAMES[res.userGuess] : "超时"}</div>}
-                                                    <div className="text-xs text-slate-600 truncate mt-1 flex items-center gap-1">
-                                                        <span className="font-bold">{CHARACTER_NAMES[res.card.characterId]}</span>
-                                                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                                                        <span className="opacity-80">{res.card.prefix}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right flex flex-col justify-between">
-                                                    <div className="text-lg font-bold text-slate-700">+{res.score}</div>
-                                                    {res.distortions && res.distortions.length > 0 && (
-                                                        <div className="flex flex-wrap justify-end gap-1 mt-1 content-end">
-                                                            {res.distortions.map((d, i) => (
-                                                                <span key={i} className="text-[10px] px-1.5 py-0.5 bg-slate-800/80 text-white rounded font-bold shadow-sm whitespace-nowrap">
-                                                                    {d.label}
-                                                                </span>
-                                                            ))}
+                                            <div className="relative z-10 flex flex-col gap-2 w-full">
+                                                <div className="flex gap-4 w-full">
+                                                    <div className="w-16 h-16 relative shrink-0">
+                                                        <div className="absolute inset-0 rounded-lg overflow-hidden shadow-sm ring-1 ring-black/10">
+                                                            <Image src={getCharacterIconUrl(res.card.characterId)} alt="char" fill className="object-cover" />
                                                         </div>
-                                                    )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-xs text-slate-500 font-bold uppercase tracking-wide mb-0.5">Round {res.round + 1}</div>
+                                                        <div className={`font-black text-lg leading-tight mb-1 ${res.isCorrect ? "text-green-700" : "text-red-700"}`}>
+                                                            {res.isCorrect ? "正确" : `错误`}
+                                                        </div>
+                                                        {!res.isCorrect && <div className="text-xs text-red-600 font-bold bg-white/50 inline-block px-1 rounded block w-fit mb-1">选了: {res.userGuess ? CHARACTER_NAMES[res.userGuess] : "超时"}</div>}
+                                                        <div className="text-xs text-slate-600 truncate flex items-center gap-1">
+                                                            <span className="font-bold shrink-0">{CHARACTER_NAMES[res.card.characterId]}</span>
+                                                            <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0"></span>
+                                                            <span className="opacity-80 truncate">{res.card.prefix}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-lg font-bold text-slate-700 shrink-0">+{res.score}</div>
                                                 </div>
+                                                {res.distortions && res.distortions.length > 0 && (
+                                                    <div className="flex flex-wrap justify-end gap-1 px-1">
+                                                        {res.distortions.map((d, i) => (
+                                                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-slate-800/80 text-white rounded font-bold shadow-sm whitespace-nowrap">
+                                                                {d.label}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </Link>
                                     ))}
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </MainLayout>
+        );
+    }
+
+    // Split for brevity / manual re-insertion of large render blocks
+    return GuessWhoClientPlayingAndSetup({
+        gameState, settings, setSettings,
+        currentTotalScore, timeLeft, isRoundActive,
+        currentRound, showFeedback, feedbackResult, currentCanvasImage,
+        canvasRef, currentDistortions, handleGuess, handleNextRound,
+        availableCharacters, startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime,
+        potentialScore: getCurrentPotentialScore()
+    });
+}
+
+export default function GuessWhoClient() {
+    return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+            <GuessWhoContent />
+        </Suspense>
+    );
+}
+
+// Helper to keep code clean since we are repeating the layout in "Playing" mode
+function GuessWhoClientPlayingAndSetup({
+    gameState, settings, setSettings,
+    currentTotalScore, timeLeft, isRoundActive,
+    currentRound, showFeedback, feedbackResult, currentCanvasImage,
+    canvasRef, currentDistortions, handleGuess, handleNextRound,
+    availableCharacters, startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime, potentialScore
+}: any) {
+    if (gameState === "playing") {
+        return (
+            <MainLayout activeNav="我是谁">
+                <div className="min-h-screen">
+                    <div className="container mx-auto px-4 py-4 flex flex-col min-h-screen relative">
+                        {/* Feedback Overlay */}
+                        {showFeedback && feedbackResult && currentCanvasImage && (
+                            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 cursor-pointer animate-in fade-in duration-200" onClick={handleNextRound}>
+                                <div className="relative w-full max-w-lg aspect-[4/3] sm:aspect-auto sm:h-[70vh]">
+                                    <CanvasImage image={currentCanvasImage} objectFit="contain" />
+                                </div>
+                                <div className={`mt-8 px-8 py-4 rounded-full font-black text-3xl animate-bounce ${feedbackResult.isCorrect ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
+                                    {feedbackResult.isCorrect ? "CORRECT!" : "WRONG!"}
+                                </div>
+                                <div className="mt-4 text-center text-white">
+                                    <div className="text-2xl font-bold mb-1">{CHARACTER_NAMES[feedbackResult.card.characterId]}</div>
+                                    <div className="text-slate-300">{feedbackResult.card.prefix}</div>
+                                </div>
+                                <div className="mt-8 text-slate-400 text-sm animate-pulse">点击屏幕继续 ({FEEDBACK_DURATION / 1000}s 后自动跳转)</div>
+                            </div>
+                        )}
+
+                        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-4 shadow-sm mb-6">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <div className="text-xl font-bold text-slate-700">Round {currentRound + 1} / {ROUNDS_PER_GAME}</div>
+                                    <div className="text-xs text-slate-400 font-mono mt-1">Seed: {settings.seed}</div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-black text-slate-800">{currentTotalScore} <span className="text-sm text-slate-400 font-normal">pts</span></div>
+                                    {isRoundActive && <div className="text-sm font-bold text-miku animate-pulse">+{potentialScore}</div>}
+                                </div>
+                            </div>
+                            <div className="relative h-6 w-full bg-slate-200 rounded-full overflow-hidden">
+                                <div className="h-full bg-miku transition-all duration-100 ease-linear" style={{ width: `${(timeLeft / settings.timeLimit) * 100}%` }} />
+                                <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow-md">{formatTime(timeLeft)}</div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 flex flex-col items-center justify-start gap-8">
+                            <div className="relative">
+                                <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white bg-slate-100 shrink-0" style={{ width: 300, height: 300 }}>
+                                    <canvas ref={canvasRef} width={300} height={300} className="w-full h-full" />
+                                    {isRoundActive && currentDistortions.length > 0 && (
+                                        <div className="absolute top-2 right-2 flex flex-col gap-1 items-end pointer-events-none">
+                                            {currentDistortions.map((d: ActiveDistortion, i: number) => (
+                                                <span key={i} className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded shadow-sm opacity-90">
+                                                    {d.label}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {!isRoundActive && !showFeedback && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white font-bold backdrop-blur-sm">
+                                            Loading...
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="w-full max-w-5xl flex flex-wrap justify-center gap-2 sm:gap-3 p-4 bg-white/80 backdrop-blur-md rounded-3xl shadow-sm transition-opacity">
+                                {Object.entries(CHARACTER_NAMES).map(([idStr, name]) => {
+                                    const id = Number(idStr);
+                                    const color = CHAR_COLORS[idStr];
+                                    if (!availableCharacters.includes(id)) return null;
+                                    return (
+                                        <button key={id} onClick={() => isRoundActive && handleGuess(id)} disabled={!isRoundActive} className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl overflow-hidden relative group transition-transform active:scale-95 hover:scale-105 disabled:opacity-50 disabled:scale-100 ring-2 ring-transparent hover:ring-miku shadow-sm" title={name}>
+                                            <Image src={getCharacterIconUrl(id)} alt={name} fill className="object-cover" unoptimized />
+                                            <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity" style={{ backgroundColor: color }} />
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
@@ -653,8 +760,7 @@ function GuessWhoContent() {
                         <p className="text-slate-500 font-medium">通过随机裁剪的卡面猜测角色</p>
                     </div>
 
-                    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-sm border border-slate-100 space-y-8">
-                        {/* Seed & Share */}
+                    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-sm border border-slate-100 space-y-6 sm:space-y-8">
                         <div className="flex flex-col sm:flex-row gap-4">
                             <div className="flex-1">
                                 <label className="block text-sm font-bold text-slate-700 mb-2">随机种子</label>
@@ -665,8 +771,8 @@ function GuessWhoContent() {
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex items-end">
-                                <button onClick={copyShareLink} className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 h-[42px]">
+                            <div className="flex items-end w-full sm:w-auto">
+                                <button onClick={copyShareLink} className="w-full sm:w-auto justify-center px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center gap-2 h-[42px]">
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
                                     分享
                                 </button>
@@ -681,8 +787,8 @@ function GuessWhoContent() {
                                         key={d}
                                         onClick={() => setSettings({ ...settings, difficulty: d })}
                                         className={`py-3 rounded-xl font-bold capitalize transition-all text-sm ${settings.difficulty === d
-                                                ? `${d === 'extreme' ? 'bg-red-500 ring-red-300' : 'bg-miku ring-miku/30'} text-white shadow-md ring-2`
-                                                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                            ? `${d === 'extreme' ? 'bg-red-500 ring-red-300' : 'bg-miku ring-miku/30'} text-white shadow-md ring-2`
+                                            : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                                             }`}
                                     >
                                         {d === "easy" ? "简单" : d === "normal" ? "普通" : d === "hard" ? "困难" : "极限"}
@@ -747,10 +853,3 @@ function GuessWhoContent() {
     );
 }
 
-export default function GuessWhoClient() {
-    return (
-        <Suspense fallback={<MainLayout activeNav="我是谁"><div className="flex h-screen items-center justify-center">Loading...</div></MainLayout>}>
-            <GuessWhoContent />
-        </Suspense>
-    );
-}
