@@ -173,12 +173,31 @@ export async function fetchMasterData<T>(path: string, noCache: boolean = false)
     // Build-time: use GitHub raw (no fallback needed)
     if (isBuildTime()) {
         const url = `${MASTER_BUILD_URL}/${path}`;
-        console.log(`[Build] Fetching ${path} from GitHub raw...`);
-        const response = await fetchWithCompression(url, fetchOptions);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch master data: ${path} from ${MASTER_BUILD_URL}`);
+        // Only log once per path to avoid spamming build logs
+        if (!(global as any).__fetchedPaths) (global as any).__fetchedPaths = new Set();
+        if (!(global as any).__fetchedPaths.has(path)) {
+            console.log(`[Build] Fetching ${path} from GitHub raw...`);
+            (global as any).__fetchedPaths.add(path);
         }
-        return response.json();
+
+        try {
+            const response = await fetchWithCompression(url, fetchOptions);
+            if (!response.ok) {
+                // If main master fails, try CN master (for cn-specific assets)
+                const cnUrl = `${MASTER_BUILD_URL_CN}/${path}`;
+                if (!(global as any).__fetchedPaths.has(path + "_cn")) {
+                    console.log(`[Build] Fetching ${path} from CN GitHub raw...`);
+                    (global as any).__fetchedPaths.add(path + "_cn");
+                }
+                const cnResponse = await fetchWithCompression(cnUrl, fetchOptions);
+                if (cnResponse.ok) return cnResponse.json();
+
+                throw new Error(`Failed to fetch master data: ${path}`);
+            }
+            return response.json();
+        } catch (e) {
+            throw e;
+        }
     }
 
     // Runtime: try primary server first, then fallback
