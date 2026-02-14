@@ -91,6 +91,13 @@ function RangeSlider({
                 step={step}
                 value={value}
                 onChange={(e) => onChange(Number(e.target.value))}
+                onPointerDown={() => {
+                    // Fix for mobile: Blur active element (like textarea) when touching slider
+                    // to prevent keyboard from popping up or staying open
+                    if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                    }
+                }}
                 className="flex-1 h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-miku
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-miku [&::-webkit-slider-thumb]:shadow-md
