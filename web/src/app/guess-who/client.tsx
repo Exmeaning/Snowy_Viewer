@@ -155,6 +155,7 @@ function GuessWhoContent() {
     const [gameState, setGameState] = useState<GameState>("setup");
     const [cards, setCards] = useState<ICardInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string>("");
 
     // Settings
     const [settings, setSettings] = useState<GameSettings>({
@@ -218,20 +219,24 @@ function GuessWhoContent() {
     }, [searchParams]);
 
     // Load Data
-    useEffect(() => {
-        async function loadData() {
-            try {
-                const data = await fetchMasterData<ICardInfo[]>("cards.json");
-                const validCards = data.filter(c => c.characterId > 0 && c.characterId <= 26);
-                setCards(validCards);
-            } catch (e) {
-                console.error("Failed to load cards", e);
-            } finally {
-                setIsLoading(false);
-            }
+    const loadCards = useCallback(async () => {
+        setIsLoading(true);
+        setLoadError("");
+        try {
+            const data = await fetchMasterData<ICardInfo[]>("cards.json");
+            const validCards = data.filter(c => c.characterId > 0 && c.characterId <= 26);
+            setCards(validCards);
+        } catch (e) {
+            console.error("Failed to load cards", e);
+            setLoadError("卡面数据加载失败，请检查网络后重试");
+        } finally {
+            setIsLoading(false);
         }
-        loadData();
     }, []);
+
+    useEffect(() => {
+        loadCards();
+    }, [loadCards]);
 
     // Share URL
     const getShareUrl = () => {
@@ -711,7 +716,8 @@ function GuessWhoContent() {
         canvasRef, currentDistortions, handleGuess, handleNextRound,
         availableCharacters, startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime,
         potentialScore: getCurrentPotentialScore(),
-        combo, strikes
+        combo, strikes,
+        loadError, loadCards, isLoading
     });
 }
 
@@ -730,7 +736,9 @@ function GuessWhoClientPlayingAndSetup({
     currentRound, showFeedback, feedbackResult, currentCanvasImage,
     canvasRef, currentDistortions, handleGuess, handleNextRound,
     availableCharacters, startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime, potentialScore,
-    combo, strikes
+
+    combo, strikes,
+    loadError, loadCards, isLoading
 }: any) {
     const multiplier = combo > 0 ? 1.0 + (combo * 0.5) : 1.0;
 
@@ -843,6 +851,13 @@ function GuessWhoClientPlayingAndSetup({
                         </div>
                         <h1 className="text-4xl font-black text-slate-800 mb-2 drop-shadow-sm">我是谁 <span className="text-miku">?</span></h1>
                         <p className="text-slate-500 font-medium">通过随机裁剪的卡面猜测角色</p>
+                        <a
+                            href="/guess-who/multiplayer/"
+                            className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-miku text-white rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 hover:bg-miku-dark"
+                        >
+                            <span>联机对战模式beta</span>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                        </a>
                     </div>
 
                     <div className="bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-sm border border-slate-100 space-y-6 sm:space-y-8">
@@ -929,8 +944,17 @@ function GuessWhoClientPlayingAndSetup({
                         <div className="text-xs text-slate-400 text-center">已选: {settings.selectedUnitIds.length > 0 ? "~" + availableCharacters.length + " 名角色" : "全部26名角色"}</div>
                     </div>
 
-                    <button onClick={startGame} className="w-full py-4 bg-gradient-to-r from-miku to-miku-dark text-white rounded-2xl font-black text-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
-                        开始挑战
+                    {loadError && (
+                        <div className="text-center p-4 bg-red-50 border border-red-200 rounded-2xl">
+                            <p className="text-red-600 text-sm font-medium mb-2">{loadError}</p>
+                            <button onClick={loadCards} className="px-4 py-2 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors">
+                                重新加载
+                            </button>
+                        </div>
+                    )}
+
+                    <button onClick={startGame} disabled={isLoading || !!loadError} className={`w-full py-4 bg-gradient-to-r from-miku to-miku-dark text-white rounded-2xl font-black text-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all ${(isLoading || loadError) ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        {isLoading ? "加载中..." : "开始挑战"}
                     </button>
                 </div>
             </div>

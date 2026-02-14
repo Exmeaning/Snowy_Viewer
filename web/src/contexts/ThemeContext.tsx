@@ -114,6 +114,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             // Update light variant for background (mix with 95% white)
             const lightColor = mixWithWhite(themeColor, 95);
             document.documentElement.style.setProperty("--theme-light", lightColor);
+
+            // Add RGB variant for rgba usage
+            const rgb = hexToRgb(themeColor);
+            if (rgb) {
+                document.documentElement.style.setProperty("--color-miku-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+            }
         }
     }, [themeColor, mounted]);
 
@@ -246,6 +252,16 @@ function mixWithWhite(hex: string, percent: number): string {
     const newB = Math.round(B * (1 - factor) + 255 * factor);
 
     return `#${((1 << 24) + (newR << 16) + (newG << 8) + newB).toString(16).slice(1)}`;
+}
+
+// Helper: Hex to RGB object
+function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
 }
 
 // Export character data for use in settings
