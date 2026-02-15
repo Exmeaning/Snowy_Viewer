@@ -694,7 +694,7 @@ export default function DeckRecommendClient() {
 
                 <div className="mt-12 text-center text-xs text-slate-400">
                     <p className="mb-1">
-                        组卡推荐器源代码采用cfl03(33)的 <ExternalLink href="https://github.com/xfl03/sekai-calculator" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-calculator</ExternalLink>
+                        组卡推荐器源代码采用xfl03(33)的 <ExternalLink href="https://github.com/xfl03/sekai-calculator" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-calculator</ExternalLink>
                     </p>
                     <p>
                         sekai-calculator采用 LGPL-2.1 开源协议 计算结果仅供参考

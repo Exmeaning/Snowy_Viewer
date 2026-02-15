@@ -142,6 +142,7 @@ export default function StickerMakerContent() {
     const imgRef = useRef<HTMLImageElement | null>(null);
     const editorRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const stickerFileInputRef = useRef<HTMLInputElement>(null);
 
     // Load characters.json
     useEffect(() => {
@@ -200,6 +201,41 @@ export default function StickerMakerContent() {
             console.error("Error loading custom font:", error);
             alert("字体加载失败，请重试");
         }
+    };
+
+
+
+    // Handle Custom Sticker Image Upload
+    const handleStickerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const dataUrl = event.target?.result as string;
+
+            // Create a temporary sticker object
+            const customSticker: CharacterData = {
+                id: `custom_${Date.now()}`,
+                name: "自定义图片",
+                character: "custom", // Or use current selected char
+                img: dataUrl,
+                color: selectedSticker?.color || "#33CEC3", // Default color or current
+                defaultText: {
+                    text: "这是一串文字",
+                    x: 148,
+                    y: 58,
+                    r: -2,
+                    s: 47
+                }
+            };
+
+            handleStickerClick(customSticker);
+        };
+        reader.readAsDataURL(file);
+
+        // Reset input
+        if (stickerFileInputRef.current) stickerFileInputRef.current.value = "";
     };
 
     // Filter Logic
@@ -285,7 +321,11 @@ export default function StickerMakerContent() {
         setLoaded(false);
         const img = new Image(); // Browser Image
         img.crossOrigin = "anonymous";
-        img.src = `/sticker-maker/img/${sticker.img}`;
+
+        // Check if img is a data URL (custom upload) or path
+        const isDataUrl = sticker.img.startsWith("data:") || sticker.img.startsWith("blob:");
+        img.src = isDataUrl ? sticker.img : `/sticker-maker/img/${sticker.img}`;
+
         img.onload = () => {
             imgRef.current = img;
             setLoaded(true);
@@ -532,6 +572,25 @@ export default function StickerMakerContent() {
                                         选择底图 ({filteredStickers.length})
                                     </h3>
                                     <div className="grid grid-cols-3 gap-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+                                        {/* Custom Upload Button */}
+                                        <button
+                                            onClick={() => stickerFileInputRef.current?.click()}
+                                            className="relative rounded-lg overflow-hidden transition-all border-2 border-dashed border-slate-300 hover:border-miku hover:bg-white flex flex-col items-center justify-center gap-1 aspect-[296/256] text-slate-400 hover:text-miku"
+                                            title="上传自定义图片"
+                                        >
+                                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                            </svg>
+                                            <span className="text-xs font-bold">上传图片</span>
+                                        </button>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            ref={stickerFileInputRef}
+                                            className="hidden"
+                                            onChange={handleStickerUpload}
+                                        />
+
                                         {filteredStickers.map((sticker) => (
                                             <button
                                                 key={sticker.id}
@@ -824,7 +883,7 @@ export default function StickerMakerContent() {
                         </p>
                     </div>
                 </div>
-            </div>
-        </MainLayout>
+            </div >
+        </MainLayout >
     );
 }
