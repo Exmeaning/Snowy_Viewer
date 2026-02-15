@@ -1,0 +1,109 @@
+/* Deck Recommend Tool Styles */
+
+/* Character selector buttons */
+.dr-char-btn {
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    background: none;
+}
+
+/* Checkbox style */
+.dr-checkbox {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    accent-color: var(--miku);
+}
+
+.dr-checkbox:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Config table */
+.dr-config-table th {
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+}
+
+/* Result row */
+.dr-result-row {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+}
+
+.dr-result-row:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Rank badge */
+.dr-rank {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Card thumbnail */
+.dr-card-thumb {
+    transition: transform 0.15s ease;
+}
+
+.dr-card-thumb:hover {
+    transform: scale(1.08);
+    z-index: 10;
+}
+
+/* Music dropdown animation */
+.dr-music-dropdown {
+    animation: dr-dropdown-enter 0.15s ease-out;
+}
+
+@keyframes dr-dropdown-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile warning - hide on desktop */
+@media (min-width: 768px) {
+    .dr-mobile-warning {
+        display: none;
+    }
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] .dr-result-row {
+    background: rgba(30, 30, 45, 0.6);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .dr-result-row:hover {
+    border-color: rgba(51, 204, 187, 0.3);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .dr-config-table th {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .dr-config-table td {
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Loading spinner */
+@keyframes dr-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.dr-spinner {
+    animation: dr-spin 0.8s linear infinite;
+}

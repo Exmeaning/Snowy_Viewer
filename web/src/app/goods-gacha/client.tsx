@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import MainLayout from '@/components/MainLayout';
+import ExternalLink from '@/components/ExternalLink';
 
 interface GachaClientProps {
     pools: Record<string, string[]>;
@@ -321,7 +322,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
                             本页面不涉及任何真实金钱交易或实物奖励，请勿关联现实。
                         </p>
                         <p className="text-xs text-slate-300 mt-2">
-                            资源修改于 <a href="https://github.com/Caffeine-co/Shinonome_Ena" target="_blank" rel="noopener noreferrer" className="hover:text-miku transition-colors underline decoration-dotted">Caffeine-co/Shinonome_Ena</a>
+                            资源修改于 <ExternalLink href="https://github.com/Caffeine-co/Shinonome_Ena" target="_blank" rel="noopener noreferrer" className="hover:text-miku transition-colors underline decoration-dotted">Caffeine-co/Shinonome_Ena</ExternalLink>
                         </p>
                     </div>
                 </div>

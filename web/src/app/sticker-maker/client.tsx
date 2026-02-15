@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import NextImage from "next/image";
+import Image from "next/image";
+import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
 import { UNIT_DATA, CHARACTER_NAMES, SUPPORT_UNIT_NAMES, SupportUnit } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
@@ -806,17 +807,17 @@ export default function StickerMakerContent() {
                     <div className="mt-12 pt-8 border-t border-slate-200 text-center text-slate-400 text-sm space-y-2">
                         <p>
                             表情包制作器源代码参考{" "}
-                            <a
+                            <ExternalLink
                                 href="https://github.com/TheOriginalAyaka/sekai-stickers"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-miku hover:underline"
+                                className="inline-flex items-center gap-1 text-miku hover:underline"
                             >
                                 sekai-stickers (TheOriginalAyaka)
-                            </a>
+                            </ExternalLink>
                         </p>
                         <p>
-                            猫啃什锦黑 由 <a href="https://scripts.sil.org/OFL" target="_blank" rel="noopener noreferrer" className="hover:underline">SIL Open Font License 1.1</a> 授权
+                            猫啃什锦黑 由 <ExternalLink href="https://scripts.sil.org/OFL" target="_blank" rel="noopener noreferrer" className="hover:underline">SIL Open Font License 1.1</ExternalLink> 授权
                         </p>
                         <p className="text-xs text-slate-300 mt-4">
                             表情包制作器为完全本地运行 自行载入字体并以商用目的制作产生的后果用户自行承担

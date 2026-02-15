@@ -2,6 +2,7 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
+import ExternalLink from "@/components/ExternalLink";
 import CurrentEventTab from "@/components/home/CurrentEventTab";
 import LatestCardsTab from "@/components/home/LatestCardsTab";
 import LatestMusicTab from "@/components/home/LatestMusicTab";
@@ -271,7 +272,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Link 1: SnowyBot */}
-            <a href="https://snowybot.exmeaning.com" target="_blank" className="relative group overflow-hidden rounded-xl h-20 shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100">
+            <ExternalLink href="https://snowybot.exmeaning.com" target="_blank" className="relative group overflow-hidden rounded-xl h-20 shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100">
               <div className="relative z-10 h-full flex items-center justify-between px-6">
                 <div className="text-left">
                   <h3 className="text-md font-bold text-primary-text">SnowyBot 主站</h3>
@@ -279,10 +280,10 @@ export default function Home() {
                 </div>
                 <svg className="w-5 h-5 text-slate-300 group-hover:text-miku transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </div>
-            </a>
+            </ExternalLink>
 
             {/* Link 2: Story */}
-            <a href="https://sekaistory.exmeaning.com/" target="_blank" className="relative group overflow-hidden rounded-xl h-20 shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100">
+            <ExternalLink href="https://sekaistory.exmeaning.com/" target="_blank" className="relative group overflow-hidden rounded-xl h-20 shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100">
               <div className="relative z-10 h-full flex items-center justify-between px-6">
                 <div className="text-left">
                   <h3 className="text-md font-bold text-primary-text">剧情站</h3>
@@ -290,10 +291,10 @@ export default function Home() {
                 </div>
                 <svg className="w-5 h-5 text-slate-300 group-hover:text-miku transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
               </div>
-            </a>
+            </ExternalLink>
 
             {/* Link 3: Predictor */}
-            <a href="https://sekaibangdan.exmeaning.com" target="_blank" className="relative group overflow-hidden rounded-xl h-20 shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100">
+            <ExternalLink href="https://sekaibangdan.exmeaning.com" target="_blank" className="relative group overflow-hidden rounded-xl h-20 shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100">
               <div className="relative z-10 h-full flex items-center justify-between px-6">
                 <div className="text-left">
                   <h3 className="text-md font-bold text-primary-text">预测站</h3>
@@ -301,7 +302,7 @@ export default function Home() {
                 </div>
                 <svg className="w-5 h-5 text-slate-300 group-hover:text-miku transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
               </div>
-            </a>
+            </ExternalLink>
           </div>
         </div>
 
@@ -309,12 +310,13 @@ export default function Home() {
         <div className="w-full max-w-5xl mt-8 pt-8 border-t border-slate-200/50">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">鸣谢</h2>
-            <div className="flex flex-wrap justify-center gap-4 text-xs">
-              <a href="https://github.com/MejiroRina" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">Haruki（希凪）</a>
-              <span className="text-slate-300">•</span>
-              <a href="https://sekai.best" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">Sekai.best</a>
-              <span className="text-slate-300">•</span>
-              <a href="https://github.com/watagashi-uni" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">Uni</a>
+            <div className="flex flex-wrap gap-x-2 gap-y-1 justify-center text-sm">
+              <span className="text-slate-400">Special Thanks:</span>
+              <ExternalLink href="https://github.com/MejiroRina" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">Haruki（希凪）</ExternalLink>
+              <span className="text-slate-300">|</span>
+              <ExternalLink href="https://sekai.best" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">Sekai.best</ExternalLink>
+              <span className="text-slate-300">|</span>
+              <ExternalLink href="https://github.com/watagashi-uni" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">Uni</ExternalLink>
             </div>
           </div>
         </div>

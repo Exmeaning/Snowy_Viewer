@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import ExternalLink from '@/components/ExternalLink';
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
 import {
@@ -614,10 +615,8 @@ function MusicMetaContent() {
     const CreditsSection = () => (
         <div className="mt-8 py-6 border-t border-slate-100 text-center">
             <div className="text-sm text-slate-400 mb-2">数据来源与鸣谢</div>
-            <div className="flex flex-wrap justify-center gap-6 text-sm">
-                <a href="https://github.com/Sekai-World/sekai-viewer" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">Sekai-World/sekai-viewer</a>
-                <a href="https://3-3.dev/" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">xfl03</a>
-                <a href="https://github.com/NeuraXmy" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">Luna茶</a>
+            <div className="text-center text-sm text-slate-500 py-8">
+                Meta Data Provided by <ExternalLink href="https://github.com/Sekai-World/sekai-viewer" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">Sekai-World/sekai-viewer</ExternalLink> & <ExternalLink href="https://3-3.dev/" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">xfl03</ExternalLink> & <ExternalLink href="https://github.com/NeuraXmy" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">Luna茶</ExternalLink>
             </div>
         </div>
     );
