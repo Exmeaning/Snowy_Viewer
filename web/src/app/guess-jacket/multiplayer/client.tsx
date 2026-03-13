@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { fetchMasterData } from "@/lib/fetch";
+import { fetchMasterDataForServer } from "@/lib/fetch";
 import { CHARACTER_NAMES } from "@/types/types";
 import { getMusicJacketUrl, getCharacterIconUrl } from "@/lib/assets";
+import type { AssetSourceType } from "@/contexts/ThemeContext";
 import { loadTranslations, type TranslationData } from "@/lib/translations";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -47,6 +48,7 @@ function generateSessionId(): string {
 // ==================== TYPES ====================
 
 type Difficulty = "easy" | "normal" | "hard" | "extreme";
+type ServerScope = "jp" | "cn";
 type DistortionType = "none" | "hue-rotate" | "flip-v" | "flip-h" | "grayscale" | "invert" | "rgb-shuffle";
 
 interface ActiveDistortion {
@@ -65,12 +67,14 @@ const DISTORTION_POOL: { type: DistortionType; label: string }[] = [
 ];
 
 interface MultiplayerSettings {
+    server: ServerScope;
     difficulty: Difficulty;
     timeLimit: number;
     optionsCount: number;
 }
 
 const DEFAULT_SETTINGS: MultiplayerSettings = {
+    server: "jp",
     difficulty: "normal",
     timeLimit: 30,
     optionsCount: 10,
@@ -92,6 +96,7 @@ interface PlayerState {
     eliminated: boolean;
     eliminatedRound: number;
     isDying?: boolean;
+    reviveCount: number;
 }
 
 interface RoundData {
@@ -159,6 +164,10 @@ function getDifficultyLabel(d: Difficulty): string {
     if (d === "normal") return "普通";
     if (d === "hard") return "困难";
     return "极限";
+}
+
+function getAssetSourceForServer(server: ServerScope): AssetSourceType {
+    return server === "cn" ? "snowyassets_cn" : "snowyassets";
 }
 
 function getCropSize(difficulty: Difficulty): number {
@@ -313,7 +322,7 @@ function MultiplayerContent() {
         setLoadError("");
         try {
             const [data, translationsData] = await Promise.all([
-                fetchMasterData<IMusicInfo[]>("musics.json"),
+                fetchMasterDataForServer<IMusicInfo[]>(gameSettings.server, "musics.json"),
                 loadTranslations(),
             ]);
             const validMusics = data.filter(m => Boolean(m.assetbundleName && m.title && m.id > 0));
@@ -325,7 +334,7 @@ function MultiplayerContent() {
         } finally {
             setMusicsLoading(false);
         }
-    }, []);
+    }, [gameSettings.server]);
 
     useEffect(() => { loadMusics(); }, [loadMusics]);
 
@@ -384,6 +393,7 @@ function MultiplayerContent() {
                     guessOrder: 0,
                     eliminated: false,
                     eliminatedRound: -1,
+                    reviveCount: 0,
                 };
                 return [...prev, newPlayer];
             });
@@ -420,6 +430,7 @@ function MultiplayerContent() {
                 eliminated: false,
                 eliminatedRound: -1,
                 isDying: false,
+                reviveCount: 0,
             })));
             setPlayerLoadProgress(new Map());
             setPlayerLoadComplete(new Map());
@@ -571,6 +582,7 @@ function MultiplayerContent() {
                 eliminated: false,
                 eliminatedRound: -1,
                 isDying: false,
+                reviveCount: 0,
             })));
             setFloatingHpChanges([]);
         });
@@ -679,9 +691,15 @@ function MultiplayerContent() {
             // Last Stand Recovery
             if (player.isDying) {
                 if (isFirstAttemptCorrect) {
+                    // Calculate revival HP: lowest positive HP among all players, capped at 200
+                    const aliveHps = updatedPlayers
+                        .filter(p => p.id !== playerId && !p.eliminated && p.hp > 0)
+                        .map(p => p.hp);
+                    const reviveHp = aliveHps.length > 0 ? Math.min(Math.min(...aliveHps), 200) : 200;
                     player.isDying = false;
-                    player.hp = INITIAL_HP * 0.2;
-                    hpChanges.push({ playerId, amount: INITIAL_HP * 0.2, type: "block" });
+                    player.hp = reviveHp;
+                    player.reviveCount = (player.reviveCount || 0) + 1;
+                    hpChanges.push({ playerId, amount: reviveHp, type: "block" });
                 }
             }
             // Kill mechanic
@@ -844,7 +862,8 @@ function MultiplayerContent() {
             fakeProgressRef.current = fakeInterval;
 
             const music = gameDeckRef.current[0];
-            const url = getMusicJacketUrl(music.assetbundleName);
+            const assetSource = getAssetSourceForServer(activeSettingsRef.current.server);
+            const url = getMusicJacketUrl(music.assetbundleName, assetSource);
 
             const onComplete = (img?: HTMLImageElement) => {
                 if (myLoadCompleteRef.current) return;
@@ -915,7 +934,8 @@ function MultiplayerContent() {
     // ==================== CANVAS RENDERING ====================
 
     const loadRoundImage = useCallback((rd: RoundData) => {
-        const url = getMusicJacketUrl(rd.assetbundleName);
+        const assetSource = getAssetSourceForServer(activeSettingsRef.current.server);
+        const url = getMusicJacketUrl(rd.assetbundleName, assetSource);
         const cachedImg = preloadedImagesRef.current.get(url);
         if (cachedImg) {
             imageRef.current = cachedImg;
@@ -938,7 +958,7 @@ function MultiplayerContent() {
         const nextIndex = rd.roundIndex + 1;
         const nextMusic = gameDeckRef.current[nextIndex];
         if (nextMusic) {
-            const nextUrl = getMusicJacketUrl(nextMusic.assetbundleName);
+            const nextUrl = getMusicJacketUrl(nextMusic.assetbundleName, assetSource);
             if (!preloadedImagesRef.current.has(nextUrl)) {
                 const prefetchImg = new window.Image();
                 prefetchImg.crossOrigin = "anonymous";
@@ -1068,6 +1088,10 @@ function MultiplayerContent() {
             }
 
             if (p.hp <= 0) {
+                // Max 2 revives; if already used up, eliminate directly
+                if ((p.reviveCount || 0) >= 2) {
+                    return { ...p, eliminated: true, eliminatedRound: roundIdx, hp: 0 };
+                }
                 return { ...p, isDying: true };
             }
 
@@ -1100,7 +1124,8 @@ function MultiplayerContent() {
         const music = gameDeckRef.current[roundIndex];
         if (!music) return;
 
-        const url = getMusicJacketUrl(music.assetbundleName);
+        const assetSource = getAssetSourceForServer(activeSettingsRef.current.server);
+        const url = getMusicJacketUrl(music.assetbundleName, assetSource);
         const cachedImg = preloadedImagesRef.current.get(url);
 
         const diff = activeSettingsRef.current.difficulty;
@@ -1228,6 +1253,7 @@ function MultiplayerContent() {
             guessOrder: 0,
             eliminated: false,
             eliminatedRound: -1,
+            reviveCount: 0,
         };
         setPlayers([myPlayer]);
 
@@ -1324,6 +1350,7 @@ function MultiplayerContent() {
                 guessOrder: 0,
                 eliminated: false,
                 eliminatedRound: -1,
+                reviveCount: 0,
             };
 
             const initialPlayers: PlayerState[] = currentPlayers.map((p: RoomPlayer) => ({
@@ -1338,6 +1365,7 @@ function MultiplayerContent() {
                 guessOrder: 0,
                 eliminated: false,
                 eliminatedRound: -1,
+                reviveCount: 0,
             }));
 
             setPlayers([...initialPlayers, myPlayer]);
@@ -1630,6 +1658,22 @@ function MultiplayerContent() {
                             <div className="mp-card">
                                 <div className="mp-card-title">游戏设置</div>
 
+                                {/* Server Scope */}
+                                <div style={{ marginBottom: "1rem" }}>
+                                    <div className="mp-settings-label">服务器范围</div>
+                                    <div className="mp-settings-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+                                        {(["jp", "cn"] as ServerScope[]).map(s => (
+                                            <button
+                                                key={s}
+                                                className={`mp-settings-btn ${gameSettings.server === s ? "active" : ""}`}
+                                                onClick={() => updateGameSettings(prev => ({ ...prev, server: s }))}
+                                            >
+                                                {s === "jp" ? "日服" : "国服"}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 {/* Difficulty */}
                                 <div style={{ marginBottom: "1rem" }}>
                                     <div className="mp-settings-label">难度设置</div>
@@ -1843,8 +1887,9 @@ function MultiplayerContent() {
                                 const diffMap: Record<string, string> = { "easy": "简单", "normal": "普通", "hard": "困难", "extreme": "极限" };
                                 const diffText = diffMap[gameSettings.difficulty] || "普通";
                                 const serverName = SERVERS.find(s => s.id === currentServerId)?.name || currentServerId;
+                                const gameServerText = gameSettings.server === "jp" ? "日服" : "国服";
                                 const shareUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}&server=${currentServerId}`;
-                                const shareText = `我正在SnowyViewer游玩【${diffText}】难度的猜曲绘大师 房间号【${roomCode}】服务器【${serverName}】 点击链接加入房间 ${shareUrl}`;
+                                const shareText = `我正在SnowyViewer游玩【${gameServerText}·${diffText}】难度的猜曲绘大师 房间号【${roomCode}】服务器【${serverName}】 点击链接加入房间 ${shareUrl}`;
                                 navigator.clipboard.writeText(shareText);
                                 alert("分享链接已复制！");
                             }}
@@ -1889,6 +1934,10 @@ function MultiplayerContent() {
                     <div className="mp-card">
                         <div className="mp-card-title">游戏设置 {!isHost && <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: 400 }}>(房主配置)</span>}</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "0.875rem" }}>
+                            <div style={{ color: "#94a3b8" }}>服务器</div>
+                            <div style={{ color: "#334155", fontWeight: 600 }}>
+                                {gameSettings.server === "jp" ? "JP (日服)" : "CN (国服)"}
+                            </div>
                             <div style={{ color: "#94a3b8" }}>难度</div>
                             <div style={{ color: "#334155", fontWeight: 600 }}>
                                 {getDifficultyLabel(gameSettings.difficulty)}
@@ -2003,7 +2052,7 @@ function MultiplayerContent() {
                                 background: "#f8fafc",
                             }}>
                                 <Image
-                                    src={getMusicJacketUrl(feedbackMusic.assetbundleName)}
+                                    src={getMusicJacketUrl(feedbackMusic.assetbundleName, getAssetSourceForServer(activeSettings.server))}
                                     alt={feedbackMusic.title}
                                     fill
                                     sizes="200px"

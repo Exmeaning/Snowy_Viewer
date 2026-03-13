@@ -109,6 +109,7 @@ interface PlayerState {
     eliminated: boolean;
     eliminatedRound: number; // round when player was eliminated (for ranking); -1 = alive
     isDying?: boolean; // Last Stand status
+    reviveCount: number;
 }
 
 interface RoundData {
@@ -403,6 +404,7 @@ function MultiplayerContent() {
                     guessOrder: 0,
                     eliminated: false,
                     eliminatedRound: -1,
+                    reviveCount: 0,
                 };
                 return [...prev, newPlayer];
             });
@@ -457,6 +459,7 @@ function MultiplayerContent() {
                 eliminated: false,
                 eliminatedRound: -1,
                 isDying: false,
+                reviveCount: 0,
             })));
             // Initialize loading progress for all players
             setPlayerLoadProgress(new Map());
@@ -611,6 +614,7 @@ function MultiplayerContent() {
                 eliminated: false,
                 eliminatedRound: -1,
                 isDying: false,
+                reviveCount: 0,
             })));
             setFloatingHpChanges([]);
         });
@@ -719,12 +723,18 @@ function MultiplayerContent() {
             const hpChanges: { playerId: string; amount: number; type: string }[] = [];
             const tl = guessTimeLeft as number;
 
-            // Last Stand Recovery: If dying and 1st try correct -> Restore 20% HP
+            // Last Stand Recovery: If dying and 1st try correct -> revive with lowest alive HP (capped at 200)
             if (player.isDying) {
                 if (isFirstAttemptCorrect) {
+                    // Calculate revival HP: lowest positive HP among all players, capped at 200
+                    const aliveHps = updatedPlayers
+                        .filter(p => p.id !== playerId && !p.eliminated && p.hp > 0)
+                        .map(p => p.hp);
+                    const reviveHp = aliveHps.length > 0 ? Math.min(Math.min(...aliveHps), 200) : 200;
                     player.isDying = false;
-                    player.hp = INITIAL_HP * 0.2; // 20% Heal
-                    hpChanges.push({ playerId, amount: INITIAL_HP * 0.2, type: "block" }); // visual: revival
+                    player.hp = reviveHp;
+                    player.reviveCount = (player.reviveCount || 0) + 1;
+                    hpChanges.push({ playerId, amount: reviveHp, type: "block" }); // visual: revival
                 }
                 // If not first attempt: isDying stays true, will be eliminated in advanceGame
             }
@@ -1142,8 +1152,12 @@ function MultiplayerContent() {
                 }
             }
 
-            // Normal players: if HP drops to 0 or below, enter Last Stand
+            // Normal players: if HP drops to 0 or below, enter Last Stand (or eliminate if no revives left)
             if (p.hp <= 0) {
+                // Max 2 revives; if already used up, eliminate directly
+                if ((p.reviveCount || 0) >= 2) {
+                    return { ...p, eliminated: true, eliminatedRound: roundIdx, hp: 0 };
+                }
                 return { ...p, isDying: true };
             }
 
@@ -1302,6 +1316,7 @@ function MultiplayerContent() {
             guessOrder: 0,
             eliminated: false,
             eliminatedRound: -1,
+            reviveCount: 0,
         };
         setPlayers([myPlayer]);
 
@@ -1403,6 +1418,7 @@ function MultiplayerContent() {
                 guessOrder: 0,
                 eliminated: false,
                 eliminatedRound: -1,
+                reviveCount: 0,
             };
 
             // Initialize local player state with existing players
@@ -1418,6 +1434,7 @@ function MultiplayerContent() {
                 guessOrder: 0,
                 eliminated: false,
                 eliminatedRound: -1,
+                reviveCount: 0,
             }));
 
             setPlayers([...initialPlayers, myPlayer]);

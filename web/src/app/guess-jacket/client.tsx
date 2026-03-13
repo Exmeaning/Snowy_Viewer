@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
 import { getMusicJacketUrl } from "@/lib/assets";
-import { fetchMasterData } from "@/lib/fetch";
+import type { AssetSourceType } from "@/contexts/ThemeContext";
+import { fetchMasterDataForServer } from "@/lib/fetch";
 import { loadTranslations, type TranslationData } from "@/lib/translations";
 import type { IMusicInfo } from "@/types/music";
 
@@ -20,6 +21,7 @@ const MAX_STRIKES_PER_ROUND = 3;
 
 type GameState = "setup" | "playing" | "result";
 type Difficulty = "easy" | "normal" | "hard" | "extreme";
+type ServerScope = "jp" | "cn";
 
 // Distortion Effects for Extreme Mode
 type DistortionType = "none" | "hue-rotate" | "flip-v" | "flip-h" | "grayscale" | "invert" | "rgb-shuffle";
@@ -46,6 +48,7 @@ interface CropRect {
 }
 
 interface GameSettings {
+    server: ServerScope;
     seed: string;
     difficulty: Difficulty;
     timeLimit: number;
@@ -132,6 +135,14 @@ function getDifficultyLabel(difficulty: Difficulty): string {
     return "极限";
 }
 
+function getAssetSourceForServer(server: ServerScope): AssetSourceType {
+    return server === "cn" ? "snowyassets_cn" : "snowyassets";
+}
+
+function getServerLabel(server: ServerScope): string {
+    return server === "jp" ? "JP (日服)" : "CN (国服)";
+}
+
 function getDifficultyMultiplier(difficulty: Difficulty): number {
     if (difficulty === "easy") return 0.8;
     if (difficulty === "hard") return 1.5;
@@ -155,6 +166,7 @@ function GuessJacketContent() {
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState("");
     const [settings, setSettings] = useState<GameSettings>({
+        server: "jp",
         seed: Math.random().toString(36).substring(7),
         difficulty: "normal",
         timeLimit: 30,
@@ -191,6 +203,7 @@ function GuessJacketContent() {
         const difficultyParam = searchParams.get("difficulty");
         const timeParam = searchParams.get("time");
         const optionsParam = searchParams.get("options");
+        const serverParam = searchParams.get("server");
 
         const safeDifficulty: Difficulty =
             difficultyParam === "easy" || difficultyParam === "normal" || difficultyParam === "hard" || difficultyParam === "extreme"
@@ -207,12 +220,15 @@ function GuessJacketContent() {
             ? optionsFromQuery
             : OPTIONS_PER_ROUND_DEFAULT;
 
+        const safeServer: ServerScope = serverParam === "cn" ? "cn" : "jp";
+
         setSettings((prev) => ({
             ...prev,
             seed: seedParam || prev.seed,
             difficulty: safeDifficulty,
             timeLimit: safeTime,
             optionsCount: safeOptions,
+            server: safeServer,
         }));
     }, [searchParams]);
 
@@ -221,7 +237,7 @@ function GuessJacketContent() {
         setLoadError("");
         try {
             const [data, translationsData] = await Promise.all([
-                fetchMasterData<IMusicInfo[]>("musics.json"),
+                fetchMasterDataForServer<IMusicInfo[]>(settings.server, "musics.json"),
                 loadTranslations(),
             ]);
             const validMusics = data.filter((music) =>
@@ -235,7 +251,7 @@ function GuessJacketContent() {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [settings.server]);
 
     useEffect(() => {
         loadMusics();
@@ -289,6 +305,7 @@ function GuessJacketContent() {
         params.set("difficulty", settings.difficulty);
         params.set("time", settings.timeLimit.toString());
         params.set("options", settings.optionsCount.toString());
+        params.set("server", settings.server);
         return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     }, [settings]);
 
@@ -342,9 +359,10 @@ function GuessJacketContent() {
         setRoundNotice("");
         setIsRoundActive(false);
 
+        const assetSource = getAssetSourceForServer(settings.server);
         const image = new window.Image();
         image.crossOrigin = "anonymous";
-        image.src = getMusicJacketUrl(question.music.assetbundleName);
+        image.src = getMusicJacketUrl(question.music.assetbundleName, assetSource);
 
         image.onload = () => {
             activeImagesRef.current[roundIndex] = image;
@@ -385,7 +403,7 @@ function GuessJacketContent() {
             setIsRoundActive(true);
             setTimeLeft(0);
         };
-    }, [settings.difficulty, settings.seed, settings.timeLimit, showTransientNotice]);
+    }, [settings.difficulty, settings.seed, settings.timeLimit, settings.server, showTransientNotice]);
 
     useEffect(() => {
         const currentImage = activeImagesRef.current[currentRound];
@@ -626,6 +644,10 @@ function GuessJacketContent() {
                                             <code className="bg-white px-2 py-1 rounded border">{settings.seed}</code>
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            <span className="font-bold text-slate-700 w-16">服务器:</span>
+                                            <span className="font-bold text-slate-900">{getServerLabel(settings.server)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
                                             <span className="font-bold text-slate-700 w-16">难度:</span>
                                             <span className="font-bold text-miku">{getDifficultyLabel(settings.difficulty)}</span>
                                         </div>
@@ -679,7 +701,7 @@ function GuessJacketContent() {
                                             <div className="flex gap-4">
                                                 <div className="w-16 h-16 relative rounded-lg overflow-hidden shadow-sm ring-1 ring-black/10 shrink-0">
                                                     <Image
-                                                        src={getMusicJacketUrl(result.music.assetbundleName)}
+                                                        src={getMusicJacketUrl(result.music.assetbundleName, getAssetSourceForServer(settings.server))}
                                                         alt={result.music.title}
                                                         fill
                                                         className="object-cover"
@@ -926,6 +948,32 @@ function GuessJacketContent() {
                             </div>
                         </div>
 
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-3">服务器范围</label>
+                                <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+                                    {(["jp", "cn"] as ServerScope[]).map(s => (
+                                        <button key={s} onClick={() => setSettings({ ...settings, server: s })} className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${settings.server === s ? "bg-white text-miku shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+                                            {s === "jp" ? "日服" : "国服"}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-3">每题时限 (秒)</label>
+                                <input
+                                    type="number"
+                                    value={settings.timeLimit}
+                                    onChange={(event) => {
+                                        const nextValue = Number(event.target.value);
+                                        const safeValue = Number.isFinite(nextValue) ? Math.max(5, Math.min(120, nextValue)) : 30;
+                                        setSettings((prev) => ({ ...prev, timeLimit: safeValue }));
+                                    }}
+                                    className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-miku font-mono text-center"
+                                />
+                            </div>
+                        </div>
+
                         <div>
                             <label className="block text-sm font-bold text-slate-700 mb-3">难度设置</label>
                             <div className="grid grid-cols-4 gap-2">
@@ -942,20 +990,6 @@ function GuessJacketContent() {
                                     </button>
                                 ))}
                             </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-3">每题时限 (秒)</label>
-                            <input
-                                type="number"
-                                value={settings.timeLimit}
-                                onChange={(event) => {
-                                    const nextValue = Number(event.target.value);
-                                    const safeValue = Number.isFinite(nextValue) ? Math.max(5, Math.min(120, nextValue)) : 30;
-                                    setSettings((prev) => ({ ...prev, timeLimit: safeValue }));
-                                }}
-                                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-miku font-mono text-center"
-                            />
                         </div>
 
                         <div>
