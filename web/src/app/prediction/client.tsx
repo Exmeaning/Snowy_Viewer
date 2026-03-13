@@ -425,7 +425,7 @@ export default function PredictionClient() {
                                                 </div>
 
                                                 {banner.status === "ongoing" && (
-                                                    <div className="absolute bottom-0 right-2 text-4xl sm:text-5xl font-black text-black select-none z-10 tracking-tighter">
+                                                    <div className="absolute bottom-0 right-2 text-4xl sm:text-5xl font-black text-black dark:text-white select-none z-10 tracking-tighter">
                                                         {Math.floor(banner.progressPercent)}<span className="text-2xl ml-1">%</span>
                                                     </div>
                                                 )}
