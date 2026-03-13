@@ -21,11 +21,18 @@ interface MusicDifficulty {
 type RawMusicCategory = MusicCategoryType | { musicCategoryName: MusicCategoryType };
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
-import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { fetchMusicAliases } from "@/lib/musicAliases";
+
+// Search index item (from search-index.json)
+interface SearchIndexItem {
+    id: number;
+    n: string;   // name (JP)
+    cn?: string;  // name (CN translation)
+    g: string;    // group: cards, music, events, gacha
+}
 
 // Level Separator Card Component
 function LevelSeparatorCard({ level, difficulty }: { level: number; difficulty: string }) {
@@ -63,7 +70,7 @@ function MusicContent() {
     const [musicTags, setMusicTags] = useState<IMusicTagInfo[]>([]);
     const [musicDifficulties, setMusicDifficulties] = useState<MusicDifficulty[]>([]);
     const [eventMusicIds, setEventMusicIds] = useState<Set<number>>(new Set());
-    const [translations, setTranslations] = useState<TranslationData | null>(null);
+    const [musicCnMap, setMusicCnMap] = useState<Map<number, string>>(new Map());
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filtersInitialized, setFiltersInitialized] = useState(false);
@@ -174,14 +181,24 @@ function MusicContent() {
             try {
                 setIsLoading(true);
 
-                // Fetch essential data and translations
-                const [musicsData, tagsData, difficultiesData, eventMusicsData, translationsData] = await Promise.all([
+                // Fetch essential data and search index (for CN translations)
+                const [musicsData, tagsData, difficultiesData, eventMusicsData, searchIndexData] = await Promise.all([
                     fetchMasterData<IMusicInfo[]>("musics.json"),
                     fetchMasterData<IMusicTagInfo[]>("musicTags.json"),
                     fetchMasterData<MusicDifficulty[]>("musicDifficulties.json"),
                     fetchMasterData<{ musicId: number }[]>("eventMusics.json"),
-                    loadTranslations(),
+                    fetch("https://translation.exmeaning.com/data/search-index.json")
+                        .then((res) => res.json() as Promise<SearchIndexItem[]>)
+                        .catch(() => [] as SearchIndexItem[]),
                 ]);
+
+                // Build musicId -> CN title map from search index
+                const cnMap = new Map<number, string>();
+                for (const item of searchIndexData) {
+                    if (item.g === "music" && item.cn) {
+                        cnMap.set(item.id, item.cn);
+                    }
+                }
 
                 // Normalize musics data (CN server returns categories as objects)
                 const normalizedMusics = musicsData.map((music) => ({
@@ -197,7 +214,7 @@ function MusicContent() {
                 setMusicTags(tagsData);
                 setMusicDifficulties(difficultiesData);
                 setEventMusicIds(new Set(eventMusicsData.map((em) => em.musicId)));
-                setTranslations(translationsData);
+                setMusicCnMap(cnMap);
                 setError(null);
 
                 // Fetch song constants (non-blocking)
@@ -271,8 +288,8 @@ function MusicContent() {
                 if (m.id === queryAsNumber) return true;
                 // Match by Japanese title
                 if (m.title.toLowerCase().includes(query)) return true;
-                // Match by Chinese title translation
-                const chineseTitle = translations?.music?.title?.[m.title];
+                // Match by Chinese title from search index
+                const chineseTitle = musicCnMap.get(m.id);
                 if (chineseTitle && chineseTitle.toLowerCase().includes(query)) return true;
                 // Match by composer/lyricist/arranger
                 if (m.composer.toLowerCase().includes(query)) return true;
@@ -317,7 +334,7 @@ function MusicContent() {
         });
 
         return result;
-    }, [musics, musicTags, eventMusicIds, selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, isShowSpoiler, translations, musicDifficultiesMap, selectedDifficulty, songConstantsMap, musicAliasesMap]);
+    }, [musics, musicTags, eventMusicIds, selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, isShowSpoiler, musicCnMap, musicDifficultiesMap, selectedDifficulty, songConstantsMap, musicAliasesMap]);
 
     // Displayed musics with level separators (only when sorting by level)
     const displayedMusicsWithSeparators = useMemo(() => {
@@ -506,7 +523,7 @@ function MusicContent() {
                                     const now = Date.now();
                                     const isSpoiler = music.publishedAt > now;
                                     const musicConstant = showDifficulty ? undefined : songConstantsMap[music.id]?.[selectedDifficulty];
-                                    return <MusicItem key={music.id} music={music} isSpoiler={isSpoiler} constant={musicConstant} difficulties={musicDifficultiesMap[music.id]} showDifficulty={showDifficulty} />;
+                                    return <MusicItem key={music.id} music={music} isSpoiler={isSpoiler} constant={musicConstant} difficulties={musicDifficultiesMap[music.id]} showDifficulty={showDifficulty} cnTitle={musicCnMap.get(music.id)} />;
                                 }
                             })}
                         </div>

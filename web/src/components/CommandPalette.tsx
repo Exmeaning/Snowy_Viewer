@@ -456,10 +456,12 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
                                                 const subtitle = item.c
                                                     ? CHARACTER_NAMES[item.c] || ""
                                                     : "";
-                                                // For music, show CN title or matched alias
-                                                const musicSubtitle = item.g === "music"
-                                                    ? (item.matchedAlias || item.cn || "")
+                                                // For music, show CN title; if matched via alias, append alias
+                                                const cnTitle = item.g === "music" ? (item.cn || "") : "";
+                                                const aliasHint = item.g === "music" && item.matchedAlias && item.matchedAlias !== item.cn
+                                                    ? `(${item.matchedAlias})`
                                                     : "";
+                                                const musicSubtitle = [cnTitle, aliasHint].filter(Boolean).join(" ");
                                                 return (
                                                     <button
                                                         key={`${item.g}-${item.id}`}

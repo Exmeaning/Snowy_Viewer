@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { IMusicInfo, getMusicJacketUrl, MUSIC_CATEGORY_NAMES, MUSIC_CATEGORY_COLORS, MusicCategoryType, MusicDifficultyType, DIFFICULTY_COLORS } from "@/types/music";
 import { useTheme } from "@/contexts/ThemeContext";
-import { TranslatedText } from "@/components/common/TranslatedText";
 
 const ALL_DIFFICULTIES: MusicDifficultyType[] = ["easy", "normal", "hard", "expert", "master", "append"];
 
@@ -13,9 +12,10 @@ interface MusicItemProps {
     constant?: number;
     difficulties?: Record<string, number>;
     showDifficulty?: boolean;
+    cnTitle?: string;
 }
 
-export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty }: MusicItemProps) {
+export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty, cnTitle }: MusicItemProps) {
     const { assetSource } = useTheme();
     const jacketUrl = getMusicJacketUrl(music.assetbundleName, assetSource);
 
@@ -69,13 +69,12 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                 {/* Info */}
                 <div className="p-3">
                     <h3 className="text-sm font-bold text-primary-text group-hover:text-miku transition-colors">
-                        <TranslatedText
-                            original={music.title}
-                            category="music"
-                            field="title"
-                            originalClassName="truncate block"
-                            translationClassName="text-xs font-medium text-slate-400 truncate block"
-                        />
+                        <span className="flex flex-col">
+                            <span className="truncate block">{music.title}</span>
+                            {cnTitle && (
+                                <span className="text-xs font-medium text-slate-400 truncate block">{cnTitle}</span>
+                            )}
+                        </span>
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">
                         {music.composer}
