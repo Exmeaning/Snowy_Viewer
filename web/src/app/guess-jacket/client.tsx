@@ -674,7 +674,7 @@ function GuessJacketContent() {
                                         <Link
                                             href={`/music/${result.music.id}`}
                                             key={result.round}
-                                            className={`block p-4 rounded-xl border transition-transform hover:-translate-y-1 hover:shadow-md ${result.isCorrect ? "bg-green-50/90 border-green-200" : "bg-red-50/90 border-red-200"}`}
+                                            className={`block p-4 rounded-xl border transition-transform hover:-translate-y-1 hover:shadow-md ${result.isCorrect ? "bg-green-50/90 dark:bg-black/50 border-green-200" : "bg-red-50/90 dark:bg-black/50 border-red-200"}`}
                                         >
                                             <div className="flex gap-4">
                                                 <div className="w-16 h-16 relative rounded-lg overflow-hidden shadow-sm ring-1 ring-black/10 shrink-0">

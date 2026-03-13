@@ -656,7 +656,7 @@ function GuessWhoContent() {
                             <div className="p-8 bg-slate-50/30">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                                     {currentResults.map((res, idx) => (
-                                        <Link href={`/cards/${res.card.id}`} key={idx} className={`relative block p-4 rounded-xl border flex gap-4 overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-md ${res.isCorrect ? "bg-green-50/90 border-green-200" : "bg-red-50/90 border-red-200"}`}>
+                                        <Link href={`/cards/${res.card.id}`} key={idx} className={`relative block p-4 rounded-xl border flex gap-4 overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-md ${res.isCorrect ? "bg-green-50/90 dark:bg-black/50 border-green-200" : "bg-red-50/90 dark:bg-black/50 border-red-200"}`}>
                                             <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
                                                 <CanvasImage image={activeImagesRef.current[res.round]} objectFit="cover" />
                                             </div>
