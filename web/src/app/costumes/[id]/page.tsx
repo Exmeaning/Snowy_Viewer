@@ -1,11 +1,25 @@
-
-import { Suspense } from "react";
-import CostumeDetailClient from "./client";
 import { Metadata } from "next";
+import { Suspense } from "react";
+import { getCostumeMeta } from "@/lib/metadata";
+import CostumeDetailClient from "./client";
 
-export const metadata: Metadata = {
-    title: "Moesekai - 服装详情",
-};
+type Props = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { id } = await params;
+    const costume = getCostumeMeta(Number(id));
+    if (!costume) return { title: "服装详情" };
+
+    const title = costume.name;
+    const description = `Project Sekai 服装「${costume.name}」`;
+
+    return {
+        title,
+        description,
+        openGraph: { title, description },
+        twitter: { card: "summary", title, description },
+    };
+}
 
 export default function CostumeDetailPage() {
     return (

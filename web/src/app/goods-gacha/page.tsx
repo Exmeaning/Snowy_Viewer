@@ -4,8 +4,8 @@ import path from 'path';
 import GachaClient from './client';
 
 export const metadata: Metadata = {
-    title: 'Moesekai - 谷子盲抽模拟',
-    description: '模拟谷子盲抽，试试你的手气！',
+    title: "谷子盲抽模拟",
+    description: "Project Sekai 谷子盲抽模拟器",
 };
 
 // Define the type for our pools data

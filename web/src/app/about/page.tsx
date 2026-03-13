@@ -6,7 +6,8 @@ import MainLayout from "@/components/MainLayout";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Moesekai - 关于",
+    title: "关于",
+    description: "关于 Moesekai (原Snowy SekaiViewer)",
 };
 
 export default function AboutPage() {

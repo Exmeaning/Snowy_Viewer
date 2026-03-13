@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -12,14 +12,36 @@ import {
   THEME_CHAR_STORAGE_KEY,
 } from "@/lib/colorScheme";
 
-
-
 export const metadata: Metadata = {
-  title: "Moesekai (原Snowy SekaiViewer)",
-  description: "Project Sekai Viewer",
-  icons: {
-    icon: "/data/icon/icon.jpg",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe"
+  ),
+  title: {
+    default: "Moesekai - Project Sekai 数据查看器",
+    template: "%s | Moesekai",
   },
+  description:
+    "Moesekai (原Snowy SekaiViewer) — Project Sekai 游戏数据查看器，提供卡牌、音乐、活动、扭蛋等全面的游戏数据浏览。",
+  icons: { icon: "/data/icon/icon.jpg" },
+  openGraph: {
+    type: "website",
+    siteName: "Moesekai",
+    locale: "zh_CN",
+    images: [{ url: "/data/icon/icon.jpg", width: 512, height: 512 }],
+  },
+  twitter: {
+    card: "summary",
+    images: ["/data/icon/icon.jpg"],
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a1a2e" },
+  ],
 };
 
 export default function RootLayout({
@@ -88,7 +110,7 @@ export default function RootLayout({
   `;
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <meta name="color-scheme" content="light dark" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

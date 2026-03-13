@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run sitemap && next build",
+    "build": "npm run sitemap && npm run generate:metadata && next build",
     "build:next": "next build",
     "sitemap": "node scripts/generate-sitemaps.mjs",
+    "generate:metadata": "node scripts/generate-metadata-map.mjs",
     "start": "next start",
     "lint": "eslint"
   },

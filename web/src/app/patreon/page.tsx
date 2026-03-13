@@ -6,7 +6,8 @@ import MainLayout from "@/components/MainLayout";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Moesekai - 支持我们",
+    title: "支持我们",
+    description: "支持 Moesekai 项目的持续开发",
 };
 
 export default function PatreonPage() {
