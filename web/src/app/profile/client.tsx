@@ -1,16 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";
+import AccountAvatar from "@/components/AccountAvatar";
 import CharacterRankRadar from "@/components/profile/CharacterRankRadar";
 import ChallengeStageChart from "@/components/profile/ChallengeStageChart";
 import BondsRankTable from "@/components/profile/BondsRankTable";
 import PowerBonusDetail from "@/components/profile/PowerBonusDetail";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useCardThumbnail } from "@/hooks/useCardThumbnail";
 import {
     getAccounts,
     getActiveAccount,
@@ -20,10 +18,8 @@ import {
     updateAccount,
     clearAllAccounts,
     verifyHarukiApi,
-    getCharacterIconUrl,
     getTopCharacterId,
     getLeaderCardId,
-    setCachedAvatarUrl,
     SERVER_LABELS,
     type MoesekaiAccount,
     type ServerType,
@@ -34,35 +30,6 @@ const SERVER_OPTIONS: { value: ServerType; label: string }[] = [
     { value: "jp", label: "日服 (JP)" },
     { value: "tw", label: "繁中服 (TW)" },
 ];
-
-// AccountAvatar 组件 - 显示账号头像（卡面缩略图或角色图标）
-function AccountAvatar({ account }: { account: MoesekaiAccount }) {
-    const { assetSource } = useTheme();
-    const cardThumbnail = useCardThumbnail(account.avatarCardId, assetSource);
-
-    // 如果有卡面缩略图，使用卡面；否则回退到角色图标
-    const avatarUrl = cardThumbnail || getCharacterIconUrl(
-        account.avatarCharacterId ||
-        (account.userCharacters ? getTopCharacterId(account.userCharacters) : 21)
-    );
-
-    // 将头像 URL 缓存到 localStorage，供侧边栏等组件直接读取
-    useEffect(() => {
-        if (avatarUrl) {
-            setCachedAvatarUrl(account.id, avatarUrl);
-        }
-    }, [account.id, avatarUrl]);
-
-    return (
-        <Image
-            src={avatarUrl}
-            alt=""
-            fill
-            className="object-cover"
-            unoptimized
-        />
-    );
-}
 
 export default function ProfileClient() {
     const [accounts, setAccounts] = useState<MoesekaiAccount[]>([]);
@@ -320,9 +287,7 @@ export default function ProfileClient() {
                                     >
                                         <div className="flex items-center gap-3">
                                             {/* Avatar - 使用卡面缩略图 */}
-                                            <div className={`relative w-12 h-12 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0 ring-2 ring-offset-1 transition-all ${isActive ? "ring-miku/40" : "ring-slate-200"}`}>
-                                                <AccountAvatar account={acc} />
-                                            </div>
+                                            <AccountAvatar account={acc} size="lg" className={`ring-2 ring-offset-1 transition-all ${isActive ? "ring-miku/40" : "ring-slate-200"}`} />
 
                                             {/* Info */}
                                             <div className="flex-1 min-w-0">

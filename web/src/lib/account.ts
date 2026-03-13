@@ -494,3 +494,9 @@ export const SERVER_LABELS: Record<ServerType, string> = {
     jp: "日服",
     tw: "繁中服",
 };
+
+export const SERVER_OPTIONS: { value: ServerType; label: string }[] = [
+    { value: "cn", label: "简中服 (CN)" },
+    { value: "jp", label: "日服 (JP)" },
+    { value: "tw", label: "繁中服 (TW)" },
+];

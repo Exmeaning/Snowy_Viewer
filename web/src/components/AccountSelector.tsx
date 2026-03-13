@@ -7,6 +7,7 @@ import {
     setActiveAccount,
     getCharacterIconUrl,
     getTopCharacterId,
+    getCachedAvatarUrl,
     SERVER_LABELS,
     type MoesekaiAccount,
     type ServerType,
@@ -44,6 +45,9 @@ export default function AccountSelector({ onSelect, currentUserId, currentServer
                 {accounts.map((acc) => {
                     const isActive = currentUserId === acc.gameId && currentServer === acc.server;
                     const charId = acc.avatarCharacterId || (acc.userCharacters ? getTopCharacterId(acc.userCharacters) : 21);
+                    const cachedAvatar = getCachedAvatarUrl(acc.id);
+                    const avatarUrl = cachedAvatar || getCharacterIconUrl(charId);
+                    const displayName = acc.userGamedata?.name || acc.nickname;
                     return (
                         <button
                             key={acc.id}
@@ -59,7 +63,7 @@ export default function AccountSelector({ onSelect, currentUserId, currentServer
                         >
                             <div className="w-5 h-5 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">
                                 <Image
-                                    src={getCharacterIconUrl(charId)}
+                                    src={avatarUrl}
                                     alt=""
                                     width={20}
                                     height={20}
@@ -67,6 +71,9 @@ export default function AccountSelector({ onSelect, currentUserId, currentServer
                                     unoptimized
                                 />
                             </div>
+                            {displayName && (
+                                <span className="font-bold truncate max-w-[80px]">{displayName}</span>
+                            )}
                             <span className="font-mono">{acc.gameId}</span>
                             <span className={`px-1 py-0.5 rounded text-[10px] font-bold ${
                                 isActive ? "bg-miku/20 text-miku" : "bg-slate-100 text-slate-500"

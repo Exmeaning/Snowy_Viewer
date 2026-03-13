@@ -6,7 +6,7 @@ import Link from "next/link";
 import { IMusicInfo, IMusicMeta } from "@/types/music";
 import { CHAR_NAMES, ATTR_ICON_PATHS, type ICardInfo } from "@/types/types";
 import { fetchMasterData } from "@/lib/fetch";
-import { saveToolState, getAccount } from "@/lib/account";
+import { saveToolState, getAccount, SERVER_OPTIONS } from "@/lib/account";
 import AccountSelector from "@/components/AccountSelector";
 import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";
@@ -130,12 +130,6 @@ interface UserCardInfo {
 type CardMasterInfo = ICardInfo;
 
 type ServerType = "jp" | "cn" | "tw";
-
-const SERVER_OPTIONS: { value: ServerType; label: string }[] = [
-    { value: "cn", label: "简中服 (CN)" },
-    { value: "jp", label: "日服 (JP)" },
-    { value: "tw", label: "繁中服 (TW)" },
-];
 
 
 

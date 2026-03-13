@@ -1,17 +1,21 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { IMusicInfo, getMusicJacketUrl, MUSIC_CATEGORY_NAMES, MUSIC_CATEGORY_COLORS, MusicCategoryType } from "@/types/music";
+import { IMusicInfo, getMusicJacketUrl, MUSIC_CATEGORY_NAMES, MUSIC_CATEGORY_COLORS, MusicCategoryType, MusicDifficultyType, DIFFICULTY_COLORS } from "@/types/music";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
+
+const ALL_DIFFICULTIES: MusicDifficultyType[] = ["easy", "normal", "hard", "expert", "master", "append"];
 
 interface MusicItemProps {
     music: IMusicInfo;
     isSpoiler?: boolean;
     constant?: number;
+    difficulties?: Record<string, number>;
+    showDifficulty?: boolean;
 }
 
-export default function MusicItem({ music, isSpoiler, constant }: MusicItemProps) {
+export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty }: MusicItemProps) {
     const { assetSource } = useTheme();
     const jacketUrl = getMusicJacketUrl(music.assetbundleName, assetSource);
 
@@ -77,6 +81,23 @@ export default function MusicItem({ music, isSpoiler, constant }: MusicItemProps
                         {music.composer}
                         {music.composer !== music.arranger && music.arranger !== "-" && ` / ${music.arranger}`}
                     </p>
+                    {showDifficulty && difficulties && (
+                        <div className="flex justify-center gap-1 mt-1.5">
+                            {ALL_DIFFICULTIES.map(diff => {
+                                const level = difficulties[diff];
+                                if (level === undefined) return null;
+                                return (
+                                    <span
+                                        key={diff}
+                                        className="text-[10px] font-bold text-white min-w-[1.25rem] text-center py-0.5 rounded"
+                                        style={{ backgroundColor: DIFFICULTY_COLORS[diff] }}
+                                    >
+                                        {level}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
         </Link>

@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import BaseFilters, { FilterSection, FilterToggle } from "@/components/common/BaseFilters";
+import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import {
     MusicTagType,
     MusicCategoryType,

@@ -11,7 +11,7 @@ import CharacterSelector from "@/components/deck-recommend/CharacterSelector";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
-import { saveToolState, getAccount } from "@/lib/account";
+import { saveToolState, getAccount, SERVER_OPTIONS } from "@/lib/account";
 import AccountSelector from "@/components/AccountSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
@@ -137,11 +137,6 @@ const VS_SUPPORT_UNIT_OPTIONS: { value: string; label: string; icon: string }[] 
     { value: "nightcord_at_25", label: "25ji", icon: "n25.webp" },
 ];
 
-const SERVER_OPTIONS: { value: ServerType; label: string }[] = [
-    { value: "cn", label: "简中服 (CN)" },
-    { value: "jp", label: "日服 (JP)" },
-    { value: "tw", label: "繁中服 (TW)" },
-];
 
 const MODE_OPTIONS: { value: DeckMode; label: string; desc: string }[] = [
     { value: "event", label: "活动", desc: "活动PT最高" },

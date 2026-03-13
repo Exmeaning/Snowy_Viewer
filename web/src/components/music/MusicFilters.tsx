@@ -26,6 +26,9 @@ interface MusicFiltersProps {
     // Difficulty filter
     selectedDifficulty?: string;
     onDifficultyChange?: (difficulty: string) => void;
+    // Show difficulty toggle
+    showDifficulty?: boolean;
+    onShowDifficultyChange?: (checked: boolean) => void;
     // Sort
     sortBy: "publishedAt" | "id" | "level" | "constant";
     sortOrder: "asc" | "desc";
@@ -74,6 +77,8 @@ export default function MusicFilters({
     onSearchChange,
     selectedDifficulty,
     onDifficultyChange,
+    showDifficulty,
+    onShowDifficultyChange,
     sortBy,
     sortOrder,
     onSortChange,
@@ -205,6 +210,11 @@ export default function MusicFilters({
                     selected={hasEventOnly}
                     onClick={() => onHasEventOnlyChange(!hasEventOnly)}
                     label="仅显示活动歌曲"
+                />
+                <FilterToggle
+                    selected={!!showDifficulty}
+                    onClick={() => onShowDifficultyChange?.(!showDifficulty)}
+                    label="显示歌曲难度"
                 />
             </FilterSection>
         </BaseFilters>

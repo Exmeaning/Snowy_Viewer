@@ -77,6 +77,7 @@ function MusicContent() {
     const [hasEventOnly, setHasEventOnly] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDifficulty, setSelectedDifficulty] = useState<string>("master");
+    const [showDifficulty, setShowDifficulty] = useState(false);
 
     // Sort states
     const [sortBy, setSortBy] = useState<"publishedAt" | "id" | "level" | "constant">("publishedAt");
@@ -101,8 +102,9 @@ function MusicContent() {
         const search = searchParams.get("search");
         const sort = searchParams.get("sortBy");
         const order = searchParams.get("sortOrder");
+        const showDiff = searchParams.get("showDifficulty");
 
-        const hasUrlParams = tag || categories || eventOnly || search || sort || order;
+        const hasUrlParams = tag || categories || eventOnly || search || sort || order || showDiff;
 
         if (hasUrlParams) {
             if (tag) setSelectedTag(tag as MusicTagType);
@@ -111,6 +113,7 @@ function MusicContent() {
             if (search) setSearchQuery(search);
             if (sort) setSortBy(sort as "publishedAt" | "id" | "level" | "constant");
             if (order) setSortOrder(order as "asc" | "desc");
+            if (showDiff === "true") setShowDifficulty(true);
         } else {
             try {
                 const saved = sessionStorage.getItem(STORAGE_KEY);
@@ -122,6 +125,7 @@ function MusicContent() {
                     if (filters.search) setSearchQuery(filters.search);
                     if (filters.sortBy) setSortBy(filters.sortBy);
                     if (filters.sortOrder) setSortOrder(filters.sortOrder);
+                    if (filters.showDifficulty) setShowDifficulty(true);
                 }
             } catch (e) {
                 console.log("Could not restore filters from sessionStorage");
@@ -141,6 +145,7 @@ function MusicContent() {
             search: searchQuery,
             sortBy,
             sortOrder,
+            showDifficulty,
         };
         try {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
@@ -155,11 +160,12 @@ function MusicContent() {
         if (searchQuery) params.set("search", searchQuery);
         if (sortBy !== "publishedAt") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
+        if (showDifficulty) params.set("showDifficulty", "true");
 
         const queryString = params.toString();
         const newUrl = queryString ? `/music?${queryString}` : "/music";
         router.replace(newUrl, { scroll: false });
-    }, [selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, router, filtersInitialized]);
+    }, [selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, showDifficulty, router, filtersInitialized]);
 
     // Fetch data
     useEffect(() => {
@@ -356,6 +362,7 @@ function MusicContent() {
         setSearchQuery("");
         setSortBy("publishedAt");
         setSortOrder("desc");
+        setShowDifficulty(false);
         resetDisplayCount();
     }, [resetDisplayCount]);
 
@@ -389,6 +396,8 @@ function MusicContent() {
             }}
             selectedDifficulty={selectedDifficulty}
             onDifficultyChange={setSelectedDifficulty}
+            showDifficulty={showDifficulty}
+            onShowDifficultyChange={setShowDifficulty}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={handleSortChange}
@@ -404,6 +413,7 @@ function MusicContent() {
         hasEventOnly,
         searchQuery,
         selectedDifficulty,
+        showDifficulty,
         sortBy,
         sortOrder,
         musics.length,
@@ -495,8 +505,8 @@ function MusicContent() {
                                     const music = item.data as IMusicInfo;
                                     const now = Date.now();
                                     const isSpoiler = music.publishedAt > now;
-                                    const musicConstant = songConstantsMap[music.id]?.[selectedDifficulty];
-                                    return <MusicItem key={music.id} music={music} isSpoiler={isSpoiler} constant={musicConstant} />;
+                                    const musicConstant = showDifficulty ? undefined : songConstantsMap[music.id]?.[selectedDifficulty];
+                                    return <MusicItem key={music.id} music={music} isSpoiler={isSpoiler} constant={musicConstant} difficulties={musicDifficultiesMap[music.id]} showDifficulty={showDifficulty} />;
                                 }
                             })}
                         </div>

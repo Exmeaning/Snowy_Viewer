@@ -12,13 +12,32 @@ import { loadTranslations, type TranslationData } from "@/lib/translations";
 import type { IMusicInfo } from "@/types/music";
 
 const ROUNDS_PER_GAME = 10;
-const OPTIONS_PER_ROUND = 10;
+const OPTIONS_PER_ROUND_DEFAULT = 10;
+const OPTIONS_CHOICES = [4, 6, 8, 10] as const;
 const BASE_SCORE_PER_ROUND = 1000;
 const FEEDBACK_DURATION = 3000;
 const MAX_STRIKES_PER_ROUND = 3;
 
 type GameState = "setup" | "playing" | "result";
 type Difficulty = "easy" | "normal" | "hard" | "extreme";
+
+// Distortion Effects for Extreme Mode
+type DistortionType = "none" | "hue-rotate" | "flip-v" | "flip-h" | "grayscale" | "invert" | "rgb-shuffle";
+
+interface ActiveDistortion {
+    type: DistortionType;
+    label: string;
+}
+
+const DISTORTION_POOL: ActiveDistortion[] = [
+    { type: "none", label: "不操作" },
+    { type: "hue-rotate", label: "色相反转" },
+    { type: "flip-v", label: "翻转" },
+    { type: "flip-h", label: "镜像" },
+    { type: "grayscale", label: "灰度" },
+    { type: "invert", label: "反色" },
+    { type: "rgb-shuffle", label: "RGB打乱" },
+];
 
 interface CropRect {
     x: number;
@@ -30,6 +49,7 @@ interface GameSettings {
     seed: string;
     difficulty: Difficulty;
     timeLimit: number;
+    optionsCount: number;
 }
 
 interface RoundQuestion {
@@ -45,6 +65,7 @@ interface RoundResult {
     score: number;
     timeTaken: number;
     multiplier: number;
+    distortions?: ActiveDistortion[];
 }
 
 class SeededRandom {
@@ -137,6 +158,7 @@ function GuessJacketContent() {
         seed: Math.random().toString(36).substring(7),
         difficulty: "normal",
         timeLimit: 30,
+        optionsCount: OPTIONS_PER_ROUND_DEFAULT,
     });
 
     const [rounds, setRounds] = useState<RoundQuestion[]>([]);
@@ -152,6 +174,7 @@ function GuessJacketContent() {
     const [disabledOptionIds, setDisabledOptionIds] = useState<number[]>([]);
     const [roundNotice, setRoundNotice] = useState("");
     const [redrawFlag, setRedrawFlag] = useState(0);
+    const [currentDistortions, setCurrentDistortions] = useState<ActiveDistortion[]>([]);
 
     const activeImagesRef = useRef<Record<number, HTMLImageElement>>({});
     const roundResolvedRef = useRef(false);
@@ -167,6 +190,7 @@ function GuessJacketContent() {
         const seedParam = searchParams.get("seed");
         const difficultyParam = searchParams.get("difficulty");
         const timeParam = searchParams.get("time");
+        const optionsParam = searchParams.get("options");
 
         const safeDifficulty: Difficulty =
             difficultyParam === "easy" || difficultyParam === "normal" || difficultyParam === "hard" || difficultyParam === "extreme"
@@ -178,11 +202,17 @@ function GuessJacketContent() {
             ? Math.max(5, Math.min(120, timeFromQuery))
             : 30;
 
+        const optionsFromQuery = optionsParam === null ? NaN : Number(optionsParam);
+        const safeOptions = Number.isFinite(optionsFromQuery) && (OPTIONS_CHOICES as readonly number[]).includes(optionsFromQuery)
+            ? optionsFromQuery
+            : OPTIONS_PER_ROUND_DEFAULT;
+
         setSettings((prev) => ({
             ...prev,
             seed: seedParam || prev.seed,
             difficulty: safeDifficulty,
             timeLimit: safeTime,
+            optionsCount: safeOptions,
         }));
     }, [searchParams]);
 
@@ -258,6 +288,7 @@ function GuessJacketContent() {
         params.set("seed", settings.seed);
         params.set("difficulty", settings.difficulty);
         params.set("time", settings.timeLimit.toString());
+        params.set("options", settings.optionsCount.toString());
         return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     }, [settings]);
 
@@ -268,7 +299,7 @@ function GuessJacketContent() {
         });
     }, [getShareUrl]);
 
-    const buildRounds = useCallback((pool: IMusicInfo[], seed: string): RoundQuestion[] => {
+    const buildRounds = useCallback((pool: IMusicInfo[], seed: string, optionsCount: number): RoundQuestion[] => {
         const deckRandom = new SeededRandom(`${seed}-deck`);
         const selectedSongs = deckRandom.pickMultiple(pool, ROUNDS_PER_GAME);
 
@@ -276,9 +307,9 @@ function GuessJacketContent() {
             const optionRandom = new SeededRandom(`${seed}-options-${roundIndex}-${music.id}`);
             const distractors = optionRandom.pickMultiple(
                 pool.filter((candidate) => candidate.id !== music.id),
-                OPTIONS_PER_ROUND - 1
+                optionsCount - 1
             );
-            const mixed = optionRandom.pickMultiple([...distractors, music], OPTIONS_PER_ROUND);
+            const mixed = optionRandom.pickMultiple([...distractors, music], optionsCount);
             return {
                 music,
                 options: mixed,
@@ -327,6 +358,23 @@ function GuessJacketContent() {
             const x = Math.floor(cropRandom.next() * (maxX + 1));
             const y = Math.floor(cropRandom.next() * (maxY + 1));
 
+            // Extreme Mode: pick 1-3 random distortions (consistent with guess-who)
+            if (settings.difficulty === "extreme") {
+                const distRandom = new SeededRandom(`${settings.seed}-dist-${roundIndex}`);
+                const numDistortions = Math.floor(distRandom.next() * 3) + 1; // 1 to 3
+                const pool = [...DISTORTION_POOL];
+                const picked: ActiveDistortion[] = [];
+                for (let i = 0; i < numDistortions && pool.length > 0; i++) {
+                    const idx = Math.floor(distRandom.next() * pool.length);
+                    picked.push(pool[idx]);
+                    pool.splice(idx, 1);
+                }
+                const activeEffects = picked.filter(e => e.type !== "none");
+                setCurrentDistortions(activeEffects);
+            } else {
+                setCurrentDistortions([]);
+            }
+
             setCropRect({ x, y, size: cropSize });
             setIsRoundActive(true);
         };
@@ -352,12 +400,35 @@ function GuessJacketContent() {
         canvas.height = 320;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Base filter per difficulty
         if (settings.difficulty === "hard") {
             ctx.filter = "saturate(120%) contrast(130%)";
-        } else if (settings.difficulty === "extreme") {
-            ctx.filter = "grayscale(100%) contrast(150%)";
         } else {
             ctx.filter = "none";
+        }
+
+        ctx.save();
+
+        // Apply distortion filters (extreme mode)
+        if (settings.difficulty === "extreme") {
+            let filterString = "";
+            const hasFlipH = currentDistortions.some(d => d.type === "flip-h");
+            const hasFlipV = currentDistortions.some(d => d.type === "flip-v");
+            const hasGrayscale = currentDistortions.some(d => d.type === "grayscale");
+            const hasInvert = currentDistortions.some(d => d.type === "invert");
+            const hasHueRotate = currentDistortions.some(d => d.type === "hue-rotate");
+
+            if (hasGrayscale) filterString += "grayscale(100%) ";
+            if (hasInvert) filterString += "invert(100%) ";
+            if (hasHueRotate) filterString += "hue-rotate(180deg) ";
+
+            if (filterString) ctx.filter = filterString.trim();
+
+            if (hasFlipH || hasFlipV) {
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.scale(hasFlipH ? -1 : 1, hasFlipV ? -1 : 1);
+                ctx.translate(-canvas.width / 2, -canvas.height / 2);
+            }
         }
 
         ctx.drawImage(
@@ -372,21 +443,23 @@ function GuessJacketContent() {
             canvas.height
         );
 
-        if (settings.difficulty === "extreme") {
-            const noiseSeed = new SeededRandom(`${settings.seed}-noise-${currentRound}`);
+        ctx.restore();
+
+        // Apply pixel manipulations (RGB Shuffle) after standard filters
+        if (settings.difficulty === "extreme" && currentDistortions.some(d => d.type === "rgb-shuffle")) {
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
-
             for (let i = 0; i < data.length; i += 4) {
-                const noise = Math.floor((noiseSeed.next() - 0.5) * 50);
-                data[i] = Math.max(0, Math.min(255, data[i] + noise));
-                data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
-                data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                data[i] = g;
+                data[i + 1] = b;
+                data[i + 2] = r;
             }
-
             ctx.putImageData(imageData, 0, 0);
         }
-    }, [currentRound, cropRect, redrawFlag, settings.difficulty, settings.seed]);
+    }, [currentRound, cropRect, redrawFlag, settings.difficulty, settings.seed, currentDistortions]);
 
     const finishRound = useCallback((guessMusicId: number | null) => {
         if (roundResolvedRef.current || !currentQuestion) return;
@@ -419,6 +492,7 @@ function GuessJacketContent() {
             score: roundScore,
             timeTaken,
             multiplier,
+            distortions: currentDistortions.length > 0 ? currentDistortions : undefined,
         };
 
         setCurrentResults((prev) => [...prev, result]);
@@ -437,7 +511,7 @@ function GuessJacketContent() {
                 setGameState("result");
             }
         }, FEEDBACK_DURATION);
-    }, [combo, currentQuestion, currentRound, rounds, settings.difficulty, settings.timeLimit, startRound, strikes, timeLeft]);
+    }, [combo, currentDistortions, currentQuestion, currentRound, rounds, settings.difficulty, settings.timeLimit, startRound, strikes, timeLeft]);
 
     const handleGuess = useCallback((musicId: number | null) => {
         if (!isRoundActive || !currentQuestion) return;
@@ -474,14 +548,14 @@ function GuessJacketContent() {
         if (isLoading) return;
 
         const validPool = musics.filter((music) => music.assetbundleName && music.title);
-        const requiredPoolSize = Math.max(ROUNDS_PER_GAME, OPTIONS_PER_ROUND);
+        const requiredPoolSize = Math.max(ROUNDS_PER_GAME, settings.optionsCount);
 
         if (validPool.length < requiredPoolSize) {
             alert(`歌曲数量不足 (${validPool.length})，请稍后重试`);
             return;
         }
 
-        const builtRounds = buildRounds(validPool, settings.seed);
+        const builtRounds = buildRounds(validPool, settings.seed, settings.optionsCount);
         setRounds(builtRounds);
         setCurrentRound(0);
         setCurrentResults([]);
@@ -489,7 +563,7 @@ function GuessJacketContent() {
         activeImagesRef.current = {};
         setGameState("playing");
         startRound(builtRounds[0], 0);
-    }, [buildRounds, isLoading, musics, settings.seed, startRound]);
+    }, [buildRounds, isLoading, musics, settings.optionsCount, settings.seed, startRound]);
 
     const handleNextRound = useCallback(() => {
         if (feedbackTimerRef.current) {
@@ -561,7 +635,7 @@ function GuessJacketContent() {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="font-bold text-slate-700 w-16">题量:</span>
-                                            <span>{ROUNDS_PER_GAME}题 / 每题{OPTIONS_PER_ROUND}选1</span>
+                                            <span>{ROUNDS_PER_GAME}题 / 每题{settings.optionsCount}选1</span>
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-center gap-2">
@@ -643,6 +717,15 @@ function GuessJacketContent() {
                                                     )}
                                                 </div>
                                             </div>
+                                            {result.distortions && result.distortions.length > 0 && (
+                                                <div className="flex flex-wrap justify-end gap-1 px-1 mt-1">
+                                                    {result.distortions.map((d, i) => (
+                                                        <span key={i} className="text-[10px] px-1.5 py-0.5 bg-slate-800/80 text-white rounded font-bold shadow-sm whitespace-nowrap">
+                                                            {d.label}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </Link>
                                     ))}
                                 </div>
@@ -732,27 +815,38 @@ function GuessJacketContent() {
                             </div>
                         </div>
 
-                        <div className="flex-1 min-h-0 flex flex-col items-center justify-start gap-2 sm:gap-6 pb-3 sm:pb-8 overflow-hidden">
-                            <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white bg-slate-100 shrink-0 w-[min(36vw,132px)] h-[min(36vw,132px)] sm:w-[320px] sm:h-[320px]">
-                                <canvas ref={canvasRef} width={320} height={320} className="w-full h-full" />
-                                {!isRoundActive && !showFeedback && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white font-bold backdrop-blur-sm">
-                                        Loading...
+                        <div className="flex-1 min-h-0 flex flex-col lg:flex-row items-center lg:items-start justify-start lg:justify-center gap-2 sm:gap-6 pb-3 sm:pb-8 overflow-hidden">
+                            <div className="flex flex-col items-center gap-2 sm:gap-4 shrink-0">
+                                <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white bg-slate-100 shrink-0 w-[min(36vw,132px)] h-[min(36vw,132px)] sm:w-[320px] sm:h-[320px]">
+                                    <canvas ref={canvasRef} width={320} height={320} className="w-full h-full" />
+                                    {isRoundActive && currentDistortions.length > 0 && (
+                                        <div className="absolute top-2 right-2 flex flex-col gap-1 items-end pointer-events-none">
+                                            {currentDistortions.map((d, i) => (
+                                                <span key={i} className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded shadow-sm opacity-90">
+                                                    {d.label}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {!isRoundActive && !showFeedback && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white font-bold backdrop-blur-sm">
+                                            Loading...
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="text-[11px] sm:text-xs text-slate-500 text-center px-4">
+                                    从 {settings.optionsCount} 首歌曲中选出正确曲绘（错误会扣 1 点血并让剩余时间减半）
+                                </div>
+
+                                {roundNotice && (
+                                    <div className="px-4 py-2 rounded-full bg-red-500 text-white text-sm font-bold animate-pulse shadow-md">
+                                        {roundNotice}
                                     </div>
                                 )}
                             </div>
 
-                            <div className="text-[11px] sm:text-xs text-slate-500 text-center px-4">
-                                从 10 首歌曲中选出正确曲绘（错误会扣 1 点血并让剩余时间减半）
-                            </div>
-
-                            {roundNotice && (
-                                <div className="px-4 py-2 rounded-full bg-red-500 text-white text-sm font-bold animate-pulse shadow-md">
-                                    {roundNotice}
-                                </div>
-                            )}
-
-                            <div className="w-full max-w-4xl p-2.5 sm:p-4 bg-white/80 backdrop-blur-md rounded-3xl shadow-sm min-h-0 flex-[1.25] overflow-hidden">
+                            <div className="w-full lg:flex-1 max-w-4xl p-2.5 sm:p-4 bg-white/80 backdrop-blur-md rounded-3xl shadow-sm min-h-0 flex-[1.25] lg:flex-1 overflow-hidden lg:h-full">
                                 <div className="h-full overflow-y-auto pr-1 touch-pan-y overscroll-contain">
                                     <div className="grid grid-cols-2 gap-2 sm:gap-3">
                                         {currentQuestion.options.map((option, index) => {
@@ -793,6 +887,13 @@ function GuessJacketContent() {
                         </div>
                         <h1 className="text-4xl font-black text-slate-800 mb-2 drop-shadow-sm">猜曲绘 <span className="text-miku">?</span></h1>
                         <p className="text-slate-500 font-medium">通过歌曲封面局部猜测曲名，每题固定 10 个选项</p>
+                        <a
+                            href="/guess-jacket/multiplayer/"
+                            className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-miku text-white rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 hover:bg-miku-dark"
+                        >
+                            <span>联机对战模式beta</span>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                        </a>
                     </div>
 
                     <div className="bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-sm border border-slate-100 space-y-6 sm:space-y-8">
@@ -857,8 +958,26 @@ function GuessJacketContent() {
                             />
                         </div>
 
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-3">选项数量</label>
+                            <div className="grid grid-cols-4 gap-2">
+                                {OPTIONS_CHOICES.map((count) => (
+                                    <button
+                                        key={count}
+                                        onClick={() => setSettings((prev) => ({ ...prev, optionsCount: count }))}
+                                        className={`py-3 rounded-xl font-bold transition-all text-sm ${settings.optionsCount === count
+                                            ? "bg-miku text-white shadow-md ring-2 ring-miku/30"
+                                            : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                            }`}
+                                    >
+                                        {count}选1
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-sm text-slate-600 space-y-1">
-                            <div>• 每局共 {ROUNDS_PER_GAME} 题，每题 {OPTIONS_PER_ROUND} 选 1。</div>
+                            <div>• 每局共 {ROUNDS_PER_GAME} 题，每题 {settings.optionsCount} 选 1。</div>
                             <div>• 每题有 {MAX_STRIKES_PER_ROUND} 点血，答错会扣血并让剩余时间减半。</div>
                             <div>• 连续无失误答对会触发 Combo 倍率。</div>
                             <div>• 相同种子会生成相同题序与选项，可公平对战。</div>

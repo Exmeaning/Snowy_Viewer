@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, Suspense } from "reac
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
+import ExternalLink from "@/components/ExternalLink";
 import CardFilters from "@/components/cards/CardFilters";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { TranslatedText } from "@/components/common/TranslatedText";
@@ -22,24 +23,13 @@ import {
     getAccounts,
     getActiveAccount,
     setActiveAccount,
-    createAccount,
-    verifyHarukiApi,
-    getCharacterIconUrl,
-    getTopCharacterId,
-    SERVER_LABELS,
     type MoesekaiAccount,
     type ServerType,
 } from "@/lib/account";
-import Image from "next/image";
-import ExternalLink from "@/components/ExternalLink";
+import AccountSelectorBar from "@/components/AccountSelectorBar";
+import QuickBindForm from "@/components/QuickBindForm";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
-
-const SERVER_OPTIONS: { value: ServerType; label: string }[] = [
-    { value: "cn", label: "简中服" },
-    { value: "jp", label: "日服" },
-    { value: "tw", label: "繁中服" },
-];
 
 // ==================== Types ====================
 
@@ -555,10 +545,18 @@ function MyCardsContent() {
         return (
             <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
                 <PageHeader />
-                <QuickBindForm onAccountAdded={() => {
-                    setAccountsList(getAccounts());
-                    setActiveAcc(getActiveAccount());
-                }} />
+                <QuickBindForm
+                    onAccountAdded={() => {
+                        setAccountsList(getAccounts());
+                        setActiveAcc(getActiveAccount());
+                    }}
+                    icon={
+                        <svg className="w-8 h-8 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                    }
+                    description="输入游戏UID即可查看卡牌收集进度"
+                />
             </div>
         );
     }
@@ -824,291 +822,6 @@ function MyCardItem({ card, userCard }: MyCardItemProps) {
     );
 }
 
-// ==================== Quick Bind Form ====================
-
-function QuickBindForm({ onAccountAdded }: { onAccountAdded: () => void }) {
-    const [gameId, setGameId] = useState("");
-    const [server, setServer] = useState<ServerType>("jp");
-    const [isVerifying, setIsVerifying] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const handleSubmit = useCallback(async () => {
-        if (!gameId.trim()) return;
-        setIsVerifying(true);
-        setError(null);
-
-        const result = await verifyHarukiApi(server, gameId.trim());
-        if (!result.success) {
-            setError(
-                result.error === "API_NOT_PUBLIC"
-                    ? "该用户的公开API未开启，请先前往 Haruki 工具箱勾选「公开API访问」"
-                    : result.error === "NOT_FOUND"
-                        ? "用户数据未找到，请确认UID和服务器是否正确，并已在 Haruki 上传数据"
-                        : "网络错误，请稍后重试"
-            );
-            setIsVerifying(false);
-            return;
-        }
-
-        const chars = result.userCharacters || [];
-        const topCharId = getTopCharacterId(chars);
-        const nickname = result.userProfile?.word || "";
-        createAccount(gameId.trim(), server, nickname, topCharId, chars, true);
-
-        setGameId("");
-        setIsVerifying(false);
-        setError(null);
-        onAccountAdded();
-    }, [gameId, server, onAccountAdded]);
-
-    return (
-        <div className="glass-card p-6 sm:p-8 rounded-2xl">
-            <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-miku/10 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                </div>
-                <h2 className="text-lg font-bold text-primary-text mb-1">快速绑定账号</h2>
-                <p className="text-xs text-slate-400">输入游戏UID即可查看卡牌收集进度</p>
-            </div>
-
-            <div className="space-y-4 max-w-sm mx-auto">
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                        游戏UID <span className="text-red-400">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        value={gameId}
-                        onChange={(e) => setGameId(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                        placeholder="输入游戏UID"
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
-                        disabled={isVerifying}
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">服务器</label>
-                    <div className="flex gap-2">
-                        {SERVER_OPTIONS.map((s) => (
-                            <button
-                                key={s.value}
-                                onClick={() => setServer(s.value)}
-                                disabled={isVerifying}
-                                className={`flex-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ${server === s.value
-                                    ? "bg-miku text-white shadow-md shadow-miku/20"
-                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                    }`}
-                            >
-                                {s.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {error && (
-                    <div className="p-3 rounded-xl bg-red-50 border border-red-200/50">
-                        <div className="flex items-start gap-2">
-                            <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div>
-                                <p className="text-xs font-medium text-red-700">{error}</p>
-                                <ExternalLink href="https://haruki.seiunx.com" className="text-xs text-miku hover:underline mt-1 inline-block">
-                                    前往 Haruki 工具箱 →
-                                </ExternalLink>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <button
-                    onClick={handleSubmit}
-                    disabled={!gameId.trim() || isVerifying}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold text-sm shadow-lg shadow-miku/20 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                    {isVerifying ? (
-                        <>
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            验证中...
-                        </>
-                    ) : (
-                        "验证并绑定"
-                    )}
-                </button>
-
-                <p className="text-[10px] text-slate-400 text-center">
-                    需要先在{" "}
-                    <ExternalLink href="https://haruki.seiunx.com" className="text-miku hover:underline">
-                        Haruki 工具箱
-                    </ExternalLink>
-                    {" "}上传数据并开启公开API
-                </p>
-            </div>
-        </div>
-    );
-}
-
-// ==================== Account Selector Bar ====================
-
-function AccountSelectorBar({
-    accounts,
-    activeAccount,
-    onSelect,
-    onAccountAdded,
-}: {
-    accounts: MoesekaiAccount[];
-    activeAccount: MoesekaiAccount | null;
-    onSelect: (acc: MoesekaiAccount) => void;
-    onAccountAdded: () => void;
-}) {
-    const [showAddForm, setShowAddForm] = useState(false);
-    const [gameId, setGameId] = useState("");
-    const [server, setServer] = useState<ServerType>("jp");
-    const [isVerifying, setIsVerifying] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const handleAdd = useCallback(async () => {
-        if (!gameId.trim()) return;
-        setIsVerifying(true);
-        setError(null);
-
-        const result = await verifyHarukiApi(server, gameId.trim());
-        if (!result.success) {
-            setError(
-                result.error === "API_NOT_PUBLIC"
-                    ? "公开API未开启"
-                    : result.error === "NOT_FOUND"
-                        ? "用户未找到"
-                        : "网络错误"
-            );
-            setIsVerifying(false);
-            return;
-        }
-
-        const chars = result.userCharacters || [];
-        const topCharId = getTopCharacterId(chars);
-        const nickname = result.userProfile?.word || "";
-        createAccount(gameId.trim(), server, nickname, topCharId, chars, true);
-
-        setGameId("");
-        setIsVerifying(false);
-        setError(null);
-        setShowAddForm(false);
-        onAccountAdded();
-    }, [gameId, server, onAccountAdded]);
-
-    return (
-        <div className="mb-6">
-            <div className="glass-card p-4 rounded-2xl">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-600">选择账号</span>
-                    <button
-                        onClick={() => { setShowAddForm(!showAddForm); setError(null); }}
-                        className="text-xs font-medium text-miku hover:text-miku-dark transition-colors flex items-center gap-0.5"
-                    >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        添加账号
-                    </button>
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                    {accounts.map((acc) => {
-                        const isActive = activeAccount?.id === acc.id;
-                        const charId = acc.avatarCharacterId || (acc.userCharacters ? getTopCharacterId(acc.userCharacters) : 21);
-                        return (
-                            <button
-                                key={acc.id}
-                                onClick={() => onSelect(acc)}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${isActive
-                                    ? "bg-miku/10 border-miku/40 text-miku shadow-sm"
-                                    : "bg-white/60 border-slate-200/60 text-slate-600 hover:border-miku/30 hover:bg-miku/5"
-                                    }`}
-                            >
-                                <div className="w-5 h-5 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">
-                                    <Image src={getCharacterIconUrl(charId)} alt="" width={20} height={20} className="object-cover" unoptimized />
-                                </div>
-                                <span className="font-mono">{acc.gameId}</span>
-                                <span className={`px-1 py-0.5 rounded text-[10px] font-bold ${isActive ? "bg-miku/20 text-miku" : "bg-slate-100 text-slate-500"}`}>
-                                    {SERVER_LABELS[acc.server]}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Inline Add Form */}
-                {showAddForm && (
-                    <div className="mt-3 pt-3 border-t border-slate-100">
-                        <div className="flex flex-wrap items-end gap-2">
-                            <div className="flex-1 min-w-[140px]">
-                                <label className="block text-[10px] font-medium text-slate-500 mb-1">UID</label>
-                                <input
-                                    type="text"
-                                    value={gameId}
-                                    onChange={(e) => setGameId(e.target.value)}
-                                    onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                                    placeholder="输入游戏UID"
-                                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-xs"
-                                    disabled={isVerifying}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-medium text-slate-500 mb-1">服务器</label>
-                                <div className="flex gap-1">
-                                    {SERVER_OPTIONS.map((s) => (
-                                        <button
-                                            key={s.value}
-                                            onClick={() => setServer(s.value)}
-                                            disabled={isVerifying}
-                                            className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all ${server === s.value
-                                                ? "bg-miku text-white"
-                                                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                                                }`}
-                                        >
-                                            {s.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <button
-                                onClick={handleAdd}
-                                disabled={!gameId.trim() || isVerifying}
-                                className="px-4 py-1.5 bg-gradient-to-r from-miku to-miku-dark text-white rounded-lg font-bold text-xs shadow-sm hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center gap-1.5"
-                            >
-                                {isVerifying ? (
-                                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                )}
-                                {isVerifying ? "验证中" : "添加"}
-                            </button>
-                            <button
-                                onClick={() => { setShowAddForm(false); setError(null); }}
-                                disabled={isVerifying}
-                                className="px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
-                            >
-                                取消
-                            </button>
-                        </div>
-                        {error && (
-                            <p className="mt-2 text-[11px] text-red-500 flex items-center gap-1">
-                                <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01" />
-                                </svg>
-                                {error}
-                            </p>
-                        )}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
 
 // ==================== Export ====================
 

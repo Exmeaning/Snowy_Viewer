@@ -83,7 +83,7 @@ export default function MainNavbar({
                         />
                         <div className="flex items-center gap-1.5 h-full">
                             <span className="text-[8px] px-1.5 py-0.5 bg-amber-400 text-white font-bold rounded-full leading-none">
-                                BETA1.134
+                                BETA1.136
                             </span>
 
                             {showDomainNotice && (
