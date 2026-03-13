@@ -11,7 +11,7 @@ WORKDIR /app/web
 ENV NEXT_PUBLIC_API_URL=
 RUN npm ci
 RUN ls -la /app/refer/re_sekai-calculator/src/index.ts
-RUN npm run build:next
+RUN npm run build
 
 # Build Stage for Backend
 FROM golang:1.23-alpine AS builder-go
