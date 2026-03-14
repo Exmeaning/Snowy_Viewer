@@ -326,7 +326,7 @@ export default function ChartPreviewPlayer({ susUrl, bgmUrl, rawOffsetMs, skipBg
                     try {
                         const controller = new AbortController();
                         const timer = window.setTimeout(() => controller.abort(), 30000);
-                        const bgmFetchUrl = `/api/audio-proxy?url=${encodeURIComponent(bgmUrl)}`;
+                        const bgmFetchUrl = bgmUrl;
                         const bgmResponse = await fetch(bgmFetchUrl, { signal: controller.signal });
                         window.clearTimeout(timer);
                         if (!bgmResponse.ok) throw new Error(`BGM: ${bgmResponse.status}`);

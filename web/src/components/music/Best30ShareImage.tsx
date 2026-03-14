@@ -112,11 +112,6 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     });
 }
 
-function toProxyImageUrl(src: string): string {
-    if (!/^https?:\/\//i.test(src)) return src;
-    return `/api/image-proxy?url=${encodeURIComponent(src)}`;
-}
-
 async function loadImageWithFallback(sources: string[]): Promise<HTMLImageElement | null> {
     const uniqueSources = Array.from(new Set(sources.filter(Boolean)));
     for (const source of uniqueSources) {
@@ -273,9 +268,7 @@ async function drawBest30Canvas(
     // Load and draw circular avatar
     if (avatarUrl) {
         try {
-            // Proxy avatar through same-origin API to avoid CORS issues with canvas
-            const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(avatarUrl)}`;
-            const avatarImg = await loadImage(proxyUrl);
+            const avatarImg = await loadImage(avatarUrl);
             ctx.save();
             ctx.beginPath();
             ctx.arc(avatarCenterX - avatarSize / 2, avatarCenterY, avatarSize / 2, 0, Math.PI * 2);
@@ -335,8 +328,7 @@ async function drawBest30Canvas(
     // ====================== Load Assets ======================
     const jacketPromises = entries.map(async (entry) => {
         const candidateUrls = buildJacketCandidateUrls(entry.assetbundleName, getMusicThumbnailUrl);
-        const proxiedCandidates = candidateUrls.map(toProxyImageUrl);
-        return loadImageWithFallback([...proxiedCandidates, ...candidateUrls]);
+        return loadImageWithFallback(candidateUrls);
     });
 
     const [apIcon, fcIcon] = await Promise.all([

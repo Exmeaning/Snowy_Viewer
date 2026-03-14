@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 
 	"snowy_viewer/internal/bilibili"
 	"snowy_viewer/internal/cache"
@@ -46,12 +45,7 @@ func main() {
 	}
 
 	// Prevent unknown /api/* paths from bouncing between Go and Next.js.
-	// Keep Next.js-owned API routes available via explicit allow-list.
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/api/image-proxy") {
-			nextjsProxy.ServeHTTP(w, r)
-			return
-		}
 		http.NotFound(w, r)
 	})
 

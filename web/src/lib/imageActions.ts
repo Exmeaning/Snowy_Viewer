@@ -1,7 +1,5 @@
 "use client";
 
-const DEFAULT_IMAGE_PROXY_PATH = "/api/image-proxy";
-
 const EXTENSION_BY_MIME: Record<string, string> = {
     "image/png": "png",
     "image/jpeg": "jpg",
@@ -10,10 +8,6 @@ const EXTENSION_BY_MIME: Record<string, string> = {
     "image/svg+xml": "svg",
     "image/avif": "avif",
 };
-
-interface ImageActionOptions {
-    proxyPath?: string;
-}
 
 function sanitizeFileName(fileName: string): string {
     const trimmed = fileName.trim();
@@ -53,37 +47,20 @@ async function fetchImageBlobDirect(url: string): Promise<Blob> {
     return blob;
 }
 
-export async function fetchImageBlob(
-    imageUrl: string,
-    options: ImageActionOptions = {}
-): Promise<Blob> {
+export async function fetchImageBlob(imageUrl: string): Promise<Blob> {
     if (typeof window === "undefined") {
         throw new Error("Image actions are only available in browser");
     }
 
-    const proxyPath = options.proxyPath || DEFAULT_IMAGE_PROXY_PATH;
     const absoluteUrl = toAbsoluteUrl(imageUrl);
-    const absolute = new URL(absoluteUrl);
-    const isSameOrigin = absolute.origin === window.location.origin;
-
-    if (isSameOrigin) {
-        return fetchImageBlobDirect(absoluteUrl);
-    }
-
-    try {
-        return await fetchImageBlobDirect(absoluteUrl);
-    } catch {
-        const proxyUrl = `${proxyPath}?url=${encodeURIComponent(absoluteUrl)}`;
-        return fetchImageBlobDirect(proxyUrl);
-    }
+    return fetchImageBlobDirect(absoluteUrl);
 }
 
 export async function saveImageFromUrl(
     imageUrl: string,
     fileName: string,
-    options: ImageActionOptions = {}
 ): Promise<void> {
-    const blob = await fetchImageBlob(imageUrl, options);
+    const blob = await fetchImageBlob(imageUrl);
     const safeName = ensureFileExtension(sanitizeFileName(fileName), blob.type);
 
     const objectUrl = URL.createObjectURL(blob);
@@ -97,10 +74,7 @@ export async function saveImageFromUrl(
     }
 }
 
-export async function copyImageFromUrl(
-    imageUrl: string,
-    options: ImageActionOptions = {}
-): Promise<void> {
+export async function copyImageFromUrl(imageUrl: string): Promise<void> {
     if (!navigator.clipboard?.write) {
         throw new Error("Clipboard API is not supported");
     }
@@ -111,7 +85,7 @@ export async function copyImageFromUrl(
         throw new Error("ClipboardItem is not supported");
     }
 
-    const blob = await fetchImageBlob(imageUrl, options);
+    const blob = await fetchImageBlob(imageUrl);
     const mimeType = blob.type.startsWith("image/") ? blob.type : "image/png";
 
     await navigator.clipboard.write([

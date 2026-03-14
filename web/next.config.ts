@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/:path((?!image-proxy).*)',
+        source: '/api/:path*',
         destination: `${internalApiBase}/api/:path`,
       },
     ];
