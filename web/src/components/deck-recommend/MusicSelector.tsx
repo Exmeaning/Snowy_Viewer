@@ -11,16 +11,24 @@ import MusicFilters from "@/components/music/MusicFilters";
 
 const MUSIC_META_API = "https://assets.exmeaning.com/musicmeta/music_metas.json";
 
+/** Sort options for MusicSelector (no level/constant since there's no difficulty context) */
+const SELECTOR_SORT_OPTIONS = [
+    { id: "publishedAt", label: "发布日期" },
+    { id: "id", label: "ID" },
+];
+
 interface MusicSelectorProps {
     selectedMusicId: string;
     onSelect: (musicId: string) => void;
+    /** Show "猜你想选" recommendations section (default: true) */
+    showRecommendations?: boolean;
     recommendMode?: "event" | "challenge";
     liveType?: string;
 }
 
 type RecommendType = "efficiency" | "pt" | "score";
 
-export default function MusicSelector({ selectedMusicId, onSelect, recommendMode = "event", liveType = "multi" }: MusicSelectorProps) {
+export default function MusicSelector({ selectedMusicId, onSelect, showRecommendations = true, recommendMode = "event", liveType = "multi" }: MusicSelectorProps) {
     const { assetSource } = useTheme();
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
     const [musicTags, setMusicTags] = useState<IMusicTagInfo[]>([]);
@@ -58,31 +66,37 @@ export default function MusicSelector({ selectedMusicId, onSelect, recommendMode
 
     // Load musics and tags on mount
     useEffect(() => {
-        Promise.all([
+        const fetches: Promise<unknown>[] = [
             fetchMasterData<IMusicInfo[]>("musics.json"),
             fetchMasterData<IMusicTagInfo[]>("musicTags.json"),
-            fetch(MUSIC_META_API).then(res => res.json()).catch(err => {
-                console.error("Failed to fetch music meta", err);
-                return [];
-            }),
-            loadTranslations()
-        ])
-            .then(([musicsData, tagsData, metasData, translationsData]) => {
-                setMusics(musicsData);
-                setMusicTags(tagsData);
-                setMusicMetas(metasData);
-                setTranslations(translationsData);
+            loadTranslations(),
+        ];
+        // Only fetch meta when recommendations are enabled
+        if (showRecommendations) {
+            fetches.push(
+                fetch(MUSIC_META_API).then(res => res.json()).catch(err => {
+                    console.error("Failed to fetch music meta", err);
+                    return [];
+                })
+            );
+        }
+        Promise.all(fetches)
+            .then(([musicsData, tagsData, translationsData, metasData]) => {
+                setMusics(musicsData as IMusicInfo[]);
+                setMusicTags(tagsData as IMusicTagInfo[]);
+                setTranslations(translationsData as TranslationData);
+                if (metasData) setMusicMetas(metasData as IMusicMeta[]);
                 setLoading(false);
             })
             .catch(err => {
                 console.error("Failed to load musics", err);
                 setLoading(false);
             });
-    }, []);
+    }, [showRecommendations]);
 
     // Recommended Musics Logic
     const recommendedMusics = useMemo(() => {
-        if (!musics.length || !musicMetas.length) return [];
+        if (!showRecommendations || !musics.length || !musicMetas.length) return [];
 
         let sortField: keyof IMusicMeta | null = null;
 
@@ -98,8 +112,6 @@ export default function MusicSelector({ selectedMusicId, onSelect, recommendMode
             else if (metaMode === "auto") sortField = "pspi_auto_score";
             else if (metaMode === "solo") sortField = "pspi_solo_score";
         }
-
-        if (!sortField) return [];
 
         if (!sortField) return [];
 
@@ -127,7 +139,6 @@ export default function MusicSelector({ selectedMusicId, onSelect, recommendMode
 
         const addItem = (id: number, isPinned: boolean = false) => {
             if (seen.has(id)) return;
-            // Best meta is already in sortedMetas, but lookup might be faster via id if we don't care about specific diff
             const meta = sortedMetas.find(m => m.music_id === id) || musicMetas.find(m => m.music_id === id);
 
             if (meta) {
@@ -157,9 +168,9 @@ export default function MusicSelector({ selectedMusicId, onSelect, recommendMode
         }
 
         return result;
-    }, [musics, musicMetas, metaMode, effectiveRecommendType]);
+    }, [showRecommendations, musics, musicMetas, metaMode, effectiveRecommendType]);
 
-    // Filter musics [Rest of the logic remains similar]
+    // Filter musics
     const filteredMusics = useMemo(() => {
         let result = [...musics];
 
@@ -184,15 +195,10 @@ export default function MusicSelector({ selectedMusicId, onSelect, recommendMode
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase();
             result = result.filter(m => {
-                // Match by ID
                 if (m.id.toString().includes(q)) return true;
-                // Match by Japanese title
                 if (m.title.toLowerCase().includes(q)) return true;
-                // Match by Chinese title translation
                 const chineseTitle = translations?.music?.title?.[m.title];
                 if (chineseTitle && chineseTitle.toLowerCase().includes(q)) return true;
-                // Match by creator/artist
-                if (m.creatorArtistId.toString().includes(q)) return true; // original checked this but maybe not useful for user search? kept as is
                 if (m.lyricist.toLowerCase().includes(q)) return true;
                 if (m.composer.toLowerCase().includes(q)) return true;
                 return false;
@@ -278,8 +284,8 @@ export default function MusicSelector({ selectedMusicId, onSelect, recommendMode
                 title="选择歌曲"
             >
                 <div>
-                    {/* Recommendations Integrated Section */}
-                    {recommendedMusics.length > 0 && !searchQuery && (
+                    {/* Recommendations Section */}
+                    {showRecommendations && recommendedMusics.length > 0 && !searchQuery && (
                         <div className="mb-6 bg-slate-50/50 rounded-xl border border-slate-100 p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
@@ -326,7 +332,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, recommendMode
 
                             {/* List View */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {recommendedMusics.map((item, idx) => (
+                                {recommendedMusics.map((item) => (
                                     <div
                                         key={item.music.id}
                                         onClick={() => handleSelect(item.music)}
@@ -401,6 +407,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, recommendMode
                                 setSortBy(nextSortBy);
                                 setSortOrder(nextSortOrder);
                             }}
+                            customSortOptions={SELECTOR_SORT_OPTIONS}
                             onReset={() => {
                                 setSelectedTag("all");
                                 setSelectedCategories([]);

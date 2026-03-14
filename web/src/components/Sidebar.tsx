@@ -260,6 +260,16 @@ const navigationGroups: NavGroup[] = [
                     </svg>
                 ),
             },
+            {
+                name: "谱面预览器",
+                href: "/chart-preview",
+                icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                ),
+            },
         ],
     },
     {
@@ -301,7 +311,7 @@ const navigationGroups: NavGroup[] = [
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                 ),
-            },
+            },
             {
                 name: "关于",
                 href: "/about",

@@ -184,6 +184,13 @@ export function getStampUrl(assetbundleName: string, source: AssetSourceType = "
 
 // ==================== Music Asset URLs ====================
 
+// Music score (SUS) URL for chart preview
+export function getMusicScoreUrl(musicId: number, difficulty: string, source: AssetSourceType = "uni"): string {
+    const baseUrl = getAssetBaseUrl(source);
+    const paddedId = String(musicId).padStart(4, '0');
+    return `${baseUrl}/startapp/music/music_score/${paddedId}_01/${difficulty}`;
+}
+
 // Chart SVG available on Uni and SnowyAssets
 export function getChartSvgUrl(musicId: number, difficulty: string, source: AssetSourceType = "uni"): string {
     return `https://charts-new.unipjsk.com/moe/svg/${musicId}/${difficulty}.svg`;

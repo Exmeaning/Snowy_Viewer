@@ -29,10 +29,15 @@ interface MusicFiltersProps {
     // Show difficulty toggle
     showDifficulty?: boolean;
     onShowDifficultyChange?: (checked: boolean) => void;
+    // Spoiler toggle
+    isShowSpoiler?: boolean;
+    onShowSpoilerChange?: (checked: boolean) => void;
     // Sort
     sortBy: "publishedAt" | "id" | "level" | "constant";
     sortOrder: "asc" | "desc";
     onSortChange: (sortBy: "publishedAt" | "id" | "level" | "constant", sortOrder: "asc" | "desc") => void;
+    /** Override default sort options (e.g. to hide level/constant in contexts without difficulty) */
+    customSortOptions?: { id: string; label: string }[];
     // Reset
     onReset: () => void;
     // Stats
@@ -79,9 +84,12 @@ export default function MusicFilters({
     onDifficultyChange,
     showDifficulty,
     onShowDifficultyChange,
+    isShowSpoiler,
+    onShowSpoilerChange,
     sortBy,
     sortOrder,
     onSortChange,
+    customSortOptions,
     onReset,
     totalMusics,
     filteredMusics,
@@ -109,7 +117,7 @@ export default function MusicFilters({
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
             searchPlaceholder="搜索歌曲名称或ID..."
-            sortOptions={SORT_OPTIONS}
+            sortOptions={customSortOptions || SORT_OPTIONS}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={(id, order) => onSortChange(id as "publishedAt" | "id" | "level" | "constant", order)}
@@ -211,11 +219,20 @@ export default function MusicFilters({
                     onClick={() => onHasEventOnlyChange(!hasEventOnly)}
                     label="仅显示活动歌曲"
                 />
-                <FilterToggle
-                    selected={!!showDifficulty}
-                    onClick={() => onShowDifficultyChange?.(!showDifficulty)}
-                    label="显示歌曲难度"
-                />
+                {onShowDifficultyChange && (
+                    <FilterToggle
+                        selected={!!showDifficulty}
+                        onClick={() => onShowDifficultyChange(!showDifficulty)}
+                        label="显示歌曲难度"
+                    />
+                )}
+                {onShowSpoilerChange && (
+                    <FilterToggle
+                        selected={!!isShowSpoiler}
+                        onClick={() => onShowSpoilerChange(!isShowSpoiler)}
+                        label="显示剧透内容"
+                    />
+                )}
             </FilterSection>
         </BaseFilters>
     );

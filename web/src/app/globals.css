@@ -346,3 +346,22 @@ button[data-shortcut-load-more="true"]::after {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Chart preview logo fill animation */
+@keyframes logo-fill-right {
+  0% {
+    background-position: 100% 0%;
+  }
+  50% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 0%;
+  }
+}
+
+.chart-preview-logo-fill {
+  animation: logo-fill-right 2.4s ease-in-out infinite;
+  background: linear-gradient(to right, var(--color-miku) 33%, var(--color-miku-dark) 33%, rgba(255,255,255,0.15) 66%, var(--color-miku) 66%);
+  background-size: 300% 100%;
+}
