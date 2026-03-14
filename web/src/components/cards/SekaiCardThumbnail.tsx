@@ -120,7 +120,7 @@ export default function SekaiCardThumbnail({
 
     return (
         <div
-            className={`relative inline-block select-none ${className}`}
+            className={`relative ${className ? "" : "inline-block"} select-none ${className}`}
             style={className ? { aspectRatio: '1 / 1' } : { width, height: width }}
         >
             <svg
