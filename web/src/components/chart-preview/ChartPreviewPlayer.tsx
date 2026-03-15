@@ -34,9 +34,6 @@ type WebkitFullscreenElement = HTMLElement & {
     webkitRequestFullscreen?: () => Promise<void> | void;
 };
 
-/** Seconds to skip at the start of BGM (game songs have ~9s silence). */
-const BGM_SKIP_SEC = 9;
-
 const LS_NOTE_SPEED = "chart-preview-note-speed";
 const LS_SE_VOLUME = "chart-preview-se-volume";
 const LS_BGM_VOLUME = "chart-preview-bgm-volume";
@@ -53,6 +50,8 @@ interface ChartPreviewPlayerProps {
     susUrl: string;
     bgmUrl?: string;
     rawOffsetMs?: number | null;
+    /** Seconds of filler/silence at the start of the BGM file (from musics.json fillerSec). */
+    fillerSec?: number;
     /** If true, skip the leading silence in BGM (default: true when bgmUrl is provided). */
     skipBgmSilence?: boolean;
     onFullscreenChange?: (isFullscreen: boolean) => void;
@@ -70,6 +69,7 @@ export default function ChartPreviewPlayer({
     susUrl,
     bgmUrl,
     rawOffsetMs,
+    fillerSec = 0,
     skipBgmSilence = true,
     onFullscreenChange,
 }: ChartPreviewPlayerProps) {
@@ -554,8 +554,8 @@ export default function ChartPreviewPlayer({
                         ]);
                         // Trim leading silence: game BGM files have ~9s of silence at the start.
                         // We offset the audio so playback aligns with the chart.
-                        if (skipBgmSilence) {
-                            transport.setBgmOffsetSec(BGM_SKIP_SEC);
+                        if (skipBgmSilence && fillerSec > 0) {
+                            transport.setBgmOffsetSec(fillerSec);
                         }
                         transport.setDuration(Math.max(transport.getSnapshot().durationSec, minimumDurationSec));
                         bgmLoadedRef.current = true;
@@ -595,7 +595,7 @@ export default function ChartPreviewPlayer({
             wasm.dispose();
             judgementSoundsInstance.stopAll();
         };
-    }, [susUrl, bgmUrl, rawOffsetMs, skipBgmSilence, updateUi]);
+    }, [susUrl, bgmUrl, rawOffsetMs, fillerSec, skipBgmSilence, updateUi]);
 
     const handlePlayToggle = useCallback(async () => {
         const transport = transportRef.current;

@@ -228,6 +228,7 @@ function ChartPreviewInner() {
                         susUrl={activeSusUrl!}
                         bgmUrl={activeBgmUrl}
                         rawOffsetMs={activeOffset}
+                        fillerSec={selectedMusic?.fillerSec}
                         onFullscreenChange={setIsPlayerFullscreen}
                     />
                 </div>
@@ -338,6 +339,7 @@ function ChartPreviewInner() {
                         susUrl={activeSusUrl}
                         bgmUrl={activeBgmUrl}
                         rawOffsetMs={activeOffset}
+                        fillerSec={selectedMusic?.fillerSec}
                         onFullscreenChange={setIsPlayerFullscreen}
                     />
                 </div>
