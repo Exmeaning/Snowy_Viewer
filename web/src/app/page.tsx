@@ -221,16 +221,6 @@ export default function Home() {
             </ExternalLink>
           </div>
 
-          {/* Performance Tip */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-xl text-green-700">
-            <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span className="text-xs">
-              若页面出现卡顿，尝试在设置中使用<strong>省电模式</strong>
-            </span>
-          </div>
-
         </div>
 
         {/* Tabs Section (Latest Info) */}

@@ -84,7 +84,7 @@ function MusicContent() {
     const [hasEventOnly, setHasEventOnly] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDifficulty, setSelectedDifficulty] = useState<string>("master");
-    const [showDifficulty, setShowDifficulty] = useState(false);
+    const [showDifficulty, setShowDifficulty] = useState(true);
 
     // Sort states
     const [sortBy, setSortBy] = useState<"publishedAt" | "id" | "level" | "constant">("publishedAt");
@@ -120,7 +120,7 @@ function MusicContent() {
             if (search) setSearchQuery(search);
             if (sort) setSortBy(sort as "publishedAt" | "id" | "level" | "constant");
             if (order) setSortOrder(order as "asc" | "desc");
-            if (showDiff === "true") setShowDifficulty(true);
+            if (showDiff === "false") setShowDifficulty(false);
         } else {
             try {
                 const saved = sessionStorage.getItem(STORAGE_KEY);
@@ -132,7 +132,7 @@ function MusicContent() {
                     if (filters.search) setSearchQuery(filters.search);
                     if (filters.sortBy) setSortBy(filters.sortBy);
                     if (filters.sortOrder) setSortOrder(filters.sortOrder);
-                    if (filters.showDifficulty) setShowDifficulty(true);
+                    if (filters.showDifficulty === false) setShowDifficulty(false);
                 }
             } catch (e) {
                 console.log("Could not restore filters from sessionStorage");
@@ -167,7 +167,7 @@ function MusicContent() {
         if (searchQuery) params.set("search", searchQuery);
         if (sortBy !== "publishedAt") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
-        if (showDifficulty) params.set("showDifficulty", "true");
+        if (!showDifficulty) params.set("showDifficulty", "false");
 
         const queryString = params.toString();
         const newUrl = queryString ? `/music?${queryString}` : "/music";
@@ -379,7 +379,7 @@ function MusicContent() {
         setSearchQuery("");
         setSortBy("publishedAt");
         setSortOrder("desc");
-        setShowDifficulty(false);
+        setShowDifficulty(true);
         resetDisplayCount();
     }, [resetDisplayCount]);
 
@@ -483,7 +483,7 @@ function MusicContent() {
                 {/* Music Grid */}
                 <div className="flex-1 min-w-0">
                     {isLoading ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
                             {Array.from({ length: 15 }).map((_, i) => (
                                 <div key={i} className="animate-pulse">
                                     <div className="rounded-xl overflow-hidden bg-white/60 border border-slate-200/60">
@@ -507,7 +507,7 @@ function MusicContent() {
                             </p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
                             {displayedMusicsWithSeparators.map((item, index) => {
                                 if (item.type === 'separator') {
                                     const sepData = item.data as { level: number, difficulty: string };
