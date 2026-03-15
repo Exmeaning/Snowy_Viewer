@@ -460,7 +460,7 @@ export default function Sidebar({
     // 仅在移动端点击导航时关闭侧边栏
     const handleNavClick = () => {
         setFocusedIndex(-1);
-        if (window.innerWidth < 768) {
+        if (window.innerWidth < 768 || screen.width < 768) {
             onClose();
         }
     };

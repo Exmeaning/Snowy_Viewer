@@ -67,7 +67,11 @@ export default function MainLayout({
             ? false
             : (() => {
                 const saved = sessionStorage.getItem("sidebar_open");
-                return saved !== null ? saved === "true" : window.innerWidth >= 768;
+                if (saved !== null) return saved === "true";
+                // 同时检查 window.innerWidth 和 screen.width，
+                // 防止某些旧版移动浏览器 innerWidth 返回 layout viewport 宽度
+                const isWideScreen = window.innerWidth >= 768 && screen.width >= 768;
+                return isWideScreen;
             })();
         let raf1 = 0;
         let raf2 = 0;
