@@ -37,6 +37,7 @@ type WebkitFullscreenElement = HTMLElement & {
 const LS_NOTE_SPEED = "chart-preview-note-speed";
 const LS_SE_VOLUME = "chart-preview-se-volume";
 const LS_BGM_VOLUME = "chart-preview-bgm-volume";
+const LS_PLAYBACK_RATE = "chart-preview-playback-rate";
 
 function readNumber(key: string, fallback: number): number {
     if (typeof window === "undefined") return fallback;
@@ -112,7 +113,7 @@ export default function ChartPreviewPlayer({
     const [noteSpeed, setNoteSpeed] = useState(() => readNumber(LS_NOTE_SPEED, 10.5));
     const [seVolume, setSeVolume] = useState(() => readNumber(LS_SE_VOLUME, 0.8));
     const [bgmVolume, setBgmVolume] = useState(() => readNumber(LS_BGM_VOLUME, 0.8));
-    const [playbackRate, setPlaybackRate] = useState(1);
+    const [playbackRate, setPlaybackRate] = useState(() => readNumber(LS_PLAYBACK_RATE, 1));
     const [lowEffects, setLowEffects] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
@@ -326,6 +327,8 @@ export default function ChartPreviewPlayer({
 
         transport.setVolume(readNumber(LS_BGM_VOLUME, 0.8));
         judgementSoundsInstance.setVolume(readNumber(LS_SE_VOLUME, 0.8));
+        const savedRate = readNumber(LS_PLAYBACK_RATE, 1);
+        if (savedRate !== 1) void transport.setPlaybackRate(savedRate);
 
         const unsubscribe = transport.subscribe(updateUi);
 
@@ -661,12 +664,20 @@ export default function ChartPreviewPlayer({
         updateUi();
     }, [updateUi]);
 
-    const handleSpeedChange = useCallback(async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleSpeedChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const transport = transportRef.current;
         if (!transport) return;
-        const rate = Number(e.target.value);
-        setPlaybackRate(rate);
-        await transport.setPlaybackRate(rate);
+        const raw = e.target.value;
+        if (raw === "") {
+            setPlaybackRate(0);
+            return;
+        }
+        const val = Number(raw);
+        if (!Number.isFinite(val)) return;
+        const clamped = Math.min(Math.max(val, 0.1), 4);
+        setPlaybackRate(clamped);
+        await transport.setPlaybackRate(clamped);
+        try { localStorage.setItem(LS_PLAYBACK_RATE, String(clamped)); } catch { /* quota */ }
         updateUi();
     }, [updateUi]);
 
@@ -917,15 +928,15 @@ export default function ChartPreviewPlayer({
                         <div className={`flex flex-wrap items-center ${isCompactControls ? "gap-1.5" : "gap-2"}`}>
                             <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
                                 <span className={fieldTextClassName}>速度</span>
-                                <select value={playbackRate} onChange={handleSpeedChange} className={`rounded-lg border px-1.5 py-0.5 text-xs font-medium ${fieldInputClassName}`}>
-                                    <option value={0.25}>0.25x</option>
-                                    <option value={0.5}>0.5x</option>
-                                    <option value={0.75}>0.75x</option>
-                                    <option value={1}>1x</option>
-                                    <option value={1.25}>1.25x</option>
-                                    <option value={1.5}>1.5x</option>
-                                    <option value={2}>2x</option>
-                                </select>
+                                <input
+                                    type="number"
+                                    min={0.1}
+                                    max={4}
+                                    step={0.05}
+                                    value={playbackRate || ""}
+                                    onChange={handleSpeedChange}
+                                    className={`${isCompactControls ? "w-14" : "w-16"} rounded-lg border px-1.5 py-0.5 text-center text-xs font-medium ${fieldInputClassName}`}
+                                />
                             </label>
 
                             <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
