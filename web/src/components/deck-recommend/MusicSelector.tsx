@@ -29,7 +29,7 @@ interface MusicSelectorProps {
 type RecommendType = "efficiency" | "pt" | "score";
 
 export default function MusicSelector({ selectedMusicId, onSelect, showRecommendations = true, recommendMode = "event", liveType = "multi" }: MusicSelectorProps) {
-    const { assetSource } = useTheme();
+    const { assetSource, isShowSpoiler } = useTheme();
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
     const [musicTags, setMusicTags] = useState<IMusicTagInfo[]>([]);
     const [musicMetas, setMusicMetas] = useState<IMusicMeta[]>([]);
@@ -205,6 +205,11 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
             });
         }
 
+        // Spoiler filter
+        if (!isShowSpoiler) {
+            result = result.filter(m => m.publishedAt <= Date.now());
+        }
+
         // Sort
         result.sort((a, b) => {
             const valA = a[sortBy];
@@ -213,7 +218,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
         });
 
         return result;
-    }, [musics, musicTags, selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, translations]);
+    }, [musics, musicTags, selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, translations, isShowSpoiler]);
 
     // Get currently selected music object
     const selectedMusic = useMemo(() => {

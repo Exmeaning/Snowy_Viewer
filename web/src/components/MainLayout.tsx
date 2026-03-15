@@ -24,11 +24,13 @@ function ScreenshotParamsListener({ onChange }: { onChange: (isScreenshot: boole
 interface MainLayoutProps {
     children: React.ReactNode;
     showLoader?: boolean;
+    immersiveMode?: boolean;
 }
 
 export default function MainLayout({
     children,
-    showLoader = false
+    showLoader = false,
+    immersiveMode = false,
 }: MainLayoutProps) {
     const router = useRouter();
     const { useTrainedThumbnail, setUseTrainedThumbnail } = useTheme();
@@ -44,10 +46,24 @@ export default function MainLayout({
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
 
+    useEffect(() => {
+        if (!immersiveMode) return;
+
+        const raf = requestAnimationFrame(() => {
+            setIsSearchOpen(false);
+            setIsSettingsOpen(false);
+            setIsShortcutsHelpOpen(false);
+        });
+
+        return () => cancelAnimationFrame(raf);
+    }, [immersiveMode]);
+
     // Restore sidebar state from sessionStorage after mount.
     // Use two RAF ticks: set position first, then enable transitions.
     useEffect(() => {
         const nextSidebarOpen = isScreenshotMode
+            ? false
+            : immersiveMode
             ? false
             : (() => {
                 const saved = sessionStorage.getItem("sidebar_open");
@@ -67,30 +83,30 @@ export default function MainLayout({
             cancelAnimationFrame(raf1);
             cancelAnimationFrame(raf2);
         };
-    }, [isScreenshotMode]);
+    }, [immersiveMode, isScreenshotMode]);
 
-    const effectiveSidebarOpen = isScreenshotMode ? false : isSidebarOpen;
+    const effectiveSidebarOpen = isScreenshotMode || immersiveMode ? false : isSidebarOpen;
 
     const handleMenuToggle = useCallback(() => {
-        if (isScreenshotMode) return;
+        if (isScreenshotMode || immersiveMode) return;
         setIsSidebarOpen(prev => {
             const newState = !prev;
             sessionStorage.setItem('sidebar_open', String(newState));
             return newState;
         });
-    }, [isScreenshotMode]);
+    }, [immersiveMode, isScreenshotMode]);
 
     const handleSidebarClose = useCallback(() => {
         setIsSidebarOpen(false);
-        if (!isScreenshotMode) {
+        if (!isScreenshotMode && !immersiveMode) {
             sessionStorage.setItem('sidebar_open', 'false');
         }
-    }, [isScreenshotMode]);
+    }, [immersiveMode, isScreenshotMode]);
 
     // Keyboard shortcut handlers.
     const shortcutHandlers = useMemo(() => ({
         onToggleSidebar: () => {
-            if (isScreenshotMode) return;
+            if (isScreenshotMode || immersiveMode) return;
             setIsSidebarOpen(prev => {
                 const newState = !prev;
                 sessionStorage.setItem('sidebar_open', String(newState));
@@ -108,9 +124,9 @@ export default function MainLayout({
         onNavigateMusic: () => router.push("/music"),
         onNavigateEvents: () => router.push("/events"),
         onNavigateProfile: () => router.push("/profile"),
-    }), [router, useTrainedThumbnail, setUseTrainedThumbnail, isScreenshotMode]);
+    }), [router, useTrainedThumbnail, setUseTrainedThumbnail, immersiveMode, isScreenshotMode]);
 
-    const isShortcutScopeLocked = isSearchOpen || isSettingsOpen || isShortcutsHelpOpen;
+    const isShortcutScopeLocked = isSearchOpen || isSettingsOpen || isShortcutsHelpOpen || immersiveMode;
 
     useKeyboardShortcuts(shortcutHandlers, {
         disabled: isShortcutScopeLocked,
@@ -134,26 +150,30 @@ export default function MainLayout({
             <BackgroundPattern />
 
             {/* Navbar */}
-            <MainNavbar
-                onMenuToggle={handleMenuToggle}
-                isSearchOpen={isSearchOpen}
-                onSearchToggle={() => setIsSearchOpen(prev => !prev)}
-                onSearchClose={() => setIsSearchOpen(false)}
-                isSettingsOpen={isSettingsOpen}
-                onSettingsToggle={() => setIsSettingsOpen(prev => !prev)}
-                onSettingsClose={() => setIsSettingsOpen(false)}
-                onShortcutsHelpToggle={() => setIsShortcutsHelpOpen(prev => !prev)}
-            />
+            {!immersiveMode && (
+                <MainNavbar
+                    onMenuToggle={handleMenuToggle}
+                    isSearchOpen={isSearchOpen}
+                    onSearchToggle={() => setIsSearchOpen(prev => !prev)}
+                    onSearchClose={() => setIsSearchOpen(false)}
+                    isSettingsOpen={isSettingsOpen}
+                    onSettingsToggle={() => setIsSettingsOpen(prev => !prev)}
+                    onSettingsClose={() => setIsSettingsOpen(false)}
+                    onShortcutsHelpToggle={() => setIsShortcutsHelpOpen(prev => !prev)}
+                />
+            )}
 
             {/* Layout with Sidebar */}
-            <div className="flex flex-grow pt-[4.5rem] relative">
+            <div className={`flex flex-grow relative ${immersiveMode ? "" : "pt-[4.5rem]"}`}>
                 {/* Sidebar */}
-                <Sidebar
-                    isOpen={effectiveSidebarOpen}
-                    onClose={handleSidebarClose}
-                    hasMounted={hasMounted}
-                    disableKeyboardNavigation={isShortcutScopeLocked}
-                />
+                {!immersiveMode && (
+                    <Sidebar
+                        isOpen={effectiveSidebarOpen}
+                        onClose={handleSidebarClose}
+                        hasMounted={hasMounted}
+                        disableKeyboardNavigation={isShortcutScopeLocked}
+                    />
+                )}
 
                 {/* Main content area */}
                 <div ref={pageContentRef} data-shortcut-page-root="true" className={`flex-grow relative z-10 w-full min-w-0 ${hasMounted ? 'transition-all duration-300' : ''} ${effectiveSidebarOpen ? 'md:ml-64' : 'md:ml-0'
@@ -162,20 +182,24 @@ export default function MainLayout({
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className={`relative z-[5] ${hasMounted ? 'transition-all duration-300' : ''} ${effectiveSidebarOpen ? 'md:ml-64' : 'md:ml-0'
-                }`}>
-                <MainFooter />
-            </div>
+            {!immersiveMode && (
+                <>
+                    {/* Footer */}
+                    <div className={`relative z-[5] ${hasMounted ? 'transition-all duration-300' : ''} ${effectiveSidebarOpen ? 'md:ml-64' : 'md:ml-0'
+                        }`}>
+                        <MainFooter />
+                    </div>
 
-            {/* Scroll To Top */}
-            <ScrollToTop />
+                    {/* Scroll To Top */}
+                    <ScrollToTop />
 
-            {/* Quick Filter floating button + modal */}
-            <QuickFilterButton />
+                    {/* Quick Filter floating button + modal */}
+                    <QuickFilterButton />
 
-            {/* Keyboard Shortcuts Help */}
-            <KeyboardShortcutsHelp isOpen={isShortcutsHelpOpen} onClose={() => setIsShortcutsHelpOpen(false)} />
+                    {/* Keyboard Shortcuts Help */}
+                    <KeyboardShortcutsHelp isOpen={isShortcutsHelpOpen} onClose={() => setIsShortcutsHelpOpen(false)} />
+                </>
+            )}
         </main>
     );
 }

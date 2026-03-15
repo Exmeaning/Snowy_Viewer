@@ -64,7 +64,7 @@ function LevelSeparatorCard({ level, difficulty }: { level: number; difficulty: 
 function MusicContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { isShowSpoiler, setShowSpoiler } = useTheme();
+    const { isShowSpoiler } = useTheme();
 
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
     const [musicTags, setMusicTags] = useState<IMusicTagInfo[]>([]);
@@ -415,8 +415,6 @@ function MusicContent() {
             onDifficultyChange={setSelectedDifficulty}
             showDifficulty={showDifficulty}
             onShowDifficultyChange={setShowDifficulty}
-            isShowSpoiler={isShowSpoiler}
-            onShowSpoilerChange={setShowSpoiler}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={handleSortChange}

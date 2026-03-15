@@ -26,7 +26,7 @@ function getBaseCharacterId(id: number): number {
 function EventsContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { isShowSpoiler, setShowSpoiler } = useTheme();
+    const { isShowSpoiler } = useTheme();
 
     const [events, setEvents] = useState<IEventInfo[]>([]);
     const [deckBonuses, setDeckBonuses] = useState<IEventDeckBonus[]>([]);
@@ -259,8 +259,6 @@ function EventsContent() {
             onReset={resetFilters}
             totalEvents={events.length}
             filteredEvents={filteredEvents.length}
-            isShowSpoiler={isShowSpoiler}
-            onShowSpoilerChange={setShowSpoiler}
         />
     );
 

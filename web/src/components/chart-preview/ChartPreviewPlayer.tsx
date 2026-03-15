@@ -25,6 +25,15 @@ const defaultConfig: PreviewRuntimeConfig = {
 
 type PreviewState = "init" | "loading" | "ready" | "error";
 
+type WebkitFullscreenDocument = Document & {
+    webkitFullscreenElement?: Element | null;
+    webkitExitFullscreen?: () => Promise<void> | void;
+};
+
+type WebkitFullscreenElement = HTMLElement & {
+    webkitRequestFullscreen?: () => Promise<void> | void;
+};
+
 /** Seconds to skip at the start of BGM (game songs have ~9s silence). */
 const BGM_SKIP_SEC = 9;
 
@@ -34,6 +43,7 @@ interface ChartPreviewPlayerProps {
     rawOffsetMs?: number | null;
     /** If true, skip the leading silence in BGM (default: true when bgmUrl is provided). */
     skipBgmSilence?: boolean;
+    onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 function formatTime(value: number) {
@@ -44,7 +54,14 @@ function formatTime(value: number) {
     return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(milliseconds).padStart(3, "0")}`;
 }
 
-export default function ChartPreviewPlayer({ susUrl, bgmUrl, rawOffsetMs, skipBgmSilence = true }: ChartPreviewPlayerProps) {
+export default function ChartPreviewPlayer({
+    susUrl,
+    bgmUrl,
+    rawOffsetMs,
+    skipBgmSilence = true,
+    onFullscreenChange,
+}: ChartPreviewPlayerProps) {
+    const wrapperRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const effectsCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -83,6 +100,187 @@ export default function ChartPreviewPlayer({ susUrl, bgmUrl, rawOffsetMs, skipBg
     const [noteSpeed, setNoteSpeed] = useState(10.5);
     const [playbackRate, setPlaybackRate] = useState(1);
     const [lowEffects, setLowEffects] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
+    const [controlsVisible, setControlsVisible] = useState(true);
+    const [controlsLocked, setControlsLocked] = useState(false);
+    const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [viewport, setViewport] = useState({ width: 0, height: 0 });
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        const syncViewport = () => {
+            const vv = window.visualViewport;
+            setViewport({
+                width: Math.round(vv?.width ?? window.innerWidth),
+                height: Math.round(vv?.height ?? window.innerHeight),
+            });
+        };
+
+        syncViewport();
+
+        const visualViewport = window.visualViewport;
+        window.addEventListener("resize", syncViewport);
+        window.addEventListener("orientationchange", syncViewport);
+        visualViewport?.addEventListener("resize", syncViewport);
+        visualViewport?.addEventListener("scroll", syncViewport);
+
+        return () => {
+            window.removeEventListener("resize", syncViewport);
+            window.removeEventListener("orientationchange", syncViewport);
+            visualViewport?.removeEventListener("resize", syncViewport);
+            visualViewport?.removeEventListener("scroll", syncViewport);
+        };
+    }, []);
+
+    // Auto-hide controls in fullscreen: show on interaction, hide after 3s idle
+    const resetControlsTimer = useCallback(() => {
+        if (controlsLocked) return;
+        setControlsVisible(true);
+        if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+        controlsTimerRef.current = setTimeout(() => setControlsVisible(false), 3000);
+    }, [controlsLocked]);
+
+    // When entering/exiting fullscreen, reset controls visibility
+    useEffect(() => {
+        if (isFullscreen) {
+            resetControlsTimer();
+        } else {
+            setControlsVisible(true);
+            setControlsLocked(false);
+            if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+        }
+        return () => { if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current); };
+    }, [isFullscreen, resetControlsTimer]);
+
+    // When controls are locked, immediately hide them
+    useEffect(() => {
+        if (controlsLocked) {
+            setControlsVisible(false);
+            if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+        }
+    }, [controlsLocked]);
+
+    const handleControlsLockToggle = useCallback(() => {
+        setControlsLocked(prev => {
+            if (prev) {
+                // Unlocking: show controls and start auto-hide timer
+                setControlsVisible(true);
+                if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+                controlsTimerRef.current = setTimeout(() => setControlsVisible(false), 3000);
+            }
+            return !prev;
+        });
+    }, []);
+
+    // Fullscreen toggle — always try Fullscreen API first, fallback to CSS overlay
+    const handleFullscreenToggle = useCallback(async () => {
+        if (!isFullscreen) {
+            const wrapper = wrapperRef.current as WebkitFullscreenElement | null;
+            if (!wrapper) return;
+            try {
+                if (wrapper.requestFullscreen) {
+                    await wrapper.requestFullscreen();
+                } else if (wrapper.webkitRequestFullscreen) {
+                    await wrapper.webkitRequestFullscreen();
+                } else {
+                    throw new Error("Fullscreen API unavailable");
+                }
+                // Try to lock orientation to landscape (requires fullscreen on mobile)
+                try { await (screen.orientation as ScreenOrientation & { lock(o: string): Promise<void> }).lock("landscape"); } catch { /* unsupported or not allowed */ }
+            } catch {
+                // Fallback: CSS fixed overlay (pseudo fullscreen)
+                setIsNativeFullscreen(false);
+                setIsFullscreen(true);
+            }
+        } else {
+            // Unlock orientation before exiting fullscreen
+            try { screen.orientation.unlock(); } catch { /* ignore */ }
+            if (isNativeFullscreen) {
+                const fullscreenDocument = document as WebkitFullscreenDocument;
+                try {
+                    if (document.fullscreenElement) {
+                        await document.exitFullscreen();
+                    } else if (fullscreenDocument.webkitFullscreenElement && fullscreenDocument.webkitExitFullscreen) {
+                        await fullscreenDocument.webkitExitFullscreen();
+                    } else {
+                        setIsNativeFullscreen(false);
+                        setIsFullscreen(false);
+                    }
+                } catch {
+                    setIsNativeFullscreen(false);
+                    setIsFullscreen(false);
+                }
+            } else {
+                setIsNativeFullscreen(false);
+                setIsFullscreen(false);
+            }
+        }
+    }, [isFullscreen, isNativeFullscreen]);
+
+    // Sync fullscreen state with browser events and unlock orientation on exit
+    useEffect(() => {
+        const handleChange = () => {
+            const fullscreenDocument = document as WebkitFullscreenDocument;
+            const fsElement = document.fullscreenElement ?? fullscreenDocument.webkitFullscreenElement;
+            const active = !!fsElement && fsElement === wrapperRef.current;
+            if (!active) {
+                try { screen.orientation.unlock(); } catch { /* ignore */ }
+            }
+            setIsNativeFullscreen(active);
+            setIsFullscreen(active);
+        };
+        document.addEventListener("fullscreenchange", handleChange);
+        document.addEventListener("webkitfullscreenchange", handleChange);
+        return () => {
+            document.removeEventListener("fullscreenchange", handleChange);
+            document.removeEventListener("webkitfullscreenchange", handleChange);
+        };
+    }, []);
+
+    const isPseudoFullscreen = isFullscreen && !isNativeFullscreen;
+
+    // Lock body scroll during pseudo fullscreen
+    useEffect(() => {
+        if (!isPseudoFullscreen) return;
+
+        const previousBodyOverflow = document.body.style.overflow;
+        const previousHtmlOverflow = document.documentElement.style.overflow;
+
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+
+        return () => {
+            document.body.style.overflow = previousBodyOverflow;
+            document.documentElement.style.overflow = previousHtmlOverflow;
+        };
+    }, [isPseudoFullscreen]);
+
+    useEffect(() => {
+        onFullscreenChange?.(isFullscreen);
+    }, [isFullscreen, onFullscreenChange]);
+
+    useEffect(() => {
+        return () => {
+            onFullscreenChange?.(false);
+        };
+    }, [onFullscreenChange]);
+
+    useEffect(() => {
+        if (!isPseudoFullscreen) return;
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== "Escape") return;
+            event.preventDefault();
+            void handleFullscreenToggle();
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [handleFullscreenToggle, isPseudoFullscreen]);
 
     const updateUi = useCallback(() => {
         const transport = transportRef.current;
@@ -380,8 +578,7 @@ export default function ChartPreviewPlayer({ susUrl, bgmUrl, rawOffsetMs, skipBg
             wasm.dispose();
             judgementSoundsInstance.stopAll();
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [susUrl, bgmUrl, rawOffsetMs]);
+    }, [susUrl, bgmUrl, rawOffsetMs, skipBgmSilence, updateUi]);
 
     const handlePlayToggle = useCallback(async () => {
         const transport = transportRef.current;
@@ -489,168 +686,251 @@ export default function ChartPreviewPlayer({ susUrl, bgmUrl, rawOffsetMs, skipBg
     }, [updateUi]);
 
     const showStatus = previewState === "init" || previewState === "loading" || previewState === "error";
+    const isCompactControls = isPseudoFullscreen;
+    const fullscreenHeight = viewport.height > 0 ? `${viewport.height}px` : "100dvh";
+    const wrapperClassName = isPseudoFullscreen
+        ? "fixed inset-0 z-[150] bg-black"
+        : isNativeFullscreen
+            ? "h-full w-full bg-black"
+            : "flex flex-col gap-3 w-full";
+    const contentClassName = isFullscreen ? "relative h-full w-full bg-black" : "flex flex-col gap-3";
+    const panelClassName = `relative overflow-hidden bg-slate-900 ${isFullscreen ? "rounded-none" : "rounded-xl"}`;
+    const controlsClassName = isFullscreen
+        ? "absolute bottom-0 left-0 right-0 z-30 flex flex-col gap-2.5 border-t border-slate-800 bg-slate-950/92 px-4 pt-3 backdrop-blur-md transition-all duration-300"
+        : "flex flex-col gap-3 rounded-xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm";
+    const timeClassName = `${isCompactControls ? "text-[11px]" : "text-xs"} ml-auto font-mono whitespace-nowrap ${isFullscreen ? "text-slate-400" : "text-slate-500"}`;
+    const secondaryButtonClassName = `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} rounded-lg font-medium transition-colors ${isFullscreen ? "bg-slate-700 text-slate-200 hover:bg-slate-600" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`;
+    const chipClassName = isFullscreen
+        ? "border-slate-700 bg-slate-800/80 hover:bg-slate-700/80"
+        : "border-slate-200 bg-slate-50/60 hover:bg-slate-50";
+    const fieldTextClassName = `${isFullscreen ? "text-slate-300" : "text-slate-600"} ${isCompactControls ? "text-[11px]" : "text-xs"} font-bold`;
+    const fieldInputClassName = isFullscreen
+        ? "border-slate-700 bg-slate-800 text-slate-200"
+        : "border-slate-200 bg-white text-slate-700";
 
     return (
-        <div className="flex flex-col gap-3 w-full">
-            {/* Preview panel */}
-            <div ref={panelRef} className="relative w-full bg-slate-900 rounded-xl overflow-hidden" style={{ aspectRatio: "16/9" }}>
-                <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-                <canvas ref={effectsCanvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
+        <div
+            ref={wrapperRef}
+            className={wrapperClassName}
+            style={isPseudoFullscreen ? { height: fullscreenHeight, overscrollBehavior: "contain" } : undefined}
+            onPointerMove={isFullscreen ? resetControlsTimer : undefined}
+            onPointerDown={isFullscreen ? resetControlsTimer : undefined}
+        >
+            <div className={contentClassName} style={isPseudoFullscreen ? { minHeight: fullscreenHeight } : undefined}>
+                <div
+                    className={isFullscreen ? "flex h-full w-full items-center justify-center bg-black" : "w-full"}
+                    style={isPseudoFullscreen ? { paddingTop: "env(safe-area-inset-top)" } : isNativeFullscreen ? { padding: 16 } : undefined}
+                >
+                    <div
+                        ref={panelRef}
+                        className={panelClassName}
+                        style={isFullscreen
+                            ? { width: "100%", aspectRatio: "16 / 9", maxWidth: isPseudoFullscreen ? "100%" : "min(100%, 1800px)", maxHeight: "100%", flexShrink: 0 }
+                            : { width: "100%", aspectRatio: "16 / 9" }}
+                    >
+                        <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+                        <canvas ref={effectsCanvasRef} className="pointer-events-none absolute inset-0 h-full w-full" />
 
-                {/* Status overlay */}
-                {showStatus && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm z-10">
-                        <div className="flex flex-col items-center p-6 gap-4">
-                            {previewState !== "error" ? (
-                                <div
-                                    className="h-14 w-56 sm:h-16 sm:w-64 chart-preview-logo-fill"
-                                    style={{
-                                        maskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
-                                        maskSize: "contain",
-                                        maskPosition: "center",
-                                        maskRepeat: "no-repeat",
-                                        WebkitMaskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
-                                        WebkitMaskSize: "contain",
-                                        WebkitMaskPosition: "center",
-                                        WebkitMaskRepeat: "no-repeat",
-                                    }}
-                                    role="img"
-                                    aria-label="Loading"
-                                />
-                            ) : (
-                                <svg className="w-10 h-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            )}
-                            <div className="text-center">
-                                <div className="text-white text-sm font-medium mb-1">{statusTitle}</div>
-                                <div className="text-slate-400 text-xs">{statusText}</div>
+                        {showStatus && (
+                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+                                <div className={`flex flex-col items-center ${isCompactControls ? "gap-3 p-4" : "gap-4 p-6"}`}>
+                                    {previewState !== "error" ? (
+                                        <div
+                                            className={`chart-preview-logo-fill ${isCompactControls ? "h-10 w-40" : "h-14 w-56 sm:h-16 sm:w-64"}`}
+                                            style={{
+                                                maskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
+                                                maskSize: "contain",
+                                                maskPosition: "center",
+                                                maskRepeat: "no-repeat",
+                                                WebkitMaskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
+                                                WebkitMaskSize: "contain",
+                                                WebkitMaskPosition: "center",
+                                                WebkitMaskRepeat: "no-repeat",
+                                            }}
+                                            role="img"
+                                            aria-label="Loading"
+                                        />
+                                    ) : (
+                                        <svg className={isCompactControls ? "h-8 w-8 text-red-400" : "h-10 w-10 text-red-400"} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    )}
+                                    <div className="text-center">
+                                        <div className={`font-medium text-white ${isCompactControls ? "mb-0.5 text-xs" : "mb-1 text-sm"}`}>{statusTitle}</div>
+                                        <div className={`text-slate-400 ${isCompactControls ? "text-[10px]" : "text-xs"}`}>{statusText}</div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                )}
+                        )}
 
-                {/* Audio unlock overlay */}
-                {requiresGesture && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm z-20">
-                        <div className="text-center p-6">
-                            <div className="text-white text-lg font-medium mb-2">浏览器需要一次点击来启动音频</div>
-                            <div className="text-slate-400 text-sm mb-4">点击后会继续当前播放请求。</div>
-                            <button
-                                onClick={handleUnlock}
-                                className="px-6 py-2 bg-miku text-white rounded-lg hover:bg-miku/90 transition-colors"
-                            >
-                                启动音频
-                            </button>
-                        </div>
-                    </div>
-                )}
+                        {requiresGesture && (
+                            <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+                                <div className={`text-center ${isCompactControls ? "p-4" : "p-6"}`}>
+                                    <div className={`font-medium text-white ${isCompactControls ? "mb-1 text-sm" : "mb-2 text-lg"}`}>浏览器需要一次点击来启动音频</div>
+                                    {!isCompactControls && <div className="mb-4 text-sm text-slate-400">点击后会继续当前播放请求。</div>}
+                                    <button
+                                        type="button"
+                                        onClick={handleUnlock}
+                                        className={`rounded-lg bg-miku text-white transition-colors hover:bg-miku/90 ${isCompactControls ? "mt-2 px-4 py-1.5 text-sm" : "px-6 py-2"}`}
+                                    >
+                                        启动音频
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
-                {/* BGM loading overlay */}
-                {bgmLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-10">
-                        <div className="text-center p-6">
-                            <div className="text-white text-lg font-medium mb-2">正在加载歌曲</div>
-                            <div className="text-slate-400 text-sm">BGM 还没准备好，加载完成后就可以播放。</div>
-                        </div>
+                        {bgmLoading && (
+                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+                                <div className={`text-center ${isCompactControls ? "p-4" : "p-6"}`}>
+                                    <div className={`font-medium text-white ${isCompactControls ? "mb-1 text-sm" : "mb-2 text-lg"}`}>正在加载歌曲</div>
+                                    <div className={isCompactControls ? "text-xs text-slate-400" : "text-sm text-slate-400"}>BGM 还没准备好，加载完成后就可以播放。</div>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
-
-            {/* Controls */}
-            <div className="flex flex-col gap-3 bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200">
-                {/* Playback buttons + time */}
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={handlePlayToggle}
-                        disabled={bgmLoading || previewState !== "ready"}
-                        className="shrink-0 px-4 py-1.5 bg-miku text-white rounded-lg text-sm font-medium hover:bg-miku/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isPlaying ? "暂停" : "播放"}
-                    </button>
-                    <button
-                        onClick={handleStop}
-                        className="shrink-0 px-4 py-1.5 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-300 transition-colors"
-                    >
-                        停止
-                    </button>
-                    <span className="ml-auto text-xs text-slate-500 font-mono whitespace-nowrap">
-                        {formatTime(currentTime)} / {formatTime(duration)}
-                    </span>
                 </div>
 
-                {/* Progress bar - own row */}
-                <input
-                    type="range"
-                    min={0}
-                    max={duration || 0}
-                    step={0.001}
-                    value={Math.min(currentTime, duration || currentTime)}
-                    onChange={handleSeek}
-                    className="w-full h-2 accent-miku cursor-pointer"
-                />
-
-                {/* Settings */}
-                <div className="flex items-center gap-2 flex-wrap text-sm">
-                    <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all cursor-pointer">
-                        <span className="text-xs font-bold text-slate-600">速度</span>
-                        <select
-                            value={playbackRate}
-                            onChange={handleSpeedChange}
-                            className="px-1.5 py-0.5 rounded-lg border border-slate-200 text-xs bg-white font-medium text-slate-700 cursor-pointer"
-                        >
-                            <option value={0.25}>0.25x</option>
-                            <option value={0.5}>0.5x</option>
-                            <option value={0.75}>0.75x</option>
-                            <option value={1}>1x</option>
-                            <option value={1.25}>1.25x</option>
-                            <option value={1.5}>1.5x</option>
-                            <option value={2}>2x</option>
-                        </select>
-                    </label>
-                    <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all cursor-pointer">
-                        <span className="text-xs font-bold text-slate-600">noteSpeed</span>
-                        <input
-                            type="number"
-                            min={1}
-                            max={12}
-                            step={0.1}
-                            value={noteSpeed || ""}
-                            onChange={handleNoteSpeedChange}
-                            className="w-14 px-1.5 py-0.5 rounded-lg border border-slate-200 text-xs bg-white text-center font-medium text-slate-700"
-                        />
-                    </label>
+                {/* Lock button — fullscreen only, always visible in top-right corner */}
+                {isFullscreen && (
                     <button
-                        onClick={handleLowEffectsToggle}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all border ${lowEffects
-                            ? "ring-2 ring-miku shadow-lg bg-white border-transparent"
-                            : "hover:bg-slate-50 border-slate-200 bg-slate-50/50"
+                        type="button"
+                        onClick={handleControlsLockToggle}
+                        className={`absolute top-3 right-3 z-40 flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 ${
+                            controlsLocked
+                                ? "bg-miku/80 text-white shadow-lg"
+                                : "bg-slate-900/50 text-slate-300 hover:bg-slate-900/70"
                         }`}
+                        title={controlsLocked ? "解锁控制栏" : "锁定控制栏"}
                     >
-                        <span className={`text-xs font-bold ${lowEffects ? "text-slate-800" : "text-slate-600"}`}>
-                            低特效
-                        </span>
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${lowEffects ? "bg-miku border-miku" : "border-slate-300 bg-white"}`}>
-                            {lowEffects && (
-                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
-                            )}
-                        </div>
+                        {controlsLocked ? (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        ) : (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                            </svg>
+                        )}
                     </button>
-                </div>
-
-                {/* Warning */}
-                {warningMessage && (
-                    <div className="text-xs text-amber-600">{warningMessage}</div>
                 )}
 
-                <div className="text-xs text-slate-400">
-                    Adapted from{" "}
-                    <a href="https://github.com/crash5band/MikuMikuWorld" target="_blank" rel="noreferrer" className="text-miku hover:underline">
-                        MikuMikuWorld
-                    </a>{" "}
-                    by Crash5b, licensed under MIT.
+                <div
+                    className={controlsClassName}
+                    style={isFullscreen
+                        ? {
+                            opacity: controlsVisible ? 1 : 0,
+                            pointerEvents: controlsVisible ? "auto" : "none",
+                            paddingBottom: isPseudoFullscreen ? "calc(env(safe-area-inset-bottom) + 12px)" : 16,
+                        }
+                        : undefined}
+                >
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={handlePlayToggle}
+                            disabled={bgmLoading || previewState !== "ready"}
+                            className={`${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-lg bg-miku font-medium text-white transition-colors hover:bg-miku/90 disabled:cursor-not-allowed disabled:opacity-50`}
+                        >
+                            {isPlaying ? "暂停" : "播放"}
+                        </button>
+                        <button type="button" onClick={handleStop} className={`${secondaryButtonClassName} shrink-0`}>
+                            停止
+                        </button>
+                        <span className={timeClassName}>
+                            {formatTime(currentTime)} / {formatTime(duration)}
+                        </span>
+                        {isFullscreen && (
+                            <button
+                                type="button"
+                                onClick={handleFullscreenToggle}
+                                title="退出全屏"
+                                className={`${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-lg border border-transparent bg-white font-medium text-slate-800 ring-2 ring-miku transition-colors hover:bg-slate-100`}
+                            >
+                                退出
+                            </button>
+                        )}
+                    </div>
+
+                    <input
+                        type="range"
+                        min={0}
+                        max={duration || 0}
+                        step={0.001}
+                        value={Math.min(currentTime, duration || currentTime)}
+                        onChange={handleSeek}
+                        className={`w-full cursor-pointer accent-miku ${isCompactControls ? "h-1.5" : "h-2"}`}
+                    />
+
+                    <div className={`flex flex-wrap items-center ${isCompactControls ? "gap-1.5" : "gap-2"}`}>
+                        <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                            <span className={fieldTextClassName}>速度</span>
+                            <select value={playbackRate} onChange={handleSpeedChange} className={`rounded-lg border px-1.5 py-0.5 text-xs font-medium ${fieldInputClassName}`}>
+                                <option value={0.25}>0.25x</option>
+                                <option value={0.5}>0.5x</option>
+                                <option value={0.75}>0.75x</option>
+                                <option value={1}>1x</option>
+                                <option value={1.25}>1.25x</option>
+                                <option value={1.5}>1.5x</option>
+                                <option value={2}>2x</option>
+                            </select>
+                        </label>
+
+                        <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                            <span className={fieldTextClassName}>noteSpeed</span>
+                            <input
+                                type="number"
+                                min={1}
+                                max={12}
+                                step={0.1}
+                                value={noteSpeed || ""}
+                                onChange={handleNoteSpeedChange}
+                                className={`${isCompactControls ? "w-12" : "w-14"} rounded-lg border px-1.5 py-0.5 text-center text-xs font-medium ${fieldInputClassName}`}
+                            />
+                        </label>
+
+                        <button
+                            type="button"
+                            onClick={handleLowEffectsToggle}
+                            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${lowEffects
+                                ? "border-transparent bg-white text-slate-800 ring-2 ring-miku shadow-lg"
+                                : `${chipClassName} ${isFullscreen ? "text-slate-300" : "text-slate-600"}`}`}
+                        >
+                            <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold`}>低特效</span>
+                            <div className={`flex h-4 w-4 items-center justify-center rounded-full border transition-colors ${lowEffects ? "border-miku bg-miku" : isFullscreen ? "border-slate-500 bg-slate-700" : "border-slate-300 bg-white"}`}>
+                                {lowEffects && (
+                                    <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                )}
+                            </div>
+                        </button>
+
+                        {!isFullscreen && (
+                            <button
+                                type="button"
+                                onClick={handleFullscreenToggle}
+                                title="进入全屏"
+                                className="ml-auto flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
+                            >
+                                <span className="text-xs font-bold text-slate-600">全屏</span>
+                                <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0 0l-5-5m-7 14l-5 5m0 0h4m-4 0v-4m16 4l-5-5m5 5v-4m0 4h-4" />
+                                </svg>
+                            </button>
+                        )}
+                    </div>
+
+                    {warningMessage && <div className={isCompactControls ? "text-[10px] text-amber-500" : "text-xs text-amber-600"}>{warningMessage}</div>}
+
+                    {!isFullscreen && (
+                        <div className="text-xs text-slate-400">
+                            Adapted from{" "}
+                            <a href="https://github.com/crash5band/MikuMikuWorld" target="_blank" rel="noreferrer" className="text-miku hover:underline">
+                                MikuMikuWorld
+                            </a>{" "}
+                            by Crash5b, licensed under MIT.
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

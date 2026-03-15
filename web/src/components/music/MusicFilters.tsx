@@ -29,9 +29,6 @@ interface MusicFiltersProps {
     // Show difficulty toggle
     showDifficulty?: boolean;
     onShowDifficultyChange?: (checked: boolean) => void;
-    // Spoiler toggle
-    isShowSpoiler?: boolean;
-    onShowSpoilerChange?: (checked: boolean) => void;
     // Sort
     sortBy: "publishedAt" | "id" | "level" | "constant";
     sortOrder: "asc" | "desc";
@@ -84,8 +81,6 @@ export default function MusicFilters({
     onDifficultyChange,
     showDifficulty,
     onShowDifficultyChange,
-    isShowSpoiler,
-    onShowSpoilerChange,
     sortBy,
     sortOrder,
     onSortChange,
@@ -212,27 +207,22 @@ export default function MusicFilters({
                 </FilterSection>
             )}
 
-            {/* Other Filters (Event Only) */}
+            {/* Other Filters */}
             <FilterSection label="其他筛选">
-                <FilterToggle
-                    selected={hasEventOnly}
-                    onClick={() => onHasEventOnlyChange(!hasEventOnly)}
-                    label="仅显示活动歌曲"
-                />
-                {onShowDifficultyChange && (
+                <div className="space-y-2">
                     <FilterToggle
-                        selected={!!showDifficulty}
-                        onClick={() => onShowDifficultyChange(!showDifficulty)}
-                        label="显示歌曲难度"
+                        selected={hasEventOnly}
+                        onClick={() => onHasEventOnlyChange(!hasEventOnly)}
+                        label="仅显示活动歌曲"
                     />
-                )}
-                {onShowSpoilerChange && (
-                    <FilterToggle
-                        selected={!!isShowSpoiler}
-                        onClick={() => onShowSpoilerChange(!isShowSpoiler)}
-                        label="显示剧透内容"
-                    />
-                )}
+                    {onShowDifficultyChange && (
+                        <FilterToggle
+                            selected={!!showDifficulty}
+                            onClick={() => onShowDifficultyChange(!showDifficulty)}
+                            label="显示歌曲难度"
+                        />
+                    )}
+                </div>
             </FilterSection>
         </BaseFilters>
     );

@@ -1,5 +1,5 @@
 "use client";
-import BaseFilters, { FilterSection, FilterToggle } from "@/components/common/BaseFilters";
+import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { EventType, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS } from "@/types/events";
 
@@ -21,9 +21,6 @@ interface EventFiltersProps {
     onReset: () => void;
     totalEvents: number;
     filteredEvents: number;
-    // Spoiler toggle
-    isShowSpoiler?: boolean;
-    onShowSpoilerChange?: (checked: boolean) => void;
 }
 
 const EVENT_TYPES: EventType[] = ["marathon", "cheerful_carnival", "world_bloom"];
@@ -48,8 +45,6 @@ export default function EventFilters({
     onReset,
     totalEvents,
     filteredEvents,
-    isShowSpoiler,
-    onShowSpoilerChange,
 }: EventFiltersProps) {
     const toggleType = (type: EventType) => {
         if (selectedTypes.includes(type)) {
@@ -104,17 +99,6 @@ export default function EventFilters({
                 unitLabel="加成角色 (团体)"
                 characterLabel="加成角色"
             />
-
-            {/* Other Filters */}
-            {onShowSpoilerChange && (
-                <FilterSection label="其他筛选">
-                    <FilterToggle
-                        selected={!!isShowSpoiler}
-                        onClick={() => onShowSpoilerChange(!isShowSpoiler)}
-                        label="显示剧透内容"
-                    />
-                </FilterSection>
-            )}
         </BaseFilters>
     );
 }

@@ -29,7 +29,7 @@ interface EventSelectorProps {
 }
 
 export default function EventSelector({ selectedEventId, onSelect, onEventTypeChange }: EventSelectorProps) {
-    const { assetSource } = useTheme();
+    const { assetSource, isShowSpoiler } = useTheme();
     const [events, setEvents] = useState<IEventInfo[]>([]);
     const [deckBonuses, setDeckBonuses] = useState<IEventDeckBonus[]>([]);
     const [translations, setTranslations] = useState<TranslationData | null>(null);
@@ -111,6 +111,11 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
             });
         }
 
+        // Spoiler filter
+        if (!isShowSpoiler) {
+            result = result.filter(e => e.startAt <= Date.now());
+        }
+
         // Sort
         result.sort((a, b) => {
             const valA = a[sortBy];
@@ -119,7 +124,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
         });
 
         return result;
-    }, [events, selectedTypes, selectedCharacters, eventBonusCharMap, searchQuery, sortBy, sortOrder, translations]);
+    }, [events, selectedTypes, selectedCharacters, eventBonusCharMap, searchQuery, sortBy, sortOrder, translations, isShowSpoiler]);
 
     // Get currently selected event object
     const selectedEvent = useMemo(() => {

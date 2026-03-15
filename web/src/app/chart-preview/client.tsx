@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { fetchMasterData } from "@/lib/fetch";
 import { getMusicScoreUrl, getMusicVocalAudioUrl, getMusicJacketUrl } from "@/lib/assets";
@@ -30,6 +29,7 @@ function ChartPreviewInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
+    const [isPlayerFullscreen, setIsPlayerFullscreen] = useState(false);
 
     // URL params (custom URL mode - legacy)
     const urlSus = searchParams.get("sus");
@@ -62,6 +62,12 @@ function ChartPreviewInner() {
     const [customBgm, setCustomBgm] = useState("");
     const [customOffset, setCustomOffset] = useState("");
     const [paramsInitialized, setParamsInitialized] = useState(false);
+
+    useEffect(() => {
+        if (!previewActive) {
+            setIsPlayerFullscreen(false);
+        }
+    }, [previewActive]);
 
     // Load vocals, musics, and difficulties data
     useEffect(() => {
@@ -167,7 +173,7 @@ function ChartPreviewInner() {
     // URL mode: auto-start (legacy sus param)
     if (urlSus && previewActive) {
         return (
-            <MainLayout>
+            <MainLayout immersiveMode={isPlayerFullscreen}>
                 <div className="container mx-auto px-4 sm:px-6 py-8">
                     <div className="text-center mb-8">
                         <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
@@ -181,6 +187,7 @@ function ChartPreviewInner() {
                         susUrl={activeSusUrl!}
                         bgmUrl={activeBgmUrl}
                         rawOffsetMs={activeOffset}
+                        onFullscreenChange={setIsPlayerFullscreen}
                     />
                 </div>
             </MainLayout>
@@ -191,20 +198,20 @@ function ChartPreviewInner() {
     if (previewActive && activeSusUrl) {
         const diffInfo = DIFFICULTIES.find((d) => d.value === selectedDifficulty);
         return (
-            <MainLayout>
+            <MainLayout immersiveMode={isPlayerFullscreen}>
                 <div className="container mx-auto px-4 sm:px-6 py-8">
                     <div className="flex items-center gap-2 mb-4">
                         {urlFrom ? (
                             <>
-                                <Link
-                                    href={urlFrom}
+                                <button
+                                    onClick={() => router.back()}
                                     className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border-2 border-miku text-miku rounded-xl font-bold hover:bg-miku hover:text-white active:scale-95 transition-all text-sm"
                                 >
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                     </svg>
                                     上一级
-                                </Link>
+                                </button>
                                 <button
                                     onClick={handleBack}
                                     className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border-2 border-slate-300 text-slate-600 rounded-xl font-bold hover:bg-slate-100 active:scale-95 transition-all text-sm"
@@ -269,6 +276,7 @@ function ChartPreviewInner() {
                         susUrl={activeSusUrl}
                         bgmUrl={activeBgmUrl}
                         rawOffsetMs={activeOffset}
+                        onFullscreenChange={setIsPlayerFullscreen}
                     />
                 </div>
             </MainLayout>
