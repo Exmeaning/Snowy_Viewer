@@ -42,6 +42,7 @@ function ChartPreviewInner() {
     const urlDifficulty = searchParams.get("difficulty");
     const urlPreview = searchParams.get("preview");
     const urlFrom = searchParams.get("from");
+    const urlVocalId = searchParams.get("vocalId");
 
     // Vocals for BGM lookup
     const [vocals, setVocals] = useState<IMusicVocalInfo[]>([]);
@@ -53,6 +54,9 @@ function ChartPreviewInner() {
     const [selectedMusicId, setSelectedMusicId] = useState<string>(urlMusicId || "");
     const [selectedDifficulty, setSelectedDifficulty] = useState<MusicDifficultyType>(
         (urlDifficulty as MusicDifficultyType) || "master"
+    );
+    const [selectedVocalId, setSelectedVocalId] = useState<number | null>(
+        urlVocalId ? Number(urlVocalId) : null
     );
     const [previewActive, setPreviewActive] = useState(urlPreview === "true");
     const [mode, setMode] = useState<"song" | "url">(urlSus ? "url" : (urlMode === "url" ? "url" : "song"));
@@ -106,17 +110,54 @@ function ChartPreviewInner() {
         if (selectedDifficulty !== "master") params.set("difficulty", selectedDifficulty);
         if (previewActive) params.set("preview", "true");
         if (urlFrom) params.set("from", urlFrom);
+        if (selectedVocalId !== null) params.set("vocalId", String(selectedVocalId));
 
         const qs = params.toString();
         router.replace(qs ? `/chart-preview?${qs}` : "/chart-preview", { scroll: false });
-    }, [mode, selectedMusicId, selectedDifficulty, previewActive, paramsInitialized, urlSus, router]);
+    }, [mode, selectedMusicId, selectedDifficulty, selectedVocalId, previewActive, paramsInitialized, urlSus, router]);
 
     // Get first vocal for BGM
     const musicIdNum = selectedMusicId ? Number(selectedMusicId) : null;
+
+    // Available difficulties for the selected song
+    const availableDifficulties = useMemo(() => {
+        if (!musicIdNum) return [];
+        const DIFF_ORDER: MusicDifficultyType[] = ["easy", "normal", "hard", "expert", "master", "append"];
+        return musicDifficulties
+            .filter((d) => d.musicId === musicIdNum)
+            .sort((a, b) => DIFF_ORDER.indexOf(a.musicDifficulty) - DIFF_ORDER.indexOf(b.musicDifficulty));
+    }, [musicDifficulties, musicIdNum]);
+
+    // Available vocals for the selected song
+    const availableVocals = useMemo(() => {
+        if (!musicIdNum) return [];
+        return vocals.filter((v) => v.musicId === musicIdNum);
+    }, [vocals, musicIdNum]);
+
+    // Auto-correct difficulty & vocal when song changes
+    useEffect(() => {
+        if (availableDifficulties.length > 0) {
+            const hasCurrent = availableDifficulties.some((d) => d.musicDifficulty === selectedDifficulty);
+            if (!hasCurrent) {
+                const master = availableDifficulties.find((d) => d.musicDifficulty === "master");
+                setSelectedDifficulty(master ? "master" : availableDifficulties[availableDifficulties.length - 1].musicDifficulty);
+            }
+        }
+    }, [availableDifficulties]);
+
+    // Reset vocal selection when song changes
+    useEffect(() => {
+        setSelectedVocalId(null);
+    }, [musicIdNum]);
+
     const selectedVocal = useMemo(() => {
         if (!musicIdNum) return null;
-        return vocals.find((v) => v.musicId === musicIdNum) ?? null;
-    }, [vocals, musicIdNum]);
+        if (selectedVocalId !== null) {
+            const match = availableVocals.find((v) => v.id === selectedVocalId);
+            if (match) return match;
+        }
+        return availableVocals[0] ?? null;
+    }, [availableVocals, musicIdNum, selectedVocalId]);
 
     // Compute URLs for song mode
     const songSusUrl = useMemo(() => {
@@ -271,6 +312,27 @@ function ChartPreviewInner() {
                             </h1>
                         )}
                     </div>
+                    {/* Vocal switcher in preview mode */}
+                    {availableVocals.length > 1 && (
+                        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+                            <span className="shrink-0 text-[10px] font-bold text-slate-400 uppercase tracking-wider">演唱版本</span>
+                            {availableVocals.map((v) => {
+                                const isActive = selectedVocal?.id === v.id;
+                                return (
+                                    <button
+                                        key={v.id}
+                                        onClick={() => setSelectedVocalId(v.id)}
+                                        className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${isActive
+                                                ? "bg-miku text-white shadow-sm"
+                                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                            }`}
+                                    >
+                                        {v.caption}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
                     <ChartPreviewPlayer
                         key={`${activeSusUrl}-${activeBgmUrl}`}
                         susUrl={activeSusUrl}
@@ -342,31 +404,94 @@ function ChartPreviewInner() {
                             <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 text-center">
                                 难度
                             </label>
-                            <div className="flex gap-2 flex-wrap justify-center">
-                                {DIFFICULTIES.map((d) => (
-                                    <button
-                                        key={d.value}
-                                        onClick={() => setSelectedDifficulty(d.value)}
-                                        className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${selectedDifficulty === d.value
-                                                ? "ring-2 shadow-lg bg-white"
-                                                : "hover:bg-slate-50 border border-transparent"
-                                            }`}
-                                        style={
-                                            selectedDifficulty === d.value
-                                                ? { borderColor: d.color, boxShadow: `0 0 0 2px ${d.color}` }
-                                                : {}
-                                        }
-                                    >
-                                        <span
-                                            className="text-xs font-bold uppercase"
-                                            style={{ color: d.color }}
+                            {availableDifficulties.length > 0 ? (
+                                <div className="flex gap-2 flex-wrap justify-center">
+                                    {availableDifficulties.map((diff) => {
+                                        const meta = DIFFICULTIES.find((d) => d.value === diff.musicDifficulty);
+                                        if (!meta) return null;
+                                        return (
+                                            <button
+                                                key={diff.musicDifficulty}
+                                                onClick={() => setSelectedDifficulty(diff.musicDifficulty)}
+                                                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${selectedDifficulty === diff.musicDifficulty
+                                                        ? "ring-2 shadow-lg bg-white"
+                                                        : "hover:bg-slate-50 border border-transparent"
+                                                    }`}
+                                                style={
+                                                    selectedDifficulty === diff.musicDifficulty
+                                                        ? { borderColor: meta.color, boxShadow: `0 0 0 2px ${meta.color}` }
+                                                        : {}
+                                                }
+                                            >
+                                                <span
+                                                    className="text-[10px] font-bold uppercase"
+                                                    style={{ color: meta.color }}
+                                                >
+                                                    {meta.label}
+                                                </span>
+                                                <span
+                                                    className="text-lg font-black"
+                                                    style={{ color: meta.color }}
+                                                >
+                                                    {diff.playLevel}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="flex gap-2 flex-wrap justify-center">
+                                    {DIFFICULTIES.map((d) => (
+                                        <button
+                                            key={d.value}
+                                            onClick={() => setSelectedDifficulty(d.value)}
+                                            className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${selectedDifficulty === d.value
+                                                    ? "ring-2 shadow-lg bg-white"
+                                                    : "hover:bg-slate-50 border border-transparent"
+                                                }`}
+                                            style={
+                                                selectedDifficulty === d.value
+                                                    ? { borderColor: d.color, boxShadow: `0 0 0 2px ${d.color}` }
+                                                    : {}
+                                            }
                                         >
-                                            {d.label}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
+                                            <span
+                                                className="text-xs font-bold uppercase"
+                                                style={{ color: d.color }}
+                                            >
+                                                {d.label}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
+
+                        {/* Vocal Selector */}
+                        {availableVocals.length > 1 && (
+                            <div>
+                                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 text-center">
+                                    演唱版本
+                                </label>
+                                <div className="flex gap-2 flex-wrap justify-center">
+                                    {availableVocals.map((v) => {
+                                        const isSelected = selectedVocal?.id === v.id;
+                                        return (
+                                            <button
+                                                key={v.id}
+                                                onClick={() => setSelectedVocalId(v.id)}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isSelected
+                                                        ? "bg-miku text-white shadow-sm"
+                                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                                    }`}
+                                            >
+                                                {v.caption}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Start Button */}
                         <button

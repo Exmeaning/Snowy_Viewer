@@ -827,11 +827,10 @@ export default function ChartPreviewPlayer({
                     <button
                         type="button"
                         onClick={handleControlsLockToggle}
-                        className={`absolute top-3 right-3 z-40 flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 ${
-                            controlsLocked
+                        className={`absolute top-3 right-3 z-40 flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 ${controlsLocked
                                 ? "bg-miku/80 text-white shadow-lg"
                                 : "bg-slate-900/50 text-slate-300 hover:bg-slate-900/70"
-                        }`}
+                            }`}
                         title={controlsLocked ? "解锁控制栏" : "锁定控制栏"}
                     >
                         {controlsLocked ? (
@@ -915,90 +914,90 @@ export default function ChartPreviewPlayer({
                     />
 
                     {!isFullscreen && (
-                    <div className={`flex flex-wrap items-center ${isCompactControls ? "gap-1.5" : "gap-2"}`}>
-                        <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
-                            <span className={fieldTextClassName}>速度</span>
-                            <select value={playbackRate} onChange={handleSpeedChange} className={`rounded-lg border px-1.5 py-0.5 text-xs font-medium ${fieldInputClassName}`}>
-                                <option value={0.25}>0.25x</option>
-                                <option value={0.5}>0.5x</option>
-                                <option value={0.75}>0.75x</option>
-                                <option value={1}>1x</option>
-                                <option value={1.25}>1.25x</option>
-                                <option value={1.5}>1.5x</option>
-                                <option value={2}>2x</option>
-                            </select>
-                        </label>
+                        <div className={`flex flex-wrap items-center ${isCompactControls ? "gap-1.5" : "gap-2"}`}>
+                            <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                                <span className={fieldTextClassName}>速度</span>
+                                <select value={playbackRate} onChange={handleSpeedChange} className={`rounded-lg border px-1.5 py-0.5 text-xs font-medium ${fieldInputClassName}`}>
+                                    <option value={0.25}>0.25x</option>
+                                    <option value={0.5}>0.5x</option>
+                                    <option value={0.75}>0.75x</option>
+                                    <option value={1}>1x</option>
+                                    <option value={1.25}>1.25x</option>
+                                    <option value={1.5}>1.5x</option>
+                                    <option value={2}>2x</option>
+                                </select>
+                            </label>
 
-                        <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
-                            <span className={fieldTextClassName}>noteSpeed</span>
-                            <input
-                                type="number"
-                                min={1}
-                                max={12}
-                                step={0.1}
-                                value={noteSpeed || ""}
-                                onChange={handleNoteSpeedChange}
-                                className={`${isCompactControls ? "w-12" : "w-14"} rounded-lg border px-1.5 py-0.5 text-center text-xs font-medium ${fieldInputClassName}`}
-                            />
-                        </label>
+                            <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                                <span className={fieldTextClassName}>noteSpeed</span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={12}
+                                    step={0.1}
+                                    value={noteSpeed || ""}
+                                    onChange={handleNoteSpeedChange}
+                                    className={`${isCompactControls ? "w-12" : "w-14"} rounded-lg border px-1.5 py-0.5 text-center text-xs font-medium ${fieldInputClassName}`}
+                                />
+                            </label>
 
-                        <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
-                            <span className={fieldTextClassName}>打击音量</span>
-                            <input
-                                type="range"
-                                min={0}
-                                max={100}
-                                step={1}
-                                value={Math.round(seVolume * 100)}
-                                onChange={handleSeVolumeChange}
-                                className={`${isCompactControls ? "w-14" : "w-16"} cursor-pointer accent-miku`}
-                            />
-                            <span className="text-[11px] tabular-nums text-slate-500">{Math.round(seVolume * 100)}%</span>
-                        </label>
+                            <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                                <span className={fieldTextClassName}>打击音量</span>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={100}
+                                    step={1}
+                                    value={Math.round(seVolume * 100)}
+                                    onChange={handleSeVolumeChange}
+                                    className={`${isCompactControls ? "w-14" : "w-16"} cursor-pointer accent-miku`}
+                                />
+                                <span className="text-[11px] tabular-nums text-slate-500">{Math.round(seVolume * 100)}%</span>
+                            </label>
 
-                        <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
-                            <span className={fieldTextClassName}>音乐音量</span>
-                            <input
-                                type="range"
-                                min={0}
-                                max={100}
-                                step={1}
-                                value={Math.round(bgmVolume * 100)}
-                                onChange={handleBgmVolumeChange}
-                                className={`${isCompactControls ? "w-14" : "w-16"} cursor-pointer accent-miku`}
-                            />
-                            <span className="text-[11px] tabular-nums text-slate-500">{Math.round(bgmVolume * 100)}%</span>
-                        </label>
+                            <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                                <span className={fieldTextClassName}>音乐音量</span>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={100}
+                                    step={1}
+                                    value={Math.round(bgmVolume * 100)}
+                                    onChange={handleBgmVolumeChange}
+                                    className={`${isCompactControls ? "w-14" : "w-16"} cursor-pointer accent-miku`}
+                                />
+                                <span className="text-[11px] tabular-nums text-slate-500">{Math.round(bgmVolume * 100)}%</span>
+                            </label>
 
-                        <button
-                            type="button"
-                            onClick={handleLowEffectsToggle}
-                            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${lowEffects
-                                ? "border-transparent bg-white text-slate-800 ring-2 ring-miku shadow-lg"
-                                : `${chipClassName} text-slate-600`}`}
-                        >
-                            <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold`}>低特效</span>
-                            <div className={`flex h-4 w-4 items-center justify-center rounded-full border transition-colors ${lowEffects ? "border-miku bg-miku" : "border-slate-300 bg-white"}`}>
-                                {lowEffects && (
-                                    <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                )}
-                            </div>
-                        </button>
+                            <button
+                                type="button"
+                                onClick={handleLowEffectsToggle}
+                                className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${lowEffects
+                                    ? "border-transparent bg-white text-slate-800 ring-2 ring-miku shadow-lg"
+                                    : `${chipClassName} text-slate-600`}`}
+                            >
+                                <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold`}>低特效</span>
+                                <div className={`flex h-4 w-4 items-center justify-center rounded-full border transition-colors ${lowEffects ? "border-miku bg-miku" : "border-slate-300 bg-white"}`}>
+                                    {lowEffects && (
+                                        <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    )}
+                                </div>
+                            </button>
 
-                        <button
-                            type="button"
-                            onClick={handleFullscreenToggle}
-                            title="进入全屏"
-                            className="ml-auto flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
-                        >
-                            <span className="text-xs font-bold text-slate-600">全屏</span>
-                            <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0 0l-5-5m-7 14l-5 5m0 0h4m-4 0v-4m16 4l-5-5m5 5v-4m0 4h-4" />
-                            </svg>
-                        </button>
-                    </div>
+                            <button
+                                type="button"
+                                onClick={handleFullscreenToggle}
+                                title="进入全屏"
+                                className="ml-auto flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
+                            >
+                                <span className="text-xs font-bold text-slate-600">全屏</span>
+                                <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0 0l-5-5m-7 14l-5 5m0 0h4m-4 0v-4m16 4l-5-5m5 5v-4m0 4h-4" />
+                                </svg>
+                            </button>
+                        </div>
                     )}
 
                     {warningMessage && <div className={isCompactControls ? "text-[10px] text-amber-500" : "text-xs text-amber-600"}>{warningMessage}</div>}
@@ -1009,7 +1008,11 @@ export default function ChartPreviewPlayer({
                             <a href="https://github.com/crash5band/MikuMikuWorld" target="_blank" rel="noreferrer" className="text-miku hover:underline">
                                 MikuMikuWorld
                             </a>{" "}
-                            by Crash5b, licensed under MIT.
+                            by Crash5b, licensed under MIT. 部分代码来源于{" "}
+                            <a href="https://github.com/watagashi-uni/" target="_blank" rel="noreferrer" className="text-miku hover:underline">
+                                watagashi-uni
+                            </a>
+                            。
                         </div>
                     )}
                 </div>
