@@ -37,6 +37,18 @@ type WebkitFullscreenElement = HTMLElement & {
 /** Seconds to skip at the start of BGM (game songs have ~9s silence). */
 const BGM_SKIP_SEC = 9;
 
+const LS_NOTE_SPEED = "chart-preview-note-speed";
+const LS_SE_VOLUME = "chart-preview-se-volume";
+const LS_BGM_VOLUME = "chart-preview-bgm-volume";
+
+function readNumber(key: string, fallback: number): number {
+    if (typeof window === "undefined") return fallback;
+    const raw = localStorage.getItem(key);
+    if (raw === null) return fallback;
+    const val = Number(raw);
+    return Number.isFinite(val) ? val : fallback;
+}
+
 interface ChartPreviewPlayerProps {
     susUrl: string;
     bgmUrl?: string;
@@ -82,7 +94,7 @@ export default function ChartPreviewPlayer({
     const initialStartSecRef = useRef(0);
     const previewReadyRef = useRef(false);
     const rendererReadyRef = useRef(false);
-    const configRef = useRef({ ...defaultConfig });
+    const configRef = useRef({ ...defaultConfig, noteSpeed: readNumber(LS_NOTE_SPEED, 10.5) });
 
     const bgmExpectedRef = useRef(false);
     const bgmLoadedRef = useRef(false);
@@ -97,7 +109,9 @@ export default function ChartPreviewPlayer({
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [noteSpeed, setNoteSpeed] = useState(10.5);
+    const [noteSpeed, setNoteSpeed] = useState(() => readNumber(LS_NOTE_SPEED, 10.5));
+    const [seVolume, setSeVolume] = useState(() => readNumber(LS_SE_VOLUME, 0.8));
+    const [bgmVolume, setBgmVolume] = useState(() => readNumber(LS_BGM_VOLUME, 0.8));
     const [playbackRate, setPlaybackRate] = useState(1);
     const [lowEffects, setLowEffects] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -309,6 +323,9 @@ export default function ChartPreviewPlayer({
         effectsRef.current = effects;
         judgementEffectsRef.current = judgementEffectsInstance;
         judgementSoundsRef.current = judgementSoundsInstance;
+
+        transport.setVolume(readNumber(LS_BGM_VOLUME, 0.8));
+        judgementSoundsInstance.setVolume(readNumber(LS_SE_VOLUME, 0.8));
 
         const unsubscribe = transport.subscribe(updateUi);
 
@@ -666,6 +683,21 @@ export default function ChartPreviewPlayer({
         setNoteSpeed(clamped);
         configRef.current = { ...configRef.current, noteSpeed: clamped };
         wasmRef.current?.setPreviewConfig(configRef.current);
+        try { localStorage.setItem(LS_NOTE_SPEED, String(clamped)); } catch { /* quota */ }
+    }, []);
+
+    const handleSeVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = Number(e.target.value) / 100;
+        setSeVolume(val);
+        judgementSoundsRef.current?.setVolume(val);
+        try { localStorage.setItem(LS_SE_VOLUME, String(val)); } catch { /* quota */ }
+    }, []);
+
+    const handleBgmVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = Number(e.target.value) / 100;
+        setBgmVolume(val);
+        transportRef.current?.setVolume(val);
+        try { localStorage.setItem(LS_BGM_VOLUME, String(val)); } catch { /* quota */ }
     }, []);
 
     const handleLowEffectsToggle = useCallback(() => {
@@ -824,17 +856,36 @@ export default function ChartPreviewPlayer({
                         }
                         : undefined}
                 >
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2">
                         <button
                             type="button"
                             onClick={handlePlayToggle}
                             disabled={bgmLoading || previewState !== "ready"}
-                            className={`${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-lg bg-miku font-medium text-white transition-colors hover:bg-miku/90 disabled:cursor-not-allowed disabled:opacity-50`}
+                            title={isPlaying ? "暂停" : "播放"}
+                            className={`${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-miku text-white hover:bg-miku/90" : `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-lg bg-miku font-medium text-white hover:bg-miku/90`} transition-colors disabled:cursor-not-allowed disabled:opacity-50`}
                         >
-                            {isPlaying ? "暂停" : "播放"}
+                            {isPlaying ? (
+                                <svg className={isFullscreen ? "h-4 w-4" : "hidden"} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                                </svg>
+                            ) : (
+                                <svg className={isFullscreen ? "h-4 w-4" : "hidden"} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                            )}
+                            {!isFullscreen && (isPlaying ? "暂停" : "播放")}
                         </button>
-                        <button type="button" onClick={handleStop} className={`${secondaryButtonClassName} shrink-0`}>
-                            停止
+                        <button
+                            type="button"
+                            onClick={handleStop}
+                            title="停止"
+                            className={`${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-200 hover:bg-slate-600" : `${secondaryButtonClassName}`} shrink-0 transition-colors`}
+                        >
+                            {isFullscreen ? (
+                                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M6 6h12v12H6z" />
+                                </svg>
+                            ) : "停止"}
                         </button>
                         <span className={timeClassName}>
                             {formatTime(currentTime)} / {formatTime(duration)}
@@ -844,9 +895,11 @@ export default function ChartPreviewPlayer({
                                 type="button"
                                 onClick={handleFullscreenToggle}
                                 title="退出全屏"
-                                className={`${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-lg border border-transparent bg-white font-medium text-slate-800 ring-2 ring-miku transition-colors hover:bg-slate-100`}
+                                className="ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-200 transition-colors hover:bg-slate-600"
                             >
-                                退出
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9L4 4m0 0v4m0-4h4m7 5l5-5m0 0v4m0-4h-4M9 15l-5 5m0 0v-4m0 4h4m7-5l5 5m0 0v-4m0 4h-4" />
+                                </svg>
                             </button>
                         )}
                     </div>
@@ -861,6 +914,7 @@ export default function ChartPreviewPlayer({
                         className={`w-full cursor-pointer accent-miku ${isCompactControls ? "h-1.5" : "h-2"}`}
                     />
 
+                    {!isFullscreen && (
                     <div className={`flex flex-wrap items-center ${isCompactControls ? "gap-1.5" : "gap-2"}`}>
                         <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
                             <span className={fieldTextClassName}>速度</span>
@@ -888,15 +942,43 @@ export default function ChartPreviewPlayer({
                             />
                         </label>
 
+                        <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                            <span className={fieldTextClassName}>打击音量</span>
+                            <input
+                                type="range"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={Math.round(seVolume * 100)}
+                                onChange={handleSeVolumeChange}
+                                className={`${isCompactControls ? "w-14" : "w-16"} cursor-pointer accent-miku`}
+                            />
+                            <span className="text-[11px] tabular-nums text-slate-500">{Math.round(seVolume * 100)}%</span>
+                        </label>
+
+                        <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                            <span className={fieldTextClassName}>音乐音量</span>
+                            <input
+                                type="range"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={Math.round(bgmVolume * 100)}
+                                onChange={handleBgmVolumeChange}
+                                className={`${isCompactControls ? "w-14" : "w-16"} cursor-pointer accent-miku`}
+                            />
+                            <span className="text-[11px] tabular-nums text-slate-500">{Math.round(bgmVolume * 100)}%</span>
+                        </label>
+
                         <button
                             type="button"
                             onClick={handleLowEffectsToggle}
                             className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${lowEffects
                                 ? "border-transparent bg-white text-slate-800 ring-2 ring-miku shadow-lg"
-                                : `${chipClassName} ${isFullscreen ? "text-slate-300" : "text-slate-600"}`}`}
+                                : `${chipClassName} text-slate-600`}`}
                         >
                             <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold`}>低特效</span>
-                            <div className={`flex h-4 w-4 items-center justify-center rounded-full border transition-colors ${lowEffects ? "border-miku bg-miku" : isFullscreen ? "border-slate-500 bg-slate-700" : "border-slate-300 bg-white"}`}>
+                            <div className={`flex h-4 w-4 items-center justify-center rounded-full border transition-colors ${lowEffects ? "border-miku bg-miku" : "border-slate-300 bg-white"}`}>
                                 {lowEffects && (
                                     <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -905,20 +987,19 @@ export default function ChartPreviewPlayer({
                             </div>
                         </button>
 
-                        {!isFullscreen && (
-                            <button
-                                type="button"
-                                onClick={handleFullscreenToggle}
-                                title="进入全屏"
-                                className="ml-auto flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
-                            >
-                                <span className="text-xs font-bold text-slate-600">全屏</span>
-                                <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0 0l-5-5m-7 14l-5 5m0 0h4m-4 0v-4m16 4l-5-5m5 5v-4m0 4h-4" />
-                                </svg>
-                            </button>
-                        )}
+                        <button
+                            type="button"
+                            onClick={handleFullscreenToggle}
+                            title="进入全屏"
+                            className="ml-auto flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
+                        >
+                            <span className="text-xs font-bold text-slate-600">全屏</span>
+                            <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0 0l-5-5m-7 14l-5 5m0 0h4m-4 0v-4m16 4l-5-5m5 5v-4m0 4h-4" />
+                            </svg>
+                        </button>
                     </div>
+                    )}
 
                     {warningMessage && <div className={isCompactControls ? "text-[10px] text-amber-500" : "text-xs text-amber-600"}>{warningMessage}</div>}
 

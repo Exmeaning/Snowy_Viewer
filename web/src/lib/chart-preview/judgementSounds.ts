@@ -38,6 +38,15 @@ type ActiveLoop = {
 export class JudgementSounds {
   private readonly buffers = new Map<SoundKey, AudioBuffer>()
   private readonly activeLoops = new Set<ActiveLoop>()
+  private volumeScale = 0.8
+
+  setVolume(scale: number) {
+    this.volumeScale = Math.min(Math.max(scale, 0), 1)
+    for (const loop of this.activeLoops) {
+      const key = loop.kind
+      loop.gain.gain.value = this.getVolume(key)
+    }
+  }
 
   async load(context: AudioContext) {
     await Promise.all(
@@ -176,7 +185,7 @@ export class JudgementSounds {
     return null
   }
 
-  private getVolume(key: SoundKey) {
+  private getBaseVolume(key: SoundKey) {
     switch (key) {
       case 'perfect':
         return 0.75
@@ -199,5 +208,9 @@ export class JudgementSounds {
       case 'holdLoopCritical':
         return 0.7
     }
+  }
+
+  private getVolume(key: SoundKey) {
+    return this.getBaseVolume(key) * this.volumeScale
   }
 }

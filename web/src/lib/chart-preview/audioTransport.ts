@@ -14,6 +14,7 @@ export class AudioTransport {
   private startedAtWallTime = 0
   private durationSec = 0
   private bgmOffsetSec = 0
+  private volume = 0.8
   private pendingGestureStart = false
   private readonly listeners = new Set<Listener>()
 
@@ -73,6 +74,13 @@ export class AudioTransport {
   /** Set how many seconds to skip at the start of the BGM audio file. */
   setBgmOffsetSec(sec: number) {
     this.bgmOffsetSec = Math.max(sec, 0)
+  }
+
+  setVolume(vol: number) {
+    this.volume = Math.min(Math.max(vol, 0), 1)
+    if (this.gainNode) {
+      this.gainNode.gain.value = this.volume
+    }
   }
 
   getAudioContext() {
@@ -186,6 +194,7 @@ export class AudioTransport {
       source.buffer = this.audioBuffer
       source.playbackRate.value = this.playbackRate
       this.gainNode ??= this.audioContext.createGain()
+      this.gainNode.gain.value = this.volume
       source.connect(this.gainNode)
       this.gainNode.connect(this.audioContext.destination)
       source.onended = () => {
