@@ -1,6 +1,6 @@
 # Build Stage for Frontend
 FROM node:20-alpine AS builder-web
-RUN npm install -g npm@10.8.2
+RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 COPY refer/re_sekai-calculator/ refer/re_sekai-calculator/
 
@@ -9,9 +9,9 @@ COPY web/ web/
 WORKDIR /app/web
 # Set API URL empty to allow relative fetching
 ENV NEXT_PUBLIC_API_URL=
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 RUN ls -la /app/refer/re_sekai-calculator/src/index.ts
-RUN npm run build
+RUN pnpm run build
 
 # Build Stage for Backend
 FROM golang:1.23-alpine AS builder-go
