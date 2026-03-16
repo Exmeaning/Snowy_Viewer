@@ -39,6 +39,13 @@ const LS_NOTE_SPEED = "chart-preview-note-speed";
 const LS_SE_VOLUME = "chart-preview-se-volume";
 const LS_BGM_VOLUME = "chart-preview-bgm-volume";
 const LS_PLAYBACK_RATE = "chart-preview-playback-rate";
+const LS_RENDER_SCALE = "chart-preview-render-scale";
+
+const RENDER_SCALE_OPTIONS = [
+    { value: 0.5, label: "50%" },
+    { value: 0.75, label: "75%" },
+    { value: 1, label: "100%" },
+] as const;
 
 function readNumber(key: string, fallback: number): number {
     if (typeof window === "undefined") return fallback;
@@ -116,6 +123,8 @@ export default function ChartPreviewPlayer({
     const [bgmVolume, setBgmVolume] = useState(() => readNumber(LS_BGM_VOLUME, 0.8));
     const [playbackRate, setPlaybackRate] = useState(() => readNumber(LS_PLAYBACK_RATE, 1));
     const [lowEffects, setLowEffects] = useState(false);
+    const [renderScale, setRenderScale] = useState(() => readNumber(LS_RENDER_SCALE, 1));
+    const renderScaleRef = useRef(readNumber(LS_RENDER_SCALE, 1));
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(true);
@@ -532,7 +541,7 @@ export default function ChartPreviewPlayer({
         const panel = panelRef.current;
         const resizeObserver = new ResizeObserver(() => {
             const bounds = panel.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
+            const dpr = (window.devicePixelRatio || 1) * renderScaleRef.current;
             renderer.resize(bounds.width, bounds.height, dpr);
             wasm.resize(bounds.width, bounds.height, dpr);
             effects.resize(bounds.width, bounds.height, dpr);
@@ -780,6 +789,20 @@ export default function ChartPreviewPlayer({
         });
     }, []);
 
+    const handleRenderScaleChange = useCallback((scale: number) => {
+        setRenderScale(scale);
+        renderScaleRef.current = scale;
+        try { localStorage.setItem(LS_RENDER_SCALE, String(scale)); } catch { /* quota */ }
+        const panel = panelRef.current;
+        if (!panel) return;
+        const bounds = panel.getBoundingClientRect();
+        const dpr = (window.devicePixelRatio || 1) * scale;
+        rendererRef.current?.resize(bounds.width, bounds.height, dpr);
+        wasmRef.current?.resize(bounds.width, bounds.height, dpr);
+        effectsRef.current?.resize(bounds.width, bounds.height, dpr);
+        judgementEffectsRef.current?.resize(bounds.width, bounds.height, dpr);
+    }, []);
+
     const handleUnlock = useCallback(async () => {
         const transport = transportRef.current;
         if (!transport) return;
@@ -899,8 +922,8 @@ export default function ChartPreviewPlayer({
                         type="button"
                         onClick={handleControlsLockToggle}
                         className={`absolute top-3 right-3 z-40 flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 ${controlsLocked
-                                ? "bg-miku/80 text-white shadow-lg"
-                                : "bg-slate-900/50 text-slate-300 hover:bg-slate-900/70"
+                            ? "bg-miku/80 text-white shadow-lg"
+                            : "bg-slate-900/50 text-slate-300 hover:bg-slate-900/70"
                             }`}
                         title={controlsLocked ? "解锁控制栏" : "锁定控制栏"}
                     >
@@ -1057,6 +1080,25 @@ export default function ChartPreviewPlayer({
                                 </div>
                             </button>
 
+                            <div className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                                <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold ${isFullscreen ? "text-slate-300" : "text-slate-600"}`}>画质</span>
+                                <div className="flex gap-1">
+                                    {RENDER_SCALE_OPTIONS.map((opt) => (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => handleRenderScaleChange(opt.value)}
+                                            className={`rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-all ${renderScale === opt.value
+                                                ? "bg-miku text-white shadow-sm"
+                                                : `${isFullscreen ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-700"}`
+                                                }`}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="ml-auto flex items-center gap-1.5">
                                 <button
                                     type="button"
@@ -1087,8 +1129,9 @@ export default function ChartPreviewPlayer({
                     {warningMessage && <div className={isCompactControls ? "text-[10px] text-amber-500" : "text-xs text-amber-600"}>{warningMessage}</div>}
 
                     {!isFullscreen && isIOS && (
-                        <div className="text-[11px] text-slate-400 italic text-right">
-                            *iOS 设备推荐使用「网页全屏」以完全屏蔽 Safari 的快捷操作
+                        <div className="text-[11px] text-slate-400 italic text-right space-y-0.5">
+                            <div>*iOS 设备推荐使用「网页全屏」以更好地屏蔽 Safari 的快捷触摸操作</div>
+                            <div>*iOS 的渲染机制可能导致全屏卡顿，建议将画质调至 50% 或 75% 以提升帧率</div>
                         </div>
                     )}
 
