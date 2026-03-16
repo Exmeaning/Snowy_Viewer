@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
+import ExternalLink from "@/components/ExternalLink";
 import type { HitEvent, PreviewRuntimeConfig, TransportState } from "@/lib/chart-preview/types";
 import { AudioTransport } from "@/lib/chart-preview/audioTransport";
 import { GlPreviewRenderer } from "@/lib/chart-preview/glRenderer";
@@ -1016,13 +1017,13 @@ export default function ChartPreviewPlayer({
                     {!isFullscreen && (
                         <div className="text-xs text-slate-400">
                             Adapted from{" "}
-                            <a href="https://github.com/crash5band/MikuMikuWorld" target="_blank" rel="noreferrer" className="text-miku hover:underline">
+                            <ExternalLink href="https://github.com/crash5band/MikuMikuWorld" className="text-miku hover:underline">
                                 MikuMikuWorld
-                            </a>{" "}
+                            </ExternalLink>{" "}
                             by Crash5b, licensed under MIT. 部分代码来源于{" "}
-                            <a href="https://github.com/watagashi-uni/" target="_blank" rel="noreferrer" className="text-miku hover:underline">
+                            <ExternalLink href="https://github.com/watagashi-uni/" className="text-miku hover:underline">
                                 watagashi-uni
-                            </a>
+                            </ExternalLink>
                             。
                         </div>
                     )}
