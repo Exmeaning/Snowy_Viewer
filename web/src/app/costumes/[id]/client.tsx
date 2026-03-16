@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "@/contexts/TranslationContext";
@@ -48,6 +49,7 @@ export default function CostumeDetailClient() {
     const costumeNumber = Number(params.id);
     const { assetSource, useTrainedThumbnail } = useTheme();
     const { t } = useTranslation();
+    const { setDetailName } = useBreadcrumb();
 
     const [costumeGroup, setCostumeGroup] = useState<ICostumeInfo | null>(null);
     const [relatedCards, setRelatedCards] = useState<ICardInfo[]>([]);
@@ -206,6 +208,11 @@ export default function CostumeDetailClient() {
 
     const representative = costumeGroup;
 
+    // Set breadcrumb detail name
+    useEffect(() => {
+        if (representative) setDetailName(representative.name);
+    }, [representative, setDetailName]);
+
     const displayGender = useMemo(() => {
         if (!representative) return "";
         return representative.gender === "female" ? "女性" : "男性";
@@ -254,27 +261,6 @@ export default function CostumeDetailClient() {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                {/* Breadcrumb */}
-                <nav className="mb-6">
-                    <ol className="flex items-center gap-2 text-sm">
-                        <li>
-                            <Link href="/costumes" className="text-slate-500 hover:text-miku transition-colors">
-                                服装
-                            </Link>
-                        </li>
-                        <li className="text-slate-300">/</li>
-                        <li className="text-slate-800 font-medium truncate max-w-[200px]">
-                            <TranslatedText
-                                original={representative.name}
-                                category="costumes"
-                                field="name"
-                                originalClassName="truncate block"
-                                translationClassName="text-xs text-slate-400 truncate block font-normal"
-                            />
-                        </li>
-                    </ol>
-                </nav>
-
                 {/* Header Section */}
                 <div className="mb-8">
                     <div className="flex flex-wrap items-center gap-2 mb-2">

@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
 import {
     IlimitedTimeMusicsInfo,
@@ -106,6 +107,7 @@ export default function MusicDetailPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
+    const { setDetailName } = useBreadcrumb();
     const musicId = Number(params.id);
     const isScreenshotMode = searchParams.get('mode') === 'screenshot';
 
@@ -134,6 +136,11 @@ export default function MusicDetailPage() {
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Set breadcrumb detail name
+    useEffect(() => {
+        if (music) setDetailName(music.title);
+    }, [music, setDetailName]);
 
     // Fetch data
     useEffect(() => {
@@ -347,27 +354,6 @@ export default function MusicDetailPage() {
             />
 
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                {/* Breadcrumb */}
-                <nav className="mb-6">
-                    <ol className="flex items-center gap-2 text-sm">
-                        <li>
-                            <Link href="/music" className="text-slate-500 hover:text-miku transition-colors">
-                                音乐
-                            </Link>
-                        </li>
-                        <li className="text-slate-300">/</li>
-                        <li className="text-slate-800 font-medium truncate max-w-[200px]">
-                            <TranslatedText
-                                original={music.title}
-                                category="music"
-                                field="title"
-                                originalClassName="truncate block"
-                                translationClassName="text-xs text-slate-400 truncate block font-normal"
-                            />
-                        </li>
-                    </ol>
-                </nav>
-
                 {/* Header Section */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">

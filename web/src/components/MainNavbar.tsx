@@ -4,6 +4,7 @@ import Link from "next/link";
 import SettingsPanel from "./SettingsPanel";
 import CommandPalette from "./CommandPalette";
 import { getPrimaryShortcutLabel } from "@/lib/shortcuts";
+import Breadcrumb from "./Breadcrumb";
 
 interface MainNavbarProps {
     onMenuToggle: () => void;
@@ -48,14 +49,15 @@ export default function MainNavbar({
     const helpShortcut = getPrimaryShortcutLabel("toggle-shortcuts-help");
 
     return (
-        <nav className="fixed top-0 w-full z-[100] bg-white/95 backdrop-blur-lg border-b border-slate-200 h-[4.5rem]">
-            <div className="container mx-auto px-6 h-full flex items-center justify-between">
-                {/* Left: Menu Toggle + Logo */}
-                <div className="flex items-center gap-4">
+        <nav className="fixed top-0 w-full z-[100] bg-white/95 backdrop-blur-lg border-b border-slate-200">
+            {/* Row 1: Logo + buttons */}
+            <div className="container mx-auto px-4 sm:px-6 h-[3.5rem] sm:h-[4.5rem] flex items-center justify-between">
+                {/* Left: Menu Toggle + Logo + Breadcrumb (desktop) */}
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     {/* Menu Toggle Button */}
                     <button
                         onClick={onMenuToggle}
-                        className="flex items-center gap-1.5 p-2 text-slate-600 hover:text-miku transition-colors rounded-lg hover:bg-slate-50"
+                        className="flex items-center gap-1.5 p-2 text-slate-600 hover:text-miku transition-colors rounded-lg hover:bg-slate-50 shrink-0"
                         title={`菜单 (${sidebarShortcut})`}
                     >
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -67,9 +69,9 @@ export default function MainNavbar({
                     </button>
 
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <Link href="/" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity shrink-0">
                         <div
-                            className="h-10 w-[6.1rem] bg-miku transition-colors"
+                            className="h-8 w-[5rem] sm:h-10 sm:w-[6.1rem] bg-miku transition-colors"
                             style={{
                                 maskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
                                 maskSize: "contain",
@@ -81,32 +83,36 @@ export default function MainNavbar({
                                 WebkitMaskRepeat: "no-repeat",
                             }}
                         />
-                        <div className="flex items-center gap-1.5 h-full">
-                            <span className="text-[8px] px-1.5 py-0.5 bg-amber-400 text-white font-bold rounded-full leading-none">
-                                BETA1.142
-                            </span>
-
-                            {showDomainNotice && (
-                                <div className="hidden sm:flex items-center gap-1 ml-2 px-2 py-0.5 bg-blue-50 border border-blue-100 rounded-full animate-fade-in">
-                                    <span className="text-[10px] text-blue-600 font-bold whitespace-nowrap">
-                                        新域名 pjsk.moe
-                                    </span>
-                                    <button
-                                        onClick={dismissDomainNotice}
-                                        className="w-3.5 h-3.5 flex items-center justify-center rounded-full hover:bg-blue-100 text-blue-400 transition-colors"
-                                    >
-                                        <svg viewBox="0 0 24 24" className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="3">
-                                            <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                        <span className="text-[8px] px-1.5 py-0.5 bg-amber-400 text-white font-bold rounded-full leading-none">
+                            BETA1.144
+                        </span>
                     </Link>
+
+                    {/* Breadcrumb - desktop inline */}
+                    <div className="hidden sm:flex items-center gap-1.5 min-w-0 overflow-visible">
+                        <Breadcrumb />
+                    </div>
+
+                    {/* Domain notice */}
+                    {showDomainNotice && (
+                        <div className="hidden lg:flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-100 rounded-full animate-fade-in shrink-0">
+                            <span className="text-[10px] text-blue-600 font-bold whitespace-nowrap">
+                                新域名 pjsk.moe
+                            </span>
+                            <button
+                                onClick={dismissDomainNotice}
+                                className="w-3.5 h-3.5 flex items-center justify-center rounded-full hover:bg-blue-100 text-blue-400 transition-colors"
+                            >
+                                <svg viewBox="0 0 24 24" className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Right: Search + Shortcuts Help + Settings */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                     {/* Search Button */}
                     <button
                         onClick={onSearchToggle}
@@ -158,6 +164,13 @@ export default function MainNavbar({
 
                 {/* Command Palette */}
                 <CommandPalette isOpen={isSearchOpen} onClose={onSearchClose} />
+            </div>
+
+            {/* Row 2: Breadcrumb - mobile only */}
+            <div className="sm:hidden border-t border-slate-100">
+                <div className="container mx-auto px-4 h-8 flex items-center gap-1.5 overflow-visible text-xs">
+                    <Breadcrumb />
+                </div>
             </div>
         </nav>
     );

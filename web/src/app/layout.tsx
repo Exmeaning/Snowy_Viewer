@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MasterDataProvider } from "@/contexts/MasterDataContext";
 import { TranslationProvider } from "@/contexts/TranslationContext";
 import { QuickFilterProvider } from "@/contexts/QuickFilterContext";
+import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import {
   COLOR_SCHEME_STORAGE_KEY,
@@ -122,7 +123,9 @@ export default function RootLayout({
           <MasterDataProvider>
             <TranslationProvider>
               <QuickFilterProvider>
-                {children}
+                <BreadcrumbProvider>
+                  {children}
+                </BreadcrumbProvider>
               </QuickFilterProvider>
             </TranslationProvider>
           </MasterDataProvider>

@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
 import {
     IVirtualLiveInfo,
@@ -45,6 +46,7 @@ export default function VirtualLiveDetailClient() {
     const router = useRouter();
     const virtualLiveId = Number(params.id);
     const { assetSource } = useTheme();
+    const { setDetailName } = useBreadcrumb();
 
     const [virtualLive, setVirtualLive] = useState<IVirtualLiveInfo | null>(null);
     const [allMusics, setAllMusics] = useState<IMusic[]>([]);
@@ -59,6 +61,11 @@ export default function VirtualLiveDetailClient() {
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Set breadcrumb detail name
+    useEffect(() => {
+        if (virtualLive) setDetailName(virtualLive.name);
+    }, [virtualLive, setDetailName]);
 
     // Fetch data
     useEffect(() => {
@@ -205,27 +212,6 @@ export default function VirtualLiveDetailClient() {
             />
 
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                {/* Breadcrumb */}
-                <nav className="mb-6">
-                    <ol className="flex items-center gap-2 text-sm">
-                        <li>
-                            <Link href="/live" className="text-slate-500 hover:text-miku transition-colors">
-                                演唱会
-                            </Link>
-                        </li>
-                        <li className="text-slate-300">/</li>
-                        <li className="text-slate-800 font-medium truncate max-w-[200px]">
-                            <TranslatedText
-                                original={virtualLive.name}
-                                category="virtualLive"
-                                field="name"
-                                originalClassName="truncate block"
-                                translationClassName="text-xs text-slate-400 truncate block font-normal"
-                            />
-                        </li>
-                    </ol>
-                </nav>
-
                 {/* Header Section */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">

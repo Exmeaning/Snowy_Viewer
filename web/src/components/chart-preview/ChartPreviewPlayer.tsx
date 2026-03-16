@@ -1081,7 +1081,7 @@ export default function ChartPreviewPlayer({
                             </button>
 
                             <div className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
-                                <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold ${isFullscreen ? "text-slate-300" : "text-slate-600"}`}>画质</span>
+                                <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold text-slate-600`}>画质</span>
                                 <div className="flex gap-1">
                                     {RENDER_SCALE_OPTIONS.map((opt) => (
                                         <button
@@ -1090,7 +1090,7 @@ export default function ChartPreviewPlayer({
                                             onClick={() => handleRenderScaleChange(opt.value)}
                                             className={`rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-all ${renderScale === opt.value
                                                 ? "bg-miku text-white shadow-sm"
-                                                : `${isFullscreen ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-700"}`
+                                                : "text-slate-600 hover:text-slate-800"
                                                 }`}
                                         >
                                             {opt.label}

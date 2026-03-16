@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getMysekaiFixtureThumbnailUrl, getMysekaiMaterialThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
@@ -45,6 +46,7 @@ export default function MysekaiFixtureDetailClient() {
     const router = useRouter();
     const fixtureId = Number(params.id);
     const { assetSource } = useTheme();
+    const { setDetailName } = useBreadcrumb();
 
     const [fixture, setFixture] = useState<IMysekaiFixtureInfo | null>(null);
     const [genres, setGenres] = useState<IMysekaiFixtureGenre[]>([]);
@@ -113,6 +115,11 @@ export default function MysekaiFixtureDetailClient() {
             fetchData();
         }
     }, [fixtureId]);
+
+    // Set breadcrumb detail name
+    useEffect(() => {
+        if (fixture) setDetailName(fixture.name);
+    }, [fixture, setDetailName]);
 
     // Get genre name
     const genreName = useMemo(() => {
@@ -256,27 +263,6 @@ export default function MysekaiFixtureDetailClient() {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                {/* Breadcrumb */}
-                <nav className="mb-6">
-                    <ol className="flex items-center gap-2 text-sm">
-                        <li>
-                            <Link href="/mysekai" className="text-slate-500 hover:text-miku transition-colors">
-                                家具
-                            </Link>
-                        </li>
-                        <li className="text-slate-300">/</li>
-                        <li className="text-slate-800 font-medium truncate max-w-[200px]">
-                            <TranslatedText
-                                original={fixture.name}
-                                category="mysekai"
-                                field="fixtureName"
-                                originalClassName="truncate block"
-                                translationClassName="text-xs text-slate-400 truncate block font-normal"
-                            />
-                        </li>
-                    </ol>
-                </nav>
-
                 {/* Header Section */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">

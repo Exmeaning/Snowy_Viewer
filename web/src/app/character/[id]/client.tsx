@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import {
@@ -38,6 +39,7 @@ export default function CharacterDetailClient() {
     const router = useRouter();
     const params = useParams();
     const { assetSource } = useTheme();
+    const { setDetailName } = useBreadcrumb();
     const id = parseInt(params.id as string, 10);
 
     // State
@@ -129,6 +131,11 @@ export default function CharacterDetailClient() {
     const unitIconName = UNIT_ICONS[character.unit] || "vs.webp";
     const characterDisplayName = CHARACTER_NAMES[id] || `${character.firstName} ${character.givenName}`;
 
+    // Set breadcrumb detail name
+    useEffect(() => {
+        if (characterDisplayName) setDetailName(characterDisplayName);
+    }, [characterDisplayName, setDetailName]);
+
     // Prepare images for display/viewer
     const charaTrimImg = getCharacterTrimUrl(id, assetSource);
     const charaLabelHImg = getCharacterLabelHUrl(id, assetSource);
@@ -138,13 +145,6 @@ export default function CharacterDetailClient() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Header / Breadcrumb */}
-            <div className="flex items-center gap-2 text-sm text-slate-500 mb-6">
-                <Link href="/character" className="hover:text-miku transition-colors">角色图鉴</Link>
-                <span>/</span>
-                <span className="text-slate-800 font-bold">{characterDisplayName}</span>
-            </div>
-
             <ImagePreviewModal
                 isOpen={imageViewerOpen}
                 onClose={() => setImageViewerOpen(false)}

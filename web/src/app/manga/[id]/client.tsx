@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";
 import { IMangaItem, IMangaData } from "@/types/manga";
@@ -24,6 +25,7 @@ function formatDate(timestamp: number): string {
 export default function MangaDetailClient() {
     const params = useParams();
     const mangaId = Number(params.id);
+    const { setDetailName } = useBreadcrumb();
 
     const [allMangas, setAllMangas] = useState<IMangaItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -69,6 +71,11 @@ export default function MangaDetailClient() {
             document.title = `Moesekai - 第${currentManga.id}话 ${currentManga.title}`;
         }
     }, [currentManga]);
+
+    // Set breadcrumb detail name
+    useEffect(() => {
+        if (currentManga) setDetailName(`第${currentManga.id}话 ${currentManga.title}`);
+    }, [currentManga, setDetailName]);
 
     // Keyboard navigation: ← prev, → next
     useEffect(() => {
@@ -136,21 +143,6 @@ export default function MangaDetailClient() {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8 max-w-4xl">
-                {/* Breadcrumb */}
-                <nav className="mb-6">
-                    <ol className="flex items-center gap-2 text-sm">
-                        <li>
-                            <Link href="/manga" className="text-slate-500 hover:text-miku transition-colors">
-                                官方四格
-                            </Link>
-                        </li>
-                        <li className="text-slate-300">/</li>
-                        <li className="text-slate-800 font-medium truncate max-w-[300px]">
-                            第{currentManga.id}话 {currentManga.title}
-                        </li>
-                    </ol>
-                </nav>
-
                 {/* Top Navigation Bar: Prev / Jump / Next */}
                 <div className="flex items-center justify-between mb-6 bg-white rounded-xl shadow ring-1 ring-slate-200 px-4 py-3">
                     {/* Prev */}

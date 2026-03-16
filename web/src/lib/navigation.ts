@@ -1,3 +1,116 @@
+// ── Breadcrumb navigation data ──
+
+export interface NavItemData {
+    name: string;
+    href: string;
+}
+
+export interface NavGroupData {
+    title: string;
+    href: string;
+    items: NavItemData[];
+}
+
+export const navigationGroups: NavGroupData[] = [
+    {
+        title: "数据库",
+        href: "/breadcrumb-database",
+        items: [
+            { name: "卡牌", href: "/cards" },
+            { name: "音乐列表", href: "/music" },
+            { name: "歌曲Meta", href: "/music/meta" },
+            { name: "角色", href: "/character" },
+            { name: "服装", href: "/costumes" },
+            { name: "称号", href: "/honors" },
+            { name: "贴纸", href: "/sticker" },
+            { name: "漫画", href: "/comic" },
+            { name: "官方四格", href: "/manga" },
+            { name: "家具", href: "/mysekai" },
+        ],
+    },
+    {
+        title: "活动",
+        href: "/breadcrumb-activity",
+        items: [
+            { name: "活动列表", href: "/events" },
+            { name: "扭蛋", href: "/gacha" },
+            { name: "演唱会", href: "/live" },
+            { name: "活动剧情", href: "/eventstory" },
+            { name: "活动预测", href: "/prediction" },
+        ],
+    },
+    {
+        title: "社区",
+        href: "/breadcrumb-community",
+        items: [
+            { name: "攻略", href: "/guides" },
+        ],
+    },
+    {
+        title: "工具",
+        href: "/breadcrumb-tools",
+        items: [
+            { name: "组卡推荐", href: "/deck-recommend" },
+            { name: "组卡比较", href: "/deck-comparator" },
+            { name: "控分计算", href: "/score-control" },
+            { name: "表情包制作", href: "/sticker-maker" },
+            { name: "谷子盲抽", href: "/goods-gacha" },
+            { name: "猜角色", href: "/guess-who" },
+            { name: "猜曲绘", href: "/guess-jacket" },
+            { name: "谱面预览器", href: "/chart-preview" },
+        ],
+    },
+    {
+        title: "个人",
+        href: "/breadcrumb-personal",
+        items: [
+            { name: "个人主页", href: "/profile" },
+            { name: "卡牌进度", href: "/my-cards" },
+            { name: "歌曲进度", href: "/my-musics" },
+            { name: "支持", href: "/patreon" },
+            { name: "关于", href: "/about" },
+        ],
+    },
+];
+
+/**
+ * 根据 pathname 查找匹配的导航项和所属分组。
+ * 返回 { group, item } 或 null。
+ */
+export function findNavMatch(pathname: string): { group: NavGroupData; item: NavItemData } | null {
+    for (const group of navigationGroups) {
+        for (const item of group.items) {
+            // 精确匹配或子路径匹配
+            if (pathname === item.href || pathname.startsWith(item.href + "/")) {
+                // 特殊处理：防止 /music/meta 误匹配 /music
+                if (item.href === "/music" && pathname.startsWith("/music/meta")) {
+                    continue;
+                }
+                return { group, item };
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * 根据 pathname 查找匹配的分组（用于分组汇总页）。
+ */
+export function findGroupMatch(pathname: string): NavGroupData | null {
+    // 去掉尾部斜杠以兼容 trailingSlash: true 配置
+    const normalized = pathname.endsWith("/") && pathname !== "/"
+        ? pathname.slice(0, -1)
+        : pathname;
+    for (const group of navigationGroups) {
+        if (normalized === group.href) {
+            return group;
+        }
+    }
+    return null;
+}
+
+// ── Command palette search data (original content) ──
+
 export interface SearchableNavItem {
     name: string;
     href: string;

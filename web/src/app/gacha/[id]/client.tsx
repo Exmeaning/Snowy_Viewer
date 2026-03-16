@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
 import { ICardInfo, IGachaInfo, IGachaDetail, GACHA_TYPE_LABELS, getRarityNumber, isTrainableCard, CardRarityType, IGachaBehavior, IGachaCardRarityRate } from "@/types/types";
@@ -66,6 +67,7 @@ export default function GachaDetailClient() {
     const [imageViewerOpen, setImageViewerOpen] = useState(false);
     const [customSpinCount, setCustomSpinCount] = useState<string>("");
     const { isShowSpoiler, useTrainedThumbnail, assetSource } = useTheme();
+    const { setDetailName } = useBreadcrumb();
 
     // Gacha Simulator states
     const [statistic, setStatistic] = useState<GachaStatistic>({
@@ -83,6 +85,11 @@ export default function GachaDetailClient() {
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Set breadcrumb detail name
+    useEffect(() => {
+        if (gacha) setDetailName(gacha.name);
+    }, [gacha, setDetailName]);
 
     useEffect(() => {
         async function fetchData() {
@@ -417,27 +424,6 @@ export default function GachaDetailClient() {
             />
 
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                {/* Breadcrumb */}
-                <nav className="mb-6">
-                    <ol className="flex items-center gap-2 text-sm">
-                        <li>
-                            <Link href="/gacha" className="text-slate-500 hover:text-miku transition-colors">
-                                扭蛋
-                            </Link>
-                        </li>
-                        <li className="text-slate-300">/</li>
-                        <li className="text-slate-800 font-medium truncate max-w-[200px]">
-                            <TranslatedText
-                                original={gacha.name}
-                                category="gacha"
-                                field="name"
-                                originalClassName="truncate block"
-                                translationClassName="text-xs text-slate-400 truncate block font-normal"
-                            />
-                        </li>
-                    </ol>
-                </nav>
-
                 {/* Header Section */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
