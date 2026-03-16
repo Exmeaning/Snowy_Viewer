@@ -188,7 +188,8 @@ export function getStampUrl(assetbundleName: string, source: AssetSourceType = "
 export function getMusicScoreUrl(musicId: number, difficulty: string, source: AssetSourceType = "uni"): string {
     const baseUrl = getAssetBaseUrl(source);
     const paddedId = String(musicId).padStart(4, '0');
-    return `${baseUrl}/startapp/music/music_score/${paddedId}_01/${difficulty}`;
+    const ext = isCnSource(source) ? ".txt" : "";
+    return `${baseUrl}/startapp/music/music_score/${paddedId}_01/${difficulty}${ext}`;
 }
 
 // Chart SVG available on Uni and SnowyAssets

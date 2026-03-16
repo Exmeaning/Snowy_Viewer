@@ -235,6 +235,17 @@ export default function ChartPreviewPlayer({
         }
     }, [isFullscreen, isNativeFullscreen]);
 
+    // Web fullscreen (CSS-only, no Fullscreen API) — recommended for iOS
+    const handleWebFullscreenToggle = useCallback(() => {
+        if (!isFullscreen) {
+            setIsNativeFullscreen(false);
+            setIsFullscreen(true);
+        } else {
+            setIsNativeFullscreen(false);
+            setIsFullscreen(false);
+        }
+    }, [isFullscreen]);
+
     // Sync fullscreen state with browser events and unlock orientation on exit
     useEffect(() => {
         const handleChange = () => {
@@ -998,17 +1009,30 @@ export default function ChartPreviewPlayer({
                                 </div>
                             </button>
 
-                            <button
-                                type="button"
-                                onClick={handleFullscreenToggle}
-                                title="进入全屏"
-                                className="ml-auto flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
-                            >
-                                <span className="text-xs font-bold text-slate-600">全屏</span>
-                                <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75V8.25M3.75 3.75H8.25M3.75 3.75L9 9M3.75 20.25V15.75M3.75 20.25H8.25M3.75 20.25L9 15M20.25 3.75L15.75 3.75M20.25 3.75V8.25M20.25 3.75L15 9M20.25 20.25H15.75M20.25 20.25V15.75M20.25 20.25L15 15" />
-                                </svg>
-                            </button>
+                            <div className="ml-auto flex items-center gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={handleWebFullscreenToggle}
+                                    title="网页全屏（iOS 推荐）"
+                                    className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
+                                >
+                                    <span className="text-xs font-bold text-slate-600">网页全屏</span>
+                                    <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 2h10M7 22h10M2 7v10M22 7v10" />
+                                    </svg>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleFullscreenToggle}
+                                    title="进入全屏"
+                                    className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
+                                >
+                                    <span className="text-xs font-bold text-slate-600">全屏</span>
+                                    <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75V8.25M3.75 3.75H8.25M3.75 3.75L9 9M3.75 20.25V15.75M3.75 20.25H8.25M3.75 20.25L9 15M20.25 3.75L15.75 3.75M20.25 3.75V8.25M20.25 3.75L15 9M20.25 20.25H15.75M20.25 20.25V15.75M20.25 20.25L15 15" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     )}
 
