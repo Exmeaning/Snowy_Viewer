@@ -26,7 +26,7 @@ export default function CardGrid({ cards, isLoading = false }: CardGridProps) {
 
     if (isLoading) {
         return (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10 gap-3">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
                 {Array.from({ length: 12 }).map((_, i) => (
                     <CardSkeleton key={i} />
                 ))}
@@ -47,7 +47,7 @@ export default function CardGrid({ cards, isLoading = false }: CardGridProps) {
     }
 
     return (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10 gap-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
             {cards.map((card) => {
                 const isSpoiler = (card.releaseAt || card.archivePublishedAt || 0) > now;
                 return <CardItem key={card.id} card={card} isSpoiler={isSpoiler} />;

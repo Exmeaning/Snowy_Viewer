@@ -152,7 +152,7 @@ function MangaContent() {
                         </div>
                     ) : (
                         <>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                                 {displayedMangas.map((manga) => (
                                     <Link
                                         key={manga.id}
