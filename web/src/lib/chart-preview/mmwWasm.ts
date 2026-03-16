@@ -21,12 +21,14 @@ async function loadModule() {
       // The WASM JS glue is an ES module (`export default factory`).
       // We use Function() to create a dynamic import() that bypasses webpack/Next.js bundling,
       // so the browser loads the file directly from /wasm/ at runtime.
-      const jsUrl = '/wasm/mmw-preview.js'
+      // Cache-bust hash — update when wasm/js files are replaced
+      const WASM_VERSION = '821aafac'
+      const jsUrl = `/wasm/mmw-preview.js?v=${WASM_VERSION}`
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mod = await (Function('url', 'return import(url)')(jsUrl) as Promise<any>)
       const factory = mod.default as (options: { locateFile: (file: string) => string }) => Promise<EmscriptenModule>
       return factory({
-        locateFile: (file: string) => `/wasm/${file}`,
+        locateFile: (file: string) => `/wasm/${file}?v=${WASM_VERSION}`,
       })
     })()
   }
