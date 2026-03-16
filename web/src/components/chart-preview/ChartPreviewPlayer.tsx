@@ -284,6 +284,47 @@ export default function ChartPreviewPlayer({
         };
     }, [isPseudoFullscreen]);
 
+    // iOS: block all touch-driven scrolling / rubber-band / swipe-back in pseudo fullscreen
+    useEffect(() => {
+        if (!isPseudoFullscreen) return;
+        const wrapper = wrapperRef.current;
+        if (!wrapper) return;
+
+        // Prevent touchmove on the whole document to kill iOS rubber-band & swipe gestures.
+        // We allow touchmove only inside elements that genuinely need scrolling (e.g. range inputs).
+        const blockTouchMove = (e: TouchEvent) => {
+            const target = e.target as HTMLElement | null;
+            // Allow range sliders to work normally
+            if (target?.tagName === "INPUT" && (target as HTMLInputElement).type === "range") return;
+            e.preventDefault();
+        };
+
+        // Prevent pull-to-refresh / overscroll on the wrapper itself
+        const blockTouchStart = (e: TouchEvent) => {
+            // Single-finger touch: if the wrapper is at scroll boundary, prevent to avoid
+            // iOS Safari pull-to-refresh / elastic overscroll.
+            if (e.touches.length === 1) {
+                const el = wrapper;
+                if (el.scrollTop <= 0) el.scrollTop = 1;
+                if (el.scrollTop + el.clientHeight >= el.scrollHeight) el.scrollTop = el.scrollHeight - el.clientHeight - 1;
+            }
+        };
+
+        // { passive: false } is required so preventDefault() actually works on iOS
+        document.addEventListener("touchmove", blockTouchMove, { passive: false });
+        wrapper.addEventListener("touchstart", blockTouchStart, { passive: true });
+
+        // Also set touch-action: none on body to prevent gesture navigation
+        const prevTouchAction = document.body.style.touchAction;
+        document.body.style.touchAction = "none";
+
+        return () => {
+            document.removeEventListener("touchmove", blockTouchMove);
+            wrapper.removeEventListener("touchstart", blockTouchStart);
+            document.body.style.touchAction = prevTouchAction;
+        };
+    }, [isPseudoFullscreen]);
+
     useEffect(() => {
         onFullscreenChange?.(isFullscreen);
     }, [isFullscreen, onFullscreenChange]);
@@ -767,7 +808,7 @@ export default function ChartPreviewPlayer({
         <div
             ref={wrapperRef}
             className={wrapperClassName}
-            style={isPseudoFullscreen ? { height: fullscreenHeight, overscrollBehavior: "contain" } : undefined}
+            style={isPseudoFullscreen ? { height: fullscreenHeight, overscrollBehavior: "none", touchAction: "none" } : undefined}
             onPointerMove={isFullscreen ? resetControlsTimer : undefined}
             onPointerDown={isFullscreen ? resetControlsTimer : undefined}
         >
