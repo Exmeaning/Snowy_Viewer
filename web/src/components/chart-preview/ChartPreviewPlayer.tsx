@@ -1144,8 +1144,11 @@ export default function ChartPreviewPlayer({
                             by Crash5b, licensed under MIT. 部分代码来源于{" "}
                             <ExternalLink href="https://github.com/watagashi-uni/" className="text-miku hover:underline">
                                 watagashi-uni
+                            </ExternalLink>的{" "}
+                            <ExternalLink href="https://github.com/watagashi-uni/sekai-mmw-preview-web" className="text-miku hover:underline">
+                                sekai-mmw-preview-web
                             </ExternalLink>
-                            。
+                            项目。
                         </div>
                     )}
                 </div>
