@@ -122,6 +122,13 @@ export default function ChartPreviewPlayer({
     const [controlsLocked, setControlsLocked] = useState(false);
     const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [viewport, setViewport] = useState({ width: 0, height: 0 });
+    const [isIOS, setIsIOS] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const ua = navigator.userAgent;
+        setIsIOS(/iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+    }, []);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -1078,6 +1085,12 @@ export default function ChartPreviewPlayer({
                     )}
 
                     {warningMessage && <div className={isCompactControls ? "text-[10px] text-amber-500" : "text-xs text-amber-600"}>{warningMessage}</div>}
+
+                    {!isFullscreen && isIOS && (
+                        <div className="text-[11px] text-slate-400 italic text-right">
+                            *iOS 设备推荐使用「网页全屏」以完全屏蔽 Safari 的快捷操作
+                        </div>
+                    )}
 
                     {!isFullscreen && (
                         <div className="text-xs text-slate-400">
