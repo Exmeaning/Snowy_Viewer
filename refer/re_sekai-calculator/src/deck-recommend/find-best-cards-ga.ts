@@ -1,5 +1,5 @@
 import { type CardDetail } from '../card-information/card-calculator'
-import { DeckCalculator, SkillReferenceChooseStrategy } from '../deck-information/deck-calculator'
+import { DeckCalculator, SkillReferenceChooseStrategy, type DeckDetail } from '../deck-information/deck-calculator'
 import { type RecommendDeck, type ScoreFunction } from './base-deck-recommend'
 import { type EventConfig } from '../event-point/event-service'
 import { type MusicMeta } from '../common/music-meta'
@@ -28,19 +28,22 @@ export interface GAConfig {
   noImproveIterToMutationRate?: number
   /** 超时时间（毫秒） */
   timeoutMs?: number
+  /** 推荐优化目标（用于加权随机选择）：'skill' 时按技能权重，其他按综合力权重 */
+  target?: string
 }
 
 const DEFAULT_GA_CONFIG: Required<GAConfig> = {
   seed: -1,
-  maxIter: 500,
-  maxIterNoImprove: 5,
-  popSize: 2000,
-  parentSize: 200,
-  eliteSize: 0,
+  maxIter: 1000,
+  maxIterNoImprove: 10,
+  popSize: 8000,
+  parentSize: 800,
+  eliteSize: 10,
   crossoverRate: 1.0,
   baseMutationRate: 0.1,
   noImproveIterToMutationRate: 0.02,
-  timeoutMs: 15000
+  timeoutMs: 15000,
+  target: 'score'
 }
 
 // ======================== 简易伪随机数生成器 ========================
@@ -90,6 +93,60 @@ function calcDeckHash (deck: CardDetail[]): number {
     hash = ((hash * BASE) + id) | 0
   }
   return hash >>> 0
+}
+
+/**
+ * 计算加权随机选择的前缀和数组（参考 C++ 库 calcRandomSelectWeights）
+ * 综合力/技能越高的卡牌被选中概率越大（权重为值的平方）
+ * @param cards 卡牌列表
+ * @param target 优化目标
+ * @param excludedCardIds 需要排除的卡牌ID集合
+ * @returns 归一化后的前缀和数组
+ */
+function calcWeightedPrefixSum (
+  cards: CardDetail[], target: string, excludedCardIds: Set<number>
+): number[] {
+  const weights: number[] = new Array(cards.length)
+  let sum = 0
+  for (let i = 0; i < cards.length; i++) {
+    if (excludedCardIds.has(cards[i].cardId)) {
+      weights[i] = 0
+      continue
+    }
+    let val: number
+    if (target === 'skill') {
+      val = cards[i].skill.getMax()
+    } else {
+      val = cards[i].power.getMax()
+    }
+    // 以平方为权重以扩大差距（参考 C++ 库）
+    weights[i] = val * val
+    sum += weights[i]
+  }
+  // 归一化并计算前缀和
+  if (sum > 0) {
+    weights[0] /= sum
+    for (let i = 1; i < weights.length; i++) {
+      weights[i] = weights[i] / sum + weights[i - 1]
+    }
+  }
+  return weights
+}
+
+/**
+ * 根据前缀和权重数组随机选择一个索引
+ */
+function weightedRandomSelect (rng: SimpleRng, prefixSum: number[]): number {
+  if (prefixSum.length === 0) return 0
+  const r = rng.next()
+  // 二分查找
+  let lo = 0; let hi = prefixSum.length - 1
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1
+    if (prefixSum[mid] < r) lo = mid + 1
+    else hi = mid
+  }
+  return lo
 }
 
 
@@ -161,6 +218,16 @@ export function findBestCardsGA (
   const fixedCardCharacterIds = new Set(fixedCards.map(c => c.characterId))
   const fixedCharacterSet = new Set(fixedCharacters)
 
+  // 计算加权随机选择的前缀和（参考 C++ 库 calcRandomSelectWeights）
+  const target = cfg.target
+  const allCardWeights = calcWeightedPrefixSum(cardDetails, target, fixedCardIds)
+  const charaCardWeights: number[][] = Array.from({ length: MAX_CID }, () => [])
+  for (let i = 0; i < MAX_CID; i++) {
+    if (charaCards[i].length > 0) {
+      charaCardWeights[i] = calcWeightedPrefixSum(charaCards[i], target, fixedCardIds)
+    }
+  }
+
   // deck hash 缓存
   const deckScoreCache = new Map<number, number>()
 
@@ -197,44 +264,103 @@ export function findBestCardsGA (
     }
 
     try {
-      // 找最佳C位（技能最高的放C位），仅在无固定角色/卡牌时执行
-      if (!effectiveBestSkillAsLeader || fixedCharacters.length > 0 || fixedSize > 0) {
-        // 不调整C位
+      if (fixedCharacters.length > 0 || fixedSize > 0) {
+        // 有固定角色/卡牌时不调整C位，直接评估
+        const deckDetail = DeckCalculator.getDeckDetailByCards(
+          individual.deck, allCards, honorBonus,
+          eventConfig.cardBonusCountLimit,
+          eventConfig.worldBloomDifferentAttributeBonuses,
+          skillReferenceChooseStrategy, keepAfterTrainingState, false
+        )
+        const score = scoreFunc(musicMeta, deckDetail)
+        individual.fitness = score
+        deckScoreCache.set(hash, score)
+        const recDeck = deckDetail as RecommendDeck
+        recDeck.score = score
+        updateResult(recDeck)
       } else {
-        let bestSkillIdx = 0
-        for (let i = 1; i < individual.deck.length; i++) {
-          if (individual.deck[bestSkillIdx].skill.isCertainlyLessThen(individual.deck[i].skill)) {
-            bestSkillIdx = i
+        // 策略A：按技能选C位（原始逻辑）
+        const dd1 = DeckCalculator.getDeckDetailByCards(
+          individual.deck, allCards, honorBonus,
+          eventConfig.cardBonusCountLimit,
+          eventConfig.worldBloomDifferentAttributeBonuses,
+          skillReferenceChooseStrategy, keepAfterTrainingState, true
+        )
+        const s1 = scoreFunc(musicMeta, dd1)
+
+        // 策略B：按 leaderBonus 最高的卡作为C位
+        let bestLeaderIdx = 0
+        let bestLeaderBonus = -1
+        for (let i = 0; i < individual.deck.length; i++) {
+          const card = individual.deck[i]
+          const lb = card.eventBonus !== undefined
+            ? card.eventBonus.getMaxBonus(true) - card.eventBonus.getMaxBonus(false)
+            : 0
+          if (lb > bestLeaderBonus) {
+            bestLeaderBonus = lb
+            bestLeaderIdx = i
           }
         }
-        if (bestSkillIdx !== 0) {
-          swap(individual.deck, 0, bestSkillIdx)
+
+        let s2 = -1
+        let dd2: DeckDetail | null = null
+        if (bestLeaderIdx !== 0 && bestLeaderBonus > 0) {
+          swap(individual.deck, 0, bestLeaderIdx)
+          dd2 = DeckCalculator.getDeckDetailByCards(
+            individual.deck, allCards, honorBonus,
+            eventConfig.cardBonusCountLimit,
+            eventConfig.worldBloomDifferentAttributeBonuses,
+            skillReferenceChooseStrategy, keepAfterTrainingState, false
+          )
+          s2 = scoreFunc(musicMeta, dd2)
+          swap(individual.deck, 0, bestLeaderIdx) // 恢复
         }
+
+        // 取更高分的策略
+        const bestScore = s2 > s1 ? s2 : s1
+        const bestDetail = (s2 > s1 && dd2 !== null) ? dd2 : dd1
+
+        individual.fitness = bestScore
+        deckScoreCache.set(hash, bestScore)
+        const recDeck = bestDetail as RecommendDeck
+        recDeck.score = bestScore
+        updateResult(recDeck)
       }
-
-      const deckDetail = DeckCalculator.getDeckDetailByCards(
-        individual.deck, allCards, honorBonus,
-        eventConfig.cardBonusCountLimit,
-        eventConfig.worldBloomDifferentAttributeBonuses,
-        skillReferenceChooseStrategy, keepAfterTrainingState, effectiveBestSkillAsLeader
-      )
-      const score = scoreFunc(musicMeta, deckDetail)
-      individual.fitness = score
-
-      deckScoreCache.set(hash, score)
-
-      // 更新全局最优
-      const recDeck = deckDetail as RecommendDeck
-      recDeck.score = score
-      updateResult(recDeck)
     } catch {
       individual.fitness = -1
       deckScoreCache.set(hash, -1)
     }
   }
 
+  // 按组合和属性分组角色（用于种群初始化的同色/同组偏向）
+  const unitCharaMap = new Map<string, number[]>() // unit → characterId[]
+  const attrCharaMap = new Map<string, number[]>() // attr → characterId[]
+  for (let j = 0; j < MAX_CID; j++) {
+    if (charaCards[j].length === 0) continue
+    if (fixedCardCharacterIds.has(j) || fixedCharacterSet.has(j)) continue
+    // 收集该角色所有可能的 unit 和 attr
+    const unitSet = new Set<string>()
+    const attrSet = new Set<string>()
+    for (const card of charaCards[j]) {
+      card.units.forEach(u => unitSet.add(u))
+      attrSet.add(card.attr)
+    }
+    for (const u of unitSet) {
+      if (!unitCharaMap.has(u)) unitCharaMap.set(u, [])
+      unitCharaMap.get(u)!.push(j)
+    }
+    for (const a of attrSet) {
+      if (!attrCharaMap.has(a)) attrCharaMap.set(a, [])
+      attrCharaMap.get(a)!.push(j)
+    }
+  }
+  // 收集能组出 >= member 个角色的组合/属性（用于偏向选择）
+  const viableUnitGroups = [...unitCharaMap.entries()].filter(([, v]) => v.length >= member - fixedSize - fixedCharacters.length)
+  const viableAttrGroups = [...attrCharaMap.entries()].filter(([, v]) => v.length >= member - fixedSize - fixedCharacters.length)
+  const hasViableGroups = viableUnitGroups.length > 0 || viableAttrGroups.length > 0
+
   // 生成随机个体（参考 C++ 库的种群生成逻辑）
-  const generateRandomIndividual = (): Individual | null => {
+  const generateRandomIndividual = (biased: boolean): Individual | null => {
     const deck: CardDetail[] = []
     const usedCharas = new Set<number>()
     const usedCardIds = new Set<number>()
@@ -252,38 +378,56 @@ export function findBestCardsGA (
       const freeSlots = member - fixedSize - fixedCharacters.length
       if (validCharas.length < freeSlots) return null
 
-      // 先添加固定角色的卡（随机选一张该角色的卡）
+      // 先添加固定角色的卡（加权随机选一张该角色的卡）
       for (const chara of fixedCharacters) {
         const cards = charaCards[chara]
         if (cards.length === 0) return null
-        const card = cards[rng.nextInt(cards.length)]
+        const idx = weightedRandomSelect(rng, charaCardWeights[chara])
+        const card = cards[idx]
         deck.push(card)
         usedCharas.add(chara)
         usedCardIds.add(card.cardId)
       }
 
-      // 随机打乱并取剩余位置
-      for (let i = validCharas.length - 1; i > 0; i--) {
-        const j = rng.nextInt(i + 1)
-        const tmp = validCharas[i]
-        validCharas[i] = validCharas[j]
-        validCharas[j] = tmp
+      let selectedCharas: number[]
+
+      // 偏向模式：从同组或同属性的角色中选择
+      if (biased && hasViableGroups) {
+        const allGroups = [...viableUnitGroups, ...viableAttrGroups]
+        const group = allGroups[rng.nextInt(allGroups.length)][1]
+        // 从该组中随机选 freeSlots 个不重复的角色
+        const shuffled = [...group]
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = rng.nextInt(i + 1)
+          const tmp = shuffled[i]
+          shuffled[i] = shuffled[j]
+          shuffled[j] = tmp
+        }
+        selectedCharas = shuffled.slice(0, freeSlots)
+      } else {
+        // 完全随机模式
+        for (let i = validCharas.length - 1; i > 0; i--) {
+          const j = rng.nextInt(i + 1)
+          const tmp = validCharas[i]
+          validCharas[i] = validCharas[j]
+          validCharas[j] = tmp
+        }
+        selectedCharas = validCharas.slice(0, freeSlots)
       }
-      const selectedCharas = validCharas.slice(0, freeSlots)
 
       for (const chara of selectedCharas) {
         const cards = charaCards[chara]
-        const idx = rng.nextInt(cards.length)
+        const idx = weightedRandomSelect(rng, charaCardWeights[chara])
         deck.push(cards[idx])
         usedCharas.add(chara)
         usedCardIds.add(cards[idx].cardId)
       }
     } else {
-      // 挑战Live：随机选 member-fixedSize 张不重复的卡
+      // 挑战Live：加权随机选 member-fixedSize 张不重复的卡
       const indices: number[] = []
       let attempts = 0
       while (indices.length < member - fixedSize && attempts < 100) {
-        const idx = rng.nextInt(cardDetails.length)
+        const idx = weightedRandomSelect(rng, allCardWeights)
         const card = cardDetails[idx]
         if (!usedCardIds.has(card.cardId) && !fixedCardIds.has(card.cardId)) {
           usedCardIds.add(card.cardId)
@@ -377,7 +521,7 @@ export function findBestCardsGA (
     return { deck, deckHash: 0, fitness: 0 }
   }
 
-  // 变异（参考 C++ 库：固定角色位只能在同角色内换卡，固定卡牌位不参与变异）
+  // 变异（参考 C++ 库：固定角色位只能在同角色内换卡，固定卡牌位不参与变异，使用加权随机）
   const mutate = (individual: Individual, mutationRate: number): void => {
     const nonFixedLen = individual.deck.length - fixedSize
     for (let pos = 0; pos < nonFixedLen; pos++) {
@@ -389,19 +533,16 @@ export function findBestCardsGA (
       for (let attempt = 0; attempt < 10; attempt++) {
         let newCard: CardDetail
         if (isFixedChara) {
-          // 固定角色位只能在同角色内换卡
-          const cards = charaCards[individual.deck[pos].characterId]
-          if (cards.length <= 1) break
-          newCard = cards[rng.nextInt(cards.length)]
-        } else if (!isChallengeLive && rng.next() < 0.5) {
-          // 同角色不同卡
+          // 固定角色位只能在同角色内换卡（加权随机）
           const chara = individual.deck[pos].characterId
           const cards = charaCards[chara]
-          if (cards.length <= 1) continue
-          newCard = cards[rng.nextInt(cards.length)]
+          if (cards.length <= 1) break
+          const idx = weightedRandomSelect(rng, charaCardWeights[chara])
+          newCard = cards[idx]
         } else {
-          // 随机角色
-          newCard = cardDetails[rng.nextInt(cardDetails.length)]
+          // 非固定角色位：从全部卡牌中加权随机选择（参考 C++ 库）
+          const idx = weightedRandomSelect(rng, allCardWeights)
+          newCard = cardDetails[idx]
         }
 
         // 检查冲突
@@ -423,18 +564,19 @@ export function findBestCardsGA (
 
   // 如果全部固定，直接评估一次
   if (member === fixedSize + fixedCharacters.length) {
-    const ind = generateRandomIndividual()
+    const ind = generateRandomIndividual(false)
     if (ind !== null) {
       evaluateIndividual(ind)
     }
     return bestDecks
   }
 
-  // 生成初始种群
+  // 生成初始种群（前 50% 使用同组/同属性偏向，后 50% 完全随机）
   let population: Individual[] = []
   for (let i = 0; i < cfg.popSize; i++) {
     if (isTimeout()) break
-    const ind = generateRandomIndividual()
+    const useBias = hasViableGroups && i < cfg.popSize * 0.5
+    const ind = generateRandomIndividual(useBias)
     if (ind === null) continue
     evaluateIndividual(ind)
     if (ind.fitness >= 0) {

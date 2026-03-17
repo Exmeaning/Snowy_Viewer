@@ -86,15 +86,6 @@ export class BaseDeckRecommend {
 
     // 已经是完整卡组，计算当前卡组的值
     if (deckCards.length === member) {
-      // 存在固定角色则不允许把技能最强的换到队长
-      const effectiveBestSkillAsLeader = fixedCharacters.length > 0 || fixedCards.length > 0 ? false : bestSkillAsLeader
-      const deckDetail = DeckCalculator.getDeckDetailByCards(
-        deckCards, allCards, honorBonus, eventConfig.cardBonusCountLimit,
-        eventConfig.worldBloomDifferentAttributeBonuses,
-        skillReferenceChooseStrategy, keepAfterTrainingState, effectiveBestSkillAsLeader
-      )
-      const score = scoreFunc(deckDetail)
-
       // 检查 hash 缓存
       if (dfsState !== undefined) {
         const hash = BaseDeckRecommend.calcDeckHash(deckCards)
@@ -104,30 +95,56 @@ export class BaseDeckRecommend {
         dfsState.deckHashCache.add(hash)
       }
 
-      // 如果有固定角色/卡牌，不检查技能效果直接返回
+      // 如果有固定角色/卡牌，不调整C位，直接评估
       if (fixedCharacters.length > 0 || fixedCards.length > 0) {
+        const deckDetail = DeckCalculator.getDeckDetailByCards(
+          deckCards, allCards, honorBonus, eventConfig.cardBonusCountLimit,
+          eventConfig.worldBloomDifferentAttributeBonuses,
+          skillReferenceChooseStrategy, keepAfterTrainingState, false
+        )
+        const score = scoreFunc(deckDetail)
         return toRecommendDeck(deckDetail, score)
       }
-      // 寻找加分效果最高的卡牌
-      const cards = deckDetail.cards
-      let bestScoreUp = cards[0].skill.scoreUp
-      let bestScoreIndex = 0
-      cards.forEach((it, i) => {
-        if (it.skill.scoreUp > bestScoreUp) {
-          bestScoreUp = it.skill.scoreUp
-          bestScoreIndex = i
+
+      // 无固定角色时：双策略选C位，取更高分
+      // 策略A：按技能选C位（原始逻辑）
+      const dd1 = DeckCalculator.getDeckDetailByCards(
+        deckCards, allCards, honorBonus, eventConfig.cardBonusCountLimit,
+        eventConfig.worldBloomDifferentAttributeBonuses,
+        skillReferenceChooseStrategy, keepAfterTrainingState, true
+      )
+      const s1 = scoreFunc(dd1)
+
+      // 策略B：按 leaderBonus 最高的卡作为C位
+      let bestLeaderIdx = 0
+      let bestLeaderBonus = -1
+      for (let i = 0; i < deckCards.length; i++) {
+        const card = deckCards[i]
+        const lb = card.eventBonus !== undefined
+          ? card.eventBonus.getMaxBonus(true) - card.eventBonus.getMaxBonus(false)
+          : 0
+        if (lb > bestLeaderBonus) {
+          bestLeaderBonus = lb
+          bestLeaderIdx = i
         }
-      })
-      // 如果现在C位已经对了
-      if (bestScoreIndex === 0) {
-        return toRecommendDeck(deckDetail, score)
       }
-      // 不然就重新算调整过C位后的分数
-      swap(deckCards, 0, bestScoreIndex)
-      return BaseDeckRecommend.findBestCardsDFS(
-        cardDetails, allCards, scoreFunc, limit, isChallengeLive, member, leaderCharacter, honorBonus,
-        eventConfig, skillReferenceChooseStrategy, keepAfterTrainingState, bestSkillAsLeader,
-        deckCards, dfsState, fixedCharacters, fixedCards)
+
+      let s2 = -1
+      let dd2: DeckDetail | null = null
+      if (bestLeaderIdx !== 0 && bestLeaderBonus > 0) {
+        swap(deckCards, 0, bestLeaderIdx)
+        dd2 = DeckCalculator.getDeckDetailByCards(
+          deckCards, allCards, honorBonus, eventConfig.cardBonusCountLimit,
+          eventConfig.worldBloomDifferentAttributeBonuses,
+          skillReferenceChooseStrategy, keepAfterTrainingState, false
+        )
+        s2 = scoreFunc(dd2)
+        swap(deckCards, 0, bestLeaderIdx) // 恢复
+      }
+
+      const bestScore = s2 > s1 ? s2 : s1
+      const bestDetail = (s2 > s1 && dd2 !== null) ? dd2 : dd1
+      return toRecommendDeck(bestDetail, bestScore)
     }
     // 非完整卡组，继续遍历所有情况
     let ans: RecommendDeck[] = []
@@ -270,10 +287,13 @@ export class BaseDeckRecommend {
     let cards =
         await this.cardCalculator.batchGetCardDetail(userCards, cardConfig, eventConfig, areaItemLevels)
 
-    // 过滤箱活的卡
-    let filterUnit = eventUnit
+    // 过滤箱活（World Bloom）的卡，不上其它组合的
+    // 只在 World Bloom 活动中过滤，马拉松/嘉年华活动不过滤（非活动团体的高综合力卡可能产生更高PT）
+    let filterUnit: string | undefined
     if (worldBloomSupportUnit !== undefined) {
       filterUnit = worldBloomSupportUnit
+    } else if (eventType === EventType.BLOOM) {
+      filterUnit = eventUnit
     }
     // 构建固定角色ID集合（用于箱活过滤豁免）
     const fixedCharacterSet = new Set(fixedCharacters)
@@ -349,19 +369,23 @@ export class BaseDeckRecommend {
     // 为 DFS/GA 传递的 leaderCharacter 兼容值（取第一个固定角色，或 0）
     const effectiveLeaderCharacter = fixedCharacters.length > 0 ? fixedCharacters[0] : 0
 
-    // 卡牌按强度降序排序的辅助函数（参考 C++ 库 base-deck-recommend.cpp:260-271）
-    // DFS 剪枝依赖卡牌按强度排序，确保第一张非固定卡是最强的
+    // 卡牌按强度降序排序（参考 C++ 库 base-deck-recommend.cpp:260-271）
+    // 使用 max/min 全序比较，而非 isCertainlyLessThan 偏序，确保排序稳定
     const sortCardsByStrength = (cardList: CardDetail[]): CardDetail[] => {
       return [...cardList].sort((a, b) => {
         if (target === RecommendTarget.Skill) {
-          // 技能优先：a 肯定弱于 b → b 排前面
-          if (a.skill.isCertainlyLessThen(b.skill)) return 1
-          if (b.skill.isCertainlyLessThen(a.skill)) return -1
+          // 技能优先：(max desc, min desc, cardId desc)
+          const aMax = a.skill.getMax(); const bMax = b.skill.getMax()
+          if (aMax !== bMax) return bMax - aMax
+          const aMin = a.skill.getMin(); const bMin = b.skill.getMin()
+          if (aMin !== bMin) return bMin - aMin
           return b.cardId - a.cardId
         } else {
-          // 综合力优先
-          if (CardCalculator.isCertainlyLessThan(a, b)) return 1
-          if (CardCalculator.isCertainlyLessThan(b, a)) return -1
+          // 综合力优先：(max desc, min desc, cardId desc)
+          const aMax = a.power.getMax(); const bMax = b.power.getMax()
+          if (aMax !== bMax) return bMax - aMax
+          const aMin = a.power.getMin(); const bMin = b.power.getMin()
+          if (aMin !== bMin) return bMin - aMin
           return b.cardId - a.cardId
         }
       })
@@ -374,11 +398,11 @@ export class BaseDeckRecommend {
     if (algorithm === RecommendAlgorithm.GA) {
       debugLog(`Using GA algorithm with ${cards.length} cards`)
 
-      // GA 不需要 filterCardPriority，直接用全部卡牌
+      // GA 用全部卡牌搜索（参考 C++ 库：GA 不使用 filterCardPriority）
       const gaResult = findBestCardsGA(
         cards, cards, effectiveScoreFunc, musicMeta, limit,
         liveType === LiveType.CHALLENGE, member, honorBonus, eventConfig,
-        { ...gaConfig, timeoutMs: Math.max(1000, timeoutMs - (Date.now() - startTime)) },
+        { ...gaConfig, timeoutMs: Math.max(1000, timeoutMs - (Date.now() - startTime)), target },
         skillReferenceChooseStrategy, keepAfterTrainingState, bestSkillAsLeader,
         effectiveLeaderCharacter, fixedCharacters, resolvedFixedCards
       )

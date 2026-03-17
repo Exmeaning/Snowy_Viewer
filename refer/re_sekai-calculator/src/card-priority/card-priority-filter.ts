@@ -130,8 +130,7 @@ function canMakeDeck (liveType: LiveType, eventType: EventType, cardDetails: Car
       for (const v of unitMap.values()) {
         if (v.size >= 5) return true
       }
-      if (!checkAttrForBloom(attrMap)) return false
-      return false
+      return checkAttrForBloom(attrMap)
     default:
       // 未知活动类型，只能先认为无论如何都组不出合理队伍，要求全卡计算
       return false

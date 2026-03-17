@@ -57,6 +57,20 @@ export class CardDetailMap<T> {
    * 如果几个维度都比其他小，这张卡可以在自动组卡时舍去
    * @param another 另一个范围
    */
+  /**
+   * 获取所有情况下的最大可比较值
+   */
+  public getMax (): number {
+    return this.max
+  }
+
+  /**
+   * 获取所有情况下的最小可比较值
+   */
+  public getMin (): number {
+    return this.min
+  }
+
   public isCertainlyLessThen (another: CardDetailMap<T>): boolean {
     // 如果自己最大值比别人最小值还要小，说明自己肯定小
     return this.max < another.min
