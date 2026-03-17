@@ -23,8 +23,8 @@ type LoadedTexture = {
   texture: WebGLTexture
 }
 
-const FLOATS_PER_VERTEX = 8
-const FLOATS_PER_QUAD = 21
+const FLOATS_PER_VERTEX = 9
+const FLOATS_PER_QUAD = 25
 
 function createShader(gl: WebGL2RenderingContext, type: number, source: string) {
   const shader = gl.createShader(type)
@@ -50,12 +50,14 @@ function createProgram(gl: WebGL2RenderingContext) {
     layout (location = 0) in vec2 aPos;
     layout (location = 1) in vec2 aUv;
     layout (location = 2) in vec4 aColor;
+    layout (location = 3) in float aReciprocalW;
     out vec2 vUv;
     out vec4 vColor;
     void main() {
       vUv = aUv;
       vColor = aColor;
-      gl_Position = vec4(aPos, 0.0, 1.0);
+      float w = aReciprocalW != 0.0 ? (1.0 / aReciprocalW) : 1.0;
+      gl_Position = vec4(aPos * w, 0.0, w);
     }`,
   )
   const fragmentShader = createShader(
@@ -100,12 +102,14 @@ function createEffectProgram(gl: WebGL2RenderingContext) {
     layout (location = 0) in vec2 aPos;
     layout (location = 1) in vec2 aUv;
     layout (location = 2) in vec4 aColor;
+    layout (location = 3) in float aReciprocalW;
     out vec2 vUv;
     out vec4 vColor;
     void main() {
       vUv = aUv;
       vColor = aColor;
-      gl_Position = vec4(aPos, 0.0, 1.0);
+      float w = aReciprocalW != 0.0 ? (1.0 / aReciprocalW) : 1.0;
+      gl_Position = vec4(aPos * w, 0.0, w);
     }`,
   )
   const fragmentShader = createShader(
@@ -186,6 +190,8 @@ export class GlPreviewRenderer {
     gl.vertexAttribPointer(1, 2, gl.FLOAT, false, FLOATS_PER_VERTEX * 4, 2 * 4)
     gl.enableVertexAttribArray(2)
     gl.vertexAttribPointer(2, 4, gl.FLOAT, false, FLOATS_PER_VERTEX * 4, 4 * 4)
+    gl.enableVertexAttribArray(3)
+    gl.vertexAttribPointer(3, 1, gl.FLOAT, false, FLOATS_PER_VERTEX * 4, 8 * 4)
     gl.bindVertexArray(null)
 
     gl.useProgram(this.program)
@@ -240,7 +246,8 @@ export class GlPreviewRenderer {
   }
 
   private drawStaticScene(config: PreviewRuntimeConfig) {
-    this.drawQuadBatch('background', [
+    this.drawQuadBatch(
+      'background',
       this.buildTexturedQuad(
         'background',
         [
@@ -257,9 +264,10 @@ export class GlPreviewRenderer {
         },
         [config.backgroundBrightness, config.backgroundBrightness, config.backgroundBrightness, 1],
       ),
-    ])
+    )
 
-    this.drawQuadBatch('stage', [
+    this.drawQuadBatch(
+      'stage',
       this.buildTexturedQuad(
         'stage',
         [
@@ -271,7 +279,7 @@ export class GlPreviewRenderer {
         mmwAtlases.stage[0],
         [1, 1, 1, config.stageOpacity],
       ),
-    ])
+    )
   }
 
   private drawFrame(frame: Float32Array, quadCount: number, config: PreviewRuntimeConfig) {
@@ -281,7 +289,7 @@ export class GlPreviewRenderer {
 
     for (let index = 0; index < quadCount; index += 1) {
       const offset = index * FLOATS_PER_QUAD
-      const textureId = Math.round(frame[offset + 20])
+      const textureId = Math.round(frame[offset + 24])
       const textureKey =
         textureId === 0
           ? 'notes'
@@ -315,43 +323,55 @@ export class GlPreviewRenderer {
     config: PreviewRuntimeConfig,
   ) {
     const texture = this.requireTexture(textureKey)
-    const rawTextureId = Math.round(frame[offset + 20])
-    const clipPositions =
+    const rawTextureId = Math.round(frame[offset + 24])
+    const positions =
+      [
+        [frame[offset + 0], frame[offset + 1], frame[offset + 2]],
+        [frame[offset + 3], frame[offset + 4], frame[offset + 5]],
+        [frame[offset + 6], frame[offset + 7], frame[offset + 8]],
+        [frame[offset + 9], frame[offset + 10], frame[offset + 11]],
+      ] as const
+    const clipPositions: readonly [
+      readonly [number, number, number],
+      readonly [number, number, number],
+      readonly [number, number, number],
+      readonly [number, number, number],
+    ] =
       rawTextureId >= 3
-        ? ([
-            [frame[offset + 0], frame[offset + 1]],
-            [frame[offset + 2], frame[offset + 3]],
-            [frame[offset + 4], frame[offset + 5]],
-            [frame[offset + 6], frame[offset + 7]],
-          ] as const)
-        : ([
-            this.worldToClip(frame[offset + 0], frame[offset + 1]),
-            this.worldToClip(frame[offset + 2], frame[offset + 3]),
-            this.worldToClip(frame[offset + 4], frame[offset + 5]),
-            this.worldToClip(frame[offset + 6], frame[offset + 7]),
-          ] as const)
+        ? [
+            [positions[0][0], positions[0][1], positions[0][2]],
+            [positions[1][0], positions[1][1], positions[1][2]],
+            [positions[2][0], positions[2][1], positions[2][2]],
+            [positions[3][0], positions[3][1], positions[3][2]],
+          ]
+        : [
+            [...this.worldToClip(positions[0][0], positions[0][1]), 1] as const,
+            [...this.worldToClip(positions[1][0], positions[1][1]), 1] as const,
+            [...this.worldToClip(positions[2][0], positions[2][1]), 1] as const,
+            [...this.worldToClip(positions[3][0], positions[3][1]), 1] as const,
+          ]
 
     const uvs = [
-      [frame[offset + 8] / texture.image.width, frame[offset + 9] / texture.image.height],
-      [frame[offset + 10] / texture.image.width, frame[offset + 11] / texture.image.height],
       [frame[offset + 12] / texture.image.width, frame[offset + 13] / texture.image.height],
       [frame[offset + 14] / texture.image.width, frame[offset + 15] / texture.image.height],
+      [frame[offset + 16] / texture.image.width, frame[offset + 17] / texture.image.height],
+      [frame[offset + 18] / texture.image.width, frame[offset + 19] / texture.image.height],
     ] as const
 
     const alphaMultiplier = textureKey === 'effect' ? config.effectOpacity : 1
     const color = [
-      frame[offset + 16],
-      frame[offset + 17],
-      frame[offset + 18],
-      frame[offset + 19] * alphaMultiplier,
+      frame[offset + 20],
+      frame[offset + 21],
+      frame[offset + 22],
+      frame[offset + 23] * alphaMultiplier,
     ] as const
 
-    this.pushTriangle(target, clipPositions[0], uvs[0], color)
-    this.pushTriangle(target, clipPositions[1], uvs[1], color)
-    this.pushTriangle(target, clipPositions[2], uvs[2], color)
-    this.pushTriangle(target, clipPositions[0], uvs[0], color)
-    this.pushTriangle(target, clipPositions[2], uvs[2], color)
-    this.pushTriangle(target, clipPositions[3], uvs[3], color)
+    this.pushTriangle(target, [clipPositions[0][0], clipPositions[0][1]], uvs[0], color, clipPositions[0][2])
+    this.pushTriangle(target, [clipPositions[1][0], clipPositions[1][1]], uvs[1], color, clipPositions[1][2])
+    this.pushTriangle(target, [clipPositions[2][0], clipPositions[2][1]], uvs[2], color, clipPositions[2][2])
+    this.pushTriangle(target, [clipPositions[0][0], clipPositions[0][1]], uvs[0], color, clipPositions[0][2])
+    this.pushTriangle(target, [clipPositions[2][0], clipPositions[2][1]], uvs[2], color, clipPositions[2][2])
+    this.pushTriangle(target, [clipPositions[3][0], clipPositions[3][1]], uvs[3], color, clipPositions[3][2])
   }
 
   private buildTexturedQuad(
@@ -370,19 +390,18 @@ export class GlPreviewRenderer {
     ] as const
 
     const vertices: number[] = []
-    this.pushTriangle(vertices, clip[0], uvs[0], color)
-    this.pushTriangle(vertices, clip[1], uvs[1], color)
-    this.pushTriangle(vertices, clip[2], uvs[2], color)
-    this.pushTriangle(vertices, clip[0], uvs[0], color)
-    this.pushTriangle(vertices, clip[2], uvs[2], color)
-    this.pushTriangle(vertices, clip[3], uvs[3], color)
+    this.pushTriangle(vertices, clip[0], uvs[0], color, 1)
+    this.pushTriangle(vertices, clip[1], uvs[1], color, 1)
+    this.pushTriangle(vertices, clip[2], uvs[2], color, 1)
+    this.pushTriangle(vertices, clip[0], uvs[0], color, 1)
+    this.pushTriangle(vertices, clip[2], uvs[2], color, 1)
+    this.pushTriangle(vertices, clip[3], uvs[3], color, 1)
     return vertices
   }
 
-  private drawQuadBatch(textureKey: TextureKey, vertices: number[] | number[][], blend: 'normal' | 'additive' = 'normal') {
+  private drawQuadBatch(textureKey: TextureKey, vertices: number[], blend: 'normal' | 'additive' = 'normal') {
     const gl = this.gl
-    const flatVertices = Array.isArray(vertices[0]) ? (vertices as number[][]).flat() : (vertices as number[])
-    if (flatVertices.length === 0) {
+    if (vertices.length === 0) {
       return
     }
 
@@ -390,7 +409,7 @@ export class GlPreviewRenderer {
     gl.useProgram(program)
     gl.bindVertexArray(this.vao)
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(flatVertices), gl.DYNAMIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW)
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, this.requireTexture(textureKey).texture)
     if (textureKey === 'effect') {
@@ -404,7 +423,7 @@ export class GlPreviewRenderer {
     } else {
       gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
     }
-    gl.drawArrays(gl.TRIANGLES, 0, flatVertices.length / FLOATS_PER_VERTEX)
+    gl.drawArrays(gl.TRIANGLES, 0, vertices.length / FLOATS_PER_VERTEX)
     gl.bindVertexArray(null)
   }
 
@@ -413,8 +432,9 @@ export class GlPreviewRenderer {
     position: readonly [number, number],
     uv: readonly [number, number],
     color: readonly [number, number, number, number],
+    reciprocalW: number,
   ) {
-    target.push(position[0], position[1], uv[0], uv[1], color[0], color[1], color[2], color[3])
+    target.push(position[0], position[1], uv[0], uv[1], color[0], color[1], color[2], color[3], reciprocalW)
   }
 
   private worldToClip(worldX: number, worldY: number): [number, number] {

@@ -27,9 +27,7 @@ export class MmwEffectSystem {
 
   trigger(_effectName: string, _trigger: TriggerOptions) {}
 
-  render(_nowSec: number) {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-  }
+  render(_nowSec: number) {}
 
   reset() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)

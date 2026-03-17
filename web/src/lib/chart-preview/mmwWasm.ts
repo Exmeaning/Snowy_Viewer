@@ -1,5 +1,7 @@
 import type { HitEvent, HitEventKind, LoadedQuadFrame, PreviewRuntimeConfig } from './types'
 
+const FLOATS_PER_QUAD = 25
+
 type EmscriptenModule = {
   HEAPF32: Float32Array
   HEAPU8: Uint8Array
@@ -22,7 +24,7 @@ async function loadModule() {
       // We use Function() to create a dynamic import() that bypasses webpack/Next.js bundling,
       // so the browser loads the file directly from /wasm/ at runtime.
       // Cache-bust hash — update when wasm/js files are replaced
-      const WASM_VERSION = '821aafac'
+      const WASM_VERSION = '25f_recipw'
       const jsUrl = `/wasm/mmw-preview.js?v=${WASM_VERSION}`
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mod = await (Function('url', 'return import(url)')(jsUrl) as Promise<any>)
@@ -104,7 +106,7 @@ export class MmwWasmPreview {
 
     return {
       count,
-      floats: module.HEAPF32.subarray(pointer / 4, pointer / 4 + count * 21),
+      floats: module.HEAPF32.subarray(pointer / 4, pointer / 4 + count * FLOATS_PER_QUAD),
     }
   }
 
