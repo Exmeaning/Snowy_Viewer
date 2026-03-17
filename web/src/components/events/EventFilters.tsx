@@ -2,6 +2,7 @@
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { EventType, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS } from "@/types/events";
+import { ICharaUnitInfo } from "@/types/types";
 
 interface EventFiltersProps {
     selectedTypes: EventType[];
@@ -12,6 +13,7 @@ interface EventFiltersProps {
     onCharacterChange: (chars: number[]) => void;
     selectedUnitIds: string[];
     onUnitIdsChange: (units: string[]) => void;
+    charaUnits?: ICharaUnitInfo[];
 
     searchQuery: string;
     onSearchChange: (query: string) => void;
@@ -37,6 +39,7 @@ export default function EventFilters({
     onCharacterChange,
     selectedUnitIds,
     onUnitIdsChange,
+    charaUnits,
     searchQuery,
     onSearchChange,
     sortBy,
@@ -98,6 +101,7 @@ export default function EventFilters({
                 onUnitIdsChange={onUnitIdsChange}
                 unitLabel="加成角色 (团体)"
                 characterLabel="加成角色"
+                charaUnits={charaUnits}
             />
         </BaseFilters>
     );
