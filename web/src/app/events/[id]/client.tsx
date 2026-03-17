@@ -16,7 +16,7 @@ import {
 } from "@/types/events";
 import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
 import { CHARACTER_NAMES, getRarityNumber, RARITY_DISPLAY, isTrainableCard } from "@/types/types";
-import type { ICardInfo } from "@/types/types";
+import type { ICardInfo, ICharaUnitInfo, IGameChara } from "@/types/types";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData, fetchWithCompression } from "@/lib/fetch";
@@ -95,6 +95,8 @@ export default function EventDetailPage() {
     const [eventMusics, setEventMusics] = useState<IEventMusic[]>([]);
     const [allCards, setAllCards] = useState<ICard[]>([]);
     const [allMusics, setAllMusics] = useState<IMusic[]>([]);
+    const [gameCharacterUnits, setGameCharacterUnits] = useState<ICharaUnitInfo[]>([]);
+    const [gameCharacters, setGameCharacters] = useState<IGameChara[]>([]);
     const [virtualLive, setVirtualLive] = useState<IVirtualLiveInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -119,13 +121,15 @@ export default function EventDetailPage() {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [eventsData, bonusesData, eventCardsData, eventMusicsData, cardsData, musicsData] = await Promise.all([
+                const [eventsData, bonusesData, eventCardsData, eventMusicsData, cardsData, musicsData, charUnitsData, gameCharsData] = await Promise.all([
                     fetchMasterData<IEventInfo[]>("events.json"),
                     fetchMasterData<IEventDeckBonus[]>("eventDeckBonuses.json"),
                     fetchMasterData<IEventCard[]>("eventCards.json"),
                     fetchMasterData<IEventMusic[]>("eventMusics.json"),
                     fetchMasterData<ICard[]>("cards.json"),
                     fetchMasterData<IMusic[]>("musics.json"),
+                    fetchMasterData<ICharaUnitInfo[]>("gameCharacterUnits.json"),
+                    fetchMasterData<IGameChara[]>("gameCharacters.json"),
                 ]);
 
                 const foundEvent = eventsData.find(e => e.id === eventId);
@@ -140,6 +144,8 @@ export default function EventDetailPage() {
                 setEventMusics(eventMusicsData.filter(m => m.eventId === eventId));
                 setAllCards(cardsData);
                 setAllMusics(musicsData);
+                setGameCharacterUnits(charUnitsData);
+                setGameCharacters(gameCharsData);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching event:", err);
@@ -178,25 +184,46 @@ export default function EventDetailPage() {
         return attrBonus?.cardAttr;
     }, [deckBonuses]);
 
-    // Get bonus characters
-    const bonusCharacterIds = useMemo(() => {
-        const getBaseId = (id: number) => {
-            if (id <= 26) return id;
-            if (id >= 27 && id <= 31) return 21; // Miku
-            if (id >= 32 && id <= 36) return 22; // Rin
-            if (id >= 37 && id <= 41) return 23; // Len
-            if (id >= 42 && id <= 46) return 24; // Luka
-            if (id >= 47 && id <= 51) return 25; // MEIKO
-            if (id >= 52 && id <= 56) return 26; // KAITO
-            return id;
-        };
+    // Unit code → display name mapping
+    const UNIT_NAME_MAP: Record<string, string> = {
+        light_sound: "Leo/need",
+        idol: "MORE MORE JUMP!",
+        street: "Vivid BAD SQUAD",
+        theme_park: "Wonderlands×Showtime",
+        school_refusal: "25時、ナイトコードで。",
+    };
 
+    // Get bonus characters with unit info for piapro characters
+    const bonusCharacters = useMemo(() => {
+        const seen = new Set<number>();
         return deckBonuses
             .filter(b => b.gameCharacterUnitId)
-            .map(b => getBaseId(b.gameCharacterUnitId!))
-            .filter((id, index, arr) => arr.indexOf(id) === index) // unique
-            .sort((a, b) => a - b);
-    }, [deckBonuses]);
+            .map(b => {
+                const unitId = b.gameCharacterUnitId!;
+                if (seen.has(unitId)) return null;
+                seen.add(unitId);
+
+                const charUnit = gameCharacterUnits.find(u => u.id === unitId);
+                if (!charUnit) return null;
+
+                const charId = charUnit.gameCharacterId;
+                const gameChar = gameCharacters.find(c => c.id === charId);
+                const baseName = CHARACTER_NAMES[charId] || `Character ${charId}`;
+
+                // If piapro character and belongs to a specific group (not piapro itself)
+                let displayName = baseName;
+                if (gameChar?.unit === "piapro" && charUnit.unit !== "piapro") {
+                    const groupName = UNIT_NAME_MAP[charUnit.unit];
+                    if (groupName) {
+                        displayName = `${baseName}（${groupName}）`;
+                    }
+                }
+
+                return { charId, unitId, displayName };
+            })
+            .filter((item): item is { charId: number; unitId: number; displayName: string } => item !== null)
+            .sort((a, b) => a.charId - b.charId);
+    }, [deckBonuses, gameCharacterUnits, gameCharacters]);
 
     // Get event cards with full card info
     const eventCardsWithInfo = useMemo(() => {
@@ -514,20 +541,20 @@ export default function EventDetailPage() {
                                         </div>
                                     </div>
                                 )}
-                                {bonusCharacterIds.length > 0 && (
+                                {bonusCharacters.length > 0 && (
                                     <div>
                                         <span className="text-sm text-slate-500 font-medium block mb-2">加成角色</span>
                                         <div className="flex flex-wrap gap-2">
-                                            {bonusCharacterIds.map(charId => (
+                                            {bonusCharacters.map(({ charId, unitId, displayName }) => (
                                                 <div
-                                                    key={charId}
+                                                    key={unitId}
                                                     className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-full"
-                                                    title={CHARACTER_NAMES[charId]}
+                                                    title={displayName}
                                                 >
                                                     <div className="w-6 h-6 rounded-full overflow-hidden bg-white ring-1 ring-slate-200">
                                                         <Image
                                                             src={getCharacterIconUrl(charId)}
-                                                            alt={CHARACTER_NAMES[charId] || `Character ${charId}`}
+                                                            alt={displayName}
                                                             width={24}
                                                             height={24}
                                                             className="w-full h-full object-cover"
@@ -535,7 +562,7 @@ export default function EventDetailPage() {
                                                         />
                                                     </div>
                                                     <span className="text-xs font-medium text-slate-600">
-                                                        {CHARACTER_NAMES[charId]}
+                                                        {displayName}
                                                     </span>
                                                 </div>
                                             ))}
