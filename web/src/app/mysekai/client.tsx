@@ -477,6 +477,19 @@ function MysekaiContent() {
         }
     };
 
+    // Handle ALL button click
+    const handleAllClick = () => {
+        if (allSelected) {
+            // If all are selected, deselect all displayed characters
+            const newChars = selectedCharacters.filter(charId => !displayedCharacters.includes(charId));
+            setSelectedCharacters(newChars);
+        } else {
+            // If not all are selected, select all displayed characters
+            const newChars = [...new Set([...selectedCharacters, ...displayedCharacters])];
+            setSelectedCharacters(newChars);
+        }
+    };
+
     // Reset all filters
     const handleReset = () => {
         setSearchQuery("");
@@ -494,6 +507,15 @@ function MysekaiContent() {
     const currentUnits = selectedUnitIds.length > 0
         ? UNIT_DATA.filter(u => selectedUnitIds.includes(u.id))
         : [];
+
+    // Get current displayed characters
+    const displayedCharacters = currentUnits.length > 0
+        ? currentUnits.flatMap(u => u.charIds)
+        : [...new Set(selectedCharacters)];
+
+    // Check if all displayed characters are selected
+    const allSelected = displayedCharacters.length > 0 && 
+        displayedCharacters.every(charId => selectedCharacters.includes(charId));
 
     const quickFilterContent = (
         <BaseFilters
@@ -545,10 +567,7 @@ function MysekaiContent() {
             {(currentUnits.length > 0 || selectedCharacters.length > 0) && (
                 <FilterSection label="角色">
                     <div className="flex flex-wrap gap-2">
-                        {(currentUnits.length > 0
-                            ? currentUnits.flatMap(u => u.charIds)
-                            : [...new Set(selectedCharacters)]
-                        ).map(charId => (
+                        {displayedCharacters.map(charId => (
                             <button
                                 key={charId}
                                 onClick={() => toggleCharacter(charId)}
@@ -570,6 +589,20 @@ function MysekaiContent() {
                                 </div>
                             </button>
                         ))}
+                        
+                        {/* ALL Button - placed at the end */}
+                        <button
+                            key="all"
+                            onClick={handleAllClick}
+                            className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold transition-all ${allSelected
+                                ? "bg-miku text-white shadow-lg ring-2 ring-miku"
+                                : "bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200"
+                                }`}
+                            title="全部"
+                            style={{ width: '40px', height: '40px' }}
+                        >
+                            ALL
+                        </button>
                     </div>
                 </FilterSection>
             )}
