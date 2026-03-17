@@ -105,6 +105,16 @@ export default function CharacterDetailClient() {
         }
     }, [id]);
 
+    // Compute display name before any conditional returns (React hooks rule)
+    const characterDisplayName = character
+        ? (CHARACTER_NAMES[id] || `${character.firstName} ${character.givenName}`)
+        : null;
+
+    // Set breadcrumb detail name — must be called before conditional returns
+    useEffect(() => {
+        if (characterDisplayName) setDetailName(characterDisplayName);
+    }, [characterDisplayName, setDetailName]);
+
     if (isLoading) {
         return (
             <div className="flex h-[50vh] w-full items-center justify-center">
@@ -129,12 +139,6 @@ export default function CharacterDetailClient() {
 
     // Determine unit icon
     const unitIconName = UNIT_ICONS[character.unit] || "vs.webp";
-    const characterDisplayName = CHARACTER_NAMES[id] || `${character.firstName} ${character.givenName}`;
-
-    // Set breadcrumb detail name
-    useEffect(() => {
-        if (characterDisplayName) setDetailName(characterDisplayName);
-    }, [characterDisplayName, setDetailName]);
 
     // Prepare images for display/viewer
     const charaTrimImg = getCharacterTrimUrl(id, assetSource);
