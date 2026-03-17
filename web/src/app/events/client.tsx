@@ -5,23 +5,12 @@ import MainLayout from "@/components/MainLayout";
 import EventGrid from "@/components/events/EventGrid";
 import EventFilters from "@/components/events/EventFilters";
 import { IEventInfo, IEventDeckBonus, EventType } from "@/types/events";
+import { ICharaUnitInfo } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
-
-/** Convert gameCharacterUnitId to base character ID (1-26) */
-function getBaseCharacterId(id: number): number {
-    if (id <= 26) return id;
-    if (id >= 27 && id <= 31) return 21; // Miku
-    if (id >= 32 && id <= 36) return 22; // Rin
-    if (id >= 37 && id <= 41) return 23; // Len
-    if (id >= 42 && id <= 46) return 24; // Luka
-    if (id >= 47 && id <= 51) return 25; // MEIKO
-    if (id >= 52 && id <= 56) return 26; // KAITO
-    return id;
-}
 
 function EventsContent() {
     const router = useRouter();
@@ -30,6 +19,7 @@ function EventsContent() {
 
     const [events, setEvents] = useState<IEventInfo[]>([]);
     const [deckBonuses, setDeckBonuses] = useState<IEventDeckBonus[]>([]);
+    const [charaUnits, setCharaUnits] = useState<ICharaUnitInfo[]>([]);
     const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -129,13 +119,15 @@ function EventsContent() {
         async function fetchEvents() {
             try {
                 setIsLoading(true);
-                const [data, bonusesData, translationsData] = await Promise.all([
+                const [data, bonusesData, charaUnitsData, translationsData] = await Promise.all([
                     fetchMasterData<IEventInfo[]>("events.json"),
                     fetchMasterData<IEventDeckBonus[]>("eventDeckBonuses.json"),
+                    fetchMasterData<ICharaUnitInfo[]>("gameCharacterUnits.json"),
                     loadTranslations(),
                 ]);
                 setEvents(data);
                 setDeckBonuses(bonusesData);
+                setCharaUnits(charaUnitsData);
                 setTranslations(translationsData);
                 setError(null);
             } catch (err) {
@@ -148,20 +140,33 @@ function EventsContent() {
         fetchEvents();
     }, []);
 
-    // Build a map: eventId -> Set of bonus character IDs (base IDs 1-26)
+    // Build a map: eventId -> Set of gameCharacterUnitIds (raw, not collapsed)
     const eventBonusCharMap = useMemo(() => {
         const map = new Map<number, Set<number>>();
         for (const bonus of deckBonuses) {
             if (bonus.gameCharacterUnitId) {
-                const charId = getBaseCharacterId(bonus.gameCharacterUnitId);
                 if (!map.has(bonus.eventId)) {
                     map.set(bonus.eventId, new Set());
                 }
-                map.get(bonus.eventId)!.add(charId);
+                map.get(bonus.eventId)!.add(bonus.gameCharacterUnitId);
             }
         }
         return map;
     }, [deckBonuses]);
+
+    // Build lookup: for each VS base char (21-26), all their gameCharacterUnitIds
+    const vsCharAllUnitIds = useMemo(() => {
+        const map = new Map<number, number[]>();
+        for (const cu of charaUnits) {
+            if (cu.gameCharacterId >= 21 && cu.gameCharacterId <= 26) {
+                if (!map.has(cu.gameCharacterId)) {
+                    map.set(cu.gameCharacterId, []);
+                }
+                map.get(cu.gameCharacterId)!.push(cu.id);
+            }
+        }
+        return map;
+    }, [charaUnits]);
 
     // Filter and sort events
     const filteredEvents = useMemo(() => {
@@ -175,9 +180,17 @@ function EventsContent() {
         // Apply character filter (intersection: event must have ALL selected characters as bonus)
         if (selectedCharacters.length > 0) {
             result = result.filter(event => {
-                const bonusChars = eventBonusCharMap.get(event.id);
-                if (!bonusChars) return false;
-                return selectedCharacters.every(charId => bonusChars.has(charId));
+                const bonusUnitIds = eventBonusCharMap.get(event.id);
+                if (!bonusUnitIds) return false;
+                return selectedCharacters.every(charId => {
+                    if (charId >= 21 && charId <= 26) {
+                        // Original VS character: matches any of their gameCharacterUnitIds
+                        const allIds = vsCharAllUnitIds.get(charId);
+                        return allIds ? allIds.some(id => bonusUnitIds.has(id)) : false;
+                    }
+                    // Original characters (1-20) or VS sub-unit characters (27+): exact match
+                    return bonusUnitIds.has(charId);
+                });
             });
         }
 
@@ -218,7 +231,7 @@ function EventsContent() {
         });
 
         return result;
-    }, [events, selectedTypes, selectedCharacters, eventBonusCharMap, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
+    }, [events, selectedTypes, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
 
     // Displayed events (with pagination)
     const displayedEvents = useMemo(() => {
@@ -251,6 +264,7 @@ function EventsContent() {
             onCharacterChange={setSelectedCharacters}
             selectedUnitIds={selectedUnitIds}
             onUnitIdsChange={setSelectedUnitIds}
+            charaUnits={charaUnits}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             sortBy={sortBy}

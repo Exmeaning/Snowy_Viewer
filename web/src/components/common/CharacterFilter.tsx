@@ -1,8 +1,8 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import Image from "next/image";
 import { FilterSection } from "@/components/common/BaseFilters";
-import { CHARACTER_NAMES, UNIT_DATA } from "@/types/types";
+import { CHARACTER_NAMES, UNIT_DATA, ICharaUnitInfo } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 
 const UNIT_ICONS: Record<string, string> = {
@@ -12,6 +12,16 @@ const UNIT_ICONS: Record<string, string> = {
     "ws": "wxs.webp",
     "25ji": "n25.webp",
     "vs": "vs.webp",
+};
+
+/** Map gameCharacterUnits.json "unit" field to UNIT_DATA id */
+const UNIT_FIELD_TO_ID: Record<string, string> = {
+    "light_sound": "ln",
+    "idol": "mmj",
+    "street": "vbs",
+    "theme_park": "ws",
+    "school_refusal": "25ji",
+    "piapro": "vs",
 };
 
 interface CharacterFilterProps {
@@ -25,6 +35,17 @@ interface CharacterFilterProps {
     characterLabel?: string;
     /** Extra content rendered below the character list inside the character FilterSection */
     extraContent?: React.ReactNode;
+    /** When provided, enables event mode: VS sub-unit chars are placed into their respective groups */
+    charaUnits?: ICharaUnitInfo[];
+}
+
+interface DisplayChar {
+    /** The ID used for selection (gameCharacterUnitId) */
+    id: number;
+    /** The base character ID (for icon/name lookup) */
+    baseCharId: number;
+    /** The unit this char belongs to in the filter (null = no badge needed) */
+    badgeUnitId: string | null;
 }
 
 export default function CharacterFilter({
@@ -35,7 +56,63 @@ export default function CharacterFilter({
     unitLabel = "团体",
     characterLabel = "角色",
     extraContent,
+    charaUnits,
 }: CharacterFilterProps) {
+    // Build event-mode unit data: remap VS sub-unit chars into their respective groups
+    const { effectiveUnitData, charDisplayMap } = useMemo(() => {
+        if (!charaUnits || charaUnits.length === 0) {
+            // Default mode: use UNIT_DATA as-is, all chars use their own ID
+            const displayMap = new Map<number, DisplayChar>();
+            for (const unit of UNIT_DATA) {
+                for (const cid of unit.charIds) {
+                    displayMap.set(cid, { id: cid, baseCharId: cid, badgeUnitId: null });
+                }
+            }
+            return { effectiveUnitData: UNIT_DATA, charDisplayMap: displayMap };
+        }
+
+        // Event mode: build new unit groups
+        const displayMap = new Map<number, DisplayChar>();
+        const unitCharMap = new Map<string, number[]>(); // unitId -> charIds for display
+
+        // Initialize with original character groups (non-VS)
+        for (const unit of UNIT_DATA) {
+            if (unit.id === "vs") continue;
+            unitCharMap.set(unit.id, [...unit.charIds]);
+            for (const cid of unit.charIds) {
+                displayMap.set(cid, { id: cid, baseCharId: cid, badgeUnitId: null });
+            }
+        }
+        // VS group: only original VS chars (unit === "piapro")
+        unitCharMap.set("vs", []);
+
+        for (const cu of charaUnits) {
+            if (cu.gameCharacterId < 21 || cu.gameCharacterId > 26) continue; // skip non-VS
+            const mappedUnitId = UNIT_FIELD_TO_ID[cu.unit];
+            if (!mappedUnitId) continue;
+
+            if (cu.unit === "piapro") {
+                // Original VS character
+                unitCharMap.get("vs")!.push(cu.id); // cu.id === cu.gameCharacterId for piapro originals (21-26)
+                displayMap.set(cu.id, { id: cu.id, baseCharId: cu.gameCharacterId, badgeUnitId: null });
+            } else {
+                // Sub-unit VS character
+                const targetGroup = unitCharMap.get(mappedUnitId);
+                if (targetGroup) {
+                    targetGroup.push(cu.id);
+                }
+                displayMap.set(cu.id, { id: cu.id, baseCharId: cu.gameCharacterId, badgeUnitId: mappedUnitId });
+            }
+        }
+
+        const newUnitData = UNIT_DATA.map(unit => ({
+            ...unit,
+            charIds: unitCharMap.get(unit.id) || unit.charIds,
+        }));
+
+        return { effectiveUnitData: newUnitData, charDisplayMap: displayMap };
+    }, [charaUnits]);
+
     const toggleCharacter = (id: number) => {
         if (selectedCharacters.includes(id)) {
             onCharacterChange(selectedCharacters.filter(c => c !== id));
@@ -45,16 +122,14 @@ export default function CharacterFilter({
     };
 
     const handleUnitClick = (unitId: string) => {
-        const unit = UNIT_DATA.find(u => u.id === unitId);
+        const unit = effectiveUnitData.find(u => u.id === unitId);
         if (!unit) return;
 
         if (selectedUnitIds.includes(unitId)) {
-            // Remove this unit and its characters
             onUnitIdsChange(selectedUnitIds.filter(id => id !== unitId));
             const newChars = selectedCharacters.filter(c => !unit.charIds.includes(c));
             onCharacterChange(newChars);
         } else {
-            // Add this unit and its characters
             onUnitIdsChange([...selectedUnitIds, unitId]);
             const newChars = [...new Set([...selectedCharacters, ...unit.charIds])];
             onCharacterChange(newChars);
@@ -62,29 +137,40 @@ export default function CharacterFilter({
     };
 
     const currentUnits = selectedUnitIds.length > 0
-        ? UNIT_DATA.filter(u => selectedUnitIds.includes(u.id))
+        ? effectiveUnitData.filter(u => selectedUnitIds.includes(u.id))
         : [];
 
-    // Get current displayed characters
     const displayedCharacters = currentUnits.length > 0
         ? currentUnits.flatMap(u => u.charIds)
         : [...new Set(selectedCharacters)];
 
-    // Check if all displayed characters are selected
-    const allSelected = displayedCharacters.length > 0 && 
+    const allSelected = displayedCharacters.length > 0 &&
         displayedCharacters.every(charId => selectedCharacters.includes(charId));
 
-    // Handle ALL button click
     const handleAllClick = () => {
         if (allSelected) {
-            // If all are selected, deselect all displayed characters
             const newChars = selectedCharacters.filter(charId => !displayedCharacters.includes(charId));
             onCharacterChange(newChars);
         } else {
-            // If not all are selected, select all displayed characters
             const newChars = [...new Set([...selectedCharacters, ...displayedCharacters])];
             onCharacterChange(newChars);
         }
+    };
+
+    const getCharName = (charId: number): string => {
+        const display = charDisplayMap.get(charId);
+        if (display) return CHARACTER_NAMES[display.baseCharId] || `Character ${charId}`;
+        return CHARACTER_NAMES[charId] || `Character ${charId}`;
+    };
+
+    const getCharIconId = (charId: number): number => {
+        const display = charDisplayMap.get(charId);
+        return display ? display.baseCharId : charId;
+    };
+
+    const getCharBadge = (charId: number): string | null => {
+        const display = charDisplayMap.get(charId);
+        return display?.badgeUnitId || null;
     };
 
     return (
@@ -92,7 +178,7 @@ export default function CharacterFilter({
             {/* Unit Selection */}
             <FilterSection label={unitLabel}>
                 <div className="flex flex-wrap gap-2">
-                    {UNIT_DATA.map(unit => {
+                    {effectiveUnitData.map(unit => {
                         const iconName = UNIT_ICONS[unit.id] || "";
                         return (
                             <button
@@ -123,29 +209,46 @@ export default function CharacterFilter({
             {(currentUnits.length > 0 || selectedCharacters.length > 0) && (
                 <FilterSection label={characterLabel}>
                     <div className="flex flex-wrap gap-2">
-                        {displayedCharacters.map(charId => (
-                            <button
-                                key={charId}
-                                onClick={() => toggleCharacter(charId)}
-                                className={`relative transition-all ${selectedCharacters.includes(charId)
-                                    ? "ring-2 ring-miku scale-110 z-10 rounded-full"
-                                    : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-80 hover:opacity-100"
-                                    }`}
-                                title={CHARACTER_NAMES[charId]}
-                            >
-                                <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
-                                    <Image
-                                        src={getCharacterIconUrl(charId)}
-                                        alt={CHARACTER_NAMES[charId]}
-                                        width={40}
-                                        height={40}
-                                        className="w-full h-full object-cover"
-                                        unoptimized
-                                    />
-                                </div>
-                            </button>
-                        ))}
-                        
+                        {displayedCharacters.map(charId => {
+                            const badgeUnitId = getCharBadge(charId);
+                            const badgeIcon = badgeUnitId ? UNIT_ICONS[badgeUnitId] : null;
+                            const charName = getCharName(charId);
+                            return (
+                                <button
+                                    key={charId}
+                                    onClick={() => toggleCharacter(charId)}
+                                    className={`relative transition-all ${selectedCharacters.includes(charId)
+                                        ? "ring-2 ring-miku scale-110 z-10 rounded-full"
+                                        : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-80 hover:opacity-100"
+                                        }`}
+                                    title={charName}
+                                >
+                                    <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
+                                        <Image
+                                            src={getCharacterIconUrl(getCharIconId(charId))}
+                                            alt={charName}
+                                            width={40}
+                                            height={40}
+                                            className="w-full h-full object-cover"
+                                            unoptimized
+                                        />
+                                    </div>
+                                    {badgeIcon && (
+                                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white shadow-sm flex items-center justify-center">
+                                            <Image
+                                                src={`/data/icon/${badgeIcon}`}
+                                                alt=""
+                                                width={12}
+                                                height={12}
+                                                className="object-contain"
+                                                unoptimized
+                                            />
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
+
                         {/* ALL Button - placed at the end */}
                         <button
                             key="all"
