@@ -67,6 +67,7 @@ export const navigationGroups: NavGroupData[] = [
             { name: "个人主页", href: "/profile" },
             { name: "卡牌进度", href: "/my-cards" },
             { name: "歌曲进度", href: "/my-musics" },
+            { name: "资源查询", href: "/my-materials" },
             { name: "支持", href: "/patreon" },
             { name: "关于", href: "/about" },
         ],
@@ -154,6 +155,7 @@ export const searchableNavItems: SearchableNavItem[] = [
     { name: "个人主页", href: "/profile", group: "个人", keywords: ["profile", "user", "account"] },
     { name: "卡牌进度", href: "/my-cards", group: "个人", keywords: ["my cards", "card progress"] },
     { name: "歌曲进度", href: "/my-musics", group: "个人", keywords: ["my musics", "music progress", "song progress"] },
+    { name: "资源查询", href: "/my-materials", group: "个人", keywords: ["my materials", "materials", "resources", "mysekai materials", "资源", "材料"] },
     { name: "关于", href: "/about", group: "个人", keywords: ["about", "info"] },
 ];
 
