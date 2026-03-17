@@ -23,6 +23,8 @@ interface CharacterFilterProps {
     unitLabel?: string;
     /** Label for the character section, defaults to "角色" */
     characterLabel?: string;
+    /** Extra content rendered below the character list inside the character FilterSection */
+    extraContent?: React.ReactNode;
 }
 
 export default function CharacterFilter({
@@ -32,6 +34,7 @@ export default function CharacterFilter({
     onUnitIdsChange,
     unitLabel = "团体",
     characterLabel = "角色",
+    extraContent,
 }: CharacterFilterProps) {
     const toggleCharacter = (id: number) => {
         if (selectedCharacters.includes(id)) {
@@ -157,6 +160,7 @@ export default function CharacterFilter({
                             ALL
                         </button>
                     </div>
+                    {extraContent}
                 </FilterSection>
             )}
         </>

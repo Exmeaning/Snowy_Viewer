@@ -5,9 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
+import CharacterFilter from "@/components/common/CharacterFilter";
 import { useTheme } from "@/contexts/ThemeContext";
-import { getMysekaiFixtureThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
-import { CHARACTER_NAMES, UNIT_DATA } from "@/types/types";
+import { getMysekaiFixtureThumbnailUrl } from "@/lib/assets";
 import {
     IMysekaiFixtureInfo,
     IMysekaiFixtureGenre,
@@ -54,16 +54,6 @@ const GENRE_NAME_MAP: Record<string, string> = {
     "その他": "其他",
     "カラータイル": "彩色瓷砖",
     "ブロック": "方块",
-};
-
-// Unit icon mapping
-const UNIT_ICONS: Record<string, string> = {
-    "ln": "ln.webp",
-    "mmj": "mmj.webp",
-    "vbs": "vbs.webp",
-    "ws": "wxs.webp",
-    "25ji": "n25.webp",
-    "vs": "vs.webp",
 };
 
 // Helper function to get translated genre name
@@ -452,44 +442,6 @@ function MysekaiContent() {
         return genre ? getTranslatedGenreName(genre.name) : "";
     };
 
-    // Toggle character selection
-    const toggleCharacter = (charId: number) => {
-        if (selectedCharacters.includes(charId)) {
-            setSelectedCharacters(selectedCharacters.filter(c => c !== charId));
-        } else {
-            setSelectedCharacters([...selectedCharacters, charId]);
-        }
-    };
-
-    // Handle unit click - select/deselect all characters in the unit
-    const handleUnitClick = (unitId: string) => {
-        const unit = UNIT_DATA.find(u => u.id === unitId);
-        if (!unit) return;
-
-        if (selectedUnitIds.includes(unitId)) {
-            setSelectedUnitIds(selectedUnitIds.filter(id => id !== unitId));
-            const newChars = selectedCharacters.filter(c => !unit.charIds.includes(c));
-            setSelectedCharacters(newChars);
-        } else {
-            setSelectedUnitIds([...selectedUnitIds, unitId]);
-            const newChars = [...new Set([...selectedCharacters, ...unit.charIds])];
-            setSelectedCharacters(newChars);
-        }
-    };
-
-    // Handle ALL button click
-    const handleAllClick = () => {
-        if (allSelected) {
-            // If all are selected, deselect all displayed characters
-            const newChars = selectedCharacters.filter(charId => !displayedCharacters.includes(charId));
-            setSelectedCharacters(newChars);
-        } else {
-            // If not all are selected, select all displayed characters
-            const newChars = [...new Set([...selectedCharacters, ...displayedCharacters])];
-            setSelectedCharacters(newChars);
-        }
-    };
-
     // Reset all filters
     const handleReset = () => {
         setSearchQuery("");
@@ -502,20 +454,6 @@ function MysekaiContent() {
     };
 
     const hasActiveFilters = !!(searchQuery || selectedGenre || selectedSubGenre || selectedTag || selectedCharacters.length > 0);
-
-    // Get current units for displaying characters
-    const currentUnits = selectedUnitIds.length > 0
-        ? UNIT_DATA.filter(u => selectedUnitIds.includes(u.id))
-        : [];
-
-    // Get current displayed characters
-    const displayedCharacters = currentUnits.length > 0
-        ? currentUnits.flatMap(u => u.charIds)
-        : [...new Set(selectedCharacters)];
-
-    // Check if all displayed characters are selected
-    const allSelected = displayedCharacters.length > 0 && 
-        displayedCharacters.every(charId => selectedCharacters.includes(charId));
 
     const quickFilterContent = (
         <BaseFilters
@@ -535,77 +473,12 @@ function MysekaiContent() {
             hasActiveFilters={hasActiveFilters}
             onReset={handleReset}
         >
-            <FilterSection label="团体">
-                <div className="flex flex-wrap gap-2">
-                    {UNIT_DATA.map(unit => {
-                        const iconName = UNIT_ICONS[unit.id] || "";
-                        return (
-                            <button
-                                key={unit.id}
-                                onClick={() => handleUnitClick(unit.id)}
-                                className={`p-1.5 rounded-xl transition-all ${selectedUnitIds.includes(unit.id)
-                                    ? "ring-2 ring-miku shadow-lg bg-white"
-                                    : "hover:bg-slate-100 border border-transparent bg-slate-50"
-                                    }`}
-                                title={unit.name}
-                            >
-                                <div className="w-8 h-8 relative">
-                                    <Image
-                                        src={`/data/icon/${iconName}`}
-                                        alt={unit.name}
-                                        fill
-                                        className="object-contain"
-                                        unoptimized
-                                    />
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
-            </FilterSection>
-
-            {(currentUnits.length > 0 || selectedCharacters.length > 0) && (
-                <FilterSection label="角色">
-                    <div className="flex flex-wrap gap-2">
-                        {displayedCharacters.map(charId => (
-                            <button
-                                key={charId}
-                                onClick={() => toggleCharacter(charId)}
-                                className={`relative transition-all ${selectedCharacters.includes(charId)
-                                    ? "ring-2 ring-miku scale-110 z-10 rounded-full"
-                                    : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-80 hover:opacity-100"
-                                    }`}
-                                title={CHARACTER_NAMES[charId]}
-                            >
-                                <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
-                                    <Image
-                                        src={getCharacterIconUrl(charId)}
-                                        alt={CHARACTER_NAMES[charId]}
-                                        width={40}
-                                        height={40}
-                                        className="w-full h-full object-cover"
-                                        unoptimized
-                                    />
-                                </div>
-                            </button>
-                        ))}
-                        
-                        {/* ALL Button - placed at the end */}
-                        <button
-                            key="all"
-                            onClick={handleAllClick}
-                            className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold transition-all ${allSelected
-                                ? "bg-miku text-white shadow-lg ring-2 ring-miku"
-                                : "bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200"
-                                }`}
-                            title="全部"
-                            style={{ width: '40px', height: '40px' }}
-                        >
-                            ALL
-                        </button>
-                    </div>
-                </FilterSection>
-            )}
+            <CharacterFilter
+                selectedCharacters={selectedCharacters}
+                onCharacterChange={setSelectedCharacters}
+                selectedUnitIds={selectedUnitIds}
+                onUnitIdsChange={setSelectedUnitIds}
+            />
 
             <FilterSection label="主类别">
                 <select
