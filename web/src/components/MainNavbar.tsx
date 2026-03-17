@@ -84,7 +84,7 @@ export default function MainNavbar({
                             }}
                         />
                         <span className="text-[8px] px-1.5 py-0.5 bg-amber-400 text-white font-bold rounded-full leading-none">
-                            BETA1.144
+                            BETA1.145
                         </span>
                     </Link>
 

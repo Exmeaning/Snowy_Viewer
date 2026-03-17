@@ -52,6 +52,7 @@ export class BaseDeckRecommend {
    * 使用递归寻找最佳卡组（DFS）
    * 栈深度不超过member+1层
    * 复杂度O(n^member)，带大量剪枝和超时控制
+   * 参考 C++ 库 (NeuraXmy/sekai-deck-recommend-cpp) 的 fixedCards/fixedCharacters 剪枝策略
    */
   private static findBestCardsDFS (
     cardDetails: CardDetail[], allCards: CardDetail[], scoreFunc: (deckDetail: DeckDetail) => number, limit: number = 1,
@@ -61,7 +62,9 @@ export class BaseDeckRecommend {
     keepAfterTrainingState: boolean = false,
     bestSkillAsLeader: boolean = true,
     deckCards: CardDetail[] = [],
-    dfsState?: DFSState
+    dfsState?: DFSState,
+    fixedCharacters: number[] = [],
+    fixedCards: CardDetail[] = []
   ): RecommendDeck[] {
     // 超时检查
     if (dfsState !== undefined && dfsState.isTimeout()) {
@@ -72,12 +75,23 @@ export class BaseDeckRecommend {
     if (isChallengeLive) {
       member = Math.min(member, cardDetails.length)
     }
+
+    // 固定卡牌/角色不参与剪枝的起始位置（参考 C++ 的 cIndex）
+    const cIndex = fixedCards.length + fixedCharacters.length
+
+    // 如果 deckCards 为空且有固定卡牌，先插入固定卡牌
+    if (deckCards.length === 0 && fixedCards.length > 0) {
+      deckCards = [...fixedCards]
+    }
+
     // 已经是完整卡组，计算当前卡组的值
     if (deckCards.length === member) {
+      // 存在固定角色则不允许把技能最强的换到队长
+      const effectiveBestSkillAsLeader = fixedCharacters.length > 0 || fixedCards.length > 0 ? false : bestSkillAsLeader
       const deckDetail = DeckCalculator.getDeckDetailByCards(
         deckCards, allCards, honorBonus, eventConfig.cardBonusCountLimit,
         eventConfig.worldBloomDifferentAttributeBonuses,
-        skillReferenceChooseStrategy, keepAfterTrainingState, bestSkillAsLeader
+        skillReferenceChooseStrategy, keepAfterTrainingState, effectiveBestSkillAsLeader
       )
       const score = scoreFunc(deckDetail)
 
@@ -90,8 +104,8 @@ export class BaseDeckRecommend {
         dfsState.deckHashCache.add(hash)
       }
 
-      // 如果固定leader，不检查技能效果直接返回
-      if (leaderCharacter > 0) {
+      // 如果有固定角色/卡牌，不检查技能效果直接返回
+      if (fixedCharacters.length > 0 || fixedCards.length > 0) {
         return toRecommendDeck(deckDetail, score)
       }
       // 寻找加分效果最高的卡牌
@@ -113,7 +127,7 @@ export class BaseDeckRecommend {
       return BaseDeckRecommend.findBestCardsDFS(
         cardDetails, allCards, scoreFunc, limit, isChallengeLive, member, leaderCharacter, honorBonus,
         eventConfig, skillReferenceChooseStrategy, keepAfterTrainingState, bestSkillAsLeader,
-        deckCards, dfsState)
+        deckCards, dfsState, fixedCharacters, fixedCards)
     }
     // 非完整卡组，继续遍历所有情况
     let ans: RecommendDeck[] = []
@@ -132,32 +146,35 @@ export class BaseDeckRecommend {
       if (!isChallengeLive && deckCards.some(it => it.characterId === card.characterId)) {
         continue
       }
-      // 如果固定leader，要判断第一张卡是不是指定角色
-      if (leaderCharacter > 0 && deckCards.length === 0 && card.characterId !== leaderCharacter) {
+      // 强制角色限制：fixedCharacters 按位置匹配（参考 C++ 的 fixedCharacters 逻辑）
+      if (fixedCharacters.length > deckCards.length && fixedCharacters[deckCards.length] !== card.characterId) {
         continue
       }
+      // C位相关优化：固定卡牌/角色不参与剪枝（参考 C++ 的 cIndex 策略）
       // C位一定是技能最好的卡牌，跳过技能比C位还好的
-      if (leaderCharacter <= 0 && deckCards.length >= 1 && deckCards[0].skill.isCertainlyLessThen(card.skill)) {
+      if (deckCards.length >= cIndex + 1 && deckCards[cIndex].skill.isCertainlyLessThen(card.skill)) {
         continue
       }
-      // 为了优化性能，必须和C位同色或同组
-      if (deckCards.length >= 1 && card.attr !== deckCards[0].attr && !containsAny(deckCards[0].units, card.units)) {
+      // 为了优化性能，必须和C位同色或同组（从 cIndex 位置开始判断）
+      if (deckCards.length >= cIndex + 1 && card.attr !== deckCards[cIndex].attr && !containsAny(deckCards[cIndex].units, card.units)) {
         continue
       }
       // 为了优化性能，如果是World Link活动，强制3色及以上
       if (eventConfig.worldBloomDifferentAttributeBonuses !== undefined && isDeckAttrLessThan3(deckCards, card)) {
         continue
       }
-      // 要求生成的卡组后面4个位置按强弱排序、同强度按卡牌ID排序
-      if (deckCards.length >= 2 && CardCalculator.isCertainlyLessThan(deckCards[deckCards.length - 1], card)) {
+      // 要求生成的卡组后面位置按强弱排序、同强度按卡牌ID排序
+      // 从 cIndex + 2 位置开始启用排序剪枝（固定位置不参与排序）
+      const sortPruneStart = cIndex + 2
+      if (deckCards.length >= sortPruneStart && CardCalculator.isCertainlyLessThan(deckCards[deckCards.length - 1], card)) {
         continue
       }
-      if (deckCards.length >= 2 && !CardCalculator.isCertainlyLessThan(card, deckCards[deckCards.length - 1]) &&
+      if (deckCards.length >= sortPruneStart && !CardCalculator.isCertainlyLessThan(card, deckCards[deckCards.length - 1]) &&
         card.cardId < deckCards[deckCards.length - 1].cardId) {
         continue
       }
       // 如果肯定比上一次选定的卡牌要弱，那么舍去
-      if (preCard !== null && CardCalculator.isCertainlyLessThan(card, preCard)) {
+      if (deckCards.length >= cIndex && preCard !== null && CardCalculator.isCertainlyLessThan(card, preCard)) {
         continue
       }
       preCard = card
@@ -165,11 +182,19 @@ export class BaseDeckRecommend {
       const result = BaseDeckRecommend.findBestCardsDFS(
         cardDetails, allCards, scoreFunc, limit, isChallengeLive, member, leaderCharacter, honorBonus,
         eventConfig, skillReferenceChooseStrategy, keepAfterTrainingState, bestSkillAsLeader,
-        [...deckCards, card], dfsState)
+        [...deckCards, card], dfsState, fixedCharacters, fixedCards)
       ans = updateDeck(ans, result, limit)
+      // 更新 dfsState 中的最佳结果，确保超时时能返回部分结果
+      if (dfsState !== undefined && ans.length > 0) {
+        dfsState.bestDecks = updateDeck(dfsState.bestDecks, ans, limit)
+      }
     }
     // 在最外层检查一下是否成功组队
     if (deckCards.length === 0 && ans.length === 0) {
+      // 超时时返回已找到的最佳结果
+      if (dfsState !== undefined && dfsState.bestDecks.length > 0) {
+        return dfsState.bestDecks
+      }
       console.warn(`Cannot find deck in ${cardDetails.length} cards(${cardDetails.map(it => it.cardId).toString()})`)
       return []
     }
@@ -199,6 +224,8 @@ export class BaseDeckRecommend {
       limit = 1,
       member = 5,
       leaderCharacter = undefined,
+      fixedCards: configFixedCards = [],
+      fixedCharacters: configFixedCharacters = [],
       cardConfig = {},
       debugLog = (_: string) => {
       },
@@ -214,6 +241,21 @@ export class BaseDeckRecommend {
     eventConfig: EventConfig = {}
   ): Promise<RecommendDeck[]> {
     const { eventType = EventType.NONE, eventUnit, specialCharacterId, worldBloomType, worldBloomSupportUnit } = eventConfig
+
+    // 向后兼容：将 leaderCharacter 转换为 fixedCharacters
+    let fixedCharacters = [...configFixedCharacters]
+    if (fixedCharacters.length === 0 && leaderCharacter !== undefined && leaderCharacter > 0) {
+      fixedCharacters = [leaderCharacter]
+    }
+
+    // 暂不支持同时指定固定卡牌和固定角色
+    if (configFixedCards.length > 0 && fixedCharacters.length > 0) {
+      throw new Error('Cannot set both fixedCards and fixedCharacters')
+    }
+    // 挑战live不允许指定固定角色
+    if (liveType === LiveType.CHALLENGE && fixedCharacters.length > 0) {
+      throw new Error('Cannot set fixedCharacters in challenge live')
+    }
 
     // 根据推荐目标覆盖 scoreFunc
     let effectiveScoreFunc = scoreFunc
@@ -233,17 +275,96 @@ export class BaseDeckRecommend {
     if (worldBloomSupportUnit !== undefined) {
       filterUnit = worldBloomSupportUnit
     }
+    // 构建固定角色ID集合（用于箱活过滤豁免）
+    const fixedCharacterSet = new Set(fixedCharacters)
     if (filterUnit !== undefined) {
       const originCardsLength = cards.length
       cards = cards.filter(it =>
         (it.units.length === 1 && it.units[0] === 'piapro') ||
-          filterUnit === undefined || it.units.includes(filterUnit))
+          filterUnit === undefined || it.units.includes(filterUnit) ||
+          fixedCharacterSet.has(it.characterId))
       debugLog(`Cards filtered with unit ${filterUnit}: ${cards.length}/${originCardsLength}`)
       debugLog(cards.map(it => it.cardId).toString())
     }
+
+    // 获取固定卡牌的 CardDetail（参考 C++ 库的虚拟卡牌生成逻辑）
+    const resolvedFixedCards: CardDetail[] = []
+    for (const cardId of configFixedCards) {
+      const existing = cards.find(c => c.cardId === cardId)
+      if (existing !== undefined) {
+        resolvedFixedCards.push(existing)
+      } else {
+        // 找不到的情况下，生成一个初始养成情况的虚拟卡牌
+        const virtualUserCard: UserCard = {
+          userId: 0,
+          cardId,
+          level: 1,
+          exp: 0,
+          totalExp: 0,
+          skillLevel: 1,
+          skillExp: 0,
+          totalSkillExp: 0,
+          masterRank: 0,
+          specialTrainingStatus: 'not_doing',
+          defaultImage: 'original',
+          duplicateCount: 0,
+          createdAt: 0,
+          episodes: []
+        }
+        const virtualCards = await this.cardCalculator.batchGetCardDetail(
+          [virtualUserCard], cardConfig, eventConfig, areaItemLevels
+        )
+        if (virtualCards.length > 0) {
+          resolvedFixedCards.push(virtualCards[0])
+          cards.push(virtualCards[0])
+          debugLog(`Generated virtual card for fixed cardId=${cardId}`)
+        } else {
+          debugLog(`Warning: Failed to generate virtual card for fixed cardId=${cardId}, skipping`)
+        }
+      }
+    }
+
+    // 检查固定卡牌是否有效
+    if (resolvedFixedCards.length > 0) {
+      if (resolvedFixedCards.length > member) {
+        throw new Error('Fixed cards size is larger than member size')
+      }
+      const fixedCardIds = new Set(resolvedFixedCards.map(c => c.cardId))
+      if (fixedCardIds.size !== resolvedFixedCards.length) {
+        throw new Error('Fixed cards have duplicate cards')
+      }
+      if (liveType !== LiveType.CHALLENGE) {
+        const fixedCardCharacterIds = new Set(resolvedFixedCards.map(c => c.characterId))
+        if (fixedCardCharacterIds.size !== resolvedFixedCards.length) {
+          throw new Error('Fixed cards have duplicate characters')
+        }
+      }
+    }
+
     // World Link Finale，需要强制指定Leader
-    if (worldBloomType === 'finale') {
-      leaderCharacter = specialCharacterId
+    if (worldBloomType === 'finale' && specialCharacterId !== undefined) {
+      fixedCharacters = [specialCharacterId]
+    }
+
+    // 为 DFS/GA 传递的 leaderCharacter 兼容值（取第一个固定角色，或 0）
+    const effectiveLeaderCharacter = fixedCharacters.length > 0 ? fixedCharacters[0] : 0
+
+    // 卡牌按强度降序排序的辅助函数（参考 C++ 库 base-deck-recommend.cpp:260-271）
+    // DFS 剪枝依赖卡牌按强度排序，确保第一张非固定卡是最强的
+    const sortCardsByStrength = (cardList: CardDetail[]): CardDetail[] => {
+      return [...cardList].sort((a, b) => {
+        if (target === RecommendTarget.Skill) {
+          // 技能优先：a 肯定弱于 b → b 排前面
+          if (a.skill.isCertainlyLessThen(b.skill)) return 1
+          if (b.skill.isCertainlyLessThen(a.skill)) return -1
+          return b.cardId - a.cardId
+        } else {
+          // 综合力优先
+          if (CardCalculator.isCertainlyLessThan(a, b)) return 1
+          if (CardCalculator.isCertainlyLessThan(b, a)) return -1
+          return b.cardId - a.cardId
+        }
+      })
     }
 
     const startTime = Date.now()
@@ -259,7 +380,7 @@ export class BaseDeckRecommend {
         liveType === LiveType.CHALLENGE, member, honorBonus, eventConfig,
         { ...gaConfig, timeoutMs: Math.max(1000, timeoutMs - (Date.now() - startTime)) },
         skillReferenceChooseStrategy, keepAfterTrainingState, bestSkillAsLeader,
-        leaderCharacter
+        effectiveLeaderCharacter, fixedCharacters, resolvedFixedCards
       )
 
       if (gaResult.length >= limit) {
@@ -275,20 +396,20 @@ export class BaseDeckRecommend {
       let preCardDetails = [] as CardDetail[]
       while (!isTimeout()) {
         const cardDetails =
-            filterCardPriority(liveType, eventType, cards, preCardDetails, member, leaderCharacter)
+            filterCardPriority(liveType, eventType, cards, preCardDetails, member, effectiveLeaderCharacter, fixedCharacters)
         if (cardDetails.length === preCardDetails.length) {
           return gaResult.length > 0 ? gaResult : []
         }
         preCardDetails = cardDetails
-        const cards0 = cardDetails.sort((a, b) => a.cardId - b.cardId)
+        const cards0 = sortCardsByStrength(cardDetails)
         debugLog(`DFS fallback with ${cards0.length}/${cards.length} cards`)
 
         const dfsState = new DFSState(Math.max(1000, timeoutMs - (Date.now() - startTime)))
         const recommend = BaseDeckRecommend.findBestCardsDFS(cards0, cards,
           deckDetail => effectiveScoreFunc(musicMeta, deckDetail), limit, liveType === LiveType.CHALLENGE, member,
-          leaderCharacter, honorBonus, eventConfig,
+          effectiveLeaderCharacter, honorBonus, eventConfig,
           skillReferenceChooseStrategy, keepAfterTrainingState, bestSkillAsLeader,
-          [], dfsState)
+          [], dfsState, fixedCharacters, resolvedFixedCards)
 
         // 合并 GA 和 DFS 结果
         const merged = updateDeck(gaResult, recommend, limit)
@@ -301,21 +422,21 @@ export class BaseDeckRecommend {
     let preCardDetails = [] as CardDetail[]
     while (!isTimeout()) {
       const cardDetails =
-          filterCardPriority(liveType, eventType, cards, preCardDetails, member, leaderCharacter)
+          filterCardPriority(liveType, eventType, cards, preCardDetails, member, effectiveLeaderCharacter, fixedCharacters)
       if (cardDetails.length === preCardDetails.length) {
         throw new Error(`Cannot recommend any deck in ${cards.length} cards`)
       }
       preCardDetails = cardDetails
-      const cards0 = cardDetails.sort((a, b) => a.cardId - b.cardId)
+      const cards0 = sortCardsByStrength(cardDetails)
       debugLog(`Recommend deck with ${cards0.length}/${cards.length} cards`)
       debugLog(cards0.map(it => it.cardId).toString())
 
       const dfsState = new DFSState(Math.max(1000, timeoutMs - (Date.now() - startTime)))
       const recommend = BaseDeckRecommend.findBestCardsDFS(cards0, cards,
         deckDetail => effectiveScoreFunc(musicMeta, deckDetail), limit, liveType === LiveType.CHALLENGE, member,
-        leaderCharacter, honorBonus, eventConfig,
+        effectiveLeaderCharacter, honorBonus, eventConfig,
         skillReferenceChooseStrategy, keepAfterTrainingState, bestSkillAsLeader,
-        [], dfsState)
+        [], dfsState, fixedCharacters, resolvedFixedCards)
       if (recommend.length >= limit) return recommend
     }
     throw new Error(`Timeout: Cannot recommend deck in ${timeoutMs}ms`)
@@ -349,7 +470,12 @@ export interface DeckRecommendConfig {
   musicMeta: MusicMeta
   limit?: number
   member?: number
+  /** @deprecated 使用 fixedCharacters 代替。仍然向后兼容：内部会转换为 fixedCharacters: [leaderCharacter] */
   leaderCharacter?: number
+  /** 指定一定要包含的卡牌ID列表（按位置顺序，从队长位开始） */
+  fixedCards?: number[]
+  /** 指定从队长位开始的卡牌所属角色ID列表（队长后的顺序无所谓） */
+  fixedCharacters?: number[]
   cardConfig?: Record<string, CardConfig>
   debugLog?: (str: string) => void
   /** 推荐算法，默认 GA */

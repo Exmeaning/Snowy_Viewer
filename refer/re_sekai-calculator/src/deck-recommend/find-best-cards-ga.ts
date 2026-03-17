@@ -97,6 +97,7 @@ function calcDeckHash (deck: CardDetail[]): number {
 
 /**
  * 使用遗传算法寻找最佳卡组
+ * 参考 C++ 库 (NeuraXmy/sekai-deck-recommend-cpp) 的 fixedCards/fixedCharacters 处理策略
  * @param cardDetails 参与计算的卡牌
  * @param allCards 全部卡牌（用于支援卡组计算）
  * @param scoreFunc 分数计算函数
@@ -107,6 +108,8 @@ function calcDeckHash (deck: CardDetail[]): number {
  * @param honorBonus 称号加成
  * @param eventConfig 活动配置
  * @param gaConfig GA配置
+ * @param fixedCharacters 固定角色ID列表（按位置顺序）
+ * @param fixedCards 固定卡牌CardDetail列表
  */
 export function findBestCardsGA (
   cardDetails: CardDetail[],
@@ -122,9 +125,12 @@ export function findBestCardsGA (
   skillReferenceChooseStrategy: SkillReferenceChooseStrategy = SkillReferenceChooseStrategy.Average,
   keepAfterTrainingState: boolean = false,
   bestSkillAsLeader: boolean = true,
-  leaderCharacter: number = 0
+  leaderCharacter: number = 0,
+  fixedCharacters: number[] = [],
+  fixedCards: CardDetail[] = []
 ): RecommendDeck[] {
   const cfg = { ...DEFAULT_GA_CONFIG, ...gaConfig }
+  const fixedSize = fixedCards.length
 
   if (isChallengeLive) {
     member = Math.min(member, cardDetails.length)
@@ -133,6 +139,9 @@ export function findBestCardsGA (
   if (cardDetails.length < member) {
     return []
   }
+
+  // 存在固定角色/卡牌则不允许把技能最强的换到队长
+  const effectiveBestSkillAsLeader = (fixedCharacters.length > 0 || fixedSize > 0) ? false : bestSkillAsLeader
 
   const seed = cfg.seed === -1 ? Date.now() : cfg.seed
   const rng = new SimpleRng(seed)
@@ -147,6 +156,11 @@ export function findBestCardsGA (
     charaCards[card.characterId].push(card)
   }
 
+  // 构建固定卡牌的 cardId 集合和角色集合
+  const fixedCardIds = new Set(fixedCards.map(c => c.cardId))
+  const fixedCardCharacterIds = new Set(fixedCards.map(c => c.characterId))
+  const fixedCharacterSet = new Set(fixedCharacters)
+
   // deck hash 缓存
   const deckScoreCache = new Map<number, number>()
 
@@ -154,12 +168,15 @@ export function findBestCardsGA (
   let bestDecks: RecommendDeck[] = []
 
   const updateResult = (deck: RecommendDeck): void => {
-    // 检查是否已存在相同卡组
-    const exists = bestDecks.some(d =>
-      d.cards[0].cardId === deck.cards[0].cardId &&
-      d.score === deck.score &&
-      d.power.total === deck.power.total
-    )
+    // 防御性检查：卡组内部不应有重复卡片
+    const deckCardIds = new Set(deck.cards.map(c => c.cardId))
+    if (deckCardIds.size !== deck.cards.length) return
+
+    // 使用完整卡组 cardId 集合比较去重
+    const exists = bestDecks.some(d => {
+      if (d.cards.length !== deck.cards.length) return false
+      return d.cards.every(c => deckCardIds.has(c.cardId))
+    })
     if (exists) return
 
     bestDecks.push(deck)
@@ -171,18 +188,6 @@ export function findBestCardsGA (
 
   // 评估个体
   const evaluateIndividual = (individual: Individual): void => {
-    // 如果指定了队长角色，确保队长在第一位
-    if (leaderCharacter > 0) {
-      const leaderIdx = individual.deck.findIndex(c => c.characterId === leaderCharacter)
-      if (leaderIdx < 0) {
-        individual.fitness = -1
-        return
-      }
-      if (leaderIdx !== 0) {
-        swap(individual.deck, 0, leaderIdx)
-      }
-    }
-
     const hash = calcDeckHash(individual.deck)
     individual.deckHash = hash
 
@@ -191,62 +196,71 @@ export function findBestCardsGA (
       return
     }
 
-    // 找最佳C位（技能最高的放C位），仅在未指定队长时执行
-    if (leaderCharacter <= 0) {
-      let bestSkillIdx = 0
-      for (let i = 1; i < individual.deck.length; i++) {
-        if (individual.deck[bestSkillIdx].skill.isCertainlyLessThen(individual.deck[i].skill)) {
-          bestSkillIdx = i
+    try {
+      // 找最佳C位（技能最高的放C位），仅在无固定角色/卡牌时执行
+      if (!effectiveBestSkillAsLeader || fixedCharacters.length > 0 || fixedSize > 0) {
+        // 不调整C位
+      } else {
+        let bestSkillIdx = 0
+        for (let i = 1; i < individual.deck.length; i++) {
+          if (individual.deck[bestSkillIdx].skill.isCertainlyLessThen(individual.deck[i].skill)) {
+            bestSkillIdx = i
+          }
+        }
+        if (bestSkillIdx !== 0) {
+          swap(individual.deck, 0, bestSkillIdx)
         }
       }
-      if (bestSkillIdx !== 0) {
-        swap(individual.deck, 0, bestSkillIdx)
-      }
+
+      const deckDetail = DeckCalculator.getDeckDetailByCards(
+        individual.deck, allCards, honorBonus,
+        eventConfig.cardBonusCountLimit,
+        eventConfig.worldBloomDifferentAttributeBonuses,
+        skillReferenceChooseStrategy, keepAfterTrainingState, effectiveBestSkillAsLeader
+      )
+      const score = scoreFunc(musicMeta, deckDetail)
+      individual.fitness = score
+
+      deckScoreCache.set(hash, score)
+
+      // 更新全局最优
+      const recDeck = deckDetail as RecommendDeck
+      recDeck.score = score
+      updateResult(recDeck)
+    } catch {
+      individual.fitness = -1
+      deckScoreCache.set(hash, -1)
     }
-
-    const deckDetail = DeckCalculator.getDeckDetailByCards(
-      individual.deck, allCards, honorBonus,
-      eventConfig.cardBonusCountLimit,
-      eventConfig.worldBloomDifferentAttributeBonuses,
-      skillReferenceChooseStrategy, keepAfterTrainingState, bestSkillAsLeader
-    )
-    const score = scoreFunc(musicMeta, deckDetail)
-    individual.fitness = score
-
-    deckScoreCache.set(hash, score)
-
-    // 更新全局最优
-    const recDeck = deckDetail as RecommendDeck
-    recDeck.score = score
-    updateResult(recDeck)
   }
 
-  // 生成随机个体
+  // 生成随机个体（参考 C++ 库的种群生成逻辑）
   const generateRandomIndividual = (): Individual | null => {
     const deck: CardDetail[] = []
     const usedCharas = new Set<number>()
     const usedCardIds = new Set<number>()
 
     if (!isChallengeLive) {
-      // 随机选择 member 个不同角色
+      // 收集可用角色（排除固定卡牌的角色和固定角色）
       const validCharas: number[] = []
-      for (let i = 0; i < MAX_CID; i++) {
-        if (charaCards[i].length > 0) validCharas.push(i)
-      }
-      if (validCharas.length < member) return null
-
-      // 如果指定了队长角色，先选入队长
-      if (leaderCharacter > 0) {
-        if (charaCards[leaderCharacter] === undefined || charaCards[leaderCharacter].length === 0) return null
-        const leaderCards = charaCards[leaderCharacter]
-        deck.push(leaderCards[rng.nextInt(leaderCards.length)])
-        usedCharas.add(leaderCharacter)
-        // 从可选角色中移除队长角色
-        const leaderIdx = validCharas.indexOf(leaderCharacter)
-        if (leaderIdx >= 0) validCharas.splice(leaderIdx, 1)
+      for (let j = 0; j < MAX_CID; j++) {
+        if (charaCards[j].length === 0) continue
+        if (fixedCardCharacterIds.has(j)) continue
+        if (fixedCharacterSet.has(j)) continue
+        validCharas.push(j)
       }
 
-      if (validCharas.length < member - deck.length) return null
+      const freeSlots = member - fixedSize - fixedCharacters.length
+      if (validCharas.length < freeSlots) return null
+
+      // 先添加固定角色的卡（随机选一张该角色的卡）
+      for (const chara of fixedCharacters) {
+        const cards = charaCards[chara]
+        if (cards.length === 0) return null
+        const card = cards[rng.nextInt(cards.length)]
+        deck.push(card)
+        usedCharas.add(chara)
+        usedCardIds.add(card.cardId)
+      }
 
       // 随机打乱并取剩余位置
       for (let i = validCharas.length - 1; i > 0; i--) {
@@ -255,36 +269,43 @@ export function findBestCardsGA (
         validCharas[i] = validCharas[j]
         validCharas[j] = tmp
       }
-      const remaining = member - deck.length
-      const selectedCharas = validCharas.slice(0, remaining)
+      const selectedCharas = validCharas.slice(0, freeSlots)
 
       for (const chara of selectedCharas) {
         const cards = charaCards[chara]
         const idx = rng.nextInt(cards.length)
         deck.push(cards[idx])
+        usedCharas.add(chara)
+        usedCardIds.add(cards[idx].cardId)
       }
     } else {
-      // 挑战Live：随机选 member 张不重复的卡
+      // 挑战Live：随机选 member-fixedSize 张不重复的卡
       const indices: number[] = []
       let attempts = 0
-      while (indices.length < member && attempts < 100) {
+      while (indices.length < member - fixedSize && attempts < 100) {
         const idx = rng.nextInt(cardDetails.length)
-        if (!usedCardIds.has(cardDetails[idx].cardId)) {
-          usedCardIds.add(cardDetails[idx].cardId)
+        const card = cardDetails[idx]
+        if (!usedCardIds.has(card.cardId) && !fixedCardIds.has(card.cardId)) {
+          usedCardIds.add(card.cardId)
           indices.push(idx)
         }
         attempts++
       }
-      if (indices.length < member) return null
+      if (indices.length < member - fixedSize) return null
       for (const idx of indices) {
         deck.push(cardDetails[idx])
       }
     }
 
+    // 添加固定卡牌（整个流程固定在最后，参考 C++ 库）
+    for (const card of fixedCards) {
+      deck.push(card)
+    }
+
     return { deck, deckHash: 0, fitness: 0 }
   }
 
-  // 交叉
+  // 交叉（参考 C++ 库的交叉逻辑：保护固定角色位和固定卡牌位）
   const crossover = (a: Individual, b: Individual): Individual | null => {
     if (rng.next() > cfg.crossoverRate) {
       return a.fitness >= b.fitness ? { ...a, deck: [...a.deck] } : { ...b, deck: [...b.deck] }
@@ -294,10 +315,19 @@ export function findBestCardsGA (
     const usedCharas = new Set<number>()
     const usedCardIds = new Set<number>()
 
-    // 从 a 中随机保留一些位置
+    // 非固定部分的长度
+    const nonFixedLen = a.deck.length - fixedSize
+
+    // 随机选择要保留的 a 位置（不包括固定卡牌位）
     const keepFromA: number[] = []
-    for (let i = 0; i < a.deck.length; i++) {
-      if (rng.next() > 0.5) {
+    for (let i = 0; i < nonFixedLen; i++) {
+      const card = a.deck[i]
+      // 如果是固定角色则一定保留（参考 C++ 逻辑）
+      if (fixedCharacterSet.has(card.characterId)) {
+        keepFromA.push(i)
+        continue
+      }
+      if (rng.next() < 0.5) {
         keepFromA.push(i)
       }
     }
@@ -310,9 +340,9 @@ export function findBestCardsGA (
       usedCardIds.add(card.cardId)
     }
 
-    // 从 b 中补充不冲突的卡
+    // 从 b 中补充不冲突的卡（不包括固定卡牌位）
     const bCandidates: number[] = []
-    for (let i = 0; i < b.deck.length; i++) {
+    for (let i = 0; i < nonFixedLen; i++) {
       const card = b.deck[i]
       if (usedCardIds.has(card.cardId)) continue
       if (!isChallengeLive && usedCharas.has(card.characterId)) continue
@@ -327,7 +357,7 @@ export function findBestCardsGA (
       bCandidates[j] = tmp
     }
 
-    const needed = member - deck.length
+    const needed = nonFixedLen - deck.length
     for (let i = 0; i < Math.min(needed, bCandidates.length); i++) {
       const card = b.deck[bCandidates[i]]
       deck.push(card)
@@ -335,43 +365,42 @@ export function findBestCardsGA (
       usedCardIds.add(card.cardId)
     }
 
-    if (deck.length < member) return null
+    if (deck.length < nonFixedLen) return null
+
+    // 添加固定卡牌
+    for (const card of fixedCards) {
+      deck.push(card)
+    }
+
+    if (deck.length !== member) return null
 
     return { deck, deckHash: 0, fitness: 0 }
   }
 
-  // 变异
+  // 变异（参考 C++ 库：固定角色位只能在同角色内换卡，固定卡牌位不参与变异）
   const mutate = (individual: Individual, mutationRate: number): void => {
-    for (let pos = 0; pos < individual.deck.length; pos++) {
+    const nonFixedLen = individual.deck.length - fixedSize
+    for (let pos = 0; pos < nonFixedLen; pos++) {
       if (rng.next() > mutationRate) continue
 
-      // 如果指定了队长角色，队长位只能在同角色内换卡
-      if (leaderCharacter > 0 && pos === 0) {
-        const cards = charaCards[leaderCharacter]
-        if (cards.length <= 1) continue
-        const newCard = cards[rng.nextInt(cards.length)]
-        if (newCard.cardId !== individual.deck[0].cardId) {
-          individual.deck[0] = newCard
-        }
-        continue
-      }
+      const isFixedChara = fixedCharacterSet.has(individual.deck[pos].characterId)
 
       // 尝试替换
       for (let attempt = 0; attempt < 10; attempt++) {
         let newCard: CardDetail
-        if (!isChallengeLive) {
-          // 从同角色或随机角色中选
-          if (rng.next() < 0.5) {
-            // 同角色不同卡
-            const chara = individual.deck[pos].characterId
-            const cards = charaCards[chara]
-            if (cards.length <= 1) continue
-            newCard = cards[rng.nextInt(cards.length)]
-          } else {
-            // 随机角色
-            newCard = cardDetails[rng.nextInt(cardDetails.length)]
-          }
+        if (isFixedChara) {
+          // 固定角色位只能在同角色内换卡
+          const cards = charaCards[individual.deck[pos].characterId]
+          if (cards.length <= 1) break
+          newCard = cards[rng.nextInt(cards.length)]
+        } else if (!isChallengeLive && rng.next() < 0.5) {
+          // 同角色不同卡
+          const chara = individual.deck[pos].characterId
+          const cards = charaCards[chara]
+          if (cards.length <= 1) continue
+          newCard = cards[rng.nextInt(cards.length)]
         } else {
+          // 随机角色
           newCard = cardDetails[rng.nextInt(cardDetails.length)]
         }
 
@@ -392,6 +421,15 @@ export function findBestCardsGA (
 
   // ======================== 主循环 ========================
 
+  // 如果全部固定，直接评估一次
+  if (member === fixedSize + fixedCharacters.length) {
+    const ind = generateRandomIndividual()
+    if (ind !== null) {
+      evaluateIndividual(ind)
+    }
+    return bestDecks
+  }
+
   // 生成初始种群
   let population: Individual[] = []
   for (let i = 0; i < cfg.popSize; i++) {
@@ -399,14 +437,17 @@ export function findBestCardsGA (
     const ind = generateRandomIndividual()
     if (ind === null) continue
     evaluateIndividual(ind)
-    population.push(ind)
+    if (ind.fitness >= 0) {
+      population.push(ind)
+    }
   }
 
   if (population.length === 0) {
     return bestDecks
   }
 
-  let curMaxFitness = 0
+  // 用初始种群的最高 fitness 初始化，避免第一代就误判为无改进
+  let curMaxFitness = population.reduce((max, ind) => Math.max(max, ind.fitness), 0)
   let lastMaxFitness = 0
   let noImproveIter = 0
 

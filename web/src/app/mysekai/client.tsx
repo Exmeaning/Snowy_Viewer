@@ -530,9 +530,6 @@ function MysekaiContent() {
                 </select>
             </FilterSection>
 
-            <div className="mt-4 text-[10px] text-slate-400 text-center px-2">
-                * 类别和标签使用LLM进行翻译 可能存在不准确现象
-            </div>
 
         </BaseFilters>
     );

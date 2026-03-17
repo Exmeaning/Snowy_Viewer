@@ -145,11 +145,16 @@ function canMakeDeck (liveType: LiveType, eventType: EventType, cardDetails: Car
  * @param cardDetails 卡牌
  * @param preCardDetails 上一次的卡牌，保证返回卡牌数量大于等于它，且能组成队伍
  * @param member 卡组成员限制
- * @param leader 固定的队长角色（用于判断leader加成）
+ * @param leader 固定的队长角色（用于判断leader加成，向后兼容）
+ * @param fixedCharacters 固定角色ID列表（扩展支持多个固定角色）
  */
 export function filterCardPriority (
-  liveType: LiveType, eventType: EventType, cardDetails: CardDetail[], preCardDetails: CardDetail[], member: number = 5, leader: number = 0
+  liveType: LiveType, eventType: EventType, cardDetails: CardDetail[], preCardDetails: CardDetail[], member: number = 5, leader: number = 0, fixedCharacters: number[] = []
 ): CardDetail[] {
+  // 构建固定角色集合（合并 leader 和 fixedCharacters）
+  const fixedCharacterSet = new Set(fixedCharacters)
+  if (leader > 0) fixedCharacterSet.add(leader)
+
   const cardPriorities = getCardPriorities(liveType, eventType)
   let cards: CardDetail[] = []
   let latestPriority = Number.MIN_SAFE_INTEGER
@@ -163,12 +168,13 @@ export function filterCardPriority (
     latestPriority = cardPriority.priority
     // 追加符合优先级限制的卡牌
     // 要保证不添加额外的重复卡牌
+    // 固定角色的卡牌使用 getMaxBonus(true) 计算（包含队长加成），其他卡牌使用 getMaxBonus(false)
     const filtered = cardDetails
       .filter(it => !cardIds.has(it.cardId) &&
         it.cardRarityType === cardPriority.cardRarityType &&
         it.masterRank >= cardPriority.masterRank &&
         (it.eventBonus === undefined ||
-            it.eventBonus.getMaxBonus(leader <= 0 || leader === it.characterId) >= cardPriority.eventBonus))
+            it.eventBonus.getMaxBonus(fixedCharacterSet.size === 0 || fixedCharacterSet.has(it.characterId)) >= cardPriority.eventBonus))
     filtered.forEach(it => cardIds.add(it.cardId))
     cards = [...cards, ...filtered]
   }
