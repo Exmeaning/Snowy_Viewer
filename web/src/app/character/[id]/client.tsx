@@ -11,7 +11,8 @@ import {
     ICharaUnitInfo,
     ICardInfo,
     CHARACTER_NAMES,
-    UNIT_DATA
+    UNIT_DATA,
+    isTrainableCard
 } from "@/types/types";
 import {
     getCharacterTrimUrl,
@@ -38,7 +39,7 @@ const UNIT_ICONS: Record<string, string> = {
 export default function CharacterDetailClient() {
     const router = useRouter();
     const params = useParams();
-    const { assetSource } = useTheme();
+    const { assetSource, useTrainedThumbnail } = useTheme();
     const { setDetailName } = useBreadcrumb();
     const id = parseInt(params.id as string, 10);
 
@@ -377,16 +378,21 @@ export default function CharacterDetailClient() {
                         </div>
                         <div className="p-6">
                             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                                {cards.map((card) => (
-                                    <Link
-                                        key={card.id}
-                                        href={`/cards/${card.id}`}
-                                        className="block"
-                                        title={card.prefix}
-                                    >
-                                        <SekaiCardThumbnail card={card} trained={false} className="w-full" />
-                                    </Link>
-                                ))}
+                                {cards.map((card) => {
+                                    const TRAINED_ONLY_CARDS = [1167];
+                                    const isTrainedOnlyCard = TRAINED_ONLY_CARDS.includes(card.id);
+                                    const showTrained = isTrainedOnlyCard || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
+                                    return (
+                                        <Link
+                                            key={card.id}
+                                            href={`/cards/${card.id}`}
+                                            className="block"
+                                            title={card.prefix}
+                                        >
+                                            <SekaiCardThumbnail card={card} trained={showTrained} className="w-full" />
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
