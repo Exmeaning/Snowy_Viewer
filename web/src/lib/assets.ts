@@ -112,6 +112,11 @@ export function getEventLogoUrl(assetbundleName: string, source: AssetSourceType
     return `${baseUrl}/ondemand/event/${assetbundleName}/logo/logo.png`;
 }
 
+export function getEventStoryBannerUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
+    const baseUrl = getAssetBaseUrl(source);
+    return `${baseUrl}/ondemand/event_story/${assetbundleName}/screen_image/banner_event_story.png`;
+}
+
 export function getEventBgmUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
     // For CN sources or snowy/haruki, use their own base URL directly
     if (isCnSource(source) || source === "snowyassets" || source === "haruki") {

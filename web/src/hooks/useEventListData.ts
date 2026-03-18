@@ -28,6 +28,7 @@ export interface UseEventListDataReturn {
     translations: TranslationData | null;
     eventUnitMap: Map<number, string>;
     eventBannerCharMap: Map<number, number>;
+    eventStoryIds: Set<number>;
     isLoading: boolean;
     error: string | null;
 
@@ -251,6 +252,8 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         return buildEventBannerCharMap(eventStories, charaUnits);
     }, [eventStories, charaUnits]);
 
+    const eventStoryIds = useMemo(() => new Set(eventStories.map(s => s.eventId)), [eventStories]);
+
     // ---- Filter & sort ----
     const filteredEvents = useMemo(() => {
         let result = [...events];
@@ -340,6 +343,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         translations,
         eventUnitMap,
         eventBannerCharMap,
+        eventStoryIds,
         isLoading,
         error,
         filteredEvents,

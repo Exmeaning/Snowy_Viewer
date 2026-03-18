@@ -2,10 +2,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { IEventInfo, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS, getEventStatus, EVENT_STATUS_DISPLAY, EventType } from "@/types/events";
-import { getEventLogoUrl, getCharacterIconUrl } from "@/lib/assets";
+import { getEventStoryBannerUrl, getEventLogoUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
-import { CHARACTER_NAMES } from "@/types/types";
 
 // Unit icon mapping for event unit badge
 const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = {
@@ -22,12 +21,15 @@ interface EventItemProps {
     isSpoiler?: boolean;
     basePath?: string;
     unitType?: string;
-    bannerCharId?: number;
+    eventStoryIds?: Set<number>;
 }
 
-export default function EventItem({ event, isSpoiler, basePath = "/events", unitType, bannerCharId }: EventItemProps) {
+export default function EventItem({ event, isSpoiler, basePath = "/events", unitType, eventStoryIds }: EventItemProps) {
     const { assetSource } = useTheme();
-    const logoUrl = getEventLogoUrl(event.assetbundleName, assetSource);
+    const hasEventStoryBanner = eventStoryIds ? eventStoryIds.has(event.id) : true;
+    const thumbnailUrl = hasEventStoryBanner
+        ? getEventStoryBannerUrl(event.assetbundleName, assetSource)
+        : getEventLogoUrl(event.assetbundleName, assetSource);
     const status = getEventStatus(event);
     const statusDisplay = EVENT_STATUS_DISPLAY[status];
 
@@ -46,10 +48,10 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                 {/* Event Logo */}
                 <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
                     <Image
-                        src={logoUrl}
+                        src={thumbnailUrl}
                         alt={event.name}
                         fill
-                        className="object-contain p-4 transition-transform duration-300 group-hover:scale-105"
+                        className={`object-contain transition-transform duration-300 group-hover:scale-105 ${hasEventStoryBanner ? "" : "p-4"}`}
                         unoptimized
                     />
 
@@ -69,60 +71,37 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                         {EVENT_TYPE_NAMES[event.eventType as EventType]}
                     </div>
 
-                    {/* Event Unit Badge */}
-                    {unitType && (
-                        <div className="absolute bottom-2 left-2">
-                            {EVENT_UNIT_ICON[unitType] ? (
-                                <div className="w-6 h-6 rounded-full bg-white/80 backdrop-blur-sm shadow-sm flex items-center justify-center" title={EVENT_UNIT_ICON[unitType].name}>
-                                    <Image
-                                        src={`/data/icon/${EVENT_UNIT_ICON[unitType].icon}`}
-                                        alt={EVENT_UNIT_ICON[unitType].name}
-                                        width={18}
-                                        height={18}
-                                        className="object-contain"
-                                        unoptimized
-                                    />
-                                </div>
-                            ) : (
-                                <div className="px-1.5 py-0.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm" title="混合">
-                                    <span className="text-[10px] text-slate-500 font-bold">混合</span>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
                     {/* Spoiler Badge - Bottom Right */}
                     {isSpoiler && (
                         <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-orange-500 rounded-full text-xs font-bold text-white shadow">
                             剧透
                         </div>
                     )}
-
-                    {/* Banner Character Avatar - Bottom Right */}
-                    {bannerCharId && (
-                        <div
-                            className={`absolute ${isSpoiler ? "bottom-8" : "bottom-2"} right-2 w-7 h-7 rounded-full overflow-hidden bg-white shadow ring-1 ring-slate-200`}
-                            title={CHARACTER_NAMES[bannerCharId] || `Character ${bannerCharId}`}
-                        >
-                            <Image
-                                src={getCharacterIconUrl(bannerCharId)}
-                                alt={CHARACTER_NAMES[bannerCharId] || ""}
-                                width={28}
-                                height={28}
-                                className="w-full h-full object-cover"
-                                unoptimized
-                            />
-                        </div>
-                    )}
                 </div>
 
                 {/* Event Info */}
                 <div className="p-4">
-                    {/* ID Badge */}
+                    {/* ID Badge + Unit Badge */}
                     <div className="flex items-center gap-2 mb-2">
                         <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs font-mono rounded-full">
                             #{event.id}
                         </span>
+                        {unitType && (
+                            EVENT_UNIT_ICON[unitType] ? (
+                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center" title={EVENT_UNIT_ICON[unitType].name}>
+                                    <Image
+                                        src={`/data/icon/${EVENT_UNIT_ICON[unitType].icon}`}
+                                        alt={EVENT_UNIT_ICON[unitType].name}
+                                        width={16}
+                                        height={16}
+                                        className="object-contain"
+                                        unoptimized
+                                    />
+                                </div>
+                            ) : (
+                                <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full" title="混合">混</span>
+                            )
+                        )}
                     </div>
 
                     {/* Event Name */}

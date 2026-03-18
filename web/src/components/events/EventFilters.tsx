@@ -15,7 +15,7 @@ export const EVENT_UNIT_FILTERS: { id: EventUnitFilterId; name: string; icon?: s
     { id: "ws", name: "Wonderlands×Showtime", icon: "wxs.webp" },
     { id: "25ji", name: "25時、ナイトコードで。", icon: "n25.webp" },
     { id: "vs", name: "Virtual Singer", icon: "vs.webp" },
-    { id: "mixed", name: "混合" },
+    { id: "mixed", name: "混" },
 ];
 
 /** Map raw event_type from actionSets to filter ID */
@@ -149,7 +149,7 @@ export default function EventFilters({
                                     </div>
                                 ) : (
                                     <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                                        <span className="text-[10px] text-slate-500 font-bold">混合</span>
+                                        <span className="text-xs text-slate-500 font-bold">混</span>
                                     </div>
                                 )}
                             </button>

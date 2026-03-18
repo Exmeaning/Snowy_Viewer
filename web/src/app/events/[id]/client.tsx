@@ -16,7 +16,7 @@ import {
 } from "@/types/events";
 import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, getEventUnitDisplayName, buildEventBannerCharMap } from "@/lib/eventUnit";
 import { type EventUnitFilterId } from "@/components/events/EventFilters";
-import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
+import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getEventStoryBannerUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
 import { CHARACTER_NAMES, getRarityNumber, RARITY_DISPLAY, isTrainableCard } from "@/types/types";
 import type { ICardInfo, ICharaUnitInfo, IGameChara } from "@/types/types";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
@@ -101,11 +101,12 @@ export default function EventDetailPage() {
     const [gameCharacters, setGameCharacters] = useState<IGameChara[]>([]);
     const [eventUnitMap, setEventUnitMap] = useState<Map<number, EventUnitFilterId>>(new Map());
     const [bannerCharId, setBannerCharId] = useState<number | null>(null);
+    const [hasEventStory, setHasEventStory] = useState(true);
     const [virtualLive, setVirtualLive] = useState<IVirtualLiveInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
-    const [activeImageTab, setActiveImageTab] = useState<"logo" | "banner" | "character">("logo");
+    const [activeImageTab, setActiveImageTab] = useState<"event_story_banner" | "logo" | "banner" | "character">("event_story_banner");
     const [imageViewerOpen, setImageViewerOpen] = useState(false);
     const { useTrainedThumbnail, assetSource } = useTheme();
     const { setDetailName } = useBreadcrumb();
@@ -162,6 +163,8 @@ export default function EventDetailPage() {
                 // Build banner character
                 const bannerMap = buildEventBannerCharMap(eventStoriesData, charUnitsData);
                 setBannerCharId(bannerMap.get(eventId) ?? null);
+                // Check if this event has event stories
+                setHasEventStory(eventStoriesData.some(s => s.eventId === eventId));
                 setError(null);
             } catch (err) {
                 console.error("Error fetching event:", err);
@@ -311,6 +314,7 @@ export default function EventDetailPage() {
     }
 
     const logoUrl = getEventLogoUrl(event.assetbundleName, assetSource);
+    const eventStoryBannerUrl = getEventStoryBannerUrl(event.assetbundleName, assetSource);
     const bannerUrl = getEventBannerUrl(event.assetbundleName, assetSource);
     const characterUrl = getEventCharacterUrl(event.assetbundleName, assetSource);
     const status = getEventStatus(event);
@@ -321,8 +325,14 @@ export default function EventDetailPage() {
     const hasBannerChar = event.eventType !== "world_bloom" && bannerCharId !== null;
     const showCharacterTab = hasBannerChar || CHARACTER_TAB_WHITELIST.includes(event.id);
 
-    const activeImageUrl = activeImageTab === "logo" ? logoUrl : activeImageTab === "banner" ? bannerUrl : characterUrl;
-    const activeImageLabel = activeImageTab === "logo" ? "Logo" : activeImageTab === "banner" ? "背景" : "角色";
+    // Events not in eventStories.json have no event story banner
+    const showEventStoryBannerTab = hasEventStory;
+
+    // Resolve effective tab (fallback to "logo" if event_story_banner tab is hidden)
+    const effectiveTab = (activeImageTab === "event_story_banner" && !showEventStoryBannerTab) ? "logo" : activeImageTab;
+
+    const activeImageUrl = effectiveTab === "event_story_banner" ? eventStoryBannerUrl : effectiveTab === "logo" ? logoUrl : effectiveTab === "banner" ? bannerUrl : characterUrl;
+    const activeImageLabel = effectiveTab === "event_story_banner" ? "Logo" : effectiveTab === "logo" ? "标题" : effectiveTab === "banner" ? "背景" : "角色";
 
     return (
         <MainLayout>
@@ -373,19 +383,36 @@ export default function EventDetailPage() {
                         {isScreenshotMode ? (
                             /* Screenshot Mode: Show all images in flat layout */
                             <div className="space-y-4">
-                                {/* Logo */}
+                                {/* Event Story Banner (Logo) — only for events with story */}
+                                {showEventStoryBannerTab && (
                                 <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
                                     <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
                                         <span className="text-sm font-bold text-slate-600">Logo</span>
                                     </div>
                                     <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100">
                                         <Image
-                                            src={logoUrl}
+                                            src={eventStoryBannerUrl}
                                             alt={`${event.name} Logo`}
+                                            fill
+                                            className="object-contain"
+                                            unoptimized
+                                            priority
+                                        />
+                                    </div>
+                                </div>
+                                )}
+                                {/* 标题 (Title Logo) */}
+                                <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                                    <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
+                                        <span className="text-sm font-bold text-slate-600">标题</span>
+                                    </div>
+                                    <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100">
+                                        <Image
+                                            src={logoUrl}
+                                            alt={`${event.name} 标题`}
                                             fill
                                             className="object-contain p-6"
                                             unoptimized
-                                            priority
                                         />
                                     </div>
                                 </div>
@@ -428,14 +455,15 @@ export default function EventDetailPage() {
                                 {/* Tabs */}
                                 <div className="flex border-b border-slate-200">
                                     {[
-                                        { key: "logo", label: "Logo" },
+                                        ...(showEventStoryBannerTab ? [{ key: "event_story_banner", label: "Logo" }] : []),
+                                        { key: "logo", label: "标题" },
                                         { key: "banner", label: "背景" },
                                         ...(showCharacterTab ? [{ key: "character", label: "角色" }] : []),
                                     ].map((tab) => (
                                         <button
                                             key={tab.key}
-                                            onClick={() => setActiveImageTab(tab.key as "logo" | "banner" | "character")}
-                                            className={`flex-1 py-3 px-4 text-sm font-bold transition-colors ${activeImageTab === tab.key
+                                            onClick={() => setActiveImageTab(tab.key as "event_story_banner" | "logo" | "banner" | "character")}
+                                            className={`flex-1 py-3 px-4 text-sm font-bold transition-colors ${effectiveTab === tab.key
                                                 ? "text-miku border-b-2 border-miku bg-miku/5"
                                                 : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                                                 }`}
@@ -449,17 +477,27 @@ export default function EventDetailPage() {
                                     className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100 cursor-zoom-in group"
                                     onClick={() => setImageViewerOpen(true)}
                                 >
-                                    {activeImageTab === "logo" && (
+                                    {effectiveTab === "event_story_banner" && (
+                                        <Image
+                                            src={eventStoryBannerUrl}
+                                            alt={`${event.name} Logo`}
+                                            fill
+                                            className="object-contain"
+                                            unoptimized
+                                            priority
+                                        />
+                                    )}
+                                    {effectiveTab === "logo" && (
                                         <Image
                                             src={logoUrl}
-                                            alt={`${event.name} Logo`}
+                                            alt={`${event.name} 标题`}
                                             fill
                                             className="object-contain p-6"
                                             unoptimized
                                             priority
                                         />
                                     )}
-                                    {activeImageTab === "banner" && (
+                                    {effectiveTab === "banner" && (
                                         <Image
                                             src={bannerUrl}
                                             alt={`${event.name} Banner`}
@@ -468,7 +506,7 @@ export default function EventDetailPage() {
                                             unoptimized
                                         />
                                     )}
-                                    {activeImageTab === "character" && showCharacterTab && (
+                                    {effectiveTab === "character" && showCharacterTab && (
                                         <Image
                                             src={characterUrl}
                                             alt={`${event.name} Character`}

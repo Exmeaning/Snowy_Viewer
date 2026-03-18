@@ -9,6 +9,7 @@ interface EventGridProps {
     basePath?: string;
     eventUnitMap?: Map<number, string>;
     eventBannerCharMap?: Map<number, number>;
+    eventStoryIds?: Set<number>;
 }
 
 // Skeleton loading component
@@ -25,7 +26,7 @@ function EventSkeleton() {
     );
 }
 
-export default function EventGrid({ events, isLoading = false, basePath = "/events", eventUnitMap, eventBannerCharMap }: EventGridProps) {
+export default function EventGrid({ events, isLoading = false, basePath = "/events", eventUnitMap, eventBannerCharMap, eventStoryIds }: EventGridProps) {
     const [now] = useState(() => Date.now());
 
     // Show skeletons while loading
@@ -58,8 +59,7 @@ export default function EventGrid({ events, isLoading = false, basePath = "/even
         <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
             {events.map(event => {
                 const isSpoiler = event.startAt > now;
-                const bannerCharId = event.eventType !== "world_bloom" ? eventBannerCharMap?.get(event.id) : undefined;
-                return <EventItem key={event.id} event={event} isSpoiler={isSpoiler} basePath={basePath} unitType={eventUnitMap?.get(event.id)} bannerCharId={bannerCharId} />;
+                return <EventItem key={event.id} event={event} isSpoiler={isSpoiler} basePath={basePath} unitType={eventUnitMap?.get(event.id)} eventStoryIds={eventStoryIds} />;
             })}
         </div>
     );

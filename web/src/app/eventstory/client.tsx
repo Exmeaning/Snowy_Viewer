@@ -89,7 +89,7 @@ function StoryListContent() {
 
                 {/* Event Grid */}
                 <div className="flex-1 min-w-0">
-                    <EventGrid events={data.displayedEvents} isLoading={data.isLoading} basePath="/eventstory" eventUnitMap={data.eventUnitMap} eventBannerCharMap={data.eventBannerCharMap} />
+                    <EventGrid events={data.displayedEvents} isLoading={data.isLoading} basePath="/eventstory" eventUnitMap={data.eventUnitMap} eventBannerCharMap={data.eventBannerCharMap} eventStoryIds={data.eventStoryIds} />
 
                     {/* Load More Button */}
                     {!data.isLoading && data.displayedEvents.length < data.filteredEvents.length && (
