@@ -43,6 +43,12 @@ interface EventFiltersProps {
     onUnitIdsChange: (units: string[]) => void;
     charaUnits?: ICharaUnitInfo[];
 
+    // Banner character filter (optional)
+    selectedBannerChars?: number[];
+    onBannerCharsChange?: (chars: number[]) => void;
+    selectedBannerUnitIds?: string[];
+    onBannerUnitIdsChange?: (units: string[]) => void;
+
     searchQuery: string;
     onSearchChange: (query: string) => void;
     sortBy: "id" | "startAt";
@@ -70,6 +76,10 @@ export default function EventFilters({
     selectedUnitIds,
     onUnitIdsChange,
     charaUnits,
+    selectedBannerChars,
+    onBannerCharsChange,
+    selectedBannerUnitIds,
+    onBannerUnitIdsChange,
     searchQuery,
     onSearchChange,
     sortBy,
@@ -96,7 +106,7 @@ export default function EventFilters({
         }
     };
 
-    const hasActiveFilters = selectedTypes.length > 0 || (selectedEventUnits && selectedEventUnits.length > 0) || selectedCharacters.length > 0 || searchQuery.trim() !== "";
+    const hasActiveFilters = selectedTypes.length > 0 || (selectedEventUnits && selectedEventUnits.length > 0) || selectedCharacters.length > 0 || (selectedBannerChars && selectedBannerChars.length > 0) || searchQuery.trim() !== "";
 
     return (
         <BaseFilters
@@ -148,6 +158,18 @@ export default function EventFilters({
                 </FilterSection>
             )}
 
+            {/* Banner Character Filter */}
+            {selectedBannerChars && onBannerCharsChange && selectedBannerUnitIds && onBannerUnitIdsChange && (
+                <CharacterFilter
+                    selectedCharacters={selectedBannerChars}
+                    onCharacterChange={onBannerCharsChange}
+                    selectedUnitIds={selectedBannerUnitIds}
+                    onUnitIdsChange={onBannerUnitIdsChange}
+                    unitLabel="封面角色"
+                    characterLabel="封面角色"
+                />
+            )}
+
             {/* Event Type Filter */}
             <FilterSection label="活动形式">
                 <div className="flex flex-wrap gap-2">
@@ -173,7 +195,7 @@ export default function EventFilters({
                 onCharacterChange={onCharacterChange}
                 selectedUnitIds={selectedUnitIds}
                 onUnitIdsChange={onUnitIdsChange}
-                unitLabel="加成角色 (团体)"
+                unitLabel="加成角色"
                 characterLabel="加成角色"
                 charaUnits={charaUnits}
             />

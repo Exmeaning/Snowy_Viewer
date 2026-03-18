@@ -1,8 +1,15 @@
 import { EVENT_TYPE_TO_FILTER_ID, EVENT_UNIT_FILTERS, type EventUnitFilterId } from "@/components/events/EventFilters";
+import type { ICharaUnitInfo } from "@/types/types";
 
 export interface IActionSet {
     releaseConditionId: number;
     scenarioId?: string;
+}
+
+export interface IEventStory {
+    id: number;
+    eventId: number;
+    bannerGameCharacterUnitId: number;
 }
 
 /**
@@ -51,4 +58,28 @@ export function getEventUnitDisplayName(eventId: number, eventUnitMap: Map<numbe
     if (!filterId) return "无";
     const unitInfo = EVENT_UNIT_FILTERS.find(u => u.id === filterId);
     return unitInfo?.name ?? "混合";
+}
+
+/**
+ * Build a map from eventId → gameCharacterId (banner character).
+ * Uses eventStories.json's bannerGameCharacterUnitId and resolves it
+ * to a gameCharacterId via gameCharacterUnits.
+ */
+export function buildEventBannerCharMap(
+    eventStories: IEventStory[],
+    charaUnits: ICharaUnitInfo[],
+): Map<number, number> {
+    const unitIdToCharId = new Map<number, number>();
+    for (const cu of charaUnits) {
+        unitIdToCharId.set(cu.id, cu.gameCharacterId);
+    }
+
+    const map = new Map<number, number>();
+    for (const story of eventStories) {
+        const charId = unitIdToCharId.get(story.bannerGameCharacterUnitId);
+        if (charId !== undefined) {
+            map.set(story.eventId, charId);
+        }
+    }
+    return map;
 }

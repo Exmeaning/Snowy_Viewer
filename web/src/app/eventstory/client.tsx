@@ -20,6 +20,10 @@ function StoryListContent() {
             selectedUnitIds={data.selectedUnitIds}
             onUnitIdsChange={data.setSelectedUnitIds}
             charaUnits={data.charaUnits}
+            selectedBannerChars={data.selectedBannerChars}
+            onBannerCharsChange={data.setSelectedBannerChars}
+            selectedBannerUnitIds={data.selectedBannerUnitIds}
+            onBannerUnitIdsChange={data.setSelectedBannerUnitIds}
             searchQuery={data.searchQuery}
             onSearchChange={data.setSearchQuery}
             sortBy={data.sortBy}
@@ -36,6 +40,8 @@ function StoryListContent() {
         data.selectedEventUnits,
         data.selectedCharacters,
         data.selectedUnitIds,
+        data.selectedBannerChars,
+        data.selectedBannerUnitIds,
         data.searchQuery,
         data.sortBy,
         data.sortOrder,

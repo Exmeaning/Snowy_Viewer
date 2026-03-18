@@ -8,7 +8,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
-import { IActionSet, buildEventRawUnitMap, rawUnitToFilterId } from "@/lib/eventUnit";
+import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, buildEventBannerCharMap } from "@/lib/eventUnit";
 
 // ---------------------------------------------------------------------------
 // Hook config & return type
@@ -43,6 +43,10 @@ export interface UseEventListDataReturn {
     setSelectedCharacters: (v: number[]) => void;
     selectedUnitIds: string[];
     setSelectedUnitIds: (v: string[]) => void;
+    selectedBannerChars: number[];
+    setSelectedBannerChars: (v: number[]) => void;
+    selectedBannerUnitIds: string[];
+    setSelectedBannerUnitIds: (v: string[]) => void;
     searchQuery: string;
     setSearchQuery: (v: string) => void;
 
@@ -70,6 +74,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
     const [deckBonuses, setDeckBonuses] = useState<IEventDeckBonus[]>([]);
     const [charaUnits, setCharaUnits] = useState<ICharaUnitInfo[]>([]);
     const [actionSets, setActionSets] = useState<IActionSet[]>([]);
+    const [eventStories, setEventStories] = useState<IEventStory[]>([]);
     const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -80,6 +85,8 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
     const [selectedEventUnits, setSelectedEventUnits] = useState<EventUnitFilterId[]>([]);
     const [selectedCharacters, setSelectedCharacters] = useState<number[]>([]);
     const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
+    const [selectedBannerChars, setSelectedBannerChars] = useState<number[]>([]);
+    const [selectedBannerUnitIds, setSelectedBannerUnitIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
 
     // Sort states
@@ -102,17 +109,21 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         const eventUnits = searchParams.get("eventUnits");
         const chars = searchParams.get("characters");
         const units = searchParams.get("units");
+        const bannerChars = searchParams.get("bannerChars");
+        const bannerUnits = searchParams.get("bannerUnits");
         const search = searchParams.get("search");
         const sort = searchParams.get("sortBy");
         const order = searchParams.get("sortOrder");
 
-        const hasUrlParams = types || eventUnits || chars || units || search || sort || order;
+        const hasUrlParams = types || eventUnits || chars || units || bannerChars || bannerUnits || search || sort || order;
 
         if (hasUrlParams) {
             if (types) setSelectedTypes(types.split(",") as EventType[]);
             if (eventUnits) setSelectedEventUnits(eventUnits.split(",") as EventUnitFilterId[]);
             if (chars) setSelectedCharacters(chars.split(",").map(Number));
             if (units) setSelectedUnitIds(units.split(","));
+            if (bannerChars) setSelectedBannerChars(bannerChars.split(",").map(Number));
+            if (bannerUnits) setSelectedBannerUnitIds(bannerUnits.split(","));
             if (search) setSearchQuery(search);
             if (sort) setSortBy(sort as "id" | "startAt");
             if (order) setSortOrder(order as "asc" | "desc");
@@ -125,6 +136,8 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
                     if (f.eventUnits?.length) setSelectedEventUnits(f.eventUnits);
                     if (f.characters?.length) setSelectedCharacters(f.characters);
                     if (f.units?.length) setSelectedUnitIds(f.units);
+                    if (f.bannerChars?.length) setSelectedBannerChars(f.bannerChars);
+                    if (f.bannerUnits?.length) setSelectedBannerUnitIds(f.bannerUnits);
                     if (f.search) setSearchQuery(f.search);
                     if (f.sortBy) setSortBy(f.sortBy);
                     if (f.sortOrder) setSortOrder(f.sortOrder);
@@ -146,6 +159,8 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
             eventUnits: selectedEventUnits,
             characters: selectedCharacters,
             units: selectedUnitIds,
+            bannerChars: selectedBannerChars,
+            bannerUnits: selectedBannerUnitIds,
             search: searchQuery,
             sortBy,
             sortOrder,
@@ -157,30 +172,34 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         if (selectedEventUnits.length > 0) params.set("eventUnits", selectedEventUnits.join(","));
         if (selectedCharacters.length > 0) params.set("characters", selectedCharacters.join(","));
         if (selectedUnitIds.length > 0) params.set("units", selectedUnitIds.join(","));
+        if (selectedBannerChars.length > 0) params.set("bannerChars", selectedBannerChars.join(","));
+        if (selectedBannerUnitIds.length > 0) params.set("bannerUnits", selectedBannerUnitIds.join(","));
         if (searchQuery) params.set("search", searchQuery);
         if (sortBy !== "id") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
 
         const qs = params.toString();
         router.replace(qs ? `${basePath}?${qs}` : basePath, { scroll: false });
-    }, [selectedTypes, selectedEventUnits, selectedCharacters, selectedUnitIds, searchQuery, sortBy, sortOrder, router, filtersInitialized, basePath, STORAGE_KEY]);
+    }, [selectedTypes, selectedEventUnits, selectedCharacters, selectedUnitIds, selectedBannerChars, selectedBannerUnitIds, searchQuery, sortBy, sortOrder, router, filtersInitialized, basePath, STORAGE_KEY]);
 
     // ---- Fetch data ----
     useEffect(() => {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [eventsData, bonusesData, charaUnitsData, actionSetsData, translationsData] = await Promise.all([
+                const [eventsData, bonusesData, charaUnitsData, actionSetsData, eventStoriesData, translationsData] = await Promise.all([
                     fetchMasterData<IEventInfo[]>("events.json"),
                     fetchMasterData<IEventDeckBonus[]>("eventDeckBonuses.json"),
                     fetchMasterData<ICharaUnitInfo[]>("gameCharacterUnits.json"),
                     fetchMasterData<IActionSet[]>("actionSets.json"),
+                    fetchMasterData<IEventStory[]>("eventStories.json"),
                     loadTranslations(),
                 ]);
                 setEvents(eventsData);
                 setDeckBonuses(bonusesData);
                 setCharaUnits(charaUnitsData);
                 setActionSets(actionSetsData);
+                setEventStories(eventStoriesData);
                 setTranslations(translationsData);
                 setError(null);
             } catch (err) {
@@ -226,6 +245,11 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         return filterMap;
     }, [actionSets]);
 
+    const eventBannerCharMap = useMemo(() => {
+        if (eventStories.length === 0 || charaUnits.length === 0) return new Map<number, number>();
+        return buildEventBannerCharMap(eventStories, charaUnits);
+    }, [eventStories, charaUnits]);
+
     // ---- Filter & sort ----
     const filteredEvents = useMemo(() => {
         let result = [...events];
@@ -255,6 +279,14 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
             });
         }
 
+        if (selectedBannerChars.length > 0) {
+            result = result.filter(e => {
+                if (e.eventType === "world_bloom") return false;
+                const bannerCharId = eventBannerCharMap.get(e.id);
+                return bannerCharId !== undefined && selectedBannerChars.includes(bannerCharId);
+            });
+        }
+
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase().trim();
             const qNum = parseInt(q, 10);
@@ -277,7 +309,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         });
 
         return result;
-    }, [events, selectedTypes, selectedEventUnits, eventUnitMap, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
+    }, [events, selectedTypes, selectedEventUnits, eventUnitMap, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, selectedBannerChars, eventBannerCharMap, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
 
     const displayedEvents = useMemo(() => filteredEvents.slice(0, displayCount), [filteredEvents, displayCount]);
 
@@ -287,6 +319,8 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         setSelectedEventUnits([]);
         setSelectedCharacters([]);
         setSelectedUnitIds([]);
+        setSelectedBannerChars([]);
+        setSelectedBannerUnitIds([]);
         setSearchQuery("");
         setSortBy("id");
         setSortOrder("desc");
@@ -316,6 +350,10 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         setSelectedCharacters,
         selectedUnitIds,
         setSelectedUnitIds,
+        selectedBannerChars,
+        setSelectedBannerChars,
+        selectedBannerUnitIds,
+        setSelectedBannerUnitIds,
         searchQuery,
         setSearchQuery,
         sortBy,
