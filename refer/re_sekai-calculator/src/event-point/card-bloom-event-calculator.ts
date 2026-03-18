@@ -8,6 +8,9 @@ import {
   type WorldBloomSupportDeckUnitEventLimitedBonus
 } from '../master-data/world-bloom-support-deck-unit-event-limited-bonus'
 
+const VIRTUAL_SINGER_MIN_ID = 21
+const VIRTUAL_SINGER_MAX_ID = 26
+
 export class CardBloomEventCalculator {
   public constructor (private readonly dataProvider: DataProvider) {
   }
@@ -31,7 +34,8 @@ export class CardBloomEventCalculator {
     if (worldBloomSupportUnit === undefined) return undefined
 
     // 任何World Link都需要先判断一张卡牌是否是和支援角色组合（V家不看应援队伍）匹配，如果不是的话不使用支援加成
-    const isVirtualSinger = card.characterId >= 21 && card.characterId <= 26
+    const isVirtualSinger =
+      card.characterId >= VIRTUAL_SINGER_MIN_ID && card.characterId <= VIRTUAL_SINGER_MAX_ID
     if (!isVirtualSinger && !units.includes(worldBloomSupportUnit)) {
       return undefined
     }

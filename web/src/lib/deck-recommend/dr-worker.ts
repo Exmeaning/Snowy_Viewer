@@ -639,7 +639,7 @@ async function runCustomMode(
     const customEventConfig: EventConfig = { customBonuses };
     if (customUnit && customUnit !== "any") {
         customEventConfig.worldBloomSupportUnit = customUnit;
-        customEventConfig.specialCharacterId = supportCharacterId || 0;
+        customEventConfig.specialCharacterId = supportCharacterId ?? 0;
     }
 
     const baseRecommend = new BaseDeckRecommend(dataProvider);
