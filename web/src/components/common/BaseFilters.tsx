@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 
 // ============================================================================
 // Types
@@ -70,7 +71,20 @@ export default function BaseFilters({
     onReset,
     children,
 }: BaseFiltersProps) {
-    const [mobileCollapsed, setMobileCollapsed] = useState(true);
+    const pathname = usePathname();
+    const STORAGE_KEY = `filters_collapsed:${pathname}`;
+    const [mobileCollapsed, setMobileCollapsed] = useState(() => {
+        if (typeof window === "undefined") return false;
+        try { return localStorage.getItem(STORAGE_KEY) === "true"; } catch { return false; }
+    });
+
+    const toggleCollapsed = () => {
+        setMobileCollapsed(prev => {
+            const next = !prev;
+            try { localStorage.setItem(STORAGE_KEY, String(next)); } catch {}
+            return next;
+        });
+    };
 
     const handleSortClick = (optionId: string) => {
         if (!onSortChange) return;
@@ -84,7 +98,7 @@ export default function BaseFilters({
             {/* Header — clickable on mobile to toggle collapse */}
             <div
                 className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center justify-between lg:cursor-default cursor-pointer select-none"
-                onClick={() => setMobileCollapsed(prev => !prev)}
+                onClick={toggleCollapsed}
             >
                 <h2 className="font-bold text-slate-800 flex items-center gap-2">
                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
