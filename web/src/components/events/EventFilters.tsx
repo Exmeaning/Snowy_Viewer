@@ -1,12 +1,40 @@
 "use client";
+import Image from "next/image";
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { EventType, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS } from "@/types/events";
 import { ICharaUnitInfo } from "@/types/types";
 
+/** Filter IDs for event unit (group) filter */
+export type EventUnitFilterId = "ln" | "mmj" | "vbs" | "ws" | "25ji" | "vs" | "mixed";
+
+export const EVENT_UNIT_FILTERS: { id: EventUnitFilterId; name: string; icon?: string }[] = [
+    { id: "ln", name: "Leo/need", icon: "ln.webp" },
+    { id: "mmj", name: "MORE MORE JUMP!", icon: "mmj.webp" },
+    { id: "vbs", name: "Vivid BAD SQUAD", icon: "vbs.webp" },
+    { id: "ws", name: "Wonderlands×Showtime", icon: "wxs.webp" },
+    { id: "25ji", name: "25時、ナイトコードで。", icon: "n25.webp" },
+    { id: "vs", name: "Virtual Singer", icon: "vs.webp" },
+    { id: "mixed", name: "混合" },
+];
+
+/** Map raw event_type from actionSets to filter ID */
+export const EVENT_TYPE_TO_FILTER_ID: Record<string, EventUnitFilterId> = {
+    band: "ln",
+    idol: "mmj",
+    street: "vbs",
+    wonder: "ws",
+    night: "25ji",
+    piapro: "vs",
+};
+
 interface EventFiltersProps {
     selectedTypes: EventType[];
     onTypeChange: (types: EventType[]) => void;
+
+    // Event unit (group) filter
+    selectedEventUnits: EventUnitFilterId[];
+    onEventUnitChange: (units: EventUnitFilterId[]) => void;
 
     // Character filter (bonus characters)
     selectedCharacters: number[];
@@ -35,6 +63,8 @@ const SORT_OPTIONS = [
 export default function EventFilters({
     selectedTypes,
     onTypeChange,
+    selectedEventUnits,
+    onEventUnitChange,
     selectedCharacters,
     onCharacterChange,
     selectedUnitIds,
@@ -57,7 +87,15 @@ export default function EventFilters({
         }
     };
 
-    const hasActiveFilters = selectedTypes.length > 0 || selectedCharacters.length > 0 || searchQuery.trim() !== "";
+    const toggleEventUnit = (unitId: EventUnitFilterId) => {
+        if (selectedEventUnits.includes(unitId)) {
+            onEventUnitChange(selectedEventUnits.filter(u => u !== unitId));
+        } else {
+            onEventUnitChange([...selectedEventUnits, unitId]);
+        }
+    };
+
+    const hasActiveFilters = selectedTypes.length > 0 || selectedEventUnits.length > 0 || selectedCharacters.length > 0 || searchQuery.trim() !== "";
 
     return (
         <BaseFilters
@@ -74,8 +112,41 @@ export default function EventFilters({
             hasActiveFilters={hasActiveFilters}
             onReset={onReset}
         >
+            {/* Event Unit (Group) Filter */}
+            <FilterSection label="活动团体">
+                <div className="flex flex-wrap gap-2">
+                    {EVENT_UNIT_FILTERS.map(unit => (
+                        <button
+                            key={unit.id}
+                            onClick={() => toggleEventUnit(unit.id)}
+                            className={`p-1.5 rounded-xl transition-all ${selectedEventUnits.includes(unit.id)
+                                ? "ring-2 ring-miku shadow-lg bg-white"
+                                : "hover:bg-slate-100 border border-transparent bg-slate-50"
+                                }`}
+                            title={unit.name}
+                        >
+                            {unit.icon ? (
+                                <div className="w-8 h-8 relative">
+                                    <Image
+                                        src={`/data/icon/${unit.icon}`}
+                                        alt={unit.name}
+                                        fill
+                                        className="object-contain"
+                                        unoptimized
+                                    />
+                                </div>
+                            ) : (
+                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                                    <span className="text-[10px] text-slate-500 font-bold">混合</span>
+                                </div>
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </FilterSection>
+
             {/* Event Type Filter */}
-            <FilterSection label="活动类型">
+            <FilterSection label="活动形式">
                 <div className="flex flex-wrap gap-2">
                     {EVENT_TYPES.map(type => (
                         <button

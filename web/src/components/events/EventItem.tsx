@@ -6,13 +6,24 @@ import { getEventLogoUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
 
+// Unit icon mapping for event unit badge
+const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = {
+    ln: { icon: "ln.webp", name: "Leo/need" },
+    mmj: { icon: "mmj.webp", name: "MORE MORE JUMP!" },
+    vbs: { icon: "vbs.webp", name: "Vivid BAD SQUAD" },
+    ws: { icon: "wxs.webp", name: "Wonderlands×Showtime" },
+    "25ji": { icon: "n25.webp", name: "25時、ナイトコードで。" },
+    vs: { icon: "vs.webp", name: "Virtual Singer" },
+};
+
 interface EventItemProps {
     event: IEventInfo;
     isSpoiler?: boolean;
     basePath?: string;
+    unitType?: string;
 }
 
-export default function EventItem({ event, isSpoiler, basePath = "/events" }: EventItemProps) {
+export default function EventItem({ event, isSpoiler, basePath = "/events", unitType }: EventItemProps) {
     const { assetSource } = useTheme();
     const logoUrl = getEventLogoUrl(event.assetbundleName, assetSource);
     const status = getEventStatus(event);
@@ -55,6 +66,28 @@ export default function EventItem({ event, isSpoiler, basePath = "/events" }: Ev
                     >
                         {EVENT_TYPE_NAMES[event.eventType as EventType]}
                     </div>
+
+                    {/* Event Unit Badge */}
+                    {unitType && (
+                        <div className="absolute bottom-2 left-2">
+                            {EVENT_UNIT_ICON[unitType] ? (
+                                <div className="w-6 h-6 rounded-full bg-white/80 backdrop-blur-sm shadow-sm flex items-center justify-center" title={EVENT_UNIT_ICON[unitType].name}>
+                                    <Image
+                                        src={`/data/icon/${EVENT_UNIT_ICON[unitType].icon}`}
+                                        alt={EVENT_UNIT_ICON[unitType].name}
+                                        width={18}
+                                        height={18}
+                                        className="object-contain"
+                                        unoptimized
+                                    />
+                                </div>
+                            ) : (
+                                <div className="px-1.5 py-0.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm" title="混合">
+                                    <span className="text-[10px] text-slate-500 font-bold">混合</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Spoiler Badge - Bottom Right */}
                     {isSpoiler && (
