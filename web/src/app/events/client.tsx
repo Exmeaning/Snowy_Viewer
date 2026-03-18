@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
 import EventGrid from "@/components/events/EventGrid";
 import EventFilters from "@/components/events/EventFilters";
+import { EVENT_TYPE_TO_FILTER_ID, type EventUnitFilterId } from "@/components/events/EventFilters";
 import { IEventInfo, IEventDeckBonus, EventType } from "@/types/events";
 import { ICharaUnitInfo } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -11,6 +12,44 @@ import { fetchMasterData } from "@/lib/fetch";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+
+// ActionSet interface for parsing event unit types
+interface IActionSet {
+    releaseConditionId: number;
+    scenarioId?: string;
+}
+
+/** Build a map from eventId to raw unit type string (e.g. 'band', 'idol', 'shuffle') */
+function buildEventRawUnitMap(actionSets: IActionSet[]): Map<number, string> {
+    const map = new Map<number, string>();
+    // Hardcoded first few events
+    map.set(1, "band");
+    map.set(5, "idol");
+    map.set(6, "street");
+    map.set(9, "shuffle");
+
+    for (const action of actionSets) {
+        const rcId = String(action.releaseConditionId);
+        if (
+            action.scenarioId &&
+            (action.scenarioId.includes("areatalk_ev") || action.scenarioId.includes("areatalk_wl")) &&
+            rcId.length === 6 &&
+            rcId[0] === "1"
+        ) {
+            const eventId = parseInt(rcId.substring(1, 4), 10) + 1;
+            const eventType = action.scenarioId.split("_")[2];
+            if (!map.has(eventId)) {
+                map.set(eventId, eventType);
+            }
+        }
+    }
+    return map;
+}
+
+/** Convert raw unit type to filter ID (e.g. 'band' -> 'ln', 'shuffle' -> 'mixed') */
+function rawUnitToFilterId(raw: string): EventUnitFilterId {
+    return EVENT_TYPE_TO_FILTER_ID[raw] || "mixed";
+}
 
 function EventsContent() {
     const router = useRouter();
@@ -20,6 +59,7 @@ function EventsContent() {
     const [events, setEvents] = useState<IEventInfo[]>([]);
     const [deckBonuses, setDeckBonuses] = useState<IEventDeckBonus[]>([]);
     const [charaUnits, setCharaUnits] = useState<ICharaUnitInfo[]>([]);
+    const [actionSets, setActionSets] = useState<IActionSet[]>([]);
     const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -27,6 +67,7 @@ function EventsContent() {
 
     // Filter states
     const [selectedTypes, setSelectedTypes] = useState<EventType[]>([]);
+    const [selectedEventUnits, setSelectedEventUnits] = useState<EventUnitFilterId[]>([]);
     const [selectedCharacters, setSelectedCharacters] = useState<number[]>([]);
     const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -49,16 +90,18 @@ function EventsContent() {
     // Initialize from URL params first, then fallback to sessionStorage
     useEffect(() => {
         const types = searchParams.get("types");
+        const eventUnits = searchParams.get("eventUnits");
         const chars = searchParams.get("characters");
         const units = searchParams.get("units");
         const search = searchParams.get("search");
         const sort = searchParams.get("sortBy");
         const order = searchParams.get("sortOrder");
 
-        const hasUrlParams = types || chars || units || search || sort || order;
+        const hasUrlParams = types || eventUnits || chars || units || search || sort || order;
 
         if (hasUrlParams) {
             if (types) setSelectedTypes(types.split(",") as EventType[]);
+            if (eventUnits) setSelectedEventUnits(eventUnits.split(",") as EventUnitFilterId[]);
             if (chars) setSelectedCharacters(chars.split(",").map(Number));
             if (units) setSelectedUnitIds(units.split(","));
             if (search) setSearchQuery(search);
@@ -70,6 +113,7 @@ function EventsContent() {
                 if (saved) {
                     const filters = JSON.parse(saved);
                     if (filters.types?.length) setSelectedTypes(filters.types);
+                    if (filters.eventUnits?.length) setSelectedEventUnits(filters.eventUnits);
                     if (filters.characters?.length) setSelectedCharacters(filters.characters);
                     if (filters.units?.length) setSelectedUnitIds(filters.units);
                     if (filters.search) setSearchQuery(filters.search);
@@ -89,6 +133,7 @@ function EventsContent() {
 
         const filters = {
             types: selectedTypes,
+            eventUnits: selectedEventUnits,
             characters: selectedCharacters,
             units: selectedUnitIds,
             search: searchQuery,
@@ -103,6 +148,7 @@ function EventsContent() {
 
         const params = new URLSearchParams();
         if (selectedTypes.length > 0) params.set("types", selectedTypes.join(","));
+        if (selectedEventUnits.length > 0) params.set("eventUnits", selectedEventUnits.join(","));
         if (selectedCharacters.length > 0) params.set("characters", selectedCharacters.join(","));
         if (selectedUnitIds.length > 0) params.set("units", selectedUnitIds.join(","));
         if (searchQuery) params.set("search", searchQuery);
@@ -112,22 +158,24 @@ function EventsContent() {
         const queryString = params.toString();
         const newUrl = queryString ? `/events?${queryString}` : "/events";
         router.replace(newUrl, { scroll: false });
-    }, [selectedTypes, selectedCharacters, selectedUnitIds, searchQuery, sortBy, sortOrder, router, filtersInitialized]);
+    }, [selectedTypes, selectedEventUnits, selectedCharacters, selectedUnitIds, searchQuery, sortBy, sortOrder, router, filtersInitialized]);
 
     // Fetch events data
     useEffect(() => {
         async function fetchEvents() {
             try {
                 setIsLoading(true);
-                const [data, bonusesData, charaUnitsData, translationsData] = await Promise.all([
+                const [data, bonusesData, charaUnitsData, actionSetsData, translationsData] = await Promise.all([
                     fetchMasterData<IEventInfo[]>("events.json"),
                     fetchMasterData<IEventDeckBonus[]>("eventDeckBonuses.json"),
                     fetchMasterData<ICharaUnitInfo[]>("gameCharacterUnits.json"),
+                    fetchMasterData<IActionSet[]>("actionSets.json"),
                     loadTranslations(),
                 ]);
                 setEvents(data);
                 setDeckBonuses(bonusesData);
                 setCharaUnits(charaUnitsData);
+                setActionSets(actionSetsData);
                 setTranslations(translationsData);
                 setError(null);
             } catch (err) {
@@ -168,6 +216,17 @@ function EventsContent() {
         return map;
     }, [charaUnits]);
 
+    // Build event unit map: eventId -> filter ID (e.g. 'ln', 'mmj', 'mixed')
+    const eventUnitMap = useMemo(() => {
+        if (actionSets.length === 0) return new Map<number, string>();
+        const rawMap = buildEventRawUnitMap(actionSets);
+        const filterMap = new Map<number, string>();
+        for (const [eventId, rawType] of rawMap) {
+            filterMap.set(eventId, rawUnitToFilterId(rawType));
+        }
+        return filterMap;
+    }, [actionSets]);
+
     // Filter and sort events
     const filteredEvents = useMemo(() => {
         let result = [...events];
@@ -175,6 +234,15 @@ function EventsContent() {
         // Apply type filter
         if (selectedTypes.length > 0) {
             result = result.filter(event => selectedTypes.includes(event.eventType as EventType));
+        }
+
+        // Apply event unit (group) filter
+        if (selectedEventUnits.length > 0) {
+            result = result.filter(event => {
+                const unitId = eventUnitMap.get(event.id);
+                if (!unitId) return false;
+                return selectedEventUnits.includes(unitId as EventUnitFilterId);
+            });
         }
 
         // Apply character filter (intersection: event must have ALL selected characters as bonus)
@@ -231,7 +299,7 @@ function EventsContent() {
         });
 
         return result;
-    }, [events, selectedTypes, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
+    }, [events, selectedTypes, selectedEventUnits, eventUnitMap, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
 
     // Displayed events (with pagination)
     const displayedEvents = useMemo(() => {
@@ -241,6 +309,7 @@ function EventsContent() {
     // Reset filters
     const resetFilters = useCallback(() => {
         setSelectedTypes([]);
+        setSelectedEventUnits([]);
         setSelectedCharacters([]);
         setSelectedUnitIds([]);
         setSearchQuery("");
@@ -260,6 +329,8 @@ function EventsContent() {
         <EventFilters
             selectedTypes={selectedTypes}
             onTypeChange={setSelectedTypes}
+            selectedEventUnits={selectedEventUnits}
+            onEventUnitChange={setSelectedEventUnits}
             selectedCharacters={selectedCharacters}
             onCharacterChange={setSelectedCharacters}
             selectedUnitIds={selectedUnitIds}
@@ -278,6 +349,7 @@ function EventsContent() {
 
     useQuickFilter("活动筛选", quickFilterContent, [
         selectedTypes,
+        selectedEventUnits,
         selectedCharacters,
         selectedUnitIds,
         searchQuery,
@@ -327,7 +399,7 @@ function EventsContent() {
 
                 {/* Event Grid */}
                 <div className="flex-1 min-w-0">
-                    <EventGrid events={displayedEvents} isLoading={isLoading} />
+                    <EventGrid events={displayedEvents} isLoading={isLoading} eventUnitMap={eventUnitMap} />
 
                     {/* Load More Button */}
                     {!isLoading && displayedEvents.length < filteredEvents.length && (
