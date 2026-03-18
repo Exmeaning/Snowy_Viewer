@@ -303,7 +303,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                     {loading ? (
                         <div className="py-20 text-center text-slate-400">加载中...</div>
                     ) : (
-                        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                             {filteredEvents.slice(0, 50).map(event => (
                                 <EventSelectionItem
                                     key={event.id}
@@ -375,7 +375,7 @@ function EventSelectionItem({
 
                     {/* Status Badge */}
                     <div
-                        className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                        className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
                         style={{ backgroundColor: statusDisplay.color }}
                     >
                         {statusDisplay.label}
@@ -383,7 +383,7 @@ function EventSelectionItem({
 
                     {/* Event Type Badge */}
                     <div
-                        className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                        className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
                         style={{ backgroundColor: EVENT_TYPE_COLORS[event.eventType as EventType] }}
                     >
                         {EVENT_TYPE_NAMES[event.eventType as EventType]}
@@ -391,17 +391,17 @@ function EventSelectionItem({
 
                     {/* Spoiler Badge */}
                     {isSpoiler && (
-                        <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-orange-500 rounded-full text-xs font-bold text-white shadow">
+                        <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-orange-500 rounded-full text-[10px] sm:text-xs font-bold text-white shadow">
                             剧透
                         </div>
                     )}
                 </div>
 
                 {/* Event Info */}
-                <div className="p-4">
+                <div className="p-2.5 sm:p-4">
                     {/* ID Badge + Unit Badge */}
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs font-mono rounded-full">
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                        <span className="px-1.5 sm:px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] sm:text-xs font-mono rounded-full">
                             #{event.id}
                         </span>
                         {unitType && (
@@ -423,7 +423,7 @@ function EventSelectionItem({
                     </div>
 
                     {/* Event Name */}
-                    <h3 className="font-bold text-slate-800 text-sm mb-2 group-hover:text-miku transition-colors">
+                    <h3 className="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 sm:mb-2 group-hover:text-miku transition-colors">
                         <TranslatedText
                             original={event.name}
                             category="events"
@@ -434,7 +434,7 @@ function EventSelectionItem({
                     </h3>
 
                     {/* Date Range */}
-                    <div className="text-xs text-slate-500 space-y-0.5">
+                    <div className="text-[10px] sm:text-xs text-slate-500 space-y-0.5 hidden sm:block">
                         <div className="flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

@@ -309,6 +309,15 @@ button[data-shortcut-load-more="true"]::after {
   display: none;
 }
 
+/* Force collapsible section to be visible inside quick filter modal */
+.quick-filter-modal-content [data-filter-collapsible="true"] {
+  display: block !important;
+}
+
+.quick-filter-modal-content [data-filter-collapse-pad="true"] {
+  display: none !important;
+}
+
 @keyframes scroll-top-icon-tap {
   0% {
     transform: translateY(0) scale(1);
