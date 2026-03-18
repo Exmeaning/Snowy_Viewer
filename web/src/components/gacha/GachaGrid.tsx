@@ -24,7 +24,7 @@ function GachaSkeleton() {
 export default function GachaGrid({ gachas, isLoading = false }: GachaGridProps) {
     if (isLoading) {
         return (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {Array.from({ length: 12 }).map((_, i) => (
                     <GachaSkeleton key={i} />
                 ))}
@@ -45,7 +45,7 @@ export default function GachaGrid({ gachas, isLoading = false }: GachaGridProps)
     }
 
     return (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {gachas.map((gacha) => (
                 <GachaItem key={gacha.id} gacha={gacha} />
             ))}

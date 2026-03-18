@@ -166,7 +166,7 @@ function ComicContent() {
                         </div>
                     ) : (
                         <>
-                            <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                                 {displayedComics.map(comic => (
                                     <div
                                         key={comic.id}
@@ -198,8 +198,8 @@ function ComicContent() {
                                                         original={comic.title}
                                                         category="comic"
                                                         field="title"
-                                                        originalClassName="truncate block"
-                                                        translationClassName="text-xs font-medium text-slate-400 truncate block"
+                                                        originalClassName="block"
+                                                        translationClassName="text-xs font-medium text-slate-400 block"
                                                     />
                                                 </div>
                                                 <p className="text-[10px] text-slate-400 mt-1">#{comic.id}</p>

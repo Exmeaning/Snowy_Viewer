@@ -428,8 +428,8 @@ function EventSelectionItem({
                             original={event.name}
                             category="events"
                             field="name"
-                            originalClassName="line-clamp-2"
-                            translationClassName="text-xs font-medium text-slate-400 mt-0.5 line-clamp-1"
+                            originalClassName=""
+                            translationClassName="text-xs font-medium text-slate-400 mt-0.5"
                         />
                     </h3>
 

@@ -38,10 +38,20 @@ export default function Modal({
         return () => cancelAnimationFrame(raf);
     }, []);
 
-    // Prevent body scroll & close on Escape
+    // Prevent body scroll, close on Escape, and handle browser back button
     useEffect(() => {
         if (!isOpen) return;
         document.body.style.overflow = "hidden";
+
+        // Push a history entry so pressing back closes the modal instead of navigating away
+        const hasModalState = window.history.state?.modal;
+        if (!hasModalState) {
+            window.history.pushState({ modal: true }, "");
+        }
+
+        const handlePopState = () => {
+            onClose();
+        };
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
@@ -49,11 +59,19 @@ export default function Modal({
                 onClose();
             }
         };
+
+        window.addEventListener("popstate", handlePopState);
         document.addEventListener("keydown", handleKeyDown);
 
         return () => {
             document.body.style.overflow = "unset";
+            window.removeEventListener("popstate", handlePopState);
             document.removeEventListener("keydown", handleKeyDown);
+
+            // Clean up the history entry we pushed (if modal is closing while still on our state)
+            if (window.history.state?.modal) {
+                window.history.back();
+            }
         };
     }, [isOpen, onClose]);
 

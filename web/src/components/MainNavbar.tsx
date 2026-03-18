@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import SettingsPanel from "./SettingsPanel";
 import CommandPalette from "./CommandPalette";
 import { getPrimaryShortcutLabel } from "@/lib/shortcuts";
@@ -28,6 +29,8 @@ export default function MainNavbar({
     onShortcutsHelpToggle,
 }: MainNavbarProps) {
     const [showDomainNotice, setShowDomainNotice] = useState(false);
+    const pathname = usePathname();
+    const isHome = pathname === "/";
 
     useEffect(() => {
         const dismissed = localStorage.getItem("moesekai_domain_notice_dismissed");
@@ -166,12 +169,14 @@ export default function MainNavbar({
                 <CommandPalette isOpen={isSearchOpen} onClose={onSearchClose} />
             </div>
 
-            {/* Row 2: Breadcrumb - mobile only */}
-            <div className="sm:hidden border-t border-slate-100">
-                <div className="container mx-auto px-4 h-8 flex items-center gap-1.5 overflow-visible text-xs">
-                    <Breadcrumb />
+            {/* Row 2: Breadcrumb - mobile only, hidden on home page */}
+            {!isHome && (
+                <div className="sm:hidden border-t border-slate-100">
+                    <div className="container mx-auto px-4 h-8 flex items-center gap-1.5 overflow-visible text-xs">
+                        <Breadcrumb />
+                    </div>
                 </div>
-            </div>
+            )}
         </nav>
     );
 }

@@ -74,8 +74,9 @@ export default function BaseFilters({
     const pathname = usePathname();
     const STORAGE_KEY = `filters_collapsed:${pathname}`;
     const [mobileCollapsed, setMobileCollapsed] = useState(() => {
-        if (typeof window === "undefined") return false;
-        try { return localStorage.getItem(STORAGE_KEY) === "true"; } catch { return false; }
+        if (typeof window === "undefined") return true;
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved === null ? true : saved === "true";
     });
 
     const toggleCollapsed = () => {
@@ -196,12 +197,32 @@ export default function BaseFilters({
                             重置筛选
                         </button>
                     )}
+
+                    {/* "Tap to collapse" bar — mobile only */}
+                    <div
+                        className="lg:hidden -mx-5 -mb-5 mt-5 flex items-center justify-center gap-1 py-2.5 bg-slate-50 border-t border-slate-100 cursor-pointer select-none text-xs text-slate-400 hover:text-slate-500 hover:bg-slate-100 transition-colors"
+                        onClick={toggleCollapsed}
+                    >
+                        <svg className="w-3.5 h-3.5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                        点击收起
+                    </div>
                 </div>
             </div>
 
-            {/* Bottom padding when search is shown but collapsible is hidden */}
-            {showSearch && onSearchChange && mobileCollapsed && (
-                <div data-filter-collapse-pad="true" className="pb-5 lg:hidden" />
+            {/* "Tap to expand" hint bar — mobile only, shown when collapsed */}
+            {mobileCollapsed && (
+                <div
+                    data-filter-collapse-pad="true"
+                    className="lg:hidden flex items-center justify-center gap-1 py-2.5 mt-4 bg-slate-50 border-t border-slate-100 cursor-pointer select-none text-xs text-slate-400 hover:text-slate-500 hover:bg-slate-100 transition-colors"
+                    onClick={toggleCollapsed}
+                >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    点击展开筛选
+                </div>
             )}
         </div>
     );

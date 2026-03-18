@@ -490,6 +490,7 @@ export default function Sidebar({
 
     // 当前可见项的平坦索引计数器
     let flatIdx = 0;
+    const isHomePage = pathname === "/";
 
     return (
         <>
@@ -503,7 +504,7 @@ export default function Sidebar({
 
             {/* Sidebar */}
             <aside
-                className={`fixed top-[4.5rem] left-0 h-[calc(100vh-4.5rem)] w-64 bg-white/95 backdrop-blur-lg border-r border-slate-200 z-[60] ${hasMounted ? 'transition-transform duration-300 ease-out' : ''} overflow-y-auto flex flex-col ${isOpen ? "translate-x-0" : "-translate-x-full"
+                className={`fixed ${isHomePage ? "top-[3.5rem] h-[calc(100vh-3.5rem)]" : "top-[5.5rem] h-[calc(100vh-5.5rem)]"} sm:top-[4.5rem] sm:h-[calc(100vh-4.5rem)] left-0 w-64 bg-white/95 backdrop-blur-lg border-r border-slate-200 z-[60] ${hasMounted ? 'transition-transform duration-300 ease-out' : ''} overflow-y-auto flex flex-col ${isOpen ? "translate-x-0" : "-translate-x-full"
                     }`}
             >
 
