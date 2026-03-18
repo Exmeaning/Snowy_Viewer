@@ -21,7 +21,7 @@ import { CHARACTER_NAMES, getRarityNumber, RARITY_DISPLAY, isTrainableCard, UNIT
 import type { ICardInfo, ICharaUnitInfo, IGameChara } from "@/types/types";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
-import { fetchMasterData, fetchWithCompression } from "@/lib/fetch";
+import { fetchMasterData, fetchMasterDataForServer, fetchWithCompression } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 
@@ -126,7 +126,7 @@ export default function EventDetailPage() {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [eventsData, bonusesData, eventCardsData, eventMusicsData, cardsData, musicsData, charUnitsData, gameCharsData, actionSetsData, eventStoriesData] = await Promise.all([
+                const [eventsData, bonusesData, eventCardsData, eventMusicsData, cardsData, musicsData, charUnitsData, gameCharsData, actionSetsForUnitMapData, eventStoriesData] = await Promise.all([
                     fetchMasterData<IEventInfo[]>("events.json"),
                     fetchMasterData<IEventDeckBonus[]>("eventDeckBonuses.json"),
                     fetchMasterData<IEventCard[]>("eventCards.json"),
@@ -135,7 +135,7 @@ export default function EventDetailPage() {
                     fetchMasterData<IMusic[]>("musics.json"),
                     fetchMasterData<ICharaUnitInfo[]>("gameCharacterUnits.json"),
                     fetchMasterData<IGameChara[]>("gameCharacters.json"),
-                    fetchMasterData<IActionSet[]>("actionSets.json"),
+                    fetchMasterDataForServer<IActionSet[]>("jp", "actionSets.json"),
                     fetchMasterData<IEventStory[]>("eventStories.json"),
                 ]);
 
@@ -153,8 +153,8 @@ export default function EventDetailPage() {
                 setAllMusics(musicsData);
                 setGameCharacterUnits(charUnitsData);
                 setGameCharacters(gameCharsData);
-                // Build event unit map from actionSets
-                const rawMap = buildEventRawUnitMap(actionSetsData);
+                // Build event unit map from actionSets (always fetched from JP server)
+                const rawMap = buildEventRawUnitMap(actionSetsForUnitMapData);
                 const unitMap = new Map<number, EventUnitFilterId>();
                 for (const [eid, rawType] of rawMap) {
                     unitMap.set(eid, rawUnitToFilterId(rawType));

@@ -1,26 +1,21 @@
 "use client";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { IEventInfo, IEventDeckBonus, EventType } from "@/types/events";
-import { fetchMasterData } from "@/lib/fetch";
-import { getEventLogoUrl } from "@/lib/assets";
+import { IEventInfo, IEventDeckBonus, EventType, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
+import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
+import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
+import { getEventLogoUrl, getEventStoryBannerUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { loadTranslations, TranslationData } from "@/lib/translations";
+import { TranslatedText } from "@/components/common/TranslatedText";
 import SelectorModal from "./SelectorModal";
-import EventFilters from "@/components/events/EventFilters";
-import EventItem from "@/components/events/EventItem";
+import EventFilters, { type EventUnitFilterId } from "@/components/events/EventFilters";
+import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, buildEventBannerCharMap } from "@/lib/eventUnit";
 
-/** Convert gameCharacterUnitId to base character ID (1-26) */
-function getBaseCharacterId(id: number): number {
-    if (id <= 26) return id;
-    if (id >= 27 && id <= 31) return 21; // Miku
-    if (id >= 32 && id <= 36) return 22; // Rin
-    if (id >= 37 && id <= 41) return 23; // Len
-    if (id >= 42 && id <= 46) return 24; // Luka
-    if (id >= 47 && id <= 51) return 25; // MEIKO
-    if (id >= 52 && id <= 56) return 26; // KAITO
-    return id;
-}
+// Build unit icon mapping from UNIT_DATA (same as EventItem)
+const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = Object.fromEntries(
+    UNIT_DATA.filter(u => UNIT_ICON_FILES[u.id]).map(u => [u.id, { icon: UNIT_ICON_FILES[u.id], name: u.name }])
+);
 
 interface EventSelectorProps {
     selectedEventId: string;
@@ -32,99 +27,149 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
     const { assetSource, isShowSpoiler } = useTheme();
     const [events, setEvents] = useState<IEventInfo[]>([]);
     const [deckBonuses, setDeckBonuses] = useState<IEventDeckBonus[]>([]);
+    const [charaUnits, setCharaUnits] = useState<ICharaUnitInfo[]>([]);
+    const [actionSetsForUnitMap, setActionSetsForUnitMap] = useState<IActionSet[]>([]);
+    const [eventStories, setEventStories] = useState<IEventStory[]>([]);
     const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
 
     // Filters state
     const [selectedTypes, setSelectedTypes] = useState<EventType[]>([]);
+    const [selectedEventUnits, setSelectedEventUnits] = useState<EventUnitFilterId[]>([]);
     const [selectedCharacters, setSelectedCharacters] = useState<number[]>([]);
     const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
+    const [selectedBannerChars, setSelectedBannerChars] = useState<number[]>([]);
+    const [selectedBannerUnitIds, setSelectedBannerUnitIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState<"id" | "startAt">("startAt");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-    // Load events on mount
+    // Load all data on mount
     useEffect(() => {
         Promise.all([
             fetchMasterData<IEventInfo[]>("events.json"),
             fetchMasterData<IEventDeckBonus[]>("eventDeckBonuses.json"),
-            loadTranslations()
+            fetchMasterData<ICharaUnitInfo[]>("gameCharacterUnits.json"),
+            fetchMasterDataForServer<IActionSet[]>("jp", "actionSets.json"),
+            fetchMasterData<IEventStory[]>("eventStories.json"),
+            loadTranslations(),
         ])
-            .then(([eventsData, bonusesData, translationsData]) => {
+            .then(([eventsData, bonusesData, charaUnitsData, actionSetsForUnitMapData, eventStoriesData, translationsData]) => {
                 setEvents(eventsData);
                 setDeckBonuses(bonusesData);
+                setCharaUnits(charaUnitsData);
+                setActionSetsForUnitMap(actionSetsForUnitMapData);
+                setEventStories(eventStoriesData);
                 setTranslations(translationsData);
                 setLoading(false);
             })
             .catch(err => {
-                console.error("Failed to load events or translations", err);
+                console.error("Failed to load events data", err);
                 setLoading(false);
             });
     }, []);
 
-    // Build a map: eventId -> Set of bonus character IDs (base IDs 1-26)
+    // Derived maps — same logic as useEventListData
     const eventBonusCharMap = useMemo(() => {
         const map = new Map<number, Set<number>>();
         for (const bonus of deckBonuses) {
             if (bonus.gameCharacterUnitId) {
-                const charId = getBaseCharacterId(bonus.gameCharacterUnitId);
-                if (!map.has(bonus.eventId)) {
-                    map.set(bonus.eventId, new Set());
-                }
-                map.get(bonus.eventId)!.add(charId);
+                if (!map.has(bonus.eventId)) map.set(bonus.eventId, new Set());
+                map.get(bonus.eventId)!.add(bonus.gameCharacterUnitId);
             }
         }
         return map;
     }, [deckBonuses]);
 
-    // Filter events
+    const vsCharAllUnitIds = useMemo(() => {
+        const map = new Map<number, number[]>();
+        for (const cu of charaUnits) {
+            if (cu.gameCharacterId >= 21 && cu.gameCharacterId <= 26) {
+                if (!map.has(cu.gameCharacterId)) map.set(cu.gameCharacterId, []);
+                map.get(cu.gameCharacterId)!.push(cu.id);
+            }
+        }
+        return map;
+    }, [charaUnits]);
+
+    const eventUnitMap = useMemo(() => {
+        if (actionSetsForUnitMap.length === 0) return new Map<number, string>();
+        const rawMap = buildEventRawUnitMap(actionSetsForUnitMap);
+        const filterMap = new Map<number, string>();
+        for (const [eventId, rawType] of rawMap) {
+            filterMap.set(eventId, rawUnitToFilterId(rawType));
+        }
+        return filterMap;
+    }, [actionSetsForUnitMap]);
+
+    const eventBannerCharMapDerived = useMemo(() => {
+        if (eventStories.length === 0 || charaUnits.length === 0) return new Map<number, number>();
+        return buildEventBannerCharMap(eventStories, charaUnits);
+    }, [eventStories, charaUnits]);
+
+    const eventStoryIds = useMemo(() => new Set(eventStories.map(s => s.eventId)), [eventStories]);
+
+    // Filter events — same logic as useEventListData
     const filteredEvents = useMemo(() => {
         let result = [...events];
 
-        // Type filter
         if (selectedTypes.length > 0) {
-            result = result.filter(e => selectedTypes.includes(e.eventType));
+            result = result.filter(e => selectedTypes.includes(e.eventType as EventType));
         }
 
-        // Character filter (intersection: event must have ALL selected characters as bonus)
-        if (selectedCharacters.length > 0) {
+        if (selectedEventUnits.length > 0) {
             result = result.filter(e => {
-                const bonusChars = eventBonusCharMap.get(e.id);
-                if (!bonusChars) return false;
-                return selectedCharacters.every(charId => bonusChars.has(charId));
+                const uid = eventUnitMap.get(e.id);
+                return uid ? selectedEventUnits.includes(uid as EventUnitFilterId) : false;
             });
         }
 
-        // Search filter
-        if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase();
+        if (selectedCharacters.length > 0) {
             result = result.filter(e => {
-                // Match by ID
-                if (e.id.toString().includes(q)) return true;
-                // Match by Japanese name
+                const bonusUnitIds = eventBonusCharMap.get(e.id);
+                if (!bonusUnitIds) return false;
+                return selectedCharacters.every(charId => {
+                    if (charId >= 21 && charId <= 26) {
+                        const allIds = vsCharAllUnitIds.get(charId);
+                        return allIds ? allIds.some(id => bonusUnitIds.has(id)) : false;
+                    }
+                    return bonusUnitIds.has(charId);
+                });
+            });
+        }
+
+        if (selectedBannerChars.length > 0) {
+            result = result.filter(e => {
+                if (e.eventType === "world_bloom") return false;
+                const bannerCharId = eventBannerCharMapDerived.get(e.id);
+                return bannerCharId !== undefined && selectedBannerChars.includes(bannerCharId);
+            });
+        }
+
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase().trim();
+            const qNum = parseInt(q, 10);
+            result = result.filter(e => {
+                if (e.id === qNum) return true;
                 if (e.name.toLowerCase().includes(q)) return true;
-                // Match by Chinese name translation
-                const chineseName = translations?.events?.name?.[e.name];
-                if (chineseName && chineseName.toLowerCase().includes(q)) return true;
+                const cn = translations?.events?.name?.[e.name];
+                if (cn && cn.toLowerCase().includes(q)) return true;
                 return false;
             });
         }
 
-        // Spoiler filter
         if (!isShowSpoiler) {
             result = result.filter(e => e.startAt <= Date.now());
         }
 
-        // Sort
         result.sort((a, b) => {
-            const valA = a[sortBy];
-            const valB = b[sortBy];
-            return sortOrder === "asc" ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+            const cmp = sortBy === "startAt" ? a.startAt - b.startAt : a.id - b.id;
+            return sortOrder === "asc" ? cmp : -cmp;
         });
 
         return result;
-    }, [events, selectedTypes, selectedCharacters, eventBonusCharMap, searchQuery, sortBy, sortOrder, translations, isShowSpoiler]);
+    }, [events, selectedTypes, selectedEventUnits, eventUnitMap, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, selectedBannerChars, eventBannerCharMapDerived, searchQuery, sortBy, sortOrder, translations, isShowSpoiler]);
 
     // Get currently selected event object
     const selectedEvent = useMemo(() => {
@@ -142,6 +187,29 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
         setModalOpen(false);
     };
 
+    const handleReset = () => {
+        setSelectedTypes([]);
+        setSelectedEventUnits([]);
+        setSelectedCharacters([]);
+        setSelectedUnitIds([]);
+        setSelectedBannerChars([]);
+        setSelectedBannerUnitIds([]);
+        setSearchQuery("");
+        setSortBy("startAt");
+        setSortOrder("desc");
+    };
+
+    // Thumbnail for the trigger button
+    const selectedEventThumbnail = useMemo(() => {
+        if (!selectedEvent) return "";
+        const hasStoryBanner = eventStoryIds.has(selectedEvent.id);
+        return hasStoryBanner
+            ? getEventStoryBannerUrl(selectedEvent.assetbundleName, assetSource)
+            : getEventLogoUrl(selectedEvent.assetbundleName, assetSource);
+    }, [selectedEvent, eventStoryIds, assetSource]);
+
+    const selectedEventHasStoryBanner = selectedEvent ? eventStoryIds.has(selectedEvent.id) : false;
+
     return (
         <div className="w-full">
             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -156,10 +224,10 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                     <>
                         <div className="relative w-16 aspect-video bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100">
                             <Image
-                                src={getEventLogoUrl(selectedEvent.assetbundleName, assetSource)}
+                                src={selectedEventThumbnail}
                                 alt={selectedEvent.name}
                                 fill
-                                className="object-contain p-1"
+                                className={`object-contain ${selectedEventHasStoryBanner ? "" : "p-1"}`}
                                 unoptimized
                             />
                         </div>
@@ -208,10 +276,17 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                     <EventFilters
                         selectedTypes={selectedTypes}
                         onTypeChange={setSelectedTypes}
+                        selectedEventUnits={selectedEventUnits}
+                        onEventUnitChange={setSelectedEventUnits}
                         selectedCharacters={selectedCharacters}
                         onCharacterChange={setSelectedCharacters}
                         selectedUnitIds={selectedUnitIds}
                         onUnitIdsChange={setSelectedUnitIds}
+                        charaUnits={charaUnits}
+                        selectedBannerChars={selectedBannerChars}
+                        onBannerCharsChange={setSelectedBannerChars}
+                        selectedBannerUnitIds={selectedBannerUnitIds}
+                        onBannerUnitIdsChange={setSelectedBannerUnitIds}
                         searchQuery={searchQuery}
                         onSearchChange={setSearchQuery}
                         sortBy={sortBy}
@@ -220,14 +295,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                             setSortBy(nextSortBy);
                             setSortOrder(nextSortOrder);
                         }}
-                        onReset={() => {
-                            setSelectedTypes([]);
-                            setSelectedCharacters([]);
-                            setSelectedUnitIds([]);
-                            setSearchQuery("");
-                            setSortBy("startAt");
-                            setSortOrder("desc");
-                        }}
+                        onReset={handleReset}
                         totalEvents={events.length}
                         filteredEvents={filteredEvents.length}
                     />
@@ -235,24 +303,16 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                     {loading ? (
                         <div className="py-20 text-center text-slate-400">加载中...</div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                             {filteredEvents.slice(0, 50).map(event => (
-                                <div
+                                <EventSelectionItem
                                     key={event.id}
+                                    event={event}
+                                    isSpoiler={event.startAt > Date.now()}
+                                    unitType={eventUnitMap.get(event.id)}
+                                    eventStoryIds={eventStoryIds}
                                     onClick={() => handleSelect(event)}
-                                    className="cursor-pointer"
-                                >
-                                    {/* We wrap EventItem in a div to capture click, and pass a dummy basePath to avoid navigation if we clicked the link inside (though EventItem wraps in Link, we might need to prevent default or just rely on the wrapper if we can make EventItem not a Link? EventItem IS a Link... so we might need a custom renderer or just use EventItem's visual part. 
-                                    
-                                    Actually, EventItem returns a Link. Clicking it will navigate. We should probably NOT use EventItem directly if it forces navigation, or we should accept that it navigates. But we want to SELECT, not navigate.
-                                    
-                                    I should probably duplicate the visual part of EventItem or make EventItem accept an onClick and disable Link.
-                                    EventItem source checks: it wraps everything in <Link>.
-                                    
-                                    I will copy the visual structure of EventItem into a local component or simplified version for selection to avoid navigation.
-                                    */}
-                                    <EventSelectionItem event={event} translations={translations} />
-                                </div>
+                                />
                             ))}
                             {filteredEvents.length > 50 && (
                                 <div className="col-span-full py-4 text-center text-slate-400 text-sm">
@@ -267,36 +327,123 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
     );
 }
 
-// Simplified EventItem for selection (no Link)
-function EventSelectionItem({ event, translations }: { event: IEventInfo, translations: TranslationData | null }) {
+// EventItem-style card for selection (div instead of Link)
+function EventSelectionItem({
+    event,
+    isSpoiler,
+    unitType,
+    eventStoryIds,
+    onClick,
+}: {
+    event: IEventInfo;
+    isSpoiler?: boolean;
+    unitType?: string;
+    eventStoryIds?: Set<number>;
+    onClick: () => void;
+}) {
     const { assetSource } = useTheme();
-    const logoUrl = getEventLogoUrl(event.assetbundleName, assetSource);
+    const hasEventStoryBanner = eventStoryIds ? eventStoryIds.has(event.id) : true;
+    const thumbnailUrl = hasEventStoryBanner
+        ? getEventStoryBannerUrl(event.assetbundleName, assetSource)
+        : getEventLogoUrl(event.assetbundleName, assetSource);
+    const status = getEventStatus(event);
+    const statusDisplay = EVENT_STATUS_DISPLAY[status];
+
+    const formatDate = (timestamp: number) => {
+        return new Date(timestamp).toLocaleDateString("zh-CN", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    };
 
     return (
-        <div className="group bg-white rounded-xl shadow-sm ring-1 ring-slate-200 overflow-hidden transition-all hover:shadow-md hover:ring-miku/50 active:scale-[0.98]">
-            <div className="relative aspect-[16/9] bg-slate-50 overflow-hidden">
-                <Image
-                    src={logoUrl}
-                    alt={event.name}
-                    fill
-                    className="object-contain p-2"
-                    unoptimized
-                />
-                <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md bg-black/50 text-white text-[10px] font-mono">
-                    #{event.id}
-                </div>
-            </div>
-            <div className="p-3">
-                <h3 className="font-bold text-slate-700 text-sm line-clamp-1 mb-0.5 group-hover:text-miku transition-colors">
-                    {event.name}
-                </h3>
-                {translations?.events?.name?.[event.name] && (
-                    <div className="text-xs text-slate-500 line-clamp-1 mb-1">
-                        {translations.events.name[event.name]}
+        <div
+            onClick={onClick}
+            className="group block cursor-pointer"
+        >
+            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:ring-miku/30">
+                {/* Event Thumbnail */}
+                <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+                    <Image
+                        src={thumbnailUrl}
+                        alt={event.name}
+                        fill
+                        className={`object-contain transition-transform duration-300 group-hover:scale-105 ${hasEventStoryBanner ? "" : "p-4"}`}
+                        unoptimized
+                    />
+
+                    {/* Status Badge */}
+                    <div
+                        className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                        style={{ backgroundColor: statusDisplay.color }}
+                    >
+                        {statusDisplay.label}
                     </div>
-                )}
-                <div className="text-xs text-slate-400">
-                    {new Date(event.startAt).toLocaleDateString()}
+
+                    {/* Event Type Badge */}
+                    <div
+                        className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                        style={{ backgroundColor: EVENT_TYPE_COLORS[event.eventType as EventType] }}
+                    >
+                        {EVENT_TYPE_NAMES[event.eventType as EventType]}
+                    </div>
+
+                    {/* Spoiler Badge */}
+                    {isSpoiler && (
+                        <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-orange-500 rounded-full text-xs font-bold text-white shadow">
+                            剧透
+                        </div>
+                    )}
+                </div>
+
+                {/* Event Info */}
+                <div className="p-4">
+                    {/* ID Badge + Unit Badge */}
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs font-mono rounded-full">
+                            #{event.id}
+                        </span>
+                        {unitType && (
+                            EVENT_UNIT_ICON[unitType] ? (
+                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center" title={EVENT_UNIT_ICON[unitType].name}>
+                                    <Image
+                                        src={`/data/icon/${EVENT_UNIT_ICON[unitType].icon}`}
+                                        alt={EVENT_UNIT_ICON[unitType].name}
+                                        width={16}
+                                        height={16}
+                                        className="object-contain"
+                                        unoptimized
+                                    />
+                                </div>
+                            ) : (
+                                <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full" title="混合">混</span>
+                            )
+                        )}
+                    </div>
+
+                    {/* Event Name */}
+                    <h3 className="font-bold text-slate-800 text-sm mb-2 group-hover:text-miku transition-colors">
+                        <TranslatedText
+                            original={event.name}
+                            category="events"
+                            field="name"
+                            originalClassName="line-clamp-2"
+                            translationClassName="text-xs font-medium text-slate-400 mt-0.5 line-clamp-1"
+                        />
+                    </h3>
+
+                    {/* Date Range */}
+                    <div className="text-xs text-slate-500 space-y-0.5">
+                        <div className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span>{formatDate(event.startAt)}</span>
+                            <span>~</span>
+                            <span>{formatDate(event.aggregateAt)}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

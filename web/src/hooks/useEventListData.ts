@@ -5,7 +5,7 @@ import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { IEventInfo, IEventDeckBonus, EventType } from "@/types/events";
 import { ICharaUnitInfo } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
-import { fetchMasterData } from "@/lib/fetch";
+import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, buildEventBannerCharMap } from "@/lib/eventUnit";
@@ -75,7 +75,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
     const [events, setEvents] = useState<IEventInfo[]>([]);
     const [deckBonuses, setDeckBonuses] = useState<IEventDeckBonus[]>([]);
     const [charaUnits, setCharaUnits] = useState<ICharaUnitInfo[]>([]);
-    const [actionSets, setActionSets] = useState<IActionSet[]>([]);
+    const [actionSetsForUnitMap, setActionSetsForUnitMap] = useState<IActionSet[]>([]);
     const [eventStories, setEventStories] = useState<IEventStory[]>([]);
     const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -189,18 +189,18 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [eventsData, bonusesData, charaUnitsData, actionSetsData, eventStoriesData, translationsData] = await Promise.all([
+                const [eventsData, bonusesData, charaUnitsData, actionSetsForUnitMapData, eventStoriesData, translationsData] = await Promise.all([
                     fetchMasterData<IEventInfo[]>("events.json"),
                     fetchMasterData<IEventDeckBonus[]>("eventDeckBonuses.json"),
                     fetchMasterData<ICharaUnitInfo[]>("gameCharacterUnits.json"),
-                    fetchMasterData<IActionSet[]>("actionSets.json"),
+                    fetchMasterDataForServer<IActionSet[]>("jp", "actionSets.json"),
                     fetchMasterData<IEventStory[]>("eventStories.json"),
                     loadTranslations(),
                 ]);
                 setEvents(eventsData);
                 setDeckBonuses(bonusesData);
                 setCharaUnits(charaUnitsData);
-                setActionSets(actionSetsData);
+                setActionSetsForUnitMap(actionSetsForUnitMapData);
                 setEventStories(eventStoriesData);
                 setTranslations(translationsData);
                 setError(null);
@@ -238,14 +238,14 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
     }, [charaUnits]);
 
     const eventUnitMap = useMemo(() => {
-        if (actionSets.length === 0) return new Map<number, string>();
-        const rawMap = buildEventRawUnitMap(actionSets);
+        if (actionSetsForUnitMap.length === 0) return new Map<number, string>();
+        const rawMap = buildEventRawUnitMap(actionSetsForUnitMap);
         const filterMap = new Map<number, string>();
         for (const [eventId, rawType] of rawMap) {
             filterMap.set(eventId, rawUnitToFilterId(rawType));
         }
         return filterMap;
-    }, [actionSets]);
+    }, [actionSetsForUnitMap]);
 
     const eventBannerCharMap = useMemo(() => {
         if (eventStories.length === 0 || charaUnits.length === 0) return new Map<number, number>();
