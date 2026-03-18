@@ -1,0 +1,364 @@
+"use client";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { EVENT_TYPE_TO_FILTER_ID, type EventUnitFilterId } from "@/components/events/EventFilters";
+import { IEventInfo, IEventDeckBonus, EventType } from "@/types/events";
+import { ICharaUnitInfo } from "@/types/types";
+import { useTheme } from "@/contexts/ThemeContext";
+import { fetchMasterData } from "@/lib/fetch";
+import { loadTranslations, TranslationData } from "@/lib/translations";
+import { useScrollRestore } from "@/hooks/useScrollRestore";
+
+// ---------------------------------------------------------------------------
+// ActionSet parsing
+// ---------------------------------------------------------------------------
+
+interface IActionSet {
+    releaseConditionId: number;
+    scenarioId?: string;
+}
+
+function buildEventRawUnitMap(actionSets: IActionSet[]): Map<number, string> {
+    const map = new Map<number, string>();
+    map.set(1, "band");
+    map.set(5, "idol");
+    map.set(6, "street");
+    map.set(9, "shuffle");
+
+    for (const action of actionSets) {
+        const rcId = String(action.releaseConditionId);
+        if (
+            action.scenarioId &&
+            (action.scenarioId.includes("areatalk_ev") || action.scenarioId.includes("areatalk_wl")) &&
+            rcId.length === 6 &&
+            rcId[0] === "1"
+        ) {
+            const eventId = parseInt(rcId.substring(1, 4), 10) + 1;
+            const eventType = action.scenarioId.split("_")[2];
+            if (!map.has(eventId)) {
+                map.set(eventId, eventType);
+            }
+        }
+    }
+    return map;
+}
+
+function rawUnitToFilterId(raw: string): EventUnitFilterId {
+    return EVENT_TYPE_TO_FILTER_ID[raw] || "mixed";
+}
+
+// ---------------------------------------------------------------------------
+// Hook config & return type
+// ---------------------------------------------------------------------------
+
+export interface UseEventListDataConfig {
+    /** Storage key prefix, e.g. "events" or "eventstory" */
+    storageKey: string;
+    /** URL base path, e.g. "/events" or "/eventstory" */
+    basePath: string;
+}
+
+export interface UseEventListDataReturn {
+    // Data
+    events: IEventInfo[];
+    charaUnits: ICharaUnitInfo[];
+    translations: TranslationData | null;
+    eventUnitMap: Map<number, string>;
+    isLoading: boolean;
+    error: string | null;
+
+    // Filtered / displayed
+    filteredEvents: IEventInfo[];
+    displayedEvents: IEventInfo[];
+
+    // Filter state
+    selectedTypes: EventType[];
+    setSelectedTypes: (v: EventType[]) => void;
+    selectedEventUnits: EventUnitFilterId[];
+    setSelectedEventUnits: (v: EventUnitFilterId[]) => void;
+    selectedCharacters: number[];
+    setSelectedCharacters: (v: number[]) => void;
+    selectedUnitIds: string[];
+    setSelectedUnitIds: (v: string[]) => void;
+    searchQuery: string;
+    setSearchQuery: (v: string) => void;
+
+    // Sort
+    sortBy: "id" | "startAt";
+    sortOrder: "asc" | "desc";
+    handleSortChange: (sortBy: "id" | "startAt", sortOrder: "asc" | "desc") => void;
+
+    // Actions
+    resetFilters: () => void;
+    loadMore: () => void;
+}
+
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
+
+export function useEventListData({ storageKey, basePath }: UseEventListDataConfig): UseEventListDataReturn {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { isShowSpoiler } = useTheme();
+
+    // Raw data
+    const [events, setEvents] = useState<IEventInfo[]>([]);
+    const [deckBonuses, setDeckBonuses] = useState<IEventDeckBonus[]>([]);
+    const [charaUnits, setCharaUnits] = useState<ICharaUnitInfo[]>([]);
+    const [actionSets, setActionSets] = useState<IActionSet[]>([]);
+    const [translations, setTranslations] = useState<TranslationData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [filtersInitialized, setFiltersInitialized] = useState(false);
+
+    // Filter states
+    const [selectedTypes, setSelectedTypes] = useState<EventType[]>([]);
+    const [selectedEventUnits, setSelectedEventUnits] = useState<EventUnitFilterId[]>([]);
+    const [selectedCharacters, setSelectedCharacters] = useState<number[]>([]);
+    const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    // Sort states
+    const [sortBy, setSortBy] = useState<"id" | "startAt">("id");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+    // Pagination
+    const { displayCount, loadMore, resetDisplayCount } = useScrollRestore({
+        storageKey,
+        defaultDisplayCount: 12,
+        increment: 12,
+        isReady: !isLoading,
+    });
+
+    const STORAGE_KEY = `${storageKey}_filters`;
+
+    // ---- Initialize filters from URL / sessionStorage ----
+    useEffect(() => {
+        const types = searchParams.get("types");
+        const eventUnits = searchParams.get("eventUnits");
+        const chars = searchParams.get("characters");
+        const units = searchParams.get("units");
+        const search = searchParams.get("search");
+        const sort = searchParams.get("sortBy");
+        const order = searchParams.get("sortOrder");
+
+        const hasUrlParams = types || eventUnits || chars || units || search || sort || order;
+
+        if (hasUrlParams) {
+            if (types) setSelectedTypes(types.split(",") as EventType[]);
+            if (eventUnits) setSelectedEventUnits(eventUnits.split(",") as EventUnitFilterId[]);
+            if (chars) setSelectedCharacters(chars.split(",").map(Number));
+            if (units) setSelectedUnitIds(units.split(","));
+            if (search) setSearchQuery(search);
+            if (sort) setSortBy(sort as "id" | "startAt");
+            if (order) setSortOrder(order as "asc" | "desc");
+        } else {
+            try {
+                const saved = sessionStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const f = JSON.parse(saved);
+                    if (f.types?.length) setSelectedTypes(f.types);
+                    if (f.eventUnits?.length) setSelectedEventUnits(f.eventUnits);
+                    if (f.characters?.length) setSelectedCharacters(f.characters);
+                    if (f.units?.length) setSelectedUnitIds(f.units);
+                    if (f.search) setSearchQuery(f.search);
+                    if (f.sortBy) setSortBy(f.sortBy);
+                    if (f.sortOrder) setSortOrder(f.sortOrder);
+                }
+            } catch {
+                // ignore
+            }
+        }
+        setFiltersInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // ---- Persist filters ----
+    useEffect(() => {
+        if (!filtersInitialized) return;
+
+        const filters = {
+            types: selectedTypes,
+            eventUnits: selectedEventUnits,
+            characters: selectedCharacters,
+            units: selectedUnitIds,
+            search: searchQuery,
+            sortBy,
+            sortOrder,
+        };
+        try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters)); } catch { /* ignore */ }
+
+        const params = new URLSearchParams();
+        if (selectedTypes.length > 0) params.set("types", selectedTypes.join(","));
+        if (selectedEventUnits.length > 0) params.set("eventUnits", selectedEventUnits.join(","));
+        if (selectedCharacters.length > 0) params.set("characters", selectedCharacters.join(","));
+        if (selectedUnitIds.length > 0) params.set("units", selectedUnitIds.join(","));
+        if (searchQuery) params.set("search", searchQuery);
+        if (sortBy !== "id") params.set("sortBy", sortBy);
+        if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
+
+        const qs = params.toString();
+        router.replace(qs ? `${basePath}?${qs}` : basePath, { scroll: false });
+    }, [selectedTypes, selectedEventUnits, selectedCharacters, selectedUnitIds, searchQuery, sortBy, sortOrder, router, filtersInitialized, basePath, STORAGE_KEY]);
+
+    // ---- Fetch data ----
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                setIsLoading(true);
+                const [eventsData, bonusesData, charaUnitsData, actionSetsData, translationsData] = await Promise.all([
+                    fetchMasterData<IEventInfo[]>("events.json"),
+                    fetchMasterData<IEventDeckBonus[]>("eventDeckBonuses.json"),
+                    fetchMasterData<ICharaUnitInfo[]>("gameCharacterUnits.json"),
+                    fetchMasterData<IActionSet[]>("actionSets.json"),
+                    loadTranslations(),
+                ]);
+                setEvents(eventsData);
+                setDeckBonuses(bonusesData);
+                setCharaUnits(charaUnitsData);
+                setActionSets(actionSetsData);
+                setTranslations(translationsData);
+                setError(null);
+            } catch (err) {
+                console.error("Error fetching events:", err);
+                setError(err instanceof Error ? err.message : "Unknown error");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
+
+    // ---- Derived maps ----
+    const eventBonusCharMap = useMemo(() => {
+        const map = new Map<number, Set<number>>();
+        for (const bonus of deckBonuses) {
+            if (bonus.gameCharacterUnitId) {
+                if (!map.has(bonus.eventId)) map.set(bonus.eventId, new Set());
+                map.get(bonus.eventId)!.add(bonus.gameCharacterUnitId);
+            }
+        }
+        return map;
+    }, [deckBonuses]);
+
+    const vsCharAllUnitIds = useMemo(() => {
+        const map = new Map<number, number[]>();
+        for (const cu of charaUnits) {
+            if (cu.gameCharacterId >= 21 && cu.gameCharacterId <= 26) {
+                if (!map.has(cu.gameCharacterId)) map.set(cu.gameCharacterId, []);
+                map.get(cu.gameCharacterId)!.push(cu.id);
+            }
+        }
+        return map;
+    }, [charaUnits]);
+
+    const eventUnitMap = useMemo(() => {
+        if (actionSets.length === 0) return new Map<number, string>();
+        const rawMap = buildEventRawUnitMap(actionSets);
+        const filterMap = new Map<number, string>();
+        for (const [eventId, rawType] of rawMap) {
+            filterMap.set(eventId, rawUnitToFilterId(rawType));
+        }
+        return filterMap;
+    }, [actionSets]);
+
+    // ---- Filter & sort ----
+    const filteredEvents = useMemo(() => {
+        let result = [...events];
+
+        if (selectedTypes.length > 0) {
+            result = result.filter(e => selectedTypes.includes(e.eventType as EventType));
+        }
+
+        if (selectedEventUnits.length > 0) {
+            result = result.filter(e => {
+                const uid = eventUnitMap.get(e.id);
+                return uid ? selectedEventUnits.includes(uid as EventUnitFilterId) : false;
+            });
+        }
+
+        if (selectedCharacters.length > 0) {
+            result = result.filter(e => {
+                const bonusUnitIds = eventBonusCharMap.get(e.id);
+                if (!bonusUnitIds) return false;
+                return selectedCharacters.every(charId => {
+                    if (charId >= 21 && charId <= 26) {
+                        const allIds = vsCharAllUnitIds.get(charId);
+                        return allIds ? allIds.some(id => bonusUnitIds.has(id)) : false;
+                    }
+                    return bonusUnitIds.has(charId);
+                });
+            });
+        }
+
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase().trim();
+            const qNum = parseInt(q, 10);
+            result = result.filter(e => {
+                if (e.id === qNum) return true;
+                if (e.name.toLowerCase().includes(q)) return true;
+                const cn = translations?.events?.name?.[e.name];
+                if (cn && cn.toLowerCase().includes(q)) return true;
+                return false;
+            });
+        }
+
+        if (!isShowSpoiler) {
+            result = result.filter(e => e.startAt <= Date.now());
+        }
+
+        result.sort((a, b) => {
+            const cmp = sortBy === "startAt" ? a.startAt - b.startAt : a.id - b.id;
+            return sortOrder === "asc" ? cmp : -cmp;
+        });
+
+        return result;
+    }, [events, selectedTypes, selectedEventUnits, eventUnitMap, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
+
+    const displayedEvents = useMemo(() => filteredEvents.slice(0, displayCount), [filteredEvents, displayCount]);
+
+    // ---- Actions ----
+    const resetFilters = useCallback(() => {
+        setSelectedTypes([]);
+        setSelectedEventUnits([]);
+        setSelectedCharacters([]);
+        setSelectedUnitIds([]);
+        setSearchQuery("");
+        setSortBy("id");
+        setSortOrder("desc");
+        resetDisplayCount();
+    }, [resetDisplayCount]);
+
+    const handleSortChange = useCallback((newSortBy: "id" | "startAt", newSortOrder: "asc" | "desc") => {
+        setSortBy(newSortBy);
+        setSortOrder(newSortOrder);
+        resetDisplayCount();
+    }, [resetDisplayCount]);
+
+    return {
+        events,
+        charaUnits,
+        translations,
+        eventUnitMap,
+        isLoading,
+        error,
+        filteredEvents,
+        displayedEvents,
+        selectedTypes,
+        setSelectedTypes,
+        selectedEventUnits,
+        setSelectedEventUnits,
+        selectedCharacters,
+        setSelectedCharacters,
+        selectedUnitIds,
+        setSelectedUnitIds,
+        searchQuery,
+        setSearchQuery,
+        sortBy,
+        sortOrder,
+        handleSortChange,
+        resetFilters,
+        loadMore,
+    };
+}
