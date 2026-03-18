@@ -13,6 +13,7 @@ import {
     type CustomBonusConfig,
     type CustomBonusRule,
     DataProvider,
+    type EventConfig,
     EventDeckRecommend,
     LiveCalculator,
     LiveType,
@@ -595,6 +596,7 @@ async function runCustomMode(
         customCharacterBonus = 25, customAttrBonus = 25,
         customCharacterUnits,
         leaderCharacter,
+        supportCharacterId,
     } = args;
 
     sendProgress("calculating", 40, "自定义组卡计算中...");
@@ -634,6 +636,12 @@ async function runCustomMode(
         return Math.floor(baseScore * musicRate0 * deckRate);
     };
 
+    const customEventConfig: EventConfig = { customBonuses };
+    if (customUnit && customUnit !== "any") {
+        customEventConfig.worldBloomSupportUnit = customUnit;
+        customEventConfig.specialCharacterId = supportCharacterId ?? 0;
+    }
+
     const baseRecommend = new BaseDeckRecommend(dataProvider);
     const result = (await baseRecommend.recommendHighScoreDeck(
         userCards as unknown as UserCard[],
@@ -650,7 +658,7 @@ async function runCustomMode(
         computedLiveType,
         // 通过 EventConfig.customBonuses 传递，库会在 CardCalculator.getCardDetail 中
         // 调用 CardCustomBonusCalculator.applyCustomBonus 为每张卡计算自定义加成
-        { customBonuses }
+        customEventConfig
     )) as unknown as DeckResultLite[];
 
     // 结果中 eventBonus 已由库计算（来自 CustomBonusConfig 规则匹配），直接使用

@@ -8,6 +8,9 @@ import {
   type WorldBloomSupportDeckUnitEventLimitedBonus
 } from '../master-data/world-bloom-support-deck-unit-event-limited-bonus'
 
+const VIRTUAL_SINGER_MIN_ID = 21
+const VIRTUAL_SINGER_MAX_ID = 26
+
 export class CardBloomEventCalculator {
   public constructor (private readonly dataProvider: DataProvider) {
   }
@@ -27,11 +30,13 @@ export class CardBloomEventCalculator {
     worldBloomSupportUnit,
     specialCharacterId = 0
   }: EventConfig): Promise<number | undefined> {
-    // 未指定角色或组合的话，不使用支援加成
-    if (specialCharacterId <= 0 || worldBloomSupportUnit === undefined) return undefined
+    // 未指定组合的话，不使用支援加成
+    if (worldBloomSupportUnit === undefined) return undefined
 
     // 任何World Link都需要先判断一张卡牌是否是和支援角色组合（V家不看应援队伍）匹配，如果不是的话不使用支援加成
-    if (!units.includes(worldBloomSupportUnit)) {
+    const isVirtualSinger =
+      card.characterId >= VIRTUAL_SINGER_MIN_ID && card.characterId <= VIRTUAL_SINGER_MAX_ID
+    if (!isVirtualSinger && !units.includes(worldBloomSupportUnit)) {
       return undefined
     }
 
@@ -44,7 +49,7 @@ export class CardBloomEventCalculator {
 
     // 角色加成
     const type =
-      card.characterId === specialCharacterId ? 'specific' : 'others'
+      specialCharacterId > 0 && card.characterId === specialCharacterId ? 'specific' : 'others'
     total += findOrThrow(bonus.worldBloomSupportDeckCharacterBonuses,
       it => it.worldBloomSupportDeckCharacterType === type).bonusRate
     // 专精等级加成
