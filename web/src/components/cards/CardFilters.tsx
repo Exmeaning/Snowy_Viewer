@@ -3,7 +3,7 @@ import React from "react";
 import Image from "next/image";
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
-import { CardRarityType, CardAttribute, ATTR_NAMES, UNIT_DATA, SupportUnit, SUPPORT_UNIT_NAMES } from "@/types/types";
+import { CardRarityType, CardAttribute, ATTR_NAMES, UNIT_DATA, SupportUnit, SUPPORT_UNIT_NAMES, UNIT_ICON_FILES, UNIT_FIELD_TO_ID } from "@/types/types";
 import { useCardSupplyTypeMapping } from "@/hooks/useCardSupplyType";
 
 interface CardFiltersProps {
@@ -179,11 +179,11 @@ export default function CardFilters({
                             const isSelected = selectedSupportUnits.includes(unit);
                             const unitIconMap: Record<SupportUnit, string> = {
                                 "none": "vs.webp",
-                                "light_sound": "ln.webp",
-                                "idol": "mmj.webp",
-                                "school_refusal": "n25.webp",
-                                "theme_park": "wxs.webp",
-                                "street": "vbs.webp",
+                                "light_sound": UNIT_ICON_FILES[UNIT_FIELD_TO_ID["light_sound"]],
+                                "idol": UNIT_ICON_FILES[UNIT_FIELD_TO_ID["idol"]],
+                                "school_refusal": UNIT_ICON_FILES[UNIT_FIELD_TO_ID["school_refusal"]],
+                                "theme_park": UNIT_ICON_FILES[UNIT_FIELD_TO_ID["theme_park"]],
+                                "street": UNIT_ICON_FILES[UNIT_FIELD_TO_ID["street"]],
                             };
                             const iconName = unitIconMap[unit];
                             return (

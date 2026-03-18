@@ -1,6 +1,7 @@
 "use client";
 import React, { useRef, useEffect } from "react";
 import { useTheme, CHAR_NAMES, CHAR_COLORS } from "@/contexts/ThemeContext";
+import { UNIT_DATA, CHARACTER_NAMES } from "@/types/types";
 import { useMasterData } from "@/contexts/MasterDataContext";
 import {
     getShortcutById,
@@ -15,15 +16,8 @@ interface SettingsPanelProps {
     onClose: () => void;
 }
 
-// Group characters by unit for better organization
-const unitGroups = [
-    { name: "Leo/need", charIds: [1, 2, 3, 4], color: "#4455DD" },
-    { name: "MORE MORE JUMP!", charIds: [5, 6, 7, 8], color: "#88DD44" },
-    { name: "Vivid BAD SQUAD", charIds: [9, 10, 11, 12], color: "#EE1166" },
-    { name: "Wonderlands×Showtime", charIds: [13, 14, 15, 16], color: "#FF9900" },
-    { name: "25時、ナイトコードで。", charIds: [17, 18, 19, 20], color: "#884499" },
-    { name: "Virtual Singer", charIds: [21, 22, 23, 24, 25, 26], color: "#33CCBB" },
-];
+// Group characters by unit for better organization (derived from UNIT_DATA)
+const unitGroups = UNIT_DATA.map(u => ({ name: u.name, charIds: u.charIds, color: u.color }));
 
 const SETTINGS_TOGGLE_COMBO = parseShortcutCombos(
     getShortcutById("toggle-settings")?.combos ?? []
@@ -174,7 +168,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                 style={{ backgroundColor: CHAR_COLORS[themeCharId] || "#33CCBB" }}
                             />
                             <span className="text-sm font-bold text-slate-700">
-                                {CHAR_NAMES[Number(themeCharId)] || "初音未来"}
+                                {CHAR_NAMES[Number(themeCharId)] || CHARACTER_NAMES[21]}
                             </span>
                         </div>
                         <svg

@@ -17,7 +17,7 @@ import {
 import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, getEventUnitDisplayName, buildEventBannerCharMap } from "@/lib/eventUnit";
 import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getEventStoryBannerUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
-import { CHARACTER_NAMES, getRarityNumber, RARITY_DISPLAY, isTrainableCard } from "@/types/types";
+import { CHARACTER_NAMES, getRarityNumber, RARITY_DISPLAY, isTrainableCard, UNIT_NAME_MAP } from "@/types/types";
 import type { ICardInfo, ICharaUnitInfo, IGameChara } from "@/types/types";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -202,15 +202,6 @@ export default function EventDetailPage() {
         const attrBonus = deckBonuses.find(b => b.cardAttr && !b.gameCharacterUnitId);
         return attrBonus?.cardAttr;
     }, [deckBonuses]);
-
-    // Unit code → display name mapping
-    const UNIT_NAME_MAP: Record<string, string> = {
-        light_sound: "Leo/need",
-        idol: "MORE MORE JUMP!",
-        street: "Vivid BAD SQUAD",
-        theme_park: "Wonderlands×Showtime",
-        school_refusal: "25時、ナイトコードで。",
-    };
 
     // Get bonus characters with unit info for piapro characters
     const bonusCharacters = useMemo(() => {

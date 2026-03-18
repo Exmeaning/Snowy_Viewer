@@ -3,30 +3,16 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
-import { IGameChara, IUnitProfile, UNIT_DATA, CHARACTER_NAMES } from "@/types/types";
+import { IGameChara, IUnitProfile, UNIT_DATA, CHARACTER_NAMES, UNIT_FIELD_TO_ID, UNIT_ICON_FILES } from "@/types/types";
 import { getCharacterSelectUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 
-const UNIT_ICONS: Record<string, string> = {
-    "light_sound": "ln.webp",
-    "idol": "mmj.webp",
-    "street": "vbs.webp",
-    "theme_park": "wxs.webp",
-    "school_refusal": "n25.webp",
-    "piapro": "vs.webp",
-};
-
-// Map unit names from master data to our internal IDs
-const UNIT_ID_MAP: Record<string, string> = {
-    "light_sound": "ln",
-    "idol": "mmj",
-    "street": "vbs",
-    "theme_park": "ws",
-    "school_refusal": "25ji",
-    "piapro": "vs",
-};
+// Derive unit field → icon filename from centralized maps
+const UNIT_FIELD_ICONS: Record<string, string> = Object.fromEntries(
+    Object.entries(UNIT_FIELD_TO_ID).map(([field, id]) => [field, UNIT_ICON_FILES[id]])
+);
 
 function CharacterListContent() {
     const { assetSource } = useTheme();
@@ -126,8 +112,8 @@ function CharacterListContent() {
             {/* Characters grouped by unit */}
             <div className="space-y-10">
                 {Object.entries(charactersByUnit).map(([unitId, { unit, characters: unitCharacters }]) => {
-                    const iconName = UNIT_ICONS[unitId] || "vs.webp";
-                    const internalUnitId = UNIT_ID_MAP[unitId] || unitId;
+                    const iconName = UNIT_FIELD_ICONS[unitId] || "vs.webp";
+                    const internalUnitId = UNIT_FIELD_TO_ID[unitId] || unitId;
 
                     return (
                         <div key={unitId} className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { CHARACTER_NAMES, UNIT_DATA } from "@/types/types";
+import { CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import Modal from "@/components/common/Modal";
@@ -20,15 +20,6 @@ interface BondRow {
     rank: number | null;
     exp: number | null;
 }
-
-const UNIT_ICONS: Record<string, string> = {
-    ln: "ln.webp",
-    mmj: "mmj.webp",
-    vbs: "vbs.webp",
-    ws: "wxs.webp",
-    "25ji": "n25.webp",
-    vs: "vs.webp",
-};
 
 const MAX_BOND_LEVEL = 75;
 const DEFAULT_TOPK = 5;
@@ -256,7 +247,7 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
                                         title={unit.name}
                                     >
                                         <div className="w-8 h-8 relative">
-                                            <Image src={`/data/icon/${UNIT_ICONS[unit.id]}`} alt={unit.name} fill className="object-contain" unoptimized />
+                                            <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unit.name} fill className="object-contain" unoptimized />
                                         </div>
                                     </button>
                                 );

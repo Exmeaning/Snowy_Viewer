@@ -1,21 +1,12 @@
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
-import { UNIT_DATA, CHARACTER_NAMES } from "@/types/types";
+import { UNIT_DATA, CHARACTER_NAMES, UNIT_ICON_FILES } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 
 interface CharacterSelectorProps {
     selectedCharacterId: number | null;
     onSelect: (id: number) => void;
 }
-
-const UNIT_ICONS: Record<string, string> = {
-    "ln": "ln.webp",
-    "mmj": "mmj.webp",
-    "vbs": "vbs.webp",
-    "ws": "wxs.webp",
-    "25ji": "n25.webp",
-    "vs": "vs.webp",
-};
 
 export default function CharacterSelector({
     selectedCharacterId,
@@ -46,7 +37,7 @@ export default function CharacterSelector({
             {/* Unit Filter */}
             <div className="flex flex-wrap gap-2">
                 {UNIT_DATA.map(unit => {
-                    const iconName = UNIT_ICONS[unit.id] || "";
+                    const iconName = UNIT_ICON_FILES[unit.id] || "";
                     const isSelected = selectedUnitId === unit.id;
                     return (
                         <button

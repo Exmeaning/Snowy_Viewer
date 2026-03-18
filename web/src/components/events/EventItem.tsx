@@ -5,16 +5,12 @@ import { IEventInfo, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS, getEventStatus, EVENT_
 import { getEventStoryBannerUrl, getEventLogoUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
+import { UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
 
-// Unit icon mapping for event unit badge
-const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = {
-    ln: { icon: "ln.webp", name: "Leo/need" },
-    mmj: { icon: "mmj.webp", name: "MORE MORE JUMP!" },
-    vbs: { icon: "vbs.webp", name: "Vivid BAD SQUAD" },
-    ws: { icon: "wxs.webp", name: "Wonderlands×Showtime" },
-    "25ji": { icon: "n25.webp", name: "25時、ナイトコードで。" },
-    vs: { icon: "vs.webp", name: "Virtual Singer" },
-};
+// Build unit icon mapping from UNIT_DATA
+const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = Object.fromEntries(
+    UNIT_DATA.filter(u => UNIT_ICON_FILES[u.id]).map(u => [u.id, { icon: UNIT_ICON_FILES[u.id], name: u.name }])
+);
 
 interface EventItemProps {
     event: IEventInfo;

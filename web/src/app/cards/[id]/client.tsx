@@ -12,6 +12,8 @@ import {
     ATTR_COLORS,
     ATTR_NAMES,
     UNIT_DATA,
+    UNIT_FIELD_TO_ID,
+    UNIT_ICON_FILES,
     isTrainableCard,
     getRarityNumber,
     CardAttribute,
@@ -683,13 +685,7 @@ export default function CardDetailPage() {
                                                 {card.supportUnit !== "none" && (
                                                     <div className="w-5 h-5 relative">
                                                         <Image
-                                                            src={`/data/icon/${{
-                                                                "light_sound": "ln.webp",
-                                                                "idol": "mmj.webp",
-                                                                "school_refusal": "n25.webp",
-                                                                "theme_park": "wxs.webp",
-                                                                "street": "vbs.webp",
-                                                            }[card.supportUnit]}`}
+                                                            src={`/data/icon/${UNIT_ICON_FILES[UNIT_FIELD_TO_ID[card.supportUnit]]}`}
                                                             alt={SUPPORT_UNIT_NAMES[card.supportUnit]}
                                                             fill
                                                             className="object-contain"

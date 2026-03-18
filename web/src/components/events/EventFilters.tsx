@@ -3,18 +3,13 @@ import Image from "next/image";
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { EventType, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS } from "@/types/events";
-import { ICharaUnitInfo } from "@/types/types";
+import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
 
 /** Filter IDs for event unit (group) filter */
 export type EventUnitFilterId = "ln" | "mmj" | "vbs" | "ws" | "25ji" | "vs" | "mixed";
 
 export const EVENT_UNIT_FILTERS: { id: EventUnitFilterId; name: string; icon?: string }[] = [
-    { id: "ln", name: "Leo/need", icon: "ln.webp" },
-    { id: "mmj", name: "MORE MORE JUMP!", icon: "mmj.webp" },
-    { id: "vbs", name: "Vivid BAD SQUAD", icon: "vbs.webp" },
-    { id: "ws", name: "Wonderlands×Showtime", icon: "wxs.webp" },
-    { id: "25ji", name: "25時、ナイトコードで。", icon: "n25.webp" },
-    { id: "vs", name: "Virtual Singer", icon: "vs.webp" },
+    ...UNIT_DATA.map(u => ({ id: u.id as EventUnitFilterId, name: u.name, icon: UNIT_ICON_FILES[u.id] })),
     { id: "mixed", name: "混合" },
 ];
 

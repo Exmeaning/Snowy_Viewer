@@ -2,27 +2,8 @@
 import React, { useMemo } from "react";
 import Image from "next/image";
 import { FilterSection } from "@/components/common/BaseFilters";
-import { CHARACTER_NAMES, UNIT_DATA, ICharaUnitInfo } from "@/types/types";
+import { CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES, UNIT_FIELD_TO_ID, UNIT_NAME_MAP, ICharaUnitInfo } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
-
-const UNIT_ICONS: Record<string, string> = {
-    "ln": "ln.webp",
-    "mmj": "mmj.webp",
-    "vbs": "vbs.webp",
-    "ws": "wxs.webp",
-    "25ji": "n25.webp",
-    "vs": "vs.webp",
-};
-
-/** Map gameCharacterUnits.json "unit" field to UNIT_DATA id */
-const UNIT_FIELD_TO_ID: Record<string, string> = {
-    "light_sound": "ln",
-    "idol": "mmj",
-    "street": "vbs",
-    "theme_park": "ws",
-    "school_refusal": "25ji",
-    "piapro": "vs",
-};
 
 interface CharacterFilterProps {
     selectedCharacters: number[];
@@ -159,8 +140,17 @@ export default function CharacterFilter({
 
     const getCharName = (charId: number): string => {
         const display = charDisplayMap.get(charId);
-        if (display) return CHARACTER_NAMES[display.baseCharId] || `Character ${charId}`;
-        return CHARACTER_NAMES[charId] || `Character ${charId}`;
+        const baseName = display
+            ? (CHARACTER_NAMES[display.baseCharId] || `Character ${charId}`)
+            : (CHARACTER_NAMES[charId] || `Character ${charId}`);
+        // For VS sub-unit characters, append the group name
+        if (display?.badgeUnitId) {
+            // Reverse lookup: unitId → unit field → unit name
+            const unitField = Object.entries(UNIT_FIELD_TO_ID).find(([, v]) => v === display.badgeUnitId)?.[0];
+            const groupName = unitField ? UNIT_NAME_MAP[unitField] : null;
+            if (groupName) return `${baseName}（${groupName}）`;
+        }
+        return baseName;
     };
 
     const getCharIconId = (charId: number): number => {
@@ -179,7 +169,7 @@ export default function CharacterFilter({
             <FilterSection label={unitLabel}>
                 <div className="flex flex-wrap gap-2">
                     {effectiveUnitData.map(unit => {
-                        const iconName = UNIT_ICONS[unit.id] || "";
+                        const iconName = UNIT_ICON_FILES[unit.id] || "";
                         return (
                             <button
                                 key={unit.id}
@@ -211,7 +201,7 @@ export default function CharacterFilter({
                     <div className="flex flex-wrap gap-2">
                         {displayedCharacters.map(charId => {
                             const badgeUnitId = getCharBadge(charId);
-                            const badgeIcon = badgeUnitId ? UNIT_ICONS[badgeUnitId] : null;
+                            const badgeIcon = badgeUnitId ? UNIT_ICON_FILES[badgeUnitId] : null;
                             const charName = getCharName(charId);
                             return (
                                 <button

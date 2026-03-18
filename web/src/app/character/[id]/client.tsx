@@ -12,6 +12,8 @@ import {
     ICardInfo,
     CHARACTER_NAMES,
     UNIT_DATA,
+    UNIT_FIELD_TO_ID,
+    UNIT_ICON_FILES,
     isTrainableCard
 } from "@/types/types";
 import {
@@ -26,15 +28,10 @@ import { TranslatedText } from "@/components/common/TranslatedText";
 import ColorPreview from "@/components/helpers/ColorPreview";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 
-// Map unit names from master data to our internal IDs for icons
-const UNIT_ICONS: Record<string, string> = {
-    "light_sound": "ln.webp",
-    "idol": "mmj.webp",
-    "street": "vbs.webp",
-    "theme_park": "wxs.webp",
-    "school_refusal": "n25.webp",
-    "piapro": "vs.webp",
-};
+// Derive unit field → icon filename from centralized maps
+const UNIT_FIELD_ICONS: Record<string, string> = Object.fromEntries(
+    Object.entries(UNIT_FIELD_TO_ID).map(([field, id]) => [field, UNIT_ICON_FILES[id]])
+);
 
 export default function CharacterDetailClient() {
     const router = useRouter();
@@ -139,7 +136,7 @@ export default function CharacterDetailClient() {
     }
 
     // Determine unit icon
-    const unitIconName = UNIT_ICONS[character.unit] || "vs.webp";
+    const unitIconName = UNIT_FIELD_ICONS[character.unit] || "vs.webp";
 
     // Prepare images for display/viewer
     const charaTrimImg = getCharacterTrimUrl(id, assetSource);

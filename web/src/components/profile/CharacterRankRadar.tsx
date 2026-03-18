@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
-import { CHAR_NAMES } from "@/types/types";
+import { CHAR_NAMES, UNIT_NAME_MAP } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 
 type UnitKey = "overview" | "ln" | "mmj" | "vbs" | "wxs" | "n25" | "vs";
@@ -13,12 +13,12 @@ interface Props {
 
 const UNIT_CONFIG: Record<UnitKey, { label: string; color: string; icon?: string; ids: number[] }> = {
     overview: { label: "总览", color: "#7b7b7b", ids: [21, 22, 23, 24, 25, 26, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] },
-    ln: { label: "Leo/need", color: "#4455DD", icon: "/data/icon/ln.webp", ids: [1, 2, 3, 4] },
-    mmj: { label: "MMJ", color: "#88DD44", icon: "/data/icon/mmj.webp", ids: [5, 6, 7, 8] },
-    vbs: { label: "VBS", color: "#EE1166", icon: "/data/icon/vbs.webp", ids: [9, 10, 11, 12] },
-    wxs: { label: "WxS", color: "#FF9900", icon: "/data/icon/wxs.webp", ids: [13, 14, 15, 16] },
-    n25: { label: "25时", color: "#884499", icon: "/data/icon/n25.webp", ids: [17, 18, 19, 20] },
-    vs: { label: "VS", color: "#33CCBB", icon: "/data/icon/vs.webp", ids: [21, 22, 23, 24, 25, 26] },
+    ln: { label: UNIT_NAME_MAP.light_sound, color: "#4455DD", icon: "/data/icon/ln.webp", ids: [1, 2, 3, 4] },
+    mmj: { label: UNIT_NAME_MAP.idol, color: "#88DD44", icon: "/data/icon/mmj.webp", ids: [5, 6, 7, 8] },
+    vbs: { label: UNIT_NAME_MAP.street, color: "#EE1166", icon: "/data/icon/vbs.webp", ids: [9, 10, 11, 12] },
+    wxs: { label: UNIT_NAME_MAP.theme_park, color: "#FF9900", icon: "/data/icon/wxs.webp", ids: [13, 14, 15, 16] },
+    n25: { label: UNIT_NAME_MAP.school_refusal, color: "#884499", icon: "/data/icon/n25.webp", ids: [17, 18, 19, 20] },
+    vs: { label: UNIT_NAME_MAP.piapro, color: "#33CCBB", icon: "/data/icon/vs.webp", ids: [21, 22, 23, 24, 25, 26] },
 };
 
 const unitColor = (id: number) => id >= 21 ? UNIT_CONFIG.vs.color : id <= 4 ? UNIT_CONFIG.ln.color : id <= 8 ? UNIT_CONFIG.mmj.color : id <= 12 ? UNIT_CONFIG.vbs.color : id <= 16 ? UNIT_CONFIG.wxs.color : UNIT_CONFIG.n25.color;

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import ReactECharts from "echarts-for-react";
-import { CHAR_NAMES, CHAR_COLORS } from "@/types/types";
+import { CHAR_NAMES, CHAR_COLORS, UNIT_NAME_MAP } from "@/types/types";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -38,12 +38,12 @@ interface CharMaster { id: number; firstName?: string; givenName?: string; }
 interface UnitMaster { unit: string; unitName: string; }
 
 const GROUPS = [
-    { key: "ln" as const, unit: "light_sound", name: "Leo/need", icon: "/data/icon/ln.webp", ids: [1, 2, 3, 4] },
-    { key: "mmj" as const, unit: "idol", name: "MORE MORE JUMP!", icon: "/data/icon/mmj.webp", ids: [5, 6, 7, 8] },
-    { key: "vbs" as const, unit: "street", name: "Vivid BAD SQUAD", icon: "/data/icon/vbs.webp", ids: [9, 10, 11, 12] },
-    { key: "wxs" as const, unit: "theme_park", name: "Wonderlands x Showtime", icon: "/data/icon/wxs.webp", ids: [13, 14, 15, 16] },
-    { key: "n25" as const, unit: "school_refusal", name: "25ji, Nightcord de.", icon: "/data/icon/n25.webp", ids: [17, 18, 19, 20] },
-    { key: "vs" as const, unit: "piapro", name: "Virtual Singer", icon: "/data/icon/vs.webp", ids: [21, 22, 23, 24, 25, 26] },
+    { key: "ln" as const, unit: "light_sound", name: UNIT_NAME_MAP.light_sound, icon: "/data/icon/ln.webp", ids: [1, 2, 3, 4] },
+    { key: "mmj" as const, unit: "idol", name: UNIT_NAME_MAP.idol, icon: "/data/icon/mmj.webp", ids: [5, 6, 7, 8] },
+    { key: "vbs" as const, unit: "street", name: UNIT_NAME_MAP.street, icon: "/data/icon/vbs.webp", ids: [9, 10, 11, 12] },
+    { key: "wxs" as const, unit: "theme_park", name: UNIT_NAME_MAP.theme_park, icon: "/data/icon/wxs.webp", ids: [13, 14, 15, 16] },
+    { key: "n25" as const, unit: "school_refusal", name: UNIT_NAME_MAP.school_refusal, icon: "/data/icon/n25.webp", ids: [17, 18, 19, 20] },
+    { key: "vs" as const, unit: "piapro", name: UNIT_NAME_MAP.piapro, icon: "/data/icon/vs.webp", ids: [21, 22, 23, 24, 25, 26] },
 ];
 
 const CHALLENGE_BOX_PURPOSE = "challenge_live_high_score";
@@ -160,7 +160,7 @@ export default function ChallengeStageChart({
         if (loading || rows) return;
         setLoading(true); setError(null);
         try {
-            const nameServer: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
+                const nameServer: "jp" | "cn" = "cn"; // Always use CN for Chinese names
             const [rewardPack, chars, units] = await Promise.all([
                 (async () => {
                     const loadPack = async (targetServer: ServerType) => {
