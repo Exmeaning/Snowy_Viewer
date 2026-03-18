@@ -315,6 +315,12 @@ export default function EventDetailPage() {
     const characterUrl = getEventCharacterUrl(event.assetbundleName, assetSource);
     const status = getEventStatus(event);
     const statusDisplay = EVENT_STATUS_DISPLAY[status];
+
+    // Events with no banner character hide the "角色" tab, except for whitelisted IDs
+    const CHARACTER_TAB_WHITELIST = [180];
+    const hasBannerChar = event.eventType !== "world_bloom" && bannerCharId !== null;
+    const showCharacterTab = hasBannerChar || CHARACTER_TAB_WHITELIST.includes(event.id);
+
     const activeImageUrl = activeImageTab === "logo" ? logoUrl : activeImageTab === "banner" ? bannerUrl : characterUrl;
     const activeImageLabel = activeImageTab === "logo" ? "Logo" : activeImageTab === "banner" ? "背景" : "角色";
 
@@ -399,6 +405,7 @@ export default function EventDetailPage() {
                                     </div>
                                 </div>
                                 {/* Character */}
+                                {showCharacterTab && (
                                 <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
                                     <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
                                         <span className="text-sm font-bold text-slate-600">角色</span>
@@ -413,6 +420,7 @@ export default function EventDetailPage() {
                                         />
                                     </div>
                                 </div>
+                                )}
                             </div>
                         ) : (
                             /* Normal Mode: Tabs */
@@ -422,7 +430,7 @@ export default function EventDetailPage() {
                                     {[
                                         { key: "logo", label: "Logo" },
                                         { key: "banner", label: "背景" },
-                                        { key: "character", label: "角色" },
+                                        ...(showCharacterTab ? [{ key: "character", label: "角色" }] : []),
                                     ].map((tab) => (
                                         <button
                                             key={tab.key}
@@ -460,7 +468,7 @@ export default function EventDetailPage() {
                                             unoptimized
                                         />
                                     )}
-                                    {activeImageTab === "character" && (
+                                    {activeImageTab === "character" && showCharacterTab && (
                                         <Image
                                             src={characterUrl}
                                             alt={`${event.name} Character`}
