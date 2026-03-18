@@ -290,10 +290,8 @@ export class BaseDeckRecommend {
     // 过滤箱活（World Bloom）的卡，不上其它组合的
     // 只在 World Bloom 活动中过滤，马拉松/嘉年华活动不过滤（非活动团体的高综合力卡可能产生更高PT）
     let filterUnit: string | undefined
-    if (worldBloomSupportUnit !== undefined) {
-      filterUnit = worldBloomSupportUnit
-    } else if (eventType === EventType.BLOOM) {
-      filterUnit = eventUnit
+    if (eventType === EventType.BLOOM) {
+      filterUnit = worldBloomSupportUnit ?? eventUnit
     }
     // 构建固定角色ID集合（用于箱活过滤豁免）
     const fixedCharacterSet = new Set(fixedCharacters)
@@ -301,7 +299,7 @@ export class BaseDeckRecommend {
       const originCardsLength = cards.length
       cards = cards.filter(it =>
         (it.units.length === 1 && it.units[0] === 'piapro') ||
-          filterUnit === undefined || it.units.includes(filterUnit) ||
+          it.units.includes(filterUnit) ||
           fixedCharacterSet.has(it.characterId))
       debugLog(`Cards filtered with unit ${filterUnit}: ${cards.length}/${originCardsLength}`)
       debugLog(cards.map(it => it.cardId).toString())
