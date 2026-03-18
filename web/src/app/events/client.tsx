@@ -89,7 +89,7 @@ function EventsContent() {
 
                 {/* Event Grid */}
                 <div className="flex-1 min-w-0">
-                    <EventGrid events={data.displayedEvents} isLoading={data.isLoading} eventUnitMap={data.eventUnitMap} />
+                    <EventGrid events={data.displayedEvents} isLoading={data.isLoading} eventUnitMap={data.eventUnitMap} eventBannerCharMap={data.eventBannerCharMap} />
 
                     {/* Load More Button */}
                     {!data.isLoading && data.displayedEvents.length < data.filteredEvents.length && (

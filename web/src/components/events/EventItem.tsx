@@ -2,9 +2,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { IEventInfo, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS, getEventStatus, EVENT_STATUS_DISPLAY, EventType } from "@/types/events";
-import { getEventLogoUrl } from "@/lib/assets";
+import { getEventLogoUrl, getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
+import { CHARACTER_NAMES } from "@/types/types";
 
 // Unit icon mapping for event unit badge
 const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = {
@@ -21,9 +22,10 @@ interface EventItemProps {
     isSpoiler?: boolean;
     basePath?: string;
     unitType?: string;
+    bannerCharId?: number;
 }
 
-export default function EventItem({ event, isSpoiler, basePath = "/events", unitType }: EventItemProps) {
+export default function EventItem({ event, isSpoiler, basePath = "/events", unitType, bannerCharId }: EventItemProps) {
     const { assetSource } = useTheme();
     const logoUrl = getEventLogoUrl(event.assetbundleName, assetSource);
     const status = getEventStatus(event);
@@ -93,6 +95,23 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                     {isSpoiler && (
                         <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-orange-500 rounded-full text-xs font-bold text-white shadow">
                             剧透
+                        </div>
+                    )}
+
+                    {/* Banner Character Avatar - Bottom Right */}
+                    {bannerCharId && (
+                        <div
+                            className={`absolute ${isSpoiler ? "bottom-8" : "bottom-2"} right-2 w-7 h-7 rounded-full overflow-hidden bg-white shadow ring-1 ring-slate-200`}
+                            title={CHARACTER_NAMES[bannerCharId] || `Character ${bannerCharId}`}
+                        >
+                            <Image
+                                src={getCharacterIconUrl(bannerCharId)}
+                                alt={CHARACTER_NAMES[bannerCharId] || ""}
+                                width={28}
+                                height={28}
+                                className="w-full h-full object-cover"
+                                unoptimized
+                            />
                         </div>
                     )}
                 </div>

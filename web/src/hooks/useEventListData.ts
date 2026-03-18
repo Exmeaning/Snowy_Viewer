@@ -27,6 +27,7 @@ export interface UseEventListDataReturn {
     charaUnits: ICharaUnitInfo[];
     translations: TranslationData | null;
     eventUnitMap: Map<number, string>;
+    eventBannerCharMap: Map<number, number>;
     isLoading: boolean;
     error: string | null;
 
@@ -338,6 +339,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         charaUnits,
         translations,
         eventUnitMap,
+        eventBannerCharMap,
         isLoading,
         error,
         filteredEvents,
