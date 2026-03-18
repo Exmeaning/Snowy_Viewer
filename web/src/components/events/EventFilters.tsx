@@ -32,9 +32,9 @@ interface EventFiltersProps {
     selectedTypes: EventType[];
     onTypeChange: (types: EventType[]) => void;
 
-    // Event unit (group) filter
-    selectedEventUnits: EventUnitFilterId[];
-    onEventUnitChange: (units: EventUnitFilterId[]) => void;
+    // Event unit (group) filter (optional — only used on events list page)
+    selectedEventUnits?: EventUnitFilterId[];
+    onEventUnitChange?: (units: EventUnitFilterId[]) => void;
 
     // Character filter (bonus characters)
     selectedCharacters: number[];
@@ -88,6 +88,7 @@ export default function EventFilters({
     };
 
     const toggleEventUnit = (unitId: EventUnitFilterId) => {
+        if (!onEventUnitChange || !selectedEventUnits) return;
         if (selectedEventUnits.includes(unitId)) {
             onEventUnitChange(selectedEventUnits.filter(u => u !== unitId));
         } else {
@@ -95,7 +96,7 @@ export default function EventFilters({
         }
     };
 
-    const hasActiveFilters = selectedTypes.length > 0 || selectedEventUnits.length > 0 || selectedCharacters.length > 0 || searchQuery.trim() !== "";
+    const hasActiveFilters = selectedTypes.length > 0 || (selectedEventUnits && selectedEventUnits.length > 0) || selectedCharacters.length > 0 || searchQuery.trim() !== "";
 
     return (
         <BaseFilters
@@ -112,38 +113,40 @@ export default function EventFilters({
             hasActiveFilters={hasActiveFilters}
             onReset={onReset}
         >
-            {/* Event Unit (Group) Filter */}
-            <FilterSection label="活动团体">
-                <div className="flex flex-wrap gap-2">
-                    {EVENT_UNIT_FILTERS.map(unit => (
-                        <button
-                            key={unit.id}
-                            onClick={() => toggleEventUnit(unit.id)}
-                            className={`p-1.5 rounded-xl transition-all ${selectedEventUnits.includes(unit.id)
-                                ? "ring-2 ring-miku shadow-lg bg-white"
-                                : "hover:bg-slate-100 border border-transparent bg-slate-50"
-                                }`}
-                            title={unit.name}
-                        >
-                            {unit.icon ? (
-                                <div className="w-8 h-8 relative">
-                                    <Image
-                                        src={`/data/icon/${unit.icon}`}
-                                        alt={unit.name}
-                                        fill
-                                        className="object-contain"
-                                        unoptimized
-                                    />
-                                </div>
-                            ) : (
-                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                                    <span className="text-[10px] text-slate-500 font-bold">混合</span>
-                                </div>
-                            )}
-                        </button>
-                    ))}
-                </div>
-            </FilterSection>
+            {/* Event Unit (Group) Filter — only shown when props are provided */}
+            {selectedEventUnits && onEventUnitChange && (
+                <FilterSection label="活动团体">
+                    <div className="flex flex-wrap gap-2">
+                        {EVENT_UNIT_FILTERS.map(unit => (
+                            <button
+                                key={unit.id}
+                                onClick={() => toggleEventUnit(unit.id)}
+                                className={`p-1.5 rounded-xl transition-all ${selectedEventUnits.includes(unit.id)
+                                    ? "ring-2 ring-miku shadow-lg bg-white"
+                                    : "hover:bg-slate-100 border border-transparent bg-slate-50"
+                                    }`}
+                                title={unit.name}
+                            >
+                                {unit.icon ? (
+                                    <div className="w-8 h-8 relative">
+                                        <Image
+                                            src={`/data/icon/${unit.icon}`}
+                                            alt={unit.name}
+                                            fill
+                                            className="object-contain"
+                                            unoptimized
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                                        <span className="text-[10px] text-slate-500 font-bold">混合</span>
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </FilterSection>
+            )}
 
             {/* Event Type Filter */}
             <FilterSection label="活动形式">
