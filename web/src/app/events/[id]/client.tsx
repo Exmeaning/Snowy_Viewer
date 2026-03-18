@@ -14,6 +14,8 @@ import {
     EVENT_STATUS_DISPLAY,
     EventType
 } from "@/types/events";
+import { IActionSet, buildEventRawUnitMap, rawUnitToFilterId, getEventUnitDisplayName } from "@/lib/eventUnit";
+import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
 import { CHARACTER_NAMES, getRarityNumber, RARITY_DISPLAY, isTrainableCard } from "@/types/types";
 import type { ICardInfo, ICharaUnitInfo, IGameChara } from "@/types/types";
@@ -97,6 +99,7 @@ export default function EventDetailPage() {
     const [allMusics, setAllMusics] = useState<IMusic[]>([]);
     const [gameCharacterUnits, setGameCharacterUnits] = useState<ICharaUnitInfo[]>([]);
     const [gameCharacters, setGameCharacters] = useState<IGameChara[]>([]);
+    const [eventUnitMap, setEventUnitMap] = useState<Map<number, EventUnitFilterId>>(new Map());
     const [virtualLive, setVirtualLive] = useState<IVirtualLiveInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -121,7 +124,7 @@ export default function EventDetailPage() {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [eventsData, bonusesData, eventCardsData, eventMusicsData, cardsData, musicsData, charUnitsData, gameCharsData] = await Promise.all([
+                const [eventsData, bonusesData, eventCardsData, eventMusicsData, cardsData, musicsData, charUnitsData, gameCharsData, actionSetsData] = await Promise.all([
                     fetchMasterData<IEventInfo[]>("events.json"),
                     fetchMasterData<IEventDeckBonus[]>("eventDeckBonuses.json"),
                     fetchMasterData<IEventCard[]>("eventCards.json"),
@@ -130,6 +133,7 @@ export default function EventDetailPage() {
                     fetchMasterData<IMusic[]>("musics.json"),
                     fetchMasterData<ICharaUnitInfo[]>("gameCharacterUnits.json"),
                     fetchMasterData<IGameChara[]>("gameCharacters.json"),
+                    fetchMasterData<IActionSet[]>("actionSets.json"),
                 ]);
 
                 const foundEvent = eventsData.find(e => e.id === eventId);
@@ -146,6 +150,13 @@ export default function EventDetailPage() {
                 setAllMusics(musicsData);
                 setGameCharacterUnits(charUnitsData);
                 setGameCharacters(gameCharsData);
+                // Build event unit map from actionSets
+                const rawMap = buildEventRawUnitMap(actionSetsData);
+                const unitMap = new Map<number, EventUnitFilterId>();
+                for (const [eid, rawType] of rawMap) {
+                    unitMap.set(eid, rawUnitToFilterId(rawType));
+                }
+                setEventUnitMap(unitMap);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching event:", err);
@@ -490,7 +501,8 @@ export default function EventDetailPage() {
                                         />
                                     }
                                 />
-                                <InfoRow label="类型" value={EVENT_TYPE_NAMES[event.eventType as EventType]} />
+                                <InfoRow label="团体" value={getEventUnitDisplayName(event.id, eventUnitMap)} />
+                                <InfoRow label="形式" value={EVENT_TYPE_NAMES[event.eventType as EventType]} />
                                 <InfoRow label="开始时间" value={formatDate(event.startAt)} />
                                 <InfoRow label="结束时间" value={formatDate(event.aggregateAt)} />
                                 <InfoRow

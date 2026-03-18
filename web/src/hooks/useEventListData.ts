@@ -1,51 +1,14 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { EVENT_TYPE_TO_FILTER_ID, type EventUnitFilterId } from "@/components/events/EventFilters";
+import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { IEventInfo, IEventDeckBonus, EventType } from "@/types/events";
 import { ICharaUnitInfo } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
-
-// ---------------------------------------------------------------------------
-// ActionSet parsing
-// ---------------------------------------------------------------------------
-
-interface IActionSet {
-    releaseConditionId: number;
-    scenarioId?: string;
-}
-
-function buildEventRawUnitMap(actionSets: IActionSet[]): Map<number, string> {
-    const map = new Map<number, string>();
-    map.set(1, "band");
-    map.set(5, "idol");
-    map.set(6, "street");
-    map.set(9, "shuffle");
-
-    for (const action of actionSets) {
-        const rcId = String(action.releaseConditionId);
-        if (
-            action.scenarioId &&
-            (action.scenarioId.includes("areatalk_ev") || action.scenarioId.includes("areatalk_wl")) &&
-            rcId.length === 6 &&
-            rcId[0] === "1"
-        ) {
-            const eventId = parseInt(rcId.substring(1, 4), 10) + 1;
-            const eventType = action.scenarioId.split("_")[2];
-            if (!map.has(eventId)) {
-                map.set(eventId, eventType);
-            }
-        }
-    }
-    return map;
-}
-
-function rawUnitToFilterId(raw: string): EventUnitFilterId {
-    return EVENT_TYPE_TO_FILTER_ID[raw] || "mixed";
-}
+import { IActionSet, buildEventRawUnitMap, rawUnitToFilterId } from "@/lib/eventUnit";
 
 // ---------------------------------------------------------------------------
 // Hook config & return type
