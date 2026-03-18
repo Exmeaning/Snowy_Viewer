@@ -57,7 +57,7 @@ export function getEventUnitDisplayName(eventId: number, eventUnitMap: Map<numbe
     const filterId = eventUnitMap.get(eventId);
     if (!filterId) return "无";
     const unitInfo = EVENT_UNIT_FILTERS.find(u => u.id === filterId);
-    return unitInfo?.name ?? "混合";
+    return unitInfo?.name ?? "其他";
 }
 
 /**

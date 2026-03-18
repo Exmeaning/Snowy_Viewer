@@ -15,7 +15,7 @@ export const EVENT_UNIT_FILTERS: { id: EventUnitFilterId; name: string; icon?: s
     { id: "ws", name: "Wonderlands×Showtime", icon: "wxs.webp" },
     { id: "25ji", name: "25時、ナイトコードで。", icon: "n25.webp" },
     { id: "vs", name: "Virtual Singer", icon: "vs.webp" },
-    { id: "mixed", name: "混" },
+    { id: "mixed", name: "混合" },
 ];
 
 /** Map raw event_type from actionSets to filter ID */
