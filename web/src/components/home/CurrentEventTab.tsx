@@ -35,7 +35,7 @@ export default function CurrentEventTab() {
         const recoverable = Math.floor(minutesUntilStart / STAMINA_RECOVERY_MINUTES);
         const normalReserve = Math.max(0, NORMAL_CAP - recoverable);
         const passReserve = Math.max(0, PASS_CAP - recoverable);
-        return { normalReserve, passReserve };
+        return { normalReserve, passReserve, recoverable };
     }, [currentEvent, now]);
 
     useEffect(() => {
@@ -212,17 +212,13 @@ export default function CurrentEventTab() {
                     <span className="text-amber-500 text-base" aria-hidden="true">⚡</span>
                     <span className="text-amber-700 font-medium">
                         {staminaReserve.normalReserve === 0 && staminaReserve.passReserve === 0 ? (
-                            "体力充裕，无需预留"
-                        ) : staminaReserve.passReserve >= PASS_CAP && staminaReserve.normalReserve >= NORMAL_CAP ? (
-                            "距活动开始较远，满体力也无法回满"
+                            staminaReserve.recoverable > PASS_CAP
+                                ? "距活动开始太久，可将多余体力塞进烤森"
+                                : "体力充裕，无需预留"
+                        ) : staminaReserve.normalReserve >= NORMAL_CAP ? (
+                            "活动即将开始，请保持满体力"
                         ) : staminaReserve.normalReserve === 0 ? (
-                            staminaReserve.passReserve <= NORMAL_CAP ? (
-                                <>预留 <span className="font-bold">{staminaReserve.passReserve}</span> 体力 — 开活恰好回满</>
-                            ) : (
-                                <>预留 <span className="font-bold">{staminaReserve.passReserve}</span> 体力 / 月卡 — 开活恰好回满</>
-                            )
-                        ) : staminaReserve.passReserve > NORMAL_CAP ? (
-                            <>预留 <span className="font-bold">{NORMAL_CAP}</span> 体力 / 普通（无法回满） · 预留 <span className="font-bold">{staminaReserve.passReserve}</span> 体力 / 月卡 — 开活恰好回满</>
+                            <>预留 <span className="font-bold">{staminaReserve.passReserve}</span> 体力 / 月卡 — 开活恰好回满</>
                         ) : (
                             <>预留 <span className="font-bold">{staminaReserve.normalReserve}</span> 体力 / 普通 · 预留 <span className="font-bold">{staminaReserve.passReserve}</span> 体力 / 月卡 — 开活恰好回满</>
                         )}
