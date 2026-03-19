@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 // ============================================================================
@@ -73,11 +73,19 @@ export default function BaseFilters({
 }: BaseFiltersProps) {
     const pathname = usePathname();
     const STORAGE_KEY = `filters_collapsed:${pathname}`;
+    const rootRef = useRef<HTMLDivElement>(null);
+    const [isInsideQuickFilter, setIsInsideQuickFilter] = useState(false);
     const [mobileCollapsed, setMobileCollapsed] = useState(() => {
         if (typeof window === "undefined") return true;
         const saved = localStorage.getItem(STORAGE_KEY);
         return saved === null ? true : saved === "true";
     });
+
+    useEffect(() => {
+        if (rootRef.current?.closest(".quick-filter-modal-content")) {
+            setIsInsideQuickFilter(true);
+        }
+    }, []);
 
     const toggleCollapsed = () => {
         setMobileCollapsed(prev => {
@@ -95,7 +103,7 @@ export default function BaseFilters({
     };
 
     return (
-        <div data-shortcut-filters="true" className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+        <div ref={rootRef} data-shortcut-filters="true" className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
             {/* Header — clickable on mobile to toggle collapse */}
             <div
                 className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center justify-between lg:cursor-default cursor-pointer select-none"
@@ -198,8 +206,10 @@ export default function BaseFilters({
                         </button>
                     )}
 
-                    {/* "Tap to collapse" bar — mobile only */}
+                    {/* "Tap to collapse" bar — mobile only, hidden in quick filter modal */}
+                    {!isInsideQuickFilter && (
                     <div
+                        data-filter-collapse-bar="true"
                         className="lg:hidden -mx-5 -mb-5 mt-5 flex items-center justify-center gap-1 py-2.5 bg-slate-50 border-t border-slate-100 cursor-pointer select-none text-xs text-slate-400 hover:text-slate-500 hover:bg-slate-100 transition-colors"
                         onClick={toggleCollapsed}
                     >
@@ -208,6 +218,7 @@ export default function BaseFilters({
                         </svg>
                         点击收起
                     </div>
+                    )}
                 </div>
             </div>
 

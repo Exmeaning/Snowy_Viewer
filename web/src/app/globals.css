@@ -318,6 +318,8 @@ button[data-shortcut-load-more="true"]::after {
   display: none !important;
 }
 
+
+
 @keyframes scroll-top-icon-tap {
   0% {
     transform: translateY(0) scale(1);
