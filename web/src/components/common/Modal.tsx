@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -31,6 +31,12 @@ export default function Modal({
 }: ModalProps) {
     const [mounted, setMounted] = useState(false);
 
+    // Keep a stable ref to onClose so the history effect doesn't re-run
+    // when the parent passes a new inline callback on every render.
+    const onCloseRef = useRef(onClose);
+    useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+    const stableOnClose = useCallback(() => onCloseRef.current(), []);
+
     useEffect(() => {
         const raf = requestAnimationFrame(() => {
             setMounted(true);
@@ -50,20 +56,26 @@ export default function Modal({
         }
 
         const handlePopState = () => {
-            onClose();
+            stableOnClose();
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 e.preventDefault();
-                onClose();
+                stableOnClose();
             }
         };
 
-        window.addEventListener("popstate", handlePopState);
+        // Delay listener registration by a frame so any popstate triggered
+        // by the pushState above (e.g. Next.js trailingSlash normalisation)
+        // is ignored.
+        const raf = requestAnimationFrame(() => {
+            window.addEventListener("popstate", handlePopState);
+        });
         document.addEventListener("keydown", handleKeyDown);
 
         return () => {
+            cancelAnimationFrame(raf);
             document.body.style.overflow = "unset";
             window.removeEventListener("popstate", handlePopState);
             document.removeEventListener("keydown", handleKeyDown);
@@ -73,7 +85,7 @@ export default function Modal({
                 window.history.back();
             }
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, stableOnClose]);
 
     if (!mounted) return null;
 
