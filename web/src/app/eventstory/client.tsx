@@ -24,6 +24,8 @@ function StoryListContent() {
             onBannerCharsChange={data.setSelectedBannerChars}
             selectedBannerUnitIds={data.selectedBannerUnitIds}
             onBannerUnitIdsChange={data.setSelectedBannerUnitIds}
+            selectedBonusAttr={data.selectedBonusAttr}
+            onBonusAttrChange={data.setSelectedBonusAttr}
             searchQuery={data.searchQuery}
             onSearchChange={data.setSearchQuery}
             sortBy={data.sortBy}
@@ -42,6 +44,7 @@ function StoryListContent() {
         data.selectedUnitIds,
         data.selectedBannerChars,
         data.selectedBannerUnitIds,
+        data.selectedBonusAttr,
         data.searchQuery,
         data.sortBy,
         data.sortOrder,
@@ -89,7 +92,7 @@ function StoryListContent() {
 
                 {/* Event Grid */}
                 <div className="flex-1 min-w-0">
-                    <EventGrid events={data.displayedEvents} isLoading={data.isLoading} basePath="/eventstory" eventUnitMap={data.eventUnitMap} eventBannerCharMap={data.eventBannerCharMap} eventStoryIds={data.eventStoryIds} />
+                    <EventGrid events={data.displayedEvents} isLoading={data.isLoading} basePath="/eventstory" eventUnitMap={data.eventUnitMap} eventBannerCharMap={data.eventBannerCharMap} eventBonusAttrMap={data.eventBonusAttrMap} eventStoryIds={data.eventStoryIds} />
 
                     {/* Load More Button */}
                     {!data.isLoading && data.displayedEvents.length < data.filteredEvents.length && (

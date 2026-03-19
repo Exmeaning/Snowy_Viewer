@@ -9,6 +9,7 @@ interface EventGridProps {
     basePath?: string;
     eventUnitMap?: Map<number, string>;
     eventBannerCharMap?: Map<number, number>;
+    eventBonusAttrMap?: Map<number, string>;
     eventStoryIds?: Set<number>;
 }
 
@@ -26,7 +27,7 @@ function EventSkeleton() {
     );
 }
 
-export default function EventGrid({ events, isLoading = false, basePath = "/events", eventUnitMap, eventBannerCharMap, eventStoryIds }: EventGridProps) {
+export default function EventGrid({ events, isLoading = false, basePath = "/events", eventUnitMap, eventBannerCharMap, eventBonusAttrMap, eventStoryIds }: EventGridProps) {
     const [now] = useState(() => Date.now());
 
     // Show skeletons while loading
@@ -59,7 +60,7 @@ export default function EventGrid({ events, isLoading = false, basePath = "/even
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {events.map(event => {
                 const isSpoiler = event.startAt > now;
-                return <EventItem key={event.id} event={event} isSpoiler={isSpoiler} basePath={basePath} unitType={eventUnitMap?.get(event.id)} eventStoryIds={eventStoryIds} />;
+                return <EventItem key={event.id} event={event} isSpoiler={isSpoiler} basePath={basePath} unitType={eventUnitMap?.get(event.id)} bonusAttr={eventBonusAttrMap?.get(event.id)} eventStoryIds={eventStoryIds} />;
             })}
         </div>
     );

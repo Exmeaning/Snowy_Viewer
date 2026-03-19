@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { IEventInfo, IEventDeckBonus, EventType, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
-import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
+import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, CardAttribute, ATTR_ICON_PATHS, ATTR_NAMES } from "@/types/types";
 import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import { getEventLogoUrl, getEventStoryBannerUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -41,6 +41,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
     const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
     const [selectedBannerChars, setSelectedBannerChars] = useState<number[]>([]);
     const [selectedBannerUnitIds, setSelectedBannerUnitIds] = useState<string[]>([]);
+    const [selectedBonusAttr, setSelectedBonusAttr] = useState<CardAttribute | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState<"id" | "startAt">("startAt");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -108,6 +109,16 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
         return buildEventBannerCharMap(eventStories, charaUnits);
     }, [eventStories, charaUnits]);
 
+    const eventBonusAttrMap = useMemo(() => {
+        const map = new Map<number, string>();
+        for (const bonus of deckBonuses) {
+            if (bonus.cardAttr && !bonus.gameCharacterUnitId) {
+                map.set(bonus.eventId, bonus.cardAttr);
+            }
+        }
+        return map;
+    }, [deckBonuses]);
+
     const eventStoryIds = useMemo(() => new Set(eventStories.map(s => s.eventId)), [eventStories]);
 
     // Filter events — same logic as useEventListData
@@ -147,6 +158,10 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
             });
         }
 
+        if (selectedBonusAttr) {
+            result = result.filter(e => eventBonusAttrMap.get(e.id) === selectedBonusAttr);
+        }
+
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase().trim();
             const qNum = parseInt(q, 10);
@@ -169,7 +184,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
         });
 
         return result;
-    }, [events, selectedTypes, selectedEventUnits, eventUnitMap, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, selectedBannerChars, eventBannerCharMapDerived, searchQuery, sortBy, sortOrder, translations, isShowSpoiler]);
+    }, [events, selectedTypes, selectedEventUnits, eventUnitMap, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, selectedBannerChars, eventBannerCharMapDerived, selectedBonusAttr, eventBonusAttrMap, searchQuery, sortBy, sortOrder, translations, isShowSpoiler]);
 
     // Get currently selected event object
     const selectedEvent = useMemo(() => {
@@ -194,6 +209,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
         setSelectedUnitIds([]);
         setSelectedBannerChars([]);
         setSelectedBannerUnitIds([]);
+        setSelectedBonusAttr(null);
         setSearchQuery("");
         setSortBy("startAt");
         setSortOrder("desc");
@@ -287,6 +303,8 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                         onBannerCharsChange={setSelectedBannerChars}
                         selectedBannerUnitIds={selectedBannerUnitIds}
                         onBannerUnitIdsChange={setSelectedBannerUnitIds}
+                        selectedBonusAttr={selectedBonusAttr}
+                        onBonusAttrChange={setSelectedBonusAttr}
                         searchQuery={searchQuery}
                         onSearchChange={setSearchQuery}
                         sortBy={sortBy}
@@ -310,6 +328,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                                     event={event}
                                     isSpoiler={event.startAt > Date.now()}
                                     unitType={eventUnitMap.get(event.id)}
+                                    bonusAttr={eventBonusAttrMap.get(event.id)}
                                     eventStoryIds={eventStoryIds}
                                     onClick={() => handleSelect(event)}
                                 />
@@ -332,12 +351,14 @@ function EventSelectionItem({
     event,
     isSpoiler,
     unitType,
+    bonusAttr,
     eventStoryIds,
     onClick,
 }: {
     event: IEventInfo;
     isSpoiler?: boolean;
     unitType?: string;
+    bonusAttr?: string;
     eventStoryIds?: Set<number>;
     onClick: () => void;
 }) {
@@ -419,6 +440,18 @@ function EventSelectionItem({
                             ) : (
                                 <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full" title="混合">混</span>
                             )
+                        )}
+                        {bonusAttr && ATTR_ICON_PATHS[bonusAttr as keyof typeof ATTR_ICON_PATHS] && (
+                            <div className="w-5 h-5 flex items-center justify-center" title={ATTR_NAMES[bonusAttr as keyof typeof ATTR_NAMES]}>
+                                <Image
+                                    src={`/data/icon/${ATTR_ICON_PATHS[bonusAttr as keyof typeof ATTR_ICON_PATHS]}`}
+                                    alt={ATTR_NAMES[bonusAttr as keyof typeof ATTR_NAMES] || bonusAttr}
+                                    width={16}
+                                    height={16}
+                                    className="object-contain"
+                                    unoptimized
+                                />
+                            </div>
                         )}
                     </div>
 

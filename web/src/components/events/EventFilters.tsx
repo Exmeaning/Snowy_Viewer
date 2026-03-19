@@ -3,7 +3,7 @@ import Image from "next/image";
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { EventType, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS } from "@/types/events";
-import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
+import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, CardAttribute, ATTR_NAMES, ATTR_ICON_PATHS, ATTR_COLORS } from "@/types/types";
 
 /** Filter IDs for event unit (group) filter */
 export type EventUnitFilterId = "ln" | "mmj" | "vbs" | "ws" | "25ji" | "vs" | "mixed";
@@ -44,6 +44,10 @@ interface EventFiltersProps {
     selectedBannerUnitIds?: string[];
     onBannerUnitIdsChange?: (units: string[]) => void;
 
+    // Bonus attribute filter (optional)
+    selectedBonusAttr?: CardAttribute | null;
+    onBonusAttrChange?: (attr: CardAttribute | null) => void;
+
     searchQuery: string;
     onSearchChange: (query: string) => void;
     sortBy: "id" | "startAt";
@@ -75,6 +79,8 @@ export default function EventFilters({
     onBannerCharsChange,
     selectedBannerUnitIds,
     onBannerUnitIdsChange,
+    selectedBonusAttr,
+    onBonusAttrChange,
     searchQuery,
     onSearchChange,
     sortBy,
@@ -101,7 +107,7 @@ export default function EventFilters({
         }
     };
 
-    const hasActiveFilters = selectedTypes.length > 0 || (selectedEventUnits && selectedEventUnits.length > 0) || selectedCharacters.length > 0 || (selectedBannerChars && selectedBannerChars.length > 0) || searchQuery.trim() !== "";
+    const hasActiveFilters = selectedTypes.length > 0 || (selectedEventUnits && selectedEventUnits.length > 0) || selectedCharacters.length > 0 || (selectedBannerChars && selectedBannerChars.length > 0) || !!selectedBonusAttr || searchQuery.trim() !== "";
 
     return (
         <BaseFilters
@@ -194,6 +200,36 @@ export default function EventFilters({
                 characterLabel="加成角色"
                 charaUnits={charaUnits}
             />
+
+            {/* Bonus Attribute Filter */}
+            {onBonusAttrChange && (
+                <FilterSection label="加成属性">
+                    <div className="flex flex-wrap gap-2">
+                        {(["cool", "cute", "happy", "mysterious", "pure"] as CardAttribute[]).map(attr => (
+                            <button
+                                key={attr}
+                                onClick={() => onBonusAttrChange(selectedBonusAttr === attr ? null : attr)}
+                                className={`p-1.5 rounded-xl transition-all flex items-center gap-1.5 ${selectedBonusAttr === attr
+                                    ? "ring-2 shadow-lg bg-white"
+                                    : "hover:bg-slate-100 border border-transparent bg-slate-50"
+                                    }`}
+                                style={selectedBonusAttr === attr ? { boxShadow: `0 0 0 2px ${ATTR_COLORS[attr]}` } : {}}
+                                title={ATTR_NAMES[attr]}
+                            >
+                                <div className="w-7 h-7 relative">
+                                    <Image
+                                        src={`/data/icon/${ATTR_ICON_PATHS[attr]}`}
+                                        alt={ATTR_NAMES[attr]}
+                                        fill
+                                        className="object-contain"
+                                        unoptimized
+                                    />
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </FilterSection>
+            )}
         </BaseFilters>
     );
 }

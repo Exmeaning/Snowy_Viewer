@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { IEventInfo, IEventDeckBonus, EventType } from "@/types/events";
-import { ICharaUnitInfo } from "@/types/types";
+import { ICharaUnitInfo, CardAttribute } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import { loadTranslations, TranslationData } from "@/lib/translations";
@@ -28,6 +28,7 @@ export interface UseEventListDataReturn {
     translations: TranslationData | null;
     eventUnitMap: Map<number, string>;
     eventBannerCharMap: Map<number, number>;
+    eventBonusAttrMap: Map<number, string>;
     eventStoryIds: Set<number>;
     isLoading: boolean;
     error: string | null;
@@ -49,6 +50,8 @@ export interface UseEventListDataReturn {
     setSelectedBannerChars: (v: number[]) => void;
     selectedBannerUnitIds: string[];
     setSelectedBannerUnitIds: (v: string[]) => void;
+    selectedBonusAttr: CardAttribute | null;
+    setSelectedBonusAttr: (v: CardAttribute | null) => void;
     searchQuery: string;
     setSearchQuery: (v: string) => void;
 
@@ -89,6 +92,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
     const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
     const [selectedBannerChars, setSelectedBannerChars] = useState<number[]>([]);
     const [selectedBannerUnitIds, setSelectedBannerUnitIds] = useState<string[]>([]);
+    const [selectedBonusAttr, setSelectedBonusAttr] = useState<CardAttribute | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
     // Sort states
@@ -113,11 +117,12 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         const units = searchParams.get("units");
         const bannerChars = searchParams.get("bannerChars");
         const bannerUnits = searchParams.get("bannerUnits");
+        const bonusAttr = searchParams.get("bonusAttr");
         const search = searchParams.get("search");
         const sort = searchParams.get("sortBy");
         const order = searchParams.get("sortOrder");
 
-        const hasUrlParams = types || eventUnits || chars || units || bannerChars || bannerUnits || search || sort || order;
+        const hasUrlParams = types || eventUnits || chars || units || bannerChars || bannerUnits || bonusAttr || search || sort || order;
 
         if (hasUrlParams) {
             if (types) setSelectedTypes(types.split(",") as EventType[]);
@@ -126,6 +131,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
             if (units) setSelectedUnitIds(units.split(","));
             if (bannerChars) setSelectedBannerChars(bannerChars.split(",").map(Number));
             if (bannerUnits) setSelectedBannerUnitIds(bannerUnits.split(","));
+            if (bonusAttr) setSelectedBonusAttr(bonusAttr as CardAttribute);
             if (search) setSearchQuery(search);
             if (sort) setSortBy(sort as "id" | "startAt");
             if (order) setSortOrder(order as "asc" | "desc");
@@ -140,6 +146,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
                     if (f.units?.length) setSelectedUnitIds(f.units);
                     if (f.bannerChars?.length) setSelectedBannerChars(f.bannerChars);
                     if (f.bannerUnits?.length) setSelectedBannerUnitIds(f.bannerUnits);
+                    if (f.bonusAttr) setSelectedBonusAttr(f.bonusAttr);
                     if (f.search) setSearchQuery(f.search);
                     if (f.sortBy) setSortBy(f.sortBy);
                     if (f.sortOrder) setSortOrder(f.sortOrder);
@@ -163,6 +170,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
             units: selectedUnitIds,
             bannerChars: selectedBannerChars,
             bannerUnits: selectedBannerUnitIds,
+            bonusAttr: selectedBonusAttr,
             search: searchQuery,
             sortBy,
             sortOrder,
@@ -176,13 +184,14 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         if (selectedUnitIds.length > 0) params.set("units", selectedUnitIds.join(","));
         if (selectedBannerChars.length > 0) params.set("bannerChars", selectedBannerChars.join(","));
         if (selectedBannerUnitIds.length > 0) params.set("bannerUnits", selectedBannerUnitIds.join(","));
+        if (selectedBonusAttr) params.set("bonusAttr", selectedBonusAttr);
         if (searchQuery) params.set("search", searchQuery);
         if (sortBy !== "id") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
 
         const qs = params.toString();
         router.replace(qs ? `${basePath}?${qs}` : basePath, { scroll: false });
-    }, [selectedTypes, selectedEventUnits, selectedCharacters, selectedUnitIds, selectedBannerChars, selectedBannerUnitIds, searchQuery, sortBy, sortOrder, router, filtersInitialized, basePath, STORAGE_KEY]);
+    }, [selectedTypes, selectedEventUnits, selectedCharacters, selectedUnitIds, selectedBannerChars, selectedBannerUnitIds, selectedBonusAttr, searchQuery, sortBy, sortOrder, router, filtersInitialized, basePath, STORAGE_KEY]);
 
     // ---- Fetch data ----
     useEffect(() => {
@@ -252,6 +261,16 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         return buildEventBannerCharMap(eventStories, charaUnits);
     }, [eventStories, charaUnits]);
 
+    const eventBonusAttrMap = useMemo(() => {
+        const map = new Map<number, string>();
+        for (const bonus of deckBonuses) {
+            if (bonus.cardAttr && !bonus.gameCharacterUnitId) {
+                map.set(bonus.eventId, bonus.cardAttr);
+            }
+        }
+        return map;
+    }, [deckBonuses]);
+
     const eventStoryIds = useMemo(() => new Set(eventStories.map(s => s.eventId)), [eventStories]);
 
     // ---- Filter & sort ----
@@ -291,6 +310,10 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
             });
         }
 
+        if (selectedBonusAttr) {
+            result = result.filter(e => eventBonusAttrMap.get(e.id) === selectedBonusAttr);
+        }
+
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase().trim();
             const qNum = parseInt(q, 10);
@@ -313,7 +336,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         });
 
         return result;
-    }, [events, selectedTypes, selectedEventUnits, eventUnitMap, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, selectedBannerChars, eventBannerCharMap, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
+    }, [events, selectedTypes, selectedEventUnits, eventUnitMap, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, selectedBannerChars, eventBannerCharMap, selectedBonusAttr, eventBonusAttrMap, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
 
     const displayedEvents = useMemo(() => filteredEvents.slice(0, displayCount), [filteredEvents, displayCount]);
 
@@ -325,6 +348,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         setSelectedUnitIds([]);
         setSelectedBannerChars([]);
         setSelectedBannerUnitIds([]);
+        setSelectedBonusAttr(null);
         setSearchQuery("");
         setSortBy("id");
         setSortOrder("desc");
@@ -343,6 +367,7 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         translations,
         eventUnitMap,
         eventBannerCharMap,
+        eventBonusAttrMap,
         eventStoryIds,
         isLoading,
         error,
@@ -360,6 +385,8 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         setSelectedBannerChars,
         selectedBannerUnitIds,
         setSelectedBannerUnitIds,
+        selectedBonusAttr,
+        setSelectedBonusAttr,
         searchQuery,
         setSearchQuery,
         sortBy,

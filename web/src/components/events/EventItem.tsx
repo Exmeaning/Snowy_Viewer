@@ -5,7 +5,7 @@ import { IEventInfo, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS, getEventStatus, EVENT_
 import { getEventStoryBannerUrl, getEventLogoUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
-import { UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
+import { UNIT_DATA, UNIT_ICON_FILES, ATTR_ICON_PATHS, ATTR_NAMES } from "@/types/types";
 
 // Build unit icon mapping from UNIT_DATA
 const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = Object.fromEntries(
@@ -17,10 +17,11 @@ interface EventItemProps {
     isSpoiler?: boolean;
     basePath?: string;
     unitType?: string;
+    bonusAttr?: string;
     eventStoryIds?: Set<number>;
 }
 
-export default function EventItem({ event, isSpoiler, basePath = "/events", unitType, eventStoryIds }: EventItemProps) {
+export default function EventItem({ event, isSpoiler, basePath = "/events", unitType, bonusAttr, eventStoryIds }: EventItemProps) {
     const { assetSource } = useTheme();
     const hasEventStoryBanner = eventStoryIds ? eventStoryIds.has(event.id) : true;
     const thumbnailUrl = hasEventStoryBanner
@@ -97,6 +98,18 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                             ) : (
                                 <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full" title="混合">混</span>
                             )
+                        )}
+                        {bonusAttr && ATTR_ICON_PATHS[bonusAttr as keyof typeof ATTR_ICON_PATHS] && (
+                            <div className="w-5 h-5 flex items-center justify-center" title={ATTR_NAMES[bonusAttr as keyof typeof ATTR_NAMES]}>
+                                <Image
+                                    src={`/data/icon/${ATTR_ICON_PATHS[bonusAttr as keyof typeof ATTR_ICON_PATHS]}`}
+                                    alt={ATTR_NAMES[bonusAttr as keyof typeof ATTR_NAMES] || bonusAttr}
+                                    width={16}
+                                    height={16}
+                                    className="object-contain"
+                                    unoptimized
+                                />
+                            </div>
                         )}
                     </div>
 
