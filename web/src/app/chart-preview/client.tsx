@@ -187,11 +187,25 @@ function ChartPreviewInner() {
     let activeSusUrl: string | null = null;
     let activeBgmUrl: string | undefined = undefined;
     let activeOffset: number | null = null;
+    let activeCoverUrl: string | null = null;
+    let activeTitle: string | null = null;
+    let activeDifficulty: string | null = null;
+    let activeComposer: string | null = null;
+    let activeLyricist: string | null = null;
+    let activeArranger: string | null = null;
+    let activeVocal: string | null = null;
 
     if (urlSus) {
         activeSusUrl = urlSus;
         activeBgmUrl = urlBgm ?? undefined;
         activeOffset = urlOffset ? Number.parseFloat(urlOffset) : null;
+        activeCoverUrl = searchParams.get("cover");
+        activeTitle = searchParams.get("title");
+        activeDifficulty = searchParams.get("difficulty");
+        activeComposer = searchParams.get("composer");
+        activeLyricist = searchParams.get("lyricist");
+        activeArranger = searchParams.get("arranger");
+        activeVocal = searchParams.get("vocal");
     } else if (mode === "url" && previewActive) {
         activeSusUrl = customSus || null;
         activeBgmUrl = customBgm || undefined;
@@ -199,6 +213,14 @@ function ChartPreviewInner() {
     } else if (mode === "song" && previewActive) {
         activeSusUrl = songSusUrl;
         activeBgmUrl = songBgmUrl ?? undefined;
+        if (selectedMusic) {
+            activeCoverUrl = getMusicJacketUrl(selectedMusic.assetbundleName, assetSource);
+            activeTitle = selectedMusic.title;
+            activeDifficulty = selectedDifficulty.toUpperCase();
+            activeComposer = selectedMusic.composer ?? null;
+            activeLyricist = selectedMusic.lyricist ?? null;
+            activeArranger = selectedMusic.arranger ?? null;
+        }
     }
 
     const handleStartPreview = () => {
@@ -230,6 +252,13 @@ function ChartPreviewInner() {
                         rawOffsetMs={activeOffset}
                         fillerSec={selectedMusic?.fillerSec}
                         onFullscreenChange={setIsPlayerFullscreen}
+                        coverUrl={activeCoverUrl}
+                        title={activeTitle}
+                        difficulty={activeDifficulty}
+                        composer={activeComposer}
+                        lyricist={activeLyricist}
+                        arranger={activeArranger}
+                        vocal={activeVocal}
                     />
                 </div>
             </MainLayout>
@@ -341,6 +370,13 @@ function ChartPreviewInner() {
                         rawOffsetMs={activeOffset}
                         fillerSec={selectedMusic?.fillerSec}
                         onFullscreenChange={setIsPlayerFullscreen}
+                        coverUrl={activeCoverUrl}
+                        title={activeTitle}
+                        difficulty={activeDifficulty}
+                        composer={activeComposer}
+                        lyricist={activeLyricist}
+                        arranger={activeArranger}
+                        vocal={activeVocal}
                     />
                 </div>
             </MainLayout>

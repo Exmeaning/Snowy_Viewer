@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import ExternalLink from "@/components/ExternalLink";
-import type { HitEvent, PreviewRuntimeConfig, TransportState } from "@/lib/chart-preview/types";
+import type { HitEvent, HudRuntimeState, PreviewRuntimeConfig, TransportState } from "@/lib/chart-preview/types";
 import { AudioTransport } from "@/lib/chart-preview/audioTransport";
 import { GlPreviewRenderer } from "@/lib/chart-preview/glRenderer";
 import { MmwWasmPreview } from "@/lib/chart-preview/mmwWasm";
@@ -10,6 +10,9 @@ import { MmwEffectSystem } from "@/lib/chart-preview/mmwEffectSystem";
 import { JudgementEffects } from "@/lib/chart-preview/judgementEffects";
 import { JudgementSounds } from "@/lib/chart-preview/judgementSounds";
 import { normalizeOffsetMs } from "@/lib/chart-preview/url";
+import { HudTimeline } from "@/lib/chart-preview/hudTimeline";
+import { generateOverlayV3BackgroundObjectUrl } from "@/lib/chart-preview/overlayBackgroundGen";
+import "./hud.css";
 
 const defaultConfig: PreviewRuntimeConfig = {
     mirror: false,
@@ -47,6 +50,131 @@ const RENDER_SCALE_OPTIONS = [
     { value: 1, label: "100%" },
 ] as const;
 
+// HUD constants
+const HUD_INTRO_DURATION_SEC = 5.5;
+const INTRO_CLEAN_BG_DURATION_SEC = 0.6;
+const INTRO_PLAYFIELD_FADE_IN_SEC = 1.2;
+const INTRO_BG_WIDTH = 1920;
+const INTRO_BG_HEIGHT = 1080;
+const INTRO_BG_BASE_COLOR = "rgba(104, 104, 156, 0.8)";
+const INTRO_GRAD_DURATION_SEC = 1.8;
+const INTRO_GRAD_START_SEC = 0.3;
+const INTRO_GRAD_START_Y = 1500;
+const INTRO_GRAD_END_Y = 0;
+const INTRO_GRAD_DRAW_WIDTH = 2400;
+const INTRO_GRAD_DRAW_HEIGHT = 1400;
+const INTRO_GRAD_ALPHA = 0.1;
+const COMBO_DIGIT_STEP = 92;
+const COMBO_BASE_SCALE = 0.85;
+const JUDGE_ANIMATION_FPS = 60;
+const JUDGE_ANIMATION_TOTAL_FRAMES = 20;
+const SCORE_PLUS_VISIBLE_SEC = 0.6;
+const SCORE_PLUS_SLIDE_IN_PX = 12;
+const SCORE_PLUS_FLOAT_PX = 8;
+const LIFE_MAX_VALUE = 2000;
+const AP_DELAY_SEC = 2.0;
+const AP_COLOR_GAIN = 1.6;
+
+const MIN_CHART_LEAD_IN_SEC = 9;
+const AUTO_BADGE_SHOW_AFTER_SEC = HUD_INTRO_DURATION_SEC + INTRO_CLEAN_BG_DURATION_SEC + INTRO_PLAYFIELD_FADE_IN_SEC;
+const AUTO_BADGE_ANIM_PERIOD_SEC = 1.25;
+const AUTO_BADGE_ANIM_SPAN = 1.2;
+
+const FIXED_BACKGROUND_URL = "/assets/mmw/background_overlay.png";
+
+function toAssetUrl(path: string) {
+    return encodeURI(path);
+}
+
+// ── HUD image preload cache ──
+// All HUD digit/sprite images are fetched once and converted to object URLs.
+// Using blob object URLs as img.src ensures the browser never issues additional
+// network requests when DOM elements are created or re-inserted.
+const hudBlobUrlCache = new Map<string, string>();
+
+function preloadHudImages(): Promise<void> {
+    if (hudBlobUrlCache.size > 0) return Promise.resolve();
+
+    const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+    const paths: string[] = [];
+
+    for (const d of [...digits, "n", "+"]) {
+        paths.push(`/assets/mmw/overlay/score/digit/${d}.png`);
+        paths.push(`/assets/mmw/overlay/score/digit/s${d}.png`);
+    }
+    for (const d of digits) {
+        paths.push(`/assets/mmw/overlay/combo/b${d}.png`);
+        paths.push(`/assets/mmw/overlay/combo/n${d}.png`);
+    }
+    for (const d of digits) {
+        paths.push(`/assets/mmw/overlay/life/v3/digit/${d}.png`);
+        paths.push(`/assets/mmw/overlay/life/v3/digit/s${d}.png`);
+    }
+    paths.push("/assets/mmw/overlay/judge/v3/1.png");
+    for (const r of ["a", "b", "c", "d", "s"]) {
+        paths.push(`/assets/mmw/overlay/score/rank/txt/en/${r}.png`);
+        paths.push(`/assets/mmw/overlay/score/rank/chr/${r}.png`);
+    }
+
+    return Promise.all(
+        paths.map((p) =>
+            fetch(toAssetUrl(p))
+                .then((r) => r.blob())
+                .then((blob) => { hudBlobUrlCache.set(p, URL.createObjectURL(blob)); })
+                .catch(() => { /* skip failed images */ }),
+        ),
+    ).then(() => {});
+}
+
+function getHudImageSrc(path: string): string {
+    return hudBlobUrlCache.get(path) ?? toAssetUrl(path);
+}
+
+function createHudImageElement(path: string, className: string) {
+    const image = document.createElement("img");
+    image.className = className;
+    image.src = getHudImageSrc(path);
+    image.alt = "";
+    return image;
+}
+
+function formatScoreValue(value: number) {
+    return String(Math.max(0, Math.round(value))).padStart(8, " ").replace(/ /g, "n");
+}
+
+function normalizeDifficulty(value: string) {
+    const normalized = value.trim().toUpperCase().replace(/\s+/g, "");
+    const map: Record<string, string> = { "0": "EASY", "1": "NORMAL", "2": "HARD", "3": "EXPERT", "4": "MASTER", "5": "APPEND", "6": "ETERNAL" };
+    return map[normalized] ?? (["EASY", "NORMAL", "HARD", "EXPERT", "MASTER", "APPEND", "ETERNAL"].includes(normalized) ? normalized : value.trim());
+}
+
+function difficultyTheme(value: string) {
+    const normalized = value.trim().toUpperCase().replace(/\s+/g, "");
+    const map: Record<string, string> = { EASY: "easy", NORMAL: "normal", HARD: "hard", EXPERT: "expert", MASTER: "master", APPEND: "append", ETERNAL: "eternal" };
+    return map[normalized] ?? "";
+}
+
+function inferDifficultyFromSusUrl(susUrl: string) {
+    let decoded = susUrl;
+    try { decoded = decodeURIComponent(susUrl); } catch { /* keep original */ }
+    const normalized = decoded.toUpperCase();
+    for (const candidate of ["ETERNAL", "APPEND", "MASTER", "EXPERT", "HARD", "NORMAL", "EASY"] as const) {
+        if (normalized.includes(candidate)) return candidate;
+    }
+    return "";
+}
+
+function upperBoundNumber(values: readonly number[], target: number) {
+    let low = 0;
+    let high = values.length;
+    while (low < high) {
+        const mid = (low + high) >> 1;
+        if (values[mid] <= target + 0.0001) low = mid + 1;
+        else high = mid;
+    }
+    return low;
+}
+
 function readNumber(key: string, fallback: number): number {
     if (typeof window === "undefined") return fallback;
     const raw = localStorage.getItem(key);
@@ -64,6 +192,26 @@ interface ChartPreviewPlayerProps {
     /** If true, skip the leading silence in BGM (default: true when bgmUrl is provided). */
     skipBgmSilence?: boolean;
     onFullscreenChange?: (isFullscreen: boolean) => void;
+    /** Cover/jacket image URL for intro card and background generation */
+    coverUrl?: string | null;
+    /** Song title for intro card */
+    title?: string | null;
+    /** Lyricist for intro card */
+    lyricist?: string | null;
+    /** Composer for intro card */
+    composer?: string | null;
+    /** Arranger for intro card */
+    arranger?: string | null;
+    /** Vocal for intro card */
+    vocal?: string | null;
+    /** Difficulty label for intro card */
+    difficulty?: string | null;
+    /** Description line 1 for intro card */
+    description1?: string | null;
+    /** Description line 2 for intro card */
+    description2?: string | null;
+    /** Extra text for intro card */
+    extra?: string | null;
 }
 
 function formatTime(value: number) {
@@ -81,6 +229,16 @@ export default function ChartPreviewPlayer({
     fillerSec = 0,
     skipBgmSilence = true,
     onFullscreenChange,
+    coverUrl,
+    title: propTitle,
+    lyricist: propLyricist,
+    composer: propComposer,
+    arranger: propArranger,
+    vocal: propVocal,
+    difficulty: propDifficulty,
+    description1: propDescription1,
+    description2: propDescription2,
+    extra: propExtra,
 }: ChartPreviewPlayerProps) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
@@ -98,6 +256,7 @@ export default function ChartPreviewPlayer({
     const hitEventsRef = useRef<HitEvent[]>([]);
     const nextHitEventIndexRef = useRef(0);
     const previousTimeSecRef = useRef(0);
+    const previousChartTimeSecRef = useRef(0);
     const previousTransportStateRef = useRef<TransportState>("idle");
     const normalizedOffsetMsRef = useRef(0);
     const initialStartSecRef = useRef(0);
@@ -107,6 +266,54 @@ export default function ChartPreviewPlayer({
 
     const bgmExpectedRef = useRef(false);
     const bgmLoadedRef = useRef(false);
+
+    // HUD refs
+    const hudLayerRef = useRef<HTMLDivElement>(null);
+    const hudTimelineRef = useRef<HudTimeline | null>(null);
+    const hudJudgeTimesRef = useRef<number[]>([]);
+    const hudComboTimesRef = useRef<number[]>([]);
+    const hudScoreDigitsRef = useRef<HTMLDivElement>(null);
+    const hudScorePlusRef = useRef<HTMLDivElement>(null);
+    const hudScoreBarClipRef = useRef<HTMLDivElement>(null);
+    const hudScoreRankCharRef = useRef<HTMLImageElement>(null);
+    const hudScoreRankTxtRef = useRef<HTMLImageElement>(null);
+    const hudLifeDigitsRef = useRef<HTMLDivElement>(null);
+    const hudLifeFillClipRef = useRef<HTMLDivElement>(null);
+    const hudComboRootRef = useRef<HTMLDivElement>(null);
+    const hudComboDigitsRef = useRef<HTMLDivElement>(null);
+    const hudComboTagRef = useRef<HTMLImageElement>(null);
+    const hudJudgeLayerRef = useRef<HTMLDivElement>(null);
+    const hudIntroCardRef = useRef<HTMLDivElement>(null);
+    const hudIntroBgCanvasRef = useRef<HTMLCanvasElement>(null);
+    const hudIntroCoverShellRef = useRef<HTMLDivElement>(null);
+    const hudIntroCoverRef = useRef<HTMLImageElement>(null);
+    const hudIntroDifficultyRef = useRef<HTMLDivElement>(null);
+    const hudIntroTitleRef = useRef<HTMLDivElement>(null);
+    const hudIntroDesc1Ref = useRef<HTMLDivElement>(null);
+    const hudIntroDesc2Ref = useRef<HTMLDivElement>(null);
+    const hudIntroExtraRef = useRef<HTMLDivElement>(null);
+    const hudIntroTextRef = useRef<HTMLDivElement>(null);
+    const hudAutoBadgeRef = useRef<HTMLImageElement>(null);
+    const hudScoreRootRef = useRef<HTMLDivElement>(null);
+    const hudLifeRootRef = useRef<HTMLDivElement>(null);
+    const apLayerRef = useRef<HTMLDivElement>(null);
+    const apVideoRef = useRef<HTMLVideoElement>(null);
+    const apCanvasRef = useRef<HTMLCanvasElement>(null);
+    const introGradImageRef = useRef<HTMLImageElement | null>(null);
+    const introGradReadyRef = useRef(false);
+    const backgroundObjectUrlRef = useRef<string | null>(null);
+
+    // HUD mutable state
+    const lastHudScoreTextRef = useRef("");
+    const lastHudScorePlusTextRef = useRef("");
+    const lastHudLifeTextRef = useRef("");
+    const lastHudComboTextRef = useRef("");
+    const lastHudRankRef = useRef<string>("");
+    const lastHudScoreForPlusTriggerRef = useRef(0);
+    const lastHudScorePlusEventIndexRef = useRef(-1);
+    const scorePlusTriggerChartSecRef = useRef(Number.NEGATIVE_INFINITY);
+    const hudJudgeImageRef = useRef<HTMLImageElement | null>(null);
+    const chartLeadInSecRef = useRef(0);
 
     const [previewState, setPreviewState] = useState<PreviewState>("init");
     const [statusTitle, setStatusTitle] = useState("正在初始化预览");
@@ -488,15 +695,357 @@ export default function ChartPreviewPlayer({
             }
         }
 
+        // ── HUD helper functions ──
+
+        function setScoreDigits(score: number) {
+            const container = hudScoreDigitsRef.current;
+            if (!container) return;
+            const text = formatScoreValue(score);
+            if (text === lastHudScoreTextRef.current) return;
+            lastHudScoreTextRef.current = text;
+            const fragment = document.createDocumentFragment();
+            for (const digit of text) {
+                const stack = document.createElement("span");
+                stack.className = "hud-score-digit-stack";
+                stack.append(
+                    createHudImageElement(`/assets/mmw/overlay/score/digit/s${digit}.png`, "hud-score-digit-shadow"),
+                    createHudImageElement(`/assets/mmw/overlay/score/digit/${digit}.png`, "hud-score-digit-main"),
+                );
+                fragment.append(stack);
+            }
+            container.replaceChildren(fragment);
+        }
+
+        function setScorePlusDigits(scoreDelta: number) {
+            const container = hudScorePlusRef.current;
+            if (!container) return;
+            const text = `+${Math.max(0, Math.round(scoreDelta))}`;
+            if (text === lastHudScorePlusTextRef.current) return;
+            lastHudScorePlusTextRef.current = text;
+            const fragment = document.createDocumentFragment();
+            for (const char of text) {
+                const stack = document.createElement("span");
+                stack.className = "hud-score-plus-stack";
+                if (char === "+") stack.classList.add("hud-score-plus-stack-sign");
+                stack.append(
+                    createHudImageElement(`/assets/mmw/overlay/score/digit/s${char === "+" ? "+" : char}.png`, "hud-score-plus-shadow"),
+                    createHudImageElement(`/assets/mmw/overlay/score/digit/${char === "+" ? "+" : char}.png`, "hud-score-plus-main"),
+                );
+                fragment.append(stack);
+            }
+            container.replaceChildren(fragment);
+        }
+
+        function hideScorePlus() {
+            const el = hudScorePlusRef.current;
+            if (!el) return;
+            el.hidden = true;
+            el.style.opacity = "0";
+            el.style.transform = `translate(${(-SCORE_PLUS_SLIDE_IN_PX).toFixed(2)}px, 0px)`;
+        }
+
+        function updateScorePlusAnimation(chartTimeSec: number, transportState: TransportState, hidden: boolean) {
+            const el = hudScorePlusRef.current;
+            if (!el) return;
+            if (hidden || transportState !== "playing" || !Number.isFinite(scorePlusTriggerChartSecRef.current)) {
+                hideScorePlus(); return;
+            }
+            const elapsed = chartTimeSec - scorePlusTriggerChartSecRef.current;
+            if (elapsed < 0 || elapsed > SCORE_PLUS_VISIBLE_SEC) { hideScorePlus(); return; }
+            const progress = Math.min(1, Math.max(0, elapsed / SCORE_PLUS_VISIBLE_SEC));
+            const entryProgress = Math.min(1, progress / 0.42);
+            const eased = 1 - (0.9 ** (entryProgress * 12));
+            const fadeStart = 0.88;
+            const baseAlpha = Math.min(1, 1.3 * eased);
+            const alpha = progress <= fadeStart ? baseAlpha : Math.max(0, baseAlpha * (1 - (progress - fadeStart) / (1 - fadeStart)));
+            const offsetX = -SCORE_PLUS_SLIDE_IN_PX * (1 - eased);
+            const offsetY = -SCORE_PLUS_FLOAT_PX * eased;
+            el.hidden = false;
+            el.style.opacity = alpha.toFixed(3);
+            el.style.transform = `translate(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px)`;
+        }
+
+        function setLifeDigits(lifeRatio: number) {
+            const container = hudLifeDigitsRef.current;
+            if (!container) return;
+            const lifeValue = Math.max(0, Math.round(LIFE_MAX_VALUE * Math.min(1, Math.max(0, lifeRatio))));
+            const text = String(lifeValue);
+            if (text === lastHudLifeTextRef.current) return;
+            lastHudLifeTextRef.current = text;
+            const fragment = document.createDocumentFragment();
+            const reversed = [...text].reverse();
+            for (let i = 0; i < reversed.length; i += 1) {
+                const digit = reversed[i];
+                const stack = document.createElement("span");
+                stack.className = "hud-life-digit-slot";
+                stack.style.left = `${319 - i * 22}px`;
+                const digitStack = document.createElement("span");
+                digitStack.className = "hud-life-digit-stack";
+                digitStack.append(
+                    createHudImageElement(`/assets/mmw/overlay/life/v3/digit/s${digit}.png`, "hud-life-digit-shadow"),
+                    createHudImageElement(`/assets/mmw/overlay/life/v3/digit/${digit}.png`, "hud-life-digit-main"),
+                );
+                stack.append(digitStack);
+                fragment.append(stack);
+            }
+            container.replaceChildren(fragment);
+        }
+
+        function setComboDigits(combo: number) {
+            const container = hudComboDigitsRef.current;
+            if (!container) return;
+            if (combo <= 0) {
+                if (lastHudComboTextRef.current !== "") {
+                    lastHudComboTextRef.current = "";
+                    container.replaceChildren();
+                }
+                return;
+            }
+            const text = String(combo);
+            if (text === lastHudComboTextRef.current) return;
+            lastHudComboTextRef.current = text;
+            const fragment = document.createDocumentFragment();
+            const mid = text.length / 2;
+            for (let i = 0; i < text.length; i += 1) {
+                const digit = text[i];
+                const slot = document.createElement("span");
+                slot.className = "hud-combo-slot";
+                slot.style.left = `calc(50% + ${(i - mid + 0.5) * COMBO_DIGIT_STEP}px)`;
+                slot.append(
+                    createHudImageElement(`/assets/mmw/overlay/combo/b${digit}.png`, "hud-combo-digit-glow"),
+                    createHudImageElement(`/assets/mmw/overlay/combo/n${digit}.png`, "hud-combo-digit"),
+                );
+                fragment.append(slot);
+            }
+            container.replaceChildren(fragment);
+        }
+
+        function setRankSprites(rank: HudRuntimeState["rank"]) {
+            if (rank === lastHudRankRef.current) return;
+            lastHudRankRef.current = rank;
+            if (hudScoreRankTxtRef.current) hudScoreRankTxtRef.current.src = getHudImageSrc(`/assets/mmw/overlay/score/rank/txt/en/${rank}.png`);
+            if (hudScoreRankCharRef.current) hudScoreRankCharRef.current.src = getHudImageSrc(`/assets/mmw/overlay/score/rank/chr/${rank}.png`);
+        }
+
+        function renderJudgeBursts(currentTimeSec: number, hidden: boolean) {
+            const layer = hudJudgeLayerRef.current;
+            if (!layer) return;
+            const times = hudJudgeTimesRef.current;
+            if (hidden || times.length === 0) { layer.hidden = true; return; }
+            const latestIndex = upperBoundNumber(times, currentTimeSec) - 1;
+            if (latestIndex < 0) { layer.hidden = true; return; }
+            const progressFrames = (currentTimeSec - times[latestIndex]) * JUDGE_ANIMATION_FPS;
+            if (progressFrames < 0 || progressFrames >= JUDGE_ANIMATION_TOTAL_FRAMES) { layer.hidden = true; return; }
+            let alpha = 1;
+            let rawScale = 2 / 3;
+            if (progressFrames < 2) alpha = 0;
+            else if (progressFrames < 5) rawScale = (2 / 3) - Math.pow(-1.45 + progressFrames / 4, 4) * (2 / 3);
+            const scale = Math.max(0.01, rawScale * 1.5);
+            if (!hudJudgeImageRef.current) {
+                hudJudgeImageRef.current = createHudImageElement("/assets/mmw/overlay/judge/v3/1.png", "hud-judge-burst");
+                layer.replaceChildren(hudJudgeImageRef.current);
+            }
+            hudJudgeImageRef.current.style.opacity = String(alpha);
+            hudJudgeImageRef.current.style.transform = `scale(${scale})`;
+            layer.hidden = false;
+        }
+
+        function updateComboAnimation(currentTimeSec: number, combo: number, hidden: boolean) {
+            const digitsEl = hudComboDigitsRef.current;
+            const rootEl = hudComboRootRef.current;
+            if (!digitsEl || !rootEl) return;
+            const times = hudComboTimesRef.current;
+            if (hidden || combo <= 0 || times.length === 0) {
+                digitsEl.style.transform = `translate(-50%, -50%) scale(${COMBO_BASE_SCALE})`;
+                rootEl.style.setProperty("--combo-glow-opacity", "0");
+                return;
+            }
+            const latestIndex = upperBoundNumber(times, currentTimeSec) - 1;
+            if (latestIndex < 0) {
+                digitsEl.style.transform = `translate(-50%, -50%) scale(${COMBO_BASE_SCALE})`;
+                rootEl.style.setProperty("--combo-glow-opacity", "0");
+                return;
+            }
+            const progress = (currentTimeSec - times[latestIndex]) * JUDGE_ANIMATION_FPS;
+            const shiftScale = Math.min(1, Math.max(0.5, (progress / 8) * 0.5 + 0.5));
+            const burstAlpha = progress < 14 ? Math.max(0, 1 - progress / 14) : 0;
+            const glowAlpha = Math.min(1, 0.25 + burstAlpha * 0.75);
+            digitsEl.style.transform = `translate(-50%, -50%) scale(${shiftScale * COMBO_BASE_SCALE})`;
+            rootEl.style.setProperty("--combo-glow-opacity", glowAlpha.toFixed(3));
+        }
+
+        function hasIntroCardContent() {
+            return Boolean(
+                coverUrl ||
+                propTitle?.trim() ||
+                propDescription1?.trim() ||
+                propDescription2?.trim() ||
+                propExtra?.trim() ||
+                propDifficulty?.trim(),
+            );
+        }
+
+        function isIntroVisible(currentTimeSec: number, transportState: TransportState) {
+            return hasIntroCardContent() && transportState === "playing" && currentTimeSec >= 0 && currentTimeSec < HUD_INTRO_DURATION_SEC;
+        }
+
+        function getPlayfieldVisibility(currentTimeSec: number, transportState: TransportState) {
+            if (!hasIntroCardContent() || transportState !== "playing" || currentTimeSec < 0) return 1;
+            const revealStartSec = HUD_INTRO_DURATION_SEC + INTRO_CLEAN_BG_DURATION_SEC;
+            if (currentTimeSec < revealStartSec) return 0;
+            return Math.min(1, Math.max(0, (currentTimeSec - revealStartSec) / INTRO_PLAYFIELD_FADE_IN_SEC));
+        }
+
+        function applyPlayfieldVisibility(visibility: number) {
+            const alpha = Math.min(1, Math.max(0, visibility)).toFixed(3);
+            const effectsCanvas = effectsCanvasRef.current;
+            if (effectsCanvas) effectsCanvas.style.opacity = alpha;
+            if (hudScoreRootRef.current) hudScoreRootRef.current.style.opacity = alpha;
+            if (hudLifeRootRef.current) hudLifeRootRef.current.style.opacity = alpha;
+            // combo opacity is managed together with its hidden state below
+            if (hudJudgeLayerRef.current) hudJudgeLayerRef.current.style.opacity = alpha;
+        }
+
+        function clamp01(v: number) { return Math.min(1, Math.max(0, v)); }
+        function easeOutQuad(v: number) { const c = clamp01(v); return 1 - (1 - c) * (1 - c); }
+
+        function drawIntroGradLayer(ctx: CanvasRenderingContext2D, introTimeSec: number, waveStartSec: number) {
+            if (!introGradReadyRef.current || !introGradImageRef.current) return;
+            const normalized = (introTimeSec - waveStartSec) / INTRO_GRAD_DURATION_SEC;
+            if (normalized <= 0 || normalized >= 1) return;
+            const eased = easeOutQuad(normalized);
+            const offsetY = INTRO_GRAD_START_Y + (INTRO_GRAD_END_Y - INTRO_GRAD_START_Y) * eased;
+            const drawX = (INTRO_BG_WIDTH - INTRO_GRAD_DRAW_WIDTH) / 2;
+            const drawY = (INTRO_BG_HEIGHT - INTRO_GRAD_DRAW_HEIGHT) / 2 + offsetY;
+            ctx.globalAlpha = INTRO_GRAD_ALPHA;
+            ctx.drawImage(introGradImageRef.current, drawX, drawY, INTRO_GRAD_DRAW_WIDTH, INTRO_GRAD_DRAW_HEIGHT);
+        }
+
+        function renderIntroBackdrop(currentTimeSec: number) {
+            const canvas = hudIntroBgCanvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
+            const introTimeSec = Math.min(HUD_INTRO_DURATION_SEC, Math.max(0, currentTimeSec));
+            ctx.clearRect(0, 0, INTRO_BG_WIDTH, INTRO_BG_HEIGHT);
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = INTRO_BG_BASE_COLOR;
+            ctx.fillRect(0, 0, INTRO_BG_WIDTH, INTRO_BG_HEIGHT);
+            drawIntroGradLayer(ctx, introTimeSec, INTRO_GRAD_START_SEC);
+            drawIntroGradLayer(ctx, introTimeSec, INTRO_GRAD_START_SEC + INTRO_GRAD_DURATION_SEC);
+            ctx.globalAlpha = 1;
+        }
+
+        function renderHudFrame(ct: number, transportState: TransportState, chartTimeSec: number) {
+            const hudLayer = hudLayerRef.current;
+            if (!hudLayer) return;
+
+            // Scale HUD layout to panel size
+            const panel = panelRef.current;
+            if (panel) {
+                const bounds = panel.getBoundingClientRect();
+                hudLayer.style.setProperty("--hud-scale", String(bounds.width / 1920));
+            }
+
+            hudLayer.hidden = !previewReadyRef.current;
+            if (!previewReadyRef.current) {
+                panelRef.current?.classList.remove("intro-active");
+                applyPlayfieldVisibility(1);
+                lastHudScoreForPlusTriggerRef.current = 0;
+                hideScorePlus();
+                if (hudAutoBadgeRef.current) hudAutoBadgeRef.current.hidden = true;
+                return;
+            }
+
+            const introVisible = isIntroVisible(ct, transportState);
+            const playfieldVisibility = getPlayfieldVisibility(ct, transportState);
+            const hudSuppressed = introVisible || playfieldVisibility <= 0.001;
+
+            applyPlayfieldVisibility(playfieldVisibility);
+
+            if (introVisible) {
+                renderIntroBackdrop(ct);
+            }
+
+            if (introVisible) {
+                panelRef.current?.classList.add("intro-active");
+                if (hudIntroCardRef.current) hudIntroCardRef.current.classList.add("visible");
+            } else {
+                panelRef.current?.classList.remove("intro-active");
+                if (hudIntroCardRef.current) hudIntroCardRef.current.classList.remove("visible");
+            }
+
+            // HUD timeline state
+            const timeline = hudTimelineRef.current;
+            if (timeline) {
+                const state = timeline.snapshotAt(chartTimeSec);
+
+                setScoreDigits(state.score);
+                setRankSprites(state.rank);
+                setLifeDigits(state.lifeRatio);
+                setComboDigits(state.combo);
+
+                // Score bar
+                if (hudScoreBarClipRef.current) {
+                    hudScoreBarClipRef.current.style.width = `${(state.scoreBarRatio * 354).toFixed(1)}px`;
+                }
+
+                // Life fill
+                if (hudLifeFillClipRef.current) {
+                    hudLifeFillClipRef.current.style.width = `${(state.lifeRatio * 100).toFixed(1)}%`;
+                }
+
+                // Combo root + tag visibility
+                if (hudComboRootRef.current) {
+                    const shouldHide = hudSuppressed || state.combo <= 0;
+                    hudComboRootRef.current.hidden = shouldHide;
+                    if (!shouldHide) {
+                        hudComboRootRef.current.style.opacity = Math.min(1, Math.max(0, playfieldVisibility)).toFixed(3);
+                    }
+                }
+                if (hudComboTagRef.current) {
+                    hudComboTagRef.current.hidden = state.combo <= 0 || hudSuppressed;
+                }
+
+                // Score plus trigger
+                if (state.latestScoreEventIndex >= 0 && state.latestScoreEventIndex !== lastHudScorePlusEventIndexRef.current) {
+                    setScorePlusDigits(state.latestScoreDelta);
+                    lastHudScorePlusEventIndexRef.current = state.latestScoreEventIndex;
+                    scorePlusTriggerChartSecRef.current = chartTimeSec;
+                    if (hudScorePlusRef.current) hudScorePlusRef.current.hidden = false;
+                }
+                updateScorePlusAnimation(chartTimeSec, transportState, hudSuppressed);
+
+                // Judge bursts
+                renderJudgeBursts(chartTimeSec, hudSuppressed);
+
+                // Combo animation
+                updateComboAnimation(chartTimeSec, state.combo, hudSuppressed);
+            }
+
+            // Auto badge — pulse animation after intro completes
+            if (hudAutoBadgeRef.current) {
+                hudAutoBadgeRef.current.hidden = false;
+                if (ct < AUTO_BADGE_SHOW_AFTER_SEC) {
+                    hudAutoBadgeRef.current.style.opacity = "0";
+                } else {
+                    const phase = ((ct - AUTO_BADGE_SHOW_AFTER_SEC) / AUTO_BADGE_ANIM_PERIOD_SEC) % AUTO_BADGE_ANIM_SPAN;
+                    const alpha = Math.max(0, Math.sin(phase * Math.PI));
+                    hudAutoBadgeRef.current.style.opacity = alpha.toFixed(3);
+                }
+            }
+        }
+
         function frameLoop() {
             if (!rendererReadyRef.current) {
+                try { renderer.renderEmpty(configRef.current); } catch { /* not ready */ }
                 rafRef.current = requestAnimationFrame(frameLoop);
                 return;
             }
             try {
                 const snapshot = transport.getSnapshot();
                 const ct = snapshot.currentTimeSec;
-                const chartTimeSec = ct + normalizedOffsetMsRef.current / 1000;
+                const chartTimeSec = ct - chartLeadInSecRef.current;
                 const frame = previewReadyRef.current ? wasm.render(chartTimeSec) : { count: 0, floats: emptyFrame };
                 renderer.render(frame.floats, frame.count, configRef.current);
 
@@ -504,26 +1053,31 @@ export default function ChartPreviewPlayer({
                     if (
                         snapshot.state !== "playing" ||
                         previousTransportStateRef.current !== "playing" ||
-                        ct < previousTimeSecRef.current ||
-                        ct - previousTimeSecRef.current > 0.25
+                        chartTimeSec < previousChartTimeSecRef.current ||
+                        chartTimeSec - previousChartTimeSecRef.current > 0.25
                     ) {
-                        nextHitEventIndexRef.current = lowerBoundHitEvent(ct);
+                        nextHitEventIndexRef.current = lowerBoundHitEvent(chartTimeSec);
                         if (snapshot.state !== "playing") {
                             effects.reset();
                             judgementEffectsInstance.reset();
                             judgementSoundsInstance.stopAll();
                         } else {
-                            resumeActiveHoldLoops(ct);
+                            resumeActiveHoldLoops(chartTimeSec);
                         }
                     } else {
-                        emitHitEvents(previousTimeSecRef.current, ct);
+                        emitHitEvents(previousChartTimeSecRef.current, chartTimeSec);
                     }
                 }
 
                 const nowSec = performance.now() / 1000;
                 effects.render(nowSec);
                 judgementEffectsInstance.render(nowSec);
+
+                // HUD rendering
+                renderHudFrame(ct, snapshot.state, chartTimeSec);
+
                 previousTimeSecRef.current = ct;
+                previousChartTimeSecRef.current = chartTimeSec;
                 previousTransportStateRef.current = snapshot.state;
                 updateUi();
             } catch (error) {
@@ -558,6 +1112,7 @@ export default function ChartPreviewPlayer({
                     wasm.init(),
                     renderer.loadTextures(),
                     effects.load(),
+                    preloadHudImages(),
                     judgementSoundsInstance.load(transport.getAudioContext()).catch(() => {
                         setWarningMessage("判定音效加载失败，已静默继续。");
                     }),
@@ -579,28 +1134,126 @@ export default function ChartPreviewPlayer({
                 const normalizedMs = normalizeOffsetMs(rawOffsetMs ?? null, susText);
                 normalizedOffsetMsRef.current = normalizedMs;
 
-                wasm.loadSusText(susText, normalizedMs);
+                // Pre-set BGM filler offset so timing calculations account for it
+                const effectiveFillerSec = (skipBgmSilence && bgmUrl && fillerSec > 0) ? fillerSec : 0;
+                transport.setBgmOffsetSec(effectiveFillerSec);
+
+                // Lead-in timing alignment (matching reference repo logic)
+                // sourceOffsetSec = the time gap between audio start and chart tick=0
+                const sourceOffsetSec = -normalizedMs / 1000;
+                // chartLeadInSec = guaranteed minimum lead-in before chart notes arrive
+                // Must be at least MIN_CHART_LEAD_IN_SEC (9s) to allow intro animation
+                const chartLeadInSec = Math.max(sourceOffsetSec, MIN_CHART_LEAD_IN_SEC);
+                // audioStartDelaySec = how long to delay audio playback in transport time
+                // The filler silence in the BGM file is skipped via bgmOffsetSec,
+                // so the effective audio content starts at fillerSec in the file.
+                // We need: at transport time = audioStartDelaySec, audio plays from bgmOffsetSec.
+                // chartLeadInSec seconds of transport time pass before chartTimeSec=0.
+                // Audio should start playing so that at chartTimeSec=0, the audio is at
+                // the point corresponding to the chart start (after filler).
+                const audioStartDelaySec = Math.max(0, chartLeadInSec - sourceOffsetSec);
+                chartLeadInSecRef.current = chartLeadInSec;
+
+                // Pass negative lead-in as the offset so WASM places notes correctly
+                wasm.loadSusText(susText, -chartLeadInSec * 1000);
                 wasm.setPreviewConfig(configRef.current);
 
+                // Set audio start delay so BGM plays at the right moment
+                transport.setAudioStartOffset(audioStartDelaySec);
+
+                // WASM already applied the -chartLeadInSec offset internally,
+                // so hit event times are in "transport time" space — no extra adjustment needed.
                 hitEventsRef.current = wasm.getHitEvents().map((event) => ({
                     ...event,
-                    timeSec: event.timeSec - normalizedMs / 1000,
-                    endTimeSec: event.endTimeSec === undefined ? undefined : event.endTimeSec - normalizedMs / 1000,
+                    timeSec: event.timeSec,
+                    endTimeSec: event.endTimeSec,
                 }));
                 nextHitEventIndexRef.current = 0;
 
+                // Initialize HUD timeline from WASM hud events (also already offset by wasm)
+                try {
+                    const hudEvents = wasm.getHudEvents();
+                    hudTimelineRef.current = new HudTimeline(hudEvents);
+                    // Extract judge and combo times for animations
+                    hudJudgeTimesRef.current = hudEvents
+                        .filter((e) => e.showJudge)
+                        .map((e) => e.timeSec)
+                        .sort((a, b) => a - b);
+                    hudComboTimesRef.current = hudEvents
+                        .map((e) => e.timeSec)
+                        .sort((a, b) => a - b);
+                } catch (hudError) {
+                    // HUD events not available in this WASM build, continue without HUD
+                    console.warn("[ChartPreview] HUD events unavailable:", hudError);
+                    hudTimelineRef.current = null;
+                }
+
+                // Initialize intro card metadata
+                const songMeta = (() => { try { return wasm.getSongMetadata(); } catch { return { title: "", artist: "", designer: "" }; } })();
+                const introTitle = propTitle?.trim() || songMeta.title.trim() || "";
+                const introLyricist = propLyricist?.trim() || "-";
+                const introComposer = propComposer?.trim() || songMeta.artist.trim() || "-";
+                const introArranger = propArranger?.trim() || "-";
+                const introVocal = propVocal?.trim() || "-";
+                const introDifficulty = propDifficulty?.trim() || inferDifficultyFromSusUrl(susUrl);
+                const introDesc1 = propDescription1?.trim() || `作詞：${introLyricist}　作曲：${introComposer}　編曲：${introArranger}`;
+                const introDesc2 = propDescription2?.trim() || `Vo. ${introVocal}`;
+                const introExtra = propExtra?.trim() || "";
+
+                // Apply intro card content to DOM
+                if (hudIntroTitleRef.current) hudIntroTitleRef.current.textContent = introTitle || "Unknown Title";
+                if (hudIntroDesc1Ref.current) hudIntroDesc1Ref.current.textContent = introDesc1;
+                if (hudIntroDesc2Ref.current) hudIntroDesc2Ref.current.textContent = introDesc2;
+                if (hudIntroExtraRef.current) {
+                    hudIntroExtraRef.current.textContent = introExtra;
+                    hudIntroExtraRef.current.hidden = !introExtra;
+                }
+                if (hudIntroDifficultyRef.current) {
+                    const diffText = introDifficulty ? normalizeDifficulty(introDifficulty) : "";
+                    hudIntroDifficultyRef.current.textContent = diffText;
+                    hudIntroDifficultyRef.current.hidden = !diffText;
+                    const theme = difficultyTheme(diffText);
+                    if (theme) hudIntroDifficultyRef.current.dataset.theme = theme;
+                    else delete hudIntroDifficultyRef.current.dataset.theme;
+                }
+
+                // Set cover image
+                if (coverUrl && hudIntroCoverRef.current && hudIntroCoverShellRef.current) {
+                    hudIntroCoverShellRef.current.hidden = false;
+                    hudIntroCoverRef.current.hidden = false;
+                    hudIntroCoverRef.current.src = coverUrl;
+                    hudIntroCardRef.current?.classList.remove("no-cover");
+                } else if (hudIntroCoverShellRef.current) {
+                    hudIntroCoverShellRef.current.hidden = true;
+                    if (hudIntroCoverRef.current) hudIntroCoverRef.current.hidden = true;
+                    hudIntroCardRef.current?.classList.add("no-cover");
+                }
+
+                // Load intro gradient image
+                const gradImg = new Image();
+                gradImg.onload = () => { introGradImageRef.current = gradImg; introGradReadyRef.current = true; };
+                gradImg.src = "/assets/mmw/overlay/start_grad.png";
+
+                // Generate V3 background if cover is available
+                if (coverUrl) {
+                    generateOverlayV3BackgroundObjectUrl(coverUrl).then((url) => {
+                        backgroundObjectUrlRef.current = url;
+                        renderer.setBackgroundUrl(url);
+                    }).catch(() => {
+                        renderer.setBackgroundUrl(FIXED_BACKGROUND_URL);
+                    });
+                } else {
+                    renderer.setBackgroundUrl(FIXED_BACKGROUND_URL);
+                }
+
                 const chartEndTimeSec = wasm.getChartEndTimeSec();
-                const minimumDurationSec = Math.max(chartEndTimeSec - normalizedMs / 1000 + 1, 1);
+                // Duration includes the lead-in period
+                const minimumDurationSec = Math.max(chartEndTimeSec + chartLeadInSec + 1, chartLeadInSec + 1);
                 transport.setDuration(minimumDurationSec);
                 transport.setReady();
 
-                const startSec = Math.max(0, -normalizedMs / 1000);
-                initialStartSecRef.current = startSec;
-                if (startSec > 0.001) {
-                    transport.seek(startSec);
-                    previousTimeSecRef.current = startSec;
-                    nextHitEventIndexRef.current = lowerBoundHitEvent(startSec);
-                }
+                // Start at time 0 — the lead-in handles the gap before chart notes arrive
+                initialStartSecRef.current = 0;
 
                 previewReadyRef.current = true;
                 setPreviewState("ready");
@@ -624,11 +1277,7 @@ export default function ChartPreviewPlayer({
                                 window.setTimeout(() => reject(new Error("BGM decode timeout.")), 30000);
                             }),
                         ]);
-                        // Trim leading silence: game BGM files have ~9s of silence at the start.
-                        // We offset the audio so playback aligns with the chart.
-                        if (skipBgmSilence && fillerSec > 0) {
-                            transport.setBgmOffsetSec(fillerSec);
-                        }
+                        // bgmOffsetSec was already set before audio start offset calculation
                         transport.setDuration(Math.max(transport.getSnapshot().durationSec, minimumDurationSec));
                         bgmLoadedRef.current = true;
                         setBgmLoading(false);
@@ -666,8 +1315,12 @@ export default function ChartPreviewPlayer({
             try { transport.getAudioContext().close(); } catch { /* ignore */ }
             wasm.dispose();
             judgementSoundsInstance.stopAll();
+            if (backgroundObjectUrlRef.current) {
+                URL.revokeObjectURL(backgroundObjectUrlRef.current);
+                backgroundObjectUrlRef.current = null;
+            }
         };
-    }, [susUrl, bgmUrl, rawOffsetMs, fillerSec, skipBgmSilence, updateUi]);
+    }, [susUrl, bgmUrl, rawOffsetMs, fillerSec, skipBgmSilence, updateUi, coverUrl, propTitle, propLyricist, propComposer, propArranger, propVocal, propDifficulty, propDescription1, propDescription2, propExtra]);
 
     const handlePlayToggle = useCallback(async () => {
         const transport = transportRef.current;
@@ -698,16 +1351,18 @@ export default function ChartPreviewPlayer({
         if (startSec > 0.001) {
             transport.seek(startSec);
         }
+        const chartTime = startSec - chartLeadInSecRef.current;
         const events = hitEventsRef.current;
         let low = 0;
         let high = events.length;
         while (low < high) {
             const mid = (low + high) >> 1;
-            if (events[mid].timeSec < startSec - 0.0001) low = mid + 1;
+            if (events[mid].timeSec < chartTime - 0.0001) low = mid + 1;
             else high = mid;
         }
         nextHitEventIndexRef.current = low;
         previousTimeSecRef.current = startSec;
+        previousChartTimeSecRef.current = chartTime;
         effectsRef.current?.reset();
         judgementEffectsRef.current?.reset();
         updateUi();
@@ -718,16 +1373,18 @@ export default function ChartPreviewPlayer({
         if (!transport) return;
         const nextTime = Number(e.target.value);
         transport.seek(nextTime);
+        const chartTime = nextTime - chartLeadInSecRef.current;
         const events = hitEventsRef.current;
         let low = 0;
         let high = events.length;
         while (low < high) {
             const mid = (low + high) >> 1;
-            if (events[mid].timeSec < nextTime - 0.0001) low = mid + 1;
+            if (events[mid].timeSec < chartTime - 0.0001) low = mid + 1;
             else high = mid;
         }
         nextHitEventIndexRef.current = low;
         previousTimeSecRef.current = nextTime;
+        previousChartTimeSecRef.current = chartTime;
         effectsRef.current?.reset();
         judgementEffectsRef.current?.reset();
         updateUi();
@@ -857,8 +1514,70 @@ export default function ChartPreviewPlayer({
                         <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
                         <canvas ref={effectsCanvasRef} className="pointer-events-none absolute inset-0 h-full w-full" />
 
+                        {/* HUD Layer */}
+                        <div ref={hudLayerRef} className="hud-layer" hidden>
+                            <div className="hud-layout">
+                                {/* Score */}
+                                <div ref={hudScoreRootRef} className="hud-score-root">
+                                    <img className="hud-score-bg" src="/assets/mmw/overlay/score/bg.png" alt="" />
+                                    <div ref={hudScoreBarClipRef} className="hud-score-bar-clip" style={{ width: 0 }}>
+                                        <img className="hud-score-bar" src="/assets/mmw/overlay/score/bar.png" alt="" />
+                                    </div>
+                                    <img className="hud-score-fg" src="/assets/mmw/overlay/score/fg.png" alt="" />
+                                    <img ref={hudScoreRankCharRef} className="hud-score-rank-char" src="/assets/mmw/overlay/score/rank/chr/d.png" alt="" />
+                                    <img ref={hudScoreRankTxtRef} className="hud-score-rank-txt" src="/assets/mmw/overlay/score/rank/txt/en/d.png" alt="" />
+                                    <div ref={hudScoreDigitsRef} className="hud-score-digits" />
+                                    <div ref={hudScorePlusRef} className="hud-score-plus" hidden />
+                                </div>
+
+                                {/* Life */}
+                                <div ref={hudLifeRootRef} className="hud-life-root">
+                                    <img className="hud-life-bg" src="/assets/mmw/overlay/life/v3/bg.png" alt="" />
+                                    <div ref={hudLifeFillClipRef} className="hud-life-fill-clip">
+                                        <img className="hud-life-fill" src="/assets/mmw/overlay/life/v3/normal.png" alt="" />
+                                    </div>
+                                    <div ref={hudLifeDigitsRef} className="hud-life-digits" />
+                                </div>
+
+                                {/* Combo */}
+                                <div ref={hudComboRootRef} className="hud-combo-root">
+                                    <img ref={hudComboTagRef} className="hud-combo-tag" src="/assets/mmw/overlay/combo/nt.png" alt="" hidden />
+                                    <div ref={hudComboDigitsRef} className="hud-combo-digits" />
+                                </div>
+
+                                {/* Judge */}
+                                <div ref={hudJudgeLayerRef} className="hud-judge-layer" hidden />
+
+                                {/* Intro Card */}
+                                <div ref={hudIntroCardRef} className="hud-intro-card">
+                                    <div className="hud-intro-bg">
+                                        <canvas ref={hudIntroBgCanvasRef} className="hud-intro-bg-canvas" width={1920} height={1080} />
+                                    </div>
+                                    <div ref={hudIntroCoverShellRef} className="hud-intro-cover-shell" hidden>
+                                        <img ref={hudIntroCoverRef} className="hud-intro-cover" alt="" hidden />
+                                        <div ref={hudIntroDifficultyRef} className="hud-intro-difficulty" hidden />
+                                    </div>
+                                    <div ref={hudIntroTextRef} className="hud-intro-text">
+                                        <div ref={hudIntroExtraRef} className="hud-intro-extra" hidden />
+                                        <div ref={hudIntroTitleRef} className="hud-intro-title" />
+                                        <div ref={hudIntroDesc1Ref} className="hud-intro-meta" />
+                                        <div ref={hudIntroDesc2Ref} className="hud-intro-meta" />
+                                    </div>
+                                </div>
+
+                                {/* Auto Live badge */}
+                                <img ref={hudAutoBadgeRef} className="hud-auto-badge" src="/assets/mmw/overlay/autolive.png" alt="" hidden />
+                            </div>
+                        </div>
+
+                        {/* AP Layer */}
+                        <div ref={apLayerRef} className="ap-layer" hidden>
+                            <video ref={apVideoRef} className="ap-video-source" src="/assets/mmw/overlay/ap.mp4" playsInline muted preload="auto" />
+                            <canvas ref={apCanvasRef} className="ap-canvas" />
+                        </div>
+
                         {showStatus && (
-                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+                            <div className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-[10px]" style={{ background: 'rgba(3, 7, 12, 0.28)' }}>
                                 <div className={`flex flex-col items-center ${isCompactControls ? "gap-3 p-4" : "gap-4 p-6"}`}>
                                     {previewState !== "error" ? (
                                         <div

@@ -14,6 +14,7 @@ export class AudioTransport {
   private startedAtWallTime = 0
   private durationSec = 0
   private bgmOffsetSec = 0
+  private audioStartOffsetSec = 0
   private volume = 0.8
   private pendingGestureStart = false
   private readonly listeners = new Set<Listener>()
@@ -74,6 +75,11 @@ export class AudioTransport {
   /** Set how many seconds to skip at the start of the BGM audio file. */
   setBgmOffsetSec(sec: number) {
     this.bgmOffsetSec = Math.max(sec, 0)
+  }
+
+  /** Set how many seconds to delay audio playback relative to transport time 0. */
+  setAudioStartOffset(sec: number) {
+    this.audioStartOffsetSec = Math.max(sec, 0)
   }
 
   setVolume(vol: number) {
@@ -187,34 +193,46 @@ export class AudioTransport {
     this.baseTimeSec = this.clampTime(this.baseTimeSec)
     this.startedAtWallTime = performance.now()
     this.startedAtAudioTime = this.audioContext?.currentTime ?? 0
-    const audioStartSec = this.baseTimeSec + this.bgmOffsetSec
-    if (this.audioBuffer && this.audioContext && audioStartSec < this.audioBuffer.duration) {
-      this.stopSource()
-      const source = this.audioContext.createBufferSource()
-      source.buffer = this.audioBuffer
-      source.playbackRate.value = this.playbackRate
-      this.gainNode ??= this.audioContext.createGain()
-      this.gainNode.gain.value = this.volume
-      source.connect(this.gainNode)
-      this.gainNode.connect(this.audioContext.destination)
-      source.onended = () => {
-        if (this.source === source && this.state === 'playing') {
-          const currentTimeSec = Math.min(this.durationSec, this.getCurrentTimeSec())
-          this.source = null
-          this.baseTimeSec = currentTimeSec
-          if (currentTimeSec < this.durationSec) {
-            this.startedAtWallTime = performance.now()
-            this.startedAtAudioTime = this.audioContext?.currentTime ?? 0
+    this.stopSource()
+    if (this.audioBuffer && this.audioContext) {
+      // audioTimeSec = how far into the logical audio stream we should be
+      // (0 = the moment the actual music content starts, after filler)
+      const audioTimeSec = this.baseTimeSec - this.audioStartOffsetSec
+      // When audioTimeSec >= 0, we're past the audio start point:
+      //   sourceOffsetSec = audioTimeSec + bgmOffsetSec (skip filler + seek to position)
+      // When audioTimeSec < 0, we haven't reached the audio start yet:
+      //   We delay playback and start from bgmOffsetSec (right after filler)
+      const startDelaySec = audioTimeSec < 0 ? (-audioTimeSec) / Math.max(this.playbackRate, 0.01) : 0
+      const sourceOffsetSec = audioTimeSec < 0
+        ? this.bgmOffsetSec
+        : audioTimeSec + this.bgmOffsetSec
+      if (sourceOffsetSec < this.audioBuffer.duration) {
+        const source = this.audioContext.createBufferSource()
+        source.buffer = this.audioBuffer
+        source.playbackRate.value = this.playbackRate
+        this.gainNode ??= this.audioContext.createGain()
+        this.gainNode.gain.value = this.volume
+        source.connect(this.gainNode)
+        this.gainNode.connect(this.audioContext.destination)
+        source.onended = () => {
+          if (this.source === source && this.state === 'playing') {
+            const currentTimeSec = Math.min(this.durationSec, this.getCurrentTimeSec())
+            this.source = null
+            this.baseTimeSec = currentTimeSec
+            if (currentTimeSec < this.durationSec) {
+              this.startedAtWallTime = performance.now()
+              this.startedAtAudioTime = this.audioContext?.currentTime ?? 0
+              this.emit()
+              return
+            }
+            this.state = 'paused'
             this.emit()
-            return
           }
-          this.state = 'paused'
-          this.emit()
         }
+        source.start(this.audioContext.currentTime + startDelaySec, sourceOffsetSec)
+        this.source = source
+        this.startedAtAudioTime = this.audioContext.currentTime
       }
-      source.start(0, audioStartSec)
-      this.source = source
-      this.startedAtAudioTime = this.audioContext.currentTime
     }
 
     this.state = 'playing'

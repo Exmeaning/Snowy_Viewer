@@ -236,6 +236,16 @@ export class GlPreviewRenderer {
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
   }
 
+  /** Render background + stage only (no notes). Safe to call before textures are loaded. */
+  renderEmpty(config: PreviewRuntimeConfig) {
+    const gl = this.gl
+    gl.clearColor(0.03, 0.03, 0.05, 1)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    if (this.textures.size > 0) {
+      try { this.drawStaticScene(config) } catch { /* textures partially loaded */ }
+    }
+  }
+
   render(frame: Float32Array, quadCount: number, config: PreviewRuntimeConfig) {
     const gl = this.gl
     gl.clearColor(0.03, 0.03, 0.05, 1)
@@ -458,5 +468,23 @@ export class GlPreviewRenderer {
       throw new Error(`Texture ${key} has not been loaded.`)
     }
     return texture
+  }
+
+  async setBackgroundUrl(url: string) {
+    const image = await loadImage(url)
+    const existing = this.textures.get('background')
+    if (existing) {
+      this.gl.bindTexture(this.gl.TEXTURE_2D, existing.texture)
+      this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, 0)
+      this.gl.texImage2D(
+        this.gl.TEXTURE_2D,
+        0,
+        this.gl.RGBA,
+        this.gl.RGBA,
+        this.gl.UNSIGNED_BYTE,
+        image,
+      )
+      existing.image = image
+    }
   }
 }

@@ -1,4 +1,4 @@
-import type { HitEvent, HitEventKind, LoadedQuadFrame, PreviewRuntimeConfig } from './types'
+import type { HitEvent, HitEventKind, HudEvent, HudEventKind, LoadedQuadFrame, PreviewRuntimeConfig, SongMetadata } from './types'
 
 const FLOATS_PER_QUAD = 25
 
@@ -153,6 +153,56 @@ export class MmwWasmPreview {
       })
     }
 
+    return events
+  }
+
+  getSongMetadata(): SongMetadata {
+    const module = this.assertReady()
+    return {
+      title: String(module.ccall('getMetadataTitle', 'string', [], [])),
+      artist: String(module.ccall('getMetadataArtist', 'string', [], [])),
+      designer: String(module.ccall('getMetadataDesigner', 'string', [], [])),
+    }
+  }
+
+  getHudEvents(): HudEvent[] {
+    const module = this.assertReady()
+    const count = Number(module.ccall('getHudEventCount', 'number', [], []))
+    const pointer = Number(module.ccall('getHudEventBufferPointer', 'number', [], []))
+
+    if (!count || !pointer) {
+      return []
+    }
+
+    const stride = 4
+    const packed = module.HEAPF32.subarray(pointer / 4, pointer / 4 + count * stride)
+    const events: HudEvent[] = []
+    for (let index = 0; index < count; index += 1) {
+      const offset = index * stride
+      const kindValue = Math.round(packed[offset + 2])
+      const kind: HudEventKind =
+        kindValue === 1
+          ? 'criticalTap'
+          : kindValue === 2
+            ? 'flick'
+            : kindValue === 3
+              ? 'trace'
+              : kindValue === 4
+                ? 'tick'
+                : kindValue === 5
+                  ? 'holdHalfBeat'
+                  : 'tap'
+      const flags = Math.round(packed[offset + 3])
+
+      events.push({
+        timeSec: packed[offset + 0],
+        weight: packed[offset + 1],
+        kind,
+        critical: (flags & 1) !== 0,
+        halfBeat: (flags & 2) !== 0,
+        showJudge: (flags & 4) !== 0,
+      })
+    }
     return events
   }
 

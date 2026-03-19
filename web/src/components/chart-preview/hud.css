@@ -1,0 +1,515 @@
+/* HUD Layer Styles for Chart Preview */
+
+@font-face {
+  font-family: "MMW Rodin DB";
+  src: local("FOT-ロダンNTLG Pro DB"), local("RodinNTLGPro-DB");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "MMW Rodin EB";
+  src: local("FOT-ロダンNTLG Pro EB"), local("RodinNTLGPro-EB"), local("FOT-ロダンNTLG Pro DB"), local("RodinNTLGPro-DB");
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+.hud-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  --hud-scale: 1;
+}
+
+.hud-layout {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: top left;
+  transform: scale(var(--hud-scale));
+  font-family: "DIN Alternate", "Rajdhani", "IBM Plex Sans", sans-serif;
+}
+
+/* Override Tailwind Preflight's img { max-width: 100% } which breaks
+   absolutely-positioned HUD sprites whose containing block has no intrinsic width. */
+.hud-layout img {
+  max-width: none;
+}
+
+/* Score */
+.hud-score-root {
+  position: absolute;
+  left: 44px;
+  top: -3px;
+  width: 444px;
+  height: 96px;
+  transform-origin: top left;
+  transform: scale(1.5);
+  transition: opacity 1560ms cubic-bezier(0.22, 0.74, 0.28, 1);
+}
+
+.hud-score-bg, .hud-score-fg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 444px;
+  height: 96px;
+}
+
+.hud-score-bar-clip {
+  position: absolute;
+  left: 79px;
+  top: 37px;
+  width: 354px;
+  height: 16px;
+  overflow: hidden;
+}
+
+.hud-score-bar {
+  width: 354px;
+  height: 16px;
+  display: block;
+}
+
+.hud-score-rank-char {
+  position: absolute;
+  left: 10px;
+  top: 13px;
+  width: 49px;
+  height: 58px;
+}
+
+.hud-score-rank-txt {
+  position: absolute;
+  left: 6px;
+  top: 77px;
+  width: 60px;
+  height: 8px;
+}
+
+.hud-score-digits {
+  position: absolute;
+  left: 82px;
+  top: 60px;
+  display: flex;
+  gap: 0;
+  pointer-events: none;
+}
+
+.hud-score-digit-stack {
+  position: relative;
+  width: 22px;
+  height: 30px;
+}
+
+.hud-score-digit-shadow {
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  width: auto;
+  height: 36px;
+  transform: translateX(-50%);
+}
+
+.hud-score-digit-main {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: auto;
+  height: 29px;
+  transform: translateX(-50%);
+}
+
+.hud-score-plus {
+  position: absolute;
+  left: 290px;
+  top: 74px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(0);
+  will-change: transform, opacity;
+}
+
+.hud-score-plus-stack {
+  position: relative;
+  width: 14px;
+  height: 22px;
+}
+
+.hud-score-plus-stack-sign {
+  width: 7px;
+}
+
+.hud-score-plus-shadow {
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  width: auto;
+  height: 22px;
+  transform: translateX(-50%);
+}
+
+.hud-score-plus-main {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: auto;
+  height: 18px;
+  transform: translateX(-50%);
+  display: block;
+}
+
+.hud-score-plus-stack-sign .hud-score-plus-shadow {
+  top: 50%;
+  height: 10px;
+  transform: translate(-70%, -70%);
+}
+
+.hud-score-plus-stack-sign .hud-score-plus-main {
+  top: 50%;
+  height: 8px;
+  transform: translate(-70%, -70%);
+}
+
+/* Life */
+.hud-life-root {
+  position: absolute;
+  left: 1442px;
+  top: 11px;
+  width: 444px;
+  height: 104px;
+  transition: opacity 1560ms cubic-bezier(0.22, 0.74, 0.28, 1);
+}
+
+.hud-life-bg, .hud-life-fill {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hud-life-fill-clip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.hud-life-digits {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 444px;
+  height: 104px;
+  pointer-events: none;
+}
+
+.hud-life-digit-slot {
+  position: absolute;
+  top: 10px;
+}
+
+.hud-life-digit-stack {
+  position: relative;
+  width: 26px;
+  height: 35px;
+}
+
+.hud-life-digit-shadow {
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  width: auto;
+  height: 37px;
+  transform: translateX(-50%);
+}
+
+.hud-life-digit-main {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: auto;
+  height: 34px;
+  transform: translateX(-50%);
+}
+
+/* Combo */
+.hud-combo-root {
+  position: absolute;
+  left: 1634px;
+  top: 478px;
+  width: 1px;
+  height: 1px;
+  --combo-glow-opacity: 0;
+}
+
+.hud-combo-tag {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 127px;
+  height: 42px;
+  transform: translate(-50%, calc(-50% - 67px));
+}
+
+.hud-combo-digits {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 620px;
+  height: 170px;
+  transform-origin: center center;
+  transform: translate(-50%, -50%) scale(0.85);
+  pointer-events: none;
+}
+
+.hud-combo-slot {
+  position: absolute;
+  bottom: 0;
+  height: 134px;
+  transform: translateX(-50%);
+}
+
+.hud-combo-digit, .hud-combo-digit-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: auto;
+  height: 134px;
+  transform: translateX(-50%);
+  transform-origin: center bottom;
+  display: block;
+}
+
+.hud-combo-digit-glow {
+  opacity: var(--combo-glow-opacity);
+  filter: drop-shadow(0 6px 12px rgba(255, 255, 255, 0.38));
+}
+
+/* Judge */
+.hud-judge-layer {
+  position: absolute;
+  left: 805px;
+  top: 627px;
+  width: 310px;
+  height: 81px;
+  display: grid;
+  place-items: center;
+}
+
+.hud-judge-burst {
+  width: 310px;
+  height: 81px;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+/* Auto badge */
+.hud-auto-badge {
+  position: absolute;
+  right: 24px;
+  bottom: 18px;
+  width: 330px;
+  height: 74px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Intro Card */
+.hud-intro-card {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1560ms cubic-bezier(0.22, 0.74, 0.28, 1);
+}
+
+.hud-intro-card.visible {
+  opacity: 1;
+  transition-duration: 520ms;
+}
+
+.hud-intro-card.no-cover {
+  --intro-text-left: 180px;
+}
+
+.hud-intro-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.hud-intro-bg-canvas {
+  position: absolute;
+  inset: 0;
+  width: 1920px;
+  height: 1080px;
+  display: block;
+}
+
+.hud-intro-cover-shell {
+  position: absolute;
+  left: 148px;
+  bottom: 104px;
+  width: 350px;
+  height: 350px;
+  overflow: visible;
+  z-index: 2;
+  isolation: isolate;
+  animation: hud-intro-cover-in 340ms cubic-bezier(0.21, 0.74, 0.3, 1) both;
+}
+
+.hud-intro-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border: 2px solid rgba(222, 234, 248, 0.38);
+}
+
+.hud-intro-difficulty {
+  position: absolute;
+  left: -40px;
+  bottom: -36px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding-left: 10px;
+  padding-bottom: 4px;
+  z-index: -1;
+  font-family: "MMW Rodin DB", "FOT-ロダンNTLG Pro DB", "RodinNTLGPro-DB", "Avenir Next", "Helvetica Neue", "Arial", sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  color: #f7faff;
+  line-height: 1;
+  -webkit-text-stroke: 0.22px currentColor;
+  paint-order: stroke fill;
+  background: var(--intro-difficulty-color, #a938ff);
+}
+
+.hud-intro-difficulty[data-theme='easy'] { --intro-difficulty-color: #4bcf8a; }
+.hud-intro-difficulty[data-theme='normal'] { --intro-difficulty-color: #5a8cff; }
+.hud-intro-difficulty[data-theme='hard'] { --intro-difficulty-color: #f2964d; }
+.hud-intro-difficulty[data-theme='expert'] { --intro-difficulty-color: #ef5a66; }
+.hud-intro-difficulty[data-theme='master'] { --intro-difficulty-color: #b55bff; }
+.hud-intro-difficulty[data-theme='append'] { --intro-difficulty-color: #b3a2ff; }
+.hud-intro-difficulty[data-theme='eternal'] { --intro-difficulty-color: #f1c04f; }
+
+.hud-intro-text {
+  position: absolute;
+  left: var(--intro-text-left, 540px);
+  right: 118px;
+  bottom: 110px;
+  z-index: 2;
+  min-width: 0;
+  font-family: "MMW Rodin DB", "FOT-ロダンNTLG Pro DB", "DIN Alternate", "Rajdhani", sans-serif;
+  animation: hud-intro-text-in 380ms cubic-bezier(0.21, 0.74, 0.3, 1) both;
+}
+
+.hud-intro-extra {
+  color: rgba(236, 246, 255, 0.92);
+  font-size: 31px;
+  line-height: 1.1;
+  margin-bottom: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-intro-title {
+  color: #f6fbff;
+  font-size: 42px;
+  font-family: "MMW Rodin EB", "FOT-ロダンNTLG Pro EB", "FOT-ロダンNTLG Pro DB", "DIN Alternate", "Rajdhani", sans-serif;
+  font-weight: 900;
+  -webkit-text-stroke: 0.22px currentColor;
+  paint-order: stroke fill;
+  line-height: 1.16;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-intro-meta {
+  margin-top: 0;
+  color: rgba(231, 241, 252, 0.9);
+  font-size: 28px;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-intro-meta:first-of-type {
+  margin-top: 33px;
+}
+
+.hud-intro-meta + .hud-intro-meta {
+  margin-top: 14px;
+}
+
+/* AP Layer */
+.ap-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ap-layer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 8, 14, 0.64);
+  z-index: 0;
+}
+
+.ap-video-source {
+  display: none;
+}
+
+.ap-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: plus-lighter;
+  opacity: 0.94;
+  z-index: 1;
+}
+
+@supports not (mix-blend-mode: plus-lighter) {
+  .ap-canvas {
+    mix-blend-mode: screen;
+  }
+}
+
+/* Animations */
+@keyframes hud-intro-cover-in {
+  from { transform: translateY(28px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes hud-intro-text-in {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
