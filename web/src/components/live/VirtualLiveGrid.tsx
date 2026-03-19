@@ -28,7 +28,7 @@ export default function VirtualLiveGrid({ virtualLives, isLoading = false }: Vir
     // Show skeletons while loading
     if (isLoading) {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
                     <VirtualLiveSkeleton key={i} />
                 ))}
@@ -52,7 +52,7 @@ export default function VirtualLiveGrid({ virtualLives, isLoading = false }: Vir
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
             {virtualLives.map(virtualLive => {
                 const isSpoiler = virtualLive.startAt > now;
                 return <VirtualLiveItem key={virtualLive.id} virtualLive={virtualLive} isSpoiler={isSpoiler} />;

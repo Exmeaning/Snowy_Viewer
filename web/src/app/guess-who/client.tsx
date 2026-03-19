@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
 import { fetchMasterData } from "@/lib/fetch";
-import { ICardInfo, UNIT_DATA, CHARACTER_NAMES, CHAR_COLORS } from "@/types/types";
+import { ICardInfo, UNIT_DATA, CHARACTER_NAMES, CHAR_COLORS, UNIT_ICON_FILES } from "@/types/types";
 import { getCardFullUrl, getCharacterIconUrl } from "@/lib/assets";
 
 // Game Constants
@@ -14,16 +14,6 @@ const ROUNDS_PER_GAME = 10;
 const BASE_SCORE_PER_ROUND = 1000;
 const FEEDBACK_DURATION = 3000; // Reduced to 3s for snappier feel
 const MAX_STRIKES_PER_ROUND = 3;
-
-// Unit Id map for icons
-const UNIT_ICON_MAP: Record<string, string> = {
-    "ln": "ln.webp",
-    "mmj": "mmj.webp",
-    "vbs": "vbs.webp",
-    "ws": "wxs.webp",
-    "25ji": "n25.webp",
-    "vs": "vs.webp",
-};
 
 // Rarity Definitions
 const RARITY_OPTIONS = [
@@ -621,7 +611,7 @@ function GuessWhoContent() {
                                                 <span className="font-bold text-slate-700 w-16 shrink-0">指定团体:</span>
                                                 <div className="flex flex-wrap gap-1">
                                                     {settings.selectedUnitIds.map(uid => (
-                                                        <Image key={uid} src={`/data/icon/${UNIT_ICON_MAP[uid]}`} width={20} height={20} alt={uid} className="w-5 h-5 object-contain" unoptimized />
+                                                        <Image key={uid} src={`/data/icon/${UNIT_ICON_FILES[uid]}`} width={20} height={20} alt={uid} className="w-5 h-5 object-contain" unoptimized />
                                                     ))}
                                                 </div>
                                             </div>
@@ -968,7 +958,7 @@ function GuessWhoClientPlayingAndSetup({
                         <div className="flex flex-wrap gap-3 mb-4 justify-center">
                             {UNIT_DATA.map(unit => (
                                 <button key={unit.id} onClick={() => handleUnitToggle(unit.id)} className={`transition-all p-1 rounded-full ${settings.selectedUnitIds.includes(unit.id) ? "bg-slate-100 ring-2 ring-miku scale-110" : "opacity-60 hover:opacity-100 grayscale hover:grayscale-0 hover:bg-slate-50"}`}>
-                                    <Image src={`/data/icon/${UNIT_ICON_MAP[unit.id]}`} alt={unit.name} width={40} height={40} className="w-10 h-10 object-contain" unoptimized />
+                                    <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unit.name} width={40} height={40} className="w-10 h-10 object-contain" unoptimized />
                                 </button>
                             ))}
                         </div>

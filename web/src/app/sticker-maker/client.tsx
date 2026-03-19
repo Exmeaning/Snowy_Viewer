@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import NextImage from "next/image";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
-import { UNIT_DATA, CHARACTER_NAMES, SUPPORT_UNIT_NAMES, SupportUnit } from "@/types/types";
+import { UNIT_DATA, CHARACTER_NAMES, SUPPORT_UNIT_NAMES, SupportUnit, UNIT_ICON_FILES } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 
 // Types
@@ -32,25 +32,10 @@ const CHAR_ID_MAP: Record<string, number> = {
     "miku": 21, "rin": 22, "len": 23, "luka": 24, "meiko": 25, "kaito": 26
 };
 
-// Character Name mapping for display (fallback)
-const CHAR_DISPLAY_NAMES: Record<string, string> = {
-    "ichika": "星乃一歌", "saki": "天馬咲希", "honami": "望月穂波", "shiho": "日野森志歩",
-    "minori": "花里みのり", "haruka": "桐谷遥", "airi": "桃井愛莉", "shizuku": "日野森雫",
-    "kohane": "小豆沢こはね", "an": "白石杏", "akito": "東雲彰人", "toya": "青柳冬弥",
-    "tsukasa": "天馬司", "emu": "鳳えむ", "nene": "草薙寧々", "rui": "神代類",
-    "kanade": "宵崎奏", "mafuyu": "朝比奈まふゆ", "ena": "東雲絵名", "mizuki": "暁山瑞希",
-    "miku": "初音ミク", "rin": "鏡音リン", "len": "鏡音レン", "luka": "巡音ルカ",
-    "meiko": "MEIKO", "kaito": "KAITO"
-};
-
-const UNIT_ICONS: Record<string, string> = {
-    "ln": "ln.webp",
-    "mmj": "mmj.webp",
-    "vbs": "vbs.webp",
-    "ws": "wxs.webp",
-    "25ji": "n25.webp",
-    "vs": "vs.webp",
-};
+// Character Name mapping for display (derived from CHARACTER_NAMES)
+const CHAR_DISPLAY_NAMES: Record<string, string> = Object.fromEntries(
+    Object.entries(CHAR_ID_MAP).map(([name, id]) => [name, CHARACTER_NAMES[id] || name])
+);
 
 // Available Fonts
 const DEFAULT_FONTS = [
@@ -516,7 +501,7 @@ export default function StickerMakerContent() {
                                 <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">筛选团体</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {UNIT_DATA.map(unit => {
-                                        const iconName = UNIT_ICONS[unit.id] || "";
+                                        const iconName = UNIT_ICON_FILES[unit.id] || "";
                                         return (
                                             <button
                                                 key={unit.id}

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { CHAR_NAMES, CHARACTER_NAMES, type CardAttribute } from "@/types/types";
+import { CHAR_NAMES, CHARACTER_NAMES, UNIT_NAME_MAP, UNIT_DATA, UNIT_FIELD_TO_ID, UNIT_ICON_FILES, type CardAttribute } from "@/types/types";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -77,32 +77,16 @@ const ATTR_ICON_FILES: Record<CardAttribute, string> = {
     pure: "Pure.webp",
 };
 
-const UNIT_LABEL_FALLBACK: Record<(typeof UNIT_ORDER)[number], string> = {
-    light_sound: "Leo/need",
-    idol: "MMJ",
-    street: "VBS",
-    theme_park: "WxS",
-    school_refusal: "25时",
-    piapro: "VS",
-};
+const UNIT_ICON: Record<string, string> = Object.fromEntries(
+    Object.entries(UNIT_FIELD_TO_ID).map(([field, id]) => [field, "/data/icon/" + UNIT_ICON_FILES[id]])
+);
 
-const UNIT_ICON: Record<(typeof UNIT_ORDER)[number], string> = {
-    light_sound: "/data/icon/ln.webp",
-    idol: "/data/icon/mmj.webp",
-    street: "/data/icon/vbs.webp",
-    theme_park: "/data/icon/wxs.webp",
-    school_refusal: "/data/icon/n25.webp",
-    piapro: "/data/icon/vs.webp",
-};
-
-const UNIT_CHAR_IDS: Record<(typeof UNIT_ORDER)[number], number[]> = {
-    light_sound: [1, 2, 3, 4],
-    idol: [5, 6, 7, 8],
-    street: [9, 10, 11, 12],
-    theme_park: [13, 14, 15, 16],
-    school_refusal: [17, 18, 19, 20],
-    piapro: [21, 22, 23, 24, 25, 26],
-};
+const UNIT_CHAR_IDS: Record<string, number[]> = Object.fromEntries(
+    UNIT_DATA.map(u => {
+        const field = Object.entries(UNIT_FIELD_TO_ID).find(([, v]) => v === u.id)?.[0];
+        return field ? [field, u.charIds] : null;
+    }).filter(Boolean) as [string, number[]][]
+);
 
 function fmt(v: number): string {
     return `${v.toFixed(1)}%`;
@@ -135,7 +119,7 @@ export default function PowerBonusDetail({
                     fetchMasterDataForServer<AreaItemLevelMaster[]>(server, "areaItemLevels.json"),
                     fetchMasterDataForServer<CharacterRankMaster[]>(server, "characterRanks.json"),
                     fetchMasterDataForServer<GateLevelMaster[]>(server, "mysekaiGateLevels.json"),
-                    fetchMasterDataForServer<UnitProfileMaster[]>(server, "unitProfiles.json"),
+                    fetchMasterDataForServer<UnitProfileMaster[]>("cn", "unitProfiles.json"), // Always CN for Chinese names
                 ]);
                 if (cancelled) return;
                 setAreaItemLevels(a);
@@ -239,7 +223,7 @@ export default function PowerBonusDetail({
             {UNIT_ORDER.map((unitKey) => {
                 const unitBonus = bonus.unit.get(unitKey)!;
                 const charIds = UNIT_CHAR_IDS[unitKey];
-                const unitLabel = unitNameMap.get(unitKey) || UNIT_LABEL_FALLBACK[unitKey];
+                const unitLabel = unitNameMap.get(unitKey) || UNIT_NAME_MAP[unitKey] || unitKey;
                 const isVirtualSinger = unitKey === "piapro";
 
                 return (

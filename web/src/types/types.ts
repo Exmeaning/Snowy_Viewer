@@ -1,6 +1,17 @@
 // Card Types for Moesekai
 // Based on sekai.best and Haruki master data structure
 
+// Unit internal field → Chinese official name mapping (source: unitProfiles.json)
+// Defined first so other constants can reference it
+export const UNIT_NAME_MAP: Record<string, string> = {
+    light_sound: "Leo/need",
+    idol: "MORE MORE JUMP！",
+    street: "Vivid BAD SQUAD",
+    theme_park: "Wonderlands×Showtime",
+    school_refusal: "25点，Nightcord见。",
+    piapro: "虚拟歌手",
+};
+
 export type CardRarityType =
     | "rarity_1"
     | "rarity_2"
@@ -26,11 +37,11 @@ export type SupportUnit =
 // Support Unit display names (for virtual singers)
 export const SUPPORT_UNIT_NAMES: Record<SupportUnit, string> = {
     "none": "原版",
-    "light_sound": "Leo/need",
-    "idol": "MORE MORE JUMP!",
-    "school_refusal": "25時、ナイトコードで。",
-    "theme_park": "Wonderlands×Showtime",
-    "street": "Vivid BAD SQUAD",
+    "light_sound": UNIT_NAME_MAP.light_sound,
+    "idol": UNIT_NAME_MAP.idol,
+    "school_refusal": UNIT_NAME_MAP.school_refusal,
+    "theme_park": UNIT_NAME_MAP.theme_park,
+    "street": UNIT_NAME_MAP.street,
 };
 
 // Support Unit to Unit ID mapping (for icons)
@@ -160,42 +171,58 @@ export interface UnitData {
     charIds: number[];
 }
 
+// Unit icon file mapping (unit id → icon filename)
+export const UNIT_ICON_FILES: Record<string, string> = {
+    ln: "ln.webp", mmj: "mmj.webp", vbs: "vbs.webp",
+    ws: "wxs.webp", "25ji": "n25.webp", vs: "vs.webp",
+};
+
+// Unit field (from master data) → unit id mapping
+export const UNIT_FIELD_TO_ID: Record<string, string> = {
+    light_sound: "ln",
+    idol: "mmj",
+    street: "vbs",
+    theme_park: "ws",
+    school_refusal: "25ji",
+    piapro: "vs",
+};
+
 // Unit definitions
 export const UNIT_DATA: UnitData[] = [
-    { id: "ln", name: "Leo/need", color: "#4455DD", charIds: [1, 2, 3, 4] },
-    { id: "mmj", name: "MORE MORE JUMP!", color: "#88DD44", charIds: [5, 6, 7, 8] },
-    { id: "vbs", name: "Vivid BAD SQUAD", color: "#EE1166", charIds: [9, 10, 11, 12] },
-    { id: "ws", name: "Wonderlands×Showtime", color: "#FF9900", charIds: [13, 14, 15, 16] },
-    { id: "25ji", name: "25時、ナイトコードで。", color: "#884499", charIds: [17, 18, 19, 20] },
-    { id: "vs", name: "Virtual Singer", color: "#33CCBB", charIds: [21, 22, 23, 24, 25, 26] },
+    { id: "ln", name: UNIT_NAME_MAP.light_sound, color: "#4455DD", charIds: [1, 2, 3, 4] },
+    { id: "mmj", name: UNIT_NAME_MAP.idol, color: "#88DD44", charIds: [5, 6, 7, 8] },
+    { id: "vbs", name: UNIT_NAME_MAP.street, color: "#EE1166", charIds: [9, 10, 11, 12] },
+    { id: "ws", name: UNIT_NAME_MAP.theme_park, color: "#FF9900", charIds: [13, 14, 15, 16] },
+    { id: "25ji", name: UNIT_NAME_MAP.school_refusal, color: "#884499", charIds: [17, 18, 19, 20] },
+    { id: "vs", name: UNIT_NAME_MAP.piapro, color: "#33CCBB", charIds: [21, 22, 23, 24, 25, 26] },
 ];
 
-// Character name mapping (Japanese)
+// Character name mapping (Chinese, from gameCharacters.json: firstName + givenName)
 export const CHARACTER_NAMES: Record<number, string> = {
     1: "星乃一歌",
-    2: "天馬咲希",
-    3: "望月穂波",
-    4: "日野森志歩",
-    5: "花里みのり",
+    2: "天马咲希",
+    3: "望月穗波",
+    4: "日野森志步",
+    5: "花里实乃理",
     6: "桐谷遥",
-    7: "桃井愛莉",
+    7: "桃井爱莉",
     8: "日野森雫",
-    9: "小豆沢こはね",
+    9: "小豆泽心羽",
     10: "白石杏",
-    11: "東雲彰人",
+    11: "东云彰人",
     12: "青柳冬弥",
-    13: "天馬司",
-    14: "鳳えむ",
-    15: "草薙寧々",
-    16: "神代類",
+    13: "天马司",
+    14: "凤笑梦",
+    15: "草薙宁宁",
+    16: "神代类",
     17: "宵崎奏",
-    18: "朝比奈まふゆ",
-    19: "東雲絵名",
-    20: "暁山瑞希",
-    21: "初音ミク",
-    22: "鏡音リン",
-    23: "鏡音レン",
-    24: "巡音ルカ",
+    18: "朝比奈真冬",
+    19: "东云绘名",
+    20: "晓山瑞希",
+    21: "初音未来",
+    22: "镜音铃",
+    23: "镜音连",
+    24: "巡音流歌",
     25: "MEIKO",
     26: "KAITO",
 };

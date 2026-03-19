@@ -17,11 +17,11 @@ import {
 import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, getEventUnitDisplayName, buildEventBannerCharMap } from "@/lib/eventUnit";
 import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getEventStoryBannerUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
-import { CHARACTER_NAMES, getRarityNumber, RARITY_DISPLAY, isTrainableCard } from "@/types/types";
+import { CHARACTER_NAMES, getRarityNumber, RARITY_DISPLAY, isTrainableCard, UNIT_NAME_MAP } from "@/types/types";
 import type { ICardInfo, ICharaUnitInfo, IGameChara } from "@/types/types";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
-import { fetchMasterData, fetchWithCompression } from "@/lib/fetch";
+import { fetchMasterData, fetchMasterDataForServer, fetchWithCompression } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 
@@ -126,7 +126,7 @@ export default function EventDetailPage() {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [eventsData, bonusesData, eventCardsData, eventMusicsData, cardsData, musicsData, charUnitsData, gameCharsData, actionSetsData, eventStoriesData] = await Promise.all([
+                const [eventsData, bonusesData, eventCardsData, eventMusicsData, cardsData, musicsData, charUnitsData, gameCharsData, actionSetsForUnitMapData, eventStoriesData] = await Promise.all([
                     fetchMasterData<IEventInfo[]>("events.json"),
                     fetchMasterData<IEventDeckBonus[]>("eventDeckBonuses.json"),
                     fetchMasterData<IEventCard[]>("eventCards.json"),
@@ -135,7 +135,7 @@ export default function EventDetailPage() {
                     fetchMasterData<IMusic[]>("musics.json"),
                     fetchMasterData<ICharaUnitInfo[]>("gameCharacterUnits.json"),
                     fetchMasterData<IGameChara[]>("gameCharacters.json"),
-                    fetchMasterData<IActionSet[]>("actionSets.json"),
+                    fetchMasterDataForServer<IActionSet[]>("jp", "actionSets.json"),
                     fetchMasterData<IEventStory[]>("eventStories.json"),
                 ]);
 
@@ -153,8 +153,8 @@ export default function EventDetailPage() {
                 setAllMusics(musicsData);
                 setGameCharacterUnits(charUnitsData);
                 setGameCharacters(gameCharsData);
-                // Build event unit map from actionSets
-                const rawMap = buildEventRawUnitMap(actionSetsData);
+                // Build event unit map from actionSets (always fetched from JP server)
+                const rawMap = buildEventRawUnitMap(actionSetsForUnitMapData);
                 const unitMap = new Map<number, EventUnitFilterId>();
                 for (const [eid, rawType] of rawMap) {
                     unitMap.set(eid, rawUnitToFilterId(rawType));
@@ -202,15 +202,6 @@ export default function EventDetailPage() {
         const attrBonus = deckBonuses.find(b => b.cardAttr && !b.gameCharacterUnitId);
         return attrBonus?.cardAttr;
     }, [deckBonuses]);
-
-    // Unit code → display name mapping
-    const UNIT_NAME_MAP: Record<string, string> = {
-        light_sound: "Leo/need",
-        idol: "MORE MORE JUMP!",
-        street: "Vivid BAD SQUAD",
-        theme_park: "Wonderlands×Showtime",
-        school_refusal: "25時、ナイトコードで。",
-    };
 
     // Get bonus characters with unit info for piapro characters
     const bonusCharacters = useMemo(() => {

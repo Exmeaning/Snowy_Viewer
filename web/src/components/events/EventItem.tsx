@@ -5,26 +5,23 @@ import { IEventInfo, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS, getEventStatus, EVENT_
 import { getEventStoryBannerUrl, getEventLogoUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
+import { UNIT_DATA, UNIT_ICON_FILES, ATTR_ICON_PATHS, ATTR_NAMES } from "@/types/types";
 
-// Unit icon mapping for event unit badge
-const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = {
-    ln: { icon: "ln.webp", name: "Leo/need" },
-    mmj: { icon: "mmj.webp", name: "MORE MORE JUMP!" },
-    vbs: { icon: "vbs.webp", name: "Vivid BAD SQUAD" },
-    ws: { icon: "wxs.webp", name: "Wonderlands×Showtime" },
-    "25ji": { icon: "n25.webp", name: "25時、ナイトコードで。" },
-    vs: { icon: "vs.webp", name: "Virtual Singer" },
-};
+// Build unit icon mapping from UNIT_DATA
+const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = Object.fromEntries(
+    UNIT_DATA.filter(u => UNIT_ICON_FILES[u.id]).map(u => [u.id, { icon: UNIT_ICON_FILES[u.id], name: u.name }])
+);
 
 interface EventItemProps {
     event: IEventInfo;
     isSpoiler?: boolean;
     basePath?: string;
     unitType?: string;
+    bonusAttr?: string;
     eventStoryIds?: Set<number>;
 }
 
-export default function EventItem({ event, isSpoiler, basePath = "/events", unitType, eventStoryIds }: EventItemProps) {
+export default function EventItem({ event, isSpoiler, basePath = "/events", unitType, bonusAttr, eventStoryIds }: EventItemProps) {
     const { assetSource } = useTheme();
     const hasEventStoryBanner = eventStoryIds ? eventStoryIds.has(event.id) : true;
     const thumbnailUrl = hasEventStoryBanner
@@ -57,7 +54,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
 
                     {/* Status Badge */}
                     <div
-                        className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                        className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
                         style={{ backgroundColor: statusDisplay.color }}
                     >
                         {statusDisplay.label}
@@ -65,7 +62,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
 
                     {/* Event Type Badge */}
                     <div
-                        className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                        className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
                         style={{ backgroundColor: EVENT_TYPE_COLORS[event.eventType as EventType] }}
                     >
                         {EVENT_TYPE_NAMES[event.eventType as EventType]}
@@ -73,17 +70,17 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
 
                     {/* Spoiler Badge - Bottom Right */}
                     {isSpoiler && (
-                        <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-orange-500 rounded-full text-xs font-bold text-white shadow">
+                        <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-orange-500 rounded-full text-[10px] sm:text-xs font-bold text-white shadow">
                             剧透
                         </div>
                     )}
                 </div>
 
                 {/* Event Info */}
-                <div className="p-4">
+                <div className="p-2.5 sm:p-4">
                     {/* ID Badge + Unit Badge */}
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs font-mono rounded-full">
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                        <span className="px-1.5 sm:px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] sm:text-xs font-mono rounded-full">
                             #{event.id}
                         </span>
                         {unitType && (
@@ -102,21 +99,33 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                                 <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full" title="混合">混</span>
                             )
                         )}
+                        {bonusAttr && ATTR_ICON_PATHS[bonusAttr as keyof typeof ATTR_ICON_PATHS] && (
+                            <div className="w-5 h-5 flex items-center justify-center" title={ATTR_NAMES[bonusAttr as keyof typeof ATTR_NAMES]}>
+                                <Image
+                                    src={`/data/icon/${ATTR_ICON_PATHS[bonusAttr as keyof typeof ATTR_ICON_PATHS]}`}
+                                    alt={ATTR_NAMES[bonusAttr as keyof typeof ATTR_NAMES] || bonusAttr}
+                                    width={16}
+                                    height={16}
+                                    className="object-contain"
+                                    unoptimized
+                                />
+                            </div>
+                        )}
                     </div>
 
                     {/* Event Name */}
-                    <h3 className="font-bold text-slate-800 text-sm mb-2 group-hover:text-miku transition-colors">
+                    <h3 className="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 sm:mb-2 group-hover:text-miku transition-colors">
                         <TranslatedText
                             original={event.name}
                             category="events"
                             field="name"
-                            originalClassName="line-clamp-2"
-                            translationClassName="text-xs font-medium text-slate-400 mt-0.5 line-clamp-1"
+                            originalClassName=""
+                            translationClassName="text-xs font-medium text-slate-400 mt-0.5"
                         />
                     </h3>
 
                     {/* Date Range */}
-                    <div className="text-xs text-slate-500 space-y-0.5">
+                    <div className="text-[10px] sm:text-xs text-slate-500 space-y-0.5 hidden sm:block">
                         <div className="flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

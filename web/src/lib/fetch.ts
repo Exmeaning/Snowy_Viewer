@@ -297,13 +297,17 @@ export async function fetchMasterDataForServer<T>(server: "cn" | "jp" | "tw", pa
     const domain = SERVER_DOMAINS[masterServer];
     const fallbackDomain = FALLBACK_DOMAINS[masterServer];
 
-    const primaryUrl = `https://${domain}/master/${path}`;
+    // Add version param to avoid stale browser/CDN cache
+    const localVersion = getLocalVersion();
+    const query = localVersion ? `?v=${encodeURIComponent(localVersion)}` : "";
+
+    const primaryUrl = `https://${domain}/master/${path}${query}`;
     try {
         const response = await fetchWithCompression(primaryUrl);
         if (response.ok) return response.json();
     } catch { /* fall through */ }
 
-    const fallbackUrl = `https://${fallbackDomain}/master/${path}`;
+    const fallbackUrl = `https://${fallbackDomain}/master/${path}${query}`;
     const fallbackResponse = await fetchWithCompression(fallbackUrl);
     if (!fallbackResponse.ok) {
         throw new Error(`Failed to fetch ${path} for server ${server}`);

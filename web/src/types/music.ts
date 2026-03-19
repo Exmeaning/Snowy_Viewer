@@ -1,6 +1,8 @@
 // Music Types for Moesekai
 // Based on sekai.best and sekaimaster data structure
 
+import { UNIT_NAME_MAP } from "@/types/types";
+
 export type MusicCategoryType = "mv" | "mv_2d" | "original" | "image";
 
 export type MusicTagType =
@@ -80,12 +82,12 @@ export interface IOutsideCharacter {
 // Music tag display names (Chinese)
 export const MUSIC_TAG_NAMES: Record<MusicTagType, string> = {
     all: "全部",
-    vocaloid: "VIRTUAL SINGER",
-    light_music_club: "Leo/need",
-    idol: "MORE MORE JUMP!",
-    street: "Vivid BAD SQUAD",
-    theme_park: "Wonderlands×Showtime",
-    school_refusal: "25時、ナイトコードで。",
+    vocaloid: UNIT_NAME_MAP.piapro,
+    light_music_club: UNIT_NAME_MAP.light_sound,
+    idol: UNIT_NAME_MAP.idol,
+    street: UNIT_NAME_MAP.street,
+    theme_park: UNIT_NAME_MAP.theme_park,
+    school_refusal: UNIT_NAME_MAP.school_refusal,
     other: "其他",
 };
 

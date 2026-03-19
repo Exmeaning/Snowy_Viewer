@@ -172,7 +172,7 @@ function MangaContent() {
                                                 />
                                             </div>
                                             <div className="p-3">
-                                                <div className="text-sm font-bold text-slate-700 truncate">
+                                                <div className="text-sm font-bold text-slate-700">
                                                     {manga.title}
                                                 </div>
                                                 <div className="flex items-center justify-between mt-1">

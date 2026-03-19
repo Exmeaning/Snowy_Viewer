@@ -505,7 +505,7 @@ function MyMaterialsContent() {
                 {/* Grid (right content) */}
                 <div className="flex-1 min-w-0">
                     {isLoading || isFetchingUser ? (
-                        <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
+                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                             {Array.from({ length: 12 }).map((_, i) => (
                                 <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-100 shadow-sm animate-pulse">
                                     <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200" />
@@ -531,7 +531,7 @@ function MyMaterialsContent() {
                             )}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
+                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                             {displayedItems.map((item) => (
                                 <MaterialCard key={item.id} item={item} />
                             ))}
@@ -605,7 +605,7 @@ function MaterialCard({ item }: { item: DisplayMaterial }) {
                 )}
             </div>
             <div className="px-2 py-1.5 bg-white border-t border-slate-100">
-                <p className="text-[10px] font-bold text-slate-800 truncate leading-tight" title={item.name}>
+                <p className="text-[10px] font-bold text-slate-800 leading-tight" title={item.name}>
                     {item.name}
                 </p>
                 <div className="flex items-center justify-between mt-0.5">

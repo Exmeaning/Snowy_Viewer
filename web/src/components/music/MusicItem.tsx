@@ -70,13 +70,13 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                 <div className="p-3">
                     <h3 className="text-sm font-bold text-primary-text group-hover:text-miku transition-colors">
                         <span className="flex flex-col">
-                            <span className="truncate block">{music.title}</span>
+                            <span className="block">{music.title}</span>
                             {cnTitle && (
-                                <span className="text-xs font-medium text-slate-400 truncate block">{cnTitle}</span>
+                                <span className="text-xs font-medium text-slate-400 block">{cnTitle}</span>
                             )}
                         </span>
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         {music.composer}
                         {music.composer !== music.arranger && music.arranger !== "-" && ` / ${music.arranger}`}
                     </p>

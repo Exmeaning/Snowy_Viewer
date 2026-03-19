@@ -573,7 +573,7 @@ function HonorsContent() {
                             </div>
                         ) : (
                             <>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                                     {displayedHonors.map(honor => {
                                         const group = honorGroupMap.get(honor.groupId);
                                         return (
@@ -599,7 +599,7 @@ function HonorsContent() {
                                                         source={assetSource}
                                                     />
                                                 </div>
-                                                <h3 className="font-bold text-sm text-slate-800 group-hover:text-miku transition-colors line-clamp-2 mb-1">
+                                                <h3 className="font-bold text-sm text-slate-800 group-hover:text-miku transition-colors mb-1">
                                                     {honor.name}
                                                 </h3>
                                                 <div className="flex flex-wrap gap-1">
@@ -666,7 +666,7 @@ function HonorsContent() {
                             </div>
                         ) : (
                             <>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                                     {displayedBondsHonors.map(bh => {
                                         const word = bondsWordMap.get(bh.bondsGroupId);
                                         return (
@@ -694,7 +694,7 @@ function HonorsContent() {
                                                         source={assetSource}
                                                     />
                                                 </div>
-                                                <h3 className="font-bold text-sm text-slate-800 group-hover:text-miku transition-colors line-clamp-2 mb-1">
+                                                <h3 className="font-bold text-sm text-slate-800 group-hover:text-miku transition-colors mb-1">
                                                     {bh.name}
                                                 </h3>
                                                 <div className="flex flex-wrap gap-1">

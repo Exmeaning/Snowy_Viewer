@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { UNIT_DATA, CHARACTER_NAMES, type CardAttribute } from "@/types/types";
+import { UNIT_DATA, CHARACTER_NAMES, UNIT_ICON_FILES, UNIT_FIELD_TO_ID, type CardAttribute } from "@/types/types";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getAreaItemThumbnailUrl, getCharacterIconUrl, getMaterialThumbnailUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -76,23 +76,9 @@ const COIN_ID = -1;
 const TREE_AREA_ID = 11;
 const FLOWER_AREA_ID = 13;
 
-const UNIT_ICON_FILES: Record<string, string> = {
-    ln: "ln.webp",
-    mmj: "mmj.webp",
-    vbs: "vbs.webp",
-    ws: "wxs.webp",
-    "25ji": "n25.webp",
-    vs: "vs.webp",
-};
-
-const UNIT_TO_TARGET: Record<string, string> = {
-    ln: "light_sound",
-    mmj: "idol",
-    vbs: "street",
-    ws: "theme_park",
-    "25ji": "school_refusal",
-    vs: "piapro",
-};
+const UNIT_TO_TARGET: Record<string, string> = Object.fromEntries(
+    Object.entries(UNIT_FIELD_TO_ID).map(([k, v]) => [v, k])
+);
 
 const ATTRS: CardAttribute[] = ["cool", "cute", "happy", "mysterious", "pure"];
 const ATTR_ICON_FILES: Record<CardAttribute, string> = {

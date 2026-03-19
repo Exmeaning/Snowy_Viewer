@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } fr
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchMasterData } from "@/lib/fetch";
-import { ICardInfo, CHARACTER_NAMES, CHAR_COLORS, UNIT_DATA } from "@/types/types";
+import { ICardInfo, CHARACTER_NAMES, CHAR_COLORS, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
 import { getCardFullUrl, getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -24,12 +24,6 @@ const INITIAL_HP = 1000;
 const ATTEMPT_PENALTY = 20;
 const TIMEOUT_PENALTY = 100;
 const FEEDBACK_DURATION = 4000;
-
-// Unit icon map (same as single player)
-const UNIT_ICON_MAP: Record<string, string> = {
-    "ln": "ln.webp", "mmj": "mmj.webp", "vbs": "vbs.webp",
-    "ws": "wxs.webp", "25ji": "n25.webp", "vs": "vs.webp",
-};
 
 // Rarity options (same as single player)
 const RARITY_OPTIONS = [
@@ -1847,7 +1841,7 @@ function MultiplayerContent() {
                                                     filter: gameSettings.selectedUnitIds.length > 0 && !gameSettings.selectedUnitIds.includes(unit.id) ? "grayscale(1)" : "none",
                                                 }}
                                             >
-                                                <Image src={`/data/icon/${UNIT_ICON_MAP[unit.id]}`} alt={unit.name} width={36} height={36} unoptimized style={{ objectFit: "contain" }} />
+                                                <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unit.name} width={36} height={36} unoptimized style={{ objectFit: "contain" }} />
                                             </button>
                                         ))}
                                     </div>

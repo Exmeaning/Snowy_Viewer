@@ -46,6 +46,44 @@ export default function MainLayout({
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
 
+    // Track whether we pushed a history entry for an overlay, so the mobile
+    // back button closes the overlay instead of navigating away.
+    const overlayHistoryRef = useRef(false);
+
+    const anyOverlayOpen = isSearchOpen || isSettingsOpen || isShortcutsHelpOpen;
+
+    useEffect(() => {
+        if (anyOverlayOpen) {
+            // Push a sentinel state so the back button can close the overlay.
+            if (!overlayHistoryRef.current) {
+                window.history.pushState({ moesekaiOverlay: true }, "");
+                overlayHistoryRef.current = true;
+            }
+        } else {
+            // If the overlay was closed programmatically (not via back button),
+            // pop the sentinel entry we pushed earlier.
+            if (overlayHistoryRef.current) {
+                overlayHistoryRef.current = false;
+                window.history.back();
+            }
+        }
+    }, [anyOverlayOpen]);
+
+    useEffect(() => {
+        const handlePopState = (e: PopStateEvent) => {
+            // If an overlay is open and the user pressed back, close it.
+            if (overlayHistoryRef.current) {
+                overlayHistoryRef.current = false;
+                setIsSearchOpen(false);
+                setIsSettingsOpen(false);
+                setIsShortcutsHelpOpen(false);
+            }
+        };
+
+        window.addEventListener("popstate", handlePopState);
+        return () => window.removeEventListener("popstate", handlePopState);
+    }, []);
+
     useEffect(() => {
         if (!immersiveMode) return;
 

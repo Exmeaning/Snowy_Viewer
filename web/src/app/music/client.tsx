@@ -483,7 +483,7 @@ function MusicContent() {
                 {/* Music Grid */}
                 <div className="flex-1 min-w-0">
                     {isLoading ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                             {Array.from({ length: 15 }).map((_, i) => (
                                 <div key={i} className="animate-pulse">
                                     <div className="rounded-xl overflow-hidden bg-white/60 border border-slate-200/60">
@@ -507,7 +507,7 @@ function MusicContent() {
                             </p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                             {displayedMusicsWithSeparators.map((item, index) => {
                                 if (item.type === 'separator') {
                                     const sepData = item.data as { level: number, difficulty: string };

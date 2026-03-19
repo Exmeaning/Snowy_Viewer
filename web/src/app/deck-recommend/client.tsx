@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import ExternalLink from "@/components/ExternalLink";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
-import { CHAR_NAMES, UNIT_DATA, CHARACTER_NAMES, type ICardInfo } from "@/types/types";
+import { CHAR_NAMES, UNIT_DATA, CHARACTER_NAMES, UNIT_NAME_MAP, type ICardInfo } from "@/types/types";
 import CharacterSelector from "@/components/deck-recommend/CharacterSelector";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData } from "@/lib/fetch";
@@ -192,12 +192,12 @@ const ATTR_OPTIONS = [
 ];
 
 const UNIT_OPTIONS = [
-    { value: "leo_need", label: "Leo/need", icon: "ln.webp" },
-    { value: "more_more_jump", label: "MORE MORE JUMP!", icon: "mmj.webp" },
-    { value: "vivid_bad_squad", label: "Vivid BAD SQUAD", icon: "vbs.webp" },
-    { value: "wonderlands_showtime", label: "WonderShow", icon: "wxs.webp" },
-    { value: "nightcord_at_25", label: "25時", icon: "n25.webp" },
-    { value: "piapro", label: "Virtual Singer", icon: "vs.webp" },
+    { value: "leo_need", label: UNIT_NAME_MAP.light_sound, icon: "ln.webp" },
+    { value: "more_more_jump", label: UNIT_NAME_MAP.idol, icon: "mmj.webp" },
+    { value: "vivid_bad_squad", label: UNIT_NAME_MAP.street, icon: "vbs.webp" },
+    { value: "wonderlands_showtime", label: UNIT_NAME_MAP.theme_park, icon: "wxs.webp" },
+    { value: "nightcord_at_25", label: UNIT_NAME_MAP.school_refusal, icon: "n25.webp" },
+    { value: "piapro", label: UNIT_NAME_MAP.piapro, icon: "vs.webp" },
 ];
 
 type CustomSubMode = "unit" | "character";

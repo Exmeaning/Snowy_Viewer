@@ -360,7 +360,7 @@ function CostumesContent() {
                         </div>
                     ) : (
                         <>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                            <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                                 {displayedGroups.map(costume => {
                                     let assetName = "";
                                     let repPart;
@@ -413,8 +413,8 @@ function CostumesContent() {
                                                         original={costume.name}
                                                         category="costumes"
                                                         field="name"
-                                                        originalClassName="line-clamp-2 block"
-                                                        translationClassName="text-xs font-medium text-slate-400 line-clamp-1 block"
+                                                        originalClassName="block"
+                                                        translationClassName="text-xs font-medium text-slate-400 block"
                                                     />
                                                 </h3>
                                                 <div className="mt-auto flex flex-wrap gap-1">

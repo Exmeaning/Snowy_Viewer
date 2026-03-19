@@ -69,8 +69,8 @@ export default function GachaItem({ gacha }: GachaItemProps) {
                             original={gacha.name}
                             category="gacha"
                             field="name"
-                            originalClassName="truncate block"
-                            translationClassName="text-xs font-medium text-slate-400 truncate block"
+                            originalClassName="block"
+                            translationClassName="text-xs font-medium text-slate-400 block"
                         />
                     </h3>
                     <div className="mt-1 text-xs text-slate-400 space-y-0.5">
