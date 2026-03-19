@@ -6,7 +6,7 @@
  * and contain CN translations for each episode's TalkData.
  */
 
-// Translation data structure for a single event
+import { TRANSLATION_BASE_URL } from "./translations";
 export interface IEpisodeTranslation {
     scenarioId: string;
     title?: string;
@@ -49,7 +49,7 @@ export async function loadEventStoryTranslation(eventId: number): Promise<IEvent
     // Start loading
     const loadPromise = (async (): Promise<IEventStoryTranslation | null> => {
         try {
-            const response = await fetch(`https://translation.exmeaning.com/translation/eventStory/event_${eventId}.json`);
+            const response = await fetch(`${TRANSLATION_BASE_URL}/eventStory/event_${eventId}.json`);
             if (!response.ok) {
                 // Translation file doesn't exist for this event
                 translationCache.set(eventId, null);

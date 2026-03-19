@@ -10,7 +10,8 @@
 import { getTranslationCache, setTranslationCache, isIndexedDBAvailable } from "./masterdata-cache";
 import { MASTERDATA_VERSION_KEY } from "./fetch";
 
-// Translation map type: original Japanese text -> Chinese translation
+// Base URL for all translation data
+export const TRANSLATION_BASE_URL = "https://translation.exmeaning.com/translation";
 export interface TranslationMap {
     [key: string]: string;
 }
@@ -131,7 +132,7 @@ function isTranslationCacheStale(): boolean {
  * Translation data is served from the MoeSekai-Hub static deployment.
  */
 async function fetchAllTranslations(): Promise<TranslationData> {
-    const baseUrl = "https://translation.exmeaning.com/translation";
+    const baseUrl = TRANSLATION_BASE_URL;
     const version = getTranslationDataVersion();
     const query = version ? `?v=${encodeURIComponent(version)}` : "";
 

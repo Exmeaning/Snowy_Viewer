@@ -10,7 +10,6 @@ import {
     IUnitProfile,
     ICharaUnitInfo,
     ICardInfo,
-    CHARACTER_NAMES,
     UNIT_DATA,
     UNIT_FIELD_TO_ID,
     UNIT_ICON_FILES,
@@ -78,7 +77,7 @@ export default function CharacterDetailClient() {
                 setCharacter(chara);
 
                 // Set page title
-                document.title = `Moesekai - ${CHARACTER_NAMES[id] || "角色详情"}`;
+                document.title = `Moesekai - ${chara.firstName}${chara.givenName}`;
 
                 // Find related data
                 setProfile(profileData.find(p => p.characterId === id) || null);
@@ -105,7 +104,7 @@ export default function CharacterDetailClient() {
 
     // Compute display name before any conditional returns (React hooks rule)
     const characterDisplayName = character
-        ? (CHARACTER_NAMES[id] || `${character.firstName} ${character.givenName}`)
+        ? `${character.firstName}${character.givenName}`
         : null;
 
     // Set breadcrumb detail name — must be called before conditional returns
@@ -242,7 +241,7 @@ export default function CharacterDetailClient() {
                                     label="姓名"
                                     value={
                                         <div className="flex flex-col items-end">
-                                            <span className="text-lg font-bold">{CHARACTER_NAMES[id] || `${character.firstName} ${character.givenName}`}</span>
+                                            <span className="text-lg font-bold">{`${character.firstName}${character.givenName}`}</span>
                                             <span className="text-xs text-slate-500">{character.firstNameRuby} {character.givenNameRuby}</span>
                                         </div>
                                     }
@@ -261,7 +260,11 @@ export default function CharacterDetailClient() {
                                                     unoptimized
                                                 />
                                             </div>
-                                            <span>{unitProfile?.unitName || character.unit}</span>
+                                            <TranslatedText
+                                                original={unitProfile?.unitName || character.unit}
+                                                category="units"
+                                                field="unitName"
+                                            />
                                         </div>
                                     }
                                 />

@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
-import { IGameChara, IUnitProfile, UNIT_DATA, CHARACTER_NAMES, UNIT_FIELD_TO_ID, UNIT_ICON_FILES } from "@/types/types";
+import { IGameChara, IUnitProfile, UNIT_DATA, UNIT_FIELD_TO_ID, UNIT_ICON_FILES } from "@/types/types";
 import { getCharacterSelectUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
@@ -167,7 +167,7 @@ function CharacterListContent() {
                                                 <div className="relative w-full h-full">
                                                     <Image
                                                         src={getCharacterSelectUrl(chara.id, assetSource)}
-                                                        alt={CHARACTER_NAMES[chara.id] || `${chara.firstName} ${chara.givenName}`}
+                                                        alt={`${chara.firstName}${chara.givenName}`}
                                                         fill
                                                         className="object-contain"
                                                         unoptimized
@@ -176,7 +176,7 @@ function CharacterListContent() {
                                                 {/* Character name overlay on hover */}
                                                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <p className="text-white text-xs font-bold text-center truncate">
-                                                        {CHARACTER_NAMES[chara.id] || `${chara.firstName}${chara.givenName}`}
+                                                        {`${chara.firstName}${chara.givenName}`}
                                                     </p>
                                                 </div>
                                             </Link>
