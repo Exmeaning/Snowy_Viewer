@@ -109,7 +109,7 @@ export default function EventStorySummaryClient() {
                 const [eventsData, storiesData, adminRes, bilibiliData] = await Promise.all([
                     fetchMasterData<IEventInfo[]>("events.json"),
                     fetchMasterData<IEventStory[]>("eventStories.json"),
-                    fetch(`https://sekaistoryadmin.exmeaning.com/api/v1/events/${eventId}`),
+                    fetch(`https://sekaistoryadmin.exmeaning.com/api/v1/events/${eventId}`, { cache: "no-store" }),
                     fetchBilibiliEventsData<IBilibiliEventsResponse>()
                 ]);
 

@@ -49,10 +49,10 @@ export async function loadEventStoryTranslation(eventId: number): Promise<IEvent
     // Start loading
     const loadPromise = (async (): Promise<IEventStoryTranslation | null> => {
         try {
-            const response = await fetch(`${TRANSLATION_BASE_URL}/eventStory/event_${eventId}.json`);
+            const response = await fetch(`${TRANSLATION_BASE_URL}/eventStory/event_${eventId}.json`, { cache: "no-store" });
             if (!response.ok) {
                 // Translation file doesn't exist for this event
-                translationCache.set(eventId, null);
+                // Don't cache — file may be added later
                 return null;
             }
             const data = await response.json();
@@ -70,11 +70,14 @@ export async function loadEventStoryTranslation(eventId: number): Promise<IEvent
                 };
             }
 
-            translationCache.set(eventId, parsedData);
+            // Only cache if data has episodes (not empty/incomplete)
+            if (Object.keys(parsedData.episodes).length > 0) {
+                translationCache.set(eventId, parsedData);
+            }
             return parsedData;
         } catch (error) {
             console.debug(`Event story translation not found for event ${eventId}:`, error);
-            translationCache.set(eventId, null);
+            // Don't cache failures — allow retry on next visit
             return null;
         } finally {
             inflightRequests.delete(eventId);
