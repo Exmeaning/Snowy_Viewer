@@ -1,5 +1,7 @@
 // TypeScript types for event prediction data
 
+// ─── Internal display types (used by components) ─────────────────────────────
+
 export interface TimePoint {
     t: string;  // ISO timestamp
     y: number;  // score value
@@ -13,9 +15,9 @@ export interface RankChart {
     PredictPoints: TimePoint[];
 }
 
-// PGAI K线数据 (全服积极指数beta)
+// PGAI K线数据 (全服积极指数)
 export interface KLinePoint {
-    t: string;  // 时间 "2026-01-31 15:00"
+    t: string;  // ISO timestamp
     o: number;  // 开盘
     c: number;  // 收盘
     l: number;  // 最低
@@ -52,10 +54,70 @@ export interface EventListItem {
     has_data?: boolean;
 }
 
-export interface EventListResponse {
-    success: boolean;
-    timestamp: number;
-    data: EventListItem[];
+export type ServerType = 'cn' | 'jp';
+
+// ─── Raw API types from rk.exmeaning.com ─────────────────────────────────────
+
+export interface RkEventItem {
+    event_id: number;
+    name: string;
+    event_type: string;
+    start_at: number;
+    end_at: number;
+    status: 'active' | 'finished' | string;
+    has_finalized_data: boolean;
+    has_realtime_data: boolean;
 }
 
-export type ServerType = 'cn' | 'jp';
+export interface RkLatestItem {
+    rank: number;
+    score: number;
+    prediction: number | null;
+    user_name: string;
+    user_id: string;
+    collect_time: string;
+    is_final: boolean;
+}
+
+export interface RkLatestResponse {
+    event_id: number;
+    status: string;
+    updated_at: string;
+    items: RkLatestItem[];
+}
+
+export interface RkKlinePoint {
+    time_bucket: string;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+}
+
+export interface RkTierSpeed {
+    rank: number;
+    speed_ph: number;
+    index_value: number;
+}
+
+export interface RkKlineResponse {
+    event_id: number;
+    status: string;
+    klines: RkKlinePoint[];
+    tier_speeds?: RkTierSpeed[];
+}
+
+export interface RkTimelineEntry {
+    progress: number;
+    collect_time: string;
+    items: RkLatestItem[];
+}
+
+export interface RkTimelineResponse {
+    event_id: number;
+    status: string;
+    granularity: number;
+    final_only: boolean;
+    timeline?: RkTimelineEntry[];
+}
