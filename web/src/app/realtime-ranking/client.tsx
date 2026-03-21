@@ -91,9 +91,16 @@ function buildEntriesWithDiff(
         const rankDelta = previous ? previous.rank - entry.rank : 0;
         const scoreDelta = previous ? entry.score - previous.score : 0;
 
-        // 如果本轮有实际变化，更新 lastChanges
+        // 分别追踪 scoreDelta 和 rankDelta，避免用 0 覆盖之前有意义的值
+        // 例如：top5 超过 top4 时，被超过的玩家 rankDelta=-1 但 scoreDelta=0，
+        // 不应该用 scoreDelta=0 覆盖之前记录的分数变动
         if (scoreDelta !== 0 || rankDelta !== 0) {
-            lastChanges.set(entry.userId, { rankDelta, scoreDelta, changedAt: Date.now() });
+            const existing = lastChanges.get(entry.userId);
+            lastChanges.set(entry.userId, {
+                scoreDelta: scoreDelta !== 0 ? scoreDelta : (existing?.scoreDelta ?? 0),
+                rankDelta: rankDelta !== 0 ? rankDelta : (existing?.rankDelta ?? 0),
+                changedAt: Date.now(),
+            });
         }
 
         const saved = lastChanges.get(entry.userId);
