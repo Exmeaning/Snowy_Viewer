@@ -79,6 +79,12 @@ export interface RealtimeRankingEntryWithDiff extends RealtimeRankingEntry {
     rankDelta: number;
     scoreDelta: number;
     isNewEntry: boolean;
+    /** 上一次分数确实发生变化时的 scoreDelta（用于分数无变化时 fallback 显示） */
+    lastScoreDelta?: number;
+    /** 上一次排名确实发生变化时的 rankDelta */
+    lastRankDelta?: number;
+    /** 上一次分数/排名发生变化的时间戳（ms） */
+    lastChangedAt?: number;
 }
 
 export interface RealtimeRankingSnapshot {

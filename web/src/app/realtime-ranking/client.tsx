@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import MainLayout from "@/components/MainLayout";
 import RankingHeader from "@/components/realtime-ranking/RankingHeader";
 import RankingList from "@/components/realtime-ranking/RankingList";
@@ -20,6 +21,48 @@ import { EventListItem } from "@/types/prediction";
 
 const DEFAULT_REGION: RealtimeRankingRegion = "cn";
 const POLL_INTERVAL = 10_000;
+const QUICK_JUMP_RANKS = [1, 20, 50, 100] as const;
+const NAV_OFFSET = 90; // px — navbar height + breathing room
+
+function scrollToRank(rank: number) {
+    const el = document.querySelector<HTMLElement>(`[data-rank="${rank}"]`);
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
+    window.scrollTo({ top: y, behavior: "smooth" });
+
+    // 滚动到达后给目标行加高亮脉冲
+    const highlight = () => {
+        el.style.transition = "box-shadow 0.3s ease, background-color 0.3s ease";
+        el.style.boxShadow = "inset 0 0 0 2px var(--color-miku), 0 0 16px var(--color-miku)";
+        el.style.backgroundColor = "color-mix(in srgb, var(--color-miku) 8%, transparent)";
+        el.style.borderRadius = "8px";
+        setTimeout(() => {
+            el.style.transition = "box-shadow 0.8s ease, background-color 0.8s ease, border-radius 0.8s ease";
+            el.style.boxShadow = "";
+            el.style.backgroundColor = "";
+            setTimeout(() => {
+                el.style.borderRadius = "";
+                el.style.transition = "";
+            }, 800);
+        }, 600);
+    };
+
+    // 等滚动结束后触发高亮
+    let scrollTimer: ReturnType<typeof setTimeout>;
+    const onScroll = () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+            window.removeEventListener("scroll", onScroll);
+            highlight();
+        }, 80);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    // 兜底：如果已经在目标位置不会触发 scroll 事件
+    scrollTimer = setTimeout(() => {
+        window.removeEventListener("scroll", onScroll);
+        highlight();
+    }, 100);
+}
 const EMPTY_MASTER_DATA: RealtimeRankingMasterData = {
     cards: [],
     honors: [],
@@ -36,25 +79,42 @@ function decodeHtmlEntities(value: string): string {
     return textarea.value;
 }
 
-function buildEntriesWithDiff(snapshot: RealtimeRankingSnapshot, previousSnapshot: RealtimeRankingSnapshot | null): RealtimeRankingEntryWithDiff[] {
+function buildEntriesWithDiff(
+    snapshot: RealtimeRankingSnapshot,
+    previousSnapshot: RealtimeRankingSnapshot | null,
+    lastChanges: Map<string, { rankDelta: number; scoreDelta: number; changedAt: number }>,
+): RealtimeRankingEntryWithDiff[] {
     const previousMap = new Map(previousSnapshot?.entries.map((entry) => [entry.userId, entry]) ?? []);
 
     return snapshot.entries.map((entry) => {
         const previous = previousMap.get(entry.userId);
+        const rankDelta = previous ? previous.rank - entry.rank : 0;
+        const scoreDelta = previous ? entry.score - previous.score : 0;
+
+        // 如果本轮有实际变化，更新 lastChanges
+        if (scoreDelta !== 0 || rankDelta !== 0) {
+            lastChanges.set(entry.userId, { rankDelta, scoreDelta, changedAt: Date.now() });
+        }
+
+        const saved = lastChanges.get(entry.userId);
+
         return {
             ...entry,
             displayName: decodeHtmlEntities(entry.displayName),
             previousRank: previous?.rank,
             previousScore: previous?.score,
-            rankDelta: previous ? previous.rank - entry.rank : 0,
-            scoreDelta: previous ? entry.score - previous.score : 0,
+            rankDelta,
+            scoreDelta,
             isNewEntry: !previous,
+            lastScoreDelta: saved?.scoreDelta,
+            lastRankDelta: saved?.rankDelta,
+            lastChangedAt: saved?.changedAt,
         };
     });
 }
 
 function RealtimeRankingContent() {
-    const { assetSource } = useTheme();
+    const { assetSource, themeColor } = useTheme();
 
     const [region, setRegion] = useState<RealtimeRankingRegion>(DEFAULT_REGION);
     const [snapshot, setSnapshot] = useState<RealtimeRankingSnapshot | null>(null);
@@ -63,12 +123,15 @@ function RealtimeRankingContent() {
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [expandedIds, setExpandedIds] = useState<string[]>([]);
     const [countdown, setCountdown] = useState(Math.floor(POLL_INTERVAL / 1000));
     const [hasRecentUpdate, setHasRecentUpdate] = useState(false);
     const [currentEvent, setCurrentEvent] = useState<IEventInfo | null>(null);
+    const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
+    const [activeRank, setActiveRank] = useState<number | null>(null);
     const requestIdRef = useRef(0);
     const snapshotRef = useRef<RealtimeRankingSnapshot | null>(null);
+    const lastUpdateTimeRef = useRef<number>(Date.now());
+    const lastChangesRef = useRef(new Map<string, { rankDelta: number; scoreDelta: number; changedAt: number }>());
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -103,6 +166,8 @@ function RealtimeRankingContent() {
             snapshotRef.current = nextSnapshot;
             setSnapshot(nextSnapshot);
             setCountdown(Math.floor(POLL_INTERVAL / 1000));
+            lastUpdateTimeRef.current = Date.now();
+            setSecondsSinceUpdate(0);
             if (asRefresh) {
                 setHasRecentUpdate(true);
                 window.setTimeout(() => setHasRecentUpdate(false), 1200);
@@ -140,6 +205,7 @@ function RealtimeRankingContent() {
     useEffect(() => {
         const timer = window.setInterval(() => {
             setCountdown((prev) => (prev <= 1 ? Math.floor(POLL_INTERVAL / 1000) : prev - 1));
+            setSecondsSinceUpdate(Math.floor((Date.now() - lastUpdateTimeRef.current) / 1000));
         }, 1000);
 
         return () => window.clearInterval(timer);
@@ -166,8 +232,40 @@ function RealtimeRankingContent() {
                     return;
                 }
 
-                const matched = masterEvents.find((event) => event.id === activeEvent.id) || null;
-                setCurrentEvent(matched);
+                const matched = masterEvents.find((event) => event.id === activeEvent.id);
+
+                // Use timestamps from prediction API (reflects actual server schedule),
+                // with sec→ms normalization, falling back to master data
+                const s = activeEvent.start_at
+                    ? (activeEvent.start_at < 10000000000 ? activeEvent.start_at * 1000 : activeEvent.start_at)
+                    : matched?.startAt;
+                const e = activeEvent.end_at
+                    ? (activeEvent.end_at < 10000000000 ? activeEvent.end_at * 1000 : activeEvent.end_at)
+                    : matched?.aggregateAt;
+
+                const startAt = s || 0;
+                const endAt = e || 0;
+
+                const correctedEvent: IEventInfo = {
+                    id: activeEvent.id,
+                    name: matched?.name || activeEvent.name || "",
+                    eventType: matched?.eventType || "marathon",
+                    assetbundleName: matched?.assetbundleName || "",
+                    bgmAssetbundleName: matched?.bgmAssetbundleName || "",
+                    eventOnlyComponentDisplayStartAt: startAt,
+                    startAt,
+                    aggregateAt: endAt,
+                    rankingAnnounceAt: endAt,
+                    distributionStartAt: endAt,
+                    eventOnlyComponentDisplayEndAt: endAt,
+                    closedAt: endAt,
+                    distributionEndAt: endAt,
+                    virtualLiveId: matched?.virtualLiveId || 0,
+                    unit: matched?.unit || "",
+                    isCountLeaderCharacterPlay: matched?.isCountLeaderCharacterPlay || false,
+                };
+
+                setCurrentEvent(correctedEvent);
             } catch {
                 if (!cancelled) {
                     setCurrentEvent(null);
@@ -184,10 +282,10 @@ function RealtimeRankingContent() {
 
     useEffect(() => {
         updateUrlRegion(region);
-        setExpandedIds([]);
         setPreviousSnapshot(null);
         setSnapshot(null);
         snapshotRef.current = null;
+        lastChangesRef.current.clear();
         void loadSnapshot(region, false);
 
         const timer = window.setInterval(() => {
@@ -199,18 +297,12 @@ function RealtimeRankingContent() {
 
     const rankingEntries = useMemo(() => {
         if (!snapshot) return [];
-        return buildEntriesWithDiff(snapshot, previousSnapshot);
+        return buildEntriesWithDiff(snapshot, previousSnapshot, lastChangesRef.current);
     }, [snapshot, previousSnapshot]);
-
-    const handleToggleExpand = useCallback((userId: string) => {
-        setExpandedIds((prev) =>
-            prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
-        );
-    }, []);
 
     return (
         <MainLayout>
-            <div className="container mx-auto px-4 sm:px-6 py-8">
+            <div className="container mx-auto px-4 sm:px-6 md:pr-24 py-8">
                 <RankingHeader
                     region={region}
                     onRegionChange={setRegion}
@@ -218,14 +310,12 @@ function RealtimeRankingContent() {
                     eventId={snapshot?.eventId}
                     totalEntries={snapshot?.entries.length ?? 0}
                     isRefreshing={isRefreshing}
-                    countdown={countdown}
-                    hasRecentUpdate={hasRecentUpdate}
                 />
 
                 <CurrentEventCard
                     event={currentEvent}
                     assetSource={assetSource}
-                    regionLabel={region === "cn" ? "简中服" : "日服"}
+                    themeColor={themeColor}
                 />
 
                 {error && (
@@ -235,16 +325,6 @@ function RealtimeRankingContent() {
                     </div>
                 )}
 
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500 dark:text-slate-400">
-                    <p>全部榜线均会显示，详细信息默认折叠；前百玩家与扩展榜线都可按需展开查看。</p>
-                    <button
-                        onClick={() => void loadSnapshot(region, true)}
-                        className="rounded-full border border-slate-200 bg-white px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                    >
-                        立即刷新
-                    </button>
-                </div>
-
                 {isLoading && !snapshot ? (
                     <div className="glass-card rounded-2xl p-10 text-center text-slate-500">
                         正在加载实时排行榜...
@@ -252,13 +332,117 @@ function RealtimeRankingContent() {
                 ) : (
                     <RankingList
                         entries={rankingEntries}
-                        expandedIds={expandedIds}
-                        onToggleExpand={handleToggleExpand}
                         masterData={masterData}
                         assetSource={assetSource}
+                        secondsSinceUpdate={secondsSinceUpdate}
                     />
                 )}
             </div>
+
+            {/* Quick Jump Sidebar — desktop: right side, mobile: bottom bar */}
+            {snapshot && (
+                <>
+                    {/* Desktop floating sidebar */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ type: "spring", stiffness: 260, damping: 24, delay: 0.15 }}
+                        className="hidden md:flex fixed right-2 top-1/2 -translate-y-1/2 z-30 flex-col items-center gap-1.5 rounded-2xl border border-miku/20 bg-white/90 p-2 shadow-lg shadow-miku/10 backdrop-blur-md dark:border-miku/30 dark:bg-slate-900/90 dark:shadow-miku/5"
+                    >
+                        {QUICK_JUMP_RANKS.map((rank, i) => (
+                            <motion.button
+                                key={rank}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 22, delay: 0.25 + i * 0.06 }}
+                                whileHover={{ scale: 1.08 }}
+                                whileTap={{ scale: 0.92 }}
+                                onClick={() => {
+                                    setActiveRank(rank);
+                                    scrollToRank(rank);
+                                }}
+                                className={`w-14 rounded-xl px-1.5 py-1.5 text-[11px] font-black transition-all ${
+                                    activeRank === rank
+                                        ? "border border-miku bg-miku text-white shadow-md shadow-miku/30"
+                                        : "border border-miku/20 bg-miku/5 text-miku hover:border-miku/50 hover:bg-miku hover:text-white dark:border-miku/30 dark:bg-miku/10 dark:hover:bg-miku dark:hover:text-white"
+                                }`}
+                            >
+                                T{rank}
+                            </motion.button>
+                        ))}
+
+                        <div className="my-0.5 h-px w-8 bg-miku/20 dark:bg-miku/30" />
+
+                        <motion.div
+                            key={countdown}
+                            initial={{ scale: 1.15, opacity: 0.6 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                            className={`text-sm font-black tabular-nums transition-colors ${hasRecentUpdate ? "text-miku" : "text-miku/60 dark:text-miku/50"}`}
+                        >
+                            {isRefreshing ? (
+                                <motion.span
+                                    animate={{ opacity: [1, 0.4, 1] }}
+                                    transition={{ duration: 0.8, repeat: Infinity }}
+                                >
+                                    ...
+                                </motion.span>
+                            ) : (
+                                `${countdown}s`
+                            )}
+                        </motion.div>
+
+                        <motion.button
+                            whileHover={{ scale: 1.08 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => void loadSnapshot(region, true)}
+                            className="w-14 rounded-xl bg-miku px-1.5 py-1.5 text-[11px] font-black text-white shadow-md shadow-miku/25 transition-colors hover:bg-miku-dark dark:shadow-miku/15"
+                        >
+                            刷新
+                        </motion.button>
+                    </motion.div>
+
+                    {/* Mobile bottom bar */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ type: "spring", stiffness: 280, damping: 24, delay: 0.1 }}
+                        className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between gap-2 border-t border-miku/20 bg-white/90 px-4 py-2.5 backdrop-blur-md dark:border-miku/30 dark:bg-slate-900/90"
+                    >
+                        <div className="flex items-center gap-1.5">
+                            {QUICK_JUMP_RANKS.map((rank) => (
+                                <motion.button
+                                    key={rank}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => {
+                                        setActiveRank(rank);
+                                        scrollToRank(rank);
+                                    }}
+                                    className={`rounded-lg px-2.5 py-1.5 text-[11px] font-black transition-all ${
+                                        activeRank === rank
+                                            ? "border border-miku bg-miku text-white"
+                                            : "border border-miku/20 bg-miku/5 text-miku active:bg-miku active:text-white dark:border-miku/30 dark:bg-miku/10"
+                                    }`}
+                                >
+                                    T{rank}
+                                </motion.button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xs font-black tabular-nums ${hasRecentUpdate ? "text-miku" : "text-miku/60 dark:text-miku/50"}`}>
+                                {isRefreshing ? "..." : `${countdown}s`}
+                            </span>
+                            <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => void loadSnapshot(region, true)}
+                                className="rounded-lg bg-miku px-3 py-1.5 text-[11px] font-black text-white shadow-sm shadow-miku/25 transition-colors active:bg-miku-dark"
+                            >
+                                刷新
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                </>
+            )}
         </MainLayout>
     );
 }

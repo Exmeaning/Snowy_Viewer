@@ -8,7 +8,7 @@ interface ScoreChangeBadgeProps {
 
 export default function ScoreChangeBadge({ scoreDelta }: ScoreChangeBadgeProps) {
     if (scoreDelta === 0) {
-        return <span className="text-[11px] text-slate-400 dark:text-slate-500">无变化</span>;
+        return <span className="text-[9px] text-slate-400 dark:text-slate-500">—</span>;
     }
 
     const positive = scoreDelta > 0;
@@ -16,12 +16,17 @@ export default function ScoreChangeBadge({ scoreDelta }: ScoreChangeBadgeProps) 
     return (
         <motion.span
             key={scoreDelta}
-            initial={{ scale: 0.9, opacity: 0.4 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold ${positive ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}
+            initial={{ scale: 1.2, opacity: 0, y: positive ? 4 : -4 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 18 }}
+            className={`inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[9px] font-bold ${
+                positive
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                    : "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
+            }`}
         >
-            <span>{positive ? "+" : ""}{scoreDelta.toLocaleString()}</span>
+            <span className="text-[8px]">{positive ? "▲" : "▼"}</span>
+            {positive ? "+" : ""}{scoreDelta.toLocaleString()}
         </motion.span>
     );
 }

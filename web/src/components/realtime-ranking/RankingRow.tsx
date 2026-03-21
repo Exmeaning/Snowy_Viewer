@@ -1,9 +1,9 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import RankChangeBadge from "@/components/realtime-ranking/RankChangeBadge";
-import ScoreChangeBadge from "@/components/realtime-ranking/ScoreChangeBadge";
 import PlayerHonorPreview from "@/components/realtime-ranking/PlayerHonorPreview";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { getCharacterIconUrl } from "@/lib/assets";
@@ -13,143 +13,206 @@ import { AssetSourceType } from "@/contexts/ThemeContext";
 
 interface RankingRowProps {
     entry: RealtimeRankingEntryWithDiff;
-    expanded: boolean;
-    onToggle: () => void;
     masterData: RealtimeRankingMasterData;
     assetSource: AssetSourceType;
+    secondsSinceUpdate?: number;
 }
 
-export default function RankingRow({ entry, expanded, onToggle, masterData, assetSource }: RankingRowProps) {
+function formatElapsed(seconds: number): string {
+    if (seconds < 0) return "刚刚";
+    if (seconds < 60) return `${seconds}s 前`;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}m${s > 0 ? `${s}s` : ""} 前`;
+}
+
+export default function RankingRow({ entry, masterData, assetSource, secondsSinceUpdate }: RankingRowProps) {
     const leaderCard = entry.leaderCardId
         ? masterData.cards.find((card) => card.id === entry.leaderCardId)
         : undefined;
 
     const derivedLeaderCharacterId = entry.leaderCharacterId ?? leaderCard?.characterId;
-    const hasDetails = Boolean(entry.signature || entry.honors.length > 0 || leaderCard || derivedLeaderCharacterId);
     const isTopThree = entry.rank <= 3;
     const isExtendedTier = entry.rank > 100;
 
-    const topThreeCardDecorations: Record<number, string> = {
-        1: "ring-2 ring-amber-300/70 shadow-[0_0_24px_rgba(251,191,36,0.25)] dark:ring-amber-400/70 dark:shadow-[0_0_28px_rgba(251,191,36,0.18)]",
-        2: "ring-2 ring-slate-300/80 shadow-[0_0_20px_rgba(148,163,184,0.2)] dark:ring-slate-400/70 dark:shadow-[0_0_24px_rgba(148,163,184,0.16)]",
-        3: "ring-2 ring-orange-300/70 shadow-[0_0_20px_rgba(251,146,60,0.2)] dark:ring-orange-400/70 dark:shadow-[0_0_24px_rgba(251,146,60,0.16)]",
+    // 用于 lastChangedAt 的实时倒计时
+    const [now, setNow] = useState(Date.now());
+    useEffect(() => {
+        const timer = window.setInterval(() => setNow(Date.now()), 1000);
+        return () => window.clearInterval(timer);
+    }, []);
+
+    // 股票式闪烁：当分数发生实际变化时触发
+    const [flashType, setFlashType] = useState<"up" | "down" | null>(null);
+    const prevScoreRef = useRef(entry.score);
+
+    useEffect(() => {
+        if (entry.scoreDelta !== 0) {
+            setFlashType(entry.scoreDelta > 0 ? "up" : "down");
+            const timer = setTimeout(() => setFlashType(null), 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [entry.score, entry.scoreDelta]);
+
+    useEffect(() => {
+        prevScoreRef.current = entry.score;
+    }, [entry.score]);
+
+    // 决定显示哪个 scoreDelta 和对应的倒计时
+    const hasCurrentChange = entry.scoreDelta !== 0;
+    const displayScoreDelta = hasCurrentChange ? entry.scoreDelta : (entry.lastScoreDelta ?? 0);
+    const displayRankDelta = hasCurrentChange ? entry.rankDelta : (entry.lastRankDelta ?? entry.rankDelta);
+    const displayElapsed = hasCurrentChange
+        ? (secondsSinceUpdate ?? 0)
+        : (entry.lastChangedAt ? Math.floor((now - entry.lastChangedAt) / 1000) : undefined);
+
+    const topThreeCardDeco: Record<number, string> = {
+        1: "ring-1 ring-amber-300/70 dark:ring-amber-400/70",
+        2: "ring-1 ring-slate-300/80 dark:ring-slate-400/70",
+        3: "ring-1 ring-orange-300/70 dark:ring-orange-400/70",
     };
 
-    const topThreeBadgeStyles: Record<number, string> = {
-        1: "border border-amber-200 bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-400 text-amber-950 dark:border-amber-400/40 dark:bg-gradient-to-r dark:from-amber-500 dark:via-yellow-400 dark:to-amber-500 dark:text-amber-950",
-        2: "border border-slate-200 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-300 text-slate-700 dark:border-slate-300/50 dark:bg-gradient-to-r dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 dark:text-white dark:shadow-[0_0_16px_rgba(226,232,240,0.16)]",
-        3: "border border-orange-200 bg-gradient-to-r from-orange-200 via-amber-100 to-orange-300 text-orange-800 dark:border-orange-400/40 dark:bg-gradient-to-r dark:from-orange-500 dark:via-amber-500 dark:to-orange-600 dark:text-orange-950",
+    const topThreeBadge: Record<number, string> = {
+        1: "border-amber-200 bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-400 text-amber-950 dark:border-amber-400/40 dark:from-amber-500 dark:via-yellow-400 dark:to-amber-500 dark:text-amber-950",
+        2: "border-slate-200 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-300 text-slate-700 dark:border-slate-300/50 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 dark:text-white",
+        3: "border-orange-200 bg-gradient-to-r from-orange-200 via-amber-100 to-orange-300 text-orange-800 dark:border-orange-400/40 dark:from-orange-500 dark:via-amber-500 dark:to-orange-600 dark:text-orange-950",
     };
 
-    const rowToneClass = isExtendedTier
-        ? "border-slate-200/80 bg-slate-50/80 dark:border-slate-700/80 dark:bg-slate-900/70"
+    const rowBg = isExtendedTier
+        ? "bg-slate-50/60 dark:bg-slate-900/50"
         : entry.isNewEntry
-            ? "border-sky-200 bg-sky-50/60 dark:border-sky-500/40 dark:bg-sky-950/20"
+            ? "bg-sky-50/40 dark:bg-sky-950/15"
             : entry.rankDelta > 0
-                ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-500/40 dark:bg-emerald-950/20"
+                ? "bg-emerald-50/30 dark:bg-emerald-950/10"
                 : entry.rankDelta < 0
-                    ? "border-rose-200 bg-rose-50/50 dark:border-rose-500/40 dark:bg-rose-950/20"
-                    : "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-900/70";
+                    ? "bg-rose-50/30 dark:bg-rose-950/10"
+                    : "";
+
+    // 分数数字的颜色：有变动时显示涨跌色
+    const scoreColorClass = hasCurrentChange
+        ? entry.scoreDelta > 0
+            ? "text-emerald-600 dark:text-emerald-400"
+            : "text-rose-600 dark:text-rose-400"
+        : "text-primary-text";
 
     return (
         <motion.div
             layout
-            initial={entry.isNewEntry ? { opacity: 0, y: 12 } : false}
+            data-rank={entry.rank}
+            initial={entry.isNewEntry ? { opacity: 0, y: 6 } : false}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 24 }}
-            className={`rounded-2xl border ${rowToneClass} backdrop-blur-sm shadow-sm`}
+            transition={{ type: "spring", stiffness: 320, damping: 28 }}
+            className={`relative overflow-hidden ${rowBg}`}
         >
-            <button
-                onClick={onToggle}
-                className="flex w-full items-start gap-3 p-4 text-left"
-            >
-                <div className="flex min-w-0 flex-1 items-center gap-4">
-                    <div className="w-14 shrink-0 text-center sm:w-16">
-                        <div className={`mx-auto inline-flex min-w-[3.25rem] items-center justify-center rounded-2xl px-3 py-2 text-lg font-black shadow-sm ${isTopThree ? topThreeBadgeStyles[entry.rank] : "border border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"}`}>
-                            #{entry.rank}
-                        </div>
-                        {isExtendedTier && (
-                            <div className="mt-2 text-[10px] font-medium text-slate-400 dark:text-slate-500">扩展榜线</div>
-                        )}
-                    </div>
-
-                    <div className="relative w-20 shrink-0">
-                        {leaderCard ? (
-                            <div className={`overflow-hidden shadow-sm ${isTopThree ? topThreeCardDecorations[entry.rank] : ""}`}>
-                                <SekaiCardThumbnail card={leaderCard} width={80} className="w-full" />
-                            </div>
-                        ) : derivedLeaderCharacterId ? (
-                            <div className={`relative h-20 w-20 overflow-hidden border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 ${isTopThree ? topThreeCardDecorations[entry.rank] : ""}`}>
-                                <Image src={getCharacterIconUrl(derivedLeaderCharacterId)} alt={CHARACTER_NAMES[derivedLeaderCharacterId] || "角色头像"} fill className="object-cover" unoptimized />
-                            </div>
-                        ) : (
-                            <div className="flex h-20 w-20 flex-col items-center justify-center bg-slate-100 px-3 py-2 dark:bg-slate-800/80">
-                                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">Rank</span>
-                                <span className="text-xl font-black text-primary-text">#{entry.rank}</span>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                            <div className="min-w-0 flex-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <h3 className="truncate text-base font-bold text-primary-text sm:text-lg">{entry.displayName}</h3>
-                                </div>
-                                <div className="mt-2 max-w-full overflow-hidden">
-                                    <PlayerHonorPreview honors={entry.honors} masterData={masterData} assetSource={assetSource} />
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col items-start gap-2 lg:items-end">
-                                <div className="text-left lg:text-right">
-                                    <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">Score</div>
-                                    <div className="text-2xl font-black leading-none text-primary-text sm:text-3xl lg:text-4xl">
-                                        {entry.score.toLocaleString()}<span className="ml-1 text-sm font-bold text-slate-400 dark:text-slate-500 sm:text-base">PT</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-                                    <RankChangeBadge rankDelta={entry.rankDelta} isNewEntry={entry.isNewEntry} />
-                                    <ScoreChangeBadge scoreDelta={entry.scoreDelta} />
-                                    {hasDetails && (
-                                        <span className="rounded-full bg-miku/10 px-2 py-1 text-[11px] font-bold text-miku dark:bg-miku/20 dark:text-cyan-300">
-                                            {expanded ? "收起详情" : "展开详情"}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </button>
-
-            <AnimatePresence initial={false}>
-                {expanded && hasDetails && (
+            {/* 股票式背景闪烁层 */}
+            <AnimatePresence>
+                {flashType && (
                     <motion.div
-                        key="detail"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="overflow-hidden border-t border-slate-100 dark:border-slate-800"
-                    >
-                        <div className="space-y-4 p-4">
-                            <div>
-                                <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">个性签名</div>
-                                <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
-                                    {entry.signature || "该用户未公开个性签名"}
-                                </div>
-                            </div>
-
-                            <div>
-                                <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">徽章 / 称号</div>
-                                <PlayerHonorPreview honors={entry.honors} masterData={masterData} assetSource={assetSource} />
-                            </div>
-                        </div>
-                    </motion.div>
+                        key={`flash-${entry.score}`}
+                        initial={{ opacity: 0.45 }}
+                        animate={{ opacity: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        className={`absolute inset-0 pointer-events-none z-0 ${
+                            flashType === "up"
+                                ? "bg-emerald-400/20 dark:bg-emerald-500/15"
+                                : "bg-rose-400/20 dark:bg-rose-500/15"
+                        }`}
+                    />
                 )}
             </AnimatePresence>
+
+            <div className="relative z-10 flex w-full items-center px-3 py-2.5 sm:py-3">
+                {/* Rank # */}
+                <div className="w-10 shrink-0 text-center sm:w-12">
+                    <span className={`inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 text-[11px] font-black leading-none ${isTopThree ? topThreeBadge[entry.rank] : "border-slate-200 bg-white text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"}`}>
+                        #{entry.rank}
+                    </span>
+                    {isExtendedTier && (
+                        <div className="mt-0.5 text-[8px] font-medium text-slate-400 dark:text-slate-500">扩展</div>
+                    )}
+                </div>
+
+                {/* Avatar */}
+                <div className="relative ml-2 w-16 shrink-0 sm:w-[72px]">
+                    {leaderCard ? (
+                        <div className={`overflow-hidden ${isTopThree ? topThreeCardDeco[entry.rank] : ""}`}>
+                            <SekaiCardThumbnail card={leaderCard} width={72} className="w-full" />
+                        </div>
+                    ) : derivedLeaderCharacterId ? (
+                        <div className={`relative h-16 w-16 overflow-hidden border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 sm:h-[72px] sm:w-[72px] ${isTopThree ? topThreeCardDeco[entry.rank] : ""}`}>
+                            <Image src={getCharacterIconUrl(derivedLeaderCharacterId)} alt={CHARACTER_NAMES[derivedLeaderCharacterId] || "角色头像"} fill className="object-cover" unoptimized />
+                        </div>
+                    ) : (
+                        <div className="flex h-16 w-16 items-center justify-center bg-slate-100 dark:bg-slate-800/80 sm:h-[72px] sm:w-[72px]">
+                            <span className="text-xs font-black text-slate-400">#{entry.rank}</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Player info: name + signature + honors */}
+                <div className="ml-3 min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-bold leading-tight text-primary-text">{entry.displayName}</h3>
+                    {entry.signature && (
+                        <p className="mt-0.5 truncate text-[11px] leading-tight text-slate-400 dark:text-slate-500">{entry.signature}</p>
+                    )}
+                    <div className="mt-1 max-w-full overflow-hidden">
+                        <PlayerHonorPreview honors={entry.honors} masterData={masterData} assetSource={assetSource} compact />
+                    </div>
+                </div>
+
+                {/* Score column — 股票式反馈 */}
+                <div className="w-32 shrink-0 text-right sm:w-40">
+                    {/* 分数主体：变动时变色 + 弹跳动画 */}
+                    <motion.div
+                        key={hasCurrentChange ? entry.score : "stable"}
+                        initial={hasCurrentChange ? { scale: 1.12 } : false}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                        className={`text-base font-black leading-tight sm:text-lg ${scoreColorClass}`}
+                    >
+                        {entry.score.toLocaleString()}
+                        <span className="ml-0.5 text-[10px] font-bold text-slate-400 dark:text-slate-500">P</span>
+                    </motion.div>
+
+                    {/* 变动详情行 */}
+                    <div className="mt-0.5 flex items-center justify-end gap-1">
+                        <RankChangeBadge rankDelta={displayRankDelta} isNewEntry={entry.isNewEntry} />
+                        <AnimatePresence mode="wait">
+                            {displayScoreDelta !== 0 ? (
+                                <motion.span
+                                    key={`delta-${displayScoreDelta}-${entry.score}`}
+                                    initial={{ opacity: 0, y: displayScoreDelta > 0 ? 6 : -6, scale: 0.85 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    transition={{ type: "spring", stiffness: 350, damping: 20 }}
+                                    className={`inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[9px] font-bold ${
+                                        displayScoreDelta > 0
+                                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                                            : "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
+                                    }`}
+                                >
+                                    {/* 涨跌箭头 */}
+                                    <span className="text-[8px]">{displayScoreDelta > 0 ? "▲" : "▼"}</span>
+                                    <span>{displayScoreDelta > 0 ? "+" : ""}{displayScoreDelta.toLocaleString()}</span>
+                                    {typeof displayElapsed === "number" && (
+                                        <span className="ml-0.5 font-medium opacity-60">{formatElapsed(displayElapsed)}</span>
+                                    )}
+                                </motion.span>
+                            ) : (
+                                <motion.span
+                                    key="no-delta"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="text-[9px] text-slate-400 dark:text-slate-500"
+                                >
+                                    —
+                                </motion.span>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
+            </div>
         </motion.div>
     );
 }
