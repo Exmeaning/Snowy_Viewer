@@ -192,6 +192,15 @@ const navigationGroups: NavGroup[] = [
                     </svg>
                 ),
             },
+            {
+                name: "实时排行榜",
+                href: "/realtime-ranking",
+                icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 13h4v8H3zm7-10h4v18h-4zm7 6h4v12h-4z" />
+                    </svg>
+                ),
+            },
         ],
     },
     {

@@ -37,6 +37,7 @@ export const navigationGroups: NavGroupData[] = [
             { name: "演唱会", href: "/live" },
             { name: "活动剧情", href: "/eventstory" },
             { name: "活动预测", href: "/prediction" },
+            { name: "实时排行榜", href: "/realtime-ranking" },
         ],
     },
     {
@@ -140,6 +141,7 @@ export const searchableNavItems: SearchableNavItem[] = [
     { name: "演唱会", href: "/live", group: "活动", keywords: ["live", "concert", "virtual live"] },
     { name: "活动剧情", href: "/eventstory", group: "活动", keywords: ["event story", "story", "scenario"] },
     { name: "活动预测", href: "/prediction", group: "活动", keywords: ["prediction", "ranking", "forecast"] },
+    { name: "实时排行榜", href: "/realtime-ranking", group: "活动", keywords: ["realtime ranking", "live ranking", "排行", "排行榜", "实时榜单"] },
 
     // 工具
     { name: "组卡推荐", href: "/deck-recommend", group: "工具", keywords: ["deck recommend", "deck", "team"] },
