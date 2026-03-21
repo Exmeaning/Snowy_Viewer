@@ -163,7 +163,7 @@ export default function StoryReaderClient() {
                                                     ? 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700/50'
                                                     : 'bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700'
                                                 }`}>
-                                                {translationSource === 'official_cn' ? '官方CN' : translationSource === 'human' ? 'AI翻译+人工精校' : 'AI翻译'}
+                                                {translationSource === 'official_cn' ? '官方CN' : translationSource === 'human' ? (eventId === 198 ? 'AI翻译+人工精校' : '人工翻译') : 'AI翻译'}
                                             </span>
                                         )}
                                     </div>
@@ -234,7 +234,7 @@ export default function StoryReaderClient() {
                                 <p>— 第 {episodeNo} 话 结束 —</p>
                                 {useLLMTranslation && (translationSource === 'llm' || translationSource === 'human') && (
                                     <p className="text-xs mt-2 italic">
-                                        翻译文本来源于moesekai的AI翻译{translationSource === 'human' ? '（经人工精校）' : ''}，转载请表明出处。
+                                        翻译文本来源于moesekai的{translationSource === 'human' ? (eventId === 198 ? 'AI翻译（经人工精校）' : '人工翻译') : 'AI翻译'}，转载请表明出处。
                                     </p>
                                 )}
                             </div>
