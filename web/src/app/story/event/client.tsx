@@ -1,6 +1,8 @@
 "use client";
 import { Suspense } from "react";
+import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
+import { StoryPageHeader } from "@/components/story/StoryPageHeader";
 import EventGrid from "@/components/events/EventGrid";
 import EventFilters from "@/components/events/EventFilters";
 import { useEventListData } from "@/hooks/useEventListData";
@@ -54,15 +56,7 @@ function StoryEventListContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">剧情阅读</span>
-                </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    活动 <span className="text-miku">剧情</span>
-                </h1>
-                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">选择活动并阅读剧情</p>
-            </div>
+            <StoryPageHeader storyKey="event" />
 
             {data.error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">

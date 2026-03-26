@@ -1,56 +1,19 @@
 /**
  * Story Asset Loader
  * Fetches story scenario JSON from the MoeSekai-Hub mirror.
- * Priority: haruki → sekai.best (fallback)
  *
- * Mirror base: https://moe.exmeaning.com/story_assets/
- * Files are stored as {original_url_without_https}.br
- * File content is brotli-compressed JSON (NOT Content-Encoding, raw binary).
- * We decompress with brotli-dec-wasm.
+ * Single source, language-based:
+ *   https://moe.exmeaning.com/story_assets/pjsk-jp-assets/  (JP)
+ *   https://moe.exmeaning.com/story_assets/pjsk-cn-assets/  (CN)
+ *
+ * Path suffix matches haruki's post-startapp/ondemand structure.
+ * Files are raw brotli-compressed JSON, decompressed via brotli-dec-wasm.
  */
 
 import { IScenarioData } from "@/types/story";
 import brotliPromise from "brotli-dec-wasm";
 
 const MIRROR_BASE = "https://moe.exmeaning.com/story_assets/";
-
-// ── Path builders (matching urls_pjsk.json exactly) ──────────────────────────
-
-function harukiPath(type: StoryAssetType, lang: "jp" | "cn", params: AssetParams): string {
-    const l = lang === "cn" ? "cn-" : "jp-";
-    switch (type) {
-        case "unit":
-            return `sekai-assets-bdf29c81.seiunx.net/${l}assets/startapp/scenario/unitstory/${params.assetbundleName}/${params.scenarioId}.asset`;
-        case "event":
-            return `sekai-assets-bdf29c81.seiunx.net/${l}assets/ondemand/event_story/${params.assetbundleName}/scenario/${params.scenarioId}.asset`;
-        case "card":
-            return `sekai-assets-bdf29c81.seiunx.net/${l}assets/startapp/character/member/${params.assetbundleName}/${params.scenarioId}.asset`;
-        case "talk":
-            return `sekai-assets-bdf29c81.seiunx.net/${l}assets/startapp/scenario/actionset/group${params.group}/${params.scenarioId}.asset`;
-        case "self":
-            return `sekai-assets-bdf29c81.seiunx.net/${l}assets/startapp/scenario/profile/${params.scenarioId}.asset`;
-        case "special":
-            return `sekai-assets-bdf29c81.seiunx.net/${l}assets/startapp/scenario/special/${params.assetbundleName}/${params.scenarioId}.asset`;
-    }
-}
-
-function sekaiPath(type: StoryAssetType, lang: "jp" | "cn", params: AssetParams): string {
-    const l = lang === "cn" ? "cn-" : "jp-";
-    switch (type) {
-        case "unit":
-            return `storage.sekai.best/sekai-${l}assets/scenario/unitstory/${params.assetbundleName}/${params.scenarioId}.asset`;
-        case "event":
-            return `storage.sekai.best/sekai-${l}assets/event_story/${params.assetbundleName}/scenario/${params.scenarioId}.asset`;
-        case "card":
-            return `storage.sekai.best/sekai-${l}assets/character/member/${params.assetbundleName}/${params.scenarioId}.asset`;
-        case "talk":
-            return `storage.sekai.best/sekai-${l}assets/scenario/actionset/group${params.group}/${params.scenarioId}.asset`;
-        case "self":
-            return `storage.sekai.best/sekai-${l}assets/scenario/profile/${params.scenarioId}.asset`;
-        case "special":
-            return `storage.sekai.best/sekai-${l}assets/scenario/special/${params.assetbundleName}/${params.scenarioId}.asset`;
-    }
-}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -71,6 +34,26 @@ export class StoryAssetMissingError extends Error {
     }
 }
 
+// ── Path builder ──────────────────────────────────────────────────────────────
+
+function buildPath(type: StoryAssetType, lang: "jp" | "cn", params: AssetParams): string {
+    const base = `${MIRROR_BASE}pjsk-${lang}-assets/`;
+    switch (type) {
+        case "unit":
+            return `${base}scenario/unitstory/${params.assetbundleName}/${params.scenarioId}.asset.br`;
+        case "event":
+            return `${base}event_story/${params.assetbundleName}/scenario/${params.scenarioId}.asset.br`;
+        case "card":
+            return `${base}character/member/${params.assetbundleName}/${params.scenarioId}.asset.br`;
+        case "talk":
+            return `${base}scenario/actionset/group${params.group}/${params.scenarioId}.asset.br`;
+        case "self":
+            return `${base}scenario/profile/${params.scenarioId}.asset.br`;
+        case "special":
+            return `${base}scenario/special/${params.assetbundleName}/${params.scenarioId}.asset.br`;
+    }
+}
+
 // ── Brotli decompression ──────────────────────────────────────────────────────
 
 async function decompressBrotli(buffer: ArrayBuffer): Promise<IScenarioData> {
@@ -81,50 +64,24 @@ async function decompressBrotli(buffer: ArrayBuffer): Promise<IScenarioData> {
     return JSON.parse(text) as IScenarioData;
 }
 
-// ── Fetch one URL, return null if 404/error ───────────────────────────────────
+// ── Fetch ─────────────────────────────────────────────────────────────────────
 
-async function tryFetch(url: string): Promise<ArrayBuffer | null> {
-    try {
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        return await res.arrayBuffer();
-    } catch {
-        return null;
-    }
-}
-
-// ── Main fetch function ───────────────────────────────────────────────────────
-
-/**
- * Fetch a story scenario asset from the mirror.
- * Tries haruki first, falls back to sekai.best.
- * Decompresses brotli in-browser via brotli-dec-wasm.
- *
- * Throws StoryAssetMissingError (with both paths) if both sources fail.
- */
 export async function fetchStoryAssetFromMirror(
     type: StoryAssetType,
     lang: "jp" | "cn",
     params: AssetParams
 ): Promise<IScenarioData> {
-    const primaryPath = harukiPath(type, lang, params);
-    const fallbackPath = sekaiPath(type, lang, params);
-
-    const primaryUrl = `${MIRROR_BASE}${primaryPath}.br`;
-    const fallbackUrl = `${MIRROR_BASE}${fallbackPath}.br`;
-
-    // Try haruki mirror first
-    const primaryBuf = await tryFetch(primaryUrl);
-    if (primaryBuf !== null) {
-        return decompressBrotli(primaryBuf);
+    const url = buildPath(type, lang, params);
+    try {
+        const res = await fetch(url);
+        if (res.ok) {
+            return decompressBrotli(await res.arrayBuffer());
+        }
+    } catch {
+        // network error
     }
 
-    // Fallback to sekai.best mirror
-    const fallbackBuf = await tryFetch(fallbackUrl);
-    if (fallbackBuf !== null) {
-        return decompressBrotli(fallbackBuf);
-    }
-
-    // Both failed — throw with the missing paths for display
-    throw new StoryAssetMissingError([primaryPath + ".br", fallbackPath + ".br"]);
+    // Strip MIRROR_BASE prefix for display
+    const displayPath = url.replace(MIRROR_BASE, "");
+    throw new StoryAssetMissingError([displayPath]);
 }

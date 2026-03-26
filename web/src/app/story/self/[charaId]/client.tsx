@@ -107,8 +107,8 @@ export default function StorySelfReaderClient() {
                 {!isLoading && (
                     <div className="max-w-4xl mx-auto space-y-10">
                         {[
-                            { label: "一年级", data: year1, missing: missing1, err: error1 },
-                            { label: "二年级", data: year2, missing: missing2, err: error2 },
+                            { label: "第二学年", data: year2, missing: missing2, err: error2 },
+                            { label: "第一学年", data: year1, missing: missing1, err: error1 },
                         ].map(({ label, data, missing, err }) => (
                             <div key={label}>
                                 <div className="flex items-center gap-3 mb-4">

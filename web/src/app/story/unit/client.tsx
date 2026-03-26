@@ -5,6 +5,8 @@ import MainLayout from "@/components/MainLayout";
 import { fetchMasterData } from "@/lib/fetch";
 import { useTheme } from "@/contexts/ThemeContext";
 import { IUnitProfile } from "@/types/types";
+import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
+import { StoryPageHeader } from "@/components/story/StoryPageHeader";
 
 interface IUnitStoryChapterEpisode {
     episodeNo: number;
@@ -33,6 +35,7 @@ export default function StoryUnitListClient() {
     const [units, setUnits] = useState<{ profile: IUnitProfile; story: IUnitStory }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    useSimpleScrollRestore("story_unit", !isLoading);
 
     useEffect(() => {
         async function load() {
@@ -66,14 +69,7 @@ export default function StoryUnitListClient() {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                <div className="flex items-center gap-3 mb-8">
-                    <Link href="/story" className="text-slate-400 hover:text-miku transition-colors">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </Link>
-                    <h1 className="text-2xl font-black text-primary-text">主线剧情</h1>
-                </div>
+                <StoryPageHeader storyKey="unit" />
 
                 {isLoading && (
                     <div className="flex justify-center py-16">

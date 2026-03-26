@@ -50,7 +50,7 @@ export default function StorySpecialReaderClient() {
                                 assetbundleName: ep.assetbundleName,
                                 scenarioId: ep.scenarioId,
                             });
-                            return { data: await processScenarioForDisplay(raw), missing: null, err: null };
+                            return { data: await processScenarioForDisplay(raw, "special"), missing: null, err: null };
                         } catch (err) {
                             if (err instanceof StoryAssetMissingError)
                                 return { data: null, missing: err.missingPaths, err: null };

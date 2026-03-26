@@ -14,7 +14,7 @@ import {
     SnippetProgressBehavior,
 } from "@/types/story";
 import { fetchMasterData } from "./fetch";
-import { getBackgroundImageUrl, getStoryVoiceUrl, getStoryBgmUrl, getStorySoundEffectUrl } from "./assets";
+import { getBackgroundImageUrl, getStoryVoiceUrl, getCardStoryVoiceUrl, getAreaTalkVoiceUrl, getSpecialStoryVoiceUrl, getStoryBgmUrl, getStorySoundEffectUrl } from "./assets";
 import { CHAR_NAMES } from "@/types/types";
 
 // Asset base URL for direct scenario fetching
@@ -67,9 +67,11 @@ function extractScenarioIdFromData(data: IScenarioData): string {
 
 /**
  * Process scenario data into a format suitable for display
+ * @param storyType - "card" | "talk" | "special" | "scenario" (default). Determines voice URL path.
  */
 export async function processScenarioForDisplay(
-    data: IScenarioData
+    data: IScenarioData,
+    storyType: "card" | "talk" | "special" | "scenario" = "scenario"
 ): Promise<IProcessedScenarioData> {
     // Fetch required master data
     const [character2ds, mobCharacters] = await Promise.all([
@@ -135,7 +137,15 @@ export async function processScenarioForDisplay(
                 let voiceUrl = "";
                 if (talkData.Voices?.length > 0) {
                     const voice = talkData.Voices[0];
-                    voiceUrl = getStoryVoiceUrl(scenarioId, voice.VoiceId);
+                    if (storyType === "card") {
+                        voiceUrl = getCardStoryVoiceUrl(scenarioId, voice.VoiceId);
+                    } else if (storyType === "talk") {
+                        voiceUrl = getAreaTalkVoiceUrl(scenarioId, voice.VoiceId);
+                    } else if (storyType === "special") {
+                        voiceUrl = getSpecialStoryVoiceUrl(scenarioId, voice.VoiceId);
+                    } else {
+                        voiceUrl = getStoryVoiceUrl(scenarioId, voice.VoiceId);
+                    }
                 }
 
                 actions.push({

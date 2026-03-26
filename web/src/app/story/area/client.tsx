@@ -6,6 +6,8 @@ import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import { IEventInfo } from "@/types/events";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
+import { StoryPageHeader } from "@/components/story/StoryPageHeader";
 
 // Minimal actionSet type
 interface IActionSet {
@@ -16,6 +18,8 @@ interface IActionSet {
     actionSetType?: string;
     isNextGrade?: boolean;
 }
+
+interface IArea { id: number; name: string; subName?: string; }
 
 // Area category type (mirrors Python __get_category)
 type AreaCategory = number | "grade1" | "grade2" | "theater" | string; // string covers limited_N, aprilfoolYYYY
@@ -55,16 +59,27 @@ function categoryToUrlParam(cat: AreaCategory): string {
     return cat;
 }
 
-function categoryLabel(cat: AreaCategory, eventMap: Map<number, string>, translations: TranslationData | null): string {
+function categoryLabel(cat: AreaCategory, eventMap: Map<number, string>, translations: TranslationData | null, areaMap?: Map<number, IArea>): string {
     if (typeof cat === "number") {
         const name = eventMap.get(cat);
-        const cnName = name ? (translations?.events?.name?.[name] ?? name) : null;
-        return cnName ? `活动 ${cat}：${cnName}` : `活动 ${cat}`;
+        if (!name) return `活动 ${cat}`;
+        const cnName = translations?.events?.name?.[name];
+        return cnName && cnName !== name
+            ? `活动 ${cat}：${name}（${cnName}）`
+            : `活动 ${cat}：${name}`;
     }
-    if (cat === "grade1") return "日常对话（一年级）";
-    if (cat === "grade2") return "日常对话（二年级）";
-    if (cat === "theater") return "剧场对话";
-    if (cat.startsWith("limited_")) return `限定区域 ${cat.replace("limited_", "")}`;
+    if (cat === "grade1") return "日常对话（第一学年）";
+    if (cat === "grade2") return "日常对话（第二学年）";
+    if (cat === "theater") return "剧场版";
+    if (cat.startsWith("limited_")) {
+        const areaId = parseInt(cat.replace("limited_", ""), 10);
+        const area = areaMap?.get(areaId);
+        if (area) {
+            const name = area.subName ? `${area.name} - ${area.subName}` : area.name;
+            return `限定：${name}`;
+        }
+        return `限定区域 ${areaId}`;
+    }
     if (cat.startsWith("aprilfool")) return `愚人节 ${cat.replace("aprilfool", "")}`;
     return cat;
 }
@@ -73,21 +88,25 @@ export default function StoryAreaListClient() {
     const { serverSource } = useTheme();
     const [actionSets, setActionSets] = useState<IActionSet[]>([]);
     const [events, setEvents] = useState<IEventInfo[]>([]);
+    const [areas, setAreas] = useState<IArea[]>([]);
     const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    useSimpleScrollRestore("story_area", !isLoading);
 
     useEffect(() => {
         async function load() {
             try {
-                const [actionSetsData, eventsData, translationsData] = await Promise.all([
+                const [actionSetsData, eventsData, areasData, translationsData] = await Promise.all([
                     fetchMasterDataForServer<IActionSet[]>("jp", "actionSets.json"),
                     fetchMasterData<IEventInfo[]>("events.json"),
+                    fetchMasterData<IArea[]>("areas.json"),
                     loadTranslations(),
                 ]);
                 setActionSets(actionSetsData);
                 setEvents(eventsData);
+                setAreas(areasData);
                 setTranslations(translationsData);
             } catch (err) {
                 setError(err instanceof Error ? err.message : "加载失败");
@@ -99,6 +118,7 @@ export default function StoryAreaListClient() {
     }, [serverSource]);
 
     const eventMap = useMemo(() => new Map(events.map(e => [e.id, e.name])), [events]);
+    const areaMap = useMemo(() => new Map(areas.map(a => [a.id, a])), [areas]);
 
     // Collect all unique categories
     const categories = useMemo(() => {
@@ -145,18 +165,11 @@ export default function StoryAreaListClient() {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                <div className="flex items-center gap-3 mb-6">
-                    <Link href="/story" className="text-slate-400 hover:text-miku transition-colors">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </Link>
-                    <h1 className="text-2xl font-black text-primary-text">区域对话</h1>
-                </div>
+                <StoryPageHeader storyKey="area" />
 
                 <input
                     type="text"
-                    placeholder="搜索活动名称..."
+                    placeholder="搜索分类名称..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     className="w-full mb-6 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-miku/30"
@@ -170,36 +183,33 @@ export default function StoryAreaListClient() {
                 {error && <div className="text-red-500 text-center py-8">{error}</div>}
 
                 {!isLoading && !error && (
-                    <div className="space-y-8">
-                        {/* Grade & Theater */}
+                    <div className="space-y-4">
+                        {/* Grade & Theater — 默认展开 */}
                         {(grouped.gradeCats.length > 0 || grouped.theaterCats.length > 0) && (
-                            <Section title="日常 / 剧场">
+                            <Section title="日常 / 剧场" storageKey="grade_theater">
                                 {[...grouped.gradeCats, ...grouped.theaterCats].map(cat => (
-                                    <CategoryLink key={String(cat)} cat={cat} eventMap={eventMap} translations={translations} />
+                                    <CategoryLink key={String(cat)} cat={cat} eventMap={eventMap} translations={translations} areaMap={areaMap} />
                                 ))}
                             </Section>
                         )}
-                        {/* Limited */}
-                        {grouped.limitedCats.length > 0 && (
-                            <Section title="限定区域">
-                                {grouped.limitedCats.map(cat => (
-                                    <CategoryLink key={String(cat)} cat={cat} eventMap={eventMap} translations={translations} />
-                                ))}
-                            </Section>
-                        )}
-                        {/* Aprilfool */}
-                        {grouped.aprilfoolCats.length > 0 && (
-                            <Section title="愚人节">
-                                {grouped.aprilfoolCats.map(cat => (
-                                    <CategoryLink key={String(cat)} cat={cat} eventMap={eventMap} translations={translations} />
-                                ))}
-                            </Section>
-                        )}
-                        {/* Events */}
                         {grouped.eventCats.length > 0 && (
-                            <Section title={`活动对话（${grouped.eventCats.length} 个）`}>
+                            <Section title={`活动对话（${grouped.eventCats.length} 个）`} storageKey="events">
                                 {grouped.eventCats.map(cat => (
-                                    <CategoryLink key={String(cat)} cat={cat} eventMap={eventMap} translations={translations} />
+                                    <CategoryLink key={String(cat)} cat={cat} eventMap={eventMap} translations={translations} areaMap={areaMap} />
+                                ))}
+                            </Section>
+                        )}
+                        {grouped.limitedCats.length > 0 && (
+                            <Section title="限定区域" storageKey="limited">
+                                {grouped.limitedCats.map(cat => (
+                                    <CategoryLink key={String(cat)} cat={cat} eventMap={eventMap} translations={translations} areaMap={areaMap} />
+                                ))}
+                            </Section>
+                        )}
+                        {grouped.aprilfoolCats.length > 0 && (
+                            <Section title="愚人节" storageKey="aprilfool">
+                                {grouped.aprilfoolCats.map(cat => (
+                                    <CategoryLink key={String(cat)} cat={cat} eventMap={eventMap} translations={translations} areaMap={areaMap} />
                                 ))}
                             </Section>
                         )}
@@ -210,17 +220,38 @@ export default function StoryAreaListClient() {
     );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, storageKey, children }: { title: string; storageKey: string; children: React.ReactNode }) {
+    const [open, setOpen] = useState(() => {
+        try {
+            const saved = sessionStorage.getItem(`area_section_${storageKey}`);
+            return saved === null ? true : saved === "1";
+        } catch { return true; }
+    });
+
+    const toggle = () => {
+        const next = !open;
+        setOpen(next);
+        try { sessionStorage.setItem(`area_section_${storageKey}`, next ? "1" : "0"); } catch { /* ignore */ }
+    };
+
     return (
         <div>
-            <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{title}</h2>
-            <div className="space-y-1.5">{children}</div>
+            <button onClick={toggle} className="flex items-center gap-1.5 mb-3 group">
+                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider group-hover:text-miku transition-colors">{title}</h2>
+                <svg
+                    className={`w-4 h-4 text-slate-400 group-hover:text-miku transition-transform ${open ? "rotate-0" : "-rotate-90"}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            {open && <div className="space-y-1.5">{children}</div>}
         </div>
     );
 }
 
-function CategoryLink({ cat, eventMap, translations }: { cat: AreaCategory; eventMap: Map<number, string>; translations: TranslationData | null }) {
-    const label = categoryLabel(cat, eventMap, translations);
+function CategoryLink({ cat, eventMap, translations, areaMap }: { cat: AreaCategory; eventMap: Map<number, string>; translations: TranslationData | null; areaMap?: Map<number, IArea> }) {
+    const label = categoryLabel(cat, eventMap, translations, areaMap);
     const urlParam = categoryToUrlParam(cat);
     return (
         <Link

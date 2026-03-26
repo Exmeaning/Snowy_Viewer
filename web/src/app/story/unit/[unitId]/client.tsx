@@ -148,7 +148,9 @@ export default function StoryUnitDetailClient() {
                                 <div className="mb-3">
                                     <h2 className="text-base font-bold text-slate-700 dark:text-slate-300">{group.name}</h2>
                                     {group.outline && (
-                                        <p className="text-sm text-slate-500 mt-1 leading-relaxed">{group.outline}</p>
+                                        <div className="mt-2 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                            {group.outline}
+                                        </div>
                                     )}
                                 </div>
                             )}

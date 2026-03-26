@@ -9,9 +9,10 @@ import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 interface CardItemProps {
     card: ICardInfo;
     isSpoiler?: boolean;
+    hrefPrefix?: string; // default: "/cards"
 }
 
-export default function CardItem({ card, isSpoiler }: CardItemProps) {
+export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: CardItemProps) {
     const { useTrainedThumbnail } = useTheme();
     const characterName = CHARACTER_NAMES[card.characterId] || `Character ${card.characterId}`;
 
@@ -23,7 +24,7 @@ export default function CardItem({ card, isSpoiler }: CardItemProps) {
     const showTrainedThumbnail = isTrainedOnlyCard || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
 
     return (
-        <Link href={`/cards/${card.id}`} className="group block" data-shortcut-item="true">
+        <Link href={`${hrefPrefix}/${card.id}`} className="group block" data-shortcut-item="true">
             <div className="relative cursor-pointer rounded-xl overflow-hidden transition-all bg-white ring-1 ring-slate-200 hover:ring-miku hover:shadow-xl hover:-translate-y-1">
                 {/* Card Image Container */}
                 <div className="w-full relative">

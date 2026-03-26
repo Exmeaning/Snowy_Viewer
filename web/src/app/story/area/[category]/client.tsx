@@ -4,15 +4,21 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
+import { getCharacterIconUrl } from "@/lib/assets";
 import { IEventInfo } from "@/types/events";
 import { loadTranslations } from "@/lib/translations";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
 
 interface IActionSet {
     id: number; areaId: number; releaseConditionId: number;
     scenarioId?: string; actionSetType?: string; isNextGrade?: boolean;
+    characterIds?: number[];
 }
 interface IArea { id: number; name: string; subName?: string; }
+interface ICharacter2D {
+    id: number; characterType: string; characterId: number;
+}
 
 type AreaCategory = number | string;
 
@@ -46,25 +52,39 @@ function getTalkTypeLabel(action: IActionSet, cat: AreaCategory): string {
 export default function StoryAreaDetailClient() {
     const params = useParams();
     const { serverSource } = useTheme();
-    const areaIdParam = decodeURIComponent(params.areaId as string);
+    const areaIdParam = decodeURIComponent(params.category as string);
     const category = urlParamToCategory(areaIdParam);
 
     const [actions, setActions] = useState<IActionSet[]>([]);
     const [areaMap, setAreaMap] = useState<Map<number, IArea>>(new Map());
-    const [eventName, setEventName] = useState<string>("");
+    const [chara2dMap, setChara2dMap] = useState<Map<number, number>>(new Map());
+    const [eventName, setEventName] = useState<string>("");       // 原文
+    const [eventNameCn, setEventNameCn] = useState<string>("");   // 翻译
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    useSimpleScrollRestore(`story_area_${areaIdParam}`, !isLoading);
 
     useEffect(() => {
         async function load() {
             try {
-                const [actionSetsData, areasData, eventsData, translationsData] = await Promise.all([
+                const [actionSetsData, areasData, eventsData, translationsData, chara2dsData] = await Promise.all([
                     fetchMasterDataForServer<IActionSet[]>("jp", "actionSets.json"),
                     fetchMasterData<IArea[]>("areas.json"),
                     fetchMasterData<IEventInfo[]>("events.json"),
                     loadTranslations(),
+                    fetchMasterData<ICharacter2D[]>("character2ds.json"),
                 ]);
                 setAreaMap(new Map(areasData.map(a => [a.id, a])));
+
+                // Build character2dId → gameCharacterId map (game_character only)
+                const c2dMap = new Map<number, number>();
+                for (const c of chara2dsData) {
+                    if (c.characterType === "game_character") {
+                        c2dMap.set(c.id, c.characterId);
+                    }
+                }
+                setChara2dMap(c2dMap);
+
                 const matched = actionSetsData.filter(a => getCategory(a) === category);
                 if (matched.length === 0) throw new Error("未找到对应的区域对话");
                 setActions(matched);
@@ -72,14 +92,16 @@ export default function StoryAreaDetailClient() {
                 if (typeof category === "number") {
                     const ev = eventsData.find(e => e.id === category);
                     if (ev) {
-                        const cn = translationsData?.events?.name?.[ev.name] ?? ev.name;
-                        setEventName(cn);
-                        document.title = `活动 ${category}：${cn} - 区域对话 - Moesekai`;
+                        const cn = translationsData?.events?.name?.[ev.name];
+                        setEventName(ev.name);
+                        setEventNameCn(cn && cn !== ev.name ? cn : "");
+                        const displayName = cn && cn !== ev.name ? `${ev.name}（${cn}）` : ev.name;
+                        document.title = `活动 ${category}：${displayName} - 区域对话 - Moesekai`;
                     }
                 } else {
-                    const labels: Record<string, string> = { grade1: "日常对话（一年级）", grade2: "日常对话（二年级）", theater: "剧场对话" };
+                    const labels: Record<string, string> = { grade1: "日常对话（第一学年）", grade2: "日常对话（第二学年）", theater: "剧场版" };
                     const label = labels[category as string]
-                        ?? (String(category).startsWith("limited_") ? `限定区域 ${String(category).replace("limited_", "")}` : `愚人节 ${String(category).replace("aprilfool", "")}`)
+                        ?? (String(category).startsWith("limited_") ? `限定区域 ${String(category).replace("limited_", "")}` : `愚人节 ${String(category).replace("aprilfool", "")}`);
                     document.title = `${label} - 区域对话 - Moesekai`;
                 }
             } catch (err) {
@@ -92,11 +114,16 @@ export default function StoryAreaDetailClient() {
     }, [areaIdParam, serverSource]);
 
     const pageTitle = useMemo(() => {
-        if (typeof category === "number") return eventName ? `活动 ${category}：${eventName}` : `活动 ${category}`;
-        const labels: Record<string, string> = { grade1: "日常对话（一年级）", grade2: "日常对话（二年级）", theater: "剧场对话" };
+        if (typeof category === "number") {
+            if (!eventName) return `活动 ${category}`;
+            return eventNameCn
+                ? `活动 ${category}：${eventName}（${eventNameCn}）`
+                : `活动 ${category}：${eventName}`;
+        }
+        const labels: Record<string, string> = { grade1: "日常对话（第一学年）", grade2: "日常对话（第二学年）", theater: "剧场版" };
         return labels[category as string]
             ?? (String(category).startsWith("limited_") ? `限定区域 ${String(category).replace("limited_", "")}` : `愚人节 ${String(category).replace("aprilfool", "")}`);
-    }, [category, eventName]);
+    }, [category, eventName, eventNameCn]);
 
     return (
         <MainLayout>
@@ -122,6 +149,14 @@ export default function StoryAreaDetailClient() {
                             const area = areaMap.get(action.areaId);
                             const areaName = area ? (area.subName ? `${area.name} - ${area.subName}` : area.name) : `区域 ${action.areaId}`;
                             const typeLabel = getTalkTypeLabel(action, category);
+
+                            // Resolve characterIds (character2d ids) → gameCharacter ids (1-26)
+                            const gameCharaIds = [...new Set(
+                                (action.characterIds ?? [])
+                                    .map(c2dId => chara2dMap.get(c2dId))
+                                    .filter((id): id is number => id !== undefined && id >= 1 && id <= 26)
+                            )];
+
                             return (
                                 <Link
                                     key={action.id}
@@ -129,9 +164,28 @@ export default function StoryAreaDetailClient() {
                                     className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-sm transition-all group"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <span className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
-                                            {idx + 1}
-                                        </span>
+                                        {/* Character avatars */}
+                                        {gameCharaIds.length > 0 ? (
+                                            <div className="flex shrink-0 -space-x-2">
+                                                {gameCharaIds.slice(0, 4).map(charaId => (
+                                                    <img
+                                                        key={charaId}
+                                                        src={getCharacterIconUrl(charaId)}
+                                                        alt=""
+                                                        className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 object-cover"
+                                                    />
+                                                ))}
+                                                {gameCharaIds.length > 4 && (
+                                                    <span className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-[10px] text-slate-500 dark:text-slate-300 font-bold">
+                                                        +{gameCharaIds.length - 4}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <span className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                                                {idx + 1}
+                                            </span>
+                                        )}
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-miku transition-colors">{areaName}</span>

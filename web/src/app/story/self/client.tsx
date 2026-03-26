@@ -6,6 +6,8 @@ import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { IGameChara, ICharaProfile, UNIT_NAME_MAP } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
+import { StoryPageHeader } from "@/components/story/StoryPageHeader";
 
 const UNIT_ORDER = ["light_sound", "idol", "street", "theme_park", "school_refusal", "piapro"];
 
@@ -15,6 +17,7 @@ export default function StorySelfListClient() {
     const [profiles, setProfiles] = useState<ICharaProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    useSimpleScrollRestore("story_self", !isLoading);
 
     useEffect(() => {
         async function load() {
@@ -46,14 +49,7 @@ export default function StorySelfListClient() {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                <div className="flex items-center gap-3 mb-8">
-                    <Link href="/story" className="text-slate-400 hover:text-miku transition-colors">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </Link>
-                    <h1 className="text-2xl font-black text-primary-text">自我介绍</h1>
-                </div>
+                <StoryPageHeader storyKey="self" />
 
                 {isLoading && (
                     <div className="flex justify-center py-16">
@@ -66,15 +62,15 @@ export default function StorySelfListClient() {
                     <div className="space-y-8">
                         {unitGroups.map(({ unit, name, charas: unitCharas }) => (
                             <div key={unit}>
-                                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{name}</h2>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 text-center">{name}</h2>
+                                <div className="flex flex-wrap justify-center gap-3">
                                     {unitCharas.map(c => {
                                         const charaName = `${c.firstName ?? ""}${c.givenName}`;
                                         return (
                                             <Link
                                                 key={c.id}
                                                 href={`/story/self/${c.id}`}
-                                                className="group flex flex-col items-center gap-2 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-md transition-all"
+                                                className="group flex flex-col items-center gap-2 p-3 w-[calc(50%-6px)] sm:w-28 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-md transition-all"
                                             >
                                                 <img
                                                     src={getCharacterIconUrl(c.id)}
