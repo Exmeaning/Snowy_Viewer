@@ -137,14 +137,17 @@ export async function processScenarioForDisplay(
                 let voiceUrl = "";
                 if (talkData.Voices?.length > 0) {
                     const voice = talkData.Voices[0];
-                    if (storyType === "card") {
-                        voiceUrl = getCardStoryVoiceUrl(scenarioId, voice.VoiceId);
-                    } else if (storyType === "talk") {
-                        voiceUrl = getAreaTalkVoiceUrl(scenarioId, voice.VoiceId);
-                    } else if (storyType === "special") {
-                        voiceUrl = getSpecialStoryVoiceUrl(scenarioId, voice.VoiceId);
-                    } else {
-                        voiceUrl = getStoryVoiceUrl(scenarioId, voice.VoiceId);
+                    // partvoice_* are part-song voices with complex URL rules, skip for now
+                    if (!voice.VoiceId.startsWith("partvoice")) {
+                        if (storyType === "card") {
+                            voiceUrl = getCardStoryVoiceUrl(scenarioId, voice.VoiceId);
+                        } else if (storyType === "talk") {
+                            voiceUrl = getAreaTalkVoiceUrl(scenarioId, voice.VoiceId);
+                        } else if (storyType === "special") {
+                            voiceUrl = getSpecialStoryVoiceUrl(scenarioId, voice.VoiceId);
+                        } else {
+                            voiceUrl = getStoryVoiceUrl(scenarioId, voice.VoiceId);
+                        }
                     }
                 }
 
