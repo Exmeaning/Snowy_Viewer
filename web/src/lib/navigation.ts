@@ -41,6 +41,18 @@ export const navigationGroups: NavGroupData[] = [
         ],
     },
     {
+        title: "剧情",
+        href: "/breadcrumb-story",
+        items: [
+            { name: "主线剧情", href: "/story/unit" },
+            { name: "活动剧情", href: "/story/event" },
+            { name: "卡牌剧情", href: "/story/card" },
+            { name: "区域对话", href: "/story/area" },
+            { name: "自我介绍", href: "/story/self" },
+            { name: "特殊剧情", href: "/story/special" },
+        ],
+    },
+    {
         title: "社区",
         href: "/breadcrumb-community",
         items: [
