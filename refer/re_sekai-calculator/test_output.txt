@@ -1,0 +1,79 @@
+﻿node.exe : FAIL test/d
+eck-recommend.test.ts
+所在位置 行:1 字符: 1
++ & "C:\Program Files\
+nodejs/node.exe" "C:\P
+rogram Files\nodejs/no
+de_mo ...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (FAIL test/   
+ deck-recommend.te    
+st.ts:String) [],     
+RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+  ● Test suite failed 
+to run
+
+    ENOENT: no such fi
+le or directory, open 
+'D:\Python_Project\sek
+ai-calculator\mock-use
+r-data.json'
+
+    [0m [90m  5 |[3
+9m
+     [90m  6 |[39m 
+[90m// 用于测试的用户数据[39m
+    [31m[1m>[22m[3
+9m[90m  7 |[39m [36
+mconst[39m mockUserDa
+ta [33m=[39m [33mJS
+ON[39m[33m.[39mpars
+e(readFileSync([32m'm
+ock-user-data.json'[3
+9m[33m,[39m [32m'ut
+f8'[39m))
+     [90m    |[39m  
+                      
+                     
+[31m[1m^[22m[39m
+     [90m  8 |[39m 
+[36mconst[39m cache 
+[33m=[39m [36mnew[3
+9m [33mMap[39m[33m<
+[39m[33mstring[39m
+[33m,[39m any[33m>[
+39m()
+     [90m  9 |[39m
+     [90m 10 |[39m 
+[36masync[39m [36mfu
+nction[39m getRemoteJ
+son (url[33m:[39m st
+ring)[33m:[39m [33m
+Promise[39m[33m<[39
+m[33many[39m[33m>[
+39m {[0m
+
+      at Object.<anony
+mous> (test/data-provi
+der.test.ts:7:45)
+      at Object.<anony
+mous> (test/deck-recom
+mend.test.ts:15:1)
+
+Test Suites: 1 failed,
+ 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        2.674 s
+Ran all test suites ma
+tching /deck-recommend
+/i.

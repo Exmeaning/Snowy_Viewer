@@ -1,0 +1,69 @@
+# ============================================================
+# Snowy Viewer - Screenshot Generator Docker Compose
+# ============================================================
+#
+# Usage:
+#   docker-compose -f docker-compose.screenshot.yml up --build
+#
+# This will:
+#   1. Build and start the web app
+#   2. Wait for web app to be ready
+#   3. Run screenshot generator
+#   4. Save screenshots to ./screenshots-output/ volume
+#
+# ============================================================
+
+version: '3.8'
+
+services:
+  # Web application (needed for screenshot generation)
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:3000" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # Go backend (for API endpoints)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - web
+
+  # Screenshot generator
+  screenshot-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile.screenshot
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      - WEB_URL=http://web:3000
+      - OUTPUT_DIR=/screenshots
+      - CONCURRENCY=3
+      - BUILD_VERSION=${BUILD_VERSION:-dev}
+    volumes:
+      - screenshots-output:/screenshots
+    # Run once and exit
+    restart: "no"
+
+volumes:
+  screenshots-output:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/screenshots-output

@@ -1,0 +1,93 @@
+/* Deck Comparator Tool Styles */
+
+/* Number input styling */
+.dc-number-input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.dc-number-input::-webkit-outer-spin-button,
+.dc-number-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Result card */
+.dc-result-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+}
+
+/* Score highlight animation */
+@keyframes dc-score-pop {
+    0% {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.02);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.dc-score-enter {
+    animation: dc-score-pop 0.3s ease-out;
+}
+
+/* Teammate row */
+.dc-teammate-row {
+    transition: all 0.2s ease;
+}
+
+.dc-teammate-row:hover {
+    background: rgba(51, 204, 187, 0.03);
+}
+
+/* Breakdown bar */
+.dc-breakdown-bar {
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: #f1f5f9;
+}
+
+.dc-breakdown-segment {
+    height: 100%;
+    transition: width 0.4s ease;
+}
+
+/* Toggle switch */
+.dc-toggle {
+    transition: background-color 0.2s ease;
+}
+
+.dc-toggle-knob {
+    transition: transform 0.2s ease;
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] .dc-result-card {
+    background: rgba(30, 30, 45, 0.6);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .dc-teammate-row:hover {
+    background: rgba(51, 204, 187, 0.05);
+}
+
+[data-theme="dark"] .dc-breakdown-bar {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile warning - hide on desktop */
+@media (min-width: 768px) {
+    .dc-mobile-info {
+        display: none;
+    }
+}

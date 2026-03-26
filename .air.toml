@@ -1,0 +1,16 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./tmp/server ./main.go"
+bin = "./tmp/server"
+full_bin = "./tmp/server"
+include_ext = ["go"]
+exclude_dir = [".git", ".vscode", "node_modules", "tmp", "web", "refer", "screenshot-generator"]
+delay = 500
+stop_on_error = true
+send_interrupt = true
+kill_delay = "500ms"
+
+[log]
+time = true

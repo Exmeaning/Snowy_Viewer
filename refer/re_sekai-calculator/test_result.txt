@@ -1,0 +1,22 @@
+\n---STDERR---\nFAIL test/deck-recommend.test.ts
+  ● Test suite failed to run
+
+    ENOENT: no such file or directory, open 'D:\Python_Project\sekai-calculator\mock-user-data.json'
+
+    [0m [90m  5 |[39m
+     [90m  6 |[39m [90m// 用于测试的用户数据[39m
+    [31m[1m>[22m[39m[90m  7 |[39m [36mconst[39m mockUserData [33m=[39m [33mJSON[39m[33m.[39mparse(readFileSync([32m'mock-user-data.json'[39m[33m,[39m [32m'utf8'[39m))
+     [90m    |[39m                                             [31m[1m^[22m[39m
+     [90m  8 |[39m [36mconst[39m cache [33m=[39m [36mnew[39m [33mMap[39m[33m<[39m[33mstring[39m[33m,[39m any[33m>[39m()
+     [90m  9 |[39m
+     [90m 10 |[39m [36masync[39m [36mfunction[39m getRemoteJson (url[33m:[39m string)[33m:[39m [33mPromise[39m[33m<[39m[33many[39m[33m>[39m {[0m
+
+      at Object.<anonymous> (test/data-provider.test.ts:7:45)
+      at Object.<anonymous> (test/deck-recommend.test.ts:15:1)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        2.757 s
+Ran all test suites matching /deck-recommend/i.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

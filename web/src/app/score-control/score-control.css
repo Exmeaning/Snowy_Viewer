@@ -1,0 +1,182 @@
+/* Score Control Calculator Styles */
+
+/* Number input styling */
+.sc-number-input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.sc-number-input::-webkit-outer-spin-button,
+.sc-number-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Result card */
+.sc-result-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+}
+
+/* Score pop animation */
+@keyframes sc-result-pop {
+    0% {
+        transform: scale(0.97);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.01);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.sc-result-enter {
+    animation: sc-result-pop 0.3s ease-out;
+}
+
+/* Boost group header */
+.sc-boost-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+}
+
+/* Score range bar */
+.sc-score-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: #e2e8f0;
+    position: relative;
+    overflow: hidden;
+}
+
+.sc-score-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #33ccbb, #2bb5a6);
+    transition: width 0.4s ease;
+}
+
+/* Table row hover */
+.sc-row {
+    transition: all 0.15s ease;
+}
+
+.sc-row:hover {
+    background: rgba(51, 204, 187, 0.04);
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] .sc-result-card {
+    background: rgba(30, 30, 45, 0.6);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .sc-boost-header {
+    background: rgba(20, 20, 35, 0.95);
+}
+
+[data-theme="dark"] .sc-row:hover {
+    background: rgba(51, 204, 187, 0.06);
+}
+
+[data-theme="dark"] .sc-score-bar {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================================================
+   Deck Recommend Styles Ported for Score Control
+   ========================================================================== */
+
+/* Checkbox style */
+.dr-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    cursor: pointer;
+    background-color: white;
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dr-checkbox:checked {
+    background-color: var(--color-miku);
+    border-color: var(--color-miku);
+    box-shadow: 0 0 0 3px rgba(51, 204, 187, 0.2);
+}
+
+.dr-checkbox::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -60%) rotate(45deg) scale(0.5);
+    opacity: 0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dr-checkbox:checked::after {
+    opacity: 1;
+    transform: translate(-50%, -60%) rotate(45deg) scale(1);
+}
+
+.dr-checkbox:disabled {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.dr-checkbox:hover:not(:disabled):not(:checked) {
+    border-color: var(--color-miku);
+    background-color: rgba(51, 204, 187, 0.05);
+}
+
+/* Config table */
+.dr-config-table th {
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+}
+
+[data-theme="dark"] .dr-config-table th {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .dr-config-table td {
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Fake progress bar */
+.sc-fake-progress-track {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+
+.sc-fake-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #33ccbb, #2bb5a6);
+    transition: width 0.3s ease-out;
+}
+
+[data-theme="dark"] .sc-fake-progress-track {
+    background: rgba(255, 255, 255, 0.1);
+}

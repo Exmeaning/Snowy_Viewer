@@ -1,0 +1,16 @@
+{
+    "name": "snowy-screenshot-generator",
+    "version": "1.0.0",
+    "description": "Puppeteer-based screenshot generator for Snowy Viewer detail pages",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "generate": "node index.js"
+    },
+    "dependencies": {
+        "puppeteer": "^21.0.0"
+    },
+    "engines": {
+        "node": ">=18"
+    }
+}

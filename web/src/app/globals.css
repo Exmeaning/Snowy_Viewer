@@ -1,0 +1,393 @@
+@import "tailwindcss";
+
+:root {
+  /* Colors from archive_web */
+  --theme-light: #f0fbf9;
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-bg: rgba(255, 255, 255, 0.35);
+  --page-bg-start: #ffffff;
+  --page-bg-end: var(--theme-light);
+  --surface-base: #ffffff;
+  --surface-soft: #f8fafc;
+  --surface-muted: #f1f5f9;
+  --surface-strong: #e2e8f0;
+  --text-strong: #1e293b;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-soft: #94a3b8;
+  --border-soft: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --ring-soft: rgba(226, 232, 240, 0.9);
+
+  /* Brand Colors */
+  --color-miku: #33ccbb;
+  --color-miku-dark: #2da89b;
+  --color-luka: #ff6699;
+  --color-primary-text: #334455;
+}
+
+:root[data-theme="dark"] {
+  --glass-border: rgba(148, 163, 184, 0.18);
+  --glass-bg: rgba(15, 23, 42, 0.55);
+  --page-bg-start: #08111b;
+  --page-bg-end: #101b2d;
+  --surface-base: rgba(15, 23, 42, 0.92);
+  --surface-soft: rgba(15, 23, 42, 0.72);
+  --surface-muted: rgba(30, 41, 59, 0.88);
+  --surface-strong: rgba(51, 65, 85, 0.88);
+  --text-strong: #f8fafc;
+  --text-body: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-soft: #64748b;
+  --border-soft: rgba(148, 163, 184, 0.16);
+  --border-strong: rgba(148, 163, 184, 0.28);
+  --ring-soft: rgba(148, 163, 184, 0.28);
+}
+
+@theme {
+  --color-miku: var(--color-miku);
+  --color-miku-dark: var(--color-miku-dark);
+  --color-luka: var(--color-luka);
+  --color-primary-text: var(--color-primary-text);
+
+  --animate-pulse-fast: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+}
+
+body {
+  overflow-x: hidden;
+  color: var(--color-primary-text);
+  background: linear-gradient(135deg, var(--page-bg-start) 0%, var(--page-bg-end) 100%);
+  min-height: 100vh;
+}
+
+:root[data-theme="dark"] body {
+  color: var(--text-body);
+}
+
+/* Loading spinner with theme color transition */
+.loading-spinner {
+  width: 4rem;
+  height: 4rem;
+  border-width: 4px;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--color-miku) 30%, transparent);
+  border-top-color: var(--color-miku);
+  border-radius: 9999px;
+  animation: spin 1s linear infinite;
+  transition: border-color 0.3s ease;
+}
+
+.loading-spinner-sm {
+  width: 3rem;
+  height: 3rem;
+}
+
+.loading-spinner-lg {
+  width: 4rem;
+  height: 4rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Glassmorphism Card Utility */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 8px 32px 0 rgba(31, 38, 135, 0.15),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.2);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+:root[data-theme="dark"] .bg-white {
+  background-color: var(--surface-base) !important;
+}
+
+:root[data-theme="dark"] .bg-white\/95,
+:root[data-theme="dark"] .bg-white\/90,
+:root[data-theme="dark"] .bg-white\/80,
+:root[data-theme="dark"] .bg-white\/70,
+:root[data-theme="dark"] .bg-white\/60,
+:root[data-theme="dark"] .bg-white\/50,
+:root[data-theme="dark"] .bg-white\/40 {
+  background-color: color-mix(in srgb, var(--surface-base) 88%, transparent) !important;
+}
+
+:root[data-theme="dark"] .bg-slate-50,
+:root[data-theme="dark"] .bg-slate-50\/70,
+:root[data-theme="dark"] .bg-slate-50\/50,
+:root[data-theme="dark"] .bg-slate-50\/30 {
+  background-color: var(--surface-soft) !important;
+}
+
+:root[data-theme="dark"] .bg-slate-100 {
+  background-color: var(--surface-muted) !important;
+}
+
+:root[data-theme="dark"] .bg-slate-200,
+:root[data-theme="dark"] .bg-slate-300 {
+  background-color: var(--surface-strong) !important;
+}
+
+:root[data-theme="dark"] .text-slate-900,
+:root[data-theme="dark"] .text-slate-800 {
+  color: var(--text-strong) !important;
+}
+
+:root[data-theme="dark"] .text-primary-text {
+  color: var(--text-body) !important;
+}
+
+:root[data-theme="dark"] .text-slate-700,
+:root[data-theme="dark"] .text-slate-600 {
+  color: var(--text-body) !important;
+}
+
+:root[data-theme="dark"] .text-slate-500,
+:root[data-theme="dark"] .text-slate-400,
+:root[data-theme="dark"] .text-slate-300 {
+  color: var(--text-muted) !important;
+}
+
+:root[data-theme="dark"] .border-slate-50,
+:root[data-theme="dark"] .border-slate-100,
+:root[data-theme="dark"] .border-slate-100\/50,
+:root[data-theme="dark"] .border-slate-200,
+:root[data-theme="dark"] .border-slate-200\/60,
+:root[data-theme="dark"] .border-slate-200\/50,
+:root[data-theme="dark"] .border-slate-300 {
+  border-color: var(--border-soft) !important;
+}
+
+:root[data-theme="dark"] .ring-slate-100,
+:root[data-theme="dark"] .ring-slate-200,
+:root[data-theme="dark"] .ring-slate-200\/60,
+:root[data-theme="dark"] .ring-slate-200\/50,
+:root[data-theme="dark"] .ring-slate-300 {
+  --tw-ring-color: var(--ring-soft) !important;
+}
+
+:root[data-theme="dark"] .hover\:bg-white:hover,
+:root[data-theme="dark"] .hover\:bg-white\/80:hover,
+:root[data-theme="dark"] .hover\:bg-white\/70:hover,
+:root[data-theme="dark"] .hover\:bg-white\/20:hover,
+:root[data-theme="dark"] .hover\:bg-slate-50:hover,
+:root[data-theme="dark"] .hover\:bg-slate-50\/50:hover,
+:root[data-theme="dark"] .hover\:bg-slate-100:hover,
+:root[data-theme="dark"] .hover\:bg-slate-200:hover,
+:root[data-theme="dark"] .hover\:bg-slate-300:hover,
+:root[data-theme="dark"] .hover\:bg-slate-700:hover,
+:root[data-theme="dark"] .hover\:bg-slate-700\/50:hover {
+  background-color: color-mix(in srgb, var(--surface-strong) 88%, transparent) !important;
+}
+
+:root[data-theme="dark"] .hover\:text-slate-900:hover,
+:root[data-theme="dark"] .hover\:text-slate-800:hover,
+:root[data-theme="dark"] .hover\:text-slate-700:hover,
+:root[data-theme="dark"] .hover\:text-slate-600:hover {
+  color: var(--text-strong) !important;
+}
+
+:root[data-theme="dark"] .hover\:border-slate-300:hover,
+:root[data-theme="dark"] .hover\:border-slate-200:hover {
+  border-color: var(--border-strong) !important;
+}
+
+:root[data-theme="dark"] .from-slate-50,
+:root[data-theme="dark"] .from-slate-100,
+:root[data-theme="dark"] .from-slate-300,
+:root[data-theme="dark"] .from-slate-400 {
+  --tw-gradient-from: var(--surface-soft) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: color-mix(in srgb, var(--surface-soft) 0%, transparent) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from), var(--tw-gradient-to)) !important;
+}
+
+:root[data-theme="dark"] .to-slate-50,
+:root[data-theme="dark"] .to-slate-100,
+:root[data-theme="dark"] .to-slate-200,
+:root[data-theme="dark"] .to-slate-400,
+:root[data-theme="dark"] .to-slate-500 {
+  --tw-gradient-to: var(--surface-muted) var(--tw-gradient-to-position) !important;
+}
+
+:root[data-theme="dark"] .shadow-2xl,
+:root[data-theme="dark"] .shadow-xl,
+:root[data-theme="dark"] .shadow-lg,
+:root[data-theme="dark"] .shadow-md,
+:root[data-theme="dark"] .shadow-sm {
+  box-shadow: 0 18px 45px rgba(2, 6, 23, 0.42) !important;
+}
+
+/* Loading animation keyframes */
+@keyframes miku-load-fast {
+  0% {
+    width: 0%;
+  }
+
+  100% {
+    width: 90%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+@keyframes breadcrumb-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-breadcrumb-dropdown {
+  animation: breadcrumb-dropdown-in 0.12s ease-out forwards;
+}
+
+[data-shortcut-focused="true"] {
+  outline: 2px solid var(--color-miku);
+  outline-offset: 3px;
+}
+
+button[data-shortcut-load-more="true"]::after {
+  content: "L";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 0.5rem;
+  padding: 0 0.35rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.quick-filter-modal-content [data-shortcut-filters="true"] > div:first-child {
+  display: none;
+}
+
+/* Force collapsible section to be visible inside quick filter modal */
+.quick-filter-modal-content [data-filter-collapsible="true"] {
+  display: block !important;
+}
+
+.quick-filter-modal-content [data-filter-collapse-pad="true"] {
+  display: none !important;
+}
+
+
+
+@keyframes scroll-top-icon-tap {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  45% {
+    transform: translateY(-1px) scale(0.9);
+  }
+
+  100% {
+    transform: translateY(-4px) scale(1.08);
+  }
+}
+
+@keyframes quick-filter-icon-tap {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  45% {
+    transform: rotate(6deg) scale(0.9);
+  }
+
+  100% {
+    transform: rotate(12deg) scale(1.08);
+  }
+}
+
+.scroll-top-icon-tap {
+  animation: scroll-top-icon-tap 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.quick-filter-icon-tap {
+  animation: quick-filter-icon-tap 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-top-icon-tap,
+  .quick-filter-icon-tap {
+    animation: none;
+  }
+}
+
+/* Hide scrollbar for horizontal scroll containers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Chart preview logo fill animation */
+@keyframes logo-fill-right {
+  0% {
+    background-position: 100% 0%;
+  }
+  50% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 0%;
+  }
+}
+
+.chart-preview-logo-fill {
+  animation: logo-fill-right 2.4s ease-in-out infinite;
+  background: linear-gradient(to right, var(--color-miku) 33%, var(--color-miku-dark) 33%, rgba(255,255,255,0.15) 66%, var(--color-miku) 66%);
+  background-size: 300% 100%;
+}

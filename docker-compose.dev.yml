@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /app
+    command: ["air", "-c", ".air.toml"]
+    environment:
+      - PORT=8080
+      - TRANSLATION_PATH=/app/web/public/data/translations
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - GITHUB_REPO=${GITHUB_REPO:-}
+      - GITHUB_WORKFLOW_FILE=${GITHUB_WORKFLOW_FILE:-sync-translations-from-deploy.yml}
+      - GITHUB_WORKFLOW_REF=${GITHUB_WORKFLOW_REF:-main}
+      - TRANSLATOR_ACCOUNTS=${TRANSLATOR_ACCOUNTS:-}
+      - JWT_SECRET=${JWT_SECRET:-dev-translate-secret}
+      - REDIS_URL=${REDIS_URL:-localhost:6379}
+    volumes:
+      - ./:/app
+    ports:
+      - "8080:8080"
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    working_dir: /app
+    environment:
+      - NEXT_PUBLIC_API_URL=
+      - INTERNAL_API_BASE_URL=http://backend:8080
+      - WATCHPACK_POLLING=true
+      - NEXT_PUBLIC_OAUTH2_CLIENT_ID=${NEXT_PUBLIC_OAUTH2_CLIENT_ID:-oauth-test-public}
+      - NEXT_PUBLIC_OAUTH2_REDIRECT_URI=${NEXT_PUBLIC_OAUTH2_REDIRECT_URI:-http://localhost:3000/oauth2/callback/code}
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend

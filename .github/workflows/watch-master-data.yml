@@ -1,0 +1,56 @@
+name: Watch Master Data
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allow manual run
+
+jobs:
+  check-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download and Update Master Data
+        run: |
+          mkdir -p data/master
+          
+          # GitHub base URL
+          GITHUB_BASE="https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master"
+          
+          # Download all files from haruki-sekai-master (GitHub Raw)
+          curl -sS --fail --retry 5 "$GITHUB_BASE/events.json" -o data/master/events.json
+          curl -sS --fail --retry 5 "$GITHUB_BASE/eventCards.json" -o data/master/eventCards.json
+          curl -sS --fail --retry 5 "$GITHUB_BASE/eventMusics.json" -o data/master/eventMusics.json
+          curl -sS --fail --retry 5 "$GITHUB_BASE/virtualLives.json" -o data/master/virtualLives.json
+          curl -sS --fail --retry 5 "$GITHUB_BASE/gachas.json" -o data/master/gachas.json
+          curl -sS --fail --retry 5 "$GITHUB_BASE/cardCostume3ds.json" -o data/master/cardCostume3ds.json
+          curl -sS --fail --retry 5 "$GITHUB_BASE/costume3ds.json" -o data/master/costume3ds.json
+          
+          # Validate JSON files
+          echo "Validating downloaded JSON files..."
+          for file in data/master/*.json; do
+            if ! python3 -c "import json; json.load(open('$file'))" 2>/dev/null; then
+              echo "ERROR: $file is not valid JSON, aborting."
+              exit 1
+            fi
+            echo "✓ $file is valid"
+          done
+          
+          # Check for changes
+          if [[ -n $(git status --porcelain data/master) ]]; then
+            echo "Changes detected in master data."
+            
+            git config --global user.name 'Snowy Bot'
+            git config --global user.email 'bot@snowy.viewer'
+            git add data/master/*.json
+            git commit -m "chore: update master data json files"
+            git push
+          else
+            echo "No changes in master data."
+          fi

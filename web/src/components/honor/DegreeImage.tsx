@@ -1,0 +1,223 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { IHonorInfo, IHonorGroup } from "@/types/honor";
+import {
+    getHonorBgUrl,
+    getHonorCustomFrameUrl,
+    getHonorRankUrl,
+    getHonorRankMatchBgUrl,
+} from "@/lib/assets";
+import { AssetSourceType } from "@/contexts/ThemeContext";
+
+// Achievement group IDs that should show level icons
+const ACHIEVEMENT_LEVEL_WHITELIST = new Set([33, 36, 37, 52, 72, 73, 74, 75, 76, 77]);
+
+// Hook to preload an image and track success/failure
+function useImageLoaded(url: string | undefined): boolean {
+    const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!url) return;
+        const targetUrl = url;
+        const img = new Image();
+        img.onload = () => setLoadedUrl(targetUrl);
+        img.onerror = () => setLoadedUrl(prev => (prev === targetUrl ? null : prev));
+        img.src = targetUrl;
+        return () => { img.onload = null; img.onerror = null; };
+    }, [url]);
+
+    return !!url && loadedUrl === url;
+}
+
+interface DegreeImageProps {
+    honor: IHonorInfo;
+    honorGroup?: IHonorGroup;
+    honorLevel?: number;
+    sub?: boolean;
+    source?: AssetSourceType;
+    className?: string;
+}
+
+export default function DegreeImage({
+    honor,
+    honorGroup,
+    honorLevel,
+    sub = false,
+    source = "snowyassets",
+    className,
+}: DegreeImageProps) {
+    const width = sub ? 180 : 380;
+    const height = 80;
+    const honorType = honorGroup?.honorType || "";
+
+    // ── Resolve assetbundleName ──
+    let bgAssetName = honor.assetbundleName;
+    if (!bgAssetName && honorLevel && honor.levels[honorLevel - 1]?.assetbundleName) {
+        bgAssetName = honor.levels[honorLevel - 1].assetbundleName;
+    }
+    if (!bgAssetName && honor.levels.length > 0 && honor.levels[0]?.assetbundleName) {
+        bgAssetName = honor.levels[0].assetbundleName;
+    }
+
+    // ── World Link detection ──
+    const isWorldLinkDegree = bgAssetName ? /.*_cp\d$/.test(bgAssetName) : false;
+
+    // ── Background URL ──
+    let bgUrl: string | undefined;
+    if (honorType === "rank_match" && honorGroup?.backgroundAssetbundleName) {
+        bgUrl = getHonorRankMatchBgUrl(honorGroup.backgroundAssetbundleName, sub, source);
+    } else if (honorGroup?.backgroundAssetbundleName) {
+        bgUrl = getHonorBgUrl(honorGroup.backgroundAssetbundleName, sub, source);
+    } else if (bgAssetName) {
+        bgUrl = getHonorBgUrl(bgAssetName, sub, source);
+    }
+
+    // ── Frame URL ──
+    const rarity = honor.honorRarity
+        || (honorLevel ? honor.levels.find(l => l.level === honorLevel)?.honorRarity : undefined)
+        || (honor.levels.length > 0 ? honor.levels[0]?.honorRarity : undefined)
+        || "low";
+
+    const rarityNumMap: Record<string, number> = { low: 1, middle: 2, high: 3, highest: 4 };
+    const rarityNum = rarityNumMap[rarity] || 1;
+
+    let frameUrl: string | undefined;
+    if (honorGroup?.frameName) {
+        frameUrl = getHonorCustomFrameUrl(honorGroup.frameName, rarity, sub, source);
+    } else {
+        const size = sub ? "s" : "m";
+        frameUrl = `/data/frame/frame_degree_${size}_${rarityNum}.png`;
+    }
+
+    // ── Rank / Scroll overlay ──
+    let rankUrl: string | undefined;
+    if (honorType === "rank_match" && bgAssetName) {
+        // rank_match: use rank_live/honor path for rank overlay
+        rankUrl = getHonorRankMatchBgUrl(bgAssetName, sub, source);
+        // Actually rank_match rank image is at a different path — use the character overlay
+        // sekai.best uses: rank_live/honor/{assetbundleName}/{main|sub}.webp
+        // We approximate with the same path structure
+        rankUrl = undefined; // rank_match bg already includes the rank visual
+    } else if (honorType === "event" || honorType === "event_point") {
+        if (bgAssetName) {
+            rankUrl = getHonorRankUrl(bgAssetName, "rank", sub, source);
+        }
+    } else if (honor.honorMissionType && bgAssetName) {
+        rankUrl = getHonorRankUrl(bgAssetName, "scroll", false, source);
+    }
+
+    // ── Level icon logic ──
+    const levelIconUrl = "/data/frame/icon_degreeLv.png";
+    const levelIcon6Url = "/data/frame/icon_degreeLv6.png";
+
+    let shouldDrawLevel = false;
+    let levelIconX = 50; // default x position
+
+    if (honorLevel && honorLevel > 0 && honor.levels.length > 1) {
+        if (honorType === "birthday") {
+            // Birthday: show level only if frameName exists, x offset at 180
+            if (honorGroup?.frameName) {
+                shouldDrawLevel = true;
+                levelIconX = 180;
+            }
+        } else if (honorType === "event" || honorType === "rank_match") {
+            // Event and rank_match: don't show level
+            shouldDrawLevel = false;
+        } else if (honorType === "achievement") {
+            // Achievement: only show level if group ID is in whitelist
+            if (honorGroup && ACHIEVEMENT_LEVEL_WHITELIST.has(honorGroup.id)) {
+                shouldDrawLevel = true;
+            }
+        } else {
+            // Default: show level
+            shouldDrawLevel = true;
+        }
+    }
+
+    // ── Rank overlay positioning ──
+    // World Link: rank covers full canvas
+    // Normal event: rank on right side
+    // Scroll (mission): centered
+    let rankX = sub ? 11 : 200;
+    let rankY = sub ? 40 : 0;
+    let rankW = sub ? 158 : 180;
+    let rankH = sub ? 40 : 78;
+
+    if (isWorldLinkDegree && rankUrl) {
+        rankX = 0;
+        rankY = 0;
+        rankW = width;
+        rankH = height;
+    }
+
+    // ── Preload images to hide 404s ──
+    const bgLoaded = useImageLoaded(bgUrl);
+    const frameLoaded = useImageLoaded(frameUrl);
+    const rankLoaded = useImageLoaded(rankUrl);
+
+    // Level 1-5 icons and 6+ icons
+    const levelCount = shouldDrawLevel && honorLevel ? Math.min(5, honorLevel) : 0;
+    const level6Count = shouldDrawLevel && honorLevel && honorLevel > 5 ? honorLevel - 5 : 0;
+
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox={`0 0 ${width} ${height}`}
+            className={className}
+            style={{ width: "100%", height: "auto" }}
+        >
+            {/* Background */}
+            {bgUrl && bgLoaded && (
+                <image
+                    href={bgUrl}
+                    x="0"
+                    y="0"
+                    height={height}
+                    width={width}
+                />
+            )}
+            {/* Frame */}
+            {frameUrl && frameLoaded && (
+                <image
+                    href={frameUrl}
+                    x="0"
+                    y="0"
+                    height={height}
+                    width={width}
+                />
+            )}
+            {/* Level icons (1-5) */}
+            {levelCount > 0 && Array.from({ length: levelCount }).map((_, idx) => (
+                <image
+                    key={`lv${idx}`}
+                    href={levelIconUrl}
+                    x={levelIconX + idx * 16}
+                    y="64"
+                    height="16"
+                    width="16"
+                />
+            ))}
+            {/* Level icons (6+) */}
+            {level6Count > 0 && Array.from({ length: level6Count }).map((_, idx) => (
+                <image
+                    key={`lv6_${idx}`}
+                    href={levelIcon6Url}
+                    x={levelIconX + idx * 16}
+                    y="64"
+                    height="16"
+                    width="16"
+                />
+            ))}
+            {/* Rank / Scroll overlay */}
+            {rankUrl && rankLoaded && (
+                <image
+                    href={rankUrl}
+                    x={rankX}
+                    y={rankY}
+                    width={rankW}
+                    height={rankH}
+                />
+            )}
+        </svg>
+    );
+}
