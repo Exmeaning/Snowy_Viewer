@@ -162,7 +162,7 @@ export default function PatreonPage() {
                         </p>
 
                         <p className="text-slate-500 text-sm mb-6 text-center">
-                            目前 moesekai 的服务器已增加过两轮，哪怕你不进行赞助，只要你一直支持我们，我们都会持续进行运营的！
+                            目前 moesekai 的服务器已进行过增加/升级，哪怕你不进行赞助，只要你一直支持我们，我们都会持续进行运营的！
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-12 justify-center items-center">
@@ -195,6 +195,15 @@ export default function PatreonPage() {
                                     <p className="font-bold text-slate-700 text-lg">微信 / WeChat Pay</p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="mt-12 pt-8 border-t border-slate-100">
+                            <h3 className="text-xl font-bold text-primary-text mb-4">你也可以以其它形式支持我们</h3>
+                            <p className="text-slate-600 bg-miku/10 border border-miku/20 p-4 rounded-lg">
+                                <strong className="text-miku">服务器赞助：</strong>如果你有服务器愿意低于市场价租赁/免费赞助我们 也可以联系我们！
+                                <br />
+                                <span className="text-sm block mt-1">moesekai目前的需求：存储≈带宽＞内存/核心</span>
+                            </p>
                         </div>
                     </section>
                 </div>
