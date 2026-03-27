@@ -37,7 +37,7 @@ export function useStoryAsset({
     translation,
     episodeNo,
 }: UseStoryAssetOptions): UseStoryAssetResult {
-    const { serverSource } = useTheme();
+    const { serverSource, assetSource } = useTheme();
     const lang: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
 
     const [scenarioData, setScenarioData] = useState<IProcessedScenarioData | null>(null);
@@ -48,7 +48,7 @@ export function useStoryAsset({
 
     // Stable key to detect param changes
     const paramsKey = params
-        ? `${type}|${lang}|${params.scenarioId}|${params.assetbundleName ?? ""}|${params.group ?? ""}`
+        ? `${type}|${lang}|${assetSource}|${params.scenarioId}|${params.assetbundleName ?? ""}|${params.group ?? ""}`
         : null;
 
     useEffect(() => {
@@ -67,7 +67,7 @@ export function useStoryAsset({
                 const rawData = await fetchStoryAssetFromMirror(type, lang, params!);
                 if (cancelled) return;
 
-                const processed = await processScenarioForDisplay(rawData);
+                const processed = await processScenarioForDisplay(rawData, "scenario", assetSource);
                 if (cancelled) return;
 
                 // Merge JP translation if available

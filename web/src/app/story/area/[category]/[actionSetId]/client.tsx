@@ -18,7 +18,7 @@ interface IArea { id: number; name: string; subName?: string; }
 
 export default function StoryAreaTalkClient() {
     const params = useParams();
-    const { serverSource } = useTheme();
+    const { serverSource, assetSource } = useTheme();
     const areaIdParam = decodeURIComponent(params.category as string);
     const actionSetId = Number(params.actionSetId);
     const lang: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
@@ -54,7 +54,7 @@ export default function StoryAreaTalkClient() {
                     scenarioId: action.scenarioId,
                     group,
                 });
-                setScenarioData(await processScenarioForDisplay(raw, "talk"));
+                setScenarioData(await processScenarioForDisplay(raw, "talk", assetSource));
             } catch (err) {
                 if (err instanceof StoryAssetMissingError) setMissingPaths(err.missingPaths);
                 else setError(err instanceof Error ? err.message : "加载失败");

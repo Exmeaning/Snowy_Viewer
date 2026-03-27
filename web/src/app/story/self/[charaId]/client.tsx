@@ -14,7 +14,7 @@ import { IProcessedScenarioData } from "@/types/story";
 
 export default function StorySelfReaderClient() {
     const params = useParams();
-    const { serverSource } = useTheme();
+    const { serverSource, assetSource } = useTheme();
     const charaId = Number(params.charaId);
     const lang: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
 
@@ -49,7 +49,7 @@ export default function StorySelfReaderClient() {
                 const loadPart = async (scenarioId: string, setData: typeof setYear1, setMissing: typeof setMissing1, setErr: typeof setError1) => {
                     try {
                         const raw = await fetchStoryAssetFromMirror("self", lang, { scenarioId });
-                        setData(await processScenarioForDisplay(raw));
+                        setData(await processScenarioForDisplay(raw, "scenario", assetSource));
                     } catch (err) {
                         if (err instanceof StoryAssetMissingError) setMissing(err.missingPaths);
                         else setErr(err instanceof Error ? err.message : "加载失败");

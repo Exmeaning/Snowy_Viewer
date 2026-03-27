@@ -405,14 +405,20 @@ export function getCardStoryVoiceUrl(scenarioId: string, voiceId: string, source
     return `${baseUrl}/ondemand/sound/card_scenario/voice/${scenarioId}/${voiceId}.mp3`;
 }
 
-// Area talk voice: fixed to storage.sekai.best, sound/actionset/voice/{scenarioId}/{voiceId}.mp3
-export function getAreaTalkVoiceUrl(scenarioId: string, voiceId: string): string {
-    return `https://storage.sekai.best/sekai-jp-assets/sound/actionset/voice/${scenarioId}/${voiceId}.mp3`;
+// Area talk voice: fixed to Snowy base, sound/actionset/voice/{scenarioId}/{voiceId}.mp3
+export function getAreaTalkVoiceUrl(scenarioId: string, voiceId: string, source: AssetSourceType = "uni"): string {
+    const baseUrl = isCnSource(source) ? ASSET_BASE_URL_SNOWY_CN : ASSET_BASE_URL_SNOWY;
+    return `${baseUrl}/ondemand/sound/actionset/voice/${scenarioId}/${voiceId}.mp3`;
 }
 
-// Special story voice: fixed to haruki, startapp/sound/scenario/voice/{scenarioId}/{voiceId}.mp3
-export function getSpecialStoryVoiceUrl(scenarioId: string, voiceId: string): string {
-    return `${ASSET_BASE_URL_HARUKI}/startapp/sound/scenario/voice/${scenarioId}/${voiceId}.mp3`;
+// Special story voice: startapp/sound/scenario/voice/{scenarioId}/{voiceId}.mp3
+export function getSpecialStoryVoiceUrl(scenarioId: string, voiceId: string, source: AssetSourceType = "uni"): string {
+    if (isCnSource(source)) {
+        const baseUrl = getAssetBaseUrl(source);
+        return `${baseUrl}/startapp/sound/scenario/voice/${scenarioId}/${voiceId}.mp3`;
+    }
+    const baseUrl = source === "snowyassets" ? ASSET_BASE_URL_SNOWY : ASSET_BASE_URL_HARUKI;
+    return `${baseUrl}/startapp/sound/scenario/voice/${scenarioId}/${voiceId}.mp3`;
 }
 
 // Get story BGM URL (audio only on Haruki/Snowy)

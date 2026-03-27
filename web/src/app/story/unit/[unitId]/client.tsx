@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { fetchMasterData } from "@/lib/fetch";
+import { isCnSource, ASSET_BASE_URL_SNOWY, ASSET_BASE_URL_SNOWY_CN } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { IUnitProfile } from "@/types/types";
 
@@ -11,8 +12,9 @@ function getUnitOutlineLogoUrl(unitCode: string, server: "jp" | "cn"): string {
     return `https://sekai.best/images/${server}/logol_outline/logo_${unitCode}.png`;
 }
 
-function getUnitEpisodeImageUrl(chapterAssetbundleName: string, episodeAssetbundleName: string): string {
-    return `https://storage.sekai.best/sekai-jp-assets/story/episode_image/${chapterAssetbundleName}/${episodeAssetbundleName}.webp`;
+function getUnitEpisodeImageUrl(chapterAssetbundleName: string, episodeAssetbundleName: string, assetSource: import("@/contexts/ThemeContext").AssetSourceType): string {
+    const base = isCnSource(assetSource) ? ASSET_BASE_URL_SNOWY_CN : ASSET_BASE_URL_SNOWY;
+    return `${base}/startapp/story/episode_image/${chapterAssetbundleName}/${episodeAssetbundleName}.png`;
 }
 
 interface IUnitStoryEpisodeGroup {
@@ -45,7 +47,7 @@ interface IUnitStory {
 
 export default function StoryUnitDetailClient() {
     const params = useParams();
-    const { serverSource } = useTheme();
+    const { serverSource, assetSource } = useTheme();
     const unitId = Number(params.unitId);
 
     const [profile, setProfile] = useState<IUnitProfile | null>(null);
@@ -164,7 +166,7 @@ export default function StoryUnitDetailClient() {
                                         <div className="p-2.5 pb-0">
                                             <div className="relative aspect-video bg-slate-100 dark:bg-slate-700 rounded-lg overflow-hidden">
                                                 <img
-                                                    src={getUnitEpisodeImageUrl(chapterAssetbundleName, ep.assetbundleName)}
+                                                    src={getUnitEpisodeImageUrl(chapterAssetbundleName, ep.assetbundleName, assetSource)}
                                                     alt={ep.title}
                                                     className="w-full h-full object-cover"
                                                     loading="lazy"

@@ -23,7 +23,7 @@ type EpResult = { data: IProcessedScenarioData | null; missing: string[] | null;
 
 export default function StorySpecialReaderClient() {
     const params = useParams();
-    const { serverSource } = useTheme();
+    const { serverSource, assetSource } = useTheme();
     const spId = Number(params.spId);
     const lang: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
 
@@ -50,7 +50,7 @@ export default function StorySpecialReaderClient() {
                                 assetbundleName: ep.assetbundleName,
                                 scenarioId: ep.scenarioId,
                             });
-                            return { data: await processScenarioForDisplay(raw, "special"), missing: null, err: null };
+                            return { data: await processScenarioForDisplay(raw, "special", assetSource), missing: null, err: null };
                         } catch (err) {
                             if (err instanceof StoryAssetMissingError)
                                 return { data: null, missing: err.missingPaths, err: null };

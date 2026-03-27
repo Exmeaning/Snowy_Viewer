@@ -15,6 +15,7 @@ import {
 } from "@/types/story";
 import { fetchMasterData } from "./fetch";
 import { getBackgroundImageUrl, getStoryVoiceUrl, getCardStoryVoiceUrl, getAreaTalkVoiceUrl, getSpecialStoryVoiceUrl, getStoryBgmUrl, getStorySoundEffectUrl } from "./assets";
+import type { AssetSourceType } from "@/contexts/ThemeContext";
 import { CHAR_NAMES } from "@/types/types";
 
 // Asset base URL for direct scenario fetching
@@ -68,10 +69,12 @@ function extractScenarioIdFromData(data: IScenarioData): string {
 /**
  * Process scenario data into a format suitable for display
  * @param storyType - "card" | "talk" | "special" | "scenario" (default). Determines voice URL path.
+ * @param source - Asset source for voice/background URLs.
  */
 export async function processScenarioForDisplay(
     data: IScenarioData,
-    storyType: "card" | "talk" | "special" | "scenario" = "scenario"
+    storyType: "card" | "talk" | "special" | "scenario" = "scenario",
+    source: AssetSourceType = "uni"
 ): Promise<IProcessedScenarioData> {
     // Fetch required master data
     const [character2ds, mobCharacters] = await Promise.all([
@@ -98,7 +101,7 @@ export async function processScenarioForDisplay(
             delay: 0,
             isWait: true,
             seType: "ChangeBackground",
-            resource: getBackgroundImageUrl(data.FirstBackground),
+            resource: getBackgroundImageUrl(data.FirstBackground, source),
             body: data.FirstBackground,
         });
     }
@@ -111,7 +114,7 @@ export async function processScenarioForDisplay(
             isWait: true,
             hasBgm: true,
             hasSe: false,
-            bgm: getStoryBgmUrl(data.FirstBgm),
+            bgm: getStoryBgmUrl(data.FirstBgm, source),
             playMode: "CrossFade",
         });
     }
@@ -140,13 +143,13 @@ export async function processScenarioForDisplay(
                     // partvoice_* are part-song voices with complex URL rules, skip for now
                     if (!voice.VoiceId.startsWith("partvoice")) {
                         if (storyType === "card") {
-                            voiceUrl = getCardStoryVoiceUrl(scenarioId, voice.VoiceId);
+                            voiceUrl = getCardStoryVoiceUrl(scenarioId, voice.VoiceId, source);
                         } else if (storyType === "talk") {
-                            voiceUrl = getAreaTalkVoiceUrl(scenarioId, voice.VoiceId);
+                            voiceUrl = getAreaTalkVoiceUrl(scenarioId, voice.VoiceId, source);
                         } else if (storyType === "special") {
-                            voiceUrl = getSpecialStoryVoiceUrl(scenarioId, voice.VoiceId);
+                            voiceUrl = getSpecialStoryVoiceUrl(scenarioId, voice.VoiceId, source);
                         } else {
-                            voiceUrl = getStoryVoiceUrl(scenarioId, voice.VoiceId);
+                            voiceUrl = getStoryVoiceUrl(scenarioId, voice.VoiceId, source);
                         }
                     }
                 }
@@ -173,11 +176,11 @@ export async function processScenarioForDisplay(
                     seData.EffectType === SpecialEffectType.ChangeBackground ||
                     seData.EffectType === SpecialEffectType.ChangeBackgroundStill
                 ) {
-                    resource = getBackgroundImageUrl(seData.StringValSub || seData.StringVal);
+                    resource = getBackgroundImageUrl(seData.StringValSub || seData.StringVal, source);
                 } else if (seData.EffectType === SpecialEffectType.FullScreenText) {
                     // Voice for fullscreen text
                     if (seData.StringValSub) {
-                        resource = getStoryVoiceUrl(scenarioId, seData.StringValSub);
+                        resource = getStoryVoiceUrl(scenarioId, seData.StringValSub, source);
                     }
                 }
 
@@ -202,8 +205,8 @@ export async function processScenarioForDisplay(
                     isWait,
                     hasBgm: !!soundData.Bgm,
                     hasSe: !!soundData.Se,
-                    bgm: soundData.Bgm ? getStoryBgmUrl(soundData.Bgm) : "",
-                    se: soundData.Se ? getStorySoundEffectUrl(soundData.Se) : "",
+                    bgm: soundData.Bgm ? getStoryBgmUrl(soundData.Bgm, source) : "",
+                    se: soundData.Se ? getStorySoundEffectUrl(soundData.Se, source) : "",
                     playMode: SoundPlayMode[soundData.PlayMode] || "CrossFade",
                 });
                 break;
