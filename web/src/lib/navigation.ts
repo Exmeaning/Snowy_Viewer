@@ -35,7 +35,6 @@ export const navigationGroups: NavGroupData[] = [
             { name: "活动列表", href: "/events" },
             { name: "扭蛋", href: "/gacha" },
             { name: "演唱会", href: "/live" },
-            { name: "活动剧情", href: "/eventstory" },
             { name: "活动预测", href: "/prediction" },
             { name: "实时排行榜", href: "/realtime-ranking" },
         ],
@@ -151,7 +150,7 @@ export const searchableNavItems: SearchableNavItem[] = [
     { name: "活动列表", href: "/events", group: "活动", keywords: ["events", "event"] },
     { name: "扭蛋", href: "/gacha", group: "活动", keywords: ["gacha", "banner", "pull"] },
     { name: "演唱会", href: "/live", group: "活动", keywords: ["live", "concert", "virtual live"] },
-    { name: "活动剧情", href: "/eventstory", group: "活动", keywords: ["event story", "story", "scenario"] },
+    { name: "活动剧情", href: "/story/event", group: "活动", keywords: ["event story", "story", "scenario"] },
     { name: "活动预测", href: "/prediction", group: "活动", keywords: ["prediction", "ranking", "forecast"] },
     { name: "实时排行榜", href: "/realtime-ranking", group: "活动", keywords: ["realtime ranking", "live ranking", "排行", "排行榜", "实时榜单"] },
 

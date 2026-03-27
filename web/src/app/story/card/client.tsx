@@ -124,17 +124,21 @@ function StoryCardContent() {
         async function fetchCards() {
             try {
                 setIsLoading(true);
-                const [cardsData, suppliesData, translationsData] = await Promise.all([
+                const [cardsData, suppliesData, translationsData, cardEpisodesData] = await Promise.all([
                     fetchMasterData<ICardInfo[]>("cards.json"),
                     fetchMasterData<ICardSupply[]>("cardSupplies.json").catch(() => [] as ICardSupply[]),
                     loadTranslations(),
+                    fetchMasterData<{ cardId: number }[]>("cardEpisodes.json").catch(() => []),
                 ]);
+                const episodeCardIds = new Set(cardEpisodesData.map(e => e.cardId));
                 const supplyTypeMap = new Map<number, string>();
                 suppliesData.forEach(s => supplyTypeMap.set(s.id, s.cardSupplyType));
-                const enhancedCards = cardsData.map(card => ({
-                    ...card,
-                    cardSupplyType: supplyTypeMap.get(card.cardSupplyId) || "normal",
-                }));
+                const enhancedCards = cardsData
+                    .filter(card => episodeCardIds.has(card.id))
+                    .map(card => ({
+                        ...card,
+                        cardSupplyType: supplyTypeMap.get(card.cardSupplyId) || "normal",
+                    }));
                 setCards(enhancedCards);
                 setTranslations(translationsData);
                 setError(null);
