@@ -77,8 +77,8 @@ export default function ProfileClient() {
                 if (acc.authSource === "oauth2") {
                     try {
                         await refreshOAuthAccountData(acc.id);
-                    } catch {
-                        console.warn(`OAuth2 账号 ${acc.gameId} 刷新失败，保留已有数据并等待重新授权`);
+                    } catch (error) {
+                        console.warn(`OAuth2 账号 ${acc.gameId} 刷新失败，保留已有数据`, error);
                     }
                     continue;
                 }
@@ -380,7 +380,10 @@ export default function ProfileClient() {
                                                 )}
                                                 {acc.authSource === "oauth2" && (
                                                     <button
-                                                        onClick={() => void refreshOAuthAccountData(acc.id).then(reload).catch(() => setVerifyError("OAuth2 账号刷新失败，请重新授权后再试"))}
+                                                        onClick={() => void refreshOAuthAccountData(acc.id).then(reload).catch((error) => {
+                                                            console.warn(`OAuth2 账号 ${acc.gameId} 手动同步失败`, error);
+                                                            setVerifyError("OAuth2 账号刷新失败，请稍后重试或查看控制台日志");
+                                                        })}
                                                         className="px-2.5 py-1.5 text-[11px] font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                                                     >
                                                         重新同步

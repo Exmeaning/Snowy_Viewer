@@ -178,23 +178,57 @@ export function getLeaderCardId(userGamedata: UserGamedata | null, userDecks: Us
 
 // ==================== Haruki API ====================
 
+function hasAccountDataField(data: Record<string, unknown>, key: string): boolean {
+    return Object.prototype.hasOwnProperty.call(data, key);
+}
+
 function normalizeHarukiApiResponse(data: Record<string, unknown>): HarukiApiResult {
-    if (!data.userGamedata) {
+    const hasKnownAccountData = [
+        "userGamedata",
+        "userProfile",
+        "userDecks",
+        "userCharacters",
+        "userChallengeLiveSoloStages",
+        "userChallengeLiveSoloResults",
+        "userChallengeLiveSoloHighScoreRewards",
+        "userBonds",
+        "userMaterials",
+        "userAreas",
+        "userMysekaiFixtureGameCharacterPerformanceBonuses",
+        "userMysekaiGates",
+        "upload_time",
+    ].some((key) => hasAccountDataField(data, key));
+
+    if (!hasKnownAccountData) {
         return { success: false, error: "NOT_FOUND" };
     }
+
     return {
         success: true,
-        userGamedata: (data.userGamedata as UserGamedata) || undefined,
-        userDecks: (data.userDecks as UserDeck[]) || [],
-        userCharacters: (data.userCharacters as UserCharacter[]) || [],
-        userChallengeLiveSoloStages: (data.userChallengeLiveSoloStages as UserChallengeLiveSoloStage[]) || [],
-        userChallengeLiveSoloResults: (data.userChallengeLiveSoloResults as UserChallengeLiveSoloResult[]) || [],
-        userChallengeLiveSoloHighScoreRewards: (data.userChallengeLiveSoloHighScoreRewards as UserChallengeLiveSoloHighScoreReward[]) || [],
-        userBonds: (data.userBonds as UserBond[]) || [],
-        userMaterials: (data.userMaterials as UserMaterial[]) || [],
-        userAreas: (data.userAreas as UserArea[]) || [],
-        userMysekaiFixtureGameCharacterPerformanceBonuses: (data.userMysekaiFixtureGameCharacterPerformanceBonuses as UserMysekaiFixtureGameCharacterPerformanceBonus[]) || [],
-        userMysekaiGates: (data.userMysekaiGates as UserMysekaiGate[]) || [],
+        userProfile: data.userProfile && typeof data.userProfile === "object"
+            ? data.userProfile as { word: string; userId: number }
+            : undefined,
+        userGamedata: data.userGamedata && typeof data.userGamedata === "object"
+            ? data.userGamedata as UserGamedata
+            : undefined,
+        userDecks: Array.isArray(data.userDecks) ? data.userDecks as UserDeck[] : undefined,
+        userCharacters: Array.isArray(data.userCharacters) ? data.userCharacters as UserCharacter[] : undefined,
+        userChallengeLiveSoloStages: Array.isArray(data.userChallengeLiveSoloStages)
+            ? data.userChallengeLiveSoloStages as UserChallengeLiveSoloStage[]
+            : undefined,
+        userChallengeLiveSoloResults: Array.isArray(data.userChallengeLiveSoloResults)
+            ? data.userChallengeLiveSoloResults as UserChallengeLiveSoloResult[]
+            : undefined,
+        userChallengeLiveSoloHighScoreRewards: Array.isArray(data.userChallengeLiveSoloHighScoreRewards)
+            ? data.userChallengeLiveSoloHighScoreRewards as UserChallengeLiveSoloHighScoreReward[]
+            : undefined,
+        userBonds: Array.isArray(data.userBonds) ? data.userBonds as UserBond[] : undefined,
+        userMaterials: Array.isArray(data.userMaterials) ? data.userMaterials as UserMaterial[] : undefined,
+        userAreas: Array.isArray(data.userAreas) ? data.userAreas as UserArea[] : undefined,
+        userMysekaiFixtureGameCharacterPerformanceBonuses: Array.isArray(data.userMysekaiFixtureGameCharacterPerformanceBonuses)
+            ? data.userMysekaiFixtureGameCharacterPerformanceBonuses as UserMysekaiFixtureGameCharacterPerformanceBonus[]
+            : undefined,
+        userMysekaiGates: Array.isArray(data.userMysekaiGates) ? data.userMysekaiGates as UserMysekaiGate[] : undefined,
         uploadTime: typeof data.upload_time === "number" ? data.upload_time : undefined,
     };
 }
@@ -784,22 +818,26 @@ export async function refreshOAuthAccountData(accountId: string): Promise<Haruki
         throw new Error(normalized.error || "NETWORK_ERROR");
     }
 
+    const latestUserGamedata = normalized.userGamedata ?? account.userGamedata ?? null;
+    const latestUserDecks = normalized.userDecks ?? account.userDecks ?? null;
+    const latestUserCharacters = normalized.userCharacters ?? account.userCharacters ?? null;
+
     updateAccount(accountId, {
         nickname: normalized.userGamedata?.name || account.nickname,
-        avatarCardId: getLeaderCardId(normalized.userGamedata || null, normalized.userDecks || null) ?? account.avatarCardId,
-        avatarCharacterId: normalized.userCharacters && normalized.userCharacters.length > 0 ? getTopCharacterId(normalized.userCharacters) : account.avatarCharacterId,
-        userCharacters: normalized.userCharacters || null,
-        userGamedata: normalized.userGamedata || null,
-        userDecks: normalized.userDecks || null,
-        userChallengeLiveSoloStages: normalized.userChallengeLiveSoloStages || null,
-        userChallengeLiveSoloResults: normalized.userChallengeLiveSoloResults || null,
-        userChallengeLiveSoloHighScoreRewards: normalized.userChallengeLiveSoloHighScoreRewards || null,
-        userBonds: normalized.userBonds || null,
-        userMaterials: normalized.userMaterials || null,
-        userAreas: normalized.userAreas || null,
-        userMysekaiFixtureGameCharacterPerformanceBonuses: normalized.userMysekaiFixtureGameCharacterPerformanceBonuses || null,
-        userMysekaiGates: normalized.userMysekaiGates || null,
-        uploadTime: normalized.uploadTime || null,
+        avatarCardId: getLeaderCardId(latestUserGamedata, latestUserDecks) ?? account.avatarCardId,
+        avatarCharacterId: latestUserCharacters && latestUserCharacters.length > 0 ? getTopCharacterId(latestUserCharacters) : account.avatarCharacterId,
+        userCharacters: latestUserCharacters,
+        userGamedata: latestUserGamedata,
+        userDecks: latestUserDecks,
+        userChallengeLiveSoloStages: normalized.userChallengeLiveSoloStages ?? account.userChallengeLiveSoloStages ?? null,
+        userChallengeLiveSoloResults: normalized.userChallengeLiveSoloResults ?? account.userChallengeLiveSoloResults ?? null,
+        userChallengeLiveSoloHighScoreRewards: normalized.userChallengeLiveSoloHighScoreRewards ?? account.userChallengeLiveSoloHighScoreRewards ?? null,
+        userBonds: normalized.userBonds ?? account.userBonds ?? null,
+        userMaterials: normalized.userMaterials ?? account.userMaterials ?? null,
+        userAreas: normalized.userAreas ?? account.userAreas ?? null,
+        userMysekaiFixtureGameCharacterPerformanceBonuses: normalized.userMysekaiFixtureGameCharacterPerformanceBonuses ?? account.userMysekaiFixtureGameCharacterPerformanceBonuses ?? null,
+        userMysekaiGates: normalized.userMysekaiGates ?? account.userMysekaiGates ?? null,
+        uploadTime: normalized.uploadTime ?? account.uploadTime ?? null,
         lastSyncAt: Date.now(),
         authError: null,
     });

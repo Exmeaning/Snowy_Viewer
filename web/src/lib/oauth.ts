@@ -257,12 +257,18 @@ async function readJsonWithTimeout<T>(response: Response): Promise<T> {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     try {
-        return await Promise.race<T>([
-            response.json() as Promise<T>,
-            new Promise<T>((_, reject) => {
+        const text = await Promise.race<string>([
+            response.text(),
+            new Promise<string>((_, reject) => {
                 timeoutId = setTimeout(() => reject(new Error("OAUTH_REQUEST_TIMEOUT")), OAUTH2_REQUEST_TIMEOUT_MS);
             }),
         ]);
+
+        if (!text.trim()) {
+            return null as T;
+        }
+
+        return JSON.parse(text) as T;
     } finally {
         if (timeoutId) clearTimeout(timeoutId);
     }
@@ -378,6 +384,7 @@ export async function fetchOAuthProfile(accessToken: string): Promise<OAuthProfi
 
 export async function fetchOAuthBindings(accessToken: string): Promise<OAuthBinding[]> {
     const data = await authorizedJson<unknown>("/user/bindings", accessToken);
+    if (data == null) return [];
     if (Array.isArray(data)) return data as OAuthBinding[];
     if (data && typeof data === "object") {
         const maybeItems = (data as {
@@ -419,7 +426,7 @@ export async function fetchOAuthGameData(accessToken: string, server: ServerType
 }
 
 export async function fetchOAuthGameDataSuite(accessToken: string, server: ServerType, userId: string): Promise<Record<string, unknown>> {
-    return authorizedJson<Record<string, unknown>>(`/game-data/${server}/suite/${encodeURIComponent(userId)}`, accessToken);
+    return (await authorizedJson<Record<string, unknown> | null>(`/game-data/${server}/suite/${encodeURIComponent(userId)}`, accessToken)) ?? {};
 }
 
 export async function resolveOAuthAuthorization(
