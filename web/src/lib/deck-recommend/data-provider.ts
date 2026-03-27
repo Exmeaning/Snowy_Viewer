@@ -80,6 +80,12 @@ interface UserHonorEntry {
 
 type UserDataMap = Record<string, unknown>;
 
+function getDefaultUserDataValue(key: string): unknown {
+    if (key === "userGamedata") return null;
+    if (key === "upload_time") return null;
+    return [];
+}
+
 // ==================== Helper Functions ====================
 
 /**
@@ -188,28 +194,82 @@ export class SnowyDataProvider implements DataProvider {
     async getUserDataAll(): Promise<UserDataMap> {
         if (this.userDataCache) return this.userDataCache;
 
-        const response = this.oauthAccessToken
-            ? await fetch(`${OAUTH2_BASE}/game-data/${this.server}/suite/${this.userId}`, {
-                headers: {
-                    Authorization: `Bearer ${this.oauthAccessToken}`,
-                },
-            })
-            : await fetch(`${HARUKI_SUITE_API}/${this.server}/suite/${this.userId}?key=${USER_DATA_KEYS}`);
-
-        if (response.status === 404) {
-            throw new Error("USER_NOT_FOUND");
-        }
-        if (response.status === 403) {
-            throw new Error("API_NOT_PUBLIC");
-        }
-        if (!response.ok) {
-            throw new Error(`Failed to fetch user data (${response.status})`);
-        }
-
-        const data = (await response.json()) as UserDataMap & {
+        let data: UserDataMap & {
             userCards?: UserCardEntry[];
             userHonors?: UserHonorEntry[];
         };
+
+        if (this.oauthAccessToken) {
+            const response = await fetch(`${OAUTH2_BASE}/game-data/${this.server}/suite/${this.userId}`, {
+                headers: {
+                    Authorization: `Bearer ${this.oauthAccessToken}`,
+                },
+            });
+
+            if (response.status === 404) {
+                throw new Error("USER_NOT_FOUND");
+            }
+            if (response.status === 403) {
+                throw new Error("API_NOT_PUBLIC");
+            }
+
+            if (response.ok) {
+                data = (await response.json()) as UserDataMap & {
+                    userCards?: UserCardEntry[];
+                    userHonors?: UserHonorEntry[];
+                };
+            } else if (response.status === 400) {
+                console.warn("[DeckRecommend] OAuth suite endpoint returned 400, falling back to per-key requests");
+                const keys = USER_DATA_KEYS.split(",");
+                const entries = await Promise.all(keys.map(async (key) => {
+                    const keyResponse = await fetch(`${OAUTH2_BASE}/game-data/${this.server}/${key}/${this.userId}`, {
+                        headers: {
+                            Authorization: `Bearer ${this.oauthAccessToken}`,
+                        },
+                    });
+
+                    if (keyResponse.status === 404) {
+                        throw new Error("USER_NOT_FOUND");
+                    }
+                    if (keyResponse.status === 403) {
+                        throw new Error("API_NOT_PUBLIC");
+                    }
+                    if (keyResponse.status === 400) {
+                        console.warn(`[DeckRecommend] OAuth user data key "${key}" returned 400, using fallback default value`);
+                        return [key, getDefaultUserDataValue(key)] as const;
+                    }
+                    if (!keyResponse.ok) {
+                        throw new Error(`Failed to fetch user data (${keyResponse.status})`);
+                    }
+
+                    return [key, await keyResponse.json()] as const;
+                }));
+
+                data = Object.fromEntries(entries) as UserDataMap & {
+                    userCards?: UserCardEntry[];
+                    userHonors?: UserHonorEntry[];
+                };
+            } else {
+                throw new Error(`Failed to fetch user data (${response.status})`);
+            }
+        } else {
+            const response = await fetch(`${HARUKI_SUITE_API}/${this.server}/suite/${this.userId}?key=${USER_DATA_KEYS}`);
+
+            if (response.status === 404) {
+                throw new Error("USER_NOT_FOUND");
+            }
+            if (response.status === 403) {
+                throw new Error("API_NOT_PUBLIC");
+            }
+            if (!response.ok) {
+                throw new Error(`Failed to fetch user data (${response.status})`);
+            }
+
+            data = (await response.json()) as UserDataMap & {
+                userCards?: UserCardEntry[];
+                userHonors?: UserHonorEntry[];
+            };
+        }
 
         // Filter userCards to ensure only cards existing in JP master data are returned
         if (data.userCards && Array.isArray(data.userCards)) {

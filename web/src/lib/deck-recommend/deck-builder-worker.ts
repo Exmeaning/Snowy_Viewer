@@ -88,11 +88,12 @@ interface EventInfoLite {
 type UserDataMap = Record<string, unknown>;
 type DeckResultRow = Record<string, unknown>;
 
-/**
- * Transform official cardParameters format to sekai-calculator expected format.
- * Official: { param1: number[], param2: number[], param3: number[] }
- * sekai-calculator expects: Array<{ id, cardId, cardLevel, cardParameterType, power }>
- */
+function getDefaultUserDataValue(key: string): unknown {
+    if (key === "userGamedata") return null;
+    if (key === "upload_time") return null;
+    return [];
+}
+
 function transformCards(cards: CardWithParameters[]): CardWithParameters[] {
     return cards.map((card) => {
         if (!card.cardParameters || Array.isArray(card.cardParameters)) {
@@ -210,6 +211,10 @@ class SnowyDataProvider implements DataProvider {
                 }
                 if (response.status === 403) {
                     throw new Error("API_NOT_PUBLIC");
+                }
+                if (response.status === 400) {
+                    console.warn(`[ScoreControl] OAuth user data key "${key}" returned 400, using fallback default value`);
+                    return [key, getDefaultUserDataValue(key)] as const;
                 }
                 if (!response.ok) {
                     throw new Error(`Failed to fetch user data (${response.status})`);

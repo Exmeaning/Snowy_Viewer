@@ -266,8 +266,42 @@ async function getRefreshedOAuthToken(account: MoesekaiAccount): Promise<OAuthTo
 
 export type AccountDataErrorCode = "API_NOT_PUBLIC" | "NOT_FOUND" | "OAUTH_REAUTH_REQUIRED" | "OAUTH_ACCESS_FAILED" | "NETWORK_ERROR";
 
+function getAccountDataErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error || "");
+}
+
+function isOAuthBadRequestError(error: unknown): boolean {
+    return getAccountDataErrorMessage(error).startsWith("AUTHORIZED_REQUEST_FAILED_400");
+}
+
+function getDefaultOAuthDataValue(key: string): unknown {
+    if (key === "userGamedata") return null;
+    if (key === "upload_time") return null;
+    return [];
+}
+
+async function fetchOAuthGameDataPerKey(
+    accessToken: string,
+    account: MoesekaiAccount,
+    keys: string[],
+): Promise<Record<string, unknown>> {
+    const entries = await Promise.all(keys.map(async (key) => {
+        try {
+            return [key, await fetchOAuthGameData(accessToken, account.server, key, account.gameId)] as const;
+        } catch (error) {
+            if (isOAuthBadRequestError(error)) {
+                console.warn(`[OAuth2] game-data key "${key}" returned 400, using fallback default value`);
+                return [key, getDefaultOAuthDataValue(key)] as const;
+            }
+            throw error;
+        }
+    }));
+
+    return Object.fromEntries(entries);
+}
+
 export function normalizeAccountDataError(error: unknown): AccountDataErrorCode {
-    const message = error instanceof Error ? error.message : String(error || "");
+    const message = getAccountDataErrorMessage(error);
     if (message === "API_NOT_PUBLIC") return "API_NOT_PUBLIC";
     if (message === "NOT_FOUND") return "NOT_FOUND";
     if (
@@ -289,23 +323,23 @@ export async function fetchAccountGameData(account: MoesekaiAccount, keys: strin
         try {
             const token = await getRefreshedOAuthToken(account);
             if (keys.length > 1) {
-                const suite = await fetchOAuthGameDataSuite(token.accessToken, account.server, account.gameId);
-                const merged: Record<string, unknown> = {};
-                keys.forEach((key) => {
-                    merged[key] = suite[key];
-                });
-                return merged;
+                try {
+                    const suite = await fetchOAuthGameDataSuite(token.accessToken, account.server, account.gameId);
+                    const merged: Record<string, unknown> = {};
+                    keys.forEach((key) => {
+                        merged[key] = suite[key];
+                    });
+                    return merged;
+                } catch (error) {
+                    if (!isOAuthBadRequestError(error)) {
+                        throw error;
+                    }
+                    console.warn("[OAuth2] suite endpoint returned 400, falling back to per-key requests", { accountId: account.id, keys });
+                    return fetchOAuthGameDataPerKey(token.accessToken, account, keys);
+                }
             }
 
-            const requests = await Promise.all(keys.map(async (key) => [
-                key,
-                await fetchOAuthGameData(token.accessToken, account.server, key, account.gameId),
-            ] as const));
-            const merged: Record<string, unknown> = {};
-            requests.forEach(([key, value]) => {
-                merged[key] = value;
-            });
-            return merged;
+            return fetchOAuthGameDataPerKey(token.accessToken, account, keys);
         } catch (error) {
             const normalized = normalizeAccountDataError(error);
 
