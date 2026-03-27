@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo } from "react";
 import Image from "next/image";
-import { FilterSection } from "@/components/common/BaseFilters";
+import { FilterSection, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
 import { CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES, UNIT_FIELD_TO_ID, UNIT_NAME_MAP, ICharaUnitInfo } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 
@@ -174,10 +174,7 @@ export default function CharacterFilter({
                             <button
                                 key={unit.id}
                                 onClick={() => handleUnitClick(unit.id)}
-                                className={`p-1.5 rounded-xl transition-all ${selectedUnitIds.includes(unit.id)
-                                    ? "ring-2 ring-miku shadow-lg bg-white"
-                                    : "hover:bg-slate-100 border border-transparent bg-slate-50"
-                                    }`}
+                                className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(selectedUnitIds.includes(unit.id))}`}
                                 title={unit.name}
                             >
                                 <div className="w-8 h-8 relative">
@@ -208,12 +205,12 @@ export default function CharacterFilter({
                                     key={charId}
                                     onClick={() => toggleCharacter(charId)}
                                     className={`relative transition-all ${selectedCharacters.includes(charId)
-                                        ? "ring-2 ring-miku scale-110 z-10 rounded-full"
-                                        : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-80 hover:opacity-100"
+                                        ? "ring-2 ring-miku scale-110 z-10 rounded-full shadow-lg"
+                                        : "ring-2 ring-transparent hover:ring-slate-200 dark:hover:ring-slate-600 rounded-full opacity-80 hover:opacity-100"
                                         }`}
                                     title={charName}
                                 >
-                                    <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
+                                    <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                                         <Image
                                             src={getCharacterIconUrl(getCharIconId(charId))}
                                             alt={charName}
@@ -224,7 +221,7 @@ export default function CharacterFilter({
                                         />
                                     </div>
                                     {badgeIcon && (
-                                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white shadow-sm flex items-center justify-center">
+                                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center">
                                             <Image
                                                 src={`/data/icon/${badgeIcon}`}
                                                 alt=""
@@ -243,10 +240,7 @@ export default function CharacterFilter({
                         <button
                             key="all"
                             onClick={handleAllClick}
-                            className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold transition-all ${allSelected
-                                ? "bg-miku text-white shadow-lg ring-2 ring-miku"
-                                : "bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200"
-                                }`}
+                            className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold transition-all ${getFilterChipStateClasses(allSelected, "bg-miku text-white shadow-lg ring-2 ring-miku border border-transparent dark:bg-miku/20 dark:text-white dark:border-miku/40 dark:ring-miku/70", "bg-slate-50 hover:bg-slate-100 text-slate-500 dark:text-slate-300 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
                             title="全部"
                             style={{ width: '40px', height: '40px' }}
                         >

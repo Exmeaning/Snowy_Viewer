@@ -1,5 +1,5 @@
 "use client";
-import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
+import BaseFilters, { FilterSection, getFilterChipStateClasses } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { GachaCategoryType, GACHA_CATEGORY_LABELS } from "@/types/types";
 
@@ -64,10 +64,7 @@ export default function GachaFilters({
                         <button
                             key={category}
                             onClick={() => onCategoryChange(category)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedCategory === category
-                                ? "bg-miku text-white shadow-md"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                }`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${getFilterChipStateClasses(selectedCategory === category)}`}
                         >
                             {GACHA_CATEGORY_LABELS[category]}
                         </button>

@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
+import BaseFilters, { FilterSection, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { EventType, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS } from "@/types/events";
 import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, CardAttribute, ATTR_NAMES, ATTR_ICON_PATHS, ATTR_COLORS } from "@/types/types";
@@ -132,10 +132,7 @@ export default function EventFilters({
                             <button
                                 key={unit.id}
                                 onClick={() => toggleEventUnit(unit.id)}
-                                className={`p-1.5 rounded-xl transition-all ${selectedEventUnits.includes(unit.id)
-                                    ? "ring-2 ring-miku shadow-lg bg-white"
-                                    : "hover:bg-slate-100 border border-transparent bg-slate-50"
-                                    }`}
+                                className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(selectedEventUnits.includes(unit.id))}`}
                                 title={unit.name}
                             >
                                 {unit.icon ? (
@@ -149,8 +146,8 @@ export default function EventFilters({
                                         />
                                     </div>
                                 ) : (
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                                        <span className="text-xs text-slate-500 font-bold">混</span>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedEventUnits.includes(unit.id) ? "bg-miku/12 dark:bg-miku/20" : "bg-slate-100 dark:bg-slate-800"}`}>
+                                        <span className={`text-xs font-bold ${selectedEventUnits.includes(unit.id) ? "text-miku dark:text-slate-100" : "text-slate-500 dark:text-slate-300"}`}>混</span>
                                     </div>
                                 )}
                             </button>
@@ -179,8 +176,8 @@ export default function EventFilters({
                             key={type}
                             onClick={() => toggleType(type)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedTypes.includes(type)
-                                ? "text-white shadow-md"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                ? "text-white shadow-md ring-1 ring-white/30 dark:ring-white/10"
+                                : getFilterChipStateClasses(false)
                                 }`}
                             style={selectedTypes.includes(type) ? { backgroundColor: EVENT_TYPE_COLORS[type] } : {}}
                         >
@@ -209,10 +206,7 @@ export default function EventFilters({
                             <button
                                 key={attr}
                                 onClick={() => onBonusAttrChange(selectedBonusAttr === attr ? null : attr)}
-                                className={`p-1.5 rounded-xl transition-all flex items-center gap-1.5 ${selectedBonusAttr === attr
-                                    ? "ring-2 shadow-lg bg-white"
-                                    : "hover:bg-slate-100 border border-transparent bg-slate-50"
-                                    }`}
+                                className={`p-1.5 rounded-xl transition-all flex items-center gap-1.5 ${getFilterIconStateClasses(selectedBonusAttr === attr, "shadow-lg bg-white border border-transparent dark:bg-miku/12 dark:border-miku/40", "bg-slate-50 border border-transparent hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
                                 style={selectedBonusAttr === attr ? { boxShadow: `0 0 0 2px ${ATTR_COLORS[attr]}` } : {}}
                                 title={ATTR_NAMES[attr]}
                             >
