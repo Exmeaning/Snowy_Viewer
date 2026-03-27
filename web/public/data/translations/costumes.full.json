@@ -1,0 +1,4536 @@
+{
+  "designer": {
+    "たま": {
+      "text": "-",
+      "source": "cn"
+    },
+    "沢良宜": {
+      "text": "-",
+      "source": "cn"
+    },
+    "ぱせり": {
+      "text": "Paseri",
+      "source": "llm"
+    },
+    "ふわ太": {
+      "text": "Fuwata",
+      "source": "llm"
+    },
+    "どこかののの": {
+      "text": "Dokoka no Nono",
+      "source": "llm"
+    },
+    "鴨ひれ": {
+      "text": "Kamohire",
+      "source": "llm"
+    },
+    "しゅがお": {
+      "text": "Shugao",
+      "source": "llm"
+    },
+    "@eggw0v0wegg": {
+      "text": "@eggw0v0wegg",
+      "source": "llm"
+    },
+    "なしこ": {
+      "text": "Nashiko",
+      "source": "llm"
+    },
+    "桃タルト": {
+      "text": "桃子塔",
+      "source": "llm"
+    },
+    "furokirai": {
+      "text": "furokirai",
+      "source": "llm"
+    },
+    "LAM": {
+      "text": "LAM",
+      "source": "llm"
+    },
+    "先崎真琴": {
+      "text": "先崎真琴",
+      "source": "llm"
+    },
+    "ライカ": {
+      "text": "Raika",
+      "source": "llm"
+    },
+    "サニー": {
+      "text": "Sunny",
+      "source": "llm"
+    },
+    "こゆと": {
+      "text": "Koyuto",
+      "source": "llm"
+    },
+    "まめまめ": {
+      "text": "Mamemame",
+      "source": "llm"
+    },
+    "SASAYORU": {
+      "text": "SASAYORU",
+      "source": "llm"
+    },
+    "TNSK": {
+      "text": "TNSK",
+      "source": "llm"
+    },
+    "いわき": {
+      "text": "Iwaki",
+      "source": "llm"
+    },
+    "澪月せろ": {
+      "text": "澪月Sero",
+      "source": "llm"
+    },
+    "上倉エク": {
+      "text": "上仓Eku",
+      "source": "llm"
+    },
+    "秋寄": {
+      "text": "_000\".",
+      "source": "llm"
+    },
+    "へいわ": {
+      "text": "Heiwa",
+      "source": "llm"
+    },
+    "なすび": {
+      "text": "Nasubi",
+      "source": "llm"
+    },
+    "きの": {
+      "text": "Kino",
+      "source": "llm"
+    },
+    "スオウ & Rella": {
+      "text": "Suou & Rella",
+      "source": "llm"
+    },
+    "きぬみやこ": {
+      "text": "Kinumiyako",
+      "source": "llm"
+    },
+    "ぺむら": {
+      "text": "Pemura",
+      "source": "llm"
+    },
+    "うみのかいせん": {
+      "text": "Umi no Kaisen",
+      "source": "llm"
+    },
+    "はやみ": {
+      "text": "Hayami",
+      "source": "llm"
+    },
+    "オム": {
+      "text": "Omu",
+      "source": "llm"
+    },
+    "もふ": {
+      "text": "Mofu",
+      "source": "llm"
+    },
+    "三月": {
+      "text": "三月",
+      "source": "llm"
+    },
+    "POKImari": {
+      "text": "POKImari",
+      "source": "llm"
+    },
+    "MAiCO": {
+      "text": "MAiCO",
+      "source": "llm"
+    },
+    "ｓｋｃ": {
+      "text": "skc",
+      "source": "llm"
+    },
+    "あるてら": {
+      "text": "Arutera",
+      "source": "llm"
+    },
+    "村上ゆいち": {
+      "text": "村上Yuichi",
+      "source": "llm"
+    },
+    "からながれ": {
+      "text": "Karanagare",
+      "source": "llm"
+    },
+    "白夜 零月": {
+      "text": "白夜 零月",
+      "source": "llm"
+    },
+    "saeko": {
+      "text": "saeko",
+      "source": "llm"
+    },
+    "掘泉インコ": {
+      "text": "掘泉Inko",
+      "source": "llm"
+    },
+    "いる": {
+      "text": "いる",
+      "source": "llm"
+    },
+    "雨月ユキ": {
+      "text": "雨月ユキ",
+      "source": "llm"
+    },
+    "増殖型うどん屋": {
+      "text": "增殖型乌冬面店",
+      "source": "llm"
+    },
+    "こむ": {
+      "text": "こむ",
+      "source": "llm"
+    },
+    "ノズ": {
+      "text": "ノズ",
+      "source": "llm"
+    },
+    "mell°": {
+      "text": "mell°",
+      "source": "llm"
+    },
+    "肴": {
+      "text": "肴",
+      "source": "llm"
+    },
+    "toori": {
+      "text": "toori",
+      "source": "llm"
+    },
+    "へぼ": {
+      "text": "へぼ",
+      "source": "llm"
+    },
+    "nezuki": {
+      "text": "nezuki",
+      "source": "llm"
+    },
+    "みっ君": {
+      "text": "みっ君",
+      "source": "llm"
+    },
+    "なぎと ふう": {
+      "text": "なぎと ふう",
+      "source": "llm"
+    },
+    "レヅキ": {
+      "text": "レヅキ",
+      "source": "llm"
+    },
+    "左脳": {
+      "text": "左脑",
+      "source": "llm"
+    },
+    "スミカラ喫茶": {
+      "text": "Sumikara咖啡厅",
+      "source": "llm"
+    },
+    "米室": {
+      "text": "米室",
+      "source": "llm"
+    },
+    "BUZZ": {
+      "text": "BUZZ",
+      "source": "llm"
+    },
+    "ゐ透": {
+      "text": "ゐ透",
+      "source": "llm"
+    },
+    "立花": {
+      "text": "立花",
+      "source": "llm"
+    },
+    "フィルハモ": {
+      "text": "フィルハモ",
+      "source": "llm"
+    },
+    "アシマ": {
+      "text": "Ashima",
+      "source": "llm"
+    },
+    "ねこたねこすけ": {
+      "text": "猫田猫助",
+      "source": "llm"
+    },
+    "ひなつ": {
+      "text": "Hinatsu",
+      "source": "llm"
+    },
+    "でつ": {
+      "text": "Detsu",
+      "source": "llm"
+    },
+    "87*saku": {
+      "text": "87*saku",
+      "source": "llm"
+    },
+    "ヒイノ": {
+      "text": "Hiino",
+      "source": "llm"
+    },
+    "ってwake！？": {
+      "text": "就是这么回事！？",
+      "source": "llm"
+    },
+    "星屑. ": {
+      "text": "星屑",
+      "source": "llm"
+    },
+    "家上": {
+      "text": "家上",
+      "source": "llm"
+    },
+    "さくこ": {
+      "text": "Sakuko",
+      "source": "llm"
+    },
+    "てん": {
+      "text": "Ten",
+      "source": "llm"
+    },
+    "シロ": {
+      "text": "Shiro",
+      "source": "llm"
+    },
+    "アザカ": {
+      "text": "Azaka",
+      "source": "llm"
+    },
+    "ちり": {
+      "text": "Chiri",
+      "source": "llm"
+    },
+    "ささき": {
+      "text": "Sasaki",
+      "source": "llm"
+    },
+    "藤ちょこ": {
+      "text": "藤Choco",
+      "source": "llm"
+    },
+    "不知丸": {
+      "text": "不知丸",
+      "source": "llm"
+    },
+    "くーぜ": {
+      "text": "Kuze",
+      "source": "llm"
+    },
+    "わいん": {
+      "text": "Wain",
+      "source": "llm"
+    },
+    "OLUOLI": {
+      "text": "OLUOLI",
+      "source": "llm"
+    },
+    "紅茶マジ太郎": {
+      "text": "红茶Maji太郎",
+      "source": "llm"
+    },
+    "風李たゆ": {
+      "text": "风李Tayu",
+      "source": "llm"
+    },
+    "Ei-Flow": {
+      "text": "Ei-Flow",
+      "source": "llm"
+    },
+    "KOJIN": {
+      "text": "KOJIN",
+      "source": "llm"
+    },
+    "Mika Pikazo": {
+      "text": "Mika Pikazo",
+      "source": "llm"
+    },
+    "マスもふﾌﾟﾝ": {
+      "text": "Masumofupun",
+      "source": "llm"
+    },
+    "moo": {
+      "text": "moo_",
+      "source": "llm"
+    },
+    "しろ": {
+      "text": "しろ",
+      "source": "llm"
+    },
+    "一登": {
+      "text": "一登",
+      "source": "llm"
+    },
+    "634": {
+      "text": "634",
+      "source": "llm"
+    },
+    "みゅん": {
+      "text": "みゅん",
+      "source": "llm"
+    },
+    "tokiwa.": {
+      "text": "tokiwa.",
+      "source": "llm"
+    },
+    "青鳥パラン": {
+      "text": "青鸟Paran",
+      "source": "llm"
+    },
+    "エラソート": {
+      "text": "Erasooto",
+      "source": "llm"
+    },
+    "iXima": {
+      "text": "iXima",
+      "source": "llm"
+    },
+    "横向き親知らず": {
+      "text": "横向智齿",
+      "source": "llm"
+    },
+    "モゲラッタ": {
+      "text": "Mogeratta",
+      "source": "llm"
+    },
+    "コチュジャンのもの": {
+      "text": "韩式辣酱之物",
+      "source": "llm"
+    },
+    "domco.": {
+      "text": "domco.",
+      "source": "llm"
+    },
+    "森倉円": {
+      "text": "森仓圆",
+      "source": "llm"
+    },
+    "井倉": {
+      "text": "井仓",
+      "source": "llm"
+    },
+    "gzz": {
+      "text": "gzz",
+      "source": "llm"
+    },
+    "コゲ": {
+      "text": "Koge",
+      "source": "llm"
+    },
+    "優": {
+      "text": "优",
+      "source": "llm"
+    },
+    "Sonyeo": {
+      "text": "Sonyeo",
+      "source": "llm"
+    },
+    "Tiv": {
+      "text": "Tiv",
+      "source": "llm"
+    },
+    "羽紫おり": {
+      "text": "羽紫ori",
+      "source": "llm"
+    },
+    "Dove": {
+      "text": "Dove",
+      "source": "llm"
+    },
+    "うごんば": {
+      "text": "うごんば",
+      "source": "llm"
+    },
+    "スオウ": {
+      "text": "スオウ",
+      "source": "llm"
+    },
+    "ndr": {
+      "text": "ndr",
+      "source": "llm"
+    },
+    "杜本": {
+      "text": "杜本",
+      "source": "llm"
+    },
+    "saino": {
+      "text": "saino",
+      "source": "llm"
+    },
+    "あかもく": {
+      "text": "Akamoku",
+      "source": "llm"
+    },
+    "えもん": {
+      "text": "Emon",
+      "source": "llm"
+    },
+    "naco": {
+      "text": "naco",
+      "source": "llm"
+    },
+    "日々花": {
+      "text": "日日花",
+      "source": "llm"
+    },
+    "えすかるご": {
+      "text": "Escargot",
+      "source": "llm"
+    },
+    "隊長": {
+      "text": "队长",
+      "source": "llm"
+    },
+    "ふのこ": {
+      "text": "funoko",
+      "source": "llm"
+    },
+    "千寿": {
+      "text": "千寿",
+      "source": "llm"
+    },
+    "82": {
+      "text": "82",
+      "source": "llm"
+    },
+    "ヲタ": {
+      "text": "Wota",
+      "source": "llm"
+    },
+    "りゅ": {
+      "text": "ryu",
+      "source": "llm"
+    },
+    "海月くらげ": {
+      "text": "海月水母",
+      "source": "llm"
+    },
+    "うりゅ": {
+      "text": "uryu",
+      "source": "llm"
+    },
+    "ねい": {
+      "text": "nei",
+      "source": "llm"
+    },
+    "PARTY GO ON!": {
+      "text": "PARTY GO ON!",
+      "source": "llm"
+    },
+    "はるおみ": {
+      "text": "Haruomi",
+      "source": "llm"
+    },
+    "あさしら": {
+      "text": "asashira",
+      "source": "llm"
+    },
+    "はるとうと": {
+      "text": "harutouto",
+      "source": "llm"
+    },
+    "わたぬき": {
+      "text": "Watanuki",
+      "source": "llm"
+    },
+    "夏炉": {
+      "text": "夏炉",
+      "source": "llm"
+    },
+    "チェリ子": {
+      "text": "チェリ子",
+      "source": "llm"
+    },
+    "ワーワー言うとりま助℃": {
+      "text": "ワーワー言うとりま助℃",
+      "source": "llm"
+    },
+    "apapico": {
+      "text": "apapico",
+      "source": "llm"
+    },
+    "DECO": {
+      "text": "DECO",
+      "source": "llm"
+    },
+    "赤倉": {
+      "text": "赤仓",
+      "source": "llm"
+    },
+    "へちま": {
+      "text": "へちま",
+      "source": "llm"
+    },
+    "kouri.": {
+      "text": "kouri.",
+      "source": "llm"
+    },
+    "Rella": {
+      "text": "Rella",
+      "source": "llm"
+    },
+    "IYORI": {
+      "text": "IYORI",
+      "source": "llm"
+    },
+    "およ": {
+      "text": "およ",
+      "source": "llm"
+    },
+    "ゆーきゃん様": {
+      "text": "ゆーきゃん",
+      "source": "llm"
+    },
+    "@pnnt_000": {
+      "text": "@pnnt_000",
+      "source": "llm"
+    },
+    "momoco。": {
+      "text": "momoco。",
+      "source": "llm"
+    },
+    "夢回廊るら": {
+      "text": "梦回廊Rura",
+      "source": "llm"
+    },
+    "△○□×": {
+      "text": "△○□×",
+      "source": "llm"
+    }
+  },
+  "colorName": {
+    "ノーマル": {
+      "text": "普通",
+      "source": "cn"
+    },
+    "オリジナル": {
+      "text": "原版颜色",
+      "source": "cn"
+    },
+    "アナザー1": {
+      "text": "其他颜色1",
+      "source": "cn"
+    },
+    "アナザー2": {
+      "text": "其他颜色2",
+      "source": "cn"
+    },
+    "アナザー3": {
+      "text": "其他颜色3",
+      "source": "cn"
+    }
+  },
+  "name": {
+    "未設定": {
+      "text": "未设置",
+      "source": "cn"
+    },
+    "デフォルト": {
+      "text": "默认",
+      "source": "cn"
+    },
+    "クール・ロック・スクーラー": {
+      "text": "帅气摇滚校服",
+      "source": "cn"
+    },
+    "アクティブ・ロック・スクーラー": {
+      "text": "动感摇滚校服",
+      "source": "cn"
+    },
+    "スイート・ロック・スクーラー": {
+      "text": "甜美摇滚校服",
+      "source": "cn"
+    },
+    "ハード・ロック・スクーラー": {
+      "text": "硬派摇滚校服",
+      "source": "cn"
+    },
+    "シャイニー・アイドル！": {
+      "text": "闪耀·偶像！",
+      "source": "cn"
+    },
+    "トゥモロー・アイドル！": {
+      "text": "明日·偶像！",
+      "source": "cn"
+    },
+    "ラブリー・アイドル！": {
+      "text": "可爱·偶像！",
+      "source": "cn"
+    },
+    "ナチュラル・アイドル！": {
+      "text": "天然·偶像！",
+      "source": "cn"
+    },
+    "リトル・ストリート": {
+      "text": "轻度街头风",
+      "source": "cn"
+    },
+    "アライブ・ストリート": {
+      "text": "活力街头风",
+      "source": "cn"
+    },
+    "グリード・ストリート": {
+      "text": "贪婪街头风",
+      "source": "cn"
+    },
+    "カーム・ストリート": {
+      "text": "冷静街头风",
+      "source": "cn"
+    },
+    "スターリング・ショウタイム": {
+      "text": "星光·演出时间",
+      "source": "cn"
+    },
+    "ジョイフル・ショウタイム": {
+      "text": "欢乐·演出时间",
+      "source": "cn"
+    },
+    "チューン・ショウタイム": {
+      "text": "调音·演出时间",
+      "source": "cn"
+    },
+    "ファンタスティック・ショウタイム": {
+      "text": "梦幻·演出时间",
+      "source": "cn"
+    },
+    "セーブ・ノクターナル": {
+      "text": "夜行拯救者",
+      "source": "cn"
+    },
+    "ブレスレス・ノクターナル": {
+      "text": "夜行屏息者",
+      "source": "cn"
+    },
+    "ドロウ・ノクターナル": {
+      "text": "夜行描绘者",
+      "source": "cn"
+    },
+    "フィール・ノクターナル": {
+      "text": "夜行感知者",
+      "source": "cn"
+    },
+    "カジュアルスクールコーデ": {
+      "text": "休闲学园风",
+      "source": "cn"
+    },
+    "ブリリアントアイドル・M": {
+      "text": "璀璨偶像·M",
+      "source": "cn"
+    },
+    "スタイリッシュ・レザー": {
+      "text": "潇洒·皮革",
+      "source": "cn"
+    },
+    "キラキラキャット": {
+      "text": "闪耀猫咪",
+      "source": "cn"
+    },
+    "Key to heart": {
+      "text": "心之键",
+      "source": "cn"
+    },
+    "トレンディスクールコーデ": {
+      "text": "时尚学园风",
+      "source": "cn"
+    },
+    "ブリリアントアイドル・R": {
+      "text": "璀璨偶像·R",
+      "source": "cn"
+    },
+    "プログレス・レザー": {
+      "text": "演化皮革装",
+      "source": "cn"
+    },
+    "スポーティー・レザー": {
+      "text": "运动皮革装",
+      "source": "cn"
+    },
+    "ドリーミーショーメイカー": {
+      "text": "梦想演绎者",
+      "source": "cn"
+    },
+    "チアフルオレンジチェック": {
+      "text": "欢乐橙色格纹",
+      "source": "cn"
+    },
+    "アクティブイエローチェック": {
+      "text": "活力黄色格纹",
+      "source": "cn"
+    },
+    "パッションレッドチェック": {
+      "text": "热情红色格纹",
+      "source": "cn"
+    },
+    "クールネイビーチェック": {
+      "text": "帅气蓝色格纹",
+      "source": "cn"
+    },
+    "プリンスコート": {
+      "text": "王子外套",
+      "source": "cn"
+    },
+    "プリティーフリル": {
+      "text": "美丽褶边裙",
+      "source": "cn"
+    },
+    "チャーミングフリル": {
+      "text": "迷人褶边裙",
+      "source": "cn"
+    },
+    "アトラクティブコート": {
+      "text": "魅力外套",
+      "source": "cn"
+    },
+    "フリースピリッツ": {
+      "text": "自由精神",
+      "source": "cn"
+    },
+    "エンジョイライフ": {
+      "text": "享受生活",
+      "source": "cn"
+    },
+    "ポッピングスマイル": {
+      "text": "灿烂微笑",
+      "source": "cn"
+    },
+    "スウィートドリーム": {
+      "text": "甜蜜梦想",
+      "source": "cn"
+    },
+    "パワフルパフォーマー": {
+      "text": "活力表演者",
+      "source": "cn"
+    },
+    "アンウィービング・ハート": {
+      "text": "编织之心",
+      "source": "cn"
+    },
+    "ソートフル・ハート": {
+      "text": "体贴之心",
+      "source": "cn"
+    },
+    "インクィジティブ・ハート": {
+      "text": "好奇之心",
+      "source": "cn"
+    },
+    "プルードゥント・ハート": {
+      "text": "谨慎之心",
+      "source": "cn"
+    },
+    "ディファイアント・ハート": {
+      "text": "反骨之心",
+      "source": "cn"
+    },
+    "スクールロック": {
+      "text": "校园摇滚",
+      "source": "cn"
+    },
+    "メロディクローバー": {
+      "text": "旋律三叶草",
+      "source": "cn"
+    },
+    "ストリートパーカー": {
+      "text": "街头卫衣",
+      "source": "cn"
+    },
+    "ワンダーマジック": {
+      "text": "奇幻魔术",
+      "source": "cn"
+    },
+    "ミッドナイトフィクション": {
+      "text": "午夜幻想",
+      "source": "cn"
+    },
+    "サブカルボーイスタイル(レディース)": {
+      "text": "亚文化男性风（女款）",
+      "source": "cn"
+    },
+    "サブカルボーイスタイル(メンズ)": {
+      "text": "亚文化男性风（男款）",
+      "source": "cn"
+    },
+    "ロッキンブルーチェック": {
+      "text": "摇滚蓝花格",
+      "source": "cn"
+    },
+    "キラキラフリル": {
+      "text": "闪闪荷叶边",
+      "source": "cn"
+    },
+    "やんちゃストリート": {
+      "text": "调皮街头风",
+      "source": "cn"
+    },
+    "ハンサムレディ": {
+      "text": "帅气女士",
+      "source": "cn"
+    },
+    "ワンダフルコート": {
+      "text": "奇幻大衣",
+      "source": "cn"
+    },
+    "セカイのお茶会ドレス": {
+      "text": "「世界」茶会洋装",
+      "source": "cn"
+    },
+    "セカイのお茶会スーツ": {
+      "text": "「世界」茶会西装",
+      "source": "cn"
+    },
+    "フラワーフェアリー": {
+      "text": "花之精灵",
+      "source": "cn"
+    },
+    "星夜の紬": {
+      "text": "星夜之绸",
+      "source": "cn"
+    },
+    "ハッピーひよこワンピ": {
+      "text": "欢乐小鸡连衣裙",
+      "source": "cn"
+    },
+    "スターライト": {
+      "text": "星光",
+      "source": "cn"
+    },
+    "トゥインクルサウンド": {
+      "text": "溢彩之音",
+      "source": "cn"
+    },
+    "ホッピングフリル": {
+      "text": "悦动蛋糕裙",
+      "source": "cn"
+    },
+    "アクティブストリート": {
+      "text": "动感街头风",
+      "source": "cn"
+    },
+    "リトルスター": {
+      "text": "小小明星",
+      "source": "cn"
+    },
+    "室咲きメロディー": {
+      "text": "温室绽放的旋律",
+      "source": "cn"
+    },
+    "ステラロック": {
+      "text": "星光摇滚",
+      "source": "cn"
+    },
+    "ステラクローバー": {
+      "text": "星光三叶草",
+      "source": "cn"
+    },
+    "マスカレードドール": {
+      "text": "化装舞会人偶",
+      "source": "cn"
+    },
+    "マスク・オブ・ティア": {
+      "text": "泪之面具",
+      "source": "cn"
+    },
+    "マスターテールコート": {
+      "text": "全盛燕尾服",
+      "source": "cn"
+    },
+    "ザ・フォーマルスター": {
+      "text": "夜礼服之星",
+      "source": "cn"
+    },
+    "もこもこスノーコート(レディース)": {
+      "text": "毛绒御寒大衣（女款）",
+      "source": "cn"
+    },
+    "もこもこスノーコート(メンズ)": {
+      "text": "毛绒御寒大衣（男款）",
+      "source": "cn"
+    },
+    "スマイリーエール": {
+      "text": "微笑喝彩",
+      "source": "cn"
+    },
+    "エンジョイフラッグ": {
+      "text": "欢乐旗帜",
+      "source": "cn"
+    },
+    "レインボーハート": {
+      "text": "彩虹之心",
+      "source": "cn"
+    },
+    "ジャンピングハート": {
+      "text": "跳跃之心",
+      "source": "cn"
+    },
+    "サンライズシティ": {
+      "text": "日出都市",
+      "source": "cn"
+    },
+    "クリアライトシティ": {
+      "text": "清光都市",
+      "source": "cn"
+    },
+    "クラシカルメイド": {
+      "text": "古典女仆",
+      "source": "cn"
+    },
+    "クラシカルバトラー": {
+      "text": "古典执事",
+      "source": "cn"
+    },
+    "カワイイ☆フェスＴシャツ": {
+      "text": "可爱音乐节☆中袖装",
+      "source": "cn"
+    },
+    "フェスティバルブレザー": {
+      "text": "节庆西装夹克",
+      "source": "cn"
+    },
+    "ワンダー☆サンタガール": {
+      "text": "奇幻☆圣诞女孩",
+      "source": "cn"
+    },
+    "プレゼント・フォー・ユー！": {
+      "text": "为你准备的礼物！",
+      "source": "cn"
+    },
+    "クリスマススタイル☆2020(レディース)": {
+      "text": "圣诞装☆2025（女款）",
+      "source": "cn"
+    },
+    "クリスマススタイル☆2020(メンズ)": {
+      "text": "圣诞装☆2025（男款）",
+      "source": "cn"
+    },
+    "謹賀の装い(レディース)": {
+      "text": "贺年装（女款）",
+      "source": "cn"
+    },
+    "謹賀の装い(メンズ)": {
+      "text": "贺年装（男款）",
+      "source": "cn"
+    },
+    "モーモー☆ニューイヤー(レディース)": {
+      "text": "哞哞☆新年装（女款）",
+      "source": "cn"
+    },
+    "モーモー☆ニューイヤー(メンズ)": {
+      "text": "哞哞☆新年装（男款）",
+      "source": "cn"
+    },
+    "ファナティック・ニューイヤー": {
+      "text": "狂热新年",
+      "source": "cn"
+    },
+    "コトブキ・フーディ": {
+      "text": "贺岁·卫衣",
+      "source": "cn"
+    },
+    "ステンドグラス・テンダーハート": {
+      "text": "神圣彩璃·温柔之心",
+      "source": "cn"
+    },
+    "ステンドグラス・ブレイブハート": {
+      "text": "神圣彩璃·勇敢之心",
+      "source": "cn"
+    },
+    "トゥルース・フラワー": {
+      "text": "真实之花",
+      "source": "cn"
+    },
+    "ディア・フラワー": {
+      "text": "爱怜之花",
+      "source": "cn"
+    },
+    "クラシックコーディネート": {
+      "text": "古典造型",
+      "source": "cn"
+    },
+    "クラシカルジャケット": {
+      "text": "古典夹克",
+      "source": "cn"
+    },
+    "ベリチョコパンケーキ": {
+      "text": "莓子巧克力松饼",
+      "source": "cn"
+    },
+    "パステルアイスクリーム": {
+      "text": "彩色冰淇淋",
+      "source": "cn"
+    },
+    "ロッキン・ビースト": {
+      "text": "摇滚·孤兽",
+      "source": "cn"
+    },
+    "ロッキン・モフモフ": {
+      "text": "摇滚·毛茸茸",
+      "source": "cn"
+    },
+    "ナーシサス・ペインタードレス": {
+      "text": "自怜·画家连衣裙",
+      "source": "cn"
+    },
+    "アンシュア・エプロンドレス": {
+      "text": "犹疑·围裙连衣裙",
+      "source": "cn"
+    },
+    "キャンディホイール": {
+      "text": "糖果之轮",
+      "source": "cn"
+    },
+    "コーヒーカップバルーン": {
+      "text": "旋转咖啡杯气球",
+      "source": "cn"
+    },
+    "オプティマイズ": {
+      "text": "前沿最优解",
+      "source": "cn"
+    },
+    "The Melody Chaser.": {
+      "text": "旋律追击者",
+      "source": "cn"
+    },
+    "ゆめかわペガサス": {
+      "text": "萌幻天马座",
+      "source": "cn"
+    },
+    "トラディショナル・ペガサス": {
+      "text": "和风天马座",
+      "source": "cn"
+    },
+    "エンジェルオブホープ": {
+      "text": "希望天使",
+      "source": "cn"
+    },
+    "エンジェルオブビリーブ": {
+      "text": "信仰天使",
+      "source": "cn"
+    },
+    "ハミングバード(レディース)": {
+      "text": "蜂鸟（女款）",
+      "source": "cn"
+    },
+    "ハミングバード(メンズ)": {
+      "text": "蜂鸟（男款）",
+      "source": "cn"
+    },
+    "レクイエムナイト": {
+      "text": "安魂曲之夜",
+      "source": "cn"
+    },
+    "ライブラリドレス": {
+      "text": "图书馆礼服",
+      "source": "cn"
+    },
+    "ファントム・バッド": {
+      "text": "Phantom Bad",
+      "source": "cn"
+    },
+    "チェリーピンク・ワンピース": {
+      "text": "樱花盛放·连衣裙",
+      "source": "cn"
+    },
+    "チェリーピンク・クロッシング": {
+      "text": "樱花盛放·异色拼接",
+      "source": "cn"
+    },
+    "ハイド・クリノリン": {
+      "text": "克里诺林隐式裙衬",
+      "source": "cn"
+    },
+    "ネスレ・クリノリン": {
+      "text": "克里诺林鸟笼状裙衬",
+      "source": "cn"
+    },
+    "ドリームチェイサー": {
+      "text": "追梦人",
+      "source": "cn"
+    },
+    "ドリームメイカー": {
+      "text": "造梦人",
+      "source": "cn"
+    },
+    "ビビッドソウル": {
+      "text": "Vivid Soul",
+      "source": "cn"
+    },
+    "ビビッドクルー": {
+      "text": "Vivid Crew",
+      "source": "cn"
+    },
+    "ブラックキャットスターライト": {
+      "text": "黑猫与星光",
+      "source": "cn"
+    },
+    "セカイの魔法使い": {
+      "text": "「世界」的魔法师",
+      "source": "cn"
+    },
+    "フェアリーテール": {
+      "text": "精灵童话",
+      "source": "cn"
+    },
+    "フォレストテール": {
+      "text": "森林传说",
+      "source": "cn"
+    },
+    "クラウンペギードレス": {
+      "text": "王冠企鹅礼服",
+      "source": "cn"
+    },
+    "ティアラペギードレス": {
+      "text": "皇冠企鹅礼服",
+      "source": "cn"
+    },
+    "トラウム・シンガータキシード": {
+      "text": "梦幻歌唱家·礼服",
+      "source": "cn"
+    },
+    "ブラウ・ロゼタキシード": {
+      "text": "蓝玫瑰·礼服",
+      "source": "cn"
+    },
+    "トレステラコック": {
+      "text": "餐厅厨师装",
+      "source": "cn"
+    },
+    "キング・オブ・スマイル": {
+      "text": "微笑之王",
+      "source": "cn"
+    },
+    "ハピハピ・クロックラビット": {
+      "text": "快乐钟钟兔",
+      "source": "cn"
+    },
+    "追想のカーネーションドレス": {
+      "text": "追忆的康乃馨礼服",
+      "source": "cn"
+    },
+    "明ける空色のグラデーションドレス": {
+      "text": "晨曦天色的渐变礼服",
+      "source": "cn"
+    },
+    "青の街のサマードレス": {
+      "text": "蓝色街道的夏日长裙",
+      "source": "cn"
+    },
+    "メモリアルハートコーデ": {
+      "text": "纪念爱心穿搭",
+      "source": "cn"
+    },
+    "オーロラレインボーコート": {
+      "text": "极光彩虹外套",
+      "source": "cn"
+    },
+    "プチレインボーコート": {
+      "text": "微彩虹外套",
+      "source": "cn"
+    },
+    "パイレーツ・オブ・ペンギン": {
+      "text": "企鹅海侠",
+      "source": "cn"
+    },
+    "Elegant Pirates": {
+      "text": "优雅海侠",
+      "source": "cn"
+    },
+    "ビーストハート・ガール": {
+      "text": "狂野之心女孩",
+      "source": "cn"
+    },
+    "ビーストハート・バディ": {
+      "text": "狂野之心伙伴",
+      "source": "cn"
+    },
+    "燃える曙の纏": {
+      "text": "燃烧破晓的庆典服",
+      "source": "cn"
+    },
+    "涼む黄昏の纏": {
+      "text": "清凉黄昏的庆典服",
+      "source": "cn"
+    },
+    "サンセットビーチ・ガール": {
+      "text": "落日海滩女孩",
+      "source": "cn"
+    },
+    "マリーンシェル・ガール": {
+      "text": "海洋贝壳女孩",
+      "source": "cn"
+    },
+    "リトルストロベアリー": {
+      "text": "Little Strawberry",
+      "source": "cn"
+    },
+    "電華熊猫": {
+      "text": "中华电子熊猫",
+      "source": "cn"
+    },
+    "愛のメッセンジャー": {
+      "text": "爱的信使",
+      "source": "cn"
+    },
+    "希望のメッセンジャー": {
+      "text": "希望的信使",
+      "source": "cn"
+    },
+    "マーメイド・ウォータードレス": {
+      "text": "美人鱼水漾礼服",
+      "source": "cn"
+    },
+    "ジェリーフィッシュ・タキシード": {
+      "text": "水母燕尾服",
+      "source": "cn"
+    },
+    "月想うアイドル・ラビット": {
+      "text": "思恋月亮偶像兔子装",
+      "source": "cn"
+    },
+    "星追うロッカー・ラビット": {
+      "text": "追逐繁星摇滚兔子装",
+      "source": "cn"
+    },
+    "安眠DreamingRibbon": {
+      "text": "安眠睡梦蝴蝶结",
+      "source": "cn"
+    },
+    "アグレッシブ寝相ウェア": {
+      "text": "夸张睡衣",
+      "source": "cn"
+    },
+    "フルメタル・ハート": {
+      "text": "钢铁之心",
+      "source": "cn"
+    },
+    "ブレイブフル・ハート": {
+      "text": "坚毅之心",
+      "source": "cn"
+    },
+    "スノーホワイト・フォギードレス": {
+      "text": "白雪雾面礼服",
+      "source": "cn"
+    },
+    "リリーベル・フォギードレス": {
+      "text": "铃兰雾面礼服",
+      "source": "cn"
+    },
+    "トリック・オア・ペイント": {
+      "text": "不涂鸦就捣蛋",
+      "source": "cn"
+    },
+    "Phantom Crow": {
+      "text": "幻影之鸦",
+      "source": "cn"
+    },
+    "グレイスフル・セカイドレス": {
+      "text": "优雅「世界」礼服",
+      "source": "cn"
+    },
+    "ホワイトハート・カーデ": {
+      "text": "雪白之心针织外套",
+      "source": "cn"
+    },
+    "ホープフル・フリルコーデ": {
+      "text": "希望满溢花边穿搭",
+      "source": "cn"
+    },
+    "ピュアハート・フリルジャケット": {
+      "text": "纯真心灵花边夹克",
+      "source": "cn"
+    },
+    "ピュアフラワー・タキシード": {
+      "text": "纯真花朵燕尾服",
+      "source": "cn"
+    },
+    "ラピススカイ・セーラー": {
+      "text": "群青之空水手服",
+      "source": "cn"
+    },
+    "ラピススカイ・ブレザー": {
+      "text": "群青之空西装夹克",
+      "source": "cn"
+    },
+    "スタッズスターズ・サスペンダー": {
+      "text": "繁星满天吊带裙",
+      "source": "cn"
+    },
+    "シャーリングテイル・クローバー": {
+      "text": "三叶草抽褶燕尾裙",
+      "source": "cn"
+    },
+    "ストカジュ・ハーネスベルト": {
+      "text": "街头吊带休闲服",
+      "source": "cn"
+    },
+    "フーディー・ハーネスベルト": {
+      "text": "背带式连帽衫",
+      "source": "cn"
+    },
+    "スイーティーカップドレス": {
+      "text": "甜美茶杯礼服",
+      "source": "cn"
+    },
+    "ロイヤルローズホース": {
+      "text": "皇家玫瑰骑手",
+      "source": "cn"
+    },
+    "ナイトリードロワーズ": {
+      "text": "夜色衬裤",
+      "source": "cn"
+    },
+    "アルカイック・アルケミスト": {
+      "text": "古老的炼金术师",
+      "source": "cn"
+    },
+    "フォレスト・ガーディアン": {
+      "text": "森林守护者",
+      "source": "cn"
+    },
+    "パンプキンマジョリーヌ": {
+      "text": "南瓜女巫",
+      "source": "cn"
+    },
+    "パンプキンソーサラー": {
+      "text": "南瓜巫师",
+      "source": "cn"
+    },
+    "ダーククラウズ・クローク": {
+      "text": "乌云披风",
+      "source": "cn"
+    },
+    "シーキング・クローク": {
+      "text": "探索披风",
+      "source": "cn"
+    },
+    "ノアールシュヴァリエ": {
+      "text": "漆黑骑士",
+      "source": "cn"
+    },
+    "テンダネス・シスター": {
+      "text": "温柔修女",
+      "source": "cn"
+    },
+    "ソートフル・シスター": {
+      "text": "体贴修女",
+      "source": "cn"
+    },
+    "トゥインクル・パレード": {
+      "text": "闪亮巡游",
+      "source": "cn"
+    },
+    "スイートナイト・パレード": {
+      "text": "甜蜜夜晚巡游",
+      "source": "cn"
+    },
+    "スノーフレイク・ジャケット": {
+      "text": "雪花结晶夹克",
+      "source": "cn"
+    },
+    "スノークリスタル・コート": {
+      "text": "雪花水晶大衣",
+      "source": "cn"
+    },
+    "ガーリーチェックガール": {
+      "text": "清纯格纹女孩",
+      "source": "cn"
+    },
+    "スイートクイーンドレス": {
+      "text": "甜蜜皇后礼服",
+      "source": "cn"
+    },
+    "ラブリールークドレス": {
+      "text": "小可爱礼服",
+      "source": "cn"
+    },
+    "ルシフェニア王国・王女の正装": {
+      "text": "露西菲尼亚王国公主正装",
+      "source": "cn"
+    },
+    "ルシフェニア王国・召使の装い": {
+      "text": "露西菲尼亚王国侍从服",
+      "source": "cn"
+    },
+    "血塗られた狂気の装い": {
+      "text": "染血的疯狂装",
+      "source": "cn"
+    },
+    "女領主の妖艶な装い": {
+      "text": "女城主之妖艳装",
+      "source": "cn"
+    },
+    "USE暗星庁・裁判官の装い": {
+      "text": "USE暗星法庭法官服",
+      "source": "cn"
+    },
+    "ウィンターキャンプジャケット": {
+      "text": "冬季野营夹克",
+      "source": "cn"
+    },
+    "オータムキャンプジャケット": {
+      "text": "秋季野营夹克",
+      "source": "cn"
+    },
+    "スパカリバルーンドレス": {
+      "text": "美妙气球礼服",
+      "source": "cn"
+    },
+    "ギャラクシーダークスーツ": {
+      "text": "银河深色西装",
+      "source": "cn"
+    },
+    "カンナギガールスタイル": {
+      "text": "巫女少女风",
+      "source": "cn"
+    },
+    "ナゴミスクールスタイル": {
+      "text": "柔和学生风",
+      "source": "cn"
+    },
+    "ミヤビストリートスタイル": {
+      "text": "高雅街头风",
+      "source": "cn"
+    },
+    "キュートタイガースタイル": {
+      "text": "可爱老虎风",
+      "source": "cn"
+    },
+    "オシャタイガースタイル": {
+      "text": "时髦老虎风",
+      "source": "cn"
+    },
+    "planet SEKAI": {
+      "text": "行星「世界」",
+      "source": "cn"
+    },
+    "キャプテン☆ミックスキャンディ": {
+      "text": "混合糖果☆队长",
+      "source": "cn"
+    },
+    "ワッフルアンバサダー": {
+      "text": "华夫饼大使",
+      "source": "cn"
+    },
+    "ベアグミツアーガイド": {
+      "text": "小熊软糖导游",
+      "source": "cn"
+    },
+    "レミニセンス・ゴシック": {
+      "text": "追忆哥特风",
+      "source": "cn"
+    },
+    "ディムライト・ゴシック": {
+      "text": "黯淡哥特风",
+      "source": "cn"
+    },
+    "ノットロスト・ゴシック": {
+      "text": "寻觅哥特风",
+      "source": "cn"
+    },
+    "スイートハート・レディ": {
+      "text": "甜心淑女",
+      "source": "cn"
+    },
+    "カフェモカ・ドーター": {
+      "text": "摩卡女孩",
+      "source": "cn"
+    },
+    "キューティリボン・ガール": {
+      "text": "可爱蝴蝶结女孩",
+      "source": "cn"
+    },
+    "ハンドメイド・アップル": {
+      "text": "手工苹果",
+      "source": "cn"
+    },
+    "はちみつレモレモン": {
+      "text": "蜜渍柠柠檬",
+      "source": "cn"
+    },
+    "SNOW MIKU 2022（初音ミク）": {
+      "text": "SNOW MIKU 2023（初音未来）",
+      "source": "cn"
+    },
+    "SNOW MIKU 2022（鏡音リン）": {
+      "text": "SNOW MIKU 2023（镜音铃）",
+      "source": "cn"
+    },
+    "SNOW MIKU 2022（鏡音レン）": {
+      "text": "SNOW MIKU 2023（镜音连）",
+      "source": "cn"
+    },
+    "SNOW MIKU 2022（巡音ルカ）": {
+      "text": "SNOW MIKU 2023（巡音流歌）",
+      "source": "cn"
+    },
+    "SNOW MIKU 2022（MEIKO）": {
+      "text": "SNOW MIKU 2023（MEIKO）",
+      "source": "cn"
+    },
+    "SNOW MIKU 2022（KAITO）": {
+      "text": "SNOW MIKU 2023（KAITO）",
+      "source": "cn"
+    },
+    "スカイランナー・ジャケット": {
+      "text": "天空跑者夹克",
+      "source": "cn"
+    },
+    "ドリームシーナリー・スタイル": {
+      "text": "梦幻景色风",
+      "source": "cn"
+    },
+    "ブルーミースカイ・パーカー": {
+      "text": "绽放天空卫衣",
+      "source": "cn"
+    },
+    "ライダーオンザロード": {
+      "text": "Rider on the road",
+      "source": "cn"
+    },
+    "ハードロックライダース": {
+      "text": "重摇滚骑手外套",
+      "source": "cn"
+    },
+    "ロングトリップライダース": {
+      "text": "长途骑手外套",
+      "source": "cn"
+    },
+    "シヴァルラス・シュヴァリエ": {
+      "text": "彬彬有礼的骑士",
+      "source": "cn"
+    },
+    "ノウブル・パラディン": {
+      "text": "高贵的圣骑士",
+      "source": "cn"
+    },
+    "オプタティオ・エクエス": {
+      "text": "心愿骑士",
+      "source": "cn"
+    },
+    "Petit Printemps": {
+      "text": "玲珑春意",
+      "source": "cn"
+    },
+    "マジカルテイラー・ウィッチ": {
+      "text": "魔法裁缝女巫",
+      "source": "cn"
+    },
+    "プリティーキャット・ウィッチ": {
+      "text": "漂亮猫咪女巫",
+      "source": "cn"
+    },
+    "モアフォーチュン・ウィッチ": {
+      "text": "多重幸运女巫",
+      "source": "cn"
+    },
+    "Sonic Style(レディース)": {
+      "text": "Sonic Style（女款）",
+      "source": "cn"
+    },
+    "Sonic Style(メンズ)": {
+      "text": "Sonic Style（男款）",
+      "source": "cn"
+    },
+    "パンチュールクロス": {
+      "text": "彩绘套装",
+      "source": "cn"
+    },
+    "ポーエトリークロス": {
+      "text": "诗意套装",
+      "source": "cn"
+    },
+    "パストラルクロス": {
+      "text": "田园套装",
+      "source": "cn"
+    },
+    "想いのリアンモルソードレス": {
+      "text": "心愿拼图礼服",
+      "source": "cn"
+    },
+    "想いのオーバーレイテール": {
+      "text": "心愿长燕尾服",
+      "source": "cn"
+    },
+    "ラブリービビッドデビル": {
+      "text": "Lovely Vivid Devil",
+      "source": "cn"
+    },
+    "ノーティス・ブレイシーズ": {
+      "text": "众所瞩目·背带裤",
+      "source": "cn"
+    },
+    "夜桜ノ纏": {
+      "text": "夜樱缠纹",
+      "source": "cn"
+    },
+    "ハルイロ・スカジャン": {
+      "text": "春色·丝卡将夹克",
+      "source": "cn"
+    },
+    "サクラ・スチューデント": {
+      "text": "樱花·校服",
+      "source": "cn"
+    },
+    "華劇装束・桜": {
+      "text": "华剧装束·樱",
+      "source": "cn"
+    },
+    "イースターマーチングドール": {
+      "text": "复活节行进娃娃",
+      "source": "cn"
+    },
+    "エクラエトワール": {
+      "text": "星光闪耀",
+      "source": "cn"
+    },
+    "トラッドモードガール": {
+      "text": "复古风女孩",
+      "source": "cn"
+    },
+    "クラシカルジェントルコート": {
+      "text": "古典绅士大衣",
+      "source": "cn"
+    },
+    "エストレッラガード": {
+      "text": "星辰守护者",
+      "source": "cn"
+    },
+    "エストレージャガール": {
+      "text": "星光女孩",
+      "source": "cn"
+    },
+    "シュテルンクルー": {
+      "text": "星星之队",
+      "source": "cn"
+    },
+    "ホープフルソルジャー": {
+      "text": "希望战士",
+      "source": "cn"
+    },
+    "プリティーウォリアー": {
+      "text": "Pretty Warrior",
+      "source": "cn"
+    },
+    "ラブリーブラックベレー": {
+      "text": "可爱特种兵",
+      "source": "cn"
+    },
+    "Hip-Hoppin’ candy cat": {
+      "text": "嘻哈糖果猫",
+      "source": "cn"
+    },
+    "古装参謀衣装": {
+      "text": "古代谋士装",
+      "source": "cn"
+    },
+    "爛漫娘花衣": {
+      "text": "烂漫女孩花衣",
+      "source": "cn"
+    },
+    "妖艶姐姐花衣": {
+      "text": "妖艳美人花衣",
+      "source": "cn"
+    },
+    "ガーネット・ローゼン": {
+      "text": "石榴石·蔷薇花",
+      "source": "cn"
+    },
+    "リファインドベル・タキシード": {
+      "text": "精致女神·燕尾服",
+      "source": "cn"
+    },
+    "レディ・エレガント": {
+      "text": "淑女·优雅",
+      "source": "cn"
+    },
+    "キューティースコアラー♥": {
+      "text": "可爱记分员♥",
+      "source": "cn"
+    },
+    "コンフュージョン・ナース": {
+      "text": "迷茫护士装",
+      "source": "cn"
+    },
+    "デセプション・ナース": {
+      "text": "伪装护士装",
+      "source": "cn"
+    },
+    "エンデュア・ナイトガウン": {
+      "text": "耐穿睡袍",
+      "source": "cn"
+    },
+    "チアフル・シトラス": {
+      "text": "欢乐·柑橘",
+      "source": "cn"
+    },
+    "パッショナブル・キビス": {
+      "text": "激情·木梨",
+      "source": "cn"
+    },
+    "エネルギッシュ・キトルッルス": {
+      "text": "活力·西瓜",
+      "source": "cn"
+    },
+    "揺れるエクリュールドレス": {
+      "text": "摇曳闪光的连衣裙",
+      "source": "cn"
+    },
+    "不動のエナメルジャケット": {
+      "text": "坚定不移的亮面夹克",
+      "source": "cn"
+    },
+    "フレッシュガール・ユニフォーム": {
+      "text": "清新自然·运动服",
+      "source": "cn"
+    },
+    "エネルギッシュ・ユニフォーム": {
+      "text": "活力四射·运动服",
+      "source": "cn"
+    },
+    "ラブリーフリル・ユニフォーム": {
+      "text": "可爱褶边·运动服",
+      "source": "cn"
+    },
+    "サマースカイウォーカー": {
+      "text": "夏日天行者",
+      "source": "cn"
+    },
+    "My Little Shine": {
+      "text": "属于我的小小光辉",
+      "source": "cn"
+    },
+    "シャープシューター": {
+      "text": "致命枪手",
+      "source": "cn"
+    },
+    "エンゼル・グリント": {
+      "text": "天使·闪光",
+      "source": "cn"
+    },
+    "マバリック・マスクスーツ": {
+      "text": "叛逆·蒙面装",
+      "source": "cn"
+    },
+    "おさんぽうさちゃんコーデ": {
+      "text": "兔兔散步休闲穿搭",
+      "source": "cn"
+    },
+    "ヒップスターウォーク": {
+      "text": "时髦散步装",
+      "source": "cn"
+    },
+    "ブルーマリン・クルースタイル": {
+      "text": "苍海·船员风",
+      "source": "cn"
+    },
+    "ブルーマリン・フリルフレア": {
+      "text": "苍海·荷叶裙",
+      "source": "cn"
+    },
+    "ブルーマリン・マーメイド": {
+      "text": "苍海·人鱼",
+      "source": "cn"
+    },
+    "レリーフ・ナイトウェア": {
+      "text": "治愈睡衣",
+      "source": "cn"
+    },
+    "リラクゼーション・ナイトウェア": {
+      "text": "休闲睡衣",
+      "source": "cn"
+    },
+    "コーズィ・ナイトウェア": {
+      "text": "温暖睡衣",
+      "source": "cn"
+    },
+    "雛人形メイド": {
+      "text": "女儿节人偶女仆",
+      "source": "cn"
+    },
+    "界世譚": {
+      "text": "界世奇谭",
+      "source": "cn"
+    },
+    "オエカキ☆コーチスタイル": {
+      "text": "绘画☆匠人典范",
+      "source": "cn"
+    },
+    "バクハツ☆アートスタイル": {
+      "text": "炸裂☆艺术创造",
+      "source": "cn"
+    },
+    "ラクガキ☆フリースタイル": {
+      "text": "涂鸦☆自由发挥",
+      "source": "cn"
+    },
+    "ドリーミング・ジャーニーズ": {
+      "text": "梦幻之旅",
+      "source": "cn"
+    },
+    "アンビシャス・ジャーニーズ": {
+      "text": "雄心之旅",
+      "source": "cn"
+    },
+    "ロイヤリティ・ロックブレザー": {
+      "text": "皇家摇滚西装夹克",
+      "source": "cn"
+    },
+    "クラブクラウン・レヴァリードレス": {
+      "text": "花环皇冠幻想礼服",
+      "source": "cn"
+    },
+    "キルティング・フォーマル": {
+      "text": "绗缝正装",
+      "source": "cn"
+    },
+    "キルティング・モードスタイル": {
+      "text": "绗缝前卫之风",
+      "source": "cn"
+    },
+    "ポップフューチャー・プリンセス": {
+      "text": "时尚前卫公主",
+      "source": "cn"
+    },
+    "ポップフューチャー・プリンス": {
+      "text": "时尚前卫王子",
+      "source": "cn"
+    },
+    "ノクティス・モナカ": {
+      "text": "Noctis Monaca",
+      "source": "cn"
+    },
+    "メモリーズ・ガイディングスタイル": {
+      "text": "忆想·引导之风",
+      "source": "cn"
+    },
+    "プレイング・ミステリィドレス": {
+      "text": "流声·神秘裙装",
+      "source": "cn"
+    },
+    "ダークシック・ドレス": {
+      "text": "暗黑高雅·礼服",
+      "source": "cn"
+    },
+    "ファシネイティング・アイドル": {
+      "text": "光彩照人·偶像",
+      "source": "cn"
+    },
+    "マッドネス・ストリート": {
+      "text": "自由不羁街头风",
+      "source": "cn"
+    },
+    "ライクヴィラン・アクター": {
+      "text": "宛如反派·演员",
+      "source": "cn"
+    },
+    "ロイヤル アンティーク": {
+      "text": "皇家古典装",
+      "source": "cn"
+    },
+    "ドリーミングフェアリー": {
+      "text": "梦想精灵",
+      "source": "cn"
+    },
+    "ガイディングフェアリー": {
+      "text": "向导精灵",
+      "source": "cn"
+    },
+    "ベコニングフェアリー": {
+      "text": "俏皮精灵",
+      "source": "cn"
+    },
+    "アワーグラス・タキシード": {
+      "text": "沙漏礼服",
+      "source": "cn"
+    },
+    "アドバンス・タキシード": {
+      "text": "进阶礼服",
+      "source": "cn"
+    },
+    "フェアウェル・ドレス": {
+      "text": "辞别礼服",
+      "source": "cn"
+    },
+    "スイートゴースト・ガール": {
+      "text": "甜美幽灵女孩",
+      "source": "cn"
+    },
+    "トリート・ナイトメアコート": {
+      "text": "治愈梦魇外套",
+      "source": "cn"
+    },
+    "赤ずきんのおでかけドレス": {
+      "text": "小红帽的户外裙",
+      "source": "cn"
+    },
+    "オオカミさんのダークマント": {
+      "text": "大灰狼的黑披风",
+      "source": "cn"
+    },
+    "子ヤギさんのフリフリドレス": {
+      "text": "小绵羊的蓬蓬裙",
+      "source": "cn"
+    },
+    "神之使": {
+      "text": "神之使者",
+      "source": "cn"
+    },
+    "ダークデコラ・スイートガール": {
+      "text": "黑暗妆饰·甜美女孩",
+      "source": "cn"
+    },
+    "ダークデコラ・キャットガール": {
+      "text": "黑暗妆饰·猫咪女孩",
+      "source": "cn"
+    },
+    "ダークデコラ・ハートガール": {
+      "text": "黑暗妆饰·爱心女孩",
+      "source": "cn"
+    },
+    "サニークルー": {
+      "text": "灿烂乘务员",
+      "source": "cn"
+    },
+    "ハッピーパイロット": {
+      "text": "快乐飞行员",
+      "source": "cn"
+    },
+    "クールアテンダント": {
+      "text": "帅气空姐",
+      "source": "cn"
+    },
+    "ホーリースノウ・アーチャー": {
+      "text": "圣雪弓手",
+      "source": "cn"
+    },
+    "カームナイト・アーチャー": {
+      "text": "静夜弓手",
+      "source": "cn"
+    },
+    "イルミネート・アーチャー": {
+      "text": "光明弓手",
+      "source": "cn"
+    },
+    "メリーベルドレス": {
+      "text": "圣诞铃铛连衣裙",
+      "source": "cn"
+    },
+    "メリーベルタキシード": {
+      "text": "圣诞铃铛燕尾服",
+      "source": "cn"
+    },
+    "ナルキッソスサロペット": {
+      "text": "水仙工装裤",
+      "source": "cn"
+    },
+    "コラージュロリータ": {
+      "text": "拼贴洛丽塔",
+      "source": "cn"
+    },
+    "翔る龍神の衣": {
+      "text": "飞天神龙服",
+      "source": "cn"
+    },
+    "侍る白狐の衣": {
+      "text": "侍奉白狐服",
+      "source": "cn"
+    },
+    "跳ねる狛犬の衣": {
+      "text": "欢跃狛犬服",
+      "source": "cn"
+    },
+    "ウサキャロットコート": {
+      "text": "兔兔胡萝卜大衣",
+      "source": "cn"
+    },
+    "ウサモコットカーディガン": {
+      "text": "兔兔胡萝卜开衫",
+      "source": "cn"
+    },
+    "プログラム『オーロラ六花』": {
+      "text": "表演节目“极光雪花”",
+      "source": "cn"
+    },
+    "エターナルドリーマー": {
+      "text": "永远的梦想家",
+      "source": "cn"
+    },
+    "ドリーミングアウェイ": {
+      "text": "遥远的梦想",
+      "source": "cn"
+    },
+    "フェアリーティンク": {
+      "text": "精灵小叮当",
+      "source": "cn"
+    },
+    "コンダクター・ライブスーツ": {
+      "text": "指挥演出服",
+      "source": "cn"
+    },
+    "エレガンス・ライブスーツ": {
+      "text": "优雅演出服",
+      "source": "cn"
+    },
+    "ビリーフ・ライブスーツ": {
+      "text": "信念演出服",
+      "source": "cn"
+    },
+    "メルティオレンジ": {
+      "text": "融情香橙",
+      "source": "cn"
+    },
+    "メルティペパーミント": {
+      "text": "融情薄荷",
+      "source": "cn"
+    },
+    "メルティラベンダー": {
+      "text": "融情薰衣草",
+      "source": "cn"
+    },
+    "花錦": {
+      "text": "花锦",
+      "source": "cn"
+    },
+    "月影ノ忍び": {
+      "text": "月影忍者",
+      "source": "cn"
+    },
+    "スプリングプリンセス": {
+      "text": "春之公主",
+      "source": "cn"
+    },
+    "フレッシュグリーンスワロウ": {
+      "text": "鲜绿飞燕",
+      "source": "cn"
+    },
+    "フラワーギフトスワロウ": {
+      "text": "鲜花盛礼飞燕",
+      "source": "cn"
+    },
+    "Flight Kid": {
+      "text": "飞行少女",
+      "source": "cn"
+    },
+    "Fallen Kid": {
+      "text": "颓废少女",
+      "source": "cn"
+    },
+    "Hound Kid": {
+      "text": "猎犬少年",
+      "source": "cn"
+    },
+    "シュヴァリエ・ノワール": {
+      "text": "黑之骑士",
+      "source": "cn"
+    },
+    "マッド・ソーサラー": {
+      "text": "疯狂术士",
+      "source": "cn"
+    },
+    "ワンダリング・ガンナー": {
+      "text": "流浪枪手",
+      "source": "cn"
+    },
+    "Fearless Clown": {
+      "text": "无畏的小丑",
+      "source": "cn"
+    },
+    "Innocent Clown": {
+      "text": "无邪的小丑",
+      "source": "cn"
+    },
+    "Sway Clown": {
+      "text": "茫然的小丑",
+      "source": "cn"
+    },
+    "レヴェル・アンキャニー": {
+      "text": "神秘陶醉套装",
+      "source": "cn"
+    },
+    "プロヴォーク・クリーピー": {
+      "text": "不寒而栗套装",
+      "source": "cn"
+    },
+    "テンプテーション・イアリー": {
+      "text": "诡异诱惑套装",
+      "source": "cn"
+    },
+    "祈りのホーリードレス": {
+      "text": "祈祷圣装",
+      "source": "cn"
+    },
+    "願いのホーリーコート": {
+      "text": "祈愿圣装",
+      "source": "cn"
+    },
+    "花咲く乙女の羽衣": {
+      "text": "花开少女的霓裳",
+      "source": "cn"
+    },
+    "春立つ乙女の羽衣": {
+      "text": "立春少女的霓裳",
+      "source": "cn"
+    },
+    "曙香る乙女の羽衣": {
+      "text": "黎明少女的霓裳",
+      "source": "cn"
+    },
+    "心躍る乙女の羽衣": {
+      "text": "雀跃少女的霓裳",
+      "source": "cn"
+    },
+    "Magic Academy of Sekai(レディース)": {
+      "text": "「世界」魔法学院（女款）",
+      "source": "cn"
+    },
+    "Magic Academy of Sekai(メンズ)": {
+      "text": "「世界」魔法学院（男款）",
+      "source": "cn"
+    },
+    "瑞雲エレガントドレス": {
+      "text": "旗袍",
+      "source": "cn"
+    },
+    "瑞雲クラッシースタイル": {
+      "text": "中式男装",
+      "source": "cn"
+    },
+    "girly spring flower": {
+      "text": "少女春花",
+      "source": "cn"
+    },
+    "ユニバーサルトレーニー": {
+      "text": "环球实习生",
+      "source": "cn"
+    },
+    "アングラビティスーツ": {
+      "text": "宇航服",
+      "source": "cn"
+    },
+    "ギャラクシーリサーチャー": {
+      "text": "银河研究员",
+      "source": "cn"
+    },
+    "フィアー・トラッド": {
+      "text": "胆怯传统风",
+      "source": "cn"
+    },
+    "ブライト・トラッド": {
+      "text": "明亮传统风",
+      "source": "cn"
+    },
+    "プロスペクト・トラッド": {
+      "text": "期望传统风",
+      "source": "cn"
+    },
+    "Runaway Cat": {
+      "text": "遁走猫咪",
+      "source": "cn"
+    },
+    "Lost kitten": {
+      "text": "迷失小猫",
+      "source": "cn"
+    },
+    "Escape girl": {
+      "text": "出逃少女",
+      "source": "cn"
+    },
+    "花園の薔薇令嬢": {
+      "text": "花园的蔷薇大小姐",
+      "source": "cn"
+    },
+    "セイラーキャプテン": {
+      "text": "水手服船长",
+      "source": "cn"
+    },
+    "ネイビーナビゲーター": {
+      "text": "海军领航员",
+      "source": "cn"
+    },
+    "セイラーアプレンティス": {
+      "text": "水手服见习生",
+      "source": "cn"
+    },
+    "イノセントガール": {
+      "text": "纯真女孩",
+      "source": "cn"
+    },
+    "カジュアルボーイ": {
+      "text": "休闲男孩",
+      "source": "cn"
+    },
+    "クラリティガイ": {
+      "text": "聪慧男士",
+      "source": "cn"
+    },
+    "ブレッシングブライド": {
+      "text": "祝福新娘",
+      "source": "cn"
+    },
+    "ハッピーベル": {
+      "text": "快乐铃铛",
+      "source": "cn"
+    },
+    "フラワーマーメイド": {
+      "text": "花朵人鱼",
+      "source": "cn"
+    },
+    "おでかけわんだーらんど": {
+      "text": "奇幻乐园外出服",
+      "source": "cn"
+    },
+    "さわやかアイスベア": {
+      "text": "清爽北极熊",
+      "source": "cn"
+    },
+    "Spirit of Love": {
+      "text": "爱之魂",
+      "source": "cn"
+    },
+    "Spirit of Sound": {
+      "text": "声之魂",
+      "source": "cn"
+    },
+    "Spirit of Wish": {
+      "text": "愿之魂",
+      "source": "cn"
+    },
+    "ブリリアントジェム": {
+      "text": "明亮宝石",
+      "source": "cn"
+    },
+    "グリッタージェム": {
+      "text": "光彩宝石",
+      "source": "cn"
+    },
+    "スパークルジェム": {
+      "text": "闪耀宝石",
+      "source": "cn"
+    },
+    "チェインズメモリー・ジャケット": {
+      "text": "回忆之链夹克",
+      "source": "cn"
+    },
+    "オーバー・ザ・ウェストランド": {
+      "text": "穿越荒漠",
+      "source": "cn"
+    },
+    "餓者髑髏を統べる者": {
+      "text": "The Gashadokuro Controller",
+      "source": "cn"
+    },
+    "座敷童のセエラア": {
+      "text": "座敷童子的水手服",
+      "source": "cn"
+    },
+    "狐狸の詰襟": {
+      "text": "狐狸与貉的立领校服",
+      "source": "cn"
+    },
+    "Marine Shark Girl": {
+      "text": "海洋鲨鱼少女",
+      "source": "cn"
+    },
+    "Loss way home": {
+      "text": "归家无途",
+      "source": "cn"
+    },
+    "Close to heart": {
+      "text": "贴近心灵",
+      "source": "cn"
+    },
+    "Become an ally": {
+      "text": "坚定后盾",
+      "source": "cn"
+    },
+    "コネクト・スター": {
+      "text": "Connect star",
+      "source": "cn"
+    },
+    "ハートビート・スター": {
+      "text": "Heartbeat star",
+      "source": "cn"
+    },
+    "イルミネート・スター": {
+      "text": "Illuminate star",
+      "source": "cn"
+    },
+    "American casual": {
+      "text": "美式休闲",
+      "source": "cn"
+    },
+    "ディーラビット": {
+      "text": "Deal Rabbit",
+      "source": "cn"
+    },
+    "シロ・モルト": {
+      "text": "白色麦芽",
+      "source": "cn"
+    },
+    "ワンダーランドトラベラー！": {
+      "text": "奇幻乐园旅行者！",
+      "source": "cn"
+    },
+    "見習い魔導士のワンピース": {
+      "text": "实习魔法师的连衣裙",
+      "source": "cn"
+    },
+    "熟練商人の旅衣装": {
+      "text": "资深商人的旅行装",
+      "source": "cn"
+    },
+    "スマイリング・マーチング": {
+      "text": "Smiling Marching",
+      "source": "cn"
+    },
+    "リリーヴ・マーチング": {
+      "text": "Relieve Marching",
+      "source": "cn"
+    },
+    "エンカレッジ・マーチング": {
+      "text": "Eencourage Marching",
+      "source": "cn"
+    },
+    "パラゴン・マーチング": {
+      "text": "Paragon Marching",
+      "source": "cn"
+    },
+    "LOGO LOGO SEKAI CORDE": {
+      "text": "LOGO LOGO 「世界」 CORDE",
+      "source": "cn"
+    },
+    "SEKAI UNIVERSITY": {
+      "text": "「世界」大学",
+      "source": "cn"
+    },
+    "Wonderful days": {
+      "text": "美好的日子",
+      "source": "cn"
+    },
+    "Alive with music": {
+      "text": "与音乐共存",
+      "source": "cn"
+    },
+    "トラブルメーカー・メイタンテイ": {
+      "text": "捣乱名侦探",
+      "source": "cn"
+    },
+    "インテリジェンス・エージェント": {
+      "text": "超智力特工",
+      "source": "cn"
+    },
+    "マスクド・ダイカイトウ": {
+      "text": "蒙面大怪盗",
+      "source": "cn"
+    },
+    "Sekai Sky": {
+      "text": "「世界」天空",
+      "source": "cn"
+    },
+    "Sekai Star": {
+      "text": "「世界」星辰",
+      "source": "cn"
+    },
+    "エクシード・サザンクロス": {
+      "text": "超越南十字星",
+      "source": "cn"
+    },
+    "フォローイング・コンパス": {
+      "text": "领航罗盘",
+      "source": "cn"
+    },
+    "トゥインクル・クローバー": {
+      "text": "闪耀三叶草",
+      "source": "cn"
+    },
+    "ブライト・クローバー": {
+      "text": "璀璨三叶草",
+      "source": "cn"
+    },
+    "太陽と月と星のパレード": {
+      "text": "日月星辰大巡游",
+      "source": "cn"
+    },
+    "太陽と月と星のカーニバル": {
+      "text": "日月星辰嘉年华",
+      "source": "cn"
+    },
+    "Trail of Butterflies": {
+      "text": "蝴蝶轨迹",
+      "source": "cn"
+    },
+    "Flutter of Butterflies": {
+      "text": "蝴蝶迷踪",
+      "source": "cn"
+    },
+    "My Way STYLE": {
+      "text": "自我风格",
+      "source": "cn"
+    },
+    "Serenity STYLE": {
+      "text": "沉着风格",
+      "source": "cn"
+    },
+    "The Starlight": {
+      "text": "星光灿烂",
+      "source": "cn"
+    },
+    "The Flowershower": {
+      "text": "沐浴花朵",
+      "source": "cn"
+    },
+    "The Spotlight": {
+      "text": "聚灯闪耀",
+      "source": "cn"
+    },
+    "The Giftedray": {
+      "text": "禀赋之光",
+      "source": "cn"
+    },
+    "Classical Butterfly": {
+      "text": "古典金斑蝶",
+      "source": "cn"
+    },
+    "Fall Fun Steps": {
+      "text": "快乐秋日步伐",
+      "source": "cn"
+    },
+    "FLAME OF ENDEAVOR": {
+      "text": "奋发之火",
+      "source": "cn"
+    },
+    "HOT AIR GIRL": {
+      "text": "炽烈少女",
+      "source": "cn"
+    },
+    "SPARK SPARKLE": {
+      "text": "火花闪耀",
+      "source": "cn"
+    },
+    "リザウンド・スカイ": {
+      "text": "青空回响",
+      "source": "cn"
+    },
+    "ビヨンド・クラウド": {
+      "text": "白云彼端",
+      "source": "cn"
+    },
+    "ウォーム・サンシャイン": {
+      "text": "阳光和煦",
+      "source": "cn"
+    },
+    "スケルトンラビート": {
+      "text": "Skeleton Rabbit",
+      "source": "cn"
+    },
+    "スケルトンラビーゴ": {
+      "text": "骨架兔",
+      "source": "cn"
+    },
+    "メランコリック・モガ": {
+      "text": "忧郁复古长裙",
+      "source": "cn"
+    },
+    "ノスタルジア・モガ": {
+      "text": "怀旧复古长裙",
+      "source": "cn"
+    },
+    "センチメンタル・モガ": {
+      "text": "感伤复古长裙",
+      "source": "cn"
+    },
+    "ジュエリーシッククイーン": {
+      "text": "精致珠宝皇后",
+      "source": "cn"
+    },
+    "夜を統べる星の王": {
+      "text": "统领黑夜的星辰之王",
+      "source": "cn"
+    },
+    "Twilight Embrace": {
+      "text": "暮中怀抱",
+      "source": "cn"
+    },
+    "Twilight Seek": {
+      "text": "暮中寻觅",
+      "source": "cn"
+    },
+    "Twilight Draw": {
+      "text": "暮中描摹",
+      "source": "cn"
+    },
+    "Twilight Reflect": {
+      "text": "暮中深思",
+      "source": "cn"
+    },
+    "ザ・ファンタズマゴリア": {
+      "text": "幻境之服",
+      "source": "cn"
+    },
+    "トランジション・ジェントルマン": {
+      "text": "转型绅士",
+      "source": "cn"
+    },
+    "スパイラル・レディ": {
+      "text": "螺旋淑女",
+      "source": "cn"
+    },
+    "頑張り☆パティシエール": {
+      "text": "勤劳☆糕点师",
+      "source": "cn"
+    },
+    "ファイティング・コック": {
+      "text": "勤奋主厨",
+      "source": "cn"
+    },
+    "夢見るペストリーシェフ": {
+      "text": "梦想甜点师",
+      "source": "cn"
+    },
+    "アップルピクニックコーデ": {
+      "text": "苹果郊游服",
+      "source": "cn"
+    },
+    "のんびりピクニックコーデ": {
+      "text": "悠闲郊游服",
+      "source": "cn"
+    },
+    "たっぷりリボンといちごのワンピ": {
+      "text": "布满蝴蝶结草莓的连衣裙",
+      "source": "cn"
+    },
+    "お散歩カーディガンスタイル": {
+      "text": "散步开衫造型",
+      "source": "cn"
+    },
+    "ふわふわモコモコメイド服": {
+      "text": "软茸茸女仆装",
+      "source": "cn"
+    },
+    "イカした乙女チックワンピース": {
+      "text": "时髦少女连衣裙",
+      "source": "cn"
+    },
+    "ふわふわポリス": {
+      "text": "毛茸警察",
+      "source": "cn"
+    },
+    "もこもこポリス": {
+      "text": "蓬松警察",
+      "source": "cn"
+    },
+    "しましまポリス": {
+      "text": "条纹警察",
+      "source": "cn"
+    },
+    "想望のセーラー": {
+      "text": "思慕水手服",
+      "source": "cn"
+    },
+    "深憂のセーラー": {
+      "text": "忧郁水手服",
+      "source": "cn"
+    },
+    "扇動のセーラー": {
+      "text": "鼓动水手服",
+      "source": "cn"
+    },
+    "ガーリッシュ・ウィンターコート": {
+      "text": "少女风·冬日大衣",
+      "source": "cn"
+    },
+    "モダン・ウィンターコート": {
+      "text": "时尚风·冬日大衣",
+      "source": "cn"
+    },
+    "花開く夢編ニットスタイル": {
+      "text": "花开梦想针织衫",
+      "source": "cn"
+    },
+    "庭園の麗しき薄花スタイル": {
+      "text": "美丽庭院浅蓝连衣裙",
+      "source": "cn"
+    },
+    "和風ロリータファッション": {
+      "text": "日式洛丽塔穿搭",
+      "source": "cn"
+    },
+    "和風ロックファッション": {
+      "text": "日式摇滚穿搭",
+      "source": "cn"
+    },
+    "和風エレガントファッション": {
+      "text": "日式优雅穿搭",
+      "source": "cn"
+    },
+    "辰ジャンタイトスカート": {
+      "text": "龙纹刺绣外套紧身裙",
+      "source": "cn"
+    },
+    "辰スカスラックス": {
+      "text": "龙纹刺绣外套休闲裤",
+      "source": "cn"
+    },
+    "ゆきんこひつじ": {
+      "text": "白雪小羊",
+      "source": "cn"
+    },
+    "intruder:R": {
+      "text": "侵入者:R",
+      "source": "cn"
+    },
+    "hacker:N": {
+      "text": "骇入者:N",
+      "source": "cn"
+    },
+    "observer:R": {
+      "text": "观察者:R",
+      "source": "cn"
+    },
+    "小悪魔系スイートチョコレート": {
+      "text": "小恶魔系甜巧克力",
+      "source": "cn"
+    },
+    "清楚系ミルクチョコレート": {
+      "text": "清纯系牛奶巧克力",
+      "source": "cn"
+    },
+    "大人シック系ビターチョコレート": {
+      "text": "成熟系苦巧克力",
+      "source": "cn"
+    },
+    "蝶たちのソワレ": {
+      "text": "蝴蝶盛宴",
+      "source": "cn"
+    },
+    "絢爛華劇": {
+      "text": "绚烂演出服",
+      "source": "cn"
+    },
+    "ジェネラル・コマンダー": {
+      "text": "指挥服",
+      "source": "cn"
+    },
+    "エイド・ユニフォーム": {
+      "text": "助手制服",
+      "source": "cn"
+    },
+    "カーネル・ユニフォーム": {
+      "text": "干部制服",
+      "source": "cn"
+    },
+    "SUNNY magician": {
+      "text": "晴空魔术师",
+      "source": "cn"
+    },
+    "RAINY magician": {
+      "text": "细雨魔术师",
+      "source": "cn"
+    },
+    "CLOUDY magician": {
+      "text": "阴云魔术师",
+      "source": "cn"
+    },
+    "淡く揺れる騎士装束": {
+      "text": "浅色飘逸骑士装",
+      "source": "cn"
+    },
+    "光射す庭の騎士装束": {
+      "text": "流光庭院骑士装",
+      "source": "cn"
+    },
+    "深淵に立つ騎士装束": {
+      "text": "伫立深渊骑士装",
+      "source": "cn"
+    },
+    "Drop sugar Tea party!": {
+      "text": "糖果茶会！",
+      "source": "cn"
+    },
+    "ロイヤルホリデー": {
+      "text": "皇室假期",
+      "source": "cn"
+    },
+    "キング・オブ・スペード": {
+      "text": "黑桃国王",
+      "source": "cn"
+    },
+    "クイーン・オブ・ダイヤ": {
+      "text": "方块皇后",
+      "source": "cn"
+    },
+    "クイーン・オブ・ハート": {
+      "text": "红心皇后",
+      "source": "cn"
+    },
+    "キング・オブ・クラブ": {
+      "text": "梅花国王",
+      "source": "cn"
+    },
+    "Color the past": {
+      "text": "染色往昔",
+      "source": "cn"
+    },
+    "Cherish regret": {
+      "text": "怀抱悔恨",
+      "source": "cn"
+    },
+    "Love suffering": {
+      "text": "珍爱伤痛",
+      "source": "cn"
+    },
+    "Come to Life": {
+      "text": "生机盎然",
+      "source": "cn"
+    },
+    "Naughty Dog": {
+      "text": "淘气狗",
+      "source": "cn"
+    },
+    "Soothing Dog": {
+      "text": "治愈狗",
+      "source": "cn"
+    },
+    "Gentle Dog": {
+      "text": "温顺狗",
+      "source": "cn"
+    },
+    "PunkyStarRider（レディース）": {
+      "text": "PunkyStarRider（女款）",
+      "source": "cn"
+    },
+    "PunkyStarRider（メンズ）": {
+      "text": "PunkyStarRider（男款）",
+      "source": "cn"
+    },
+    "紬音桜舞": {
+      "text": "绸音樱舞",
+      "source": "cn"
+    },
+    "さくらブレザー": {
+      "text": "樱花夹克",
+      "source": "cn"
+    },
+    "リゾルブ・ワンピース": {
+      "text": "坚定连衣裙",
+      "source": "cn"
+    },
+    "フィールライト・パンツ": {
+      "text": "轻盈长裤",
+      "source": "cn"
+    },
+    "スナグル・シャツ": {
+      "text": "舒心衬衫",
+      "source": "cn"
+    },
+    "ゲームドレス・エトワール": {
+      "text": "对战礼服·星辰点点",
+      "source": "cn"
+    },
+    "ゲームウェア・メテオール": {
+      "text": "对战服·流星闪耀",
+      "source": "cn"
+    },
+    "ゴシック・ブロッケージ": {
+      "text": "Gothic Blockage",
+      "source": "cn"
+    },
+    "ゴシック・トラスト": {
+      "text": "Gothic Trust",
+      "source": "cn"
+    },
+    "ゴシック・アクセプト": {
+      "text": "Gothic Accept",
+      "source": "cn"
+    },
+    "ギャラクシースラッグガール": {
+      "text": "银河蛞蝓女孩",
+      "source": "cn"
+    },
+    "ユニバース・ジェントルマン": {
+      "text": "寰宇绅士",
+      "source": "cn"
+    },
+    "コズミック・ラビットボーイ": {
+      "text": "宇宙兔男孩",
+      "source": "cn"
+    },
+    "しずくも": {
+      "text": "滴雨云",
+      "source": "cn"
+    },
+    "Connect Rock'n Beat(レディース)": {
+      "text": "Connect Rock'n Beat（女款）",
+      "source": "cn"
+    },
+    "Connect Rock'n Beat(メンズ)": {
+      "text": "Connect Rock'n Beat（男款）",
+      "source": "cn"
+    },
+    "Connect Street Beat(レディース)": {
+      "text": "Connect Street Beat（女款）",
+      "source": "cn"
+    },
+    "Connect Street Beat(メンズ)": {
+      "text": "Connect Street Beat（男款）",
+      "source": "cn"
+    },
+    "ブランシュエルドレス": {
+      "text": "纯白羽翼礼服",
+      "source": "cn"
+    },
+    "ノワールクレマティットドレス": {
+      "text": "漆黑铁线莲礼服",
+      "source": "cn"
+    },
+    "燃ゆる仁の衣": {
+      "text": "燃烧之仁衣",
+      "source": "cn"
+    },
+    "流るる智の衣": {
+      "text": "流动之智衣",
+      "source": "cn"
+    },
+    "まどろむ信の衣": {
+      "text": "小寐之信衣",
+      "source": "cn"
+    },
+    "ほえーるおーけすとら": {
+      "text": "鲸鱼交响乐",
+      "source": "cn"
+    },
+    "ぺんぎんわるつ": {
+      "text": "企鹅华尔兹",
+      "source": "cn"
+    },
+    "くまのみまーち": {
+      "text": "小丑鱼进行曲",
+      "source": "cn"
+    },
+    "フィーチャー・コンパス": {
+      "text": "独特指南针",
+      "source": "cn"
+    },
+    "コンパス・セーラー": {
+      "text": "指南针水手服",
+      "source": "cn"
+    },
+    "テイルコート・コンパス": {
+      "text": "燕尾服指南针",
+      "source": "cn"
+    },
+    "ムーディー・コンパス": {
+      "text": "情调指南针",
+      "source": "cn"
+    },
+    "スタイリッシュ・コンパス": {
+      "text": "帅气指南针",
+      "source": "cn"
+    },
+    "コンパス・ジャケット": {
+      "text": "指南针夹克",
+      "source": "cn"
+    },
+    "初音ミク「マジカルミライ 2024」": {
+      "text": "初音未来“魔法未来2024”",
+      "source": "cn"
+    },
+    "ファンファントリップガール": {
+      "text": "Fan fun trip girl",
+      "source": "cn"
+    },
+    "ファンファントリップボーイ": {
+      "text": "Fan fun trip boy",
+      "source": "cn"
+    },
+    "どり～みん★ごーすとさん": {
+      "text": "梦想★幽灵",
+      "source": "cn"
+    },
+    "てりぶる★なーすさん": {
+      "text": "可怕★护士",
+      "source": "cn"
+    },
+    "てんだー★めいどさん": {
+      "text": "温柔★女仆",
+      "source": "cn"
+    },
+    "Awesome Player": {
+      "text": "Awesome  Player",
+      "source": "cn"
+    },
+    "アンビション・サロペット": {
+      "text": "志向背带裤",
+      "source": "cn"
+    },
+    "フレアレッグ・サロペット": {
+      "text": "喇叭背带裤",
+      "source": "cn"
+    },
+    "キャットニット・ボーイ": {
+      "text": "猫咪针织衫男孩",
+      "source": "cn"
+    },
+    "風渡る朝焼けの装い(レディース)": {
+      "text": "风动朝霞（女款）",
+      "source": "cn"
+    },
+    "風渡る朝焼けの装い(メンズ)": {
+      "text": "风动朝霞（男款）",
+      "source": "cn"
+    },
+    "Starry night dance party!(レディース)": {
+      "text": "Starry night dance party!（女款）",
+      "source": "cn"
+    },
+    "Starry night dance party!(メンズ)": {
+      "text": "Starry night dance party!（男款）",
+      "source": "cn"
+    },
+    "Sweet & Rose(レディース)": {
+      "text": "Sweet & Rose（女款）",
+      "source": "cn"
+    },
+    "Sweet & Rose(メンズ)": {
+      "text": "Sweet & Rose（男款）",
+      "source": "cn"
+    },
+    "Red step rabbit(レディース)": {
+      "text": "Red step rabbit（女款）",
+      "source": "cn"
+    },
+    "Red step rabbit(メンズ)": {
+      "text": "Red step rabbit（男款）",
+      "source": "cn"
+    },
+    "Wonderful Symphony(レディース)": {
+      "text": "Wonderful Symphony（女款）",
+      "source": "cn"
+    },
+    "Wonderful Symphony(メンズ)": {
+      "text": "Wonderful Symphony（男款）",
+      "source": "cn"
+    },
+    "Midnight Celebration Tea Party(レディース)": {
+      "text": "Midnight Celebration Tea Party（女款）",
+      "source": "cn"
+    },
+    "Midnight Celebration Tea Party(メンズ)": {
+      "text": "Midnight Celebration Tea Party（男款）",
+      "source": "cn"
+    },
+    "スペキュラティブコート": {
+      "text": "思辨大衣",
+      "source": "cn"
+    },
+    "アナクロニズムドレス": {
+      "text": "异时代复古礼服",
+      "source": "cn"
+    },
+    "ディグニファイド・ブリリアンス": {
+      "text": "Dignified Brilliance",
+      "source": "cn"
+    },
+    "アーデント・ブリリアンス": {
+      "text": "Ardent Brilliance",
+      "source": "cn"
+    },
+    "カプテイヴィング・ブリリアンス": {
+      "text": "Captivating Brilliance",
+      "source": "cn"
+    },
+    "イクスプレスト・ブリリアンス": {
+      "text": "Express Brilliance",
+      "source": "cn"
+    },
+    "カフェモカ・ベア": {
+      "text": "摩卡小熊",
+      "source": "cn"
+    },
+    "おやすみぷらねっと": {
+      "text": "晚安星球",
+      "source": "cn"
+    },
+    "苦痛の綻花": {
+      "text": "苦痛之绽花",
+      "source": "cn"
+    },
+    "不図の落花": {
+      "text": "不意之落花",
+      "source": "cn"
+    },
+    "無言の贈花": {
+      "text": "无言之赠花",
+      "source": "cn"
+    },
+    "心赴くセットアップスタイル": {
+      "text": "心驰神往穿搭",
+      "source": "cn"
+    },
+    "音鳴らすワンピーススタイル": {
+      "text": "悦音连衣裙",
+      "source": "cn"
+    },
+    "憩いのサロペットスタイル": {
+      "text": "休憩工装裤",
+      "source": "cn"
+    },
+    "ゆかし紅葉の衣": {
+      "text": "典雅红叶服",
+      "source": "cn"
+    },
+    "かぐはし落葉の衣": {
+      "text": "飘香落叶服",
+      "source": "cn"
+    },
+    "らうたし一葉の衣": {
+      "text": "烂漫孤叶服",
+      "source": "cn"
+    },
+    "フィエ・シュヴァリエ": {
+      "text": "高傲爵士",
+      "source": "cn"
+    },
+    "スーリール・シュヴァリエ": {
+      "text": "愉悦爵士",
+      "source": "cn"
+    },
+    "ハビリティ・シュヴァリエ": {
+      "text": "机敏爵士",
+      "source": "cn"
+    },
+    "スィーズ・ベスティ": {
+      "text": "抓紧挚友",
+      "source": "cn"
+    },
+    "クロワール・ベスティ": {
+      "text": "信赖挚友",
+      "source": "cn"
+    },
+    "プロテージェ・パピヨン": {
+      "text": "守护之蝶",
+      "source": "cn"
+    },
+    "煌めきのワルツ": {
+      "text": "闪耀华尔兹",
+      "source": "cn"
+    },
+    "タウロスの星衣": {
+      "text": "金牛座星衣",
+      "source": "cn"
+    },
+    "チアフレッシュ・ドレス": {
+      "text": "Cheer-Fresh Dress",
+      "source": "cn"
+    },
+    "チアスプラッシュ・ユニフォーム": {
+      "text": "Cheer-Splash Uniform",
+      "source": "cn"
+    },
+    "飛翔のフェザー": {
+      "text": "翱翔之羽",
+      "source": "cn"
+    },
+    "鼓舞のフェザー": {
+      "text": "鼓舞之羽",
+      "source": "cn"
+    },
+    "扶翼のフェザー": {
+      "text": "扶翼之羽",
+      "source": "cn"
+    },
+    "順風なびく羽衣": {
+      "text": "顺风飘拂羽衣",
+      "source": "cn"
+    },
+    "香風そよぐ羽衣": {
+      "text": "香风吹拂羽衣",
+      "source": "cn"
+    },
+    "清風はためく羽衣": {
+      "text": "清风飘扬羽衣",
+      "source": "cn"
+    },
+    "豊穣のヘビーダンサー": {
+      "text": "丰收的肚皮舞娘",
+      "source": "cn"
+    },
+    "生命のヘビーダンサー": {
+      "text": "生命的肚皮舞者",
+      "source": "cn"
+    },
+    "グラスマチカ": {
+      "text": "草原之舞",
+      "source": "cn"
+    },
+    "黎明のステップ": {
+      "text": "黎明之步",
+      "source": "cn"
+    },
+    "ファーミーワンピース": {
+      "text": "乡村连衣裙",
+      "source": "cn"
+    },
+    "ファーミーオーバーオール": {
+      "text": "乡村工装裤",
+      "source": "cn"
+    },
+    "クローズドクロスブルゾン": {
+      "text": "闭合式交叉外套",
+      "source": "cn"
+    },
+    "オープンドミーツドレス": {
+      "text": "敞开式多层次礼服",
+      "source": "cn"
+    },
+    "シャイニー・ロリータ": {
+      "text": "闪耀洛丽塔",
+      "source": "cn"
+    },
+    "ハートフル・ロリータ": {
+      "text": "温馨洛丽塔",
+      "source": "cn"
+    },
+    "シークレット・ロリータ": {
+      "text": "秘密洛丽塔",
+      "source": "cn"
+    },
+    "ミッドナイトダイバー": {
+      "text": "Midnight Diver",
+      "source": "cn"
+    },
+    "ノウブル・ストリートスタイル": {
+      "text": "贵族街头风",
+      "source": "cn"
+    },
+    "シヴァルラス・カジュアルコーデ": {
+      "text": "骑士风范休闲穿搭",
+      "source": "cn"
+    },
+    "夜空に輝くスタースーツ": {
+      "text": "闪耀夜空星光服",
+      "source": "cn"
+    },
+    "マジカルショージャケット": {
+      "text": "魔法演出夹克",
+      "source": "cn"
+    },
+    "ASTRO FES COSTUME（レン）": {
+      "text": "ASTRO FES COSTUME（镜音连）",
+      "source": "cn"
+    },
+    "ASTRO FES COSTUME（類）": {
+      "text": "ASTRO FES COSTUME（类）",
+      "source": "cn"
+    },
+    "ポム・ソルシエール": {
+      "text": "苹果魔女",
+      "source": "cn"
+    },
+    "パンプルムース・ソルシエール": {
+      "text": "西柚魔女",
+      "source": "cn"
+    },
+    "レザン・ソルシエール": {
+      "text": "葡萄魔女",
+      "source": "cn"
+    },
+    "セイントビースト・ソーサラー": {
+      "text": "圣兽魔法师",
+      "source": "cn"
+    },
+    "ビーストマン・サマナー": {
+      "text": "兽人召唤师",
+      "source": "cn"
+    },
+    "ゴールドシープ・ソルジャー": {
+      "text": "金羊战士",
+      "source": "cn"
+    },
+    "めくるめ。": {
+      "text": "光彩炫目。",
+      "source": "cn"
+    },
+    "クラージュ・オートクチュール": {
+      "text": "勇气高级定制服",
+      "source": "cn"
+    },
+    "シェリール・オートクチュール": {
+      "text": "钟爱高级定制服",
+      "source": "cn"
+    },
+    "スリール・オートクチュール": {
+      "text": "微笑高级定制服",
+      "source": "cn"
+    },
+    "初音ミク「マジカルミライ 2025」": {
+      "text": "初音未来“魔法未来2025”",
+      "source": "cn"
+    },
+    "サマーミルキーウェイ・ベガ": {
+      "text": "夏日银河·织女星",
+      "source": "cn"
+    },
+    "サマーミルキーウェイ・アルタイル": {
+      "text": "夏日银河·牛郎星",
+      "source": "cn"
+    },
+    "Calm Wisdom": {
+      "text": "冷静智慧",
+      "source": "cn"
+    },
+    "いたずらな小鬼の衣": {
+      "text": "顽皮小鬼之衣",
+      "source": "cn"
+    },
+    "ミラージュ・チュチュ": {
+      "text": "海市蜃楼芭蕾裙",
+      "source": "cn"
+    },
+    "ウィッシュ・チュチュ": {
+      "text": "心愿芭蕾裙",
+      "source": "cn"
+    },
+    "アクティブ・オーバーオール": {
+      "text": "活力工装背带裤",
+      "source": "cn"
+    },
+    "エフォートレス・オーバーオール": {
+      "text": "休闲工装背带裤",
+      "source": "cn"
+    },
+    "Lo-fi Green": {
+      "text": "轻音海盐汽水·bilibili（男款）",
+      "source": "cn"
+    },
+    "Youthful life": {
+      "text": "青春生活",
+      "source": "llm"
+    },
+    "妖椿鬼": {
+      "text": "妖椿鬼",
+      "source": "llm"
+    },
+    "メインテイン・チュチュ": {
+      "text": "维护芭蕾裙",
+      "source": "llm"
+    },
+    "ソートフル・ワーカー": {
+      "text": "体贴的劳动者",
+      "source": "llm"
+    },
+    "Confidence suit": {
+      "text": "自信西装",
+      "source": "llm"
+    },
+    "hope to strive": {
+      "text": "奋斗的希望",
+      "source": "llm"
+    },
+    "Cheerful Streamer": {
+      "text": "开朗的主播",
+      "source": "llm"
+    },
+    "Innocent Streamer": {
+      "text": "纯真的主播",
+      "source": "llm"
+    },
+    "White Attractive": {
+      "text": "白色魅力",
+      "source": "llm"
+    },
+    "Classical Eyeshadow": {
+      "text": "古典眼影",
+      "source": "llm"
+    },
+    "Bear in pocket": {
+      "text": "口袋里的熊",
+      "source": "llm"
+    },
+    "Dance of pleasure": {
+      "text": "愉悦之舞",
+      "source": "llm"
+    },
+    "Code name: Violet": {
+      "text": "代号：紫罗兰",
+      "source": "llm"
+    },
+    "贈り物を包む兵士": {
+      "text": "包装礼物的士兵",
+      "source": "llm"
+    },
+    "インベンティブ・ワーカー": {
+      "text": "创意的劳动者",
+      "source": "llm"
+    },
+    "DENIM&MONO": {
+      "text": "丹宁与单色",
+      "source": "llm"
+    },
+    "Awesome Star": {
+      "text": "了不起的明星",
+      "source": "llm"
+    },
+    "Bright flame": {
+      "text": "灿烂之火",
+      "source": "llm"
+    },
+    "mend a tear": {
+      "text": "缝补泪痕",
+      "source": "llm"
+    },
+    "Snowflake White Rabbit彡": {
+      "text": "雪花白兔",
+      "source": "llm"
+    },
+    "Fresh Citrus Weekend": {
+      "text": "清新柑橘周末",
+      "source": "llm"
+    },
+    "MIKU MIKU POP!": {
+      "text": "MIKU MIKU POP!",
+      "source": "llm"
+    },
+    "Brilliant Tender": {
+      "text": "璀璨温柔",
+      "source": "llm"
+    },
+    "Classical Blush": {
+      "text": "古典羞涩",
+      "source": "llm"
+    },
+    "Starry Identity": {
+      "text": "星空身份",
+      "source": "llm"
+    },
+    "リラクシー･ボタニカル": {
+      "text": "休闲草本",
+      "source": "llm"
+    },
+    "Night rose-queen": {
+      "text": "暗夜玫瑰女王",
+      "source": "llm"
+    },
+    "Cheer of neighbor": {
+      "text": "邻里应援",
+      "source": "llm"
+    },
+    "mode parfum": {
+      "text": "香氛风尚",
+      "source": "llm"
+    },
+    "duel of Growth": {
+      "text": "成长的决斗",
+      "source": "llm"
+    },
+    "ハレギサラブレイト（レディース）": {
+      "text": "盛装庆典（女装）",
+      "source": "llm"
+    },
+    "レーヴ・デ・スリアン": {
+      "text": "微笑之梦",
+      "source": "llm"
+    },
+    "S×S": {
+      "text": "S×S",
+      "source": "llm"
+    },
+    "Glamorous Peacock Suit": {
+      "text": "华丽孔雀西装",
+      "source": "llm"
+    },
+    "Summer Ribbon Style": {
+      "text": "夏日缎带风格",
+      "source": "llm"
+    },
+    "笑顔溢れる鬼姫の衣": {
+      "text": "笑容洋溢的鬼姬之衣",
+      "source": "llm"
+    },
+    "Craving flame": {
+      "text": "渴望之焰",
+      "source": "llm"
+    },
+    "風統べる蒼炎": {
+      "text": "统御风之苍炎",
+      "source": "llm"
+    },
+    "touch hearts song": {
+      "text": "触动心灵之歌",
+      "source": "llm"
+    },
+    "Summer time Flamingo": {
+      "text": "夏日火烈鸟",
+      "source": "llm"
+    },
+    "shot": {
+      "text": "瞬间",
+      "source": "llm"
+    },
+    "peppy abyssinian": {
+      "text": "活泼阿比西尼亚",
+      "source": "llm"
+    },
+    "Snow Fairy lover": {
+      "text": "雪之精灵恋人",
+      "source": "llm"
+    },
+    "Bond of Sparkle": {
+      "text": "闪耀之绊",
+      "source": "llm"
+    },
+    "Colorful Bunny": {
+      "text": "彩色兔兔",
+      "source": "llm"
+    },
+    "RAD ONEROAD": {
+      "text": "RAD唯一之路",
+      "source": "llm"
+    },
+    "Connect Hopeful Hour（メンズ）": {
+      "text": "连结希望时刻（男款）",
+      "source": "llm"
+    },
+    "♡Sweet Little Soldier♡": {
+      "text": "♡甜美小战士♡",
+      "source": "llm"
+    },
+    "BRILLIANT COWBOY!!": {
+      "text": "闪耀牛仔！！",
+      "source": "llm"
+    },
+    "dizzy trap": {
+      "text": "眩晕陷阱",
+      "source": "llm"
+    },
+    "Faith in Shadows": {
+      "text": "影中信仰",
+      "source": "llm"
+    },
+    "Brush of Solitude": {
+      "text": "孤独画笔",
+      "source": "llm"
+    },
+    "Unchanged purity": {
+      "text": "不变的纯真",
+      "source": "llm"
+    },
+    "Awesome Wings": {
+      "text": "威风之翼",
+      "source": "llm"
+    },
+    "Shortcake*Gentleman": {
+      "text": "草莓蛋糕*绅士",
+      "source": "llm"
+    },
+    "knitting colors": {
+      "text": "编织色彩",
+      "source": "llm"
+    },
+    "fallin' fluff": {
+      "text": "飘落绒毛",
+      "source": "llm"
+    },
+    "Dance of freedom": {
+      "text": "自由之舞",
+      "source": "llm"
+    },
+    "Livelylady Dress": {
+      "text": "活泼淑女裙",
+      "source": "llm"
+    },
+    "Yearning flame": {
+      "text": "憧憬之焰",
+      "source": "llm"
+    },
+    "Pure Transparency": {
+      "text": "纯粹透明",
+      "source": "llm"
+    },
+    "おとぎ話の森コーデ（レディース）": {
+      "text": "童话森林套装（女）",
+      "source": "llm"
+    },
+    "oversize･streeT": {
+      "text": "廓形街头",
+      "source": "llm"
+    },
+    "Classical Lipstick": {
+      "text": "经典口红",
+      "source": "llm"
+    },
+    "Hot New Colors": {
+      "text": "流行新色",
+      "source": "llm"
+    },
+    "フェイスエプロン": {
+      "text": "饰面围裙",
+      "source": "llm"
+    },
+    "fairy tale princess": {
+      "text": "童话公主",
+      "source": "llm"
+    },
+    "Bond of memory": {
+      "text": "记忆的羁绊",
+      "source": "llm"
+    },
+    "Hamster in pocket": {
+      "text": "口袋里的仓鼠",
+      "source": "llm"
+    },
+    "レーヴ・デ・マジ": {
+      "text": "梦幻魔法",
+      "source": "llm"
+    },
+    "BAD Argyle": {
+      "text": "BAD 菱格纹",
+      "source": "llm"
+    },
+    "Code name: Joker": {
+      "text": "代号：Joker",
+      "source": "llm"
+    },
+    "Tight Player": {
+      "text": "实力玩家",
+      "source": "llm"
+    },
+    "Beat Rider": {
+      "text": "节奏骑士",
+      "source": "llm"
+    },
+    "Easter・Bunny Boy": {
+      "text": "复活节・兔男郎",
+      "source": "llm"
+    },
+    "Dynamic-tone": {
+      "text": "动感色调",
+      "source": "llm"
+    },
+    "cozy time": {
+      "text": "惬意时光",
+      "source": "llm"
+    },
+    "コーディアル・カラー": {
+      "text": "诚挚色彩",
+      "source": "llm"
+    },
+    "Wings of trust": {
+      "text": "信任之翼",
+      "source": "llm"
+    },
+    "Fairlady Dress": {
+      "text": "淑女礼服",
+      "source": "llm"
+    },
+    "Noble Eternity": {
+      "text": "高洁永恒",
+      "source": "llm"
+    },
+    "NEON SINGER": {
+      "text": "霓虹歌手",
+      "source": "llm"
+    },
+    "cosmic rhythm shooter": {
+      "text": "宇宙节奏射手",
+      "source": "llm"
+    },
+    "地平望む猛炎": {
+      "text": "眺望地平线的猛炎",
+      "source": "llm"
+    },
+    "Bond of flame": {
+      "text": "火焰之绊",
+      "source": "llm"
+    },
+    "stir hearts performance": {
+      "text": "动人心弦的演出",
+      "source": "llm"
+    },
+    "Vitality suit": {
+      "text": "活力套装",
+      "source": "llm"
+    },
+    "Icy rose-lady": {
+      "text": "冰之玫瑰淑女",
+      "source": "llm"
+    },
+    "bombyx mori": {
+      "text": "家蚕",
+      "source": "llm"
+    },
+    "ハレギサラブレイト（メンズ）": {
+      "text": "盛装庆典（男款）",
+      "source": "llm"
+    },
+    "アスピレエプロン": {
+      "text": "憧憬围裙",
+      "source": "llm"
+    },
+    "Permanent Spirit": {
+      "text": "永恒精神",
+      "source": "llm"
+    },
+    "Starry Ability": {
+      "text": "星之才能",
+      "source": "llm"
+    },
+    "アフェクショネート・シンデレラ": {
+      "text": "深情灰姑娘",
+      "source": "llm"
+    },
+    "レーヴ・デトワール": {
+      "text": "繁星之梦",
+      "source": "llm"
+    },
+    "COOL SURVIVOR": {
+      "text": "酷炫幸存者",
+      "source": "llm"
+    },
+    "ROSE/POMPADOUR": {
+      "text": "玫瑰/庞巴度",
+      "source": "llm"
+    },
+    "聖夜の星明り": {
+      "text": "圣夜的星光",
+      "source": "llm"
+    },
+    "Prismatic Blossom": {
+      "text": "棱镜花开",
+      "source": "llm"
+    },
+    "レーヴ・デ・トナリティ": {
+      "text": "调性之梦",
+      "source": "llm"
+    },
+    "Suave Resort Style": {
+      "text": "优雅度假风",
+      "source": "llm"
+    },
+    "Worry of walker": {
+      "text": "漫步者的忧虑",
+      "source": "llm"
+    },
+    "Witness of duel": {
+      "text": "决斗的见证者",
+      "source": "llm"
+    },
+    "see-p-ta-ni-ka stars(メンズ)": {
+      "text": "see-p-ta-ni-ka stars（男款）",
+      "source": "llm"
+    },
+    "Soar high canary": {
+      "text": "高飞的金丝雀",
+      "source": "llm"
+    },
+    "Connect Sunshine Dream（レディース）": {
+      "text": "Connect Sunshine Dream（女款）",
+      "source": "llm"
+    },
+    "Monotone city": {
+      "text": "单色都市",
+      "source": "llm"
+    },
+    "NEON Vo.": {
+      "text": "霓虹主唱",
+      "source": "llm"
+    },
+    "ときめきトリップ": {
+      "text": "悸动之旅",
+      "source": "llm"
+    },
+    "Starry Core": {
+      "text": "星光核心",
+      "source": "llm"
+    },
+    "ブリッジ・カラー": {
+      "text": "桥梁色彩",
+      "source": "llm"
+    },
+    "Echoes of Myself": {
+      "text": "自我的回响",
+      "source": "llm"
+    },
+    "Jumping life": {
+      "text": "跳跃生活",
+      "source": "llm"
+    },
+    "House Walker": {
+      "text": "House漫步者",
+      "source": "llm"
+    },
+    "Connect Smileful Hour（レディース）": {
+      "text": "Connect Smileful Hour（女款）",
+      "source": "llm"
+    },
+    "Crown Knight": {
+      "text": "王冠骑士",
+      "source": "llm"
+    },
+    "Papilionidae": {
+      "text": "凤蝶",
+      "source": "llm"
+    },
+    "漂泊する鬼人の衣": {
+      "text": "漂泊鬼人之衣",
+      "source": "llm"
+    },
+    "ASTRO FES COSTUME（彰人）": {
+      "text": "ASTRO FES服装（彰人）",
+      "source": "llm"
+    },
+    "PURE WATCHER": {
+      "text": "纯净观测者",
+      "source": "llm"
+    },
+    "city casual coffee": {
+      "text": "城市休闲咖啡",
+      "source": "llm"
+    },
+    "Light steps": {
+      "text": "轻盈脚步",
+      "source": "llm"
+    },
+    "Smashing vivid": {
+      "text": "飒爽鲜活",
+      "source": "llm"
+    },
+    "Sugary Maid": {
+      "text": "甜心女仆",
+      "source": "llm"
+    },
+    "みみっち風キュートパーカー": {
+      "text": "萌耳风可爱连帽衫",
+      "source": "llm"
+    },
+    "Bittersweet Guardian": {
+      "text": "绽放的圆舞曲",
+      "source": "cn"
+    },
+    "おとぎ話の森コーデ（メンズ）": {
+      "text": "童话森林套装（男款）",
+      "source": "llm"
+    },
+    "Road to CHAMPION（メンズ）": {
+      "text": "冠军之路（男款）",
+      "source": "llm"
+    },
+    "STEP-uniform": {
+      "text": "STEP制服",
+      "source": "llm"
+    },
+    "彷徨のステラ": {
+      "text": "彷徨之星",
+      "source": "llm"
+    },
+    "CHEERFUL PROJECT!!": {
+      "text": "欢快计划！！",
+      "source": "llm"
+    },
+    "Loving Sunflower": {
+      "text": "挚爱向日葵",
+      "source": "llm"
+    },
+    "Road to CHAMPION（レディース）": {
+      "text": "冠军之路（女款）",
+      "source": "llm"
+    },
+    "Petit pas": {
+      "text": "小小步履",
+      "source": "llm"
+    },
+    "Connect Hopeful Hour（レディース）": {
+      "text": "连接希望时刻（女款）",
+      "source": "llm"
+    },
+    "Tethered Calm": {
+      "text": "维系的沉着",
+      "source": "llm"
+    },
+    "Happy deliver": {
+      "text": "快乐传递",
+      "source": "llm"
+    },
+    "Smile deliver": {
+      "text": "微笑传递",
+      "source": "llm"
+    },
+    "Kind Brother": {
+      "text": "温柔兄长",
+      "source": "llm"
+    },
+    "Phantom thief": {
+      "text": "怪盗",
+      "source": "llm"
+    },
+    "Bond of belief": {
+      "text": "信念之绊",
+      "source": "llm"
+    },
+    "Topgear-tone": {
+      "text": "极速音调",
+      "source": "llm"
+    },
+    "Prince of the CK": {
+      "text": "拇指国的玫瑰公主",
+      "source": "cn"
+    },
+    "lady of charming": {
+      "text": "魅力淑女",
+      "source": "llm"
+    },
+    "Silent Devotion": {
+      "text": "静默奉献",
+      "source": "llm"
+    },
+    "Petite joie": {
+      "text": "微小喜悦",
+      "source": "llm"
+    },
+    "Dark Embrace": {
+      "text": "漆黑拥抱",
+      "source": "llm"
+    },
+    "legendarily radiance(メンズ)": {
+      "text": "传说光芒（男装）",
+      "source": "llm"
+    },
+    "lady in flowers": {
+      "text": "花中淑女",
+      "source": "llm"
+    },
+    "Classical Perfume": {
+      "text": "古典香氛",
+      "source": "llm"
+    },
+    "Resolution suit": {
+      "text": "决意西装",
+      "source": "llm"
+    },
+    "Sherlock Times": {
+      "text": "夏洛克时代",
+      "source": "llm"
+    },
+    "GIFT-uniform": {
+      "text": "礼物制服",
+      "source": "llm"
+    },
+    "魔法少女☆フェニー・ザ・スマイル": {
+      "text": "魔法少女☆笑脸菲尼",
+      "source": "llm"
+    },
+    "優麗のシリウス": {
+      "text": "优丽的天狼星",
+      "source": "llm"
+    },
+    "Sparkling life": {
+      "text": "闪耀生活",
+      "source": "llm"
+    },
+    "HAPPY Flower": {
+      "text": "快乐花朵",
+      "source": "llm"
+    },
+    "Classical Gloss": {
+      "text": "古典亮泽",
+      "source": "llm"
+    },
+    "Nussknacker": {
+      "text": "胡桃夹子",
+      "source": "llm"
+    },
+    "どりぃみぃ・きゃっと☆彡": {
+      "text": "梦幻小猫☆彡",
+      "source": "llm"
+    },
+    "PURE FIGHTER": {
+      "text": "纯粹战士",
+      "source": "llm"
+    },
+    "duel of Revolt": {
+      "text": "反叛决斗",
+      "source": "llm"
+    },
+    "Pure Walker": {
+      "text": "纯粹行者",
+      "source": "llm"
+    },
+    "Warming Cat": {
+      "text": "暖心猫咪",
+      "source": "llm"
+    },
+    "Stitch up Heart": {
+      "text": "缝补之心",
+      "source": "llm"
+    },
+    "Connect Moonlight Dream（レディース）": {
+      "text": "连接月光之梦（女装）",
+      "source": "llm"
+    },
+    "Gentle steps": {
+      "text": "温柔步伐",
+      "source": "llm"
+    },
+    "Believe in・Style": {
+      "text": "坚信・风格",
+      "source": "llm"
+    },
+    "Vivid Bunny": {
+      "text": "鲜艳兔兔",
+      "source": "llm"
+    },
+    "Fake Smile": {
+      "text": "虚假笑容",
+      "source": "llm"
+    },
+    "Playing life": {
+      "text": "演奏人生",
+      "source": "llm"
+    },
+    "Old Days Boy": {
+      "text": "昔日少年",
+      "source": "llm"
+    },
+    "Pretty Lady": {
+      "text": "俏丽淑女",
+      "source": "llm"
+    },
+    "Cosmo Phone": {
+      "text": "宇宙耳机",
+      "source": "llm"
+    },
+    "crystal meteor(メンズ)": {
+      "text": "水晶流星（男装）",
+      "source": "llm"
+    },
+    "Connect Moonlight Dream（メンズ）": {
+      "text": "连接月光之梦（男装）",
+      "source": "llm"
+    },
+    "Patrol Bear": {
+      "text": "巡逻小熊",
+      "source": "llm"
+    },
+    "めめっち風ぐるぐるスタイル": {
+      "text": "美美美风卷卷风格",
+      "source": "llm"
+    },
+    "ASTRO FES COSTUME（冬弥）": {
+      "text": "ASTRO FES服装（冬弥）",
+      "source": "llm"
+    },
+    "パーシスタント・シンデレラ": {
+      "text": "执着灰姑娘",
+      "source": "llm"
+    },
+    "syzygy(レディース)": {
+      "text": "syzygy（女）",
+      "source": "llm"
+    },
+    "reminiscence echo": {
+      "text": "reminiscence echo",
+      "source": "llm"
+    },
+    "Detective Cat Robe": {
+      "text": "Detective Cat Robe",
+      "source": "llm"
+    },
+    "Don't give up・Style": {
+      "text": "Don't give up・Style",
+      "source": "llm"
+    },
+    "海辺のひまわり": {
+      "text": "海边的向日葵",
+      "source": "llm"
+    },
+    "EVIL ONE": {
+      "text": "EVIL ONE",
+      "source": "llm"
+    },
+    "Song to taste.": {
+      "text": "Song to taste.",
+      "source": "llm"
+    },
+    "Hello! Cherry Blossom": {
+      "text": "Hello! Cherry Blossom",
+      "source": "llm"
+    },
+    "Elysion Ange": {
+      "text": "Elysion Ange",
+      "source": "llm"
+    },
+    "heroic featherias (レディース)": {
+      "text": "heroic featherias（女）",
+      "source": "llm"
+    },
+    "インサイト・ボディスーツ": {
+      "text": "洞察连体服",
+      "source": "llm"
+    },
+    "39PUNK": {
+      "text": "39PUNK",
+      "source": "llm"
+    },
+    "hope to rise": {
+      "text": "hope to rise",
+      "source": "llm"
+    },
+    "Biggest Bluff": {
+      "text": "Biggest Bluff",
+      "source": "llm"
+    },
+    "POPPIN' CUTE POLICE": {
+      "text": "POPPIN' CUTE POLICE",
+      "source": "llm"
+    },
+    "Shady rose-duke": {
+      "text": "Shady rose-duke",
+      "source": "llm"
+    },
+    "Lit vivid": {
+      "text": "Lit vivid",
+      "source": "llm"
+    },
+    "syzygy(メンズ)": {
+      "text": "syzygy（男）",
+      "source": "llm"
+    },
+    "flower champagne(レディース)": {
+      "text": "繁花香槟（女）",
+      "source": "llm"
+    },
+    "pretty silver tabby": {
+      "text": "俏皮银虎斑",
+      "source": "llm"
+    },
+    "Devil move heart": {
+      "text": "恶魔动心",
+      "source": "llm"
+    },
+    "ASTRO FES COSTUME（司）": {
+      "text": "太空节服装（司）",
+      "source": "llm"
+    },
+    "Ramble Rider": {
+      "text": "漫步骑手",
+      "source": "llm"
+    },
+    "Stunning lady": {
+      "text": "惊艳淑女",
+      "source": "llm"
+    },
+    "turning purple": {
+      "text": "渐变紫色",
+      "source": "llm"
+    },
+    "Unfailing kindness": {
+      "text": "恒久仁慈",
+      "source": "llm"
+    },
+    "コージー・カラー": {
+      "text": "舒适色彩",
+      "source": "llm"
+    },
+    "Dilemma of seeker": {
+      "text": "探索者的困境",
+      "source": "llm"
+    },
+    "ソートフル・マーチ": {
+      "text": "体贴进行曲",
+      "source": "llm"
+    },
+    "D.C.Get close": {
+      "text": "D.C.亲近",
+      "source": "llm"
+    },
+    "ホワイトハート・ボディスーツ": {
+      "text": "白心紧身衣",
+      "source": "llm"
+    },
+    "Connect Sunshine Dream（メンズ）": {
+      "text": "连结阳光之梦（男）",
+      "source": "llm"
+    },
+    "SUMMER SPLASH！": {
+      "text": "夏日水花！",
+      "source": "llm"
+    },
+    "SMILE-uniform": {
+      "text": "微笑制服",
+      "source": "llm"
+    },
+    "PURE PUNCHER": {
+      "text": "纯真击球手",
+      "source": "llm"
+    },
+    "heroic featherias(メンズ)": {
+      "text": "英勇羽翼（男）",
+      "source": "llm"
+    },
+    "Awesome Ribbon": {
+      "text": "绝赞缎带",
+      "source": "llm"
+    },
+    "LOVE-uniform": {
+      "text": "恋爱制服",
+      "source": "llm"
+    },
+    "Starry Vigor": {
+      "text": "繁星活力",
+      "source": "llm"
+    },
+    "Awesome Clover": {
+      "text": "精彩三叶草",
+      "source": "llm"
+    },
+    "Merry Bad Bride": {
+      "text": "欢愉坏新娘",
+      "source": "llm"
+    },
+    "リンクト・マーチ": {
+      "text": "连结进行曲",
+      "source": "llm"
+    },
+    "raise hearts voice": {
+      "text": "振奋心声",
+      "source": "llm"
+    },
+    "Attend Your Future": {
+      "text": "迈向未来",
+      "source": "llm"
+    },
+    "see-p-ta-ni-ka stars(レディース)": {
+      "text": "Sip-ta-ni-ka之星(女装)",
+      "source": "llm"
+    },
+    "Vivid Argyle": {
+      "text": "鲜艳菱格",
+      "source": "llm"
+    },
+    "Melody Walker": {
+      "text": "旋律行者",
+      "source": "llm"
+    },
+    "SEKAI step wear": {
+      "text": "SEKAI步履装",
+      "source": "llm"
+    },
+    "Ocean Captain": {
+      "text": "海洋船长",
+      "source": "llm"
+    },
+    "Casual Painter": {
+      "text": "休闲画师",
+      "source": "llm"
+    },
+    "Awesome vivid": {
+      "text": "精彩活力",
+      "source": "llm"
+    },
+    "Attract attention": {
+      "text": "瞩目焦点",
+      "source": "llm"
+    },
+    "Calm Rider": {
+      "text": "沉稳骑手",
+      "source": "llm"
+    },
+    "Cat in pocket": {
+      "text": "兜中猫",
+      "source": "llm"
+    },
+    "Glamorous Peacock Ensemble": {
+      "text": "华丽孔雀合奏",
+      "source": "llm"
+    },
+    "Classical Nails": {
+      "text": "古典美甲",
+      "source": "llm"
+    },
+    "Ruse Direction": {
+      "text": "诡计导向",
+      "source": "llm"
+    },
+    "sparkle of smarts": {
+      "text": "智慧火花",
+      "source": "llm"
+    },
+    "classical school girl": {
+      "text": "古典校服少女",
+      "source": "llm"
+    },
+    "D.C.Be help": {
+      "text": "D.C.小帮手",
+      "source": "llm"
+    },
+    "hope to believe": {
+      "text": "相信希望",
+      "source": "llm"
+    },
+    "NEON Dr.": {
+      "text": "霓虹医生",
+      "source": "llm"
+    },
+    "Cool New Colors": {
+      "text": "酷炫新色",
+      "source": "llm"
+    },
+    "ASTRO FES COSTUME（KAITO）": {
+      "text": "ASTRO FES服装（KAITO）",
+      "source": "llm"
+    },
+    "Fleek vivid": {
+      "text": "鲜艳时髦",
+      "source": "llm"
+    },
+    "夏かし小旅行": {
+      "text": "怀旧夏日小旅行",
+      "source": "llm"
+    },
+    "ヴェリティエプロン": {
+      "text": "真理围裙",
+      "source": "llm"
+    },
+    "Attend Your Dream": {
+      "text": "伴你之梦",
+      "source": "llm"
+    },
+    "Petit souhait": {
+      "text": "小小愿望",
+      "source": "llm"
+    },
+    "ハーティー・オーバーオール": {
+      "text": "诚挚背带裤",
+      "source": "llm"
+    },
+    "Real badass": {
+      "text": "真正的硬汉",
+      "source": "llm"
+    },
+    "Honor Student": {
+      "text": "优等生",
+      "source": "llm"
+    },
+    "=esprit": {
+      "text": "=灵气",
+      "source": "llm"
+    },
+    "Soulful-tone": {
+      "text": "灵魂音色",
+      "source": "llm"
+    },
+    "Mellow Streamer": {
+      "text": "柔和流光",
+      "source": "llm"
+    },
+    "I'm a catch!!": {
+      "text": "我钓到了！！",
+      "source": "llm"
+    },
+    "レトロな本旅": {
+      "text": "复古书香之旅",
+      "source": "llm"
+    },
+    "Go Frontier（メンズ）": {
+      "text": "Go Frontier（男款）",
+      "source": "llm"
+    },
+    "暁光仰ぐ紅炎": {
+      "text": "仰望晓光的红炎",
+      "source": "llm"
+    },
+    "legendarily radiance(レディース)": {
+      "text": "传奇光辉（女装）",
+      "source": "llm"
+    },
+    "Vivid New Colors": {
+      "text": "鲜艳新色",
+      "source": "llm"
+    },
+    "Go Frontier（レディース）": {
+      "text": "前进边境（女装）",
+      "source": "llm"
+    },
+    "flower champagne(メンズ)": {
+      "text": "花之香槟（男装）",
+      "source": "llm"
+    },
+    "Chill-Out Marine": {
+      "text": "悠闲海洋",
+      "source": "llm"
+    },
+    "hope to persevere": {
+      "text": "坚持的希望",
+      "source": "llm"
+    },
+    "day by denim": {
+      "text": "丹宁时光",
+      "source": "llm"
+    },
+    "Xylocopa": {
+      "text": "木蜂",
+      "source": "llm"
+    },
+    "Dance of zeal": {
+      "text": "热忱之舞",
+      "source": "llm"
+    },
+    "ステッドファスト・シンデレラ": {
+      "text": "坚定不移的辛德瑞拉",
+      "source": "llm"
+    },
+    "まめっち風ドットジャケット": {
+      "text": "豆豆亲风点阵夹克",
+      "source": "llm"
+    },
+    "crystal meteor(レディース)": {
+      "text": "水晶流星（女装）",
+      "source": "llm"
+    },
+    "cute white kitty": {
+      "text": "可爱白猫",
+      "source": "llm"
+    },
+    "アップビート・ワーカー": {
+      "text": "欢快劳动者",
+      "source": "llm"
+    },
+    "ノーブル·シルエット": {
+      "text": "高贵剪影",
+      "source": "llm"
+    },
+    "Eternal Belief": {
+      "text": "永恒信念",
+      "source": "llm"
+    },
+    "Unshakable belief": {
+      "text": "坚定信念",
+      "source": "llm"
+    },
+    "Wings of watch": {
+      "text": "守护之翼",
+      "source": "llm"
+    },
+    "ゆめくいていぱー": {
+      "text": "食梦貘",
+      "source": "llm"
+    },
+    "Connect Smileful Hour（メンズ）": {
+      "text": "连结微笑时刻（男装）",
+      "source": "llm"
+    },
+    "Rose Cage": {
+      "text": "玫瑰之笼",
+      "source": "llm"
+    },
+    "くちぱっち風ゆったりコーデ": {
+      "text": "嘴巴奇风宽松穿搭",
+      "source": "llm"
+    },
+    "Penguin lover": {
+      "text": "企鹅爱好者",
+      "source": "llm"
+    },
+    "ヴェイルド・ボディスーツ": {
+      "text": "面纱连体衣",
+      "source": "llm"
+    },
+    "Star Player": {
+      "text": "明星选手",
+      "source": "llm"
+    },
+    "ROOKIE SURVIVOR": {
+      "text": "新手幸存者",
+      "source": "llm"
+    },
+    "雨色": {
+      "text": "雨色",
+      "source": "llm"
+    },
+    "cyber saver!": {
+      "text": "赛博救星！",
+      "source": "llm"
+    },
+    "悠然のポラリス": {
+      "text": "悠然北极星",
+      "source": "llm"
+    },
+    "Adorable steps": {
+      "text": "萌动舞步",
+      "source": "llm"
+    },
+    "sparkle of trust": {
+      "text": "信任的闪耀",
+      "source": "llm"
+    },
+    "sparkle of resolve": {
+      "text": "决心的闪耀",
+      "source": "llm"
+    },
+    "V.B.S SURVIVOR": {
+      "text": "V.B.S 幸存者",
+      "source": "llm"
+    },
+    "アンウェーバリング・マーチ": {
+      "text": "坚定进行曲",
+      "source": "llm"
+    },
+    "CHECK IT!!": {
+      "text": "CHECK IT!!",
+      "source": "llm"
+    },
+    "D.C.Bad trip": {
+      "text": "D.C.Bad trip",
+      "source": "llm"
+    },
+    "Midnight calm": {
+      "text": "午夜宁静",
+      "source": "llm"
+    },
+    "Idol lover": {
+      "text": "偶像爱好者",
+      "source": "llm"
+    },
+    "Prismatic Floret": {
+      "text": "棱镜小花",
+      "source": "llm"
+    },
+    "Fluffy rabbit princess": {
+      "text": "蓬松兔子公主",
+      "source": "llm"
+    },
+    "Soft fur attendant": {
+      "text": "毛茸茸皮毛侍从",
+      "source": "llm"
+    },
+    "Cushy butler": {
+      "text": "软绵绵执事",
+      "source": "llm"
+    },
+    "USAMIMI♡GAMERS": {
+      "text": "兔耳♡游戏玩家",
+      "source": "llm"
+    },
+    "Lunatic Puppeteer": {
+      "text": "疯狂的傀儡师",
+      "source": "llm"
+    },
+    "Melting Curse": {
+      "text": "融化的诅咒",
+      "source": "llm"
+    },
+    "Insomnia Night": {
+      "text": "不眠之夜",
+      "source": "llm"
+    },
+    "Bビットボーイ": {
+      "text": "B比特男孩",
+      "source": "llm"
+    }
+  }
+}

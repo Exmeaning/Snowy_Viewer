@@ -6,6 +6,7 @@ import CardItem from "./CardItem";
 interface CardGridProps {
     cards: ICardInfo[];
     isLoading?: boolean;
+    hrefPrefix?: string;
 }
 
 // Loading skeleton component
@@ -21,7 +22,7 @@ function CardSkeleton() {
     );
 }
 
-export default function CardGrid({ cards, isLoading = false }: CardGridProps) {
+export default function CardGrid({ cards, isLoading = false, hrefPrefix }: CardGridProps) {
     const [now] = React.useState(() => Date.now());
 
     if (isLoading) {
@@ -50,7 +51,7 @@ export default function CardGrid({ cards, isLoading = false }: CardGridProps) {
         <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
             {cards.map((card) => {
                 const isSpoiler = (card.releaseAt || card.archivePublishedAt || 0) > now;
-                return <CardItem key={card.id} card={card} isSpoiler={isSpoiler} />;
+                return <CardItem key={card.id} card={card} isSpoiler={isSpoiler} hrefPrefix={hrefPrefix} />;
             })}
         </div>
     );

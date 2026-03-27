@@ -35,9 +35,20 @@ export const navigationGroups: NavGroupData[] = [
             { name: "活动列表", href: "/events" },
             { name: "扭蛋", href: "/gacha" },
             { name: "演唱会", href: "/live" },
-            { name: "活动剧情", href: "/eventstory" },
             { name: "活动预测", href: "/prediction" },
             { name: "实时排行榜", href: "/realtime-ranking" },
+        ],
+    },
+    {
+        title: "剧情",
+        href: "/breadcrumb-story",
+        items: [
+            { name: "主线剧情", href: "/story/unit" },
+            { name: "活动剧情", href: "/story/event" },
+            { name: "卡牌剧情", href: "/story/card" },
+            { name: "区域对话", href: "/story/area" },
+            { name: "自我介绍", href: "/story/self" },
+            { name: "特殊剧情", href: "/story/special" },
         ],
     },
     {
@@ -139,7 +150,7 @@ export const searchableNavItems: SearchableNavItem[] = [
     { name: "活动列表", href: "/events", group: "活动", keywords: ["events", "event"] },
     { name: "扭蛋", href: "/gacha", group: "活动", keywords: ["gacha", "banner", "pull"] },
     { name: "演唱会", href: "/live", group: "活动", keywords: ["live", "concert", "virtual live"] },
-    { name: "活动剧情", href: "/eventstory", group: "活动", keywords: ["event story", "story", "scenario"] },
+    { name: "活动剧情", href: "/story/event", group: "活动", keywords: ["event story", "story", "scenario"] },
     { name: "活动预测", href: "/prediction", group: "活动", keywords: ["prediction", "ranking", "forecast"] },
     { name: "实时排行榜", href: "/realtime-ranking", group: "活动", keywords: ["realtime ranking", "live ranking", "排行", "排行榜", "实时榜单"] },
 

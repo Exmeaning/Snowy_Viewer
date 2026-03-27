@@ -93,6 +93,7 @@ export default function CardDetailPage() {
     const [relatedEvent, setRelatedEvent] = useState<{ id: number; name: string; assetbundleName: string } | null>(null);
     const [relatedGachas, setRelatedGachas] = useState<RelatedGachaInfo[]>([]);
     const [relatedCostumes, setRelatedCostumes] = useState<ICostumeInfo[]>([]);
+    const [hasCardStory, setHasCardStory] = useState(false);
 
 
     // Set mounted state
@@ -110,10 +111,11 @@ export default function CardDetailPage() {
         async function fetchCard() {
             try {
                 setIsLoading(true);
-                const [cardsData, skillsData, suppliesData] = await Promise.all([
+                const [cardsData, skillsData, suppliesData, cardEpisodesData] = await Promise.all([
                     fetchMasterData<ICardInfo[]>("cards.json"),
                     fetchMasterData<ISkillInfo[]>("skills.json"),
-                    fetchMasterData<CardSupplyInfo[]>("cardSupplies.json").catch(() => [])
+                    fetchMasterData<CardSupplyInfo[]>("cardSupplies.json").catch(() => []),
+                    fetchMasterData<{ cardId: number }[]>("cardEpisodes.json").catch(() => []),
                 ]);
 
                 const foundCard = cardsData.find(c => c.id === cardId);
@@ -121,6 +123,9 @@ export default function CardDetailPage() {
                 if (!foundCard) {
                     throw new Error(`Card ${cardId} not found`);
                 }
+
+                // Check if card has story episodes
+                setHasCardStory(cardEpisodesData.some(e => e.cardId === cardId));
 
                 // Handle Supply Type
                 const supply = suppliesData.find((s) => s.id === foundCard.cardSupplyId);
@@ -849,6 +854,37 @@ export default function CardDetailPage() {
                                 <div className="p-5">
                                     <CostumeGrid costumes={relatedCostumes} assetSource={assetSource} />
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Card Story Card */}
+                        {hasCardStory && (
+                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden group">
+                                <Link href={`/story/card/${cardId}`} className="block">
+                                    <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-pink-500/10 to-transparent group-hover:from-pink-500/20 transition-colors">
+                                        <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                                            <svg className="w-5 h-5 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                            </svg>
+                                            卡牌剧情
+                                        </h2>
+                                    </div>
+                                    <div className="p-5 flex items-center justify-between group-hover:bg-pink-50/30 transition-colors">
+                                        <div>
+                                            <p className="font-bold text-slate-800 group-hover:text-pink-600 transition-colors">
+                                                阅读卡牌剧情
+                                            </p>
+                                            <p className="text-xs text-slate-500 mt-1">
+                                                点击查看本卡牌的前后篇故事
+                                            </p>
+                                        </div>
+                                        <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center group-hover:bg-pink-200 transition-colors">
+                                            <svg className="w-4 h-4 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </Link>
                             </div>
                         )}
 
