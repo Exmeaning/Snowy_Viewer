@@ -20,6 +20,9 @@ dist/
 .env
 .env*.local
 
+# Rust / WASM
+background-pattern-wasm/target/
+
 # Logs
 *.log
 

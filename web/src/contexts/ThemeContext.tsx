@@ -15,6 +15,7 @@ import {
 const DEFAULT_THEME_CHAR = "21";
 const DEFAULT_COLOR = "#33ccbb";
 const DEFAULT_COLOR_SCHEME_PREFERENCE: ColorSchemePreference = "system";
+const POWER_SAVING_STORAGE_KEY = "power-saving-v4";
 
 // Asset source type (5 independent sources: 3 JP + 2 CN)
 export type AssetSourceType = "uni" | "haruki" | "snowyassets" | "snowyassets_cn" | "haruki_cn";
@@ -83,8 +84,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             if (savedSpoiler === "true") {
                 setIsShowSpoiler(true);
             }
-            // Load power saving setting (v2: default ON, ignore old "power-saving" cache)
-            const savedPowerSaving = localStorage.getItem("power-saving-v2");
+            // Load power saving setting (v4: default ON until the Rust/WASM renderer finishes real-device validation)
+            const savedPowerSaving = localStorage.getItem(POWER_SAVING_STORAGE_KEY);
             if (savedPowerSaving === "false") {
                 setIsPowerSaving(false);
             }
@@ -228,7 +229,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const setPowerSaving = (enabled: boolean) => {
         setIsPowerSaving(enabled);
         try {
-            localStorage.setItem("power-saving-v2", enabled ? "true" : "false");
+            localStorage.setItem(POWER_SAVING_STORAGE_KEY, enabled ? "true" : "false");
         } catch (e) {
             console.error("Failed to save power saving setting to localStorage:", e);
         }

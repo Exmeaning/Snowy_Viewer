@@ -328,7 +328,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         </button>
                     </div>
                     <p className="text-[10px] text-amber-500 mt-1.5 leading-relaxed font-medium">
-                        ⚠ 该动画没有做任何优化，对于系统的占用约等于一个3A级游戏，建议对自己设备性能有信心时再开启
+                        该动画可能会增加占用，请按需开启
                     </p>
                 </div>
 

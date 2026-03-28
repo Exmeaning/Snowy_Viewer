@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { IEventInfo, getEventStatus, EVENT_TYPE_NAMES, EVENT_STATUS_DISPLAY, EVENT_TYPE_COLORS } from "@/types/events";
+import { IEventInfo, getEventStatus, EVENT_TYPE_NAMES, EVENT_STATUS_DISPLAY } from "@/types/events";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { getEventBannerUrl, getEventLogoUrl } from "@/lib/assets";
@@ -14,7 +14,7 @@ export default function CurrentEventTab() {
     const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [now, setNow] = useState(Date.now());
+    const [now, setNow] = useState(() => Date.now());
 
     // Update `now` every 60s for real-time stamina calculation
     useEffect(() => {
@@ -95,7 +95,6 @@ export default function CurrentEventTab() {
 
     const status = getEventStatus(currentEvent);
     const statusDisplay = EVENT_STATUS_DISPLAY[status];
-    const eventTypeColor = EVENT_TYPE_COLORS[currentEvent.eventType] || "#333";
     const eventTypeName = EVENT_TYPE_NAMES[currentEvent.eventType] || currentEvent.eventType;
     const translatedName = translations?.events?.name?.[currentEvent.name] || "";
 
@@ -141,6 +140,8 @@ export default function CurrentEventTab() {
                                     fill
                                     className="object-contain drop-shadow-2xl"
                                     unoptimized
+                                    loading="eager"
+                                    fetchPriority="high"
                                 />
                             </div>
                         </div>

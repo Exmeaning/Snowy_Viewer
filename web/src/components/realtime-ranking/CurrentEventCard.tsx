@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { IEventInfo, getEventStatus, EVENT_TYPE_NAMES, EVENT_STATUS_DISPLAY } from "@/types/events";
@@ -18,14 +19,23 @@ function formatDate(ts: number) {
 }
 
 export default function CurrentEventCard({ event, assetSource, themeColor }: CurrentEventCardProps) {
+    const [now, setNow] = useState(() => Date.now());
+
+    useEffect(() => {
+        if (!event || getEventStatus(event) !== "ongoing") {
+            return;
+        }
+
+        const timer = window.setInterval(() => setNow(Date.now()), 60000);
+        return () => window.clearInterval(timer);
+    }, [event]);
+
     if (!event) return null;
 
     const status = getEventStatus(event);
     const statusDisplay = EVENT_STATUS_DISPLAY[status];
     const eventTypeName = EVENT_TYPE_NAMES[event.eventType] || event.eventType;
     const hasBanner = !!event.assetbundleName;
-
-    const now = Date.now();
     const totalDuration = event.aggregateAt - event.startAt;
     const elapsed = Math.max(0, now - event.startAt);
     let progressPercent = 0;
@@ -60,6 +70,8 @@ export default function CurrentEventCard({ event, assetSource, themeColor }: Cur
                                         fill
                                         className="object-contain drop-shadow-2xl"
                                         unoptimized
+                                        loading="eager"
+                                        fetchPriority="high"
                                     />
                                 </div>
                             </div>
