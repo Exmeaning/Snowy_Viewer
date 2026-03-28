@@ -37,7 +37,17 @@ async function loadPatternImage() {
     return image;
 }
 
-function getViewportSize() {
+function getViewportSize(container: HTMLDivElement | null) {
+    if (container) {
+        const rect = container.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+            return {
+                width: Math.max(rect.width, 1),
+                height: Math.max(rect.height, 1),
+            };
+        }
+    }
+
     return {
         width: Math.max(window.innerWidth, 1),
         height: Math.max(window.innerHeight, 1),
@@ -50,11 +60,13 @@ function getPatternDevicePixelRatio() {
 
 const BackgroundPattern = () => {
     const { isPowerSaving, themeColor } = useTheme();
+    const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const rendererRef = useRef<BackgroundPatternRendererInstance | null>(null);
     const animationFrameRef = useRef(0);
     const resizeFrameRef = useRef(0);
     const lastTimestampRef = useRef(0);
+    const lastResizeStateRef = useRef<{ width: number; height: number; dpr: number } | null>(null);
     const themeColorRef = useRef(themeColor);
 
     const stopAnimation = useCallback(() => {
@@ -72,8 +84,26 @@ const BackgroundPattern = () => {
             return;
         }
 
-        const { width, height } = getViewportSize();
-        renderer.resize(width, height, getPatternDevicePixelRatio());
+        const { width, height } = getViewportSize(containerRef.current);
+        const dpr = getPatternDevicePixelRatio();
+        const nextState = {
+            width: Math.round(width * 100) / 100,
+            height: Math.round(height * 100) / 100,
+            dpr,
+        };
+        const previousState = lastResizeStateRef.current;
+
+        if (
+            previousState &&
+            previousState.width === nextState.width &&
+            previousState.height === nextState.height &&
+            previousState.dpr === nextState.dpr
+        ) {
+            return;
+        }
+
+        renderer.resize(nextState.width, nextState.height, nextState.dpr);
+        lastResizeStateRef.current = nextState;
     }, []);
 
     const renderStaticFrame = useCallback(() => {
@@ -167,6 +197,7 @@ const BackgroundPattern = () => {
 
             rendererRef.current?.free();
             rendererRef.current = null;
+            lastResizeStateRef.current = null;
         };
     }, [resizeRenderer, stopAnimation, syncAnimationState]);
 
@@ -198,9 +229,21 @@ const BackgroundPattern = () => {
         };
 
         handleResize();
+
+        const container = containerRef.current;
+        const resizeObserver =
+            container && typeof ResizeObserver !== 'undefined'
+                ? new ResizeObserver(() => handleResize())
+                : null;
+
+        resizeObserver?.observe(container);
         window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize);
+
         return () => {
+            resizeObserver?.disconnect();
             window.removeEventListener('resize', handleResize);
+            window.removeEventListener('orientationchange', handleResize);
             if (resizeFrameRef.current) {
                 cancelAnimationFrame(resizeFrameRef.current);
                 resizeFrameRef.current = 0;
@@ -209,7 +252,7 @@ const BackgroundPattern = () => {
     }, [renderStaticFrame, resizeRenderer]);
 
     return (
-        <div className={styles.bgPatternContainer} aria-hidden="true">
+        <div ref={containerRef} className={styles.bgPatternContainer} aria-hidden="true">
             <canvas ref={canvasRef} className={styles.bgPatternCanvas} />
         </div>
     );
