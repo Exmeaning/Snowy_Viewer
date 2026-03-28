@@ -12,6 +12,7 @@ interface MainNavbarProps {
     isSearchOpen: boolean;
     onSearchToggle: () => void;
     onSearchClose: () => void;
+    onSearchNavigate: (href: string) => void;
     isSettingsOpen: boolean;
     onSettingsToggle: () => void;
     onSettingsClose: () => void;
@@ -23,6 +24,7 @@ export default function MainNavbar({
     isSearchOpen,
     onSearchToggle,
     onSearchClose,
+    onSearchNavigate,
     isSettingsOpen,
     onSettingsToggle,
     onSettingsClose,
@@ -87,7 +89,7 @@ export default function MainNavbar({
                             }}
                         />
                         <span className="text-[8px] px-1.5 py-0.5 bg-amber-400 text-white font-bold rounded-full leading-none">
-                            BETA1.149
+                            BETA1.152
                         </span>
                     </Link>
 
@@ -166,7 +168,11 @@ export default function MainNavbar({
                 </div>
 
                 {/* Command Palette */}
-                <CommandPalette isOpen={isSearchOpen} onClose={onSearchClose} />
+                <CommandPalette
+                    isOpen={isSearchOpen}
+                    onClose={onSearchClose}
+                    onNavigate={onSearchNavigate}
+                />
             </div>
 
             {/* Row 2: Breadcrumb - mobile only, hidden on home page */}

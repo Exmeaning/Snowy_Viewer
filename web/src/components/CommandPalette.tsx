@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { searchableNavItems, SEARCH_GROUP_LABELS, SEARCH_GROUP_ROUTES } from "@/lib/navigation";
 import { CHARACTER_NAMES } from "@/types/types";
@@ -25,6 +24,7 @@ interface SearchResultItem extends SearchIndexItem {
 interface CommandPaletteProps {
     isOpen: boolean;
     onClose: () => void;
+    onNavigate: (href: string) => void;
 }
 
 function escapeRegExp(string: string) {
@@ -35,14 +35,13 @@ function escapeRegExp(string: string) {
 const MAX_DYNAMIC_PER_GROUP = 8;
 const WILDCARD_STORAGE_KEY = "moesekai_search_wildcard_enabled";
 
-export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
+export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandPaletteProps) {
     const [mounted, setMounted] = useState(false);
     const [query, setQuery] = useState("");
     const [activeIndex, setActiveIndex] = useState(0);
     const [useWildcard, setUseWildcard] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
-    const router = useRouter();
 
     // Dynamic search index state (loaded once per session)
     const [searchIndex, setSearchIndex] = useState<SearchIndexItem[] | null>(null);
@@ -256,10 +255,9 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
 
     const navigate = useCallback(
         (href: string) => {
-            router.push(href);
-            onClose();
+            onNavigate(href);
         },
-        [router, onClose]
+        [onNavigate]
     );
 
     // Scroll active item into view

@@ -21,6 +21,16 @@ function ScreenshotParamsListener({ onChange }: { onChange: (isScreenshot: boole
     return null;
 }
 
+function getHistoryStateObject() {
+    return typeof window.history.state === "object" && window.history.state !== null
+        ? window.history.state as Record<string, unknown>
+        : {};
+}
+
+function hasOverlayHistoryState() {
+    return Boolean(getHistoryStateObject().moesekaiOverlay);
+}
+
 interface MainLayoutProps {
     children: React.ReactNode;
     showLoader?: boolean;
@@ -49,6 +59,7 @@ export default function MainLayout({
     // Track whether we pushed a history entry for an overlay, so the mobile
     // back button closes the overlay instead of navigating away.
     const overlayHistoryRef = useRef(false);
+    const skipNextOverlayHistoryCleanupRef = useRef(false);
 
     const anyOverlayOpen = isSearchOpen || isSettingsOpen || isShortcutsHelpOpen;
 
@@ -56,24 +67,34 @@ export default function MainLayout({
         if (anyOverlayOpen) {
             // Push a sentinel state so the back button can close the overlay.
             if (!overlayHistoryRef.current) {
-                window.history.pushState({ moesekaiOverlay: true }, "");
+                window.history.pushState(
+                    { ...getHistoryStateObject(), moesekaiOverlay: true },
+                    "",
+                );
                 overlayHistoryRef.current = true;
             }
-        } else {
-            // If the overlay was closed programmatically (not via back button),
-            // pop the sentinel entry we pushed earlier.
-            if (overlayHistoryRef.current) {
-                overlayHistoryRef.current = false;
-                window.history.back();
-            }
+            return;
+        }
+
+        if (!overlayHistoryRef.current) return;
+
+        const shouldSkipCleanup = skipNextOverlayHistoryCleanupRef.current;
+        skipNextOverlayHistoryCleanupRef.current = false;
+        overlayHistoryRef.current = false;
+
+        // Search result navigation replaces the overlay sentinel entry with the
+        // destination page, so there is no extra history entry to pop here.
+        if (!shouldSkipCleanup && hasOverlayHistoryState()) {
+            window.history.back();
         }
     }, [anyOverlayOpen]);
 
     useEffect(() => {
-        const handlePopState = (e: PopStateEvent) => {
+        const handlePopState = () => {
             // If an overlay is open and the user pressed back, close it.
             if (overlayHistoryRef.current) {
                 overlayHistoryRef.current = false;
+                skipNextOverlayHistoryCleanupRef.current = false;
                 setIsSearchOpen(false);
                 setIsSettingsOpen(false);
                 setIsShortcutsHelpOpen(false);
@@ -145,6 +166,16 @@ export default function MainLayout({
         }
     }, [immersiveMode, isScreenshotMode]);
 
+    const handleSearchClose = useCallback(() => {
+        setIsSearchOpen(false);
+    }, []);
+
+    const handleSearchNavigate = useCallback((href: string) => {
+        skipNextOverlayHistoryCleanupRef.current = true;
+        setIsSearchOpen(false);
+        router.replace(href);
+    }, [router]);
+
     // Keyboard shortcut handlers.
     const shortcutHandlers = useMemo(() => ({
         onToggleSidebar: () => {
@@ -197,7 +228,8 @@ export default function MainLayout({
                     onMenuToggle={handleMenuToggle}
                     isSearchOpen={isSearchOpen}
                     onSearchToggle={() => setIsSearchOpen(prev => !prev)}
-                    onSearchClose={() => setIsSearchOpen(false)}
+                    onSearchClose={handleSearchClose}
+                    onSearchNavigate={handleSearchNavigate}
                     isSettingsOpen={isSettingsOpen}
                     onSettingsToggle={() => setIsSettingsOpen(prev => !prev)}
                     onSettingsClose={() => setIsSettingsOpen(false)}
