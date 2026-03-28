@@ -236,7 +236,9 @@ const BackgroundPattern = () => {
                 ? new ResizeObserver(() => handleResize())
                 : null;
 
-        resizeObserver?.observe(container);
+        if (resizeObserver && container) {
+            resizeObserver.observe(container);
+        }
         window.addEventListener('resize', handleResize);
         window.addEventListener('orientationchange', handleResize);
 
