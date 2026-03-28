@@ -107,7 +107,7 @@ export default function StoryEventReaderClient() {
                                             ? "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700/50"
                                             : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700"
                                     }`}>
-                                        {translationSource === "official_cn" ? "官方CN" : translationSource === "human" ? "AI翻译+人工精校" : "AI翻译"}
+                                        {translationSource === "official_cn" ? "官方CN" : translationSource === "human" ? (eventId <= 198 ? "AI翻译+人工精校" : "人工翻译") : "AI翻译"}
                                     </span>
                                 )}
                                 <span className={`text-[10px] px-1.5 py-0.5 rounded border ${

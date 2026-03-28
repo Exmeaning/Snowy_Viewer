@@ -251,7 +251,7 @@ export default function StoryEventDetailClient() {
                             {adminData && (
                                 <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
                                     <p className="text-xs text-slate-400 italic text-right">
-                                        剧情总结和章节翻译文本来源于moesekai，转载请表明出处。
+                                        剧情总结和章节翻译文本来源于moesekai（@雪莹ちゃん），转载请表明出处。
                                     </p>
                                 </div>
                             )}
