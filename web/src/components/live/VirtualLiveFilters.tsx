@@ -1,5 +1,5 @@
 "use client";
-import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
+import BaseFilters, { FilterSection, getFilterChipStateClasses } from "@/components/common/BaseFilters";
 import { VirtualLiveType, VIRTUAL_LIVE_TYPE_NAMES, VIRTUAL_LIVE_TYPE_COLORS } from "@/types/virtualLive";
 
 interface VirtualLiveFiltersProps {
@@ -67,8 +67,8 @@ export default function VirtualLiveFilters({
                             key={type}
                             onClick={() => toggleType(type)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedTypes.includes(type)
-                                ? "text-white shadow-md"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                ? "text-white shadow-md ring-1 ring-white/30 dark:ring-white/10"
+                                : getFilterChipStateClasses(false)
                                 }`}
                             style={selectedTypes.includes(type) ? { backgroundColor: VIRTUAL_LIVE_TYPE_COLORS[type] } : {}}
                         >

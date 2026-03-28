@@ -1,9 +1,9 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
+import BaseFilters, { FilterSection, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
-import { CardRarityType, CardAttribute, ATTR_NAMES, UNIT_DATA, SupportUnit, SUPPORT_UNIT_NAMES, UNIT_ICON_FILES, UNIT_FIELD_TO_ID } from "@/types/types";
+import { CardRarityType, CardAttribute, ATTR_NAMES, SupportUnit, SUPPORT_UNIT_NAMES, UNIT_ICON_FILES, UNIT_FIELD_TO_ID } from "@/types/types";
 import { useCardSupplyTypeMapping } from "@/hooks/useCardSupplyType";
 
 interface CardFiltersProps {
@@ -190,10 +190,7 @@ export default function CardFilters({
                                 <button
                                     key={unit}
                                     onClick={() => toggleSupportUnit(unit)}
-                                    className={`p-1.5 rounded-xl transition-all ${isSelected
-                                        ? "ring-2 ring-miku shadow-lg bg-white"
-                                        : "hover:bg-slate-100 border border-transparent bg-slate-50"
-                                        }`}
+                                    className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(isSelected)}`}
                                     title={SUPPORT_UNIT_NAMES[unit]}
                                 >
                                     <div className="w-8 h-8 relative">
@@ -221,10 +218,7 @@ export default function CardFilters({
                             <button
                                 key={attr}
                                 onClick={() => toggleAttr(attr)}
-                                className={`p-1.5 rounded-xl transition-all ${selectedAttrs.includes(attr)
-                                    ? "ring-2 ring-miku shadow-lg bg-white"
-                                    : "hover:bg-slate-100 border border-transparent bg-slate-50"
-                                    }`}
+                                className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(selectedAttrs.includes(attr))}`}
                                 title={ATTR_NAMES[attr]}
                             >
                                 <div className="w-6 h-6 relative">
@@ -250,10 +244,7 @@ export default function CardFilters({
                                 <button
                                     key={type}
                                     onClick={() => toggleRarity(type)}
-                                    className={`h-9 px-2.5 rounded-xl transition-all flex items-center justify-center gap-0.5 border ${isSelected
-                                        ? "ring-2 ring-miku shadow-lg bg-white border-transparent"
-                                        : "hover:bg-slate-100 border-slate-200 bg-slate-50"
-                                        }`}
+                                    className={`h-9 px-2.5 rounded-xl transition-all flex items-center justify-center gap-0.5 border ${getFilterIconStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white border-transparent dark:bg-miku/12 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
                                     title={type}
                                 >
                                     {type === "rarity_birthday" ? (
@@ -295,10 +286,7 @@ export default function CardFilters({
                             <button
                                 key={st.type}
                                 onClick={() => toggleSupplyType(st.type)}
-                                className={`px-3 py-1.5 rounded-xl text-sm transition-all border ${isSelected
-                                    ? "ring-2 ring-miku shadow-lg bg-white border-transparent"
-                                    : "hover:bg-slate-100 border-slate-200 bg-slate-50 text-slate-600"
-                                    }`}
+                                className={`px-3 py-1.5 rounded-xl text-sm transition-all border ${getFilterChipStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white text-slate-700 border-transparent dark:bg-miku/12 dark:text-slate-100 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
                             >
                                 {st.name}
                             </button>

@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import BaseFilters, { FilterSection, FilterToggle } from "@/components/common/BaseFilters";
+import BaseFilters, { FilterSection, FilterToggle, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
 import {
     MusicTagType,
     MusicCategoryType,
@@ -130,10 +130,7 @@ export default function MusicFilters({
                             <button
                                 key={tag}
                                 onClick={() => onTagChange(tag)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${isSelected
-                                    ? "ring-2 ring-miku shadow-lg bg-white"
-                                    : "hover:bg-slate-100 border border-slate-200 bg-slate-50/50"
-                                    }`}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${getFilterIconStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white border border-transparent dark:bg-miku/12 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50/50 border border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
                                 title={MUSIC_TAG_NAMES[tag]}
                             >
                                 {hasIcon && (
@@ -147,7 +144,7 @@ export default function MusicFilters({
                                         />
                                     </div>
                                 )}
-                                <span className="text-xs font-medium text-slate-600">
+                                <span className={`text-xs font-medium ${isSelected ? "text-slate-800 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}`}>
                                     {MUSIC_TAG_NAMES[tag]}
                                 </span>
                             </button>
@@ -166,8 +163,8 @@ export default function MusicFilters({
                                 key={cat}
                                 onClick={() => toggleCategory(cat)}
                                 className={`h-9 px-3 rounded-xl transition-all flex items-center justify-center border ${isSelected
-                                    ? "text-white shadow-lg border-transparent"
-                                    : "hover:bg-slate-100 border-slate-200 bg-slate-50/50 text-slate-600"
+                                    ? "text-white shadow-lg border-transparent ring-1 ring-white/30 dark:ring-white/10"
+                                    : getFilterChipStateClasses(false, undefined, "bg-slate-50/50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")
                                     }`}
                                 style={
                                     isSelected
@@ -195,8 +192,8 @@ export default function MusicFilters({
                                     key={diff.id}
                                     onClick={() => onDifficultyChange(diff.id)}
                                     className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${isSelected
-                                        ? `bg-gradient-to-r ${diff.color} text-white shadow-lg`
-                                        : "bg-slate-50/50 border border-slate-200 text-slate-600 hover:bg-slate-100"
+                                        ? `bg-gradient-to-r ${diff.color} text-white shadow-lg ring-1 ring-white/30 dark:ring-white/10`
+                                        : "bg-slate-50/50 border border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/80 dark:hover:border-slate-600"
                                         }`}
                                 >
                                     {diff.label}

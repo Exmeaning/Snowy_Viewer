@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
 
 // ============================================================================
@@ -51,6 +51,38 @@ export interface BaseFiltersProps {
 }
 
 // ============================================================================
+// Shared filter styles
+// ============================================================================
+
+export function getFilterChipStateClasses(
+    selected: boolean,
+    selectedClassName?: string,
+    unselectedClassName?: string
+) {
+    const selectedState = selectedClassName ?? "bg-miku text-white shadow-md border border-transparent dark:bg-miku/20 dark:text-white dark:border-miku/40 dark:ring-1 dark:ring-miku/35";
+    const unselectedState = unselectedClassName ?? "bg-slate-100 text-slate-600 border border-transparent hover:bg-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600";
+
+    return selected ? selectedState : unselectedState;
+}
+
+export function getFilterIconStateClasses(
+    selected: boolean,
+    selectedClassName?: string,
+    unselectedClassName?: string
+) {
+    const selectedState = selectedClassName ?? "ring-2 ring-miku shadow-lg bg-white border border-transparent dark:bg-miku/15 dark:border-miku/40 dark:ring-miku/75";
+    const unselectedState = unselectedClassName ?? "bg-slate-50 border border-transparent hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600";
+
+    return selected ? selectedState : unselectedState;
+}
+
+export function getFilterToggleStateClasses(selected: boolean) {
+    return selected
+        ? "ring-2 ring-miku shadow-lg bg-white border-transparent dark:bg-miku/10 dark:border-miku/40 dark:ring-miku/75"
+        : "border-slate-200 bg-slate-50/50 hover:bg-slate-50 dark:bg-slate-800/70 dark:border-slate-700 dark:hover:bg-slate-700/70 dark:hover:border-slate-600";
+}
+
+// ============================================================================
 // Component
 // ============================================================================
 
@@ -73,19 +105,18 @@ export default function BaseFilters({
 }: BaseFiltersProps) {
     const pathname = usePathname();
     const STORAGE_KEY = `filters_collapsed:${pathname}`;
-    const rootRef = useRef<HTMLDivElement>(null);
-    const [isInsideQuickFilter, setIsInsideQuickFilter] = useState(false);
+    const [rootElement, setRootElement] = useState<HTMLDivElement | null>(null);
     const [mobileCollapsed, setMobileCollapsed] = useState(() => {
         if (typeof window === "undefined") return true;
         const saved = localStorage.getItem(STORAGE_KEY);
         return saved === null ? true : saved === "true";
     });
 
-    useEffect(() => {
-        if (rootRef.current?.closest(".quick-filter-modal-content")) {
-            setIsInsideQuickFilter(true);
-        }
+    const rootRef = useCallback((node: HTMLDivElement | null) => {
+        setRootElement((current) => (current === node ? current : node));
     }, []);
+
+    const isInsideQuickFilter = !!rootElement?.closest(".quick-filter-modal-content");
 
     const toggleCollapsed = () => {
         setMobileCollapsed(prev => {
@@ -103,13 +134,13 @@ export default function BaseFilters({
     };
 
     return (
-        <div ref={rootRef} data-shortcut-filters="true" className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+        <div ref={rootRef} data-shortcut-filters="true" className="bg-white dark:bg-slate-900/85 rounded-2xl shadow-lg ring-1 ring-slate-200 dark:ring-slate-700/70 overflow-hidden">
             {/* Header — clickable on mobile to toggle collapse */}
             <div
-                className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center justify-between lg:cursor-default cursor-pointer select-none"
+                className="px-5 py-4 border-b border-slate-100 dark:border-slate-700/70 bg-gradient-to-r from-miku/5 to-transparent dark:from-miku/10 dark:to-slate-900/30 flex items-center justify-between lg:cursor-default cursor-pointer select-none"
                 onClick={toggleCollapsed}
             >
-                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <h2 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
@@ -120,14 +151,14 @@ export default function BaseFilters({
                     )}
                 </h2>
                 <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
                         {filteredCount === totalCount
                             ? `${totalCount}${countUnit ? ` ${countUnit}` : ""}`
                             : `${filteredCount} / ${totalCount}`}
                     </span>
                     {/* Collapse chevron — mobile only */}
                     <svg
-                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 lg:hidden ${mobileCollapsed ? "" : "rotate-180"}`}
+                        className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 lg:hidden ${mobileCollapsed ? "" : "rotate-180"}`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -140,7 +171,7 @@ export default function BaseFilters({
             {/* Search — always visible */}
             {showSearch && onSearchChange && (
                 <div className="px-5 pt-5">
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
                         搜索
                     </label>
                     <div className="relative">
@@ -150,9 +181,9 @@ export default function BaseFilters({
                             placeholder={searchPlaceholder}
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full px-4 py-2.5 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-miku/30 focus:border-miku transition-all"
+                            className="w-full px-4 py-2.5 pr-10 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-miku/30 dark:focus:ring-miku/40 focus:border-miku dark:focus:border-miku transition-all"
                         />
-                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
@@ -165,7 +196,7 @@ export default function BaseFilters({
                     {/* Sort Options */}
                     {sortOptions && sortOptions.length > 0 && onSortChange && (
                         <div>
-                            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
                                 排序
                             </label>
                             <div className={`grid gap-2 ${sortOptions.length <= 2 ? "grid-cols-2" : sortOptions.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
@@ -173,10 +204,7 @@ export default function BaseFilters({
                                     <button
                                         key={opt.id}
                                         onClick={() => handleSortClick(opt.id)}
-                                        className={`px-2 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${sortBy === opt.id
-                                            ? "bg-miku text-white"
-                                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                            }`}
+                                        className={`px-2 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${getFilterChipStateClasses(sortBy === opt.id)}`}
                                     >
                                         {opt.label}
                                         {sortBy === opt.id && (
@@ -197,7 +225,7 @@ export default function BaseFilters({
                     {hasActiveFilters && onReset && (
                         <button
                             onClick={onReset}
-                            className="w-full py-2.5 border border-slate-200 rounded-xl text-sm text-slate-600 font-medium hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-600 dark:text-slate-300 font-medium bg-white/70 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -210,7 +238,7 @@ export default function BaseFilters({
                     {!isInsideQuickFilter && (
                     <div
                         data-filter-collapse-bar="true"
-                        className="lg:hidden -mx-5 -mb-5 mt-5 flex items-center justify-center gap-1 py-2.5 bg-slate-50 border-t border-slate-100 cursor-pointer select-none text-xs text-slate-400 hover:text-slate-500 hover:bg-slate-100 transition-colors"
+                        className="lg:hidden -mx-5 -mb-5 mt-5 flex items-center justify-center gap-1 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 cursor-pointer select-none text-xs text-slate-400 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors"
                         onClick={toggleCollapsed}
                     >
                         <svg className="w-3.5 h-3.5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -226,7 +254,7 @@ export default function BaseFilters({
             {mobileCollapsed && (
                 <div
                     data-filter-collapse-pad="true"
-                    className="lg:hidden flex items-center justify-center gap-1 py-2.5 mt-4 bg-slate-50 border-t border-slate-100 cursor-pointer select-none text-xs text-slate-400 hover:text-slate-500 hover:bg-slate-100 transition-colors"
+                    className="lg:hidden flex items-center justify-center gap-1 py-2.5 mt-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 cursor-pointer select-none text-xs text-slate-400 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors"
                     onClick={toggleCollapsed}
                 >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -251,7 +279,7 @@ interface FilterSectionProps {
 export function FilterSection({ label, children }: FilterSectionProps) {
     return (
         <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
                 {label}
             </label>
             {children}
@@ -271,10 +299,7 @@ export function FilterButton({ selected, onClick, children, className = "", styl
     return (
         <button
             onClick={onClick}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selected
-                ? "bg-miku text-white shadow-md"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                } ${className}`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${getFilterChipStateClasses(selected)} ${className}`}
             style={style}
         >
             {children}
@@ -292,15 +317,12 @@ export function FilterToggle({ selected, onClick, label }: FilterToggleProps) {
     return (
         <button
             onClick={onClick}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all border ${selected
-                ? "ring-2 ring-miku shadow-lg bg-white border-transparent"
-                : "hover:bg-slate-50 border-slate-200 bg-slate-50/50"
-                }`}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all border ${getFilterToggleStateClasses(selected)}`}
         >
-            <span className={`text-sm font-bold ${selected ? "text-slate-800" : "text-slate-600"}`}>
+            <span className={`text-sm font-bold ${selected ? "text-slate-800 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}`}>
                 {label}
             </span>
-            <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selected ? "bg-miku border-miku" : "border-slate-300 bg-white"}`}>
+            <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selected ? "bg-miku border-miku dark:bg-miku dark:border-miku" : "border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-700"}`}>
                 {selected && (
                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
