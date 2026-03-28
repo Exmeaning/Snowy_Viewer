@@ -111,8 +111,8 @@ export function StoryReader({
                     <p>— {endLabel ?? "结束"} —</p>
                     {useLLMTranslation && (translationSource === "llm" || translationSource === "human") && (
                         <p className="text-xs mt-2 italic">
-                            翻译文本来源于 moesekai 的 AI 翻译
-                            {translationSource === "human" ? "（经人工精校）" : ""}，转载请表明出处。
+                            翻译文本来源于 moesekai（@雪莹ちゃん） 的
+                            {translationSource === "human" ? (eventId <= 198 ? "AI翻译（经人工精校）" : "人工翻译") : "AI翻译"}，转载请表明出处。
                         </p>
                     )}
                 </div>
