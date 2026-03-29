@@ -129,6 +129,8 @@ export default function StoryEventReaderClient() {
                     missingPaths={missingPaths ?? undefined}
                     endLabel={`第 ${episodeNo} 话`}
                     translationSource={translationSource}
+                    storyType="event"
+                    storyId={eventId}
                 />
 
                 {/* Episode navigation */}

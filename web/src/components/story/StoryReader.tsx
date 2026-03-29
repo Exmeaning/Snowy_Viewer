@@ -23,6 +23,10 @@ interface StoryReaderProps {
     endLabel?: string;
     /** 翻译来源标记 */
     translationSource?: "official_cn" | "llm" | "human";
+    /** 剧情类型，用于翻译来源文案判断 */
+    storyType?: "event" | "unit" | "card" | "area" | "self" | "special";
+    /** 剧情 ID，用于翻译来源文案判断 */
+    storyId?: number;
 }
 
 export function StoryReader({
@@ -32,6 +36,8 @@ export function StoryReader({
     missingPaths,
     endLabel,
     translationSource,
+    storyType,
+    storyId,
 }: StoryReaderProps) {
     const { useLLMTranslation } = useTheme();
 
@@ -112,7 +118,11 @@ export function StoryReader({
                     {useLLMTranslation && (translationSource === "llm" || translationSource === "human") && (
                         <p className="text-xs mt-2 italic">
                             翻译文本来源于 moesekai（@雪莹ちゃん） 的
-                            {translationSource === "human" ? (eventId <= 198 ? "AI翻译（经人工精校）" : "人工翻译") : "AI翻译"}，转载请表明出处。
+                            {translationSource === "human"
+                                ? (storyType === "event" && storyId !== undefined && storyId <= 198
+                                    ? "AI翻译（经人工精校）"
+                                    : "人工翻译")
+                                : "AI翻译"}，转载请表明出处。
                         </p>
                     )}
                 </div>
