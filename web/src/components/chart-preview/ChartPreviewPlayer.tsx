@@ -1333,11 +1333,15 @@ export default function ChartPreviewPlayer({
         const transport = transportRef.current;
         if (!transport) return;
 
-        // If speed is invalid, flash the input and refuse to play
+        // If speed is invalid, reset to 1x and continue playing
         if (speedErrorRef.current) {
             setSpeedError(false);
-            requestAnimationFrame(() => setSpeedError(true));
-            return;
+            speedErrorRef.current = false;
+            pausedBySpeedErrorRef.current = false;
+            setSpeedText("1");
+            setPlaybackRate(1);
+            await transport.setPlaybackRate(1);
+            try { localStorage.setItem(LS_PLAYBACK_RATE, "1"); } catch { /* quota */ }
         }
 
         if (bgmExpectedRef.current && !bgmLoadedRef.current) {
