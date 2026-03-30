@@ -21,10 +21,12 @@ sekai-calculator 采用 **LGPL-2.1** 开源协议。
 项目算法也参考了**Luna茶**的相关组卡代码实现[sekai-deck-recommend-cpp](https://github.com/NeuraXmy/sekai-deck-recommend-cpp)
 ## 免责声明 / Disclaimer
 
-表情包制作器参考了**Parallel-SEKAI**的PJSK-Sticker仓库
+表情包制作器参考了**Parallel-SEKAI**的PJSK-Sticker仓库 以及 **TheOriginalAyaka**的sekai-stickers仓库
 [PJSK-Sticker]github.com/Parallel-SEKAI/PJSK-Sticker
+[sekai-stickers]github.com/TheOriginalAyaka/sekai-stickers
 
-
+谱面预览器参考了**watagashi-uni**的sekai-mmw-preview-web 及 mikumikuworld 的相关实现 [sekai-mmw-preview-web]https://github.com/watagashi-uni/sekai-mmw-preview-web
+[MikuMikuWorld]https://github.com/crash5band/MikuMikuWorld
 **本项目包含大量由人工智能（AI）辅助生成的代码。**
 
 - 代码可能包含潜在的错误、逻辑漏洞或非最佳实践。
