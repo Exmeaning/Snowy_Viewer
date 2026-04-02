@@ -593,7 +593,7 @@ export default function PredictionClient() {
                                     )}
                                     {/* Footer Sources */}
                                     <div className="text-center text-xs text-slate-400 pb-8 space-y-1">
-                                        <p>榜线来源：Haruki</p>
+                                        <p>榜线来源：Moe-API</p>
                                         <p>预测来源：AkiYome v1.2.0-Uta（诗）</p>
                                     </div>
                                 </>
