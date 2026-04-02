@@ -329,6 +329,13 @@ export default function ChartPreviewPlayer({
     const [seVolume, setSeVolume] = useState(() => readNumber(LS_SE_VOLUME, 0.8));
     const [bgmVolume, setBgmVolume] = useState(() => readNumber(LS_BGM_VOLUME, 0.8));
     const [playbackRate, setPlaybackRate] = useState(() => readNumber(LS_PLAYBACK_RATE, 1));
+    const [speedText, setSpeedText] = useState(() => String(readNumber(LS_PLAYBACK_RATE, 1)));
+    const [speedError, setSpeedError] = useState(false);
+    const speedInputRef = useRef<HTMLInputElement>(null);
+    const speedErrorRef = useRef(false);
+    const pausedBySpeedErrorRef = useRef(false);
+    const [markedTime, setMarkedTime] = useState<number | null>(null);
+    const [markFlash, setMarkFlash] = useState(false);
     const [lowEffects, setLowEffects] = useState(false);
     const [renderScale, setRenderScale] = useState(() => readNumber(LS_RENDER_SCALE, 1));
     const renderScaleRef = useRef(readNumber(LS_RENDER_SCALE, 1));
@@ -1326,12 +1333,24 @@ export default function ChartPreviewPlayer({
         const transport = transportRef.current;
         if (!transport) return;
 
+        // If speed is invalid, reset to 1x and continue playing
+        if (speedErrorRef.current) {
+            setSpeedError(false);
+            speedErrorRef.current = false;
+            pausedBySpeedErrorRef.current = false;
+            setSpeedText("1");
+            setPlaybackRate(1);
+            await transport.setPlaybackRate(1);
+            try { localStorage.setItem(LS_PLAYBACK_RATE, "1"); } catch { /* quota */ }
+        }
+
         if (bgmExpectedRef.current && !bgmLoadedRef.current) {
             setWarningMessage("歌曲仍在加载中，请稍候。");
             return;
         }
 
         if (transport.getSnapshot().state === "playing") {
+            pausedBySpeedErrorRef.current = false;
             transport.pause();
             return;
         }
@@ -1347,6 +1366,7 @@ export default function ChartPreviewPlayer({
         const transport = transportRef.current;
         if (!transport) return;
         transport.stop();
+        setMarkedTime(null);
         const startSec = initialStartSecRef.current;
         if (startSec > 0.001) {
             transport.seek(startSec);
@@ -1367,6 +1387,21 @@ export default function ChartPreviewPlayer({
         judgementEffectsRef.current?.reset();
         updateUi();
     }, [updateUi]);
+
+    const handleMark = useCallback(() => {
+        const transport = transportRef.current;
+        if (!transport) return;
+        setMarkedTime(transport.getSnapshot().currentTimeSec);
+        setMarkFlash(true);
+        setTimeout(() => setMarkFlash(false), 400);
+    }, []);
+
+    const handleJump = useCallback(() => {
+        const transport = transportRef.current;
+        if (!transport || markedTime === null) return;
+        transport.seek(markedTime);
+        updateUi();
+    }, [markedTime, updateUi]);
 
     const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const transport = transportRef.current;
@@ -1392,19 +1427,36 @@ export default function ChartPreviewPlayer({
 
     const handleSpeedChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const transport = transportRef.current;
-        if (!transport) return;
         const raw = e.target.value;
-        if (raw === "") {
-            setPlaybackRate(0);
-            return;
-        }
+        setSpeedText(raw);
+
         const val = Number(raw);
-        if (!Number.isFinite(val)) return;
-        const clamped = Math.min(Math.max(val, 0.1), 4);
-        setPlaybackRate(clamped);
-        await transport.setPlaybackRate(clamped);
-        try { localStorage.setItem(LS_PLAYBACK_RATE, String(clamped)); } catch { /* quota */ }
-        updateUi();
+        const valid = raw !== "" && Number.isFinite(val) && val >= 0.1 && val <= 4;
+
+        if (valid) {
+            setSpeedError(false);
+            speedErrorRef.current = false;
+            setPlaybackRate(val);
+            if (transport) {
+                await transport.setPlaybackRate(val);
+                try { localStorage.setItem(LS_PLAYBACK_RATE, String(val)); } catch { /* quota */ }
+                // Auto-resume if we paused due to speed error
+                if (pausedBySpeedErrorRef.current) {
+                    pausedBySpeedErrorRef.current = false;
+                    await transport.play();
+                }
+                updateUi();
+            }
+        } else {
+            setSpeedError(true);
+            speedErrorRef.current = true;
+            // Pause if currently playing, and remember we did so
+            if (transport && transport.getSnapshot().state === "playing") {
+                pausedBySpeedErrorRef.current = true;
+                transport.pause();
+                updateUi();
+            }
+        }
     }, [updateUi]);
 
     const handleNoteSpeedChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1668,7 +1720,9 @@ export default function ChartPreviewPlayer({
                         }
                         : undefined}
                 >
-                    <div className="flex items-center gap-2">
+                    <div className={isFullscreen ? "flex items-center justify-between" : "flex items-center gap-2"}>
+                        {/* Left buttons */}
+                        <div className={isFullscreen ? "flex items-center gap-2" : "contents"}>
                         <button
                             type="button"
                             onClick={handlePlayToggle}
@@ -1699,21 +1753,59 @@ export default function ChartPreviewPlayer({
                                 </svg>
                             ) : "停止"}
                         </button>
-                        <span className={timeClassName}>
-                            {formatTime(currentTime)} / {formatTime(duration)}
-                        </span>
-                        {isFullscreen && (
+                        {/* Mark button */}
+                        <button
+                            type="button"
+                            onClick={handleMark}
+                            title="标记当前时间"
+                            className={`${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-200 hover:bg-slate-600" : `${secondaryButtonClassName}`} shrink-0 transition-colors`}
+                        >
+                            {isFullscreen ? (
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                </svg>
+                            ) : "标记"}
+                        </button>
+                        {/* Jump button */}
+                        <button
+                            type="button"
+                            onClick={handleJump}
+                            disabled={markedTime === null}
+                            title={markedTime !== null ? `跳转到 ${formatTime(markedTime)}` : "尚未标记时间"}
+                            className={`${isFullscreen
+                                ? `flex h-9 w-9 items-center justify-center rounded-full transition-colors ${markedTime !== null ? `${markFlash ? "bg-slate-700 text-slate-400" : "bg-miku text-white hover:bg-miku/90"}` : "bg-slate-700 text-slate-500 cursor-not-allowed"}`
+                                : `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-lg font-medium transition-colors ${markedTime !== null ? `${markFlash ? "bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500" : "bg-miku text-white hover:bg-miku/90"}` : "bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed"}`
+                            }`}
+                        >
+                            {isFullscreen ? (
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                                </svg>
+                            ) : "跳转"}
+                        </button>
+                        </div>
+                        {/* Non-fullscreen time (original position) */}
+                        {!isFullscreen && (
+                            <span className={timeClassName}>
+                                {formatTime(currentTime)} / {formatTime(duration)}
+                            </span>
+                        )}
+                        {/* Right: time + exit fullscreen (fullscreen only) */}
+                        <div className={isFullscreen ? "flex items-center gap-3" : "hidden"}>
+                            <span className={timeClassName}>
+                                {formatTime(currentTime)} / {formatTime(duration)}
+                            </span>
                             <button
                                 type="button"
                                 onClick={handleFullscreenToggle}
                                 title="退出全屏"
-                                className="ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-200 transition-colors hover:bg-slate-600"
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-200 transition-colors hover:bg-slate-600"
                             >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 9L9 4.5M9 9L4.5 9M9 9L3.75 3.75M9 15L9 19.5M9 15L4.5 15M9 15L3.75 20.25M15 9H19.5M15 9V4.5M15 9L20.25 3.75M15 15H19.5M15 15L15 19.5M15 15L20.25 20.25" />
                                 </svg>
                             </button>
-                        )}
+                        </div>
                     </div>
 
                     <input
@@ -1731,13 +1823,13 @@ export default function ChartPreviewPlayer({
                             <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
                                 <span className={fieldTextClassName}>速度</span>
                                 <input
+                                    ref={speedInputRef}
                                     type="number"
-                                    min={0.1}
                                     max={4}
                                     step={0.05}
-                                    value={playbackRate || ""}
+                                    value={speedText}
                                     onChange={handleSpeedChange}
-                                    className={`${isCompactControls ? "w-14" : "w-16"} rounded-lg border px-1.5 py-0.5 text-center text-xs font-medium ${fieldInputClassName}`}
+                                    className={`${isCompactControls ? "w-14" : "w-16"} rounded-lg border px-1.5 py-0.5 text-center text-xs font-medium transition-colors ${speedError ? "border-red-400 bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 dark:border-red-500 animate-pulse" : fieldInputClassName}`}
                                 />
                             </label>
 
