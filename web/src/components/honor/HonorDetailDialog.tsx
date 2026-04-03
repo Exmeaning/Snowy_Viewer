@@ -1,8 +1,10 @@
 "use client";
-import React from "react";
+import React, { useRef } from "react";
+import Modal from "@/components/common/Modal";
 import { IHonorInfo, IHonorGroup, HONOR_RARITY_NAMES, HONOR_TYPE_NAMES } from "@/types/honor";
 import DegreeImage from "./DegreeImage";
 import { AssetSourceType } from "@/contexts/ThemeContext";
+import { useSvgPreviewActions } from "@/hooks/useSvgPreviewActions";
 
 interface HonorDetailDialogProps {
     open: boolean;
@@ -19,32 +21,25 @@ export default function HonorDetailDialog({
     honorGroup,
     source = "snowyassets",
 }: HonorDetailDialogProps) {
-    if (!open || !honor) return null;
+    const previewRef = useRef<HTMLDivElement>(null);
+    const { headerActions, errorMessage } = useSvgPreviewActions({
+        isOpen: open,
+        previewRef,
+        fileName: honor ? `${honor.name}_${honor.id}` : "honor",
+    });
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={onClose}>
-            {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-
-            {/* Dialog */}
-            <div
-                className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Close button */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
-                >
-                    <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-
-                <div className="p-6 space-y-5">
-                    {/* Honor Image Preview */}
+        <Modal
+            isOpen={open}
+            onClose={onClose}
+            title={honor?.name ?? "称号详情"}
+            size="md"
+            headerActions={headerActions}
+        >
+            {honor ? (
+                <div className="space-y-5">
                     <div className="flex justify-center">
-                        <div className="w-full max-w-[380px]">
+                        <div ref={previewRef} className="w-full max-w-[380px]">
                             <DegreeImage
                                 honor={honor}
                                 honorGroup={honorGroup}
@@ -54,7 +49,6 @@ export default function HonorDetailDialog({
                         </div>
                     </div>
 
-                    {/* Info Rows */}
                     <div className="space-y-0">
                         <InfoRow label="ID" value={String(honor.id)} />
                         <InfoRow label="名称" value={honor.name} />
@@ -69,17 +63,16 @@ export default function HonorDetailDialog({
                         )}
                     </div>
 
-                    {/* Levels */}
                     {honor.levels.length > 0 && (
                         <div>
-                            <h3 className="text-sm font-bold text-slate-700 mb-3">等级详情</h3>
+                            <h3 className="mb-3 text-sm font-bold text-slate-700">等级详情</h3>
                             <div className="space-y-4">
                                 {honor.levels.map(level => (
-                                    <div key={level.level} className="bg-slate-50 rounded-xl p-4 space-y-2">
+                                    <div key={level.level} className="rounded-xl bg-slate-50 p-4 space-y-2">
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs font-bold text-miku">Lv.{level.level}</span>
                                             {level.honorRarity && (
-                                                <span className="text-xs px-2 py-0.5 bg-miku/10 text-miku rounded-full font-medium">
+                                                <span className="rounded-full bg-miku/10 px-2 py-0.5 text-xs font-medium text-miku">
                                                     {HONOR_RARITY_NAMES[level.honorRarity] || level.honorRarity}
                                                 </span>
                                             )}
@@ -102,9 +95,11 @@ export default function HonorDetailDialog({
                             </div>
                         </div>
                     )}
+
+                    {errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
                 </div>
-            </div>
-        </div>
+            ) : null}
+        </Modal>
     );
 }
 

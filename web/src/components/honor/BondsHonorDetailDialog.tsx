@@ -1,9 +1,11 @@
 "use client";
-import React from "react";
+import React, { useRef } from "react";
+import Modal from "@/components/common/Modal";
 import { IBondsHonor, IBondsHonorWord, IGameCharaUnit, HONOR_RARITY_NAMES } from "@/types/honor";
 import BondsDegreeImage from "./BondsDegreeImage";
 import { AssetSourceType } from "@/contexts/ThemeContext";
 import { CHARACTER_NAMES } from "@/types/types";
+import { useSvgPreviewActions } from "@/hooks/useSvgPreviewActions";
 
 interface BondsHonorDetailDialogProps {
     open: boolean;
@@ -22,34 +24,34 @@ export default function BondsHonorDetailDialog({
     gameCharaUnits,
     source = "snowyassets",
 }: BondsHonorDetailDialogProps) {
-    if (!open || !bondsHonor) return null;
-
-    const gcu1 = gameCharaUnits.find(g => g.id === bondsHonor.gameCharacterUnitId1);
-    const gcu2 = gameCharaUnits.find(g => g.id === bondsHonor.gameCharacterUnitId2);
-
-    // Find the first matching word for this bonds group
-    const defaultWord = bondsHonorWords.find(w => w.bondsGroupId === bondsHonor.bondsGroupId);
+    const previewRef = useRef<HTMLDivElement>(null);
+    const { headerActions, errorMessage } = useSvgPreviewActions({
+        isOpen: open,
+        previewRef,
+        fileName: bondsHonor ? `${bondsHonor.name}_${bondsHonor.id}` : "bonds_honor",
+    });
+    const gcu1 = bondsHonor
+        ? gameCharaUnits.find(g => g.id === bondsHonor.gameCharacterUnitId1)
+        : undefined;
+    const gcu2 = bondsHonor
+        ? gameCharaUnits.find(g => g.id === bondsHonor.gameCharacterUnitId2)
+        : undefined;
+    const defaultWord = bondsHonor
+        ? bondsHonorWords.find(w => w.bondsGroupId === bondsHonor.bondsGroupId)
+        : undefined;
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={onClose}>
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-            <div
-                className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto"
-                onClick={e => e.stopPropagation()}
-            >
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
-                >
-                    <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-
-                <div className="p-6 space-y-5">
-                    {/* Preview */}
+        <Modal
+            isOpen={open}
+            onClose={onClose}
+            title={bondsHonor?.name ?? "羁绊称号详情"}
+            size="md"
+            headerActions={headerActions}
+        >
+            {bondsHonor ? (
+                <div className="space-y-5">
                     <div className="flex justify-center">
-                        <div className="w-full max-w-[380px]">
+                        <div ref={previewRef} className="w-full max-w-[380px]">
                             <BondsDegreeImage
                                 bondsHonor={bondsHonor}
                                 gameCharaUnits={gameCharaUnits}
@@ -61,7 +63,6 @@ export default function BondsHonorDetailDialog({
                         </div>
                     </div>
 
-                    {/* Info */}
                     <div className="space-y-0">
                         <InfoRow label="ID" value={String(bondsHonor.id)} />
                         <InfoRow label="名称" value={bondsHonor.name} />
@@ -74,13 +75,12 @@ export default function BondsHonorDetailDialog({
                         )}
                     </div>
 
-                    {/* Levels */}
                     {bondsHonor.levels.length > 0 && (
                         <div>
-                            <h3 className="text-sm font-bold text-slate-700 mb-3">等级详情</h3>
+                            <h3 className="mb-3 text-sm font-bold text-slate-700">等级详情</h3>
                             <div className="space-y-3">
                                 {bondsHonor.levels.map(level => (
-                                    <div key={level.level} className="bg-slate-50 rounded-xl p-4 space-y-2">
+                                    <div key={level.level} className="rounded-xl bg-slate-50 p-4 space-y-2">
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs font-bold text-miku">Lv.{level.level}</span>
                                         </div>
@@ -93,27 +93,28 @@ export default function BondsHonorDetailDialog({
                         </div>
                     )}
 
-                    {/* Available Words */}
                     {bondsHonorWords.filter(w => w.bondsGroupId === bondsHonor.bondsGroupId).length > 0 && (
                         <div>
-                            <h3 className="text-sm font-bold text-slate-700 mb-3">可用称号词</h3>
+                            <h3 className="mb-3 text-sm font-bold text-slate-700">可用称号词</h3>
                             <div className="space-y-2">
                                 {bondsHonorWords
                                     .filter(w => w.bondsGroupId === bondsHonor.bondsGroupId)
                                     .map(word => (
-                                        <div key={word.id} className="bg-slate-50 rounded-xl p-3">
-                                            <p className="text-sm text-slate-700 font-medium">{word.name}</p>
+                                        <div key={word.id} className="rounded-xl bg-slate-50 p-3">
+                                            <p className="text-sm font-medium text-slate-700">{word.name}</p>
                                             {word.description && (
-                                                <p className="text-xs text-slate-500 mt-1">{word.description}</p>
+                                                <p className="mt-1 text-xs text-slate-500">{word.description}</p>
                                             )}
                                         </div>
                                     ))}
                             </div>
                         </div>
                     )}
+
+                    {errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
                 </div>
-            </div>
-        </div>
+            ) : null}
+        </Modal>
     );
 }
 
