@@ -28,6 +28,7 @@ export default function ImagePreviewModal({
     const [copySuccess, setCopySuccess] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [saveClickCount, setSaveClickCount] = useState(0);
     const copyResetTimerRef = useRef<number | null>(null);
     const saveResetTimerRef = useRef<number | null>(null);
 
@@ -49,6 +50,7 @@ export default function ImagePreviewModal({
             setIsSaving(false);
             setCopySuccess(false);
             setSaveSuccess(false);
+            setSaveClickCount(0);
             if (copyResetTimerRef.current) {
                 window.clearTimeout(copyResetTimerRef.current);
                 copyResetTimerRef.current = null;
@@ -84,6 +86,7 @@ export default function ImagePreviewModal({
         setIsSaving(true);
         setErrorMessage(null);
         setSaveSuccess(false);
+        setSaveClickCount((prev) => prev + 1);
         try {
             await saveImageFromUrl(imageUrl, fileName);
             setSaveSuccess(true);
@@ -183,7 +186,21 @@ export default function ImagePreviewModal({
             size={size}
             headerActions={headerActions}
         >
-            <div className="space-y-4">
+            <div className="space-y-3">
+                {saveClickCount >= 2 && (
+                    <div className="rounded-xl bg-gradient-to-r from-miku/5 to-luka/5 border border-miku/15 px-4 py-2.5 animate-in fade-in duration-300">
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            若未能正常开启下载，请尝试<strong className="text-slate-700">右键点击图片（移动端长按）→ 保存图像</strong>。
+                            或下载最新版浏览器：
+                            <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer" className="text-miku font-medium hover:underline ml-1">Chrome</a>
+                            <span className="mx-0.5 text-slate-300">/</span>
+                            <a href="https://www.firefox.com/zh-CN/" target="_blank" rel="noopener noreferrer" className="text-miku font-medium hover:underline">Firefox</a>
+                        </p>
+                    </div>
+                )}
+
+                {errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
+
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
                     <div className="max-h-[65vh] overflow-auto flex items-center justify-center">
                         <img
@@ -193,8 +210,6 @@ export default function ImagePreviewModal({
                         />
                     </div>
                 </div>
-
-                {errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
             </div>
         </Modal>
     );
