@@ -45,6 +45,7 @@ export const USER_DATA_KEYS = [
     "userEvents", "userWorldBlooms", "userMusicAchievements",
     "userPlayerFrames", "userMaterials", "upload_time",
 ].join(",");
+const USER_DATA_KEYS_LIST = USER_DATA_KEYS.split(",");
 
 // Master data keys needed for preloading
 export const PRELOAD_MASTER_KEYS = [
@@ -94,6 +95,75 @@ function getDefaultUserDataValue(key: string): unknown {
     if (key === "userGamedata") return null;
     if (key === "upload_time") return null;
     return [];
+}
+
+const USER_DATA_CONTAINER_KEYS = ["data", "result", "updatedData"] as const;
+const USER_DATA_ARRAY_KEYS = ["items", "updatedData", "records", "list"] as const;
+
+function toRecord(value: unknown): Record<string, unknown> | null {
+    return value && typeof value === "object" && !Array.isArray(value)
+        ? value as Record<string, unknown>
+        : null;
+}
+
+function extractUserDataRecord(payload: unknown): UserDataMap | null {
+    const direct = toRecord(payload);
+    if (!direct) return null;
+    if (USER_DATA_KEYS_LIST.some((key) => key in direct)) return direct;
+
+    for (const containerKey of USER_DATA_CONTAINER_KEYS) {
+        const nested = toRecord(direct[containerKey]);
+        if (nested && USER_DATA_KEYS_LIST.some((key) => key in nested)) {
+            return nested;
+        }
+    }
+
+    return null;
+}
+
+function applyDefaultUserDataKeys(data: UserDataMap): UserDataMap {
+    const normalized: UserDataMap = { ...data };
+    for (const key of USER_DATA_KEYS_LIST) {
+        if (!(key in normalized)) {
+            normalized[key] = getDefaultUserDataValue(key);
+        }
+    }
+    return normalized;
+}
+
+function normalizeSuiteUserDataPayload(payload: unknown): UserDataMap {
+    const record = extractUserDataRecord(payload);
+    if (!record) {
+        throw new Error("INVALID_USER_DATA_PAYLOAD");
+    }
+    return applyDefaultUserDataKeys(record);
+}
+
+function normalizePerKeyUserDataValue(key: string, payload: unknown): unknown {
+    const direct = toRecord(payload);
+    if (!direct) {
+        return payload;
+    }
+
+    if (key in direct) {
+        return direct[key];
+    }
+
+    for (const containerKey of USER_DATA_CONTAINER_KEYS) {
+        const nested = toRecord(direct[containerKey]);
+        if (nested && key in nested) {
+            return nested[key];
+        }
+    }
+
+    for (const arrayKey of USER_DATA_ARRAY_KEYS) {
+        const candidate = direct[arrayKey];
+        if (Array.isArray(candidate)) {
+            return candidate;
+        }
+    }
+
+    return payload;
 }
 
 // ==================== Helper Functions ====================
@@ -247,7 +317,7 @@ export class SnowyDataProvider implements DataProvider {
             }
 
             if (response.ok) {
-                data = (await response.json()) as UserDataMap & {
+                data = normalizeSuiteUserDataPayload(await response.json()) as UserDataMap & {
                     userCards?: UserCardEntry[];
                     userHonors?: UserHonorEntry[];
                 };
@@ -333,4 +403,6 @@ export class SnowyDataProvider implements DataProvider {
         this.userDataCache = data;
         return data;
     }
+}
+  }
 }

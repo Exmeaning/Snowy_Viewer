@@ -210,6 +210,8 @@ function getErrorMessage(error: string): string {
             return "用户数据未找到，请确认用户ID/所选服务器是否正确，并已在 Haruki 上传数据。";
         case "API_NOT_PUBLIC":
             return "该用户的公开API未开启，请先在 Haruki 上开启公开API。";
+        case "INVALID_USER_DATA_PAYLOAD":
+            return "读取到的用户数据格式异常，请重新同步 Haruki/OAuth 数据后重试。";
         default:
             if (error.includes("404")) return "用户数据未找到 (404)";
             if (error.includes("403")) return "公开API未开启 (403)";

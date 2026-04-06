@@ -3,12 +3,15 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+    ACCOUNTS_CHANGED_EVENT,
     getActiveAccount,
     getCharacterIconUrl,
     getTopCharacterId,
     getCachedAvatarUrl,
     type MoesekaiAccount,
 } from "@/lib/account";
+import { useCardThumbnail } from "@/hooks/useCardThumbnail";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
     getShortcutById,
     isEditableEventTarget,
@@ -415,11 +418,13 @@ export default function Sidebar({
 }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
+    const { assetSource } = useTheme();
     // 默认展开所有分组
     const [expandedGroups, setExpandedGroups] = useState<string[]>(
         navigationGroups.map(group => group.title)
     );
     const [activeAccount, setActiveAccountState] = useState<MoesekaiAccount | null>(null);
+    const activeAccountCardThumbnail = useCardThumbnail(activeAccount?.avatarCardId ?? null, assetSource);
     const navRef = useRef<HTMLElement>(null);
 
     // 键盘导航状态：-1 表示无焦点
@@ -438,10 +443,20 @@ export default function Sidebar({
         return items;
     }, [expandedGroups]);
 
-    // 加载当前激活账号
+    // 加载并同步当前激活账号
     useEffect(() => {
-        const account = getActiveAccount();
-        setActiveAccountState(account);
+        const syncActiveAccount = () => {
+            const account = getActiveAccount();
+            setActiveAccountState(account);
+        };
+
+        syncActiveAccount();
+        window.addEventListener(ACCOUNTS_CHANGED_EVENT, syncActiveAccount);
+        window.addEventListener("storage", syncActiveAccount);
+        return () => {
+            window.removeEventListener(ACCOUNTS_CHANGED_EVENT, syncActiveAccount);
+            window.removeEventListener("storage", syncActiveAccount);
+        };
     }, []);
 
     // 恢复导航栏滚动位置
@@ -659,13 +674,14 @@ export default function Sidebar({
                             {activeAccount ? (
                                 <img
                                     src={
+                                        activeAccountCardThumbnail ||
                                         getCachedAvatarUrl(activeAccount.id) ||
                                         getCharacterIconUrl(
                                             activeAccount.avatarCharacterId ||
                                             (activeAccount.userCharacters ? getTopCharacterId(activeAccount.userCharacters) : 21)
                                         )
                                     }
-                                    alt={activeAccount.userGamedata?.name || activeAccount.nickname || ""}
+                                    alt={activeAccount.userGamedata?.name || activeAccount.nickname || activeAccount.gameId}
                                     className="w-full h-full object-cover"
                                 />
                             ) : (

@@ -145,6 +145,7 @@ import { getHarukiPublicApiBase } from "./haruki-public-api";
 const HARUKI_PUBLIC_API_BASE = getHarukiPublicApiBase();
 const ACCOUNTS_KEY = "moesekai_accounts";
 const ACTIVE_KEY = "moesekai_active_account";
+export const ACCOUNTS_CHANGED_EVENT = "moesekai:accounts-changed";
 
 // Legacy keys
 const LEGACY_ACCOUNT_KEY = "moesekai_account";
@@ -177,60 +178,172 @@ export function getLeaderCardId(userGamedata: UserGamedata | null, userDecks: Us
     return currentDeck ? currentDeck.leader : null;
 }
 
-// ==================== Haruki API ====================
+const KNOWN_ACCOUNT_DATA_KEYS = [
+    "userGamedata",
+    "userProfile",
+    "userDecks",
+    "userCharacters",
+    "userChallengeLiveSoloStages",
+    "userChallengeLiveSoloResults",
+    "userChallengeLiveSoloHighScoreRewards",
+    "userBonds",
+    "userMaterials",
+    "userAreas",
+    "userMysekaiFixtureGameCharacterPerformanceBonuses",
+    "userMysekaiGates",
+    "upload_time",
+] as const;
 
-function hasAccountDataField(data: Record<string, unknown>, key: string): boolean {
-    return Object.prototype.hasOwnProperty.call(data, key);
+const ACCOUNT_DATA_CONTAINER_KEYS = ["data", "result", "updatedData"] as const;
+const ACCOUNT_DATA_ARRAY_KEYS = ["items", "updatedData", "records", "list"] as const;
+const ACCOUNT_DATA_NOT_FOUND = Symbol("ACCOUNT_DATA_NOT_FOUND");
+
+function toAccountDataRecord(value: unknown): Record<string, unknown> | null {
+    return value && typeof value === "object" && !Array.isArray(value)
+        ? value as Record<string, unknown>
+        : null;
 }
 
-function normalizeHarukiApiResponse(data: Record<string, unknown>): HarukiApiResult {
-    const hasKnownAccountData = [
-        "userGamedata",
-        "userProfile",
-        "userDecks",
-        "userCharacters",
-        "userChallengeLiveSoloStages",
-        "userChallengeLiveSoloResults",
-        "userChallengeLiveSoloHighScoreRewards",
-        "userBonds",
-        "userMaterials",
-        "userAreas",
-        "userMysekaiFixtureGameCharacterPerformanceBonuses",
-        "userMysekaiGates",
-        "upload_time",
-    ].some((key) => hasAccountDataField(data, key));
+function hasKnownAccountDataKey(data: Record<string, unknown>, keys: readonly string[]): boolean {
+    if (keys.some((key) => Object.prototype.hasOwnProperty.call(data, key))) {
+        return true;
+    }
+    return keys.includes("upload_time") && Object.prototype.hasOwnProperty.call(data, "uploadTime");
+}
 
-    if (!hasKnownAccountData) {
+function extractAccountDataRecord(
+    payload: unknown,
+    keys: readonly string[] = KNOWN_ACCOUNT_DATA_KEYS,
+    depth = 0,
+): Record<string, unknown> | null {
+    const direct = toAccountDataRecord(payload);
+    if (!direct) return null;
+    if (hasKnownAccountDataKey(direct, keys)) return direct;
+    if (depth >= 3) return null;
+
+    for (const containerKey of ACCOUNT_DATA_CONTAINER_KEYS) {
+        const nested = extractAccountDataRecord(direct[containerKey], keys, depth + 1);
+        if (nested) return nested;
+    }
+
+    return null;
+}
+
+function normalizeUploadTime(value: unknown): number | undefined {
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return value;
+    }
+    if (typeof value === "string") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) {
+            return parsed;
+        }
+    }
+    return undefined;
+}
+
+function applyDefaultAccountDataKeys(data: Record<string, unknown>, keys: readonly string[]): Record<string, unknown> {
+    const normalized: Record<string, unknown> = { ...data };
+
+    if (!("upload_time" in normalized) && "uploadTime" in normalized) {
+        normalized.upload_time = normalized.uploadTime;
+    }
+
+    keys.forEach((key) => {
+        if (!(key in normalized)) {
+            normalized[key] = getDefaultOAuthDataValue(key);
+        }
+    });
+
+    return normalized;
+}
+
+function normalizeAccountDataPayload(payload: unknown, keys: readonly string[]): Record<string, unknown> {
+    const record = extractAccountDataRecord(payload, keys);
+    if (!record) {
+        throw new Error("INVALID_ACCOUNT_DATA_PAYLOAD");
+    }
+    return applyDefaultAccountDataKeys(record, keys);
+}
+
+function extractAccountDataValue(key: string, payload: unknown, depth = 0): unknown | typeof ACCOUNT_DATA_NOT_FOUND {
+    const direct = toAccountDataRecord(payload);
+    if (!direct) {
+        return ACCOUNT_DATA_NOT_FOUND;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(direct, key)) {
+        return direct[key];
+    }
+    if (key === "upload_time" && Object.prototype.hasOwnProperty.call(direct, "uploadTime")) {
+        return direct.uploadTime;
+    }
+
+    if (depth < 3) {
+        for (const containerKey of ACCOUNT_DATA_CONTAINER_KEYS) {
+            const nested = extractAccountDataValue(key, direct[containerKey], depth + 1);
+            if (nested !== ACCOUNT_DATA_NOT_FOUND) {
+                return nested;
+            }
+        }
+    }
+
+    for (const arrayKey of ACCOUNT_DATA_ARRAY_KEYS) {
+        const candidate = direct[arrayKey];
+        if (Array.isArray(candidate)) {
+            return candidate;
+        }
+    }
+
+    return ACCOUNT_DATA_NOT_FOUND;
+}
+
+function normalizePerKeyAccountDataValue(key: string, payload: unknown): unknown {
+    const extracted = extractAccountDataValue(key, payload);
+    if (extracted !== ACCOUNT_DATA_NOT_FOUND) {
+        return extracted;
+    }
+    return payload;
+}
+
+// ==================== Haruki API ====================
+
+function normalizeHarukiApiResponse(data: unknown): HarukiApiResult {
+    const normalizedData = extractAccountDataRecord(data, KNOWN_ACCOUNT_DATA_KEYS);
+
+    if (!normalizedData) {
         return { success: false, error: "NOT_FOUND" };
     }
 
+    const flatData = applyDefaultAccountDataKeys(normalizedData, KNOWN_ACCOUNT_DATA_KEYS);
+
     return {
         success: true,
-        userProfile: data.userProfile && typeof data.userProfile === "object"
-            ? data.userProfile as { word: string; userId: number }
+        userProfile: flatData.userProfile && typeof flatData.userProfile === "object"
+            ? flatData.userProfile as { word: string; userId: number }
             : undefined,
-        userGamedata: data.userGamedata && typeof data.userGamedata === "object"
-            ? data.userGamedata as UserGamedata
+        userGamedata: flatData.userGamedata && typeof flatData.userGamedata === "object"
+            ? flatData.userGamedata as UserGamedata
             : undefined,
-        userDecks: Array.isArray(data.userDecks) ? data.userDecks as UserDeck[] : undefined,
-        userCharacters: Array.isArray(data.userCharacters) ? data.userCharacters as UserCharacter[] : undefined,
-        userChallengeLiveSoloStages: Array.isArray(data.userChallengeLiveSoloStages)
-            ? data.userChallengeLiveSoloStages as UserChallengeLiveSoloStage[]
+        userDecks: Array.isArray(flatData.userDecks) ? flatData.userDecks as UserDeck[] : undefined,
+        userCharacters: Array.isArray(flatData.userCharacters) ? flatData.userCharacters as UserCharacter[] : undefined,
+        userChallengeLiveSoloStages: Array.isArray(flatData.userChallengeLiveSoloStages)
+            ? flatData.userChallengeLiveSoloStages as UserChallengeLiveSoloStage[]
             : undefined,
-        userChallengeLiveSoloResults: Array.isArray(data.userChallengeLiveSoloResults)
-            ? data.userChallengeLiveSoloResults as UserChallengeLiveSoloResult[]
+        userChallengeLiveSoloResults: Array.isArray(flatData.userChallengeLiveSoloResults)
+            ? flatData.userChallengeLiveSoloResults as UserChallengeLiveSoloResult[]
             : undefined,
-        userChallengeLiveSoloHighScoreRewards: Array.isArray(data.userChallengeLiveSoloHighScoreRewards)
-            ? data.userChallengeLiveSoloHighScoreRewards as UserChallengeLiveSoloHighScoreReward[]
+        userChallengeLiveSoloHighScoreRewards: Array.isArray(flatData.userChallengeLiveSoloHighScoreRewards)
+            ? flatData.userChallengeLiveSoloHighScoreRewards as UserChallengeLiveSoloHighScoreReward[]
             : undefined,
-        userBonds: Array.isArray(data.userBonds) ? data.userBonds as UserBond[] : undefined,
-        userMaterials: Array.isArray(data.userMaterials) ? data.userMaterials as UserMaterial[] : undefined,
-        userAreas: Array.isArray(data.userAreas) ? data.userAreas as UserArea[] : undefined,
-        userMysekaiFixtureGameCharacterPerformanceBonuses: Array.isArray(data.userMysekaiFixtureGameCharacterPerformanceBonuses)
-            ? data.userMysekaiFixtureGameCharacterPerformanceBonuses as UserMysekaiFixtureGameCharacterPerformanceBonus[]
+        userBonds: Array.isArray(flatData.userBonds) ? flatData.userBonds as UserBond[] : undefined,
+        userMaterials: Array.isArray(flatData.userMaterials) ? flatData.userMaterials as UserMaterial[] : undefined,
+        userAreas: Array.isArray(flatData.userAreas) ? flatData.userAreas as UserArea[] : undefined,
+        userMysekaiFixtureGameCharacterPerformanceBonuses: Array.isArray(flatData.userMysekaiFixtureGameCharacterPerformanceBonuses)
+            ? flatData.userMysekaiFixtureGameCharacterPerformanceBonuses as UserMysekaiFixtureGameCharacterPerformanceBonus[]
             : undefined,
-        userMysekaiGates: Array.isArray(data.userMysekaiGates) ? data.userMysekaiGates as UserMysekaiGate[] : undefined,
-        uploadTime: typeof data.upload_time === "number" ? data.upload_time : undefined,
+        userMysekaiGates: Array.isArray(flatData.userMysekaiGates) ? flatData.userMysekaiGates as UserMysekaiGate[] : undefined,
+        uploadTime: normalizeUploadTime(flatData.upload_time),
     };
 }
 
@@ -309,23 +422,31 @@ function isOAuthBadRequestError(error: unknown): boolean {
     return getAccountDataErrorMessage(error).startsWith("AUTHORIZED_REQUEST_FAILED_400");
 }
 
+function shouldFallbackToOAuthPerKey(error: unknown): boolean {
+    const message = getAccountDataErrorMessage(error);
+    return isOAuthBadRequestError(error) || message === "INVALID_ACCOUNT_DATA_PAYLOAD";
+}
+
 function getDefaultOAuthDataValue(key: string): unknown {
     if (key === "userGamedata") return null;
-    if (key === "upload_time") return null;
+    if (key === "upload_time" || key === "uploadTime") return null;
     return [];
 }
 
 async function fetchOAuthGameDataPerKey(
     accessToken: string,
-    account: MoesekaiAccount,
+    server: ServerType,
+    gameId: string,
     keys: string[],
+    accountId?: string,
 ): Promise<Record<string, unknown>> {
     const entries = await Promise.all(keys.map(async (key) => {
         try {
-            return [key, await fetchOAuthGameData(accessToken, account.server, key, account.gameId)] as const;
+            const payload = await fetchOAuthGameData(accessToken, server, key, gameId);
+            return [key, normalizePerKeyAccountDataValue(key, payload)] as const;
         } catch (error) {
             if (isOAuthBadRequestError(error)) {
-                console.warn(`[OAuth2] game-data key "${key}" returned 400, using fallback default value`);
+                console.warn(`[OAuth2] game-data key "${key}" returned 400, using fallback default value`, { accountId, server, gameId });
                 return [key, getDefaultOAuthDataValue(key)] as const;
             }
             throw error;
@@ -360,21 +481,17 @@ export async function fetchAccountGameData(account: MoesekaiAccount, keys: strin
             if (keys.length > 1) {
                 try {
                     const suite = await fetchOAuthGameDataSuite(token.accessToken, account.server, account.gameId);
-                    const merged: Record<string, unknown> = {};
-                    keys.forEach((key) => {
-                        merged[key] = suite[key];
-                    });
-                    return merged;
+                    return normalizeAccountDataPayload(suite, keys);
                 } catch (error) {
-                    if (!isOAuthBadRequestError(error)) {
+                    if (!shouldFallbackToOAuthPerKey(error)) {
                         throw error;
                     }
-                    console.warn("[OAuth2] suite endpoint returned 400, falling back to per-key requests", { accountId: account.id, keys });
-                    return fetchOAuthGameDataPerKey(token.accessToken, account, keys);
+                    console.warn("[OAuth2] suite endpoint unavailable or payload invalid, falling back to per-key requests", { accountId: account.id, keys, error });
+                    return fetchOAuthGameDataPerKey(token.accessToken, account.server, account.gameId, keys, account.id);
                 }
             }
 
-            return fetchOAuthGameDataPerKey(token.accessToken, account, keys);
+            return fetchOAuthGameDataPerKey(token.accessToken, account.server, account.gameId, keys, account.id);
         } catch (error) {
             const normalized = normalizeAccountDataError(error);
 
@@ -393,6 +510,34 @@ export async function fetchAccountGameData(account: MoesekaiAccount, keys: strin
     return fetchPublicGameData(account.server, account.gameId, keys);
 }
 
+export async function fetchOAuthBindingInitialData(
+    accessToken: string,
+    server: ServerType,
+    gameId: string,
+): Promise<HarukiApiResult | null> {
+    const initialKeys = ["userGamedata", "userDecks", "userCharacters", "upload_time"];
+
+    try {
+        try {
+            const suite = await fetchOAuthGameDataSuite(accessToken, server, gameId);
+            const normalized = normalizeHarukiApiResponse(normalizeAccountDataPayload(suite, initialKeys));
+            return normalized.success ? normalized : null;
+        } catch (error) {
+            if (!shouldFallbackToOAuthPerKey(error)) {
+                throw error;
+            }
+            console.warn("[OAuth2] initial suite endpoint unavailable or payload invalid, falling back to per-key requests", { server, gameId, error });
+        }
+
+        const perKey = await fetchOAuthGameDataPerKey(accessToken, server, gameId, initialKeys, `${server}_${gameId}`);
+        const normalized = normalizeHarukiApiResponse(perKey);
+        return normalized.success ? normalized : null;
+    } catch (error) {
+        console.warn("[OAuth2] failed to preload initial binding data", { server, gameId, error });
+        return null;
+    }
+}
+
 // ==================== 多账号 CRUD ====================
 
 /** 获取所有账号 */
@@ -407,6 +552,11 @@ export function getAccounts(): MoesekaiAccount[] {
     } catch {
         return [];
     }
+}
+
+function notifyAccountsChanged(): void {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new Event(ACCOUNTS_CHANGED_EVENT));
 }
 
 /** 保存所有账号 */
@@ -453,6 +603,7 @@ export function setActiveAccount(accountId: string): void {
         localStorage.setItem(LEGACY_USERID_KEY, account.gameId);
         localStorage.setItem(LEGACY_SERVER_KEY, account.server);
     }
+    notifyAccountsChanged();
 }
 
 /** 添加账号 */
@@ -468,7 +619,9 @@ export function addAccount(account: MoesekaiAccount): void {
     // 如果是第一个账号，自动设为活跃
     if (accounts.length === 1) {
         setActiveAccount(account.id);
+        return;
     }
+    notifyAccountsChanged();
 }
 
 /** 创建并添加账号 */
@@ -521,6 +674,7 @@ export function updateAccount(accountId: string, updates: Partial<MoesekaiAccoun
     if (idx < 0) return;
     accounts[idx] = { ...accounts[idx], ...updates, updatedAt: Date.now() };
     saveAccounts(accounts);
+    notifyAccountsChanged();
 }
 
 /** 删除账号 */
@@ -533,12 +687,13 @@ export function removeAccount(accountId: string): void {
     if (activeId === accountId) {
         if (accounts.length > 0) {
             setActiveAccount(accounts[0].id);
-        } else {
-            localStorage.removeItem(ACTIVE_KEY);
-            localStorage.removeItem(LEGACY_USERID_KEY);
-            localStorage.removeItem(LEGACY_SERVER_KEY);
+            return;
         }
+        localStorage.removeItem(ACTIVE_KEY);
+        localStorage.removeItem(LEGACY_USERID_KEY);
+        localStorage.removeItem(LEGACY_SERVER_KEY);
     }
+    notifyAccountsChanged();
 }
 
 /** 清除所有账号 */
@@ -549,6 +704,7 @@ export function clearAllAccounts(): void {
     localStorage.removeItem(LEGACY_ACCOUNT_KEY);
     localStorage.removeItem(LEGACY_USERID_KEY);
     localStorage.removeItem(LEGACY_SERVER_KEY);
+    notifyAccountsChanged();
 }
 
 /** 检查是否有账号 */

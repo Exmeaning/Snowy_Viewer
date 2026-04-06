@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
-import { createOrUpdateOAuthAccount } from "@/lib/account";
+import { createOrUpdateOAuthAccount, fetchOAuthBindingInitialData } from "@/lib/account";
 import {
     clearPendingOAuthState,
     formatOAuthErrorMessage,
@@ -15,7 +15,7 @@ import {
     type OAuthBinding,
 } from "@/lib/oauth";
 
-type CallbackPhase = OAuthAuthorizationPhase | "saving_account" | "redirecting" | "selecting_binding";
+type CallbackPhase = OAuthAuthorizationPhase | "loading_initial_data" | "saving_account" | "redirecting" | "selecting_binding";
 
 function getPhaseMessage(phase: CallbackPhase): string {
     switch (phase) {
@@ -27,6 +27,8 @@ function getPhaseMessage(phase: CallbackPhase): string {
             return "正在读取授权用户信息…";
         case "loading_bindings":
             return "正在读取已绑定游戏账号…";
+        case "loading_initial_data":
+            return "正在同步基础游戏数据…";
         case "saving_account":
             return "正在保存授权账号…";
         case "redirecting":
@@ -129,12 +131,15 @@ export default function CallbackClient() {
 
         setLoading(true);
         setError(null);
-        setPhase("saving_account");
+        setPhase("loading_initial_data");
         try {
+            const initialData = await fetchOAuthBindingInitialData(source.tokenSet.accessToken, server, gameId);
+            setPhase("saving_account");
             const account = createOrUpdateOAuthAccount({
                 binding,
                 profile: source.profile,
                 tokenSet: source.tokenSet,
+                initialData,
             });
             const redirectUrl = buildSuccessReturnUrl(returnTo, account.id);
             clearPendingOAuthState(state);
