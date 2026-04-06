@@ -21,4 +21,9 @@ export interface UserWorldBloomSupportDeck {
   member18: number
   member19: number
   member20: number
+  member21?: number
+  member22?: number
+  member23?: number
+  member24?: number
+  member25?: number
 }

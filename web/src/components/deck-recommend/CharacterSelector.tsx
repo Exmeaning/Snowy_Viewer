@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { UNIT_DATA, CHARACTER_NAMES, UNIT_ICON_FILES } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
@@ -6,13 +6,31 @@ import { getCharacterIconUrl } from "@/lib/assets";
 interface CharacterSelectorProps {
     selectedCharacterId: number | null;
     onSelect: (id: number) => void;
+    availableCharacterIds?: readonly number[];
 }
 
 export default function CharacterSelector({
     selectedCharacterId,
     onSelect,
+    availableCharacterIds,
 }: CharacterSelectorProps) {
     const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+
+    const availableCharacterIdSet = useMemo(
+        () => availableCharacterIds ? new Set(availableCharacterIds) : null,
+        [availableCharacterIds],
+    );
+
+    const visibleUnits = useMemo(() => {
+        if (availableCharacterIdSet === null) return UNIT_DATA;
+        return UNIT_DATA.filter(unit => unit.charIds.some(charId => availableCharacterIdSet.has(charId)));
+    }, [availableCharacterIdSet]);
+
+    useEffect(() => {
+        if (selectedUnitId === null) return;
+        if (visibleUnits.some(unit => unit.id === selectedUnitId)) return;
+        setSelectedUnitId(null);
+    }, [selectedUnitId, visibleUnits]);
 
     const handleUnitClick = (unitId: string) => {
         if (selectedUnitId === unitId) {
@@ -24,19 +42,21 @@ export default function CharacterSelector({
 
     const displayedCharacters = useMemo(() => {
         if (!selectedUnitId) {
-            // Show all characters if no unit selected
-            return UNIT_DATA.flatMap(u => u.charIds);
+            return availableCharacterIds ?? UNIT_DATA.flatMap(u => u.charIds);
         }
-        const unit = UNIT_DATA.find(u => u.id === selectedUnitId);
-        return unit ? unit.charIds : [];
-    }, [selectedUnitId]);
+        const unit = visibleUnits.find(u => u.id === selectedUnitId);
+        if (!unit) return [];
+        return availableCharacterIdSet
+            ? unit.charIds.filter(charId => availableCharacterIdSet.has(charId))
+            : unit.charIds;
+    }, [selectedUnitId, availableCharacterIdSet, availableCharacterIds, visibleUnits]);
 
 
     return (
         <div className="space-y-4">
             {/* Unit Filter */}
             <div className="flex flex-wrap gap-2">
-                {UNIT_DATA.map(unit => {
+                {visibleUnits.map(unit => {
                     const iconName = UNIT_ICON_FILES[unit.id] || "";
                     const isSelected = selectedUnitId === unit.id;
                     return (

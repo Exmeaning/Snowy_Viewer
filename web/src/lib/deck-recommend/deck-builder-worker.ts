@@ -14,6 +14,8 @@ import {
     LiveType,
     MusicMeta,
 } from "sekai-calculator";
+import { getHarukiPublicApiBase } from "../haruki-public-api";
+import { augmentMasterDataWithWorldBloomSimulation } from "../world-bloom-simulation";
 
 // ==================== INLINED DATA PROVIDER ====================
 
@@ -27,7 +29,7 @@ const MASTER_DATA_BASES: Record<string, string> = {
 };
 
 // Haruki suite API base
-const HARUKI_SUITE_API = "https://suite-api.haruki.seiunx.com/public";
+const HARUKI_SUITE_API = getHarukiPublicApiBase();
 const OAUTH2_BASE = (process.env.NEXT_PUBLIC_OAUTH2_BASE_URL || "https://toolbox-api-direct.haruki.seiunx.com/api/oauth2").replace(/\/+$/, "");
 
 // User data keys needed for deck recommendation
@@ -51,8 +53,16 @@ const PRELOAD_MASTER_KEYS = [
     "eventRarityBonusRates", "eventDeckBonuses", "gameCharacters",
     "gameCharacterUnits", "honors", "masterLessons", "mysekaiGates",
     "mysekaiGateLevels", "skills", "worldBloomDifferentAttributeBonuses",
-    "worldBloomSupportDeckBonuses", "worldBloomSupportDeckUnitEventLimitedBonuses",
+    "worldBloomSupportDeckBonuses", "worldBloomSupportDeckBonusesWL1",
+    "worldBloomSupportDeckBonusesWL2", "worldBloomSupportDeckBonusesWL3",
+    "worldBloomSupportDeckUnitEventLimitedBonuses",
 ];
+
+const LOCAL_MASTER_DATA_PATHS: Partial<Record<string, string>> = {
+    worldBloomSupportDeckBonusesWL1: "/data/worldBloomSupportDeckBonusesWL1.json",
+    worldBloomSupportDeckBonusesWL2: "/data/worldBloomSupportDeckBonusesWL2.json",
+    worldBloomSupportDeckBonusesWL3: "/data/worldBloomSupportDeckBonusesWL3.json",
+};
 
 type HarukiServer = "jp" | "cn" | "tw";
 
@@ -131,6 +141,7 @@ function calcDuration() {
 
 class SnowyDataProvider implements DataProvider {
     private userDataCache: UserDataMap | null = null;
+    private masterDataRawCache = new Map<string, Promise<unknown[]>>();
 
     constructor(
         private userId: string,
@@ -146,9 +157,9 @@ class SnowyDataProvider implements DataProvider {
         return new CachedDataProvider(new SnowyDataProvider(userId, server, oauthAccessToken));
     }
 
-    private async fetchMasterJson(base: string, key: string): Promise<unknown[] | null> {
+    private async fetchJsonArray(url: string): Promise<unknown[] | null> {
         try {
-            const response = await fetch(`${base}/${key}.json`);
+            const response = await fetch(url);
             if (!response.ok) return null;
             const contentType = response.headers.get("content-type") || "";
             if (contentType.includes("text/html")) return null;
@@ -161,13 +172,35 @@ class SnowyDataProvider implements DataProvider {
         }
     }
 
-    async getMasterData<T>(key: string): Promise<T[]> {
-        const base = MASTER_DATA_BASES["jp"];
-        let data = await this.fetchMasterJson(base, key);
-        if (data === null) {
-            console.warn(`[DeckRecommend] Master data "${key}" not available, using empty array`);
-            return [] as T[];
+    private async loadRawMasterData(key: string): Promise<unknown[]> {
+        const cached = this.masterDataRawCache.get(key);
+        if (cached) {
+            return cached;
         }
+        const promise = (async () => {
+            const localPath = LOCAL_MASTER_DATA_PATHS[key];
+            let data = localPath === undefined ? null : await this.fetchJsonArray(localPath);
+            if (data === null) {
+                const base = MASTER_DATA_BASES["jp"];
+                data = await this.fetchJsonArray(`${base}/${key}.json`);
+            }
+            if (data === null) {
+                console.warn(`[DeckRecommend] Master data "${key}" not available, using empty array`);
+                return [];
+            }
+            return data;
+        })();
+        this.masterDataRawCache.set(key, promise);
+        return promise;
+    }
+
+    async getMasterData<T>(key: string): Promise<T[]> {
+        let data = await this.loadRawMasterData(key);
+        data = await augmentMasterDataWithWorldBloomSimulation(
+            key,
+            data,
+            async <U,>(depKey: string) => await this.loadRawMasterData(depKey) as U[],
+        );
         if (key === "cards") {
             data = transformCards(data as CardWithParameters[]);
         }

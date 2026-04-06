@@ -270,7 +270,8 @@ export function findBestCardsGA (
           individual.deck, allCards, honorBonus,
           eventConfig.cardBonusCountLimit,
           eventConfig.worldBloomDifferentAttributeBonuses,
-          skillReferenceChooseStrategy, keepAfterTrainingState, false
+          skillReferenceChooseStrategy, keepAfterTrainingState, false,
+          eventConfig.worldBloomEventTurn
         )
         const score = scoreFunc(musicMeta, deckDetail)
         individual.fitness = score
@@ -284,7 +285,8 @@ export function findBestCardsGA (
           individual.deck, allCards, honorBonus,
           eventConfig.cardBonusCountLimit,
           eventConfig.worldBloomDifferentAttributeBonuses,
-          skillReferenceChooseStrategy, keepAfterTrainingState, true
+          skillReferenceChooseStrategy, keepAfterTrainingState, true,
+          eventConfig.worldBloomEventTurn
         )
         const s1 = scoreFunc(musicMeta, dd1)
 
@@ -310,7 +312,8 @@ export function findBestCardsGA (
             individual.deck, allCards, honorBonus,
             eventConfig.cardBonusCountLimit,
             eventConfig.worldBloomDifferentAttributeBonuses,
-            skillReferenceChooseStrategy, keepAfterTrainingState, false
+            skillReferenceChooseStrategy, keepAfterTrainingState, false,
+            eventConfig.worldBloomEventTurn
           )
           s2 = scoreFunc(musicMeta, dd2)
           swap(individual.deck, 0, bestLeaderIdx) // 恢复

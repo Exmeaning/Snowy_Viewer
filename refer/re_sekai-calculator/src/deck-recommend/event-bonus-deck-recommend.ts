@@ -2,6 +2,7 @@ import { type DataProvider } from '../data-provider/data-provider'
 import { CardCalculator, type CardConfig, type CardDetail } from '../card-information/card-calculator'
 import {
   DeckCalculator,
+  SkillReferenceChooseStrategy,
   type DeckDetail
 } from '../deck-information/deck-calculator'
 import { LiveType } from '../live-score/live-calculator'
@@ -488,7 +489,11 @@ export class EventBonusDeckRecommend {
 
           const deckDetail = DeckCalculator.getDeckDetailByCards(
             deckCards, allCards, honorBonus, eventConfig.cardBonusCountLimit,
-            eventConfig.worldBloomDifferentAttributeBonuses
+            eventConfig.worldBloomDifferentAttributeBonuses,
+            SkillReferenceChooseStrategy.Average,
+            false,
+            true,
+            eventConfig.worldBloomEventTurn
           )
           const actualBonus = safeNumber(deckDetail.eventBonus) + safeNumber(deckDetail.supportDeckBonus)
           // 验证加成正确
@@ -584,7 +589,11 @@ export class EventBonusDeckRecommend {
 
           const deckDetail = DeckCalculator.getDeckDetailByCards(
             deckCards, allCards, honorBonus, eventConfig.cardBonusCountLimit,
-            eventConfig.worldBloomDifferentAttributeBonuses
+            eventConfig.worldBloomDifferentAttributeBonuses,
+            SkillReferenceChooseStrategy.Average,
+            false,
+            true,
+            eventConfig.worldBloomEventTurn
           )
           const actualBonus = safeNumber(deckDetail.eventBonus) + safeNumber(deckDetail.supportDeckBonus)
           if (Math.abs(actualBonus * 2 - bonus2) < 1e-3) {

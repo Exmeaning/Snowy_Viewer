@@ -129,7 +129,11 @@ export class EventCalculator {
    * @param deckCards 队伍
    * @param allCards 所有卡牌（按支援加成从大到小排序）
    */
-  public static getSupportDeckBonus (deckCards: Array<{ cardId: number }>, allCards: CardDetail[]): { bonus: number, cards: CardDetail[] } {
+  public static getSupportDeckBonus (
+    deckCards: Array<{ cardId: number }>,
+    allCards: CardDetail[],
+    supportDeckCount: number = 20
+  ): { bonus: number, cards: CardDetail[] } {
     // 当前主队伍的卡牌信息
     const deckCardIds = new Set(deckCards.map(it => it.cardId))
     let bonus = 0
@@ -142,11 +146,14 @@ export class EventCalculator {
       if (deckCardIds.has(card.cardId)) continue
       bonus += card.supportDeckBonus
       cards.push(card)
-      // 4.5周年之后，支援队伍为20张卡
-      if (cards.length >= 20) break
+      if (cards.length >= supportDeckCount) break
     }
     // 组满支援队伍或者用完所有卡，就返回
     return { bonus, cards }
+  }
+
+  public static getWorldBloomSupportDeckCount (worldBloomEventTurn?: 1 | 2 | 3): number {
+    return worldBloomEventTurn === 1 ? 12 : worldBloomEventTurn === 2 ? 20 : 25
   }
 
   /**

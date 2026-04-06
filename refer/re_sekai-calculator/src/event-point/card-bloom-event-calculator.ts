@@ -27,6 +27,7 @@ export class CardBloomEventCalculator {
    */
   public async getCardSupportDeckBonus (userCard: UserCard, card: Card, units: string[], {
     eventId = 0,
+    worldBloomEventTurn,
     worldBloomSupportUnit,
     specialCharacterId = 0
   }: EventConfig): Promise<number | undefined> {
@@ -41,8 +42,18 @@ export class CardBloomEventCalculator {
     }
 
     // 获得稀有度对应的加成
-    const worldBloomSupportDeckBonuses =
-      await this.dataProvider.getMasterData<WorldBloomSupportDeckBonus>('worldBloomSupportDeckBonuses')
+    const worldBloomSupportDeckBonusKey =
+      worldBloomEventTurn === 1
+        ? 'worldBloomSupportDeckBonusesWL1'
+        : worldBloomEventTurn === 2
+          ? 'worldBloomSupportDeckBonusesWL2'
+          : 'worldBloomSupportDeckBonusesWL3'
+    let worldBloomSupportDeckBonuses =
+      await this.dataProvider.getMasterData<WorldBloomSupportDeckBonus>(worldBloomSupportDeckBonusKey)
+    if (worldBloomSupportDeckBonuses.length === 0) {
+      worldBloomSupportDeckBonuses =
+        await this.dataProvider.getMasterData<WorldBloomSupportDeckBonus>('worldBloomSupportDeckBonuses')
+    }
     const bonus = findOrThrow(worldBloomSupportDeckBonuses,
       it => it.cardRarityType === card.cardRarityType)
     let total = 0
