@@ -12,7 +12,7 @@ import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, SERVER_OPTIONS } from "@/lib/account";
-import { getWl3SimulationGroupByEventId } from "@/lib/world-bloom-simulation";
+import { getWl3SimulationGroupByEventId, WL3_SIMULATION_GROUPS, type Wl3SimulationGroup } from "@/lib/world-bloom-simulation";
 import AccountSelector from "@/components/AccountSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
@@ -122,7 +122,7 @@ interface DeckRecommendWorkerArgs {
     strongestTarget?: StrongestTarget;
 }
 
-type DeckMode = "event" | "challenge" | "mysekai" | "custom" | "strongest";
+type DeckMode = "event" | "challenge" | "mysekai" | "custom" | "strongest" | "wl3";
 type ServerType = "jp" | "cn" | "tw";
 type StrongestTarget = "power" | "skill";
 
@@ -141,6 +141,7 @@ const VS_SUPPORT_UNIT_OPTIONS: { value: string; label: string; icon: string }[] 
 
 const MODE_OPTIONS: { value: DeckMode; label: string; desc: string }[] = [
     { value: "event", label: "活动", desc: "活动PT最高" },
+    { value: "wl3", label: "WL3模拟", desc: "World Bloom 3 模拟组卡" },
     { value: "challenge", label: "挑战Live", desc: "分数最高" },
     { value: "mysekai", label: "烤森", desc: "烤森PT最高" },
     { value: "strongest", label: "最强组卡", desc: "综合力/技能实效最高" },
@@ -328,6 +329,7 @@ export default function DeckRecommendClient() {
     const [leaderCharacterId, setLeaderCharacterId] = useState<number | null>(null);
     const [showLeaderSelect, setShowLeaderSelect] = useState(false);
     const [strongestTarget, setStrongestTarget] = useState<StrongestTarget>("power");
+    const [wl3GroupId, setWl3GroupId] = useState<number | null>(null);
     const [isCalculating, setIsCalculating] = useState(false);
     const [results, setResults] = useState<DeckResult[] | null>(null);
     const [challengeHighScore, setChallengeHighScore] = useState<ChallengeHighScoreInfo | null>(null);
@@ -343,7 +345,12 @@ export default function DeckRecommendClient() {
     const [userCards, setUserCards] = useState<UserCardInfo[]>([]);
     const workerRef = useRef<Worker | null>(null);
     const autoCalculateKeyRef = useRef<string>("");
-    const selectedWl3Simulation = getWl3SimulationGroupByEventId(eventId);
+    // WL3 mode: derive simulation group from wl3GroupId; event mode: derive from eventId
+    const selectedWl3Simulation = mode === "wl3"
+        ? (wl3GroupId !== null ? WL3_SIMULATION_GROUPS.find(g => g.groupId === wl3GroupId) ?? null : null)
+        : getWl3SimulationGroupByEventId(eventId);
+    // Effective eventId for WL3 mode
+    const effectiveEventId = mode === "wl3" ? (selectedWl3Simulation?.eventId?.toString() ?? "") : eventId;
 
     useEffect(() => {
         fetchMasterData<CardMasterInfo[]>("cards.json").then(setCardsMaster).catch(console.error);
@@ -484,12 +491,20 @@ export default function DeckRecommendClient() {
         setCardConfig(prev => ({ ...prev, [rarity]: { ...prev[rarity], [field]: value } }));
     }, []);
 
-    // Clear supportCharacterId when event type is not world_bloom
+    // Clear supportCharacterId when event type is not world_bloom (only for non-wl3 modes)
     useEffect(() => {
+        if (mode === "wl3") return; // WL3 mode manages its own support character
         if (selectedEventType !== "world_bloom") {
             setSupportCharacterId(null);
         }
-    }, [selectedEventType]);
+    }, [selectedEventType, mode]);
+
+    // In WL3 mode: default to showing support character selector (set to 0 = "please select")
+    useEffect(() => {
+        if (mode === "wl3" && supportCharacterId === null) {
+            setSupportCharacterId(0);
+        }
+    }, [mode, supportCharacterId]);
 
     useEffect(() => {
         if (!selectedWl3Simulation) return;
@@ -500,12 +515,14 @@ export default function DeckRecommendClient() {
 
     const needsMusic = mode !== "mysekai";
     const needsEvent = mode === "event" || mode === "mysekai";
+    const isWl3Mode = mode === "wl3";
     const scoreLabel = mode === "mysekai" ? "烤森PT" : mode === "challenge" ? "分数" : mode === "strongest" ? (strongestTarget === "skill" ? "实效值" : "综合力") : "PT";
     const canAutoCalculateInScreenshot =
         isScreenshotMode &&
         !!userId.trim() &&
         (!needsMusic || !!musicId) &&
-        (!needsEvent || !!eventId.trim()) &&
+        (!needsEvent || !!effectiveEventId.trim()) &&
+        (isWl3Mode ? (wl3GroupId !== null && supportCharacterId !== null && supportCharacterId > 0) : true) &&
         (selectedEventType !== "world_bloom" || supportCharacterId !== null) &&
         (mode !== "challenge" || characterId !== null);
 
@@ -513,7 +530,9 @@ export default function DeckRecommendClient() {
         if (!userId.trim()) { setError("请输入用户ID"); return; }
         if (needsMusic && !musicId) { setError("请选择歌曲"); return; }
         if (mode === "challenge" && !characterId) { setError("请选择角色"); return; }
-        if (needsEvent && !eventId.trim()) { setError("请输入活动ID"); return; }
+        if (isWl3Mode && !wl3GroupId) { setError("请选择WL3模拟分组"); return; }
+        if (isWl3Mode && (supportCharacterId === null || supportCharacterId <= 0)) { setError("请选择支援角色"); return; }
+        if (needsEvent && !effectiveEventId.trim()) { setError("请输入活动ID"); return; }
         if (selectedEventType === "world_bloom" && supportCharacterId === null) { setError("请选择支援角色"); return; }
 
         setError(null); setResults(null); setChallengeHighScore(null); setDuration(null); setDataTime(null);
@@ -524,9 +543,12 @@ export default function DeckRecommendClient() {
             configForCalc[key] = val.disable ? { disable: true } : { rankMax: val.rankMax, episodeRead: val.episodeRead, masterMax: val.masterMax, skillMax: val.skillMax };
         }
 
+        // WL3 mode maps to "event" for the worker
+        const workerMode: DeckMode = isWl3Mode ? "event" : mode;
+        const workerEventId = isWl3Mode ? effectiveEventId : eventId;
         const workerArgs: DeckRecommendWorkerArgs = {
-            mode, userId: userId.trim(), server, musicId: musicId ? parseInt(musicId) : 0, difficulty,
-            characterId: characterId || undefined, eventId: eventId ? parseInt(eventId) : undefined,
+            mode: workerMode, userId: userId.trim(), server, musicId: musicId ? parseInt(musicId) : 0, difficulty,
+            characterId: characterId || undefined, eventId: workerEventId ? parseInt(workerEventId) : undefined,
             liveType, supportCharacterId: supportCharacterId || undefined, cardConfig: configForCalc,
             leaderCharacter: showLeaderSelect && leaderCharacterId ? leaderCharacterId : undefined,
         };
@@ -586,7 +608,7 @@ export default function DeckRecommendClient() {
                 oauthAccessToken,
             },
         });
-    }, [userId, server, mode, characterId, eventId, liveType, supportCharacterId, selectedEventType, musicId, difficulty, cardConfig, needsMusic, needsEvent, customSubMode, customUnit, customCharacterIds, customCharacterUnits, customAttr, leaderCharacterId, showLeaderSelect, strongestTarget]);
+    }, [userId, server, mode, characterId, eventId, effectiveEventId, liveType, supportCharacterId, selectedEventType, musicId, difficulty, cardConfig, needsMusic, needsEvent, isWl3Mode, wl3GroupId, customSubMode, customUnit, customCharacterIds, customCharacterUnits, customAttr, leaderCharacterId, showLeaderSelect, strongestTarget]);
 
     const handleCancel = useCallback(() => {
         if (workerRef.current) { workerRef.current.terminate(); workerRef.current = null; }
@@ -618,6 +640,7 @@ export default function DeckRecommendClient() {
             leaderCharacterId ?? "",
             showLeaderSelect,
             strongestTarget,
+            wl3GroupId ?? "",
         ].join("|");
 
         if (autoCalculateKeyRef.current === autoCalculateKey) return;
@@ -646,6 +669,7 @@ export default function DeckRecommendClient() {
         leaderCharacterId,
         showLeaderSelect,
         strongestTarget,
+        wl3GroupId,
         handleCalculate,
     ]);
 
@@ -780,6 +804,69 @@ export default function DeckRecommendClient() {
                         </div>
                     )}
 
+                    {/* WL3 Mode: Group Selector + Live Type + Support Character */}
+                    {isWl3Mode && (
+                        <div className="mb-5 space-y-4">
+                            {/* WL3 Group Selector */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">模拟分组 <span className="text-red-400">*</span></label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    {WL3_SIMULATION_GROUPS.map(group => {
+                                        const isSelected = wl3GroupId === group.groupId;
+                                        return (
+                                            <button
+                                                key={group.groupId}
+                                                onClick={() => setWl3GroupId(isSelected ? null : group.groupId)}
+                                                className={`rounded-xl border p-3 text-left transition-all ${isSelected
+                                                    ? "border-emerald-400 bg-white shadow-sm ring-2 ring-emerald-100"
+                                                    : "border-slate-200 bg-white/80 hover:border-emerald-300 hover:bg-white"
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between gap-2 mb-2">
+                                                    <div className="text-sm font-bold text-slate-700">{group.title}</div>
+                                                    <span className="text-[11px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">WL3</span>
+                                                </div>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {group.members.map(charId => (
+                                                        <div key={charId} className="w-7 h-7 rounded-full overflow-hidden bg-slate-100 ring-1 ring-white shadow-sm" title={CHARACTER_NAMES[charId]}>
+                                                            <Image src={getCharacterIconUrl(charId)} alt={CHARACTER_NAMES[charId]} width={28} height={28} className="w-full h-full object-cover" unoptimized />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Live Type */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Live类型</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {LIVE_TYPE_OPTIONS.map((lt) => (
+                                        <button key={lt.value} onClick={() => setLiveType(lt.value)}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${liveType === lt.value ? "bg-miku text-white shadow-md shadow-miku/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                                            {lt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Support Character — always visible, no toggle */}
+                            {selectedWl3Simulation && (
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">支援角色 <span className="text-red-400">*</span></label>
+                                    <CharacterSelector
+                                        selectedCharacterId={supportCharacterId}
+                                        onSelect={setSupportCharacterId}
+                                        availableCharacterIds={selectedWl3Simulation.members}
+                                        hideUnitFilter
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Event / Mysekai Mode */}
                     {needsEvent && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
@@ -813,9 +900,7 @@ export default function DeckRecommendClient() {
                                         <div className="flex items-center justify-between">
                                             <div className="flex flex-col">
                                                 <span className="text-sm text-slate-700 font-medium">支援角色</span>
-                                                <span className="text-slate-400 text-xs text-left">
-                                                    {selectedWl3Simulation ? "仅显示当前 WL3 模拟活动角色" : "World Bloom 活动必选"}
-                                                </span>
+                                                <span className="text-slate-400 text-xs text-left">World Bloom 活动必选</span>
                                             </div>
                                             <button onClick={() => setSupportCharacterId(supportCharacterId !== null ? null : 0)}
                                                 className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${supportCharacterId !== null ? 'bg-miku' : 'bg-slate-200'}`}>
@@ -827,7 +912,6 @@ export default function DeckRecommendClient() {
                                                 <CharacterSelector
                                                     selectedCharacterId={supportCharacterId}
                                                     onSelect={setSupportCharacterId}
-                                                    availableCharacterIds={selectedWl3Simulation?.members}
                                                 />
                                             </div>
                                         )}
@@ -1200,7 +1284,7 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                                 <div className="font-bold text-miku text-sm">{totalPower.toLocaleString()}</div>
                             </div>
                         )}
-                        {(mode === "event" || mode === "mysekai" || mode === "custom") && totalEventBonus > 0 && (
+                        {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && totalEventBonus > 0 && (
                             <div className="flex-shrink-0 min-w-[60px] hidden sm:block">
                                 <div className="text-xs text-slate-400">{totalBonusLabel}</div>
                                 <div className="font-bold text-miku text-sm">{totalEventBonusText}</div>
@@ -1260,7 +1344,7 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                                 <th className="text-left py-1 px-1">卡面名称</th>
                                 <th className="text-right py-1 px-1">综合力</th>
                                 <th className="text-right py-1 px-1">技能</th>
-                                {(mode === "event" || mode === "mysekai" || mode === "custom") && <th className="text-right py-1 px-1">{mode === "custom" ? "自定义加成" : "活动加成"}</th>}
+                                {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && <th className="text-right py-1 px-1">{mode === "custom" ? "自定义加成" : "活动加成"}</th>}
                             </tr></thead>
                             <tbody>
                                 {deck.cards?.map((card: DeckCardResult, i: number) => {
@@ -1284,7 +1368,7 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                                                 <span>{card.skill?.scoreUp || 0}%</span>
                                                 {card.skill?.isPreTrainingSkill && <span className="ml-1 text-[9px] font-medium text-amber-500 bg-amber-50 px-1 py-[1px] rounded" title="该卡使用觉醒前（花前）技能效果">花前</span>}
                                             </td>
-                                            {(mode === "event" || mode === "mysekai" || mode === "custom") && (
+                                            {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && (
                                                 <td className="py-1.5 px-1 text-right font-bold text-amber-600">
                                                     {eventBonusText}
                                                 </td>
@@ -1296,7 +1380,7 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                         </table>
                     </div>
                     <div className="mt-2 flex gap-4 sm:hidden text-xs">
-                        {(mode === "event" || mode === "mysekai" || mode === "custom") && totalEventBonus > 0 && (
+                        {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && totalEventBonus > 0 && (
                             <span className="text-slate-500">
                                 {totalBonusLabel}: <span className="font-bold text-miku">{totalEventBonusText}</span>
                                 {showSupportBonusBreakdown && <span className="text-slate-400">（主队{baseEventBonusText} + 支援{supportDeckBonusText}）</span>}

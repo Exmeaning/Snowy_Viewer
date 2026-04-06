@@ -7,12 +7,14 @@ interface CharacterSelectorProps {
     selectedCharacterId: number | null;
     onSelect: (id: number) => void;
     availableCharacterIds?: readonly number[];
+    hideUnitFilter?: boolean;
 }
 
 export default function CharacterSelector({
     selectedCharacterId,
     onSelect,
     availableCharacterIds,
+    hideUnitFilter = false,
 }: CharacterSelectorProps) {
     const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 
@@ -55,7 +57,7 @@ export default function CharacterSelector({
     return (
         <div className="space-y-4">
             {/* Unit Filter */}
-            <div className="flex flex-wrap gap-2">
+            {!hideUnitFilter && <div className="flex flex-wrap gap-2">
                 {visibleUnits.map(unit => {
                     const iconName = UNIT_ICON_FILES[unit.id] || "";
                     const isSelected = selectedUnitId === unit.id;
@@ -81,7 +83,7 @@ export default function CharacterSelector({
                         </button>
                     );
                 })}
-            </div>
+            </div>}
 
             {/* Character Grid */}
             <div className="flex flex-wrap gap-2">

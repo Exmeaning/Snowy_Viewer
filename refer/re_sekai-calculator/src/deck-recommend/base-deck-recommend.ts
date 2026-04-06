@@ -14,6 +14,11 @@ import { isDeckAttrLessThan3, toRecommendDeck, updateDeck } from './deck-result-
 import { AreaItemService } from '../area-item-information/area-item-service'
 import { type EventConfig, EventType } from '../event-point/event-service'
 import { findBestCardsGA, type GAConfig } from './find-best-cards-ga'
+import {
+  getMainDeckFilterUnit,
+  shouldApplySameUnitOrAttrPrune,
+  shouldKeepCardForMainDeckFilter
+} from './world-bloom-filter'
 
 /** 推荐算法类型 */
 export enum RecommendAlgorithm {
@@ -78,6 +83,7 @@ export class BaseDeckRecommend {
 
     // 固定卡牌/角色不参与剪枝的起始位置（参考 C++ 的 cIndex）
     const cIndex = fixedCards.length + fixedCharacters.length
+    const applySameUnitOrAttrPrune = shouldApplySameUnitOrAttrPrune(eventConfig)
 
     // 如果 deckCards 为空且有固定卡牌，先插入固定卡牌
     if (deckCards.length === 0 && fixedCards.length > 0) {
@@ -175,8 +181,10 @@ export class BaseDeckRecommend {
       if (deckCards.length >= cIndex + 1 && deckCards[cIndex].skill.isCertainlyLessThen(card.skill)) {
         continue
       }
-      // 为了优化性能，必须和C位同色或同组（从 cIndex 位置开始判断）
-      if (deckCards.length >= cIndex + 1 && card.attr !== deckCards[cIndex].attr && !containsAny(deckCards[cIndex].units, card.units)) {
+      // 为了优化性能，通常要求和C位同色或同组；
+      // 但混团 World Bloom / WL3 模拟没有固定团体约束，继续使用这条剪枝会过早排除跨团体最优解。
+      if (applySameUnitOrAttrPrune && deckCards.length >= cIndex + 1 &&
+        card.attr !== deckCards[cIndex].attr && !containsAny(deckCards[cIndex].units, card.units)) {
         continue
       }
       // 为了优化性能，如果是World Link活动，强制3色及以上
@@ -260,7 +268,7 @@ export class BaseDeckRecommend {
     liveType: LiveType,
     eventConfig: EventConfig = {}
   ): Promise<RecommendDeck[]> {
-    const { eventType = EventType.NONE, eventUnit, specialCharacterId, worldBloomType, worldBloomSupportUnit } = eventConfig
+    const { eventType = EventType.NONE, specialCharacterId, worldBloomType } = eventConfig
 
     // 向后兼容：将 leaderCharacter 转换为 fixedCharacters
     let fixedCharacters = [...configFixedCharacters]
@@ -290,20 +298,14 @@ export class BaseDeckRecommend {
     let cards =
         await this.cardCalculator.batchGetCardDetail(userCards, cardConfig, eventConfig, areaItemLevels)
 
-    // 过滤箱活（World Bloom）的卡，不上其它组合的
-    // 只在 World Bloom 活动中过滤，马拉松/嘉年华活动不过滤（非活动团体的高综合力卡可能产生更高PT）
-    let filterUnit: string | undefined
-    if (eventType === EventType.BLOOM) {
-      filterUnit = worldBloomSupportUnit ?? eventUnit
-    }
-    // 构建固定角色ID集合（用于箱活过滤豁免）
+    // 过滤单团体 World Bloom 的主卡候选；
+    // 混团 WL / WL3 模拟时，即使选择了支援角色，也不能按支援角色所属团体过滤主卡池。
+    const filterUnit = getMainDeckFilterUnit(eventConfig)
+    // 构建固定角色ID集合（用于主卡池过滤豁免）
     const fixedCharacterSet = new Set(fixedCharacters)
     if (filterUnit !== undefined) {
       const originCardsLength = cards.length
-      cards = cards.filter(it =>
-        (it.units.length === 1 && it.units[0] === 'piapro') ||
-          it.units.includes(filterUnit) ||
-          fixedCharacterSet.has(it.characterId))
+      cards = cards.filter(it => shouldKeepCardForMainDeckFilter(it, filterUnit, fixedCharacterSet))
       debugLog(`Cards filtered with unit ${filterUnit}: ${cards.length}/${originCardsLength}`)
       debugLog(cards.map(it => it.cardId).toString())
     }

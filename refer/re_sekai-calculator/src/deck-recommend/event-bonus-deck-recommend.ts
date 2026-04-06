@@ -9,6 +9,10 @@ import { LiveType } from '../live-score/live-calculator'
 import { type UserCard } from '../user-data/user-card'
 import { type MusicMeta } from '../common/music-meta'
 import { type RecommendDeck } from './base-deck-recommend'
+import {
+  getMainDeckFilterUnit,
+  shouldKeepCardForMainDeckFilter
+} from './world-bloom-filter'
 import { AreaItemService } from '../area-item-information/area-item-service'
 import { type EventConfig, EventType } from '../event-point/event-service'
 import { EventService } from '../event-point/event-service'
@@ -370,17 +374,12 @@ export class EventBonusDeckRecommend {
     let cards =
       await this.cardCalculator.batchGetCardDetail(userCards, cardConfig, eventConfig, areaItemLevels)
 
-    // 过滤箱活的卡
-    const { eventUnit, worldBloomSupportUnit } = eventConfig
-    let filterUnit = eventUnit
-    if (worldBloomSupportUnit !== undefined) {
-      filterUnit = worldBloomSupportUnit
-    }
+    // 仅过滤单团体 World Bloom 的主卡候选；
+    // 混团 WL / WL3 模拟不能因为支援角色所属团体而裁掉其它加成角色。
+    const filterUnit = getMainDeckFilterUnit(eventConfig)
     if (filterUnit !== undefined) {
       const originCardsLength = cards.length
-      cards = cards.filter(it =>
-        (it.units.length === 1 && it.units[0] === 'piapro') ||
-        filterUnit === undefined || it.units.includes(filterUnit))
+      cards = cards.filter(it => shouldKeepCardForMainDeckFilter(it, filterUnit))
       debugLog(`Cards filtered with unit ${filterUnit}: ${cards.length}/${originCardsLength}`)
     }
 

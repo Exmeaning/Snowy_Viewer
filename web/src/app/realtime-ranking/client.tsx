@@ -452,6 +452,9 @@ function RealtimeRankingContent() {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 md:pr-24 py-8">
+                <div className="mb-4 rounded-xl border border-miku/20 bg-miku/5 px-4 py-3 text-sm text-miku font-medium text-center">
+                    worldlink活动 单人榜单将在活动开始后12h内更新 感谢对moesekai的支持！
+                </div>
                 <RankingHeader
                     region={region}
                     onRegionChange={setRegion}
