@@ -60,7 +60,8 @@ export class DeckCalculator {
     worldBloomDifferentAttributeBonuses?: WorldBloomDifferentAttributeBonus[],
     skillReferenceChooseStrategy: SkillReferenceChooseStrategy = SkillReferenceChooseStrategy.Average,
     keepAfterTrainingState: boolean = false,
-    bestSkillAsLeader: boolean = true
+    bestSkillAsLeader: boolean = true,
+    worldBloomEventTurn?: 1 | 2 | 3
   ): DeckDetail {
     const cardNum = cardDetails.length
 
@@ -293,7 +294,11 @@ export class DeckCalculator {
       cardDetails, cardBonusCountLimit, worldBloomDifferentAttributeBonuses)
     const supportDeckBonus =
         worldBloomDifferentAttributeBonuses !== undefined
-          ? EventCalculator.getSupportDeckBonus(cardDetails, allCards).bonus
+          ? EventCalculator.getSupportDeckBonus(
+            cardDetails,
+            allCards,
+            EventCalculator.getWorldBloomSupportDeckCount(worldBloomEventTurn)
+          ).bonus
           : 0
 
     return {
@@ -392,7 +397,11 @@ export class DeckCalculator {
     return DeckCalculator.getDeckDetailByCards(
       await this.cardCalculator.batchGetCardDetail(deckCards, {}, eventConfig, areaItemLevels),
       allCards0, await this.getHonorBonusPower(), eventConfig?.cardBonusCountLimit,
-      eventConfig?.worldBloomDifferentAttributeBonuses)
+      eventConfig?.worldBloomDifferentAttributeBonuses,
+      SkillReferenceChooseStrategy.Average,
+      false,
+      true,
+      eventConfig?.worldBloomEventTurn)
   }
 }
 

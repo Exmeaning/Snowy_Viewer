@@ -100,7 +100,8 @@ export class BaseDeckRecommend {
         const deckDetail = DeckCalculator.getDeckDetailByCards(
           deckCards, allCards, honorBonus, eventConfig.cardBonusCountLimit,
           eventConfig.worldBloomDifferentAttributeBonuses,
-          skillReferenceChooseStrategy, keepAfterTrainingState, false
+          skillReferenceChooseStrategy, keepAfterTrainingState, false,
+          eventConfig.worldBloomEventTurn
         )
         const score = scoreFunc(deckDetail)
         return toRecommendDeck(deckDetail, score)
@@ -111,7 +112,8 @@ export class BaseDeckRecommend {
       const dd1 = DeckCalculator.getDeckDetailByCards(
         deckCards, allCards, honorBonus, eventConfig.cardBonusCountLimit,
         eventConfig.worldBloomDifferentAttributeBonuses,
-        skillReferenceChooseStrategy, keepAfterTrainingState, true
+        skillReferenceChooseStrategy, keepAfterTrainingState, true,
+        eventConfig.worldBloomEventTurn
       )
       const s1 = scoreFunc(dd1)
 
@@ -136,7 +138,8 @@ export class BaseDeckRecommend {
         dd2 = DeckCalculator.getDeckDetailByCards(
           deckCards, allCards, honorBonus, eventConfig.cardBonusCountLimit,
           eventConfig.worldBloomDifferentAttributeBonuses,
-          skillReferenceChooseStrategy, keepAfterTrainingState, false
+          skillReferenceChooseStrategy, keepAfterTrainingState, false,
+          eventConfig.worldBloomEventTurn
         )
         s2 = scoreFunc(dd2)
         swap(deckCards, 0, bestLeaderIdx) // 恢复

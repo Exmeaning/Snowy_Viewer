@@ -12,6 +12,7 @@ import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, SERVER_OPTIONS } from "@/lib/account";
+import { getWl3SimulationGroupByEventId } from "@/lib/world-bloom-simulation";
 import AccountSelector from "@/components/AccountSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
@@ -342,6 +343,7 @@ export default function DeckRecommendClient() {
     const [userCards, setUserCards] = useState<UserCardInfo[]>([]);
     const workerRef = useRef<Worker | null>(null);
     const autoCalculateKeyRef = useRef<string>("");
+    const selectedWl3Simulation = getWl3SimulationGroupByEventId(eventId);
 
     useEffect(() => {
         fetchMasterData<CardMasterInfo[]>("cards.json").then(setCardsMaster).catch(console.error);
@@ -489,6 +491,13 @@ export default function DeckRecommendClient() {
         }
     }, [selectedEventType]);
 
+    useEffect(() => {
+        if (!selectedWl3Simulation) return;
+        if (supportCharacterId === null || supportCharacterId <= 0) return;
+        if ((selectedWl3Simulation.members as readonly number[]).includes(supportCharacterId)) return;
+        setSupportCharacterId(0);
+    }, [selectedWl3Simulation, supportCharacterId]);
+
     const needsMusic = mode !== "mysekai";
     const needsEvent = mode === "event" || mode === "mysekai";
     const scoreLabel = mode === "mysekai" ? "烤森PT" : mode === "challenge" ? "分数" : mode === "strongest" ? (strongestTarget === "skill" ? "实效值" : "综合力") : "PT";
@@ -497,6 +506,7 @@ export default function DeckRecommendClient() {
         !!userId.trim() &&
         (!needsMusic || !!musicId) &&
         (!needsEvent || !!eventId.trim()) &&
+        (selectedEventType !== "world_bloom" || supportCharacterId !== null) &&
         (mode !== "challenge" || characterId !== null);
 
     const handleCalculate = useCallback(() => {
@@ -504,6 +514,7 @@ export default function DeckRecommendClient() {
         if (needsMusic && !musicId) { setError("请选择歌曲"); return; }
         if (mode === "challenge" && !characterId) { setError("请选择角色"); return; }
         if (needsEvent && !eventId.trim()) { setError("请输入活动ID"); return; }
+        if (selectedEventType === "world_bloom" && supportCharacterId === null) { setError("请选择支援角色"); return; }
 
         setError(null); setResults(null); setChallengeHighScore(null); setDuration(null); setDataTime(null);
         setIsCalculating(true); setProgressStage("fetching"); setProgressPercent(5); setProgressLabel("正在获取用户数据...");
@@ -575,7 +586,7 @@ export default function DeckRecommendClient() {
                 oauthAccessToken,
             },
         });
-    }, [userId, server, mode, characterId, eventId, liveType, supportCharacterId, musicId, difficulty, cardConfig, needsMusic, needsEvent, customSubMode, customUnit, customCharacterIds, customCharacterUnits, customAttr, leaderCharacterId, showLeaderSelect, strongestTarget]);
+    }, [userId, server, mode, characterId, eventId, liveType, supportCharacterId, selectedEventType, musicId, difficulty, cardConfig, needsMusic, needsEvent, customSubMode, customUnit, customCharacterIds, customCharacterUnits, customAttr, leaderCharacterId, showLeaderSelect, strongestTarget]);
 
     const handleCancel = useCallback(() => {
         if (workerRef.current) { workerRef.current.terminate(); workerRef.current = null; }
@@ -802,7 +813,9 @@ export default function DeckRecommendClient() {
                                         <div className="flex items-center justify-between">
                                             <div className="flex flex-col">
                                                 <span className="text-sm text-slate-700 font-medium">支援角色</span>
-                                                <span className="text-slate-400 text-xs text-left">World Bloom 活动可选</span>
+                                                <span className="text-slate-400 text-xs text-left">
+                                                    {selectedWl3Simulation ? "仅显示当前 WL3 模拟活动角色" : "World Bloom 活动必选"}
+                                                </span>
                                             </div>
                                             <button onClick={() => setSupportCharacterId(supportCharacterId !== null ? null : 0)}
                                                 className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${supportCharacterId !== null ? 'bg-miku' : 'bg-slate-200'}`}>
@@ -811,7 +824,11 @@ export default function DeckRecommendClient() {
                                         </div>
                                         {supportCharacterId !== null && (
                                             <div className="mt-4 pt-3 border-t border-slate-200/50">
-                                                <CharacterSelector selectedCharacterId={supportCharacterId} onSelect={setSupportCharacterId} />
+                                                <CharacterSelector
+                                                    selectedCharacterId={supportCharacterId}
+                                                    onSelect={setSupportCharacterId}
+                                                    availableCharacterIds={selectedWl3Simulation?.members}
+                                                />
                                             </div>
                                         )}
                                     </div>

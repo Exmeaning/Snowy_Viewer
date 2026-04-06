@@ -2,20 +2,55 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { IEventInfo, IEventDeckBonus, EventType, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
-import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, CardAttribute, ATTR_ICON_PATHS, ATTR_NAMES } from "@/types/types";
+import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, CardAttribute, ATTR_ICON_PATHS, ATTR_NAMES, CHARACTER_NAMES } from "@/types/types";
 import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
-import { getEventLogoUrl, getEventStoryBannerUrl } from "@/lib/assets";
+import { getCharacterIconUrl, getEventLogoUrl, getEventStoryBannerUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import SelectorModal from "./SelectorModal";
 import EventFilters, { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, buildEventBannerCharMap } from "@/lib/eventUnit";
+import { WL3_SIMULATION_GROUPS, type Wl3SimulationGroup, getWl3SimulationGroupByEventId } from "@/lib/world-bloom-simulation";
 
 // Build unit icon mapping from UNIT_DATA (same as EventItem)
 const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = Object.fromEntries(
     UNIT_DATA.filter(u => UNIT_ICON_FILES[u.id]).map(u => [u.id, { icon: UNIT_ICON_FILES[u.id], name: u.name }])
 );
+
+function getWl3SimulationInfo(eventId: string): Wl3SimulationGroup | null {
+    return getWl3SimulationGroupByEventId(eventId);
+}
+
+function Wl3SimulationMemberAvatars({
+    members,
+    size = 28,
+}: {
+    members: readonly number[];
+    size?: number;
+}) {
+    return (
+        <div className="flex flex-wrap gap-1.5">
+            {members.map((characterId) => (
+                <div
+                    key={characterId}
+                    className="rounded-full ring-2 ring-white shadow-sm overflow-hidden bg-slate-100"
+                    title={CHARACTER_NAMES[characterId]}
+                    style={{ width: size, height: size }}
+                >
+                    <Image
+                        src={getCharacterIconUrl(characterId)}
+                        alt={CHARACTER_NAMES[characterId]}
+                        width={size}
+                        height={size}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                    />
+                </div>
+            ))}
+        </div>
+    );
+}
 
 interface EventSelectorProps {
     selectedEventId: string;
@@ -192,13 +227,22 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
         return events.find(e => e.id.toString() === selectedEventId) || null;
     }, [events, selectedEventId]);
 
+    const selectedWl3Simulation = useMemo(() => {
+        return getWl3SimulationInfo(selectedEventId);
+    }, [selectedEventId]);
+
     // Notify parent of event type when selected event resolves (including initial load)
     useEffect(() => {
-        onEventTypeChange?.(selectedEvent?.eventType ?? null);
-    }, [selectedEvent, onEventTypeChange]);
+        onEventTypeChange?.(selectedEvent?.eventType ?? (selectedWl3Simulation ? "world_bloom" : null));
+    }, [selectedEvent, selectedWl3Simulation, onEventTypeChange]);
 
     const handleSelect = (event: IEventInfo) => {
         onSelect(event.id.toString(), event.eventType);
+        setModalOpen(false);
+    };
+
+    const handleSelectWl3Simulation = (group: Wl3SimulationGroup) => {
+        onSelect(group.eventId.toString(), "world_bloom");
         setModalOpen(false);
     };
 
@@ -266,6 +310,28 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                             )}
                         </div>
                     </>
+                ) : selectedWl3Simulation ? (
+                    <>
+                        <div className="w-16 aspect-video rounded-lg flex-shrink-0 border border-emerald-200 bg-gradient-to-br from-emerald-400 via-teal-400 to-cyan-500 flex items-center justify-center shadow-sm">
+                            <span className="text-white text-sm font-black tracking-wide">WL3</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                                <span className="text-xs font-mono text-emerald-600 bg-emerald-50 px-1.5 rounded-md">
+                                    #{selectedWl3Simulation.eventId}
+                                </span>
+                                <span className="text-xs text-emerald-600 bg-emerald-50 px-1.5 rounded-md">
+                                    模拟
+                                </span>
+                            </div>
+                            <div className="text-sm font-bold text-slate-700 truncate group-hover:text-miku transition-colors">
+                                WL3 模拟 · {selectedWl3Simulation.title}
+                            </div>
+                            <div className="mt-2">
+                                <Wl3SimulationMemberAvatars members={selectedWl3Simulation.members} size={24} />
+                            </div>
+                        </div>
+                    </>
                 ) : (
                     <>
                         <div className="w-16 aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-300">
@@ -289,6 +355,45 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                 title="选择活动"
             >
                 <div className="space-y-6">
+                    <section className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-cyan-50 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-700">WL3 模拟组卡</h3>
+                            </div>
+                            <span className="px-2 py-1 rounded-full text-[11px] font-bold bg-white text-emerald-600 border border-emerald-200">
+                                World Bloom
+                            </span>
+                        </div>
+                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {WL3_SIMULATION_GROUPS.map(group => {
+                                const isSelected = selectedWl3Simulation?.eventId === group.eventId;
+                                return (
+                                    <button
+                                        key={group.eventId}
+                                        type="button"
+                                        onClick={() => handleSelectWl3Simulation(group)}
+                                        className={`rounded-xl border p-3 text-left transition-all ${isSelected
+                                            ? "border-emerald-400 bg-white shadow-sm ring-2 ring-emerald-100"
+                                            : "border-emerald-100 bg-white/80 hover:border-emerald-300 hover:bg-white"
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="text-sm font-bold text-slate-700">
+                                                {group.title}
+                                            </div>
+                                            <span className="text-[11px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                                                #{group.eventId}
+                                            </span>
+                                        </div>
+                                        <div className="mt-3">
+                                            <Wl3SimulationMemberAvatars members={group.members} />
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </section>
+
                     <EventFilters
                         selectedTypes={selectedTypes}
                         onTypeChange={setSelectedTypes}

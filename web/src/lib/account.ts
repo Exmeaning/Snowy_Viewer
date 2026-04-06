@@ -140,8 +140,9 @@ export interface HarukiApiResult {
 }
 
 import { fetchOAuthGameData, fetchOAuthGameDataSuite, refreshOAuthToken, revokeOAuthToken, type OAuthBinding, type OAuthProfile, type OAuthTokenSet } from "./oauth";
+import { getHarukiPublicApiBase } from "./haruki-public-api";
 
-const HARUKI_PUBLIC_API_BASE = "https://suite-api.haruki.seiunx.com/public";
+const HARUKI_PUBLIC_API_BASE = getHarukiPublicApiBase();
 const ACCOUNTS_KEY = "moesekai_accounts";
 const ACTIVE_KEY = "moesekai_active_account";
 

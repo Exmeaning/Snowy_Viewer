@@ -46,6 +46,9 @@ export class EventService {
     const isWorldBloom = eventType === EventType.BLOOM
     const worldBloomType = isWorldBloom ? await this.getWorldBloomType(eventId) : undefined
     const isWorldBloomFinale = EventService.isWorldBloomFinale(worldBloomType)
+    const worldBloomEventTurn = isWorldBloom
+      ? EventService.getWorldBloomEventTurn(eventId)
+      : undefined
     return {
       eventId,
       eventType,
@@ -57,6 +60,7 @@ export class EventService {
       worldBloomDifferentAttributeBonuses:
           isWorldBloom ? await this.getWorldBloomDifferentAttributeBonuses() : undefined,
       worldBloomType,
+      worldBloomEventTurn,
       worldBloomSupportUnit: isWorldBloom ? await this.getWorldBloomSupportUnit(specialCharacterId) : undefined
     }
   }
@@ -178,6 +182,20 @@ export class EventService {
   public static isWorldBloomFinale (worldBloomType?: string): boolean {
     return worldBloomType === 'finale'
   }
+
+  /**
+   * 参考 C++ 组卡库的规则：
+   * 真实活动 1-140 视为 WL1，141-180 视为 WL2，180 之后视为 WL3；
+   * fake event 则从 eventId 编码中直接反解 turn。
+   */
+  public static getWorldBloomEventTurn (eventId: number): 1 | 2 | 3 {
+    if (eventId > 1000) {
+      return (((Math.floor(eventId / 100000)) % 10) + 1) as 1 | 2 | 3
+    }
+    if (eventId <= 140) return 1
+    if (eventId <= 180) return 2
+    return 3
+  }
 }
 
 /**
@@ -231,6 +249,11 @@ export interface EventConfig {
    * game_character（普通）、finale（Final）
    */
   worldBloomType?: string
+  /**
+   * World Link轮次
+   * 1 / 2 / 3
+   */
+  worldBloomEventTurn?: 1 | 2 | 3
   /**
    * 支援角色组合，和specialCharacterId保持一致（用于World Link活动）
    */
