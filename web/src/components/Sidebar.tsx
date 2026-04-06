@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -672,7 +673,7 @@ export default function Sidebar({
                         {/* Avatar */}
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-miku to-blue-400 flex items-center justify-center flex-shrink-0 overflow-hidden">
                             {activeAccount ? (
-                                <img
+                                <Image
                                     src={
                                         activeAccountCardThumbnail ||
                                         getCachedAvatarUrl(activeAccount.id) ||
@@ -682,7 +683,10 @@ export default function Sidebar({
                                         )
                                     }
                                     alt={activeAccount.userGamedata?.name || activeAccount.nickname || activeAccount.gameId}
+                                    width={40}
+                                    height={40}
                                     className="w-full h-full object-cover"
+                                    unoptimized
                                 />
                             ) : (
                                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
