@@ -12,6 +12,7 @@ import { JudgementSounds } from "@/lib/chart-preview/judgementSounds";
 import { normalizeOffsetMs } from "@/lib/chart-preview/url";
 import { HudTimeline } from "@/lib/chart-preview/hudTimeline";
 import { generateOverlayV3BackgroundObjectUrl } from "@/lib/chart-preview/overlayBackgroundGen";
+import { MOE_LOGO_URL } from "@/lib/assets";
 import "./hud.css";
 
 const defaultConfig: PreviewRuntimeConfig = {
@@ -1635,11 +1636,11 @@ export default function ChartPreviewPlayer({
                                         <div
                                             className={`chart-preview-logo-fill ${isCompactControls ? "h-10 w-40" : "h-14 w-56 sm:h-16 sm:w-64"}`}
                                             style={{
-                                                maskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
+                                                maskImage: `url(${MOE_LOGO_URL})`,
                                                 maskSize: "contain",
                                                 maskPosition: "center",
                                                 maskRepeat: "no-repeat",
-                                                WebkitMaskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
+                                                WebkitMaskImage: `url(${MOE_LOGO_URL})`,
                                                 WebkitMaskSize: "contain",
                                                 WebkitMaskPosition: "center",
                                                 WebkitMaskRepeat: "no-repeat",

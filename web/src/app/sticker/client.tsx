@@ -6,7 +6,7 @@ import MainLayout from "@/components/MainLayout";
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import { useTheme } from "@/contexts/ThemeContext";
 import { CHARACTER_NAMES } from "@/types/types";
-import { getStampUrl } from "@/lib/assets";
+import { getStampUrl, getCharacterIconUrl } from "@/lib/assets";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
@@ -179,7 +179,7 @@ function StickerContent() {
                             >
                                 {hasName ? (
                                     <Image
-                                        src={`https://assets.exmeaning.com/character_icons/chr_ts_${id}.png`}
+                                        src={getCharacterIconUrl(id)}
                                         alt={CHARACTER_NAMES[id]}
                                         fill
                                         className="object-cover"
@@ -221,7 +221,7 @@ function StickerContent() {
                             >
                                 {hasName ? (
                                     <Image
-                                        src={`https://assets.exmeaning.com/character_icons/chr_ts_${id}.png`}
+                                        src={getCharacterIconUrl(id)}
                                         alt={CHARACTER_NAMES[id]}
                                         fill
                                         className="object-cover"

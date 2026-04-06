@@ -18,6 +18,7 @@ import {
 import { CHARACTER_NAMES } from "@/types/types";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { getCharacterIconUrl } from "@/lib/assets";
 
 type HonorTab = "normal" | "bonds";
 
@@ -422,7 +423,7 @@ function HonorsContent() {
                             >
                                 {hasName ? (
                                     <Image
-                                        src={`https://assets.exmeaning.com/character_icons/chr_ts_${id}.png`}
+                                        src={getCharacterIconUrl(id)}
                                         alt={CHARACTER_NAMES[id]}
                                         fill
                                         className="object-cover"
@@ -463,7 +464,7 @@ function HonorsContent() {
                             >
                                 {hasName ? (
                                     <Image
-                                        src={`https://assets.exmeaning.com/character_icons/chr_ts_${id}.png`}
+                                        src={getCharacterIconUrl(id)}
                                         alt={CHARACTER_NAMES[id]}
                                         fill
                                         className="object-cover"

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { getUpcomingBirthdays, isVirtualSinger } from "@/lib/birthdays";
 import { ICardInfo, CHAR_COLORS } from "@/types/types";
 import { fetchMasterData } from "@/lib/fetch";
-import { getCardFullUrl } from "@/lib/assets";
+import { getCardFullUrl, getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 
 // Simple helper to hex to rgb
@@ -149,7 +149,7 @@ export default function BirthdaySection() {
                                         style={{ boxShadow: `0 4px 6px -1px ${charColor}40` }}
                                     >
                                         <Image
-                                            src={`https://assets.exmeaning.com/character_icons/chr_ts_${birthday.id}.png`}
+                                            src={getCharacterIconUrl(birthday.id)}
                                             alt={birthday.name}
                                             fill
                                             className="object-contain rounded-full"
@@ -210,7 +210,7 @@ export default function BirthdaySection() {
                         >
                             <div className="relative w-14 h-14 transition-transform duration-300 group-hover:scale-110">
                                 <Image
-                                    src={`https://assets.exmeaning.com/character_icons/chr_ts_${birthday.id}.png`}
+                                    src={getCharacterIconUrl(birthday.id)}
                                     alt={birthday.name}
                                     fill
                                     className="object-contain"

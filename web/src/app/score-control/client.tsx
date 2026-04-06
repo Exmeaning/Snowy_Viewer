@@ -14,7 +14,7 @@ import MusicSelector from "@/components/deck-recommend/MusicSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
 import CharacterSelector from "@/components/deck-recommend/CharacterSelector";
 import { useTheme } from "@/contexts/ThemeContext";
-import { getMusicJacketUrl } from "@/lib/assets";
+import { getMusicJacketUrl, MOE_MUSIC_META_URL } from "@/lib/assets";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import {
     getValidScores,
@@ -25,7 +25,7 @@ import {
 } from "@/lib/score-control/score-control-calculator";
 import "./score-control.css";
 
-const MUSIC_META_API = "https://assets.exmeaning.com/musicmeta/music_metas.json";
+const MUSIC_META_API = MOE_MUSIC_META_URL;
 
 const DIFFICULTY_OPTIONS = [
     { value: "easy", label: "Easy" },

@@ -3,6 +3,7 @@
 import React, { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { MOE_LOGO_URL } from '@/lib/assets';
 
 function LeavePageContent() {
     const searchParams = useSearchParams();
@@ -57,11 +58,11 @@ function LeavePageContent() {
                         <div
                             className="h-8 w-[5rem] bg-miku"
                             style={{
-                                maskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
+                                maskImage: `url(${MOE_LOGO_URL})`,
                                 maskSize: "contain",
                                 maskPosition: "center",
                                 maskRepeat: "no-repeat",
-                                WebkitMaskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
+                                WebkitMaskImage: `url(${MOE_LOGO_URL})`,
                                 WebkitMaskSize: "contain",
                                 WebkitMaskPosition: "center",
                                 WebkitMaskRepeat: "no-repeat",

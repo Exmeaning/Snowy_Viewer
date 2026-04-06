@@ -10,6 +10,7 @@ import UpcomingLiveTab from "@/components/home/UpcomingLiveTab";
 import BilibiliDynamicTab from "@/components/home/BilibiliDynamicTab";
 import BirthdaySection from "@/components/home/BirthdaySection";
 import { getTodayBirthdays } from "@/lib/birthdays";
+import { MOE_LOGO_URL } from "@/lib/assets";
 
 type TabType = "event" | "cards" | "music" | "live";
 
@@ -191,11 +192,11 @@ export default function Home() {
               <div
                 className="h-16 w-64 sm:h-20 sm:w-80 lg:h-24 lg:w-96 bg-gradient-to-r from-miku to-miku-dark transition-all hover:brightness-110"
                 style={{
-                  maskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
+                  maskImage: `url(${MOE_LOGO_URL})`,
                   maskSize: "contain",
                   maskPosition: "center",
                   maskRepeat: "no-repeat",
-                  WebkitMaskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
+                  WebkitMaskImage: `url(${MOE_LOGO_URL})`,
                   WebkitMaskSize: "contain",
                   WebkitMaskPosition: "center",
                   WebkitMaskRepeat: "no-repeat",

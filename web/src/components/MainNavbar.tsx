@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import SettingsPanel from "./SettingsPanel";
 import CommandPalette from "./CommandPalette";
 import { getPrimaryShortcutLabel } from "@/lib/shortcuts";
+import { MOE_LOGO_URL } from "@/lib/assets";
 import Breadcrumb from "./Breadcrumb";
 
 interface MainNavbarProps {
@@ -78,11 +79,11 @@ export default function MainNavbar({
                         <div
                             className="h-8 w-[5rem] sm:h-10 sm:w-[6.1rem] bg-miku transition-colors"
                             style={{
-                                maskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
+                                maskImage: `url(${MOE_LOGO_URL})`,
                                 maskSize: "contain",
                                 maskPosition: "center",
                                 maskRepeat: "no-repeat",
-                                WebkitMaskImage: "url(https://assets.exmeaning.com/SnowyBot/logo.svg)",
+                                WebkitMaskImage: `url(${MOE_LOGO_URL})`,
                                 WebkitMaskSize: "contain",
                                 WebkitMaskPosition: "center",
                                 WebkitMaskRepeat: "no-repeat",

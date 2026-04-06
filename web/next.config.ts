@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'assets.exmeaning.com',
+        hostname: 'moe.exmeaning.com',
       },
       {
         protocol: 'https',

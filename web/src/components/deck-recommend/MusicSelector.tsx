@@ -3,13 +3,13 @@ import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { IMusicInfo, MusicTagType, MusicCategoryType, IMusicTagInfo, IMusicMeta } from "@/types/music";
 import { fetchMasterData } from "@/lib/fetch";
-import { getMusicJacketUrl } from "@/lib/assets";
+import { getMusicJacketUrl, MOE_MUSIC_META_URL } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import SelectorModal from "./SelectorModal";
 import MusicFilters from "@/components/music/MusicFilters";
 
-const MUSIC_META_API = "https://assets.exmeaning.com/musicmeta/music_metas.json";
+const MUSIC_META_API = MOE_MUSIC_META_URL;
 
 /** Sort options for MusicSelector (no level/constant since there's no difficulty context) */
 const SELECTOR_SORT_OPTIONS = [

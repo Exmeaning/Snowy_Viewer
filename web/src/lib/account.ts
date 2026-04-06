@@ -160,7 +160,7 @@ function makeAccountId(server: ServerType, gameId: string): string {
 
 /** 获取角色头像URL */
 export function getCharacterIconUrl(characterId: number): string {
-    return `https://assets.exmeaning.com/character_icons/chr_ts_${characterId}.png`;
+    return `https://moe.exmeaning.com/assets/chr_ts_${characterId}.png`;
 }
 
 /** 获取等级最高的角色ID */

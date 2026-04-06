@@ -17,7 +17,7 @@ import {
 } from "@/lib/deck-comparator/calculator";
 import "./deck-comparator.css";
 
-const MUSIC_META_API = "https://assets.exmeaning.com/musicmeta/music_metas.json";
+const MUSIC_META_API = "https://moe.exmeaning.com/data/music_meta/music_metas.json";
 
 const DIFFICULTY_OPTIONS = [
     { value: "easy", label: "Easy" },

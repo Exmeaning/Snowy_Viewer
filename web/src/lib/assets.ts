@@ -1,6 +1,11 @@
-import { AssetSourceType } from "@/contexts/ThemeContext";
+import type { AssetSourceType } from "@/contexts/ThemeContext";
 
-export const ASSET_BASE_URL_EX = "https://assets.exmeaning.com/sekai-assets";
+export const MOE_STATIC_BASE_URL = "https://moe.exmeaning.com";
+export const MOE_ASSETS_BASE_URL = `${MOE_STATIC_BASE_URL}/assets`;
+export const MOE_LOGO_URL = `${MOE_ASSETS_BASE_URL}/logo.svg`;
+export const MOE_MUSIC_META_URL = `${MOE_STATIC_BASE_URL}/data/music_meta/music_metas.json`;
+export const MOE_RANKINGS_URL = `${MOE_STATIC_BASE_URL}/data/music_meta/rankings_best.json`;
+
 export const ASSET_BASE_URL_UNI = "https://assets.unipjsk.com";
 export const ASSET_BASE_URL_HARUKI = "https://sekai-assets-bdf29c81.seiunx.net/jp-assets";
 export const ASSET_BASE_URL_SNOWY = "https://snowyassets.exmeaning.com";
@@ -37,8 +42,7 @@ function getHarukiSource(source: AssetSourceType): AssetSourceType {
 }
 
 export function getCharacterIconUrl(characterId: number): string {
-    // Using exmeaning with specific path format as requested - NO sekai-assets subpath
-    return `https://assets.exmeaning.com/character_icons/chr_ts_${characterId}.png`;
+    return `${MOE_ASSETS_BASE_URL}/chr_ts_${characterId}.png`;
 }
 
 export function getAreaItemThumbnailUrl(
@@ -177,7 +181,7 @@ export function getComicUrl(assetbundleName: string, source: AssetSourceType = "
 // ==================== Manga Asset URLs ====================
 
 export function getMangaImageUrl(id: number): string {
-    return `https://moe.exmeaning.com/mangas/${id}.png`;
+    return `${MOE_STATIC_BASE_URL}/mangas/${id}.png`;
 }
 
 // ==================== Sticker/Stamp Asset URLs ====================

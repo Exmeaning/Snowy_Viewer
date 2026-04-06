@@ -25,7 +25,7 @@ import {
 // ==================== INLINED DATA PROVIDER ====================
 
 // Music meta URL
-const MUSIC_META_URL = "https://assets.exmeaning.com/musicmeta/music_metas.json";
+const MUSIC_META_URL = "https://moe.exmeaning.com/data/music_meta/music_metas.json";
 
 // Master data URLs - use project's self-hosted official source
 const MASTER_DATA_BASES: Record<string, string> = {

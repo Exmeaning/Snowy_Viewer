@@ -26,7 +26,7 @@ import {
 } from "@/types/music";
 import { CHARACTER_NAMES } from "@/types/types";
 import { useTheme, AssetSourceType } from "@/contexts/ThemeContext";
-import { getCharacterIconUrl, getEventBannerUrl } from "@/lib/assets";
+import { getCharacterIconUrl, getEventBannerUrl, MOE_MUSIC_META_URL, MOE_RANKINGS_URL } from "@/lib/assets";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
@@ -36,8 +36,8 @@ import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 const DIFFICULTY_ORDER: MusicDifficultyType[] = ["easy", "normal", "hard", "expert", "master", "append"];
 
 // External data URLs
-const MUSIC_META_API = "https://assets.exmeaning.com/musicmeta/music_metas.json";
-const RANKINGS_API = "https://assets.exmeaning.com/musicmeta/rankings_best.json";
+const MUSIC_META_API = MOE_MUSIC_META_URL;
+const RANKINGS_API = MOE_RANKINGS_URL;
 
 // Music meta data structure
 interface MusicMetaData {

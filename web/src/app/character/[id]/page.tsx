@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 import MainLayout from "@/components/MainLayout";
 import { getCharacterMeta } from "@/lib/metadata";
+import { getCharacterIconUrl } from "@/lib/assets";
 import CharacterDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const title = character.name;
     const description = `Project Sekai 角色「${character.name}」详细信息`;
-    const ogImage = `https://assets.exmeaning.com/character_icons/chr_ts_${id}.png`;
+    const ogImage = getCharacterIconUrl(Number(id));
 
     return {
         title,

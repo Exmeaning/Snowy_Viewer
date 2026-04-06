@@ -16,9 +16,10 @@ import {
 } from "@/types/music";
 import { fetchMasterData } from "@/lib/fetch";
 import { useTheme } from "@/contexts/ThemeContext";
+import { MOE_MUSIC_META_URL } from "@/lib/assets";
 
 // Music Meta API URL
-const MUSIC_META_API = "https://assets.exmeaning.com/musicmeta/music_metas.json";
+const MUSIC_META_API = MOE_MUSIC_META_URL;
 
 // Items per page options
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
