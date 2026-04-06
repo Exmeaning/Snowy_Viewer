@@ -2,7 +2,6 @@
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
-import MusicGrid from "@/components/music/MusicGrid";
 import MusicFilters from "@/components/music/MusicFilters";
 import MusicItem from "@/components/music/MusicItem";
 import {
@@ -60,6 +59,8 @@ function LevelSeparatorCard({ level, difficulty }: { level: number; difficulty: 
         </div>
     );
 }
+
+const MUSIC_GRID_CLASS = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 sm:gap-4";
 
 function MusicContent() {
     const router = useRouter();
@@ -134,7 +135,7 @@ function MusicContent() {
                     if (filters.sortOrder) setSortOrder(filters.sortOrder);
                     if (filters.showDifficulty === false) setShowDifficulty(false);
                 }
-            } catch (e) {
+            } catch {
                 console.log("Could not restore filters from sessionStorage");
             }
         }
@@ -156,7 +157,7 @@ function MusicContent() {
         };
         try {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
-        } catch (e) {
+        } catch {
             console.log("Could not save filters to sessionStorage");
         }
 
@@ -483,7 +484,7 @@ function MusicContent() {
                 {/* Music Grid */}
                 <div className="flex-1 min-w-0">
                     {isLoading ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                        <div className={MUSIC_GRID_CLASS}>
                             {Array.from({ length: 15 }).map((_, i) => (
                                 <div key={i} className="animate-pulse">
                                     <div className="rounded-xl overflow-hidden bg-white/60 border border-slate-200/60">
@@ -507,8 +508,8 @@ function MusicContent() {
                             </p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                            {displayedMusicsWithSeparators.map((item, index) => {
+                        <div className={MUSIC_GRID_CLASS}>
+                            {displayedMusicsWithSeparators.map((item) => {
                                 if (item.type === 'separator') {
                                     const sepData = item.data as { level: number, difficulty: string };
                                     return (
