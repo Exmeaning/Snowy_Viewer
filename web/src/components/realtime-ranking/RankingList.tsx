@@ -13,9 +13,19 @@ interface RankingListProps {
     showChurn: boolean;
     churnData: Map<string, ChurnRankingEntry>;
     onShowParkingPeriods: (userId: string) => void;
+    showExtendedWarning?: boolean;
 }
 
-export default function RankingList({ entries, masterData, assetSource, secondsSinceUpdate, showChurn, churnData, onShowParkingPeriods }: RankingListProps) {
+export default function RankingList({
+    entries,
+    masterData,
+    assetSource,
+    secondsSinceUpdate,
+    showChurn,
+    churnData,
+    onShowParkingPeriods,
+    showExtendedWarning = true,
+}: RankingListProps) {
     if (entries.length === 0) {
         return (
             <div className="glass-card rounded-2xl p-10 text-center text-slate-500">
@@ -37,7 +47,7 @@ export default function RankingList({ entries, masterData, assetSource, secondsS
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {entries.map((entry, index) => {
                     const prevRank = index > 0 ? entries[index - 1].rank : 0;
-                    const showNotice = entry.rank > 100 && prevRank <= 100;
+                    const showNotice = showExtendedWarning && entry.rank > 100 && prevRank <= 100;
                     return (
                         <React.Fragment key={entry.userId}>
                             {showNotice && (

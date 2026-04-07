@@ -9,17 +9,22 @@ import CurrentEventCard from "@/components/realtime-ranking/CurrentEventCard";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { fetchEventList } from "@/lib/prediction-api";
-import { fetchRealtimeRanking, fetchRealtimeRankingMasterData, fetchChurnData } from "@/lib/realtime-ranking-api";
+import { fetchRealtimeRanking, fetchRealtimeRankingMasterData, fetchChurnData, fetchWorldLinkChurnData, fetchWorldLinkRanking } from "@/lib/realtime-ranking-api";
 import ParkingPeriodsModal from "@/components/realtime-ranking/ParkingPeriodsModal";
 import {
+    RealtimeRankingBoardMode,
     RealtimeRankingEntryWithDiff,
     RealtimeRankingMasterData,
     RealtimeRankingRegion,
     RealtimeRankingSnapshot,
     ChurnRankingEntry,
+    ChurnApiResponse,
+    WorldLinkGroupSnapshot,
+    WorldLinkSnapshot,
 } from "@/types/realtime-ranking";
 import { IEventInfo } from "@/types/events";
 import { EventListItem } from "@/types/prediction";
+import { CHARACTER_NAMES } from "@/types/types";
 
 const DEFAULT_REGION: RealtimeRankingRegion = "cn";
 const POLL_INTERVAL = 10_000;
@@ -112,6 +117,7 @@ function buildEntriesWithDiff(
     snapshot: RealtimeRankingSnapshot,
     previousSnapshot: RealtimeRankingSnapshot | null,
     lastChanges: Map<string, { rankDelta: number; scoreDelta: number; changedAt: number }>,
+    scopeKey: string,
 ): RealtimeRankingEntryWithDiff[] {
     const previousMap = new Map(previousSnapshot?.entries.map((entry) => [entry.userId, entry]) ?? []);
 
@@ -119,20 +125,21 @@ function buildEntriesWithDiff(
         const previous = previousMap.get(entry.userId);
         const rankDelta = previous ? previous.rank - entry.rank : 0;
         const scoreDelta = previous ? entry.score - previous.score : 0;
+        const scopedUserKey = `${scopeKey}:${entry.userId}`;
 
         // 分别追踪 scoreDelta 和 rankDelta，避免用 0 覆盖之前有意义的值
         // 例如：top5 超过 top4 时，被超过的玩家 rankDelta=-1 但 scoreDelta=0，
         // 不应该用 scoreDelta=0 覆盖之前记录的分数变动
         if (scoreDelta !== 0 || rankDelta !== 0) {
-            const existing = lastChanges.get(entry.userId);
-            lastChanges.set(entry.userId, {
+            const existing = lastChanges.get(scopedUserKey);
+            lastChanges.set(scopedUserKey, {
                 scoreDelta: scoreDelta !== 0 ? scoreDelta : (existing?.scoreDelta ?? 0),
                 rankDelta: rankDelta !== 0 ? rankDelta : (existing?.rankDelta ?? 0),
                 changedAt: Date.now(),
             });
         }
 
-        const saved = lastChanges.get(entry.userId);
+        const saved = lastChanges.get(scopedUserKey);
 
         return {
             ...entry,
@@ -149,12 +156,42 @@ function buildEntriesWithDiff(
     });
 }
 
+function findWorldLinkGroup(snapshot: WorldLinkSnapshot | null, gameCharacterId: number | null): WorldLinkGroupSnapshot | null {
+    if (!snapshot || snapshot.groups.length === 0) return null;
+    if (gameCharacterId != null) {
+        const matched = snapshot.groups.find((group) => group.gameCharacterId === gameCharacterId);
+        if (matched) return matched;
+    }
+    return snapshot.groups[0] ?? null;
+}
+
+function applySnapshotChurnDiff(
+    previous: RealtimeRankingSnapshot | null,
+    next: RealtimeRankingSnapshot | null,
+    onChanged: (userId: string) => void,
+) {
+    if (!previous || !next) return;
+
+    const prevMap = new Map(previous.entries.map((entry) => [entry.userId, entry]));
+    for (const entry of next.entries) {
+        const prev = prevMap.get(entry.userId);
+        if (prev && entry.score !== prev.score) {
+            onChanged(entry.userId);
+        }
+    }
+}
+
 function RealtimeRankingContent() {
     const { assetSource, themeColor } = useTheme();
 
+    const [hasInitializedQuery, setHasInitializedQuery] = useState(false);
     const [region, setRegion] = useState<RealtimeRankingRegion>(DEFAULT_REGION);
+    const [boardMode, setBoardMode] = useState<RealtimeRankingBoardMode>("overall");
+    const [selectedWorldLinkCharacterId, setSelectedWorldLinkCharacterId] = useState<number | null>(null);
     const [snapshot, setSnapshot] = useState<RealtimeRankingSnapshot | null>(null);
     const [previousSnapshot, setPreviousSnapshot] = useState<RealtimeRankingSnapshot | null>(null);
+    const [worldLinkSnapshot, setWorldLinkSnapshot] = useState<WorldLinkSnapshot | null>(null);
+    const [previousWorldLinkSnapshot, setPreviousWorldLinkSnapshot] = useState<WorldLinkSnapshot | null>(null);
     const [masterData, setMasterData] = useState<RealtimeRankingMasterData>(EMPTY_MASTER_DATA);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -169,6 +206,9 @@ function RealtimeRankingContent() {
     const [parkingModalUserId, setParkingModalUserId] = useState<string | null>(null);
     const requestIdRef = useRef(0);
     const snapshotRef = useRef<RealtimeRankingSnapshot | null>(null);
+    const worldLinkSnapshotRef = useRef<WorldLinkSnapshot | null>(null);
+    const boardModeRef = useRef<RealtimeRankingBoardMode>("overall");
+    const selectedWorldLinkCharacterIdRef = useRef<number | null>(null);
     const lastUpdateTimeRef = useRef<number>(Date.now());
     const lastChangesRef = useRef(new Map<string, { rankDelta: number; scoreDelta: number; changedAt: number }>());
     const churnDataRef = useRef<Map<string, ChurnRankingEntry>>(new Map());
@@ -201,16 +241,44 @@ function RealtimeRankingContent() {
     }, []);
 
     useEffect(() => {
+        boardModeRef.current = boardMode;
+    }, [boardMode]);
+
+    useEffect(() => {
+        selectedWorldLinkCharacterIdRef.current = selectedWorldLinkCharacterId;
+    }, [selectedWorldLinkCharacterId]);
+
+    useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const regionParam = params.get("region");
         if (regionParam === "cn" || regionParam === "jp") {
             setRegion(regionParam);
         }
+        const boardParam = params.get("board");
+        if (boardParam === "worldlink") {
+            setBoardMode("worldlink");
+        }
+        const wlCharacterIdParam = params.get("wlCharacterId");
+        if (wlCharacterIdParam && /^\d+$/.test(wlCharacterIdParam)) {
+            setSelectedWorldLinkCharacterId(Number(wlCharacterIdParam));
+        }
+        setHasInitializedQuery(true);
     }, []);
 
-    const updateUrlRegion = useCallback((nextRegion: RealtimeRankingRegion) => {
+    const updateUrlState = useCallback((nextRegion: RealtimeRankingRegion, nextBoardMode: RealtimeRankingBoardMode, nextWorldLinkCharacterId: number | null) => {
         const url = new URL(window.location.href);
         url.searchParams.set("region", nextRegion);
+        if (nextBoardMode === "worldlink") {
+            url.searchParams.set("board", "worldlink");
+            if (nextWorldLinkCharacterId != null) {
+                url.searchParams.set("wlCharacterId", String(nextWorldLinkCharacterId));
+            } else {
+                url.searchParams.delete("wlCharacterId");
+            }
+        } else {
+            url.searchParams.delete("board");
+            url.searchParams.delete("wlCharacterId");
+        }
         window.history.replaceState({}, "", url.toString());
     }, []);
 
@@ -223,24 +291,56 @@ function RealtimeRankingContent() {
         }
 
         try {
-            const nextSnapshot = await fetchRealtimeRanking(nextRegion);
+            const [snapshotResult, worldLinkResult] = await Promise.allSettled([
+                fetchRealtimeRanking(nextRegion),
+                fetchWorldLinkRanking(nextRegion),
+            ]);
             if (currentRequestId !== requestIdRef.current) return;
 
+            if (snapshotResult.status !== "fulfilled") {
+                throw snapshotResult.reason;
+            }
+
+            const nextSnapshot = snapshotResult.value;
             const previous = snapshotRef.current;
             if (asRefresh && previous) {
                 setPreviousSnapshot(previous);
-
-                // 热更周回数据：对比前后 snapshot，若某用户 score 变化则 +1
-                const prevMap = new Map(previous.entries.map((e) => [e.userId, e]));
-                for (const entry of nextSnapshot.entries) {
-                    const prev = prevMap.get(entry.userId);
-                    if (prev && entry.score !== prev.score) {
-                        updateChurnForUser(entry.userId);
-                    }
-                }
             }
             snapshotRef.current = nextSnapshot;
             setSnapshot(nextSnapshot);
+
+            const nextWorldLinkSnapshot = worldLinkResult.status === "fulfilled"
+                && worldLinkResult.value
+                && worldLinkResult.value.eventId === nextSnapshot.eventId
+                ? worldLinkResult.value
+                : null;
+            const previousWorldLink = worldLinkSnapshotRef.current;
+
+            if (nextWorldLinkSnapshot) {
+                if (asRefresh && previousWorldLink) {
+                    setPreviousWorldLinkSnapshot(previousWorldLink);
+                }
+                worldLinkSnapshotRef.current = nextWorldLinkSnapshot;
+                setWorldLinkSnapshot(nextWorldLinkSnapshot);
+            } else if (!asRefresh || previousWorldLink == null) {
+                worldLinkSnapshotRef.current = null;
+                setWorldLinkSnapshot(null);
+                setPreviousWorldLinkSnapshot(null);
+            }
+
+            if (asRefresh) {
+                if (boardModeRef.current === "worldlink") {
+                    const selectedCharacterId = selectedWorldLinkCharacterIdRef.current;
+                    applySnapshotChurnDiff(
+                        findWorldLinkGroup(previousWorldLink, selectedCharacterId),
+                        findWorldLinkGroup(nextWorldLinkSnapshot, selectedCharacterId),
+                        updateChurnForUser,
+                    );
+                } else {
+                    applySnapshotChurnDiff(previous, nextSnapshot, updateChurnForUser);
+                }
+            }
+
             setCountdown(Math.floor(POLL_INTERVAL / 1000));
             lastUpdateTimeRef.current = Date.now();
             setSecondsSinceUpdate(0);
@@ -259,25 +359,33 @@ function RealtimeRankingContent() {
         }
     }, [updateChurnForUser]);
 
-    const loadChurnData = useCallback(async (nextRegion: RealtimeRankingRegion): Promise<boolean> => {
+    const loadChurnData = useCallback(async (
+        nextRegion: RealtimeRankingRegion,
+        nextBoardMode: RealtimeRankingBoardMode,
+        nextWorldLinkCharacterId: number | null,
+    ): Promise<boolean> => {
         const currentRequestId = ++churnRequestIdRef.current;
 
         try {
-            const data = await fetchChurnData(nextRegion);
+            const data: ChurnApiResponse = nextBoardMode === "worldlink" && nextWorldLinkCharacterId != null
+                ? await fetchWorldLinkChurnData(nextRegion, nextWorldLinkCharacterId)
+                : await fetchChurnData(nextRegion);
             if (currentRequestId !== churnRequestIdRef.current) return true;
 
             const map = new Map<string, ChurnRankingEntry>();
+            const scopeKey = data.board_type === "worldlink" ? `worldlink:${data.target_id}` : "overall";
             for (const entry of data.rankings) {
                 const uid = String(entry.userId);
                 map.set(uid, entry);
 
                 // 将 churn 的 last_change 预注入 lastChangesRef，
                 // 这样首次自动刷新后仍然能显示涨跌幅而不会被覆盖为 "—"
-                if (entry.last_change && !lastChangesRef.current.has(uid)) {
+                const scopedUid = `${scopeKey}:${uid}`;
+                if (entry.last_change && !lastChangesRef.current.has(scopedUid)) {
                     // 时间戳兼容：秒级 vs 毫秒级
                     const rawTime = entry.last_change.time;
                     const changedAt = rawTime < 1e12 ? rawTime * 1000 : rawTime;
-                    lastChangesRef.current.set(uid, {
+                    lastChangesRef.current.set(scopedUid, {
                         scoreDelta: entry.last_change.delta,
                         rankDelta: 0,
                         changedAt,
@@ -323,6 +431,14 @@ function RealtimeRankingContent() {
     }, []);
 
     useEffect(() => {
+        if (!hasInitializedQuery) return;
+
+        updateUrlState(region, boardMode, boardMode === "worldlink" ? selectedWorldLinkCharacterId : null);
+    }, [hasInitializedQuery, region, boardMode, selectedWorldLinkCharacterId, updateUrlState]);
+
+    useEffect(() => {
+        if (!hasInitializedQuery) return;
+
         let cancelled = false;
 
         async function loadCurrentEvent() {
@@ -389,13 +505,17 @@ function RealtimeRankingContent() {
         return () => {
             cancelled = true;
         };
-    }, [region]);
+    }, [hasInitializedQuery, region]);
 
     useEffect(() => {
-        updateUrlRegion(region);
+        if (!hasInitializedQuery) return;
+
         setPreviousSnapshot(null);
         setSnapshot(null);
+        setPreviousWorldLinkSnapshot(null);
+        setWorldLinkSnapshot(null);
         snapshotRef.current = null;
+        worldLinkSnapshotRef.current = null;
         lastChangesRef.current.clear();
         void loadSnapshot(region, false);
 
@@ -406,13 +526,60 @@ function RealtimeRankingContent() {
         return () => {
             window.clearInterval(timer);
         };
-    }, [region, loadSnapshot, updateUrlRegion]);
+    }, [hasInitializedQuery, region, loadSnapshot]);
+
+    const worldLinkAvailable = !!worldLinkSnapshot
+        && !!snapshot
+        && worldLinkSnapshot.eventId === snapshot.eventId
+        && worldLinkSnapshot.groups.length > 0;
+    const isWorldBloomEvent = currentEvent?.eventType === "world_bloom";
+    const activeWorldLinkGroup = useMemo(
+        () => findWorldLinkGroup(worldLinkSnapshot, selectedWorldLinkCharacterId),
+        [selectedWorldLinkCharacterId, worldLinkSnapshot],
+    );
+    const previousWorldLinkGroup = useMemo(() => {
+        if (!previousWorldLinkSnapshot || !activeWorldLinkGroup) return null;
+        return previousWorldLinkSnapshot.groups.find((group) => group.gameCharacterId === activeWorldLinkGroup.gameCharacterId) ?? null;
+    }, [activeWorldLinkGroup, previousWorldLinkSnapshot]);
+    const isWorldLinkMode = boardMode === "worldlink" && worldLinkAvailable && !!activeWorldLinkGroup;
+    const activeSnapshot = isWorldLinkMode ? activeWorldLinkGroup : snapshot;
+    const activePreviousSnapshot = isWorldLinkMode ? previousWorldLinkGroup : previousSnapshot;
+    const activeScopeLabel = isWorldLinkMode && activeWorldLinkGroup
+        ? `WL单榜 · ${CHARACTER_NAMES[activeWorldLinkGroup.gameCharacterId] || `角色 ${activeWorldLinkGroup.gameCharacterId}`}`
+        : "总榜";
+    const activeChurnData = churnData;
+    const shouldShowChurnToggle = true;
+    const activeChurnBoardMode: RealtimeRankingBoardMode = isWorldLinkMode ? "worldlink" : "overall";
+    const activeChurnTargetId = isWorldLinkMode && activeWorldLinkGroup ? activeWorldLinkGroup.gameCharacterId : null;
 
     useEffect(() => {
+        if (!worldLinkSnapshot || worldLinkSnapshot.groups.length === 0) {
+            setSelectedWorldLinkCharacterId(null);
+            return;
+        }
+
+        setSelectedWorldLinkCharacterId((prev) => {
+            if (prev != null && worldLinkSnapshot.groups.some((group) => group.gameCharacterId === prev)) {
+                return prev;
+            }
+            return worldLinkSnapshot.groups[0].gameCharacterId;
+        });
+    }, [worldLinkSnapshot]);
+
+    useEffect(() => {
+        if (!isLoading && boardMode === "worldlink" && !worldLinkAvailable) {
+            setBoardMode("overall");
+        }
+    }, [boardMode, isLoading, worldLinkAvailable]);
+
+    useEffect(() => {
+        if (!hasInitializedQuery) return;
+
         let disposed = false;
         const emptyMap = new Map<string, ChurnRankingEntry>();
         setChurnData(emptyMap);
         churnDataRef.current = emptyMap;
+        setParkingModalUserId(null);
 
         if (churnRetryTimerRef.current != null) {
             window.clearTimeout(churnRetryTimerRef.current);
@@ -422,7 +589,7 @@ function RealtimeRankingContent() {
         const tryLoad = (attempt: number) => {
             if (disposed) return;
 
-            void loadChurnData(region).then((ok) => {
+            void loadChurnData(region, activeChurnBoardMode, activeChurnTargetId).then((ok) => {
                 if (disposed || ok) return;
 
                 const retryDelay = CHURN_RETRY_DELAYS[Math.min(attempt, CHURN_RETRY_DELAYS.length - 1)];
@@ -442,31 +609,35 @@ function RealtimeRankingContent() {
                 churnRetryTimerRef.current = null;
             }
         };
-    }, [region, loadChurnData]);
+    }, [activeChurnBoardMode, activeChurnTargetId, hasInitializedQuery, loadChurnData, region]);
 
     const rankingEntries = useMemo(() => {
-        if (!snapshot) return [];
-        return buildEntriesWithDiff(snapshot, previousSnapshot, lastChangesRef.current);
-    }, [snapshot, previousSnapshot]);
+        if (!activeSnapshot) return [];
+        return buildEntriesWithDiff(
+            activeSnapshot,
+            activePreviousSnapshot,
+            lastChangesRef.current,
+            isWorldLinkMode && activeWorldLinkGroup ? `worldlink:${activeWorldLinkGroup.gameCharacterId}` : "overall",
+        );
+    }, [activePreviousSnapshot, activeSnapshot, activeWorldLinkGroup, isWorldLinkMode]);
 
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 md:pr-24 py-8">
-                <div className="mb-4 rounded-xl border border-miku/20 bg-miku/5 px-4 py-3 text-sm text-miku font-medium text-center">
-                    worldlink活动 单人榜单将在活动开始后12h内更新 感谢对moesekai的支持！
-                </div>
                 <RankingHeader
                     region={region}
                     onRegionChange={setRegion}
-                    updatedAt={snapshot?.updatedAt}
-                    eventId={snapshot?.eventId}
-                    totalEntries={snapshot?.entries.length ?? 0}
+                    updatedAt={activeSnapshot?.updatedAt}
+                    eventId={activeSnapshot?.eventId}
+                    scopeLabel={activeScopeLabel}
+                    totalEntries={activeSnapshot?.entries.length ?? 0}
                     isRefreshing={isRefreshing}
-                    showChurn={showChurn}
+                    showChurn={shouldShowChurnToggle ? showChurn : false}
                     onShowChurnChange={(v) => {
                         setShowChurn(v);
                         writeShowChurnPreference(v);
                     }}
+                    showChurnToggle={shouldShowChurnToggle}
                 />
 
                 <CurrentEventCard
@@ -475,6 +646,78 @@ function RealtimeRankingContent() {
                     themeColor={themeColor}
                 />
 
+                {(worldLinkAvailable || isWorldBloomEvent) && (
+                    <div className="mb-6 rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                onClick={() => setBoardMode("overall")}
+                                className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                                    boardMode === "overall"
+                                        ? "bg-miku text-white shadow-md shadow-miku/20"
+                                        : "border border-slate-200 bg-white text-slate-600 hover:border-miku/40 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                }`}
+                            >
+                                总榜
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (worldLinkAvailable) {
+                                        setBoardMode("worldlink");
+                                    }
+                                }}
+                                disabled={!worldLinkAvailable}
+                                className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                                    boardMode === "worldlink" && worldLinkAvailable
+                                        ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                                        : worldLinkAvailable
+                                            ? "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                            : "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500"
+                                }`}
+                            >
+                                WL单榜
+                            </button>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                                {isWorldLinkMode
+                                    ? "当前为单人榜高精度采集视图。"
+                                    : "World Link 活动期间可切换到单人榜。"}
+                            </span>
+                        </div>
+
+                        {isWorldLinkMode && worldLinkSnapshot && (
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                {worldLinkSnapshot.groups.map((group) => {
+                                    const isActive = group.gameCharacterId === activeWorldLinkGroup?.gameCharacterId;
+                                    return (
+                                        <button
+                                            key={group.gameCharacterId}
+                                            onClick={() => setSelectedWorldLinkCharacterId(group.gameCharacterId)}
+                                            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+                                                isActive
+                                                    ? "bg-miku text-white shadow-sm shadow-miku/20"
+                                                    : "border border-slate-200 bg-white text-slate-600 hover:border-miku/40 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                            }`}
+                                        >
+                                            {CHARACTER_NAMES[group.gameCharacterId] || `角色 ${group.gameCharacterId}`}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {isWorldLinkMode && (
+                            <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                                WL 单榜的近 48H 周回按当前角色独立统计。
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {isWorldBloomEvent && !worldLinkAvailable && !isLoading && (
+                    <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                        当前为 World Link 活动，但 WL 单人榜数据暂未同步完成，稍后会自动显示。
+                    </div>
+                )}
+
                 {error && (
                     <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
                         <p className="font-bold">加载失败</p>
@@ -482,7 +725,7 @@ function RealtimeRankingContent() {
                     </div>
                 )}
 
-                {isLoading && !snapshot ? (
+                {isLoading && !activeSnapshot ? (
                     <div className="glass-card rounded-2xl p-10 text-center text-slate-500">
                         正在加载实时排行榜...
                     </div>
@@ -492,15 +735,16 @@ function RealtimeRankingContent() {
                         masterData={masterData}
                         assetSource={assetSource}
                         secondsSinceUpdate={secondsSinceUpdate}
-                        showChurn={showChurn}
-                        churnData={churnData}
+                        showChurn={shouldShowChurnToggle ? showChurn : false}
+                        churnData={activeChurnData}
                         onShowParkingPeriods={setParkingModalUserId}
+                        showExtendedWarning={!isWorldLinkMode}
                     />
                 )}
             </div>
 
             {/* Quick Jump Sidebar — desktop: right side, mobile: bottom bar */}
-            {snapshot && (
+            {activeSnapshot && (
                 <>
                     {/* Desktop floating sidebar */}
                     <motion.div
@@ -607,7 +851,7 @@ function RealtimeRankingContent() {
             {/* 停车区间弹窗 */}
             <ParkingPeriodsModal
                 userId={parkingModalUserId}
-                churnEntry={parkingModalUserId ? churnData.get(parkingModalUserId) : undefined}
+                churnEntry={parkingModalUserId ? activeChurnData.get(parkingModalUserId) : undefined}
                 onClose={() => setParkingModalUserId(null)}
             />
         </MainLayout>

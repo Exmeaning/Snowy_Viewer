@@ -2,6 +2,8 @@ import { IHonorInfo, IHonorGroup, IBondsHonor, IBondsHonorWord, IGameCharaUnit }
 import { ICardInfo } from "@/types/types";
 
 export type RealtimeRankingRegion = "cn" | "jp";
+export type RealtimeRankingBoardMode = "overall" | "worldlink";
+export type ChurnBoardType = "overall" | "worldlink";
 
 export interface RealtimeRankingRawProfileHonor {
     seq: number;
@@ -98,6 +100,42 @@ export interface RealtimeRankingSnapshot {
     entries: RealtimeRankingEntry[];
 }
 
+export interface WorldLinkGroupApiResponse {
+    event_id: number;
+    region: RealtimeRankingRegion;
+    game_character_id: number;
+    start_at: number;
+    end_at: number;
+    updated_at: number;
+    user_ranking_status: string;
+    is_world_bloom_chapter_aggregate: boolean;
+    rankings: RealtimeRankingRawEntry[];
+}
+
+export interface WorldLinkApiResponse {
+    event_id: number;
+    region: RealtimeRankingRegion;
+    start_at: number;
+    end_at: number;
+    updated_at: number;
+    groups: WorldLinkGroupApiResponse[];
+}
+
+export interface WorldLinkGroupSnapshot extends RealtimeRankingSnapshot {
+    gameCharacterId: number;
+    userRankingStatus: string;
+    isWorldBloomChapterAggregate: boolean;
+}
+
+export interface WorldLinkSnapshot {
+    eventId: number;
+    region: RealtimeRankingRegion;
+    startAt: number;
+    endAt: number;
+    updatedAt: number;
+    groups: WorldLinkGroupSnapshot[];
+}
+
 export interface RealtimeRankingMasterData {
     cards: ICardInfo[];
     honors: IHonorInfo[];
@@ -152,6 +190,8 @@ export interface ChurnRankingEntry {
 export interface ChurnApiResponse {
     event_id: number;
     region: RealtimeRankingRegion;
+    board_type: ChurnBoardType;
+    target_id: number;
     updated_at: number;
     rankings: ChurnRankingEntry[];
 }
