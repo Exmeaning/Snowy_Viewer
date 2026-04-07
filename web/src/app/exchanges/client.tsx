@@ -9,7 +9,7 @@ import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
-import { getCharacterIconUrl, getMaterialThumbnailUrl, getMysekaiMaterialThumbnailUrl } from "@/lib/assets";
+import { getCharacterIconUrl, getCommonMaterialThumbnailUrl, getMaterialThumbnailUrl, getMysekaiMaterialThumbnailUrl } from "@/lib/assets";
 import { fetchMasterData } from "@/lib/fetch";
 import {
     areExchangeFiltersEqual,
@@ -174,6 +174,26 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
             <img
                 src={getMaterialThumbnailUrl(detail.resourceId, assetSource)}
                 alt={`material-${detail.resourceId}`}
+                className="shrink-0 h-9 w-9 rounded-md bg-slate-50 object-contain p-0.5"
+                loading="lazy"
+            />
+        );
+    }
+
+    if (
+        detail.resourceType === "coin" ||
+        detail.resourceType === "jewel" ||
+        detail.resourceType === "virtual_coin"
+    ) {
+        const assetName = detail.resourceType === "coin"
+            ? "coin"
+            : detail.resourceType === "jewel"
+                ? "jewel"
+                : "virtual_coin";
+        return (
+            <img
+                src={getCommonMaterialThumbnailUrl(assetName, assetSource)}
+                alt={detail.resourceType}
                 className="shrink-0 h-9 w-9 rounded-md bg-slate-50 object-contain p-0.5"
                 loading="lazy"
             />
