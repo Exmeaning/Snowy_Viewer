@@ -115,6 +115,11 @@ export default function RootLayout({
       <head>
         <meta name="color-scheme" content="light dark" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1417523602857305"
+          crossOrigin="anonymous"
+        />
       </head>
       <body
         className={`antialiased`}

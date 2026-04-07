@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
+import DetailPageAdCard from "@/components/DetailPageAdCard";
 import { ICardInfo, IGachaInfo, IGachaDetail, GACHA_TYPE_LABELS, getRarityNumber, isTrainableCard, CardRarityType, IGachaBehavior, IGachaCardRarityRate, isWishGacha } from "@/types/types";
 import { getGachaLogoUrl, getGachaScreenUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -1161,6 +1162,8 @@ export default function GachaDetailClient() {
                                 </div>
                             </div>
                         )}
+
+                        <DetailPageAdCard hidden={isScreenshotMode} />
                     </div>
                 </div>
 

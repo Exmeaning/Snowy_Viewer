@@ -27,6 +27,7 @@ import { useTranslation } from "@/contexts/TranslationContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
+import DetailPageAdCard from "@/components/DetailPageAdCard";
 import { ICostumeInfo, IMoeCostumeData, PART_TYPE_NAMES } from "@/types/costume";
 
 // Max levels by rarity
@@ -982,6 +983,8 @@ export default function CardDetailPage() {
                                 </div>
                             </div>
                         )}
+
+                        <DetailPageAdCard hidden={isScreenshotMode} />
                     </div>
                 </div>
 

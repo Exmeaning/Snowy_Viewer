@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
+import DetailPageAdCard from "@/components/DetailPageAdCard";
 import ExternalLink from "@/components/ExternalLink";
 import { IMangaItem, IMangaData } from "@/types/manga";
 import { getMangaImageUrl } from "@/lib/assets";
@@ -266,6 +267,10 @@ export default function MangaDetailClient() {
                             </ExternalLink>
                         </div>
                     </div>
+                </div>
+
+                <div className="mb-8 max-w-xl mx-auto">
+                    <DetailPageAdCard />
                 </div>
 
                 {/* Bottom Navigation: Prev / Next (large) */}

@@ -142,7 +142,41 @@ export default function AboutPage() {
                             </div>
                         </div>
                     </div>
-                    {/* Card 5: Sponsors */}
+
+                    {/* Card 5: Site Policies */}
+                    <div className="md:col-span-3 p-6 rounded-xl shadow-md border border-slate-100 bg-white/80 backdrop-blur-sm hover:shadow-xl transition-shadow">
+                        <div className="flex items-center gap-2 mb-4">
+                            <p className="text-md font-bold text-primary-text">站点政策与广告说明</p>
+                        </div>
+                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                            本站已接入 Google AdSense 用于覆盖部分运营成本。有关 Cookie、个性化广告与用户数据处理方式，请查看下列页面。
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                            <Link
+                                href="/privacy"
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:text-miku hover:border-miku/30 hover:shadow-sm transition-all"
+                            >
+                                <span>隐私政策</span>
+                            </Link>
+                            <Link
+                                href="/terms"
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:text-miku hover:border-miku/30 hover:shadow-sm transition-all"
+                            >
+                                <span>服务条款</span>
+                            </Link>
+                            <ExternalLink
+                                href="https://www.google.com/settings/ads"
+                                target="_blank"
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:text-miku hover:border-miku/30 hover:shadow-sm transition-all"
+                            >
+                                <span>Google 广告设置</span>
+                            </ExternalLink>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-4 leading-relaxed">
+                            你可以通过 Google 广告设置管理个性化广告偏好；页脚也提供了这些入口，方便随时查阅。
+                        </p>
+                    </div>
+                    {/* Card 6: Sponsors */}
                     <div className="md:col-span-3 p-6 rounded-xl shadow-md border border-slate-100 bg-white/80 backdrop-blur-sm hover:shadow-xl transition-shadow">
                         <div className="flex items-center gap-2 mb-4">
                             <p className="text-md font-bold text-primary-text">赞助者致谢 （不分先后）</p>

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
+import DetailPageAdCard from "@/components/DetailPageAdCard";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getMysekaiFixtureThumbnailUrl, getMysekaiMaterialThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
 import { CHARACTER_NAMES } from "@/types/types";
@@ -510,6 +511,8 @@ export default function MysekaiFixtureDetailClient() {
                                 </div>
                             </div>
                         )}
+
+                        <DetailPageAdCard />
                     </div>
                 </div>
 

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
+import DetailPageAdCard from "@/components/DetailPageAdCard";
 import {
     IVirtualLiveInfo,
     VIRTUAL_LIVE_TYPE_NAMES,
@@ -432,6 +433,8 @@ export default function VirtualLiveDetailClient() {
                                 </div>
                             </div>
                         )}
+
+                        <DetailPageAdCard />
                     </div>
                 </div>
 

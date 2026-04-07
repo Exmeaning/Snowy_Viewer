@@ -5,6 +5,7 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import MainLayout from "@/components/MainLayout";
+import DetailPageAdCard from "@/components/DetailPageAdCard";
 import ExternalLink from "@/components/ExternalLink";
 import {
     fetchGuidesIndex,
@@ -245,6 +246,10 @@ function GuideDetailContent() {
                 >
                     {content}
                 </ReactMarkdown>
+            </div>
+
+            <div className="mt-8 max-w-xl mx-auto">
+                <DetailPageAdCard />
             </div>
 
             {/* Bottom Back Button */}

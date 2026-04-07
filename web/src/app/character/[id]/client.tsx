@@ -26,6 +26,7 @@ import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ColorPreview from "@/components/helpers/ColorPreview";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
+import DetailPageAdCard from "@/components/DetailPageAdCard";
 
 // Derive unit field → icon filename from centralized maps
 const UNIT_FIELD_ICONS: Record<string, string> = Object.fromEntries(
@@ -396,6 +397,8 @@ export default function CharacterDetailClient() {
                             </div>
                         </div>
                     </div>
+
+                    <DetailPageAdCard />
                 </div>
             </div>
         </div>

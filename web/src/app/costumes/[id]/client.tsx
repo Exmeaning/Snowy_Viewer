@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
+import DetailPageAdCard from "@/components/DetailPageAdCard";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "@/contexts/TranslationContext";
 import { getCostumeThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
@@ -541,6 +542,8 @@ export default function CostumeDetailClient() {
                                 </div>
                             </div>
                         )}
+
+                        <DetailPageAdCard />
                     </div>
                 </div>
 

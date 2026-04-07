@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
+import DetailPageAdCard from "@/components/DetailPageAdCard";
 import {
     IlimitedTimeMusicsInfo,
     IMusicInfo,
@@ -727,6 +728,8 @@ export default function MusicDetailPage() {
                                 </div>
                             </div>
                         )}
+
+                        <DetailPageAdCard hidden={isScreenshotMode} />
                     </div>
                 </div>
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
+import DetailPageAdCard from "@/components/DetailPageAdCard";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -461,6 +462,8 @@ export default function ExchangeDetailClient() {
                             <InfoRow label="兑换所结束" value={formatExchangeTime(entry.summaryEndAt)} />
                             <InfoRow label="展示资源组 ID" value={entry.summaryDisplayResourceGroupId ? `#${entry.summaryDisplayResourceGroupId}` : "-"} />
                         </SectionCard>
+
+                        <DetailPageAdCard />
                     </div>
                 </div>
             </div>
