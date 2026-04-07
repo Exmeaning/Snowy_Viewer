@@ -62,6 +62,7 @@ async function main() {
         { path: '/live/', priority: 0.7, changefreq: 'weekly' },
         { path: '/character/', priority: 0.8, changefreq: 'weekly' },
         { path: '/mysekai/', priority: 0.7, changefreq: 'weekly' },
+        { path: '/materials/', priority: 0.7, changefreq: 'weekly' },
         { path: '/costumes/', priority: 0.7, changefreq: 'weekly' },
         { path: '/manga/', priority: 0.6, changefreq: 'weekly' },
         { path: '/eventstory/', priority: 0.7, changefreq: 'weekly' },

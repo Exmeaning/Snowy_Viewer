@@ -18,6 +18,7 @@ const ITEM_DESCRIPTIONS: Record<string, string> = {
     "/comic": "阅读官方漫画",
     "/manga": "阅读官方四格漫画",
     "/mysekai": "浏览家具图鉴",
+    "/materials": "浏览持有物图鉴",
     "/events": "查看活动列表与详情",
     "/gacha": "查看扭蛋卡池信息",
     "/live": "查看虚拟演唱会信息",
@@ -40,6 +41,7 @@ const ITEM_DESCRIPTIONS: Record<string, string> = {
     "/profile": "查看与管理个人信息",
     "/my-cards": "追踪卡牌收集进度",
     "/my-musics": "追踪歌曲游玩进度",
+    "/my-materials": "查询拥有的资源情况",
     "/patreon": "支持项目持续开发",
     "/about": "关于 Moesekai 项目",
 };

@@ -12,6 +12,8 @@ interface ModalProps {
     size?: "sm" | "md" | "lg" | "xl";
     /** Optional action buttons shown in header, left of close */
     headerActions?: React.ReactNode;
+    /** Whether to sync modal open state to browser history. Default: true */
+    syncHistory?: boolean;
 }
 
 const sizeClasses: Record<string, string> = {
@@ -28,6 +30,7 @@ export default function Modal({
     children,
     size = "md",
     headerActions,
+    syncHistory = true,
 }: ModalProps) {
     const [mounted, setMounted] = useState(false);
 
@@ -44,16 +47,13 @@ export default function Modal({
         return () => cancelAnimationFrame(raf);
     }, []);
 
-    // Prevent body scroll, close on Escape, and handle browser back button
+    // Prevent body scroll, close on Escape, and optionally sync with browser back button
     useEffect(() => {
         if (!isOpen) return;
         document.body.style.overflow = "hidden";
 
-        // Push a history entry so pressing back closes the modal instead of navigating away
-        const hasModalState = window.history.state?.modal;
-        if (!hasModalState) {
-            window.history.pushState({ modal: true }, "");
-        }
+        let didPushHistory = false;
+        let rafId: number | null = null;
 
         const handlePopState = () => {
             stableOnClose();
@@ -66,26 +66,40 @@ export default function Modal({
             }
         };
 
-        // Delay listener registration by a frame so any popstate triggered
-        // by the pushState above (e.g. Next.js trailingSlash normalisation)
-        // is ignored.
-        const raf = requestAnimationFrame(() => {
-            window.addEventListener("popstate", handlePopState);
-        });
+        if (syncHistory) {
+            // Push a history entry so pressing back closes the modal instead of navigating away
+            const hasModalState = window.history.state?.modal;
+            if (!hasModalState) {
+                window.history.pushState({ modal: true }, "");
+                didPushHistory = true;
+            }
+
+            // Delay listener registration by a frame so any popstate triggered
+            // by the pushState above (e.g. Next.js trailingSlash normalisation)
+            // is ignored.
+            rafId = requestAnimationFrame(() => {
+                window.addEventListener("popstate", handlePopState);
+            });
+        }
+
         document.addEventListener("keydown", handleKeyDown);
 
         return () => {
-            cancelAnimationFrame(raf);
-            document.body.style.overflow = "unset";
-            window.removeEventListener("popstate", handlePopState);
-            document.removeEventListener("keydown", handleKeyDown);
-
-            // Clean up the history entry we pushed (if modal is closing while still on our state)
-            if (window.history.state?.modal) {
-                window.history.back();
+            if (rafId !== null) {
+                cancelAnimationFrame(rafId);
             }
+            document.body.style.overflow = "unset";
+            if (syncHistory) {
+                window.removeEventListener("popstate", handlePopState);
+
+                // Clean up the history entry we pushed (if modal is closing while still on our state)
+                if (didPushHistory && window.history.state?.modal) {
+                    window.history.back();
+                }
+            }
+            document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [isOpen, stableOnClose]);
+    }, [isOpen, stableOnClose, syncHistory]);
 
     if (!mounted) return null;
 

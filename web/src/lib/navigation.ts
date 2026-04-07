@@ -26,6 +26,7 @@ export const navigationGroups: NavGroupData[] = [
             { name: "漫画", href: "/comic" },
             { name: "官方四格", href: "/manga" },
             { name: "家具", href: "/mysekai" },
+            { name: "持有物", href: "/materials" },
         ],
     },
     {
@@ -145,6 +146,7 @@ export const searchableNavItems: SearchableNavItem[] = [
     { name: "贴纸", href: "/sticker", group: "数据库", keywords: ["sticker", "stickers", "stamp"] },
     { name: "漫画", href: "/comic", group: "数据库", keywords: ["comic", "comics", "manga"] },
     { name: "家具", href: "/mysekai", group: "数据库", keywords: ["furniture", "mysekai", "home"] },
+    { name: "持有物", href: "/materials", group: "数据库", keywords: ["materials", "items", "holding", "holdings", "material", "持有物", "材料", "道具"] },
 
     // 活动
     { name: "活动列表", href: "/events", group: "活动", keywords: ["events", "event"] },
