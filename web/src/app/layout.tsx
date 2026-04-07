@@ -12,6 +12,13 @@ import {
   DARK_MEDIA_QUERY,
   THEME_CHAR_STORAGE_KEY,
 } from "@/lib/colorScheme";
+import {
+  ADSENSE_SCRIPT_ID,
+  ADSENSE_SCRIPT_SRC,
+  ADS_FEATURE_ENABLED,
+  DEFAULT_SHOW_ADS,
+  SHOW_ADS_STORAGE_KEY,
+} from "@/lib/ads";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -53,6 +60,30 @@ export default function RootLayout({
   // Inline script to apply theme color before React hydration
   const themeScript = `
     (function() {
+      var adsFeatureEnabled = ${ADS_FEATURE_ENABLED ? "true" : "false"};
+      var showAds = ${DEFAULT_SHOW_ADS ? "true" : "false"};
+
+      if (adsFeatureEnabled) {
+        try {
+          var savedShowAds = localStorage.getItem('${SHOW_ADS_STORAGE_KEY}');
+          if (savedShowAds === 'true') showAds = true;
+          if (savedShowAds === 'false') showAds = false;
+        } catch (e) {}
+      } else {
+        showAds = false;
+      }
+
+      document.documentElement.dataset.showAds = showAds ? 'true' : 'false';
+
+      if (showAds && !document.getElementById('${ADSENSE_SCRIPT_ID}')) {
+        var adsenseScript = document.createElement('script');
+        adsenseScript.id = '${ADSENSE_SCRIPT_ID}';
+        adsenseScript.async = true;
+        adsenseScript.crossOrigin = 'anonymous';
+        adsenseScript.src = '${ADSENSE_SCRIPT_SRC}';
+        document.head.appendChild(adsenseScript);
+      }
+
       try {
         var savedColorSchemePreference = localStorage.getItem('${COLOR_SCHEME_STORAGE_KEY}');
         var colorSchemePreference =
@@ -115,11 +146,6 @@ export default function RootLayout({
       <head>
         <meta name="color-scheme" content="light dark" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1417523602857305"
-          crossOrigin="anonymous"
-        />
       </head>
       <body
         className={`antialiased`}

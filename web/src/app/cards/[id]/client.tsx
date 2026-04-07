@@ -274,7 +274,7 @@ export default function CardDetailPage() {
 
     // Fetch related event and gachas
     useEffect(() => {
-        const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://snowyviewer.exmeaning.com";
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
         async function fetchEventMap() {
             try {

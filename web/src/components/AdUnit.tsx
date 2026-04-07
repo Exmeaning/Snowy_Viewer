@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { ADSENSE_CLIENT } from "@/lib/ads";
 
 interface AdUnitProps {
   adSlot: string;
@@ -11,21 +13,28 @@ interface AdUnitProps {
 export default function AdUnit({
   adSlot,
   adLayoutKey,
-  adClient = "ca-pub-1417523602857305",
+  adClient = ADSENSE_CLIENT,
   className = "",
 }: AdUnitProps) {
+  const { showAds } = useTheme();
   const adRef = useRef<HTMLModElement>(null);
   const pushed = useRef(false);
 
   useEffect(() => {
-    if (pushed.current) return;
+    if (pushed.current || !showAds) return;
+    if (document.documentElement.dataset.showAds === "false") return;
+
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
       pushed.current = true;
     } catch {
       // silently ignore ad errors
     }
-  }, []);
+  }, [showAds]);
+
+  if (!showAds) {
+    return null;
+  }
 
   return (
     <ins

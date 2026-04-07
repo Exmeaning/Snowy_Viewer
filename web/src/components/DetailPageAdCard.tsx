@@ -1,6 +1,7 @@
 "use client";
 
 import AdUnit from "@/components/AdUnit";
+import { useTheme } from "@/contexts/ThemeContext";
 import { DETAIL_FEED_AD } from "@/lib/ads";
 
 interface DetailPageAdCardProps {
@@ -8,10 +9,12 @@ interface DetailPageAdCardProps {
 }
 
 export default function DetailPageAdCard({ hidden = false }: DetailPageAdCardProps) {
-    if (hidden) return null;
+    const { showAds } = useTheme();
+
+    if (hidden || !showAds) return null;
 
     return (
-        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+        <div className="moesekai-ad-slot bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-amber-500/10 to-transparent">
                 <h2 className="font-bold text-slate-800 flex items-center gap-2">
                     <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

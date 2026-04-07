@@ -3,6 +3,7 @@ import React, { useRef, useEffect } from "react";
 import { useTheme, CHAR_NAMES, CHAR_COLORS } from "@/contexts/ThemeContext";
 import { UNIT_DATA, CHARACTER_NAMES } from "@/types/types";
 import { useMasterData } from "@/contexts/MasterDataContext";
+import { ADS_SETTINGS_VISIBLE } from "@/lib/ads";
 import {
     getShortcutById,
     isEditableEventTarget,
@@ -48,6 +49,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         setAssetSource,
         useLLMTranslation,
         setUseLLMTranslation,
+        showAds,
+        setShowAds,
         serverSource,
         setServerSource,
     } = useTheme();
@@ -302,6 +305,31 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
                         开启后将显示日文内容的中文翻译
                     </p>
+
+                    {ADS_SETTINGS_VISIBLE && (
+                        <>
+                            {/* Ads Toggle */}
+                            <div className="flex items-center justify-between mt-4">
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                                    </svg>
+                                    <span className="text-sm text-slate-700">显示广告</span>
+                                </div>
+                                <button
+                                    onClick={() => setShowAds(!showAds)}
+                                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${showAds ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                >
+                                    <span
+                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${showAds ? 'translate-x-5' : 'translate-x-0'}`}
+                                    />
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                                这是支持我们运营下去的方式之一
+                            </p>
+                        </>
+                    )}
                 </div>
 
                 {/* Background Animation */}

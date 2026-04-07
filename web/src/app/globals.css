@@ -65,6 +65,10 @@ body {
   color: var(--text-body);
 }
 
+:root[data-show-ads="false"] .moesekai-ad-slot {
+  display: none !important;
+}
+
 /* Loading spinner with theme color transition */
 .loading-spinner {
   width: 4rem;

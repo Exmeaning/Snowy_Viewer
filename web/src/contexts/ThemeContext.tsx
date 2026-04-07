@@ -10,6 +10,13 @@ import {
     type ColorSchemePreference,
     type ResolvedColorScheme,
 } from "@/lib/colorScheme";
+import {
+    ADSENSE_SCRIPT_ID,
+    ADSENSE_SCRIPT_SRC,
+    ADS_FEATURE_ENABLED,
+    DEFAULT_SHOW_ADS,
+    SHOW_ADS_STORAGE_KEY,
+} from "@/lib/ads";
 
 // Default theme color (Miku)
 const DEFAULT_THEME_CHAR = "21";
@@ -44,6 +51,8 @@ interface ThemeContextType {
     setAssetSource: (source: AssetSourceType) => void;
     useLLMTranslation: boolean;
     setUseLLMTranslation: (enabled: boolean) => void;
+    showAds: boolean;
+    setShowAds: (enabled: boolean) => void;
     serverSource: ServerSourceType;
     setServerSource: (source: ServerSourceType) => void;
 }
@@ -65,7 +74,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const [useTrainedThumbnailState, setUseTrainedThumbnailState] = useState(false);
     const [assetSourceState, setAssetSourceState] = useState<AssetSourceType>(DEFAULT_ASSET_SOURCE);
     const [useLLMTranslationState, setUseLLMTranslationState] = useState(true); // Default ON
+    const [showAdsState, setShowAdsState] = useState(DEFAULT_SHOW_ADS);
     const [serverSourceState, setServerSourceState] = useState<ServerSourceType>(DEFAULT_SERVER_SOURCE);
+    const effectiveShowAds = ADS_FEATURE_ENABLED && showAdsState;
 
     // Load saved settings from localStorage on mount
     useEffect(() => {
@@ -104,6 +115,18 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             const savedLLMTranslation = localStorage.getItem("use-llm-translation");
             if (savedLLMTranslation === "false") {
                 setUseLLMTranslationState(false);
+            }
+            // Load ads display setting
+            const savedShowAds = localStorage.getItem(SHOW_ADS_STORAGE_KEY);
+            if (ADS_FEATURE_ENABLED) {
+                if (savedShowAds === "true") {
+                    setShowAdsState(true);
+                } else if (savedShowAds === "false") {
+                    setShowAdsState(false);
+                }
+            } else {
+                setShowAdsState(false);
+                localStorage.setItem(SHOW_ADS_STORAGE_KEY, "false");
             }
             // Load server source setting
             const savedServerSource = localStorage.getItem("server-source");
@@ -170,6 +193,25 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         mediaQuery.addListener(handleChange);
         return () => mediaQuery.removeListener(handleChange);
     }, [colorSchemePreference, hasHydratedThemeSettings]);
+
+    useEffect(() => {
+        if (typeof document === "undefined" || !hasHydratedThemeSettings) {
+            return;
+        }
+
+        document.documentElement.dataset.showAds = effectiveShowAds ? "true" : "false";
+
+        if (!effectiveShowAds || document.getElementById(ADSENSE_SCRIPT_ID)) {
+            return;
+        }
+
+        const script = document.createElement("script");
+        script.id = ADSENSE_SCRIPT_ID;
+        script.async = true;
+        script.crossOrigin = "anonymous";
+        script.src = ADSENSE_SCRIPT_SRC;
+        document.head.appendChild(script);
+    }, [effectiveShowAds, hasHydratedThemeSettings]);
 
     // Apply theme color to CSS variables
     useEffect(() => {
@@ -262,6 +304,25 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         }
     };
 
+    const setShowAds = (enabled: boolean) => {
+        if (!ADS_FEATURE_ENABLED) {
+            setShowAdsState(false);
+            try {
+                localStorage.setItem(SHOW_ADS_STORAGE_KEY, "false");
+            } catch (e) {
+                console.error("Failed to save ads display setting to localStorage:", e);
+            }
+            return;
+        }
+
+        setShowAdsState(enabled);
+        try {
+            localStorage.setItem(SHOW_ADS_STORAGE_KEY, enabled ? "true" : "false");
+        } catch (e) {
+            console.error("Failed to save ads display setting to localStorage:", e);
+        }
+    };
+
     const setServerSource = (source: ServerSourceType) => {
         setServerSourceState(source);
         try {
@@ -292,7 +353,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     };
 
     return (
-        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, colorSchemePreference, resolvedColorScheme, setColorSchemePreference, isShowSpoiler, setShowSpoiler, isPowerSaving, setPowerSaving, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource, useLLMTranslation: useLLMTranslationState, setUseLLMTranslation, serverSource: serverSourceState, setServerSource }}>
+        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, colorSchemePreference, resolvedColorScheme, setColorSchemePreference, isShowSpoiler, setShowSpoiler, isPowerSaving, setPowerSaving, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource, useLLMTranslation: useLLMTranslationState, setUseLLMTranslation, showAds: effectiveShowAds, setShowAds, serverSource: serverSourceState, setServerSource }}>
             {children}
         </ThemeContext.Provider>
     );
