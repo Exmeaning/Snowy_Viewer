@@ -2,6 +2,7 @@ import type { AssetSourceType } from "@/contexts/ThemeContext";
 import {
     getCardThumbnailUrl,
     getCharacterIconUrl,
+    getCommonMaterialThumbnailUrl,
     getCostumeThumbnailUrl,
     getMaterialThumbnailUrl,
     getMysekaiFixtureThumbnailUrl,
@@ -627,7 +628,7 @@ function extractGenericName(item: GenericNamedMasterRow | undefined, fallback: s
     return typeof name === "string" && name.trim() ? name : fallback;
 }
 
-function resolveStaticCurrency(resourceType: string, quantity: number): ResolvedExchangeReward {
+function resolveStaticCurrency(resourceType: string, quantity: number, assetSource: AssetSourceType): ResolvedExchangeReward {
     const nameMap: Record<string, string> = {
         coin: "金币",
         jewel: "水晶",
@@ -639,6 +640,7 @@ function resolveStaticCurrency(resourceType: string, quantity: number): Resolved
         resourceType,
         quantity,
         name: nameMap[resourceType] || getRewardTypeLabel(resourceType),
+        imageUrl: resourceType === "coin" ? getCommonMaterialThumbnailUrl("coin", assetSource) : undefined,
     };
 }
 
@@ -840,7 +842,7 @@ export function resolveExchangeRewards(
             case "jewel":
             case "virtual_coin": {
                 return {
-                    ...resolveStaticCurrency(detail.resourceType, quantity),
+                    ...resolveStaticCurrency(detail.resourceType, quantity, assetSource),
                     seq: detail.seq,
                     resourceId,
                 };

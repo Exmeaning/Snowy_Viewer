@@ -61,6 +61,14 @@ export function getMaterialThumbnailUrl(
     return `${baseUrl}/startapp/thumbnail/material/material${materialId}.png`;
 }
 
+export function getCommonMaterialThumbnailUrl(
+    assetbundleName: string,
+    source: AssetSourceType = "uni"
+): string {
+    const baseUrl = getAssetBaseUrl(source);
+    return `${baseUrl}/startapp/thumbnail/common_material/${assetbundleName}.png`;
+}
+
 export function getAttrIconUrl(attr: string, source: AssetSourceType = "uni"): string {
     const baseUrl = getAssetBaseUrl(source);
     return `${baseUrl}/startapp/thumbnail/common/attribute/${attr}.png`;
