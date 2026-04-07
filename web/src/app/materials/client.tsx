@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
 import Modal from "@/components/common/Modal";
@@ -16,6 +17,13 @@ import { fetchMasterData } from "@/lib/fetch";
 import { getMaterialThumbnailUrl, getMysekaiMaterialThumbnailUrl } from "@/lib/assets";
 import { useImageUrlActions } from "@/hooks/useImageUrlActions";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
+import {
+    findMaterialExchangeUsages,
+    loadExchangeCoreData,
+    STATUS_LABELS,
+    type MaterialExchangeUsages,
+} from "@/lib/exchanges";
+import type { ExchangeStatus, FlattenedMaterialExchange } from "@/types/exchange";
 import type { IMaterialInfo, IMysekaiSiteInfo } from "@/types/material";
 import type { IMysekaiMaterial } from "@/types/mysekai";
 
@@ -411,6 +419,116 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     );
 }
 
+function getExchangeStatusTone(status: ExchangeStatus): "miku" | "violet" | "amber" | "emerald" | "slate" {
+    switch (status) {
+        case "active": return "emerald";
+        case "upcoming": return "amber";
+        case "ended": return "slate";
+        case "permanent": default: return "violet";
+    }
+}
+
+function ExchangeUsageLink({ entry }: { entry: FlattenedMaterialExchange }) {
+    return (
+        <Link
+            href={`/exchanges/${entry.id}`}
+            className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 px-3 py-2 text-sm transition-colors hover:border-miku/30 hover:bg-miku/5"
+        >
+            <span className="truncate font-medium text-slate-700">{entry.resolvedTitle}</span>
+            <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                getExchangeStatusTone(entry.status) === "emerald" ? "bg-emerald-500/10 text-emerald-700" :
+                getExchangeStatusTone(entry.status) === "amber" ? "bg-amber-500/10 text-amber-700" :
+                getExchangeStatusTone(entry.status) === "violet" ? "bg-violet-500/10 text-violet-600" :
+                "bg-slate-100 text-slate-500"
+            }`}>
+                {STATUS_LABELS[entry.status]}
+            </span>
+        </Link>
+    );
+}
+
+function ExchangeUsageSection({ selection }: { selection: MaterialDetailSelection }) {
+    const [usages, setUsages] = useState<MaterialExchangeUsages | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (!selection) {
+            setUsages(null);
+            return;
+        }
+
+        let cancelled = false;
+        setIsLoading(true);
+
+        loadExchangeCoreData()
+            .then((coreData) => {
+                if (cancelled) return;
+                const materialType = selection.kind === "material" ? "material" as const : "mysekai_material" as const;
+                const result = findMaterialExchangeUsages(
+                    selection.item.id,
+                    materialType,
+                    coreData.flattenedExchanges
+                );
+                setUsages(result);
+            })
+            .catch(() => {
+                if (!cancelled) setUsages(null);
+            })
+            .finally(() => {
+                if (!cancelled) setIsLoading(false);
+            });
+
+        return () => { cancelled = true; };
+    }, [selection]);
+
+    if (isLoading) {
+        return (
+            <div>
+                <h3 className="mb-3 text-sm font-bold text-slate-700">兑换所关联</h3>
+                <div className="rounded-xl bg-slate-50 p-4 text-center text-xs text-slate-400">加载中...</div>
+            </div>
+        );
+    }
+
+    if (!usages || (usages.asCost.length === 0 && usages.asReward.length === 0)) {
+        return null;
+    }
+
+    return (
+        <div>
+            <h3 className="mb-3 text-sm font-bold text-slate-700">兑换所关联</h3>
+            <div className="space-y-3">
+                {usages.asCost.length > 0 && (
+                    <div>
+                        <p className="mb-1.5 text-xs font-bold text-slate-500">作为兑换成本 ({usages.asCost.length})</p>
+                        <div className="space-y-1">
+                            {usages.asCost.slice(0, 8).map((entry) => (
+                                <ExchangeUsageLink key={`cost-${entry.id}`} entry={entry} />
+                            ))}
+                            {usages.asCost.length > 8 && (
+                                <p className="text-xs text-slate-400 pl-3">还有 {usages.asCost.length - 8} 项...</p>
+                            )}
+                        </div>
+                    </div>
+                )}
+                {usages.asReward.length > 0 && (
+                    <div>
+                        <p className="mb-1.5 text-xs font-bold text-slate-500">作为兑换奖励 ({usages.asReward.length})</p>
+                        <div className="space-y-1">
+                            {usages.asReward.slice(0, 8).map((entry) => (
+                                <ExchangeUsageLink key={`reward-${entry.id}`} entry={entry} />
+                            ))}
+                            {usages.asReward.length > 8 && (
+                                <p className="text-xs text-slate-400 pl-3">还有 {usages.asReward.length - 8} 项...</p>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 function MaterialDetailModal({
     selection,
     assetSource,
@@ -518,6 +636,8 @@ function MaterialDetailModal({
                             </div>
                         </div>
                     )}
+
+                    <ExchangeUsageSection selection={selection} />
                 </div>
             )}
         </Modal>

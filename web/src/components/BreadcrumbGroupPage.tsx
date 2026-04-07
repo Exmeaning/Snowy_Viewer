@@ -19,6 +19,7 @@ const ITEM_DESCRIPTIONS: Record<string, string> = {
     "/manga": "阅读官方四格漫画",
     "/mysekai": "浏览家具图鉴",
     "/materials": "浏览持有物图鉴",
+    "/exchanges": "浏览兑换所条目与奖励信息",
     "/events": "查看活动列表与详情",
     "/gacha": "查看扭蛋卡池信息",
     "/live": "查看虚拟演唱会信息",

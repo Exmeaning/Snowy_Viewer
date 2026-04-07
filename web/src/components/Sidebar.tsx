@@ -155,6 +155,15 @@ const navigationGroups: NavGroup[] = [
                     </svg>
                 ),
             },
+            {
+                name: "兑换所",
+                href: "/exchanges",
+                icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h11m0 0l-3-3m3 3l-3 3M20 17H9m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                ),
+            },
         ],
     },
     {

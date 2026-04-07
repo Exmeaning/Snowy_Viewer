@@ -22,16 +22,28 @@ const OUT_FILE = path.join(__dirname, '..', 'public', 'data', 'metadata-map.json
 /**
  * Fetch JSON with error handling
  */
-async function fetchJSON(url, label) {
+async function fetchJSON(url, label, retries = 2) {
     console.log(`  Fetching ${label}...`);
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch ${label}: HTTP ${response.status}`);
+
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch ${label}: HTTP ${response.status}`);
+            }
+            const data = await response.json();
+            const size = JSON.stringify(data).length;
+            console.log(`    ✓ ${label} (${(size / 1024 / 1024).toFixed(2)} MB raw)`);
+            return data;
+        } catch (error) {
+            if (attempt === retries) {
+                throw error;
+            }
+            console.warn(`    ↻ ${label} retry ${attempt + 1}/${retries}`);
+        }
     }
-    const data = await response.json();
-    const size = JSON.stringify(data).length;
-    console.log(`    ✓ ${label} (${(size / 1024 / 1024).toFixed(2)} MB raw)`);
-    return data;
+
+    throw new Error(`Failed to fetch ${label}`);
 }
 
 /**
@@ -53,17 +65,18 @@ async function main() {
 
     // Fetch all data in parallel
     console.log('Fetching master data...');
-    const [cards, musics, events, gachas, characters, virtualLives, costumesRaw, fixtures, mangasRaw] =
+    const [cards, musics, events, gachas, characters, virtualLives, costumesRaw, fixtures, mangasRaw, exchangeSummaries] =
         await Promise.all([
-            fetchJSON(`${MASTER_URL}/cards.json`, 'cards'),
-            fetchJSON(`${MASTER_URL}/musics.json`, 'musics'),
-            fetchJSON(`${MASTER_URL}/events.json`, 'events'),
-            fetchJSON(`${MASTER_URL}/gachas.json`, 'gachas'),
-            fetchJSON(`${MASTER_URL}/gameCharacters.json`, 'characters'),
-            fetchJSON(`${MASTER_URL}/virtualLives.json`, 'virtualLives'),
+            fetchJSONOptional(`${MASTER_URL}/cards.json`, 'cards', []),
+            fetchJSONOptional(`${MASTER_URL}/musics.json`, 'musics', []),
+            fetchJSONOptional(`${MASTER_URL}/events.json`, 'events', []),
+            fetchJSONOptional(`${MASTER_URL}/gachas.json`, 'gachas', []),
+            fetchJSONOptional(`${MASTER_URL}/gameCharacters.json`, 'characters', []),
+            fetchJSONOptional(`${MASTER_URL}/virtualLives.json`, 'virtualLives', []),
             fetchJSONOptional(`${MASTER_URL}/moe_costume.json`, 'costumes', { costumes: [] }),
             fetchJSONOptional(`${MASTER_URL}/mysekaiFixtures.json`, 'fixtures', []),
             fetchJSONOptional(MANGA_URL, 'mangas', {}),
+            fetchJSONOptional(`${MASTER_URL}/materialExchangeSummaries.json`, 'exchangeSummaries', []),
         ]);
 
     // Build metadata map — only extract fields needed for SEO
@@ -128,6 +141,15 @@ async function main() {
             Object.entries(mangasRaw || {}).map(([k, v]) => [k, {
                 title: v.title || '',
             }])
+        ),
+        exchanges: Object.fromEntries(
+            (Array.isArray(exchangeSummaries) ? exchangeSummaries : [])
+                .flatMap(summary => (summary.materialExchanges || []).map(exchange => [exchange.id, {
+                    name: exchange.displayName || summary.name || `兑换项 #${exchange.id}`,
+                    summaryName: summary.name || '',
+                    category: summary.exchangeCategory || '',
+                    type: summary.materialExchangeType || '',
+                }]))
         ),
     };
 

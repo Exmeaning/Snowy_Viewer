@@ -63,6 +63,7 @@ async function main() {
         { path: '/character/', priority: 0.8, changefreq: 'weekly' },
         { path: '/mysekai/', priority: 0.7, changefreq: 'weekly' },
         { path: '/materials/', priority: 0.7, changefreq: 'weekly' },
+        { path: '/exchanges/', priority: 0.7, changefreq: 'weekly' },
         { path: '/costumes/', priority: 0.7, changefreq: 'weekly' },
         { path: '/manga/', priority: 0.6, changefreq: 'weekly' },
         { path: '/eventstory/', priority: 0.7, changefreq: 'weekly' },
@@ -74,13 +75,14 @@ async function main() {
 
     // Fetch detail data
     console.log('Fetching master data...');
-    const [cards, musics, events, gachas, virtualLives, characters] = await Promise.all([
+    const [cards, musics, events, gachas, virtualLives, characters, exchangeSummaries] = await Promise.all([
         fetchMasterData('cards.json'),
         fetchMasterData('musics.json'),
         fetchMasterData('events.json'),
         fetchMasterData('gachas.json'),
         fetchMasterData('virtualLives.json'),
         fetchMasterData('gameCharacters.json'),
+        fetchMasterData('materialExchangeSummaries.json'),
     ]);
 
     // Build detail routes (domain-agnostic, only paths)
@@ -133,6 +135,19 @@ async function main() {
         console.log(`  - ${events.length} event story pages`);
         for (const e of events) {
             detailRoutes.push({ path: `/eventstory/${e.id}/`, lastmod: formatDate(e.startAt), priority: 0.5, changefreq: 'weekly' });
+        }
+    }
+
+    if (Array.isArray(exchangeSummaries)) {
+        const exchangeEntries = exchangeSummaries.flatMap(summary =>
+            (summary.materialExchanges || []).map(exchange => ({
+                id: exchange.id,
+                lastmod: exchange.startAt || summary.startAt || summary.endAt,
+            }))
+        );
+        console.log(`  - ${exchangeEntries.length} exchange pages`);
+        for (const exchange of exchangeEntries) {
+            detailRoutes.push({ path: `/exchanges/${exchange.id}/`, lastmod: formatDate(exchange.lastmod), priority: 0.5, changefreq: 'weekly' });
         }
     }
 
