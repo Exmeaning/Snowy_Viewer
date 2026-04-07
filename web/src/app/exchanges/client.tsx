@@ -9,7 +9,7 @@ import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
-import { getMaterialThumbnailUrl, getMysekaiMaterialThumbnailUrl } from "@/lib/assets";
+import { getCharacterIconUrl, getMaterialThumbnailUrl, getMysekaiMaterialThumbnailUrl } from "@/lib/assets";
 import { fetchMasterData } from "@/lib/fetch";
 import {
     areExchangeFiltersEqual,
@@ -34,7 +34,7 @@ import {
     type ExchangeSortOrder,
 } from "@/lib/exchanges";
 import type { ExchangeStatus, FlattenedMaterialExchange } from "@/types/exchange";
-import type { ICardInfo } from "@/types/types";
+import { CHARACTER_NAMES, type ICardInfo } from "@/types/types";
 import type { IMysekaiMaterial } from "@/types/mysekai";
 
 function PageHeader() {
@@ -154,7 +154,6 @@ function ScrollRow({ label, children }: { label: string; children: React.ReactNo
         </div>
     );
 }
-
 function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceId?: number; resourceQuantity?: number } }) {
     const { assetSource } = useTheme();
     const { cardsMap } = useExchangePageContext();
@@ -186,6 +185,18 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
             <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-md bg-violet-50 text-[8px] font-bold text-violet-400">
                 MS
             </div>
+        );
+    }
+
+    if (detail.resourceType === "character_rank_exp" && typeof detail.resourceId === "number") {
+        return (
+            <img
+                src={getCharacterIconUrl(detail.resourceId)}
+                alt={`character-rank-exp-${detail.resourceId}`}
+                className="shrink-0 h-9 w-9 rounded-full border border-emerald-100 bg-white object-cover"
+                loading="lazy"
+                title={CHARACTER_NAMES[detail.resourceId] || `Character #${detail.resourceId}`}
+            />
         );
     }
 
