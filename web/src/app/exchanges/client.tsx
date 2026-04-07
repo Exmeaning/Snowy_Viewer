@@ -180,11 +180,20 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
         );
     }
 
-    if (detail.resourceType === "coin") {
+    if (
+        detail.resourceType === "coin" ||
+        detail.resourceType === "jewel" ||
+        detail.resourceType === "virtual_coin"
+    ) {
+        const assetName = detail.resourceType === "coin"
+            ? "coin"
+            : detail.resourceType === "jewel"
+                ? "jewel"
+                : "virtual_coin";
         return (
             <img
-                src={getCommonMaterialThumbnailUrl("coin", assetSource)}
-                alt="coin"
+                src={getCommonMaterialThumbnailUrl(assetName, assetSource)}
+                alt={detail.resourceType}
                 className="shrink-0 h-9 w-9 rounded-md bg-slate-50 object-contain p-0.5"
                 loading="lazy"
             />

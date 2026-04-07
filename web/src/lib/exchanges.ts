@@ -640,7 +640,11 @@ function resolveStaticCurrency(resourceType: string, quantity: number, assetSour
         resourceType,
         quantity,
         name: nameMap[resourceType] || getRewardTypeLabel(resourceType),
-        imageUrl: resourceType === "coin" ? getCommonMaterialThumbnailUrl("coin", assetSource) : undefined,
+        imageUrl:
+            resourceType === "coin" ? getCommonMaterialThumbnailUrl("coin", assetSource) :
+                resourceType === "jewel" ? getCommonMaterialThumbnailUrl("jewel", assetSource) :
+                    resourceType === "virtual_coin" ? getCommonMaterialThumbnailUrl("virtual_coin", assetSource) :
+                        undefined,
     };
 }
 
