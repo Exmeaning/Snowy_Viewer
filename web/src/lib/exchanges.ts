@@ -594,7 +594,7 @@ export async function loadRewardLookupsByTypes(rewardTypes: string[]): Promise<E
     const [cards, stamps, costumeData, blueprints, fixtures, practiceTickets, skillPracticeTickets, boostItems, gachaTickets, avatarCoordinates, mysekaiItems, mysekaiTools] = await Promise.all([
         types.has("card") ? fetchOptionalRows<ICardInfo>("cards.json") : Promise.resolve([]),
         types.has("stamp") ? fetchOptionalRows<StampMasterRow>("stamps.json") : Promise.resolve([]),
-        types.has("costume_3d") ? fetchMasterData<IMoeCostumeData>("moe_costume.json").catch(() => ({ costumes: [] } as IMoeCostumeData)) : Promise.resolve({ costumes: [] } as IMoeCostumeData),
+        types.has("costume_3d") ? fetchMasterData<IMoeCostumeData>("moe_costume.json").catch(() => ({ costumes: [] } as unknown as IMoeCostumeData)) : Promise.resolve({ costumes: [] } as unknown as IMoeCostumeData),
         types.has("mysekai_blueprint") ? fetchOptionalRows<IMysekaiBlueprint>("mysekaiBlueprints.json") : Promise.resolve([]),
         types.has("mysekai_blueprint") || types.has("mysekai_fixture") ? fetchOptionalRows<IMysekaiFixtureInfo>("mysekaiFixtures.json") : Promise.resolve([]),
         types.has("practice_ticket") ? fetchOptionalRows<GenericNamedMasterRow>("practiceTickets.json") : Promise.resolve([]),
