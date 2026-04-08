@@ -17,7 +17,11 @@ import {
 import { ICardInfo } from "@/types/types";
 import { IBondsHonor, IBondsHonorWord, IGameCharaUnit, IHonorGroup, IHonorInfo } from "@/types/honor";
 
-const BASE_URL = (process.env.NEXT_PUBLIC_REALTIME_RANKING_API_BASE || "/api/public").replace(/\/+$/, "");
+// /realtime-ranking 使用 rks.exmeaning.com 的公开实时榜接口；
+// 默认不要走站内 /api/public，因为当前仓库并没有对应代理路由。
+const BASE_URL = (
+    process.env.NEXT_PUBLIC_REALTIME_RANKING_API_BASE || "https://rks.exmeaning.com/api/public"
+).replace(/\/+$/, "");
 const CHURN_TIMEOUT_MS = 15_000;
 
 function buildRealtimeRankingApiUrl(
