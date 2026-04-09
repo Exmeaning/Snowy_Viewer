@@ -1,14 +1,15 @@
 "use client";
-import React, { useState, useEffect, Suspense, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
+import Modal from "@/components/common/Modal";
 import PredictionChart from "@/components/events/PredictionChart";
 import PGAIChart from "@/components/events/PGAIChart";
 import Sparkline from "@/components/events/Sparkline";
 import ActivityStats from "@/components/events/ActivityStats";
 import { fetchPredictionData, fetchEventList } from "@/lib/prediction-api";
-import { PredictionData, EventListItem, ServerType, RankChart, TierKLine } from "@/types/prediction";
+import { PredictionData, EventListItem, ServerType, TierKLine } from "@/types/prediction";
 import { IEventInfo, getEventStatus, EVENT_TYPE_NAMES, EVENT_STATUS_DISPLAY } from "@/types/events";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
@@ -38,6 +39,7 @@ export default function PredictionClient() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [eventsLoading, setEventsLoading] = useState(true);
+    const [isWlNoticeOpen, setIsWlNoticeOpen] = useState(false);
 
     // Live Clock for relative time & progress
     const [now, setNow] = useState(() => Date.now());
@@ -232,6 +234,16 @@ export default function PredictionClient() {
         };
     }, [selectedEventId, events, masterEvents, predictionData, now]);
 
+    const isWorldBloomEvent = eventState?.banner.mockEvent.eventType === "world_bloom";
+
+    useEffect(() => {
+        if (selectedEventId && isWorldBloomEvent) {
+            setIsWlNoticeOpen(true);
+            return;
+        }
+        setIsWlNoticeOpen(false);
+    }, [selectedEventId, isWorldBloomEvent]);
+
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
@@ -293,6 +305,17 @@ export default function PredictionClient() {
                             )}
                         </select>
                     </div>
+                    {isWorldBloomEvent && (
+                        <button
+                            onClick={() => setIsWlNoticeOpen(true)}
+                            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100 shrink-0"
+                        >
+                            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
+                            </svg>
+                            WL 说明
+                        </button>
+                    )}
                     {/* Warning for >99% progress */}
                     {eventState && eventState.isActive && eventState.banner.progressPercent >= 99 && (
                         <div className="flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm w-full sm:w-auto justify-center sm:justify-start shrink-0"
@@ -615,6 +638,19 @@ export default function PredictionClient() {
                     )
                 }
             </div >
+            <Modal
+                isOpen={isWlNoticeOpen}
+                onClose={() => setIsWlNoticeOpen(false)}
+                title="WL 活动预测说明"
+                size="sm"
+                syncHistory={false}
+            >
+                <div>
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+                        WL 活动几乎无法预测，数据完全图一乐。
+                    </div>
+                </div>
+            </Modal>
         </MainLayout >
     );
 }
