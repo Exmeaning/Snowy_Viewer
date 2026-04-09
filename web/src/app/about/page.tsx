@@ -182,7 +182,7 @@ export default function AboutPage() {
                             <p className="text-md font-bold text-primary-text">赞助者致谢 （不分先后）</p>
                         </div>
                         <p className="text-sm text-slate-600 leading-7 text-justify">
-                            cike Hakuchumu 性价比 luoxia 雪莹ちゃん 蘸色绘糖/晕星奏 tony_all 沙皮 轩 末乐回忆 metamiku 垂耳兔kawayi 以及 两位不愿意透露具体ID的支持者
+                            cike Hakuchumu 性价比 luoxia 雪莹ちゃん 蘸色绘糖/晕星奏 tony_all 沙皮 轩 末乐回忆 metamiku 垂耳兔kawayi amia 以及 两位不愿意透露具体ID的支持者
                         </p>
                     </div>
 
