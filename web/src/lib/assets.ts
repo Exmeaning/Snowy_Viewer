@@ -419,8 +419,8 @@ export function getCardStoryVoiceUrl(scenarioId: string, voiceId: string, source
 
 // Area talk voice: fixed to Snowy base, sound/actionset/voice/{scenarioId}/{voiceId}.mp3
 export function getAreaTalkVoiceUrl(scenarioId: string, voiceId: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = isCnSource(source) ? ASSET_BASE_URL_SNOWY_CN : ASSET_BASE_URL_SNOWY;
-    return `${baseUrl}/ondemand/sound/actionset/voice/${scenarioId}/${voiceId}.mp3`;
+    const baseUrl = 'https://storage.sekai.best/sekai-jp-assets/sound/actionset/voice';
+    return `${baseUrl}/${scenarioId}/${voiceId}.mp3`;
 }
 
 // Special story voice: startapp/sound/scenario/voice/{scenarioId}/{voiceId}.mp3
