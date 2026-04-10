@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
-import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
+import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { IEventInfo } from "@/types/events";
 import { loadTranslations } from "@/lib/translations";
@@ -68,7 +68,7 @@ export default function StoryAreaDetailClient() {
         async function load() {
             try {
                 const [actionSetsData, areasData, eventsData, translationsData, chara2dsData] = await Promise.all([
-                    fetchMasterDataForServer<IActionSet[]>("jp", "actionSets.json"),
+                    fetchMasterData<IActionSet[]>("actionSets.json"),
                     fetchMasterData<IArea[]>("areas.json"),
                     fetchMasterData<IEventInfo[]>("events.json"),
                     loadTranslations(),

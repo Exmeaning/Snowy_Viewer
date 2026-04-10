@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { StoryReader } from "@/components/story/StoryReader";
-import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
+import { fetchMasterData } from "@/lib/fetch";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchStoryAssetFromMirror, StoryAssetMissingError } from "@/lib/storyAsset";
 import { processScenarioForDisplay } from "@/lib/storyLoader";
@@ -38,7 +38,7 @@ export default function StoryAreaTalkClient() {
             setScenarioData(null);
             try {
                 const [actionSetsData, areasData] = await Promise.all([
-                    fetchMasterDataForServer<IActionSet[]>("jp", "actionSets.json"),
+                    fetchMasterData<IActionSet[]>("actionSets.json"),
                     fetchMasterData<IArea[]>("areas.json"),
                 ]);
                 const action = actionSetsData.find(a => a.id === actionSetId);
