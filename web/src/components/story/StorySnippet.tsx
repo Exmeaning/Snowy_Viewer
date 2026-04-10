@@ -12,9 +12,10 @@ interface TalkSnippetProps {
     cnText?: string;
     cnDisplayName?: string;
     translationSource?: 'official_cn' | 'llm' | 'human';
+    unitName?: string; // Localized unit name for virtual singers
 }
 
-export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText, cnDisplayName, translationSource }: TalkSnippetProps) {
+export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText, cnDisplayName, translationSource, unitName }: TalkSnippetProps) {
     const { useLLMTranslation } = useTheme();
     const iconUrl = characterId > 0 && characterId <= 26
         ? getCharacterIconUrl(characterId)
@@ -51,6 +52,9 @@ export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText
                     <div className="flex items-center gap-2 mb-2">
                         <span className="inline-block px-2.5 py-0.5 bg-miku/10 text-miku text-sm font-medium rounded-full border border-miku/20">
                             {displayName}
+                            {unitName && (
+                                <span className="text-xs ml-1">（{unitName}）</span>
+                            )}
                         </span>
                     </div>
 
@@ -243,6 +247,29 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                 </div>
             );
 
+        case "PlayMV":
+            // resource format: "id:name" or just "id"
+            const mvParts = resource?.split(':') || [];
+            const mvId = mvParts[0] || '';
+            const mvName = mvParts[1] || '';
+            
+            return (
+                <div className="bg-gradient-to-r from-purple-900/80 to-pink-900/80 dark:from-purple-950/80 dark:to-pink-950/80 rounded-xl p-4 my-3 border border-purple-500/50">
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                            <span className="px-2.5 py-0.5 bg-purple-500/30 text-purple-200 text-xs font-medium rounded-full">
+                                播放MV
+                            </span>
+                        </div>
+                        {mvName ? (
+                            <p className="text-purple-100 text-base font-medium">{mvName}</p>
+                        ) : (
+                            <p className="text-purple-200 text-sm">MV ID: {mvId}</p>
+                        )}
+                    </div>
+                </div>
+            );
+
         default:
             return null;
     }
@@ -342,6 +369,7 @@ export function StorySnippet({ action }: StorySnippetProps) {
                     cnText={action.cnBody}
                     cnDisplayName={action.cnDisplayName}
                     translationSource={action.translationSource}
+                    unitName={action.chara?.unitName}
                 />
             );
 

@@ -75,6 +75,7 @@ export enum SpecialEffectType {
     BlackWipeOutTop = 34,
     BlackWipeInBottom = 35,
     BlackWipeOutBottom = 36,
+    PlayMV = 37,
     FullScreenTextShow = 38,
     FullScreenTextHide = 39,
     SekaiInCenter = 40,
@@ -232,6 +233,7 @@ export interface IProcessedAction {
     chara?: {
         id: number;
         name: string;
+        unitName?: string; // For virtual singers with sub-unit (localized unit name)
     };
     body?: string;
     voice?: string;
