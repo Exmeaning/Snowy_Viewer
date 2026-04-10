@@ -114,16 +114,11 @@ function normalizeMirrorStoryDetail(
   };
 }
 
-async function fetchStorySummaryWithFallback(
+async function fetchStorySummaryFromMirror(
   eventId: number,
   assetbundleName: string,
   story?: IEventStory,
 ): Promise<IStoryAdminResponse | null> {
-  const adminData = await fetchStoryAdminData(eventId);
-  if (adminData) {
-    return adminData;
-  }
-
   try {
     const response = await fetch(getStoryDetailMirrorUrl(eventId), {
       cache: "no-store",
@@ -273,24 +268,6 @@ export default function StoryEventDetailClient() {
 
     let cancelled = false;
 
-    async function hydrateOptionalData(event: IEventInfo, story?: IEventStory) {
-      try {
-        const [summaryData, bEvent] = await Promise.all([
-          fetchStorySummaryWithFallback(eventId, event.assetbundleName, story),
-          fetchOptionalBilibiliEvent(eventId),
-        ]);
-
-        if (cancelled) return;
-        if (summaryData) setAdminData(summaryData);
-        if (bEvent) setBilibiliEvent(bEvent);
-      } catch (error) {
-        console.warn(
-          `[StoryEventDetail] Failed to hydrate optional data for event ${eventId}:`,
-          error,
-        );
-      }
-    }
-
     async function fetchData() {
       try {
         setIsLoading(true);
@@ -300,9 +277,13 @@ export default function StoryEventDetailClient() {
         setBilibiliEvent(null);
         setFallbackChapters([]);
 
-        const [eventsData, storiesData] = await Promise.all([
+        const summaryPromise = fetchStoryAdminData(eventId);
+        const bilibiliPromise = fetchOptionalBilibiliEvent(eventId);
+
+        const [eventsData, storiesData, bEvent] = await Promise.all([
           fetchMasterData<IEventInfo[]>("events.json"),
           fetchMasterData<IEventStory[]>("eventStories.json"),
+          bilibiliPromise,
         ]);
 
         if (cancelled) return;
@@ -319,12 +300,23 @@ export default function StoryEventDetailClient() {
             }))
           : [];
 
+        let summaryData = await summaryPromise;
+        if (!summaryData) {
+          summaryData = await fetchStorySummaryFromMirror(
+            eventId,
+            event.assetbundleName,
+            story,
+          );
+        }
+
+        if (cancelled) return;
+
         setEventInfo(event);
         setFallbackChapters(nextFallbackChapters);
+        if (summaryData) setAdminData(summaryData);
+        if (bEvent) setBilibiliEvent(bEvent);
         document.title = `${event.name} - 活动剧情 - Moesekai`;
         setIsLoading(false);
-
-        void hydrateOptionalData(event, story);
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "加载失败");
