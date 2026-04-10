@@ -291,53 +291,80 @@ function RealtimeRankingContent() {
         }
 
         try {
-            const [snapshotResult, worldLinkResult] = await Promise.allSettled([
-                fetchRealtimeRanking(nextRegion),
-                fetchWorldLinkRanking(nextRegion),
-            ]);
+            // WL活动时分开刷新端点：初次加载同时请求两个端点；
+            // 轮询刷新时，总榜模式只请求 /latest/，单人榜模式只请求 /worldlink-latest/
+            const skipOverall   = asRefresh && boardModeRef.current === "worldlink";
+            const skipWorldLink = asRefresh && boardModeRef.current !== "worldlink";
+
+            const snapshotPromise = skipOverall
+                ? Promise.resolve(null as RealtimeRankingSnapshot | null)
+                : fetchRealtimeRanking(nextRegion);
+            const worldLinkPromise = skipWorldLink
+                ? Promise.resolve(null as WorldLinkSnapshot | null)
+                : fetchWorldLinkRanking(nextRegion);
+
+            const [snapshotResult, worldLinkResult] = await Promise.allSettled([snapshotPromise, worldLinkPromise]);
             if (currentRequestId !== requestIdRef.current) return;
 
-            if (snapshotResult.status !== "fulfilled") {
-                throw snapshotResult.reason;
-            }
-
-            const nextSnapshot = snapshotResult.value;
-            const previous = snapshotRef.current;
-            if (asRefresh && previous) {
-                setPreviousSnapshot(previous);
-            }
-            snapshotRef.current = nextSnapshot;
-            setSnapshot(nextSnapshot);
-
-            const nextWorldLinkSnapshot = worldLinkResult.status === "fulfilled"
-                && worldLinkResult.value
-                && worldLinkResult.value.eventId === nextSnapshot.eventId
-                ? worldLinkResult.value
-                : null;
+            // 刷新前保存旧引用，用于 diff 计算
+            const previousOverall   = snapshotRef.current;
             const previousWorldLink = worldLinkSnapshotRef.current;
 
-            if (nextWorldLinkSnapshot) {
-                if (asRefresh && previousWorldLink) {
-                    setPreviousWorldLinkSnapshot(previousWorldLink);
+            // --- 总榜快照处理 ---
+            let nextOverallSnapshot: RealtimeRankingSnapshot | null = null;
+
+            if (!skipOverall) {
+                if (snapshotResult.status !== "fulfilled") {
+                    throw snapshotResult.reason;
                 }
-                worldLinkSnapshotRef.current = nextWorldLinkSnapshot;
-                setWorldLinkSnapshot(nextWorldLinkSnapshot);
-            } else if (!asRefresh || previousWorldLink == null) {
-                worldLinkSnapshotRef.current = null;
-                setWorldLinkSnapshot(null);
-                setPreviousWorldLinkSnapshot(null);
+                nextOverallSnapshot = snapshotResult.value;
+                if (asRefresh && previousOverall) {
+                    setPreviousSnapshot(previousOverall);
+                }
+                snapshotRef.current = nextOverallSnapshot;
+                setSnapshot(nextOverallSnapshot);
+
+                // 若活动已切换，清除旧的 WL 快照，避免跨活动数据残留
+                if (previousWorldLink && nextOverallSnapshot &&
+                    previousWorldLink.eventId !== nextOverallSnapshot.eventId) {
+                    worldLinkSnapshotRef.current = null;
+                    setWorldLinkSnapshot(null);
+                    setPreviousWorldLinkSnapshot(null);
+                }
             }
 
+            // --- WL单人榜快照处理 ---
+            let nextWorldLinkSnapshot: WorldLinkSnapshot | null = null;
+
+            if (!skipWorldLink) {
+                const currentEventId = snapshotRef.current?.eventId;
+                const candidate = worldLinkResult.status === "fulfilled" ? worldLinkResult.value : null;
+                nextWorldLinkSnapshot = candidate && candidate.eventId === currentEventId ? candidate : null;
+
+                if (nextWorldLinkSnapshot) {
+                    if (asRefresh && previousWorldLink) {
+                        setPreviousWorldLinkSnapshot(previousWorldLink);
+                    }
+                    worldLinkSnapshotRef.current = nextWorldLinkSnapshot;
+                    setWorldLinkSnapshot(nextWorldLinkSnapshot);
+                } else if (!asRefresh || previousWorldLink == null) {
+                    worldLinkSnapshotRef.current = null;
+                    setWorldLinkSnapshot(null);
+                    setPreviousWorldLinkSnapshot(null);
+                }
+            }
+
+            // --- 周回热更 diff ---
             if (asRefresh) {
                 if (boardModeRef.current === "worldlink") {
                     const selectedCharacterId = selectedWorldLinkCharacterIdRef.current;
                     applySnapshotChurnDiff(
                         findWorldLinkGroup(previousWorldLink, selectedCharacterId),
-                        findWorldLinkGroup(nextWorldLinkSnapshot, selectedCharacterId),
+                        findWorldLinkGroup(worldLinkSnapshotRef.current, selectedCharacterId),
                         updateChurnForUser,
                     );
                 } else {
-                    applySnapshotChurnDiff(previous, nextSnapshot, updateChurnForUser);
+                    applySnapshotChurnDiff(previousOverall, nextOverallSnapshot, updateChurnForUser);
                 }
             }
 
