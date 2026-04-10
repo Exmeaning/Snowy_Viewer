@@ -7,6 +7,8 @@ import {
     getMaterialThumbnailUrl,
     getMysekaiFixtureThumbnailUrl,
     getMysekaiMaterialThumbnailUrl,
+    getPracticeTicketThumbnailUrl,
+    getSkillPracticeTicketThumbnailUrl,
     getStampUrl,
 } from "@/lib/assets";
 import { fetchMasterData } from "@/lib/fetch";
@@ -762,6 +764,7 @@ export function resolveExchangeRewards(
                     quantity,
                     name: extractGenericName(item, `练习券 #${resourceId ?? "?"}`),
                     subtitle: "练习券",
+                    imageUrl: typeof resourceId === "number" ? getPracticeTicketThumbnailUrl(resourceId, assetSource) : undefined,
                 };
             }
             case "skill_practice_ticket": {
@@ -773,6 +776,7 @@ export function resolveExchangeRewards(
                     quantity,
                     name: extractGenericName(item, `技能练习券 #${resourceId ?? "?"}`),
                     subtitle: "技能练习券",
+                    imageUrl: typeof resourceId === "number" ? getSkillPracticeTicketThumbnailUrl(resourceId, assetSource) : undefined,
                 };
             }
             case "boost_item": {
