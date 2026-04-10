@@ -67,7 +67,7 @@ export function useStoryAsset({
                 const rawData = await fetchStoryAssetFromMirror(type, lang, params!);
                 if (cancelled) return;
 
-                const processed = await processScenarioForDisplay(rawData, "scenario", assetSource);
+                const processed = await processScenarioForDisplay(rawData, "scenario", assetSource, serverSource);
                 if (cancelled) return;
 
                 // Merge JP translation if available

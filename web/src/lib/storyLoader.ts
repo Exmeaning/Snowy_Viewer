@@ -17,6 +17,16 @@ import { fetchMasterData } from "./fetch";
 import { getBackgroundImageUrl, getStoryVoiceUrl, getCardStoryVoiceUrl, getAreaTalkVoiceUrl, getSpecialStoryVoiceUrl, getStoryBgmUrl, getStorySoundEffectUrl } from "./assets";
 import type { AssetSourceType } from "@/contexts/ThemeContext";
 import { CHAR_NAMES } from "@/types/types";
+import { IGameChara, IUnitProfile } from "@/types/types";
+
+// MV names mapping (ID 1-5 for unit main stories)
+const MV_NAMES: Record<number, { jp: string; cn: string }> = {
+    1: { jp: "needLe", cn: "needLe" },
+    2: { jp: "アイドル新鋭隊", cn: "偶像新锐队" },
+    3: { jp: "Ready Steady", cn: "Ready Steady" },
+    4: { jp: "セカイはまだ始まってすらいない", cn: "世界还未开始" },
+    5: { jp: "悔やむと書いてミライ", cn: "写作悔恨的未来" },
+};
 
 // Asset base URL for direct scenario fetching
 const SCENARIO_BASE_URL = "https://assets.unipjsk.com/ondemand";
@@ -34,12 +44,14 @@ export async function fetchScenarioData(scenarioUrl: string): Promise<IScenarioD
 
 /**
  * Get character name from character2d ID
+ * Returns character info with unit annotation for virtual singers
  */
-function getCharacterName(
+async function getCharacterName(
     character2dId: number,
     character2ds: ICharacter2D[],
-    mobCharacters: IMobCharacter[]
-): { id: number; name: string } {
+    mobCharacters: IMobCharacter[],
+    unitProfiles: IUnitProfile[]
+): Promise<{ id: number; name: string; unitName?: string }> {
     const chara2d = character2ds.find((c) => c.id === character2dId);
 
     if (!chara2d) {
@@ -48,6 +60,18 @@ function getCharacterName(
 
     if (chara2d.characterType === "game_character") {
         const name = CHAR_NAMES[chara2d.characterId] || `Character ${chara2d.characterId}`;
+        
+        // Check if this is a virtual singer (characterId 21-26)
+        const isVirtualSinger = chara2d.characterId >= 21 && chara2d.characterId <= 26;
+        
+        // If it's a virtual singer and has a specific unit, get unit name from unitProfiles
+        if (isVirtualSinger && chara2d.unit && chara2d.unit !== "piapro" && chara2d.unit !== "none") {
+            const unitProfile = unitProfiles.find(u => u.unit === chara2d.unit);
+            if (unitProfile) {
+                return { id: chara2d.characterId, name, unitName: unitProfile.unitName };
+            }
+        }
+        
         return { id: chara2d.characterId, name };
     }
 
@@ -70,29 +94,43 @@ function extractScenarioIdFromData(data: IScenarioData): string {
  * Process scenario data into a format suitable for display
  * @param storyType - "card" | "talk" | "special" | "scenario" (default). Determines voice URL path.
  * @param source - Asset source for voice/background URLs.
+ * @param serverSource - Server source (jp/cn) for localized MV names.
  */
 export async function processScenarioForDisplay(
     data: IScenarioData,
     storyType: "card" | "talk" | "special" | "scenario" = "scenario",
-    source: AssetSourceType = "uni"
+    source: AssetSourceType = "uni",
+    serverSource: "jp" | "cn" = "jp"
 ): Promise<IProcessedScenarioData> {
     // Fetch required master data
-    const [character2ds, mobCharacters] = await Promise.all([
+    const [character2ds, mobCharacters, gameCharacters, unitProfiles] = await Promise.all([
         fetchMasterData<ICharacter2D[]>("character2ds.json").catch(() => []),
         fetchMasterData<IMobCharacter[]>("mobCharacters.json").catch(() => []),
+        fetchMasterData<IGameChara[]>("gameCharacters.json").catch(() => []),
+        fetchMasterData<IUnitProfile[]>("unitProfiles.json").catch(() => []),
     ]);
 
     const scenarioId = extractScenarioIdFromData(data);
     const actions: IProcessedAction[] = [];
     const characters: { id: number; name: string }[] = [];
 
-    // Process appear characters
+    // Process appear characters - only add game_character types
+    // Note: We only collect characterId here, not character2d unit info
+    const characterIdSet = new Set<number>();
     for (const appearChar of data.AppearCharacters) {
-        const charInfo = getCharacterName(appearChar.Character2dId, character2ds, mobCharacters);
-        if (!characters.some((c) => c.id === charInfo.id)) {
-            characters.push(charInfo);
+        const chara2d = character2ds.find((c) => c.id === appearChar.Character2dId);
+        if (chara2d && chara2d.characterType === "game_character") {
+            const charId = chara2d.characterId;
+            if (!characterIdSet.has(charId)) {
+                characterIdSet.add(charId);
+                const charName = CHAR_NAMES[charId] || `Character ${charId}`;
+                characters.push({ id: charId, name: charName });
+            }
         }
     }
+    
+    // Sort characters by ID
+    characters.sort((a, b) => a.id - b.id);
 
     // Add first background if exists
     if (data.FirstBackground) {
@@ -130,7 +168,7 @@ export async function processScenarioForDisplay(
 
                 const character2dId = talkData.TalkCharacters[0]?.Character2dId || 0;
                 const charInfo = character2dId
-                    ? getCharacterName(character2dId, character2ds, mobCharacters)
+                    ? await getCharacterName(character2dId, character2ds, mobCharacters, unitProfiles)
                     : { id: 0, name: talkData.WindowDisplayName };
 
                 // Use WindowDisplayName if it differs from resolved name (for mobs/custom names)
@@ -158,7 +196,7 @@ export async function processScenarioForDisplay(
                     type: SnippetAction.Talk,
                     delay: snippet.Delay,
                     isWait,
-                    chara: { id: charInfo.id, name: displayName },
+                    chara: { id: charInfo.id, name: displayName, unitName: charInfo.unitName },
                     body: talkData.Body,
                     voice: voiceUrl,
                 });
@@ -181,6 +219,16 @@ export async function processScenarioForDisplay(
                     // Voice for fullscreen text
                     if (seData.StringValSub) {
                         resource = getStoryVoiceUrl(scenarioId, seData.StringValSub, source);
+                    }
+                } else if (seData.EffectType === SpecialEffectType.PlayMV) {
+                    // For PlayMV, IntVal contains the music video ID
+                    const mvId = seData.IntVal;
+                    if (mvId && MV_NAMES[mvId]) {
+                        // Use localized MV name based on server source
+                        const mvName = serverSource === "cn" ? MV_NAMES[mvId].cn : MV_NAMES[mvId].jp;
+                        resource = `${mvId}:${mvName}`;
+                    } else {
+                        resource = mvId?.toString() || "";
                     }
                 }
 

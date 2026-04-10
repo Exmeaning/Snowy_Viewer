@@ -54,7 +54,7 @@ export default function StoryAreaTalkClient() {
                     scenarioId: action.scenarioId,
                     group,
                 });
-                setScenarioData(await processScenarioForDisplay(raw, "talk", assetSource));
+                setScenarioData(await processScenarioForDisplay(raw, "talk", assetSource, serverSource));
             } catch (err) {
                 if (err instanceof StoryAssetMissingError) setMissingPaths(err.missingPaths);
                 else setError(err instanceof Error ? err.message : "加载失败");
