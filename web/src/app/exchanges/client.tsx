@@ -9,7 +9,7 @@ import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
-import { getCharacterIconUrl, getCommonMaterialThumbnailUrl, getMaterialThumbnailUrl, getMysekaiMaterialThumbnailUrl } from "@/lib/assets";
+import { getCharacterIconUrl, getCommonMaterialThumbnailUrl, getMaterialThumbnailUrl, getMysekaiMaterialThumbnailUrl, getPracticeTicketThumbnailUrl, getSkillPracticeTicketThumbnailUrl } from "@/lib/assets";
 import { fetchMasterData } from "@/lib/fetch";
 import {
     areExchangeFiltersEqual,
@@ -156,7 +156,7 @@ function ScrollRow({ label, children }: { label: string; children: React.ReactNo
 }
 function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceId?: number; resourceQuantity?: number } }) {
     const { assetSource } = useTheme();
-    const { cardsMap } = useExchangePageContext();
+    const { coreData, cardsMap } = useExchangePageContext();
 
     if (detail.resourceType === "card" && typeof detail.resourceId === "number") {
         const card = cardsMap.get(detail.resourceId);
@@ -200,23 +200,66 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
         );
     }
 
-    if (detail.resourceType === "mysekai_material") {
-        return (
+    if (detail.resourceType === "mysekai_material" && typeof detail.resourceId === "number") {
+        const mat = coreData.mysekaiMaterialMap.get(detail.resourceId);
+        const imgUrl = mat?.iconAssetbundleName
+            ? getMysekaiMaterialThumbnailUrl(mat.iconAssetbundleName, assetSource)
+            : undefined;
+        return imgUrl ? (
+            <img
+                src={imgUrl}
+                alt={mat?.name ?? `mysekai-mat-${detail.resourceId}`}
+                className="shrink-0 h-9 w-9 rounded-md bg-violet-50 object-contain p-0.5"
+                loading="lazy"
+                title={mat?.name}
+            />
+        ) : (
             <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-md bg-violet-50 text-[8px] font-bold text-violet-400">
                 MS
             </div>
         );
     }
 
-    if (detail.resourceType === "character_rank_exp" && typeof detail.resourceId === "number") {
+    if (detail.resourceType === "practice_ticket" && typeof detail.resourceId === "number") {
         return (
             <img
-                src={getCharacterIconUrl(detail.resourceId)}
-                alt={`character-rank-exp-${detail.resourceId}`}
-                className="shrink-0 h-9 w-9 rounded-full border border-emerald-100 bg-white object-cover"
+                src={getPracticeTicketThumbnailUrl(detail.resourceId, assetSource)}
+                alt={`practice-ticket-${detail.resourceId}`}
+                className="shrink-0 h-9 w-9 rounded-md bg-slate-50 object-contain p-0.5"
                 loading="lazy"
-                title={CHARACTER_NAMES[detail.resourceId] || `Character #${detail.resourceId}`}
+                title="练习券"
             />
+        );
+    }
+
+    if (detail.resourceType === "skill_practice_ticket" && typeof detail.resourceId === "number") {
+        return (
+            <img
+                src={getSkillPracticeTicketThumbnailUrl(detail.resourceId, assetSource)}
+                alt={`skill-practice-ticket-${detail.resourceId}`}
+                className="shrink-0 h-9 w-9 rounded-md bg-slate-50 object-contain p-0.5"
+                loading="lazy"
+                title="技能练习券"
+            />
+        );
+    }
+
+    if (detail.resourceType === "character_rank_exp" && typeof detail.resourceId === "number") {
+        return (
+            <div
+                className="shrink-0 relative"
+                title={`角色等级经验 · ${CHARACTER_NAMES[detail.resourceId] ?? `#${detail.resourceId}`}`}
+            >
+                <img
+                    src={getCharacterIconUrl(detail.resourceId)}
+                    alt={`character-rank-exp-${detail.resourceId}`}
+                    className="h-9 w-9 rounded-full border border-emerald-100 bg-white object-cover"
+                    loading="lazy"
+                />
+                <span className="absolute -bottom-0.5 -right-0.5 rounded bg-emerald-500 px-[3px] text-[6px] font-black text-white leading-tight select-none">
+                    EXP
+                </span>
+            </div>
         );
     }
 

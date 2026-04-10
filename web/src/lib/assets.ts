@@ -265,6 +265,20 @@ export function getMysekaiFixtureThumbnailUrl(assetbundleName: string, source: A
     return `${baseUrl}/ondemand/mysekai/thumbnail/fixture/${assetbundleName}_1.png`;
 }
 
+// Practice Ticket Thumbnail
+// URL pattern: startapp/thumbnail/practice_ticket/ticket{resourceId}.png
+export function getPracticeTicketThumbnailUrl(resourceId: number, source: AssetSourceType = "uni"): string {
+    const baseUrl = getAssetBaseUrl(source);
+    return `${baseUrl}/startapp/thumbnail/practice_ticket/ticket${resourceId}.png`;
+}
+
+// Skill Practice Ticket Thumbnail
+// URL pattern: startapp/thumbnail/skill_practice_ticket/ticket{resourceId}.png
+export function getSkillPracticeTicketThumbnailUrl(resourceId: number, source: AssetSourceType = "uni"): string {
+    const baseUrl = getAssetBaseUrl(source);
+    return `${baseUrl}/startapp/thumbnail/skill_practice_ticket/ticket${resourceId}.png`;
+}
+
 // MySEKAI Material Thumbnail available on Haruki and SnowyAssets
 export function getMysekaiMaterialThumbnailUrl(iconAssetbundleName: string, source: AssetSourceType = "uni"): string {
     // CN sources use their own base
