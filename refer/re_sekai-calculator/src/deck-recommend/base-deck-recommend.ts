@@ -198,7 +198,7 @@ export class BaseDeckRecommend {
         continue
       }
       if (deckCards.length >= sortPruneStart && !CardCalculator.isCertainlyLessThan(card, deckCards[deckCards.length - 1]) &&
-        card.cardId < deckCards[deckCards.length - 1].cardId) {
+        card.cardId > deckCards[deckCards.length - 1].cardId) {
         continue
       }
       // 如果肯定比上一次选定的卡牌要弱，那么舍去
@@ -263,7 +263,8 @@ export class BaseDeckRecommend {
       target = RecommendTarget.Score,
       skillReferenceChooseStrategy = SkillReferenceChooseStrategy.Average,
       keepAfterTrainingState = false,
-      bestSkillAsLeader = true
+      bestSkillAsLeader = true,
+      filterOtherUnit = false
     }: DeckRecommendConfig,
     liveType: LiveType,
     eventConfig: EventConfig = {}
@@ -298,9 +299,9 @@ export class BaseDeckRecommend {
     let cards =
         await this.cardCalculator.batchGetCardDetail(userCards, cardConfig, eventConfig, areaItemLevels)
 
-    // 过滤单团体 World Bloom 的主卡候选；
-    // 混团 WL / WL3 模拟时，即使选择了支援角色，也不能按支援角色所属团体过滤主卡池。
-    const filterUnit = getMainDeckFilterUnit(eventConfig)
+    // 仅在显式开启 filterOtherUnit 时，才过滤单团体 World Bloom 的主卡候选；
+    // 默认不过滤，与 C++ 版保持一致。混团 WL / WL3 模拟始终不过滤主卡池。
+    const filterUnit = getMainDeckFilterUnit(eventConfig, filterOtherUnit)
     // 构建固定角色ID集合（用于主卡池过滤豁免）
     const fixedCharacterSet = new Set(fixedCharacters)
     if (filterUnit !== undefined) {
@@ -519,4 +520,6 @@ export interface DeckRecommendConfig {
   keepAfterTrainingState?: boolean
   /** 是否自动将技能最高的卡放到队长位，默认 true */
   bestSkillAsLeader?: boolean
+  /** 是否将单团活动/WL主卡池裁成同团候选，默认 false（与 C++ 版一致） */
+  filterOtherUnit?: boolean
 }

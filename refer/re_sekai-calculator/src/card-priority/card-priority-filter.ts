@@ -126,10 +126,9 @@ function canMakeDeck (liveType: LiveType, eventType: EventType, cardDetails: Car
       }
       return false
     case EventType.BLOOM:
-      // 对于世界开花活动，必须要满足能组出一个团队，且能组出5种属性的队伍
-      for (const v of unitMap.values()) {
-        if (v.size >= 5) return true
-      }
+      // 对于世界开花活动，主卡组允许混组卡；
+      // 因此这里只要求候选池能够凑出 5 色，不再要求存在 5 人同团。
+      // 否则会把一部分更优的混组卡解过早挡在扩池之外。
       return checkAttrForBloom(attrMap)
     default:
       // 未知活动类型，只能先认为无论如何都组不出合理队伍，要求全卡计算

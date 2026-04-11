@@ -363,7 +363,8 @@ export class EventBonusDeckRecommend {
       cardConfig = {},
       specificBonuses,
       debugLog = (_: string) => { },
-      timeoutMs = 30000
+      timeoutMs = 30000,
+      filterOtherUnit = false
     } = config
 
     const minB = maxBonus !== undefined ? targetBonus : targetBonus
@@ -374,9 +375,9 @@ export class EventBonusDeckRecommend {
     let cards =
       await this.cardCalculator.batchGetCardDetail(userCards, cardConfig, eventConfig, areaItemLevels)
 
-    // 仅过滤单团体 World Bloom 的主卡候选；
-    // 混团 WL / WL3 模拟不能因为支援角色所属团体而裁掉其它加成角色。
-    const filterUnit = getMainDeckFilterUnit(eventConfig)
+    // 仅在显式开启 filterOtherUnit 时，才过滤单团体 World Bloom 的主卡候选；
+    // 默认不过滤，与 C++ 版保持一致。混团 WL / WL3 模拟始终不过滤主卡池。 
+    const filterUnit = getMainDeckFilterUnit(eventConfig, filterOtherUnit)
     if (filterUnit !== undefined) {
       const originCardsLength = cards.length
       cards = cards.filter(it => shouldKeepCardForMainDeckFilter(it, filterUnit))
@@ -621,4 +622,6 @@ export interface EventBonusDeckRecommendConfig {
   debugLog?: (str: string) => void
   /** 超时时间（毫秒），默认30秒 */
   timeoutMs?: number
+  /** 是否将单团活动/WL主卡池裁成同团候选，默认 false（与 C++ 版一致） */
+  filterOtherUnit?: boolean
 }

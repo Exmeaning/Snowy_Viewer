@@ -1,7 +1,7 @@
 import { type CardDetail } from '../card-information/card-calculator'
 import { DeckCalculator, SkillReferenceChooseStrategy, type DeckDetail } from '../deck-information/deck-calculator'
 import { type RecommendDeck, type ScoreFunction } from './base-deck-recommend'
-import { type EventConfig } from '../event-point/event-service'
+import { type EventConfig, EventType } from '../event-point/event-service'
 import { type MusicMeta } from '../common/music-meta'
 import { swap } from '../util/collection-util'
 
@@ -361,6 +361,9 @@ export function findBestCardsGA (
   const viableUnitGroups = [...unitCharaMap.entries()].filter(([, v]) => v.length >= member - fixedSize - fixedCharacters.length)
   const viableAttrGroups = [...attrCharaMap.entries()].filter(([, v]) => v.length >= member - fixedSize - fixedCharacters.length)
   const hasViableGroups = viableUnitGroups.length > 0 || viableAttrGroups.length > 0
+  // World Bloom 尤其是混团/多色场景下，额外的同团/同色偏置会显著缩窄搜索覆盖面。
+  // 这里对齐 C++ 版思路：WL 使用更接近纯随机角色选择的初始种群。
+  const allowBiasInitialization = eventConfig.eventType !== EventType.BLOOM
 
   // 生成随机个体（参考 C++ 库的种群生成逻辑）
   const generateRandomIndividual = (biased: boolean): Individual | null => {
@@ -578,7 +581,7 @@ export function findBestCardsGA (
   let population: Individual[] = []
   for (let i = 0; i < cfg.popSize; i++) {
     if (isTimeout()) break
-    const useBias = hasViableGroups && i < cfg.popSize * 0.5
+    const useBias = allowBiasInitialization && hasViableGroups && i < cfg.popSize * 0.5
     const ind = generateRandomIndividual(useBias)
     if (ind === null) continue
     evaluateIndividual(ind)
