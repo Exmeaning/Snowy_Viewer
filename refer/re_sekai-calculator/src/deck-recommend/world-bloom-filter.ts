@@ -11,7 +11,11 @@ export interface MainDeckFilterCard {
  * 只对真正的单团体 World Bloom 生效；
  * 混团 WL / WL3 模拟时即使选择了支援角色，也不能按支援角色所属团体过滤主卡池。
  */
-export function getMainDeckFilterUnit (eventConfig: EventConfig): string | undefined {
+export function getMainDeckFilterUnit (
+  eventConfig: EventConfig,
+  filterOtherUnit: boolean = false
+): string | undefined {
+  if (!filterOtherUnit) return undefined
   if (eventConfig.eventType !== EventType.BLOOM) return undefined
   return eventConfig.eventUnit
 }
