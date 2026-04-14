@@ -89,9 +89,13 @@ export default function MainNavbar({
                                 WebkitMaskRepeat: "no-repeat",
                             }}
                         />
-                        <span className="text-[8px] px-1.5 py-0.5 bg-amber-400 text-white font-bold rounded-full leading-none">
-                            BETA1.157
-                        </span>
+                        <div className="flex items-center gap-1.5 sm:gap-2 h-8 sm:h-10 ml-0.5 sm:ml-1">
+                            {/* 100 Days Stylized Text */}
+                            <div className="flex items-baseline text-miku font-black italic tracking-tighter cursor-default select-none hover:scale-105 transition-transform origin-left">
+                                <span className="text-2xl sm:text-[1.75rem] leading-none drop-shadow-sm">1</span>
+                                <span className="text-sm sm:text-base leading-none drop-shadow-sm">00<span className="text-[10px] sm:text-xs ml-0.5 tracking-normal uppercase">days</span></span>
+                            </div>
+                        </div>
                     </Link>
 
                     {/* Breadcrumb - desktop inline */}
