@@ -148,7 +148,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body
-        className={`antialiased`}
+        className={`antialiased font-sans`}
       >
         <ThemeProvider>
           <MasterDataProvider>
