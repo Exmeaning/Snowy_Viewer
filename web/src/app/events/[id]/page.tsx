@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { getEventMeta } from "@/lib/metadata";
+import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
 import EventDetailClient from "./client";
 
 const OG_ASSET = "https://snowyassets.exmeaning.com";
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (!event) return { title: "活动详情" };
 
     const title = event.name;
-    const description = `Project Sekai 活动「${event.name}」`;
+    const description = `Project Sekai 活动「${event.name}」` + DETAIL_SEO_SUFFIX;
     const ogImage = `${OG_ASSET}/ondemand/event/${event.asset}/screen/bg.png`;
 
     return {

@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 import MainLayout from "@/components/MainLayout";
 import { getCharacterMeta } from "@/lib/metadata";
+import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
 import { getCharacterIconUrl } from "@/lib/assets";
 import CharacterDetailClient from "./client";
 
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (!character) return { title: "角色详情" };
 
     const title = character.name;
-    const description = `Project Sekai 角色「${character.name}」详细信息`;
+    const description = `Project Sekai 角色「${character.name}」详细信息` + DETAIL_SEO_SUFFIX;
     const ogImage = getCharacterIconUrl(Number(id));
 
     return {

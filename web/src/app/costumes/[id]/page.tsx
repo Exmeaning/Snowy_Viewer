@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { getCostumeMeta } from "@/lib/metadata";
+import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
 import CostumeDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
@@ -11,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (!costume) return { title: "服装详情" };
 
     const title = costume.name;
-    const description = `Project Sekai 服装「${costume.name}」`;
+    const description = `Project Sekai 服装「${costume.name}」` + DETAIL_SEO_SUFFIX;
 
     return {
         title,

@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import GuidesClient from "./client";
 
 export const metadata: Metadata = {
-    title: "Moesekai - 攻略",
+    title: "攻略",
     description: "PROJECT SEKAI 攻略合集",
 };
 

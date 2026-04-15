@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import ConnectClient from "./client";
 
 export const metadata: Metadata = {
-    title: "Moesekai - OAuth2 授权绑定",
+    title: "OAuth2 授权绑定",
 };
 
 export default function OAuth2ConnectPage() {

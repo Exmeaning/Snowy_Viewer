@@ -19,19 +19,25 @@ import {
   DEFAULT_SHOW_ADS,
   SHOW_ADS_STORAGE_KEY,
 } from "@/lib/ads";
+import { getRootKeywords, generateJsonLd } from "@/lib/seo-keywords";
+
+const SITE_BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe";
+
+const jsonLd = generateJsonLd(SITE_BASE_URL);
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe"
-  ),
+  metadataBase: new URL(SITE_BASE_URL),
   title: {
-    default: "Moesekai - Project Sekai 数据查看器",
+    default: "Moesekai - 新一代PJSK WIKI",
     template: "%s | Moesekai",
   },
   description:
-    "Moesekai (原Snowy SekaiViewer) — Project Sekai 游戏数据查看器，提供卡牌、音乐、活动、扭蛋等全面的游戏数据浏览。",
+    "Moesekai (原Snowy SekaiViewer) — 新一代PJSK WIKI，世界计划彩色舞台feat.初音未来游戏数据查看器，提供卡牌、音乐、活动、扭蛋等全面图鉴与工具。",
+  keywords: getRootKeywords(),
   icons: { icon: "/data/icon/icon.jpg" },
   openGraph: {
+    title: "Moesekai - 新一代PJSK WIKI",
     type: "website",
     siteName: "Moesekai",
     locale: "zh_CN",
@@ -146,6 +152,14 @@ export default function RootLayout({
       <head>
         <meta name="color-scheme" content="light dark" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd.website) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd.videoGame) }}
+        />
       </head>
       <body
         className={`antialiased font-sans`}
