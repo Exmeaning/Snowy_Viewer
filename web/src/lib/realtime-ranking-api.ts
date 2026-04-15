@@ -233,7 +233,9 @@ export async function fetchRealtimeRanking(region: RealtimeRankingRegion): Promi
 
 export async function fetchWorldLinkRanking(region: RealtimeRankingRegion): Promise<WorldLinkSnapshot | null> {
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 10000);
+    // WL 响应体 (~200KB+) 远大于总榜 (~70KB)，慢网环境下 10s 容易超时
+    // 导致即使服务器 200 也因 body 下载未完而被 abort，前端误显"暂未同步"
+    const timeout = window.setTimeout(() => controller.abort(), 30000);
 
     try {
         const response = await fetch(buildRealtimeRankingApiUrl(`${region}/worldlink-latest`), {

@@ -40,7 +40,7 @@ COPY --from=builder-web /app/web/public ./nextjs/web/public
 COPY data/ ./data/
 
 # Install certs for external API calls from backend
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates wget
 
 # Translation files are served from Next.js public directory.
 ENV TRANSLATION_PATH=/app/nextjs/web/public/data/translations
@@ -51,6 +51,17 @@ RUN printf '#!/bin/sh\n\
     # Start Next.js standalone server on port 3000\n\
     cd /app/nextjs/web && PORT=3000 HOSTNAME=0.0.0.0 node server.js &\n\
     NEXTJS_PID=$!\n\
+    \n\
+    # Wait for Next.js to be ready\n\
+    echo "Waiting for Next.js to start..."\n\
+    for i in 1 2 3 4 5 6 7 8 9 10; do\n\
+        if wget -q --spider http://localhost:3000 2>/dev/null; then\n\
+            echo "Next.js is ready"\n\
+            break\n\
+        fi\n\
+        echo "Attempt $i: Next.js not ready yet, waiting..."\n\
+        sleep 2\n\
+    done\n\
     \n\
     # Start Go API server on port 8080\n\
     cd /app && ./server &\n\
