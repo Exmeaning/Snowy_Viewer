@@ -54,7 +54,7 @@ export default function AboutPage() {
                                 Moesekai 是一个完全由小型组织维护的非盈利项目。
                             </p>
                             <p>
-                                如果您喜欢这个项目，欢迎为我们 <Link href="/creator" className="text-miku font-bold">贡献/赞助</Link>，这就是对开发者最大的支持。
+                                如果您喜欢这个项目，欢迎为我们 <Link href="/patreon" className="text-miku font-bold">贡献/赞助</Link>，这就是对开发者最大的支持。
                             </p>
                         </div>
                     </div>
