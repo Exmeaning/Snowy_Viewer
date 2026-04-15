@@ -4,10 +4,12 @@ import Link from "next/link";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
 import { Metadata } from "next";
+import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
 
 export const metadata: Metadata = {
     title: "关于",
-    description: "关于 Moesekai (原Snowy SekaiViewer)",
+    description: "关于 Moesekai (原Snowy SekaiViewer)" + SEO_SUFFIX,
+    keywords: getPageKeywords("about"),
 };
 
 export default function AboutPage() {

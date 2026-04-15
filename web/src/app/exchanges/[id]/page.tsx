@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { getExchangeMeta } from "@/lib/metadata";
+import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
 import ExchangeDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
@@ -12,14 +13,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (!exchange) {
         return {
             title: "兑换所详情",
-            description: "Project Sekai 兑换所条目详情",
+            description: "Project Sekai 兑换所条目详情" + DETAIL_SEO_SUFFIX,
         };
     }
 
     const title = exchange.summaryName && exchange.summaryName !== exchange.name
         ? `${exchange.name} - ${exchange.summaryName}`
         : exchange.name;
-    const description = `Project Sekai 兑换所条目「${exchange.name}」${exchange.summaryName ? `，所属兑换所：${exchange.summaryName}` : ""}`;
+    const description = `Project Sekai 兑换所条目「${exchange.name}」${exchange.summaryName ? `，所属兑换所：${exchange.summaryName}` : ""}` + DETAIL_SEO_SUFFIX;
 
     return {
         title,

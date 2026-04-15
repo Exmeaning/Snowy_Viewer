@@ -37,3 +37,4 @@ screenshot-generator/run-local-full.ps1
 scripts/translate_secret.py
 .claude/settings.local.json
 .narrafork/
+.codeartsdoer

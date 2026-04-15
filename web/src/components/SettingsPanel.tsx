@@ -121,9 +121,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </svg>
                     设置
                 </h3>
-                <span className="text-[10px] px-2 py-0.5 bg-amber-400 text-white font-bold rounded-full leading-none shadow-sm">
-                    BETA1.157
-                </span>
             </div>
 
             {/* Content */}
@@ -546,6 +543,15 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         <p className="text-[10px] text-slate-400 leading-relaxed">
                             数据（Masterdata、翻译文本）已缓存至浏览器本地数据库（IndexedDB），版本更新时自动刷新。翻译文本每6小时在后台静默检查更新。图片资源通过 Service Worker 缓存，再次访问时秒加载。如遇数据异常可点击上方按钮清除所有缓存并重新拉取。
                         </p>
+                    </div>
+                </div>
+
+                {/* Footer with version */}
+                <div className="border-t border-slate-100 mt-4 pt-3 px-4 pb-3">
+                    <div className="flex items-center justify-center">
+                        <span className="text-[10px] text-slate-400 font-medium">
+                            Snowy Viewer · BETA 1.158
+                        </span>
                     </div>
                 </div>
             </div>

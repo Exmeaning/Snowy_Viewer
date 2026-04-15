@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import ProfileClient from "./client";
 
 export const metadata: Metadata = {
-    title: "Moesekai - 我的主页",
+    title: "我的主页",
     description: "Moesekai 个人主页",
 };
 

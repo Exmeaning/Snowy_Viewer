@@ -2,10 +2,12 @@ import { Metadata } from 'next';
 import fs from 'fs';
 import path from 'path';
 import GachaClient from './client';
+import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
 
 export const metadata: Metadata = {
     title: "谷子盲抽模拟",
-    description: "Project Sekai 谷子盲抽模拟器",
+    description: "Project Sekai 谷子盲抽模拟器" + SEO_SUFFIX,
+    keywords: getPageKeywords("goods_gacha"),
 };
 
 // Define the type for our pools data
