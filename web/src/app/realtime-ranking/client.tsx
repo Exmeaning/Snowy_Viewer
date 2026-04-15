@@ -214,6 +214,7 @@ function RealtimeRankingContent() {
     const churnDataRef = useRef<Map<string, ChurnRankingEntry>>(new Map());
     const churnRequestIdRef = useRef(0);
     const churnRetryTimerRef = useRef<number | null>(null);
+    const worldLinkCheckedRef = useRef(false);
 
     /** 热更：某用户分数变化时，更新其当前小时的周回计数 */
     const updateChurnForUser = useCallback((userId: string) => {
@@ -339,7 +340,10 @@ function RealtimeRankingContent() {
 
             if (!skipWorldLink) {
                 const currentEventId = snapshotRef.current?.eventId ?? nextOverallSnapshot?.eventId;
-                const candidate = worldLinkResult.status === "fulfilled" ? worldLinkResult.value : null;
+                // 只有请求成功（fulfilled）才算真正"检查过" WL 数据是否可用；
+                // 超时/网络错误（rejected）不算，避免慢网下误显"暂未同步"提示
+                const wlFulfilled = worldLinkResult.status === "fulfilled";
+                const candidate = wlFulfilled ? worldLinkResult.value : null;
                 nextWorldLinkSnapshot = candidate && candidate.eventId === currentEventId ? candidate : null;
 
                 if (nextWorldLinkSnapshot) {
@@ -348,10 +352,16 @@ function RealtimeRankingContent() {
                     }
                     worldLinkSnapshotRef.current = nextWorldLinkSnapshot;
                     setWorldLinkSnapshot(nextWorldLinkSnapshot);
+                    worldLinkCheckedRef.current = true;
                 } else if (!asRefresh || previousWorldLink == null) {
                     worldLinkSnapshotRef.current = null;
                     setWorldLinkSnapshot(null);
                     setPreviousWorldLinkSnapshot(null);
+                    // 请求成功但无可用数据（404/503/eventId 不匹配）→ 确认不可用
+                    // 请求失败（超时/网络错误）→ 不确认，等下次轮询重试
+                    if (wlFulfilled) {
+                        worldLinkCheckedRef.current = true;
+                    }
                 }
             }
 
@@ -544,6 +554,7 @@ function RealtimeRankingContent() {
         setWorldLinkSnapshot(null);
         snapshotRef.current = null;
         worldLinkSnapshotRef.current = null;
+        worldLinkCheckedRef.current = false;
         lastChangesRef.current.clear();
         void loadSnapshot(region, false);
 
@@ -560,6 +571,9 @@ function RealtimeRankingContent() {
         && !!snapshot
         && worldLinkSnapshot.eventId === snapshot.eventId
         && worldLinkSnapshot.groups.length > 0;
+    // 只在 WL API 真正被成功检查过后才显示"暂未同步"，
+    // 请求超时/网络错误时不显示（等待下次轮询重试）
+    const worldLinkConfirmedUnavailable = worldLinkCheckedRef.current && !worldLinkAvailable;
     const isWorldBloomEvent = currentEvent?.eventType === "world_bloom";
     const activeWorldLinkGroup = useMemo(
         () => findWorldLinkGroup(worldLinkSnapshot, selectedWorldLinkCharacterId),
@@ -740,7 +754,7 @@ function RealtimeRankingContent() {
                     </div>
                 )}
 
-                {isWorldBloomEvent && !worldLinkAvailable && !isLoading && (
+                {isWorldBloomEvent && worldLinkConfirmedUnavailable && !isLoading && (
                     <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
                         当前为 World Link 活动，但 WL 单人榜数据暂未同步完成，稍后会自动显示。
                     </div>
