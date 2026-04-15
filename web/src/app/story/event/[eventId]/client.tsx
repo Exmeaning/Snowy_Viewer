@@ -20,8 +20,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { IStoryAdminResponse, IStoryAdminChapter } from "@/types/storyAdmin";
 import ExternalLink from "@/components/ExternalLink";
 
-const STORY_ADMIN_BASE_URL =
-  "https://sekaistoryadmin.exmeaning.com/api/v1/events";
 const STORY_DETAIL_MIRROR_BASE_URL = "https://moe.exmeaning.com/story/detail";
 
 interface IHubStoryDetailChapter {
@@ -45,26 +43,6 @@ interface IHubStoryDetailResponse {
 
 function getStoryDetailMirrorUrl(eventId: number): string {
   return `${STORY_DETAIL_MIRROR_BASE_URL}/event_${String(eventId).padStart(3, "0")}.json`;
-}
-
-async function fetchStoryAdminData(
-  eventId: number,
-): Promise<IStoryAdminResponse | null> {
-  try {
-    const response = await fetch(`${STORY_ADMIN_BASE_URL}/${eventId}`, {
-      cache: "no-store",
-    });
-    if (!response.ok) {
-      console.warn(
-        `[StoryAdmin] Failed to fetch event ${eventId}: HTTP ${response.status}`,
-      );
-      return null;
-    }
-    return (await response.json()) as IStoryAdminResponse;
-  } catch (error) {
-    console.warn(`[StoryAdmin] Failed to fetch event ${eventId}:`, error);
-    return null;
-  }
 }
 
 function normalizeMirrorStoryDetail(
@@ -120,9 +98,7 @@ async function fetchStorySummaryFromMirror(
   story?: IEventStory,
 ): Promise<IStoryAdminResponse | null> {
   try {
-    const response = await fetch(getStoryDetailMirrorUrl(eventId), {
-      cache: "no-store",
-    });
+    const response = await fetch(getStoryDetailMirrorUrl(eventId));
     if (!response.ok) {
       console.warn(
         `[StorySummaryMirror] Failed to fetch event ${eventId}: HTTP ${response.status}`,
@@ -278,7 +254,6 @@ export default function StoryEventDetailClient() {
         setBilibiliEvent(null);
         setFallbackChapters([]);
 
-        const summaryPromise = fetchStoryAdminData(eventId);
         const bilibiliPromise = fetchOptionalBilibiliEvent(eventId);
 
         const [eventsData, storiesData, bEvent] = await Promise.all([
@@ -301,14 +276,12 @@ export default function StoryEventDetailClient() {
             }))
           : [];
 
-        let summaryData = await summaryPromise;
-        if (!summaryData) {
-          summaryData = await fetchStorySummaryFromMirror(
-            eventId,
-            event.assetbundleName,
-            story,
-          );
-        }
+        // Fetch story summary from mirror
+        const summaryData = await fetchStorySummaryFromMirror(
+          eventId,
+          event.assetbundleName,
+          story,
+        );
 
         if (cancelled) return;
 
