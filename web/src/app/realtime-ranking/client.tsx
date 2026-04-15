@@ -337,7 +337,7 @@ function RealtimeRankingContent() {
             let nextWorldLinkSnapshot: WorldLinkSnapshot | null = null;
 
             if (!skipWorldLink) {
-                const currentEventId = snapshotRef.current?.eventId;
+                const currentEventId = snapshotRef.current?.eventId ?? nextOverallSnapshot?.eventId;
                 const candidate = worldLinkResult.status === "fulfilled" ? worldLinkResult.value : null;
                 nextWorldLinkSnapshot = candidate && candidate.eventId === currentEventId ? candidate : null;
 
