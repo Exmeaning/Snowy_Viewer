@@ -101,7 +101,9 @@ export class DeckCalculator {
     const fixtureBonus = DeckCalculator.sumPower(cardDetails, cardPower, it => it.fixtureBonus)
     const gateBonus = DeckCalculator.sumPower(cardDetails, cardPower, it => it.gateBonus)
     const total = DeckCalculator.sumPower(cardDetails, cardPower, it => it.total) + honorBonus
-    const power = { base, areaItemBonus, characterBonus, honorBonus, fixtureBonus, gateBonus, total }
+    // Apply WL3 power cap (336,000) when worldBloomEventTurn === 3
+    const cappedTotal = worldBloomEventTurn === 3 ? Math.min(total, 336000) : total
+    const power = { base, areaItemBonus, characterBonus, honorBonus, fixtureBonus, gateBonus, total: cappedTotal }
 
     // ========== 花前花后技能枚举 ==========
 
