@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
@@ -248,6 +248,7 @@ function ChapterItem({
 
 export default function StoryEventDetailClient() {
   const params = useParams();
+  const router = useRouter();
   const { assetSource, serverSource } = useTheme();
   const eventId = Number(params.eventId);
 
@@ -362,8 +363,8 @@ export default function StoryEventDetailClient() {
   return (
     <MainLayout>
       <div className="container mx-auto px-4 sm:px-6 py-8">
-        <Link
-          href="/story/event"
+        <button
+          onClick={() => router.back()}
           className="inline-flex items-center gap-2 text-slate-500 hover:text-miku transition-colors mb-6"
         >
           <svg
@@ -379,8 +380,8 @@ export default function StoryEventDetailClient() {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          返回活动列表
-        </Link>
+          返回
+        </button>
 
         {/* Banner */}
         <div className="relative rounded-2xl overflow-hidden shadow-lg mb-8 bg-white dark:bg-slate-800 min-h-[200px] sm:min-h-[250px] flex items-center">
@@ -574,12 +575,6 @@ export default function StoryEventDetailClient() {
                 章节列表
               </h2>
               <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setShowEpImages(!showEpImages)}
-                  className="text-xs sm:text-sm px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5"
-                >
-                  {showEpImages ? "隐藏图片" : "显示图片"}
-                </button>
                 <span className="text-sm text-slate-500 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
                   共 {totalChapters} 话
                 </span>

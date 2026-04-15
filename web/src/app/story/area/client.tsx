@@ -8,56 +8,9 @@ import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
 import { StoryPageHeader } from "@/components/story/StoryPageHeader";
-
-// Minimal actionSet type
-interface IActionSet {
-    id: number;
-    areaId: number;
-    releaseConditionId: number;
-    scenarioId?: string;
-    actionSetType?: string;
-    isNextGrade?: boolean;
-}
+import { getAreaCategory, categoryToUrlParam, type IActionSet, type AreaCategory } from "./areaCategory";
 
 interface IArea { id: number; name: string; subName?: string; }
-
-// Area category type (mirrors Python __get_category)
-type AreaCategory = number | "grade1" | "grade2" | "theater" | string; // string covers limited_N, aprilfoolYYYY
-
-function getCategory(action: IActionSet): AreaCategory | "" {
-    const cond = String(action.releaseConditionId);
-    if (action.scenarioId && cond.length === 6 && cond[0] === "1") {
-        return parseInt(cond.slice(1, 4), 10) + 1;
-    }
-    if (action.id === 2373) return 145;
-    if (
-        action.scenarioId &&
-        action.actionSetType === "normal" &&
-        action.isNextGrade === false &&
-        action.releaseConditionId === 1
-    ) return "grade1";
-    if (
-        action.scenarioId &&
-        action.actionSetType === "normal" &&
-        action.isNextGrade === true &&
-        action.releaseConditionId === 1
-    ) return "grade2";
-    if (action.scenarioId && action.releaseConditionId >= 2000000 && action.releaseConditionId <= 2000036) {
-        return "theater";
-    }
-    if (action.scenarioId && action.actionSetType === "limited" && !action.scenarioId.includes("aprilfool")) {
-        return `limited_${action.areaId}`;
-    }
-    if (action.scenarioId && action.actionSetType === "limited" && action.scenarioId.includes("aprilfool")) {
-        return action.scenarioId.split("_")[1]; // e.g. "aprilfool2022"
-    }
-    return "";
-}
-
-function categoryToUrlParam(cat: AreaCategory): string {
-    if (typeof cat === "number") return `event_${cat}`;
-    return cat;
-}
 
 function categoryLabel(cat: AreaCategory, eventMap: Map<number, string>, translations: TranslationData | null, areaMap?: Map<number, IArea>): string {
     if (typeof cat === "number") {
@@ -125,7 +78,7 @@ export default function StoryAreaListClient() {
         const seen = new Set<string>();
         const result: AreaCategory[] = [];
         for (const action of actionSets) {
-            const cat = getCategory(action);
+            const cat = getAreaCategory(action);
             if (cat === "") continue;
             const key = String(cat);
             if (!seen.has(key)) {

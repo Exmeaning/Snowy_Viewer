@@ -105,24 +105,46 @@ export default function StorySelfReaderClient() {
                 )}
 
                 {!isLoading && (
-                    <div className="max-w-4xl mx-auto space-y-10">
-                        {[
-                            { label: "第二学年", data: year2, missing: missing2, err: error2 },
-                            { label: "第一学年", data: year1, missing: missing1, err: error1 },
-                        ].map(({ label, data, missing, err }) => (
-                            <div key={label}>
-                                <div className="flex items-center gap-3 mb-4">
-                                    <span className="px-3 py-1 bg-miku/10 text-miku text-sm font-bold rounded-full border border-miku/20">{label}</span>
-                                </div>
-                                <StoryReader
-                                    scenarioData={data}
-                                    isLoading={false}
-                                    error={err}
-                                    missingPaths={missing ?? undefined}
-                                    endLabel={label}
-                                />
+                    <div className="max-w-4xl mx-auto">
+                        {/* 导航栏 */}
+                        <div className="mb-6 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm text-slate-500 mr-2">目录</span>
+                                <button
+                                    onClick={() => document.getElementById('part-第二学年')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                                    className="px-3 py-1.5 text-sm font-medium text-miku hover:bg-miku/10 rounded-lg transition-colors"
+                                >
+                                    第二学年
+                                </button>
+                                <span className="text-slate-300 dark:text-slate-600">|</span>
+                                <button
+                                    onClick={() => document.getElementById('part-第一学年')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                                    className="px-3 py-1.5 text-sm font-medium text-miku hover:bg-miku/10 rounded-lg transition-colors"
+                                >
+                                    第一学年
+                                </button>
                             </div>
-                        ))}
+                        </div>
+
+                        <div className="space-y-10">
+                            {[
+                                { label: "第二学年", data: year2, missing: missing2, err: error2 },
+                                { label: "第一学年", data: year1, missing: missing1, err: error1 },
+                            ].map(({ label, data, missing, err }) => (
+                                <div key={label} id={`part-${label}`} className="scroll-mt-32">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <span className="px-3 py-1 bg-miku/10 text-miku text-sm font-bold rounded-full border border-miku/20">{label}</span>
+                                    </div>
+                                    <StoryReader
+                                        scenarioData={data}
+                                        isLoading={false}
+                                        error={err}
+                                        missingPaths={missing ?? undefined}
+                                        endLabel={label}
+                                    />
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
