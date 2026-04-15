@@ -9,34 +9,11 @@ import { IEventInfo } from "@/types/events";
 import { loadTranslations } from "@/lib/translations";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
+import { getAreaCategory, urlParamToCategory, type IActionSet, type AreaCategory } from "../areaCategory";
 
-interface IActionSet {
-    id: number; areaId: number; releaseConditionId: number;
-    scenarioId?: string; actionSetType?: string; isNextGrade?: boolean;
-    characterIds?: number[];
-}
 interface IArea { id: number; name: string; subName?: string; }
 interface ICharacter2D {
     id: number; characterType: string; characterId: number;
-}
-
-type AreaCategory = number | string;
-
-function getCategory(action: IActionSet): AreaCategory | "" {
-    const cond = String(action.releaseConditionId);
-    if (action.scenarioId && cond.length === 6 && cond[0] === "1") return parseInt(cond.slice(1, 4), 10) + 1;
-    if (action.id === 2373) return 145;
-    if (action.scenarioId && action.actionSetType === "normal" && action.isNextGrade === false && action.releaseConditionId === 1) return "grade1";
-    if (action.scenarioId && action.actionSetType === "normal" && action.isNextGrade === true && action.releaseConditionId === 1) return "grade2";
-    if (action.scenarioId && action.releaseConditionId >= 2000000 && action.releaseConditionId <= 2000036) return "theater";
-    if (action.scenarioId && action.actionSetType === "limited" && !action.scenarioId.includes("aprilfool")) return `limited_${action.areaId}`;
-    if (action.scenarioId && action.actionSetType === "limited" && action.scenarioId.includes("aprilfool")) return action.scenarioId.split("_")[1];
-    return "";
-}
-
-function urlParamToCategory(param: string): AreaCategory {
-    if (param.startsWith("event_")) return parseInt(param.slice(6), 10);
-    return param;
 }
 
 function getTalkTypeLabel(action: IActionSet, cat: AreaCategory): string {
@@ -85,7 +62,7 @@ export default function StoryAreaDetailClient() {
                 }
                 setChara2dMap(c2dMap);
 
-                const matched = actionSetsData.filter(a => getCategory(a) === category);
+                const matched = actionSetsData.filter(a => getAreaCategory(a) === category);
                 if (matched.length === 0) throw new Error("未找到对应的区域对话");
                 setActions(matched);
 
@@ -150,12 +127,12 @@ export default function StoryAreaDetailClient() {
                             const areaName = area ? (area.subName ? `${area.name} - ${area.subName}` : area.name) : `区域 ${action.areaId}`;
                             const typeLabel = getTalkTypeLabel(action, category);
 
-                            // Resolve characterIds (character2d ids) → gameCharacter ids (1-26)
+                            // Resolve characterIds (character2d ids) → gameCharacter ids (1-26) and sort
                             const gameCharaIds = [...new Set(
                                 (action.characterIds ?? [])
                                     .map(c2dId => chara2dMap.get(c2dId))
                                     .filter((id): id is number => id !== undefined && id >= 1 && id <= 26)
-                            )];
+                            )].sort((a, b) => a - b);
 
                             return (
                                 <Link
@@ -167,7 +144,7 @@ export default function StoryAreaDetailClient() {
                                         {/* Character avatars */}
                                         {gameCharaIds.length > 0 ? (
                                             <div className="flex shrink-0 -space-x-2">
-                                                {gameCharaIds.slice(0, 4).map(charaId => (
+                                                {gameCharaIds.map(charaId => (
                                                     <img
                                                         key={charaId}
                                                         src={getCharacterIconUrl(charaId)}
@@ -175,11 +152,6 @@ export default function StoryAreaDetailClient() {
                                                         className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 object-cover"
                                                     />
                                                 ))}
-                                                {gameCharaIds.length > 4 && (
-                                                    <span className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-[10px] text-slate-500 dark:text-slate-300 font-bold">
-                                                        +{gameCharaIds.length - 4}
-                                                    </span>
-                                                )}
                                             </div>
                                         ) : (
                                             <span className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
