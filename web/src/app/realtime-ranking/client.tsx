@@ -293,8 +293,9 @@ function RealtimeRankingContent() {
         try {
             // WL活动时分开刷新端点：初次加载同时请求两个端点；
             // 轮询刷新时，总榜模式只请求 /latest/，单人榜模式只请求 /worldlink-latest/
+            // 但如果 WL 数据不可用，总榜模式也需要检查 WL 数据
             const skipOverall   = asRefresh && boardModeRef.current === "worldlink";
-            const skipWorldLink = asRefresh && boardModeRef.current !== "worldlink";
+            const skipWorldLink = asRefresh && boardModeRef.current !== "worldlink" && worldLinkSnapshotRef.current != null;
 
             const snapshotPromise = skipOverall
                 ? Promise.resolve(null as RealtimeRankingSnapshot | null)
