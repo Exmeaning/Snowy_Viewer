@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans } from "next/font/google";
 
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -21,13 +20,6 @@ import {
   SHOW_ADS_STORAGE_KEY,
 } from "@/lib/ads";
 import { getRootKeywords, generateJsonLd } from "@/lib/seo-keywords";
-
-const ibmPlexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
-  variable: "--font-ibm-plex-sans",
-});
 
 const SITE_BASE_URL =
   process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe";
@@ -158,7 +150,6 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={ibmPlexSans.variable}
       suppressHydrationWarning
     >
       <head>

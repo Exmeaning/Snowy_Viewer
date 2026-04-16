@@ -32,7 +32,7 @@
   height: 1080px;
   transform-origin: top left;
   transform: scale(var(--hud-scale));
-  font-family: "DIN Alternate", "Rajdhani", "IBM Plex Sans", sans-serif;
+  font-family: "DIN Alternate", "Rajdhani", system-ui, sans-serif;
 }
 
 /* Override Tailwind Preflight's img { max-width: 100% } which breaks
