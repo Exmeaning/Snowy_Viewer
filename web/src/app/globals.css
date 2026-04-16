@@ -44,16 +44,8 @@
   --ring-soft: rgba(148, 163, 184, 0.28);
 }
 
-@font-face {
-  font-family: "IBM Plex Sans Light";
-  src: url("/ibm-plex-sans/IBMPlexSans-Light.woff2") format("woff2");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
 @theme {
-  --font-sans: "IBM Plex Sans Light", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: var(--font-ibm-plex-sans), "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --color-miku: var(--color-miku);
   --color-miku-dark: var(--color-miku-dark);
   --color-luka: var(--color-luka);
@@ -68,6 +60,10 @@ body {
   color: var(--color-primary-text);
   background: linear-gradient(135deg, var(--page-bg-start) 0%, var(--page-bg-end) 100%);
   min-height: 100vh;
+  font-weight: 300;
+  font-synthesis-weight: none;
+  font-synthesis-style: none;
+  text-rendering: optimizeLegibility;
 }
 
 :root[data-theme="dark"] body {
