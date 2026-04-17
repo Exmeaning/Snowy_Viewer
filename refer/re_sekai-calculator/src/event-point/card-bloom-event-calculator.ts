@@ -8,9 +8,6 @@ import {
   type WorldBloomSupportDeckUnitEventLimitedBonus
 } from '../master-data/world-bloom-support-deck-unit-event-limited-bonus'
 
-const VIRTUAL_SINGER_MIN_ID = 21
-const VIRTUAL_SINGER_MAX_ID = 26
-
 export class CardBloomEventCalculator {
   public constructor (private readonly dataProvider: DataProvider) {
   }
@@ -34,10 +31,11 @@ export class CardBloomEventCalculator {
     // 未指定组合的话，不使用支援加成
     if (worldBloomSupportUnit === undefined) return undefined
 
-    // 任何World Link都需要先判断一张卡牌是否是和支援角色组合（V家不看应援队伍）匹配，如果不是的话不使用支援加成
-    const isVirtualSinger =
-      card.characterId >= VIRTUAL_SINGER_MIN_ID && card.characterId <= VIRTUAL_SINGER_MAX_ID
-    if (!isVirtualSinger && !units.includes(worldBloomSupportUnit)) {
+    // 判断卡牌是否属于支援角色所在的组合，不匹配则不参与支援卡组
+    // 虚拟歌手卡也需要匹配：
+    //   - 支援角色为人类角色（如奏，nightcord_at_25）→ 仅该团体成员卡 + 该团体应援的VS卡可进入
+    //   - 支援角色为虚拟歌手（如Miku，piapro）→ 所有VS卡都包含 piapro 所以自然全部通过，人类角色卡不含 piapro 自然排除
+    if (!units.includes(worldBloomSupportUnit)) {
       return undefined
     }
 
