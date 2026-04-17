@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { IProcessedAction, SnippetAction } from "@/types/story";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
+import { UNIT_FIELD_TO_ID, UNIT_ICON_FILES } from "@/types/types";
 
 interface TalkSnippetProps {
     characterId: number;
@@ -13,9 +15,10 @@ interface TalkSnippetProps {
     cnDisplayName?: string;
     translationSource?: 'official_cn' | 'llm' | 'human';
     unitName?: string; // Localized unit name for virtual singers
+    unitField?: string; // Unit field for virtual singers (e.g., 'light_sound', 'school_refusal')
 }
 
-export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText, cnDisplayName, translationSource, unitName }: TalkSnippetProps) {
+export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText, cnDisplayName, translationSource, unitName, unitField }: TalkSnippetProps) {
     const { useLLMTranslation } = useTheme();
     const iconUrl = characterId > 0 && characterId <= 26
         ? getCharacterIconUrl(characterId)
@@ -26,17 +29,40 @@ export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText
     // Show CN text when translation is enabled
     const showCnText = useLLMTranslation && !!cnText;
 
+    // Determine badge unit icon for virtual singers (21-26)
+    const isVirtualSinger = characterId >= 21 && characterId <= 26;
+    let badgeUnitId: string | null = null;
+    if (isVirtualSinger && unitField && unitField !== "piapro") {
+        // Directly use UNIT_FIELD_TO_ID to get the unit id
+        badgeUnitId = UNIT_FIELD_TO_ID[unitField] || null;
+    }
+    const badgeIcon = badgeUnitId ? UNIT_ICON_FILES[badgeUnitId] : null;
+
     return (
         <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 my-3 shadow-sm border border-slate-200/50 dark:border-slate-700/50 relative">
             <div className="flex items-start gap-3">
                 {/* Character Avatar */}
-                <div className="shrink-0">
+                <div className="shrink-0 relative">
                     {iconUrl ? (
-                        <img
-                            src={iconUrl}
-                            alt={characterName}
-                            className="w-12 h-12 rounded-full object-cover bg-slate-100 dark:bg-slate-700 border-2 border-miku/30"
-                        />
+                        <>
+                            <img
+                                src={iconUrl}
+                                alt={characterName}
+                                className="w-12 h-12 rounded-full object-cover bg-slate-100 dark:bg-slate-700 border-2 border-miku/30"
+                            />
+                            {badgeIcon && (
+                                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center">
+                                    <Image
+                                        src={`/data/icon/${badgeIcon}`}
+                                        alt=""
+                                        width={16}
+                                        height={16}
+                                        className="object-contain"
+                                        unoptimized
+                                    />
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center border-2 border-slate-300 dark:border-slate-600">
                             <span className="text-white text-sm font-bold">
@@ -52,9 +78,6 @@ export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText
                     <div className="flex items-center gap-2 mb-2">
                         <span className="inline-block px-2.5 py-0.5 bg-miku/10 text-miku text-sm font-medium rounded-full border border-miku/20">
                             {displayName}
-                            {unitName && (
-                                <span className="text-xs ml-1">（{unitName}）</span>
-                            )}
                         </span>
                     </div>
 
@@ -370,6 +393,7 @@ export function StorySnippet({ action }: StorySnippetProps) {
                     cnDisplayName={action.cnDisplayName}
                     translationSource={action.translationSource}
                     unitName={action.chara?.unitName}
+                    unitField={action.chara?.unitField}
                 />
             );
 

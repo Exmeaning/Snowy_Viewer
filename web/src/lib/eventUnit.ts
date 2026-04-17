@@ -76,6 +76,12 @@ export function buildEventBannerCharMap(
 
     const map = new Map<number, number>();
     for (const story of eventStories) {
+        // Special case: Event 97 always returns character ID 10
+        if (story.eventId === 97) {
+            map.set(97, 10);
+            continue;
+        }
+        
         const charId = unitIdToCharId.get(story.bannerGameCharacterUnitId);
         if (charId !== undefined) {
             map.set(story.eventId, charId);

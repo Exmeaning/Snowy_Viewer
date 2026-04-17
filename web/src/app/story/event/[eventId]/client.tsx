@@ -336,26 +336,6 @@ export default function StoryEventDetailClient() {
   return (
     <MainLayout>
       <div className="container mx-auto px-4 sm:px-6 py-8">
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-slate-500 hover:text-miku transition-colors mb-6"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          返回
-        </button>
-
         {/* Banner */}
         <div className="relative rounded-2xl overflow-hidden shadow-lg mb-8 bg-white dark:bg-slate-800 min-h-[200px] sm:min-h-[250px] flex items-center">
           <div className="absolute inset-0 z-0">

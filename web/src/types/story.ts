@@ -234,6 +234,7 @@ export interface IProcessedAction {
         id: number;
         name: string;
         unitName?: string; // For virtual singers with sub-unit (localized unit name)
+        unitField?: string; // For virtual singers with sub-unit (unit field like 'light_sound', 'school_refusal')
     };
     body?: string;
     voice?: string;
