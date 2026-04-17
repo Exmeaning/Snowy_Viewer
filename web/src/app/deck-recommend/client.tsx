@@ -320,6 +320,7 @@ export default function DeckRecommendClient() {
     const [liveType, setLiveType] = useState("multi");
     const [supportCharacterId, setSupportCharacterId] = useState<number | null>(null);
     const [selectedEventType, setSelectedEventType] = useState<string | null>(null);
+    const [eventBonusCharacterIds, setEventBonusCharacterIds] = useState<number[]>([]);
     const [musicId, setMusicId] = useState("");
     const [difficulty, setDifficulty] = useState("master");
     const [cardConfig, setCardConfig] = useState<Record<string, CardConfigItem>>(JSON.parse(JSON.stringify(DEFAULT_CARD_CONFIG)));
@@ -493,13 +494,25 @@ export default function DeckRecommendClient() {
         setCardConfig(prev => ({ ...prev, [rarity]: { ...prev[rarity], [field]: value } }));
     }, []);
 
-    // Clear supportCharacterId when event type is not world_bloom (only for non-wl3 modes)
+    // Auto-enable support character when world_bloom is selected; clear when not
     useEffect(() => {
         if (mode === "wl3") return; // WL3 mode manages its own support character
-        if (selectedEventType !== "world_bloom") {
+        if (selectedEventType === "world_bloom") {
+            setSupportCharacterId(prev => prev === null ? 0 : prev);
+        } else {
             setSupportCharacterId(null);
         }
     }, [selectedEventType, mode]);
+
+    // Reset support character if it's no longer in the bonus character list
+    useEffect(() => {
+        if (mode === "wl3") return;
+        if (selectedEventType !== "world_bloom") return;
+        if (eventBonusCharacterIds.length === 0) return;
+        if (supportCharacterId === null || supportCharacterId <= 0) return;
+        if (eventBonusCharacterIds.includes(supportCharacterId)) return;
+        setSupportCharacterId(0);
+    }, [mode, selectedEventType, eventBonusCharacterIds, supportCharacterId]);
 
     // In WL3 mode: default to showing support character selector (set to 0 = "please select")
     useEffect(() => {
@@ -525,7 +538,7 @@ export default function DeckRecommendClient() {
         (!needsMusic || !!musicId) &&
         (!needsEvent || !!effectiveEventId.trim()) &&
         (isWl3Mode ? (wl3GroupId !== null && supportCharacterId !== null && supportCharacterId > 0) : true) &&
-        (selectedEventType !== "world_bloom" || supportCharacterId !== null) &&
+        (selectedEventType !== "world_bloom" || (supportCharacterId !== null && supportCharacterId > 0)) &&
         (mode !== "challenge" || characterId !== null);
 
     const handleCalculate = useCallback(() => {
@@ -535,7 +548,7 @@ export default function DeckRecommendClient() {
         if (isWl3Mode && !wl3GroupId) { setError("请选择WL3模拟分组"); return; }
         if (isWl3Mode && (supportCharacterId === null || supportCharacterId <= 0)) { setError("请选择支援角色"); return; }
         if (needsEvent && !effectiveEventId.trim()) { setError("请输入活动ID"); return; }
-        if (selectedEventType === "world_bloom" && supportCharacterId === null) { setError("请选择支援角色"); return; }
+        if (selectedEventType === "world_bloom" && (supportCharacterId === null || supportCharacterId <= 0)) { setError("请选择支援角色"); return; }
 
         setError(null); setResults(null); setChallengeHighScore(null); setDuration(null); setDataTime(null);
         setIsCalculating(true); setProgressStage("fetching"); setProgressPercent(5); setProgressLabel("正在获取用户数据...");
@@ -872,7 +885,7 @@ export default function DeckRecommendClient() {
                     {/* Event / Mysekai Mode */}
                     {needsEvent && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-                            <div><EventSelector selectedEventId={eventId} onSelect={(id) => setEventId(id)} onEventTypeChange={setSelectedEventType} /></div>
+                            <div><EventSelector selectedEventId={eventId} onSelect={(id) => setEventId(id)} onEventTypeChange={setSelectedEventType} onBonusCharactersChange={setEventBonusCharacterIds} /></div>
                             {mode === "event" && (
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">Live类型</label>
@@ -899,24 +912,13 @@ export default function DeckRecommendClient() {
                             {selectedEventType === "world_bloom" && (
                                 <div className="sm:col-span-2">
                                     <div className="border border-slate-200 rounded-lg p-3 bg-slate-50/50">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm text-slate-700 font-medium">支援角色</span>
-                                                <span className="text-slate-400 text-xs text-left">World Bloom 活动必选</span>
-                                            </div>
-                                            <button onClick={() => setSupportCharacterId(supportCharacterId !== null ? null : 0)}
-                                                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${supportCharacterId !== null ? 'bg-miku' : 'bg-slate-200'}`}>
-                                                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${supportCharacterId !== null ? 'translate-x-5' : 'translate-x-0'}`} />
-                                            </button>
-                                        </div>
-                                        {supportCharacterId !== null && (
-                                            <div className="mt-4 pt-3 border-t border-slate-200/50">
-                                                <CharacterSelector
-                                                    selectedCharacterId={supportCharacterId}
-                                                    onSelect={setSupportCharacterId}
-                                                />
-                                            </div>
-                                        )}
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">支援角色 <span className="text-red-400">*</span></label>
+                                        <CharacterSelector
+                                            selectedCharacterId={supportCharacterId}
+                                            onSelect={setSupportCharacterId}
+                                            availableCharacterIds={eventBonusCharacterIds.length > 0 ? eventBonusCharacterIds : undefined}
+                                            hideUnitFilter={eventBonusCharacterIds.length > 0}
+                                        />
                                     </div>
                                 </div>
                             )}

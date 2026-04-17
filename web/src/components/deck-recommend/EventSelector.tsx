@@ -56,9 +56,10 @@ interface EventSelectorProps {
     selectedEventId: string;
     onSelect: (eventId: string, eventType?: string) => void;
     onEventTypeChange?: (eventType: string | null) => void;
+    onBonusCharactersChange?: (characterIds: number[]) => void;
 }
 
-export default function EventSelector({ selectedEventId, onSelect, onEventTypeChange }: EventSelectorProps) {
+export default function EventSelector({ selectedEventId, onSelect, onEventTypeChange, onBonusCharactersChange }: EventSelectorProps) {
     const { assetSource, isShowSpoiler } = useTheme();
     const [events, setEvents] = useState<IEventInfo[]>([]);
     const [deckBonuses, setDeckBonuses] = useState<IEventDeckBonus[]>([]);
@@ -117,6 +118,34 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
         }
         return map;
     }, [deckBonuses]);
+
+    // Map: gameCharacterUnitId → gameCharacterId
+    const charUnitToCharId = useMemo(() => {
+        const map = new Map<number, number>();
+        for (const cu of charaUnits) {
+            map.set(cu.id, cu.gameCharacterId);
+        }
+        return map;
+    }, [charaUnits]);
+
+    // Compute bonus characterIds for the currently selected event
+    const selectedEventBonusCharacterIds = useMemo(() => {
+        const eid = parseInt(selectedEventId, 10);
+        if (!eid) return [];
+        const bonusUnitIds = eventBonusCharMap.get(eid);
+        if (!bonusUnitIds) return [];
+        const charIdSet = new Set<number>();
+        for (const unitId of bonusUnitIds) {
+            const charId = charUnitToCharId.get(unitId);
+            if (charId !== undefined) charIdSet.add(charId);
+        }
+        return [...charIdSet].sort((a, b) => a - b);
+    }, [selectedEventId, eventBonusCharMap, charUnitToCharId]);
+
+    // Notify parent of bonus characters when selection changes
+    useEffect(() => {
+        onBonusCharactersChange?.(selectedEventBonusCharacterIds);
+    }, [selectedEventBonusCharacterIds, onBonusCharactersChange]);
 
     const vsCharAllUnitIds = useMemo(() => {
         const map = new Map<number, number[]>();
