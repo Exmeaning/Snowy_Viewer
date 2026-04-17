@@ -735,15 +735,15 @@ export default function MusicDetailPage() {
 
                 {/* Back Button */}
                 <div className="mt-12 text-center">
-                    <button
-                        onClick={() => router.back()}
+                    <Link
+                        href="/music"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                         返回音乐列表
-                    </button>
+                    </Link>
                 </div>
             </div>
         </MainLayout>
