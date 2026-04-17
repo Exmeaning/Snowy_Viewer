@@ -89,13 +89,6 @@ export default function StoryCardReaderClient() {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-slate-500 hover:text-miku transition-colors mb-6">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    返回
-                </button>
-
                 {card && (
                     <Link href={`/cards/${card.id}`} className="flex items-center gap-4 mb-8 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-sm transition-all group">
                         <img src={getCardThumbnailUrl(card.characterId, card.assetbundleName, false, assetSource)} alt={card.prefix} className="w-24 h-12 object-cover rounded-lg shrink-0" />

@@ -16,7 +16,7 @@ import {
 import { fetchMasterData } from "./fetch";
 import { getBackgroundImageUrl, getStoryVoiceUrl, getCardStoryVoiceUrl, getAreaTalkVoiceUrl, getSpecialStoryVoiceUrl, getStoryBgmUrl, getStorySoundEffectUrl } from "./assets";
 import type { AssetSourceType } from "@/contexts/ThemeContext";
-import { CHAR_NAMES } from "@/types/types";
+import { CHAR_NAMES, UNIT_NAME_MAP } from "@/types/types";
 import { IGameChara, IUnitProfile } from "@/types/types";
 
 // MV names mapping (ID 1-5 for unit main stories)
@@ -51,7 +51,7 @@ async function getCharacterName(
     character2ds: ICharacter2D[],
     mobCharacters: IMobCharacter[],
     unitProfiles: IUnitProfile[]
-): Promise<{ id: number; name: string; unitName?: string }> {
+): Promise<{ id: number; name: string; unitName?: string; unitField?: string }> {
     const chara2d = character2ds.find((c) => c.id === character2dId);
 
     if (!chara2d) {
@@ -64,11 +64,11 @@ async function getCharacterName(
         // Check if this is a virtual singer (characterId 21-26)
         const isVirtualSinger = chara2d.characterId >= 21 && chara2d.characterId <= 26;
         
-        // If it's a virtual singer and has a specific unit, get unit name from unitProfiles
+        // If it's a virtual singer and has a specific unit, use UNIT_NAME_MAP for consistency
         if (isVirtualSinger && chara2d.unit && chara2d.unit !== "piapro" && chara2d.unit !== "none") {
-            const unitProfile = unitProfiles.find(u => u.unit === chara2d.unit);
-            if (unitProfile) {
-                return { id: chara2d.characterId, name, unitName: unitProfile.unitName };
+            const unitName = UNIT_NAME_MAP[chara2d.unit];
+            if (unitName) {
+                return { id: chara2d.characterId, name, unitName, unitField: chara2d.unit };
             }
         }
         
@@ -196,7 +196,12 @@ export async function processScenarioForDisplay(
                     type: SnippetAction.Talk,
                     delay: snippet.Delay,
                     isWait,
-                    chara: { id: charInfo.id, name: displayName, unitName: charInfo.unitName },
+                    chara: { 
+                        id: charInfo.id, 
+                        name: displayName, 
+                        unitName: charInfo.unitName,
+                        unitField: charInfo.unitField 
+                    },
                     body: talkData.Body,
                     voice: voiceUrl,
                 });
