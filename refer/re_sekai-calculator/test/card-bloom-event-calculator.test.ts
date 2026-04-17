@@ -86,24 +86,93 @@ function makeCard (characterId: number): Card {
   }
 }
 
-test('virtual singer support deck bonus does not require matching support unit', async () => {
+// ========== VS card with matching support unit ==========
+
+test('VS card with matching support unit gets bonus', async () => {
   const calculator = new CardBloomEventCalculator(mockProvider)
+  // Miku card tagged with nightcord_at_25 (25h应援), support is nightcord_at_25
+  const bonus = await calculator.getCardSupportDeckBonus(
+    makeUserCard(),
+    makeCard(21),
+    ['piapro', 'nightcord_at_25'],
+    { worldBloomSupportUnit: 'nightcord_at_25' }
+  )
+  expect(bonus).toBe(13) // 10 (others) + 1 (masterRank) + 2 (skillLevel)
+})
+
+// ========== VS card without matching support unit ==========
+
+test('VS card without matching support unit is excluded', async () => {
+  const calculator = new CardBloomEventCalculator(mockProvider)
+  // Miku piapro-only card, support is leo_need → excluded
   const bonus = await calculator.getCardSupportDeckBonus(
     makeUserCard(),
     makeCard(21),
     ['piapro'],
     { worldBloomSupportUnit: 'leo_need' }
   )
-  expect(bonus).toBe(13)
+  expect(bonus).toBeUndefined()
 })
 
-test('non virtual singer still requires matching support unit', async () => {
+// ========== Non-VS card requires matching support unit ==========
+
+test('non-VS card with mismatched unit is excluded', async () => {
   const calculator = new CardBloomEventCalculator(mockProvider)
   const bonus = await calculator.getCardSupportDeckBonus(
     makeUserCard(),
     makeCard(1),
     ['leo_need'],
     { worldBloomSupportUnit: 'more_more_jump' }
+  )
+  expect(bonus).toBeUndefined()
+})
+
+test('non-VS card with matching unit gets bonus', async () => {
+  const calculator = new CardBloomEventCalculator(mockProvider)
+  const bonus = await calculator.getCardSupportDeckBonus(
+    makeUserCard(),
+    makeCard(1),
+    ['leo_need'],
+    { worldBloomSupportUnit: 'leo_need' }
+  )
+  expect(bonus).toBe(13)
+})
+
+// ========== VS support character (piapro) ==========
+
+test('VS support character: all VS cards included (piapro matches)', async () => {
+  const calculator = new CardBloomEventCalculator(mockProvider)
+  // Support is Miku (piapro), another VS card with piapro unit → included
+  const bonus = await calculator.getCardSupportDeckBonus(
+    makeUserCard(),
+    makeCard(22), // Rin
+    ['piapro'],
+    { worldBloomSupportUnit: 'piapro' }
+  )
+  expect(bonus).toBe(13)
+})
+
+test('VS support character: non-VS cards excluded (no piapro unit)', async () => {
+  const calculator = new CardBloomEventCalculator(mockProvider)
+  // Support is Miku (piapro), human character card → excluded
+  const bonus = await calculator.getCardSupportDeckBonus(
+    makeUserCard(),
+    makeCard(1),
+    ['leo_need'],
+    { worldBloomSupportUnit: 'piapro' }
+  )
+  expect(bonus).toBeUndefined()
+})
+
+// ========== No support unit specified ==========
+
+test('no worldBloomSupportUnit returns undefined', async () => {
+  const calculator = new CardBloomEventCalculator(mockProvider)
+  const bonus = await calculator.getCardSupportDeckBonus(
+    makeUserCard(),
+    makeCard(21),
+    ['piapro'],
+    {}
   )
   expect(bonus).toBeUndefined()
 })
