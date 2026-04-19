@@ -137,7 +137,7 @@ export default function StoryAreaDetailClient() {
                             return (
                                 <Link
                                     key={action.id}
-                                    href={`/story/area/${encodeURIComponent(areaIdParam)}/${action.id}`}
+                                    href={`/story/area/${encodeURIComponent(areaIdParam)}/${encodeURIComponent(action.scenarioId ?? "")}`}
                                     className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-sm transition-all group"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
@@ -163,7 +163,7 @@ export default function StoryAreaDetailClient() {
                                                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-miku transition-colors">{areaName}</span>
                                                 {typeLabel && <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 rounded">{typeLabel}</span>}
                                             </div>
-                                            <p className="text-xs text-slate-400 mt-0.5">ID: {action.id}</p>
+                                            <p className="text-xs text-slate-400 mt-0.5">ID: {action.id}:{action.scenarioId}</p>
                                         </div>
                                     </div>
                                     <svg className="w-4 h-4 text-slate-300 group-hover:text-miku transition-colors shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
