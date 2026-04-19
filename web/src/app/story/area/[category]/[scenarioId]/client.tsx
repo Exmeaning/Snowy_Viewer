@@ -20,17 +20,18 @@ export default function StoryAreaTalkClient() {
     const params = useParams();
     const { serverSource, assetSource } = useTheme();
     const areaIdParam = decodeURIComponent(params.category as string);
-    const actionSetId = Number(params.actionSetId);
+    const scenarioId = decodeURIComponent(params.scenarioId as string);
     const lang: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
 
     const [areaName, setAreaName] = useState<string>("");
+    const [actionSetId, setActionSetId] = useState<number | null>(null);
     const [scenarioData, setScenarioData] = useState<IProcessedScenarioData | null>(null);
     const [missingPaths, setMissingPaths] = useState<string[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!actionSetId) return;
+        if (!scenarioId) return;
         async function load() {
             setIsLoading(true);
             setError(null);
@@ -41,15 +42,16 @@ export default function StoryAreaTalkClient() {
                     fetchMasterData<IActionSet[]>("actionSets.json"),
                     fetchMasterData<IArea[]>("areas.json"),
                 ]);
-                const action = actionSetsData.find(a => a.id === actionSetId);
+                const action = actionSetsData.find(a => a.scenarioId === scenarioId);
                 if (!action?.scenarioId) throw new Error("对话不存在");
 
+                setActionSetId(action.id);
                 const area = areasData.find(a => a.id === action.areaId);
                 const name = area ? (area.subName ? `${area.name} - ${area.subName}` : area.name) : `区域 ${action.areaId}`;
                 setAreaName(name);
                 document.title = `${name} - 区域对话 - Moesekai`;
 
-                const group = Math.floor(actionSetId / 100);
+                const group = Math.floor(action.id / 100);
                 const raw = await fetchStoryAssetFromMirror("talk", lang, {
                     scenarioId: action.scenarioId,
                     group,
@@ -63,7 +65,7 @@ export default function StoryAreaTalkClient() {
             }
         }
         load();
-    }, [actionSetId, lang]);
+    }, [scenarioId, lang]);
 
     return (
         <MainLayout>
@@ -80,8 +82,8 @@ export default function StoryAreaTalkClient() {
 
                 <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="font-bold text-slate-900 dark:text-slate-100">{areaName || `对话 ${actionSetId}`}</h1>
-                        <span className="text-xs text-slate-400">ID: {actionSetId}</span>
+                        <h1 className="font-bold text-slate-900 dark:text-slate-100">{areaName || `对话 ${scenarioId}`}</h1>
+                        <span className="text-xs text-slate-400">ID: {actionSetId}:{scenarioId}</span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
                             serverSource === "cn"
                                 ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50"
