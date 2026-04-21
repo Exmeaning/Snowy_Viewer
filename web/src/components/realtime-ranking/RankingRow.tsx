@@ -58,8 +58,10 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
     const masterRank = entry.leaderCardMasterRank ?? 0;
     const isTopThree = entry.rank <= 3;
     const isExtendedTier = entry.rank > 100;
-    // TOP100 之外只保留“扩展”标识，不展示周回详情
+    const isTierLineEntry = isExtendedTier && !!churnEntry?.isTierLine;
+    // TOP100 之外：真实玩家行展示周回详情，榜线行展示榜线速度
     const canShowChurnDetails = !isExtendedTier && churnEntry != null;
+    const canShowTierLine = isTierLineEntry;
 
     // 用于 lastChangedAt 的实时倒计时
     const [now, setNow] = useState(() => Date.now());
@@ -75,6 +77,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
     // 单行展开状态（关闭全局周回面板时，允许手动展开某一行）
     const [localExpanded, setLocalExpanded] = useState(false);
     const showChurnRow = canShowChurnDetails && (showChurn || localExpanded);
+    const showTierLineRow = canShowTierLine && (showChurn || localExpanded);
 
     useEffect(() => {
         const nextFlashType = entry.scoreDelta === 0 ? null : entry.scoreDelta > 0 ? "up" : "down";
@@ -143,15 +146,19 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
         3: "border-orange-200 bg-gradient-to-r from-orange-200 via-amber-100 to-orange-300 text-orange-800 dark:border-orange-400/40 dark:from-orange-500 dark:via-amber-500 dark:to-orange-600 dark:text-orange-950",
     };
 
-    const rowBg = isExtendedTier
-        ? "bg-slate-50/60 dark:bg-slate-900/50"
-        : entry.isNewEntry
-            ? "bg-sky-50/40 dark:bg-sky-950/15"
-            : entry.rankDelta > 0
-                ? "bg-emerald-50/30 dark:bg-emerald-950/10"
-                : entry.rankDelta < 0
-                    ? "bg-rose-50/30 dark:bg-rose-950/10"
-                    : "";
+    const rowBg = entry.isNewEntry
+        ? "bg-sky-50/40 dark:bg-sky-950/15"
+        : entry.scoreDelta > 0
+            ? "bg-emerald-50/30 dark:bg-emerald-950/10"
+            : entry.scoreDelta < 0
+                ? "bg-rose-50/30 dark:bg-rose-950/10"
+                : isExtendedTier
+                    ? "bg-slate-50/60 dark:bg-slate-900/50"
+                    : entry.rankDelta > 0
+                        ? "bg-emerald-50/30 dark:bg-emerald-950/10"
+                        : entry.rankDelta < 0
+                            ? "bg-rose-50/30 dark:bg-rose-950/10"
+                            : "";
 
     // 分数数字的颜色：有变动时显示涨跌色
     const scoreColorClass = hasCurrentChange
@@ -197,7 +204,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                         <div className="mt-0.5 text-[8px] font-medium text-slate-400 dark:text-slate-500">扩展</div>
                     )}
                     {/* 展开/收起按钮 — 全端显示在排名列下方 */}
-                    {canShowChurnDetails && !showChurn && (
+                    {(canShowChurnDetails || canShowTierLine) && !showChurn && (
                         <div className="mt-1 flex flex-col items-center gap-0.5">
                             {/* 移动端：1H 气泡也放在排名列 */}
                             {currentHourChurn > 0 && (
@@ -345,6 +352,17 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                         className="relative z-10 overflow-hidden"
                     >
                         <ChurnRow churnEntry={churnEntry} userId={entry.userId} rank={entry.rank} churnData={churnData} onShowParkingPeriods={onShowParkingPeriods} />
+                    </motion.div>
+                )}
+                {showTierLineRow && churnEntry && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        className="relative z-10 overflow-hidden"
+                    >
+                        <TierLineChurnRow churnEntry={churnEntry} />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -607,6 +625,70 @@ function ChurnRow({ churnEntry, userId, rank, churnData, onShowParkingPeriods }:
                         })()}
                     </>
                 )}
+                </div>
+                {/* 右侧渐变遮罩（仅手机端） */}
+                <div
+                    className="pointer-events-none absolute right-0 top-0 h-full w-6 sm:hidden"
+                    style={{ background: "linear-gradient(to left, var(--surface-base), transparent)" }}
+                />
+            </div>
+        </div>
+    );
+}
+
+/** 榜线速度行 — 用于 rank > 100 的榜线数据点（无真实玩家信息） */
+function TierLineChurnRow({ churnEntry }: { churnEntry: ChurnRankingEntry }) {
+    const recentChanges = churnEntry.recent_score_changes ?? [];
+    const speed1h = churnEntry.growth_1h;
+    const speed20min3 = calcRecentGrowth(recentChanges, 20) * 3;
+    const trend = getSpeedTrend(speed1h, speed20min3);
+    const activityCount = churnEntry.recent_activity?.count ?? 0;
+
+    const trendIcon = trend === "up"
+        ? <span className="text-emerald-500 font-black">▲</span>
+        : trend === "down"
+            ? <span className="text-rose-500 font-black">▼</span>
+            : <span className="text-slate-400">—</span>;
+
+    return (
+        <div className="px-3 pb-2.5 pt-0.5">
+            <div className="relative pl-[calc(2.5rem+0.5rem)] sm:pl-[calc(3rem+0.5rem)]">
+                <div
+                    className="flex flex-nowrap items-center gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:overflow-visible sm:gap-y-1"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+                >
+                    {/* 标签 */}
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] dark:bg-slate-800">
+                        <span className="font-medium text-slate-400 dark:text-slate-500">榜线速度</span>
+                    </span>
+
+                    <span className="shrink-0 text-slate-300 dark:text-slate-600 select-none px-0.5">·</span>
+
+                    {/* 近1h时速 + 趋势 */}
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] dark:bg-slate-800">
+                        <span className="font-medium text-slate-500 dark:text-slate-400">1h速</span>
+                        <span className="font-black text-slate-700 dark:text-slate-200 tabular-nums">{fmtSpeed(speed1h)}</span>
+                        <span className="text-[9px] leading-none">{trendIcon}</span>
+                    </span>
+
+                    {/* 近20min×3时速 */}
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] dark:bg-slate-800">
+                        <span className="font-medium text-slate-500 dark:text-slate-400">20m×3速</span>
+                        <span className={`font-black tabular-nums ${trend === "up" ? "text-emerald-600 dark:text-emerald-400" : trend === "down" ? "text-rose-500 dark:text-rose-400" : "text-slate-700 dark:text-slate-200"}`}>
+                            {fmtSpeed(speed20min3)}
+                        </span>
+                    </span>
+
+                    {activityCount > 0 && (
+                        <>
+                            <span className="shrink-0 text-slate-300 dark:text-slate-600 select-none px-0.5">·</span>
+                            {/* 近期采集次数 */}
+                            <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-sky-100 px-1.5 py-0.5 text-[10px] dark:bg-sky-500/15">
+                                <span className="font-medium text-slate-500 dark:text-slate-400">近期采集</span>
+                                <span className="font-black text-sky-600 dark:text-sky-400 tabular-nums">{activityCount}</span>
+                            </span>
+                        </>
+                    )}
                 </div>
                 {/* 右侧渐变遮罩（仅手机端） */}
                 <div
