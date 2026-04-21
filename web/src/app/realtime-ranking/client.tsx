@@ -168,7 +168,7 @@ function findWorldLinkGroup(snapshot: WorldLinkSnapshot | null, gameCharacterId:
 function applySnapshotChurnDiff(
     previous: RealtimeRankingSnapshot | null,
     next: RealtimeRankingSnapshot | null,
-    onChanged: (userId: string) => void,
+    onChanged: (userId: string, scoreDelta: number) => void,
 ) {
     if (!previous || !next) return;
 
@@ -176,7 +176,7 @@ function applySnapshotChurnDiff(
     for (const entry of next.entries) {
         const prev = prevMap.get(entry.userId);
         if (prev && entry.score !== prev.score) {
-            onChanged(entry.userId);
+            onChanged(entry.userId, entry.score - prev.score);
         }
     }
 }
@@ -216,12 +216,13 @@ function RealtimeRankingContent() {
     const churnRetryTimerRef = useRef<number | null>(null);
     const worldLinkCheckedRef = useRef(false);
 
-    /** 热更：某用户分数变化时，更新其当前小时的周回计数 */
-    const updateChurnForUser = useCallback((userId: string) => {
+    /** 热更：某用户分数变化时，更新其当前小时的周回计数及时速数据 */
+    const updateChurnForUser = useCallback((userId: string, scoreDelta: number) => {
         const map = churnDataRef.current;
         const entry = map.get(userId);
         if (!entry) return;
 
+        const now = Date.now();
         const hourKey = getCurrentHourKey();
         const existing = entry.hourly_churn.find((h) => h.hour === hourKey);
         if (existing) {
@@ -230,6 +231,19 @@ function RealtimeRankingContent() {
             entry.hourly_churn.push({ hour: hourKey, count: 1 });
         }
         entry.churn_48h += 1;
+
+        // 更新 recent_score_changes（追加新记录，保留近1小时内的）
+        const newChange = { time: now, delta: scoreDelta };
+        const cutoff1h = now - 3600_000;
+        entry.recent_score_changes = [
+            ...entry.recent_score_changes.filter((c) => c.time >= cutoff1h),
+            newChange,
+        ];
+
+        // 重算 growth_1h
+        entry.growth_1h = entry.recent_score_changes
+            .filter((c) => c.time >= cutoff1h && c.delta > 0)
+            .reduce((acc, c) => acc + c.delta, 0);
 
         // 触发 React 重渲染
         const next = new Map(map);
