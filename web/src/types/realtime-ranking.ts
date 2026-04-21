@@ -182,8 +182,10 @@ export interface ChurnScoreChange {
 
 export interface ChurnRankingEntry {
     rank: number;
-    userId: number | string;
+    userId?: number | string;
     name: string;
+    /** 榜线条目（rank > 100，无真实玩家信息） */
+    isTierLine?: boolean;
     score: number;
     churn_48h: number;
     hourly_churn: ChurnHourlyEntry[];

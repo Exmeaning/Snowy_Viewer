@@ -119,39 +119,48 @@ function buildEntriesWithDiff(
     lastChanges: Map<string, { rankDelta: number; scoreDelta: number; changedAt: number }>,
     scopeKey: string,
 ): RealtimeRankingEntryWithDiff[] {
-    const previousMap = new Map(previousSnapshot?.entries.map((entry) => [entry.userId, entry]) ?? []);
+    const previousByUserId = new Map(previousSnapshot?.entries.map((entry) => [entry.userId, entry]) ?? []);
+    const previousByRank   = new Map(previousSnapshot?.entries.map((entry) => [entry.rank,   entry]) ?? []);
 
     return snapshot.entries.map((entry) => {
-        const previous = previousMap.get(entry.userId);
-        const rankDelta = previous ? previous.rank - entry.rank : 0;
-        const scoreDelta = previous ? entry.score - previous.score : 0;
-        const scopedUserKey = `${scopeKey}:${entry.userId}`;
+        const isTierLine = entry.rank > 100;
 
-        // 分别追踪 scoreDelta 和 rankDelta，避免用 0 覆盖之前有意义的值
-        // 例如：top5 超过 top4 时，被超过的玩家 rankDelta=-1 但 scoreDelta=0，
-        // 不应该用 scoreDelta=0 覆盖之前记录的分数变动
+        // rank > 100 的榜线行：按 rank 位置 diff（不管换没换人）
+        // rank <= 100 的玩家行：按 userId diff
+        const previous = isTierLine
+            ? previousByRank.get(entry.rank)
+            : previousByUserId.get(entry.userId);
+
+        const rankDelta  = previous && !isTierLine ? previous.rank - entry.rank : 0;
+        const scoreDelta = previous ? entry.score - previous.score : 0;
+
+        // lastChanges key：榜线用 tier:{rank}，玩家用 userId
+        const scopedKey = isTierLine
+            ? `${scopeKey}:tier:${entry.rank}`
+            : `${scopeKey}:${entry.userId}`;
+
         if (scoreDelta !== 0 || rankDelta !== 0) {
-            const existing = lastChanges.get(scopedUserKey);
-            lastChanges.set(scopedUserKey, {
+            const existing = lastChanges.get(scopedKey);
+            lastChanges.set(scopedKey, {
                 scoreDelta: scoreDelta !== 0 ? scoreDelta : (existing?.scoreDelta ?? 0),
-                rankDelta: rankDelta !== 0 ? rankDelta : (existing?.rankDelta ?? 0),
+                rankDelta:  rankDelta  !== 0 ? rankDelta  : (existing?.rankDelta  ?? 0),
                 changedAt: Date.now(),
             });
         }
 
-        const saved = lastChanges.get(scopedUserKey);
+        const saved = lastChanges.get(scopedKey);
 
         return {
             ...entry,
             displayName: decodeHtmlEntities(entry.displayName),
-            previousRank: previous?.rank,
+            previousRank:  previous?.rank,
             previousScore: previous?.score,
             rankDelta,
             scoreDelta,
             isNewEntry: !previous,
             lastScoreDelta: saved?.scoreDelta,
-            lastRankDelta: saved?.rankDelta,
-            lastChangedAt: saved?.changedAt,
+            lastRankDelta:  saved?.rankDelta,
+            lastChangedAt:  saved?.changedAt,
         };
     });
 }
@@ -168,15 +177,22 @@ function findWorldLinkGroup(snapshot: WorldLinkSnapshot | null, gameCharacterId:
 function applySnapshotChurnDiff(
     previous: RealtimeRankingSnapshot | null,
     next: RealtimeRankingSnapshot | null,
-    onChanged: (userId: string, scoreDelta: number) => void,
+    onChanged: (key: string, scoreDelta: number, isTierLine?: boolean) => void,
 ) {
     if (!previous || !next) return;
 
-    const prevMap = new Map(previous.entries.map((entry) => [entry.userId, entry]));
+    const prevByUserId = new Map(previous.entries.map((entry) => [entry.userId, entry]));
+    const prevByRank   = new Map(previous.entries.map((entry) => [entry.rank,   entry]));
+
     for (const entry of next.entries) {
-        const prev = prevMap.get(entry.userId);
+        const isTierLine = entry.rank > 100;
+        const prev = isTierLine ? prevByRank.get(entry.rank) : prevByUserId.get(entry.userId);
         if (prev && entry.score !== prev.score) {
-            onChanged(entry.userId, entry.score - prev.score);
+            const delta = entry.score - prev.score;
+            if (!isTierLine) {
+                onChanged(entry.userId, delta);
+            }
+            onChanged(`tier:${entry.rank}`, delta, true);
         }
     }
 }
@@ -216,25 +232,29 @@ function RealtimeRankingContent() {
     const churnRetryTimerRef = useRef<number | null>(null);
     const worldLinkCheckedRef = useRef(false);
 
-    /** 热更：某用户分数变化时，更新其当前小时的周回计数及时速数据 */
-    const updateChurnForUser = useCallback((userId: string, scoreDelta: number) => {
+    /** 热更：某用户/榜线分数变化时，更新其时速数据 */
+    const updateChurnForUser = useCallback((key: string, scoreDelta: number, isTierLine?: boolean) => {
         const map = churnDataRef.current;
-        const entry = map.get(userId);
+        const entry = map.get(key);
         if (!entry) return;
 
         const now = Date.now();
-        const hourKey = getCurrentHourKey();
-        const existing = entry.hourly_churn.find((h) => h.hour === hourKey);
-        if (existing) {
-            existing.count += 1;
-        } else {
-            entry.hourly_churn.push({ hour: hourKey, count: 1 });
+        const cutoff1h = now - 3600_000;
+
+        // 榜线条目无周回网格，跳过 hourly_churn / churn_48h
+        if (!isTierLine) {
+            const hourKey = getCurrentHourKey();
+            const existing = entry.hourly_churn.find((h) => h.hour === hourKey);
+            if (existing) {
+                existing.count += 1;
+            } else {
+                entry.hourly_churn.push({ hour: hourKey, count: 1 });
+            }
+            entry.churn_48h += 1;
         }
-        entry.churn_48h += 1;
 
         // 更新 recent_score_changes（追加新记录，保留近1小时内的）
         const newChange = { time: now, delta: scoreDelta };
-        const cutoff1h = now - 3600_000;
         entry.recent_score_changes = [
             ...entry.recent_score_changes.filter((c) => c.time >= cutoff1h),
             newChange,
@@ -244,6 +264,12 @@ function RealtimeRankingContent() {
         entry.growth_1h = entry.recent_score_changes
             .filter((c) => c.time >= cutoff1h && c.delta > 0)
             .reduce((acc, c) => acc + c.delta, 0);
+
+        // 榜线：同步更新 recent_activity.count（近期采集次数）
+        if (isTierLine && entry.recent_activity) {
+            entry.recent_activity.count += 1;
+            entry.recent_activity.changed_at = [...entry.recent_activity.changed_at, now];
+        }
 
         // 触发 React 重渲染
         const next = new Map(map);
@@ -426,12 +452,30 @@ function RealtimeRankingContent() {
             const map = new Map<string, ChurnRankingEntry>();
             const scopeKey = data.board_type === "worldlink" ? `worldlink:${data.target_id}` : "overall";
             for (const entry of data.rankings) {
-                const uid = String(entry.userId);
-                map.set(uid, entry);
+                // 无 userId 的条目是榜线数据点（如 TOP200），用 "tier:{rank}" 作为 key
+                const isTierLine = entry.userId == null;
+                const mapKey = isTierLine ? `tier:${entry.rank}` : String(entry.userId);
+                map.set(mapKey, { ...entry, isTierLine: isTierLine || undefined });
+
+                if (isTierLine) {
+                    // 榜线条目：取 recent_score_changes 最后一条作为首次加载的 diff 基准
+                    const scopedTierKey = `${scopeKey}:tier:${entry.rank}`;
+                    const changes = entry.recent_score_changes;
+                    if (changes && changes.length > 0 && !lastChangesRef.current.has(scopedTierKey)) {
+                        const last = changes[changes.length - 1];
+                        const changedAt = last.time < 1e12 ? last.time * 1000 : last.time;
+                        lastChangesRef.current.set(scopedTierKey, {
+                            scoreDelta: last.delta,
+                            rankDelta: 0,
+                            changedAt,
+                        });
+                    }
+                    continue;
+                }
 
                 // 将 churn 的 last_change 预注入 lastChangesRef，
                 // 这样首次自动刷新后仍然能显示涨跌幅而不会被覆盖为 "—"
-                const scopedUid = `${scopeKey}:${uid}`;
+                const scopedUid = `${scopeKey}:${mapKey}`;
                 if (entry.last_change && !lastChangesRef.current.has(scopedUid)) {
                     // 时间戳兼容：秒级 vs 毫秒级
                     const rawTime = entry.last_change.time;
@@ -793,7 +837,7 @@ function RealtimeRankingContent() {
                         showChurn={shouldShowChurnToggle ? showChurn : false}
                         churnData={activeChurnData}
                         onShowParkingPeriods={setParkingModalUserId}
-                        showExtendedWarning={!isWorldLinkMode}
+                        showExtendedWarning={true}
                     />
                 )}
             </div>
