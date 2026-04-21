@@ -18,6 +18,7 @@ interface RankingRowProps {
     secondsSinceUpdate?: number;
     showChurn: boolean;
     churnEntry?: ChurnRankingEntry;
+    churnData: Map<string, ChurnRankingEntry>;
     onShowParkingPeriods: (userId: string) => void;
 }
 
@@ -47,7 +48,7 @@ function getCurrentHourChurn(churnEntry?: ChurnRankingEntry): number {
     return found?.count ?? 0;
 }
 
-export default function RankingRow({ entry, masterData, assetSource, secondsSinceUpdate, showChurn, churnEntry, onShowParkingPeriods }: RankingRowProps) {
+export default function RankingRow({ entry, masterData, assetSource, secondsSinceUpdate, showChurn, churnEntry, churnData, onShowParkingPeriods }: RankingRowProps) {
     const leaderCard = entry.leaderCardId
         ? masterData.cards.find((card) => card.id === entry.leaderCardId)
         : undefined;
@@ -248,11 +249,24 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                 </div>
 
                 {/* Player info: name + signature + honors */}
-                <div className="ml-3 min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-bold leading-tight text-primary-text">{entry.displayName}</h3>
-                    {entry.signature && (
-                        <p className="mt-0.5 truncate text-[11px] leading-tight text-slate-400 dark:text-slate-500">{entry.signature}</p>
-                    )}
+                <div className="ml-3 min-w-0 flex-1 overflow-hidden">
+                    {/* 名字 + 签名：手机端单行横滑，PC 端正常截断 */}
+                    <div className="relative">
+                        <div
+                            className="flex items-baseline gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden sm:overflow-visible"
+                            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+                        >
+                            <h3 className="shrink-0 text-sm font-bold leading-tight text-primary-text sm:shrink sm:truncate">{entry.displayName}</h3>
+                            {entry.signature && (
+                                <p className="shrink-0 text-[11px] leading-tight text-slate-400 dark:text-slate-500 sm:shrink sm:truncate">{entry.signature}</p>
+                            )}
+                        </div>
+                        {/* 右侧渐变遮罩（仅手机端） */}
+                        <div
+                            className="pointer-events-none absolute right-0 top-0 h-full w-5 sm:hidden"
+                            style={{ background: "linear-gradient(to left, var(--surface-base), transparent)" }}
+                        />
+                    </div>
                     <div className="mt-1 max-w-full overflow-hidden">
                         <PlayerHonorPreview honors={entry.honors} masterData={masterData} assetSource={assetSource} compact />
                     </div>
@@ -330,7 +344,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                         transition={{ duration: 0.2, ease: "easeInOut" }}
                         className="relative z-10 overflow-hidden"
                     >
-                        <ChurnRow churnEntry={churnEntry} userId={entry.userId} onShowParkingPeriods={onShowParkingPeriods} />
+                        <ChurnRow churnEntry={churnEntry} userId={entry.userId} rank={entry.rank} churnData={churnData} onShowParkingPeriods={onShowParkingPeriods} />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -384,73 +398,222 @@ function getChurnCellColor(count: number, isCurrentHour: boolean): string {
     return "bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-400";
 }
 
-function ChurnRow({ churnEntry, userId, onShowParkingPeriods }: { churnEntry: ChurnRankingEntry; userId: string; onShowParkingPeriods: (userId: string) => void }) {
-    const grid = buildHourlyGridReversed(churnEntry.hourly_churn);
+/** 根据当前排名计算上下梯度排名 */
+function getTierRanks(rank: number): [number | null, number | null] {
+    if (rank <= 10) {
+        return [rank > 1 ? rank - 1 : null, rank < 10 ? rank + 1 : null];
+    }
+    const lower = Math.floor((rank - 1) / 10) * 10;
+    const upper = Math.ceil((rank + 1) / 10) * 10;
+    return [lower > 0 ? lower : null, upper <= 100 ? upper : null];
+}
 
-    // grid[0] = 当前小时（1H），grid[1..23] = 前 1~23 小时 → 第一行
-    // grid[24..47] = 前 24~47 小时 → 第二行
+/** 用 recent_score_changes 计算近 N 分钟内的总增量 */
+function calcRecentGrowth(recentChanges: { time: number; delta: number }[], minutes: number): number {
+    const cutoff = Date.now() - minutes * 60 * 1000;
+    return recentChanges
+        .filter((c) => c.time >= cutoff && c.delta > 0)
+        .reduce((acc, c) => acc + c.delta, 0);
+}
+
+/** 用 recent_score_changes 计算近 N 分钟内的周回次数 */
+function calcRecentChurnCount(recentChanges: { time: number; delta: number }[], minutes: number): number {
+    const cutoff = Date.now() - minutes * 60 * 1000;
+    return recentChanges.filter((c) => c.time >= cutoff && c.delta > 0).length;
+}
+
+/** 格式化分数为 k 单位 */
+function fmtSpeed(value: number): string {
+    return `${Math.round(value / 1000)}k`;
+}
+
+/** 时速趋势：比较近20min×3 与 近1h，判断加速/减速/持平 */
+function getSpeedTrend(speed1h: number, speed20min3: number): "up" | "down" | "flat" {
+    if (speed1h === 0 && speed20min3 === 0) return "flat";
+    const ratio = speed1h > 0 ? speed20min3 / speed1h : speed20min3 > 0 ? Infinity : 1;
+    if (ratio > 1.08) return "up";
+    if (ratio < 0.92) return "down";
+    return "flat";
+}
+
+function ChurnRow({ churnEntry, userId, rank, churnData, onShowParkingPeriods }: {
+    churnEntry: ChurnRankingEntry;
+    userId: string;
+    rank: number;
+    churnData: Map<string, ChurnRankingEntry>;
+    onShowParkingPeriods: (userId: string) => void;
+}) {
+    const grid = buildHourlyGridReversed(churnEntry.hourly_churn);
     const row1 = grid.slice(0, 24);
     const row2 = grid.slice(24, 48);
 
-    // 自动滚动到最左侧（最新数据）— 已经是默认 scrollLeft=0
     const scrollRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollLeft = 0;
-        }
+        if (scrollRef.current) scrollRef.current.scrollLeft = 0;
     }, []);
 
+    // 周回数
+    const recentChanges = churnEntry.recent_score_changes ?? [];
+    const churn1h = calcRecentChurnCount(recentChanges, 60);
+    const churn20min = calcRecentChurnCount(recentChanges, 20);
+
+    // 时速
+    const speed1h = churnEntry.growth_1h;
+    const speed20min3 = calcRecentGrowth(recentChanges, 20) * 3;
+    const trend = getSpeedTrend(speed1h, speed20min3);
+
+    // 梯度
+    const [lowerRank, upperRank] = getTierRanks(rank);
+    const findByRank = (r: number | null): ChurnRankingEntry | undefined => {
+        if (r == null || r <= 0) return undefined;
+        for (const e of churnData.values()) {
+            if (e.rank === r) return e;
+        }
+        return undefined;
+    };
+    const lowerEntry = findByRank(lowerRank);
+    const upperEntry = findByRank(upperRank);
+
+    const trendIcon = trend === "up"
+        ? <span className="text-emerald-500 font-black">▲</span>
+        : trend === "down"
+            ? <span className="text-rose-500 font-black">▼</span>
+            : <span className="text-slate-400">—</span>;
+
     return (
-        <div className="flex items-center gap-2 px-3 pb-2 pt-0.5">
-            {/* 48H 总计 */}
-            <div className="shrink-0 text-center w-10 sm:w-12">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">48H</span>
-                <div className="text-xs font-black text-miku">{churnEntry.churn_48h}</div>
+        <div className="px-3 pb-2.5 pt-0.5">
+            {/* 周回网格行 */}
+            <div className="flex items-center gap-2">
+                {/* 48H 总计 */}
+                <div className="shrink-0 text-center w-10 sm:w-12">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">48H</span>
+                    <div className="text-xs font-black text-miku">{churnEntry.churn_48h}</div>
+                </div>
+
+                {/* 每小时网格 */}
+                <div ref={scrollRef} className="flex-1 min-w-0 overflow-x-auto">
+                    <div className="flex gap-px mb-px">
+                        {row1.map((cell, i) => (
+                            <div key={`h-${i}`} className="flex-1 min-w-[22px] text-center text-[8px] font-medium text-slate-400 dark:text-slate-500">
+                                {i === 0 ? "1H" : cell.hour}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex gap-px mb-px">
+                        {row1.map((cell, i) => (
+                            <div key={`r1-${i}`} className={`flex-1 min-w-[22px] text-center text-[9px] font-bold rounded-sm py-0.5 ${getChurnCellColor(cell.count, cell.isCurrentHour)}`} title={cell.localLabel}>
+                                {cell.count > 0 ? `${cell.count}${cell.isCurrentHour ? "*" : ""}` : ""}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex gap-px">
+                        {row2.map((cell, i) => (
+                            <div key={`r2-${i}`} className={`flex-1 min-w-[22px] text-center text-[9px] font-bold rounded-sm py-0.5 ${getChurnCellColor(cell.count, cell.isCurrentHour)}`} title={cell.localLabel}>
+                                {cell.count > 0 ? `${cell.count}${cell.isCurrentHour ? "*" : ""}` : ""}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 停车按钮 */}
+                <button
+                    onClick={() => onShowParkingPeriods(userId)}
+                    className="shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold text-slate-500 transition-colors hover:border-miku/30 hover:bg-miku/5 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-miku/30 dark:hover:bg-miku/10 dark:hover:text-miku"
+                >
+                    停车
+                </button>
             </div>
 
-            {/* 每小时网格 — 从右往左（最新在最左） */}
-            <div ref={scrollRef} className="flex-1 min-w-0 overflow-x-auto">
-                {/* 小时标题行 */}
-                <div className="flex gap-px mb-px">
-                    {row1.map((cell, i) => (
-                        <div key={`h-${i}`} className="flex-1 min-w-[22px] text-center text-[8px] font-medium text-slate-400 dark:text-slate-500">
-                            {i === 0 ? "1H" : cell.hour}
-                        </div>
-                    ))}
-                </div>
-                {/* 第一行（近 0~23h） */}
-                <div className="flex gap-px mb-px">
-                    {row1.map((cell, i) => (
-                        <div
-                            key={`r1-${i}`}
-                            className={`flex-1 min-w-[22px] text-center text-[9px] font-bold rounded-sm py-0.5 ${getChurnCellColor(cell.count, cell.isCurrentHour)}`}
-                            title={cell.localLabel}
-                        >
-                            {cell.count > 0 ? `${cell.count}${cell.isCurrentHour ? "*" : ""}` : ""}
-                        </div>
-                    ))}
-                </div>
-                {/* 第二行（近 24~47h） */}
-                <div className="flex gap-px">
-                    {row2.map((cell, i) => (
-                        <div
-                            key={`r2-${i}`}
-                            className={`flex-1 min-w-[22px] text-center text-[9px] font-bold rounded-sm py-0.5 ${getChurnCellColor(cell.count, cell.isCurrentHour)}`}
-                            title={cell.localLabel}
-                        >
-                            {cell.count > 0 ? `${cell.count}${cell.isCurrentHour ? "*" : ""}` : ""}
-                        </div>
-                    ))}
-                </div>
-            </div>
+            {/* 时速 & 周回统计行 */}
+            <div className="relative mt-1.5 pl-[calc(2.5rem+0.5rem)] sm:pl-[calc(3rem+0.5rem)]">
+                <div
+                    className="flex flex-nowrap items-center gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:overflow-visible sm:gap-y-1"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+                >
+                {/* 近1h周回 */}
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-miku/10 px-1.5 py-0.5 text-[10px] dark:bg-miku/15">
+                    <span className="font-medium text-slate-500 dark:text-slate-400">1h周回</span>
+                    <span className="font-black text-miku tabular-nums">{churn1h}</span>
+                </span>
 
-            {/* 停车按钮 */}
-            <button
-                onClick={() => onShowParkingPeriods(userId)}
-                className="shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold text-slate-500 transition-colors hover:border-miku/30 hover:bg-miku/5 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-miku/30 dark:hover:bg-miku/10 dark:hover:text-miku"
-            >
-                停车
-            </button>
+                {/* 近20min×3周回 */}
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-sky-100 px-1.5 py-0.5 text-[10px] dark:bg-sky-500/15">
+                    <span className="font-medium text-slate-500 dark:text-slate-400">20m×3周回</span>
+                    <span className="font-black text-sky-600 dark:text-sky-400 tabular-nums">{churn20min * 3}</span>
+                </span>
+
+                <span className="shrink-0 text-slate-300 dark:text-slate-600 select-none px-0.5">·</span>
+
+                {/* 近1h时速 + 趋势符号 */}
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] dark:bg-slate-800">
+                    <span className="font-medium text-slate-500 dark:text-slate-400">1h速</span>
+                    <span className="font-black text-slate-700 dark:text-slate-200 tabular-nums">{fmtSpeed(speed1h)}</span>
+                    <span className="text-[9px] leading-none">{trendIcon}</span>
+                </span>
+
+                {/* 近20min×3时速 */}
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] dark:bg-slate-800">
+                    <span className="font-medium text-slate-500 dark:text-slate-400">20m×3速</span>
+                    <span className={`font-black tabular-nums ${trend === "up" ? "text-emerald-600 dark:text-emerald-400" : trend === "down" ? "text-rose-500 dark:text-rose-400" : "text-slate-700 dark:text-slate-200"}`}>
+                        {fmtSpeed(speed20min3)}
+                    </span>
+                </span>
+
+                {/* 梯度时速对比 — 每个梯度独立气泡 */}
+                {(lowerRank != null || upperRank != null) && (
+                    <>
+                        <span className="shrink-0 text-slate-300 dark:text-slate-600 select-none px-0.5">·</span>
+                        {lowerRank != null && (() => {
+                            const spd = lowerEntry?.growth_1h;
+                            const faster = spd != null && speed1h > spd;
+                            const slower = spd != null && speed1h < spd;
+                            return (
+                                <span className={`shrink-0 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                                    faster ? "bg-emerald-100 dark:bg-emerald-500/15" :
+                                    slower ? "bg-rose-100 dark:bg-rose-500/15" :
+                                    "bg-slate-100 dark:bg-slate-800"
+                                }`}>
+                                    <span className={`font-medium ${faster ? "text-emerald-700 dark:text-emerald-300" : slower ? "text-rose-600 dark:text-rose-400" : "text-slate-500 dark:text-slate-400"}`}>
+                                        T{lowerRank}
+                                    </span>
+                                    <span className={`tabular-nums ${faster ? "text-emerald-700 dark:text-emerald-300" : slower ? "text-rose-600 dark:text-rose-400" : "text-slate-600 dark:text-slate-300"}`}>
+                                        {spd != null ? fmtSpeed(spd) : "—"}
+                                    </span>
+                                    {faster && <span className="text-emerald-500 text-[9px]">↑</span>}
+                                    {slower && <span className="text-rose-500 text-[9px]">↓</span>}
+                                </span>
+                            );
+                        })()}
+                        {upperRank != null && (() => {
+                            const spd = upperEntry?.growth_1h;
+                            const faster = spd != null && speed1h > spd;
+                            const slower = spd != null && speed1h < spd;
+                            return (
+                                <span className={`shrink-0 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                                    faster ? "bg-emerald-100 dark:bg-emerald-500/15" :
+                                    slower ? "bg-rose-100 dark:bg-rose-500/15" :
+                                    "bg-slate-100 dark:bg-slate-800"
+                                }`}>
+                                    <span className={`font-medium ${faster ? "text-emerald-700 dark:text-emerald-300" : slower ? "text-rose-600 dark:text-rose-400" : "text-slate-500 dark:text-slate-400"}`}>
+                                        T{upperRank}
+                                    </span>
+                                    <span className={`tabular-nums ${faster ? "text-emerald-700 dark:text-emerald-300" : slower ? "text-rose-600 dark:text-rose-400" : "text-slate-600 dark:text-slate-300"}`}>
+                                        {spd != null ? fmtSpeed(spd) : "—"}
+                                    </span>
+                                    {faster && <span className="text-emerald-500 text-[9px]">↑</span>}
+                                    {slower && <span className="text-rose-500 text-[9px]">↓</span>}
+                                </span>
+                            );
+                        })()}
+                    </>
+                )}
+                </div>
+                {/* 右侧渐变遮罩（仅手机端） */}
+                <div
+                    className="pointer-events-none absolute right-0 top-0 h-full w-6 sm:hidden"
+                    style={{ background: "linear-gradient(to left, var(--surface-base), transparent)" }}
+                />
+            </div>
         </div>
     );
 }

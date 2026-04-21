@@ -69,7 +69,7 @@ export default function RankingHeader({
                             }`}
                     >
                         <span className={showChurn ? "text-slate-800 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}>
-                            近48H周回
+                            显示周回与时速
                         </span>
                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${showChurn ? "bg-miku border-miku" : "border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-700"}`}>
                             {showChurn && (

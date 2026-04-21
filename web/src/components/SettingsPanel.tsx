@@ -550,7 +550,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 <div className="border-t border-slate-100 mt-4 pt-3 px-4 pb-3">
                     <div className="flex items-center justify-center">
                         <span className="text-[10px] text-slate-400 font-medium">
-                            Snowy Viewer · BETA 1.158
+                            Moesekai · BETA 1.159
                         </span>
                     </div>
                 </div>

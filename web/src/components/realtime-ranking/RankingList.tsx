@@ -63,6 +63,7 @@ export default function RankingList({
                                 secondsSinceUpdate={secondsSinceUpdate}
                                 showChurn={showChurn}
                                 churnEntry={churnData.get(entry.userId)}
+                                churnData={churnData}
                                 onShowParkingPeriods={onShowParkingPeriods}
                             />
                         </React.Fragment>

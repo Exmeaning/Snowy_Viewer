@@ -175,6 +175,11 @@ export interface ChurnParkingPeriod {
     duration_s?: number;
 }
 
+export interface ChurnScoreChange {
+    time: number;
+    delta: number;
+}
+
 export interface ChurnRankingEntry {
     rank: number;
     userId: number | string;
@@ -184,6 +189,10 @@ export interface ChurnRankingEntry {
     hourly_churn: ChurnHourlyEntry[];
     last_change: ChurnLastChange | null;
     recent_activity: ChurnRecentActivity;
+    /** 近1小时内每次分数变化记录（数量不固定） */
+    recent_score_changes: ChurnScoreChange[];
+    /** 近1小时总增长分数（服务端计算） */
+    growth_1h: number;
     parking_periods: ChurnParkingPeriod[];
 }
 
