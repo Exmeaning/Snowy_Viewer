@@ -20,11 +20,13 @@ import {
   SHOW_ADS_STORAGE_KEY,
 } from "@/lib/ads";
 import { getRootKeywords, generateJsonLd } from "@/lib/seo-keywords";
+import { buildGoogleTagBootstrapScript } from "@/lib/googleTag";
 
 const SITE_BASE_URL =
   process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe";
 
 const jsonLd = generateJsonLd(SITE_BASE_URL);
+const googleTagScript = buildGoogleTagBootstrapScript();
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_BASE_URL),
@@ -155,6 +157,7 @@ export default function RootLayout({
       <head>
         <meta name="color-scheme" content="light dark" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: googleTagScript }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd.website) }}
