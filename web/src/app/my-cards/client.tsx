@@ -510,6 +510,8 @@ function MyCardsContent() {
             onSupplyTypeChange={setSelectedSupplyTypes}
             selectedSupportUnits={selectedSupportUnits}
             onSupportUnitChange={setSelectedSupportUnits}
+            selectedSkillTypes={[]}
+            onSkillTypeChange={() => {}}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             sortBy={sortBy}

@@ -207,6 +207,7 @@ function StoryCardContent() {
             selectedRarities={selectedRarities} onRarityChange={setSelectedRarities}
             selectedSupplyTypes={selectedSupplyTypes} onSupplyTypeChange={setSelectedSupplyTypes}
             selectedSupportUnits={selectedSupportUnits} onSupportUnitChange={setSelectedSupportUnits}
+            selectedSkillTypes={[]} onSkillTypeChange={() => {}}
             searchQuery={searchQuery} onSearchChange={setSearchQuery}
             sortBy={sortBy} sortOrder={sortOrder} onSortChange={handleSortChange}
             onReset={resetFilters}

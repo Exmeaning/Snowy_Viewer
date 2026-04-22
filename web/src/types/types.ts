@@ -147,9 +147,15 @@ export interface ISkillEffectDetail {
 
 export interface ISkillEffect {
     id: number;
+    skillEffectType: string;
+    activateNotesJudgmentType?: string;
     skillEffectDetails: ISkillEffectDetail[];
     skillEnhance?: {
         activateEffectValue: number;
+        skillEnhanceType?: string;
+        skillEnhanceCondition?: {
+            unit?: string;
+        };
     };
     activateCharacterRank?: number;
     activateUnitCount?: number;
@@ -158,7 +164,10 @@ export interface ISkillEffect {
 export interface ISkillInfo {
     id: number;
     skillId: number;
+    shortDescription?: string;
     description: string;
+    descriptionSpriteName: string;
+    skillFilterId: number;
     skillEffects: ISkillEffect[];
 }
 
