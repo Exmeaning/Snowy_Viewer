@@ -1,6 +1,76 @@
 
 import { ICardInfo, ISkillInfo, CHARACTER_NAMES } from "@/types/types";
 
+export type CardSkillType =
+    | "score_up"
+    | "perfect_score_up"
+    | "life_score_up"
+    | "score_up_keep"
+    | "score_up_unit_count"
+    | "different_unit_score_up"
+    | "score_up_character_rank"
+    | "other_member_score_up_reference_rate"
+    | "judgment_up"
+    | "life_recovery";
+
+export function getCardSkillTypes(skill?: Pick<ISkillInfo, "descriptionSpriteName" | "skillFilterId" | "skillEffects"> | null): CardSkillType[] {
+    if (!skill) return [];
+
+    const types = new Set<CardSkillType>();
+    const effects = skill.skillEffects ?? [];
+    const firstEffect = effects[0];
+
+    if (
+        skill.skillFilterId === 3 ||
+        effects.some(effect => effect.skillEffectType === "judgment_up")
+    ) {
+        types.add("judgment_up");
+        return [...types];
+    }
+
+    if (
+        skill.skillFilterId === 4 ||
+        effects.some(effect => effect.skillEffectType === "life_recovery")
+    ) {
+        types.add("life_recovery");
+        return [...types];
+    }
+
+    if (firstEffect?.activateNotesJudgmentType === "perfect") {
+        types.add("perfect_score_up");
+    }
+
+    if (firstEffect?.skillEffectType === "score_up_condition_life") {
+        types.add("life_score_up");
+    }
+
+    if (effects.some(effect => effect.skillEffectType === "score_up_keep")) {
+        types.add("score_up_keep");
+    }
+
+    if (effects.some(effect => effect.skillEnhance?.skillEnhanceType === "sub_unit_score_up")) {
+        types.add("score_up_unit_count");
+    }
+
+    if (effects.some(effect => effect.skillEffectType === "score_up_unit_count")) {
+        types.add("different_unit_score_up");
+    }
+
+    if (effects.some(effect => effect.skillEffectType === "score_up_character_rank")) {
+        types.add("score_up_character_rank");
+    }
+
+    if (effects.some(effect => effect.skillEffectType === "other_member_score_up_reference_rate")) {
+        types.add("other_member_score_up_reference_rate");
+    }
+
+    if (types.size === 0) {
+        types.add("score_up");
+    }
+
+    return [...types];
+}
+
 /**
  * Formats the skill description by replacing placeholders with actual values.
  * Based on sekai.best implementation.

@@ -5,6 +5,7 @@ import BaseFilters, { FilterSection, getFilterChipStateClasses, getFilterIconSta
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { CardRarityType, CardAttribute, ATTR_NAMES, SupportUnit, SUPPORT_UNIT_NAMES, UNIT_ICON_FILES, UNIT_FIELD_TO_ID } from "@/types/types";
 import { useCardSupplyTypeMapping } from "@/hooks/useCardSupplyType";
+import { useSkillMapping } from "@/hooks/useSkillMapping";
 
 interface CardFiltersProps {
     // Character filter
@@ -30,6 +31,10 @@ interface CardFiltersProps {
     // Support Unit filter (for Virtual Singers)
     selectedSupportUnits: SupportUnit[];
     onSupportUnitChange: (units: SupportUnit[]) => void;
+
+    // Skill Type filter
+    selectedSkillTypes: string[];
+    onSkillTypeChange: (types: string[]) => void;
 
     // Search
     searchQuery: string;
@@ -74,6 +79,14 @@ const ATTR_ICONS: Record<CardAttribute, string> = {
     "pure": "Pure.webp",
 };
 
+const UNIT_ID_TO_SUPPORT_UNIT: Partial<Record<string, SupportUnit>> = {
+    ln: "light_sound",
+    mmj: "idol",
+    vbs: "street",
+    ws: "theme_park",
+    "25ji": "school_refusal",
+};
+
 export default function CardFilters({
     selectedCharacters,
     onCharacterChange,
@@ -87,6 +100,8 @@ export default function CardFilters({
     onSupplyTypeChange,
     selectedSupportUnits,
     onSupportUnitChange,
+    selectedSkillTypes,
+    onSkillTypeChange,
     searchQuery,
     onSearchChange,
     sortBy,
@@ -99,6 +114,7 @@ export default function CardFilters({
 }: CardFiltersProps) {
 
     const supplyTypes = useCardSupplyTypeMapping();
+    const skillTypes = useSkillMapping();
 
     const toggleAttr = (attr: CardAttribute) => {
         if (selectedAttrs.includes(attr)) {
@@ -132,8 +148,76 @@ export default function CardFilters({
         }
     };
 
-    // Check if any virtual singer is selected (characterId >= 21)
-    const hasVirtualSingerSelected = selectedCharacters.some(id => id >= 21);
+    const handleUnitIdsChange = (nextUnitIds: string[]) => {
+        const hasVsUnitSelected = nextUnitIds.includes("vs");
+        const hadVsUnitSelected = selectedUnitIds.includes("vs");
+
+        if (!hasVsUnitSelected) {
+            const currentShortcutUnits = selectedUnitIds
+                .map(unitId => UNIT_ID_TO_SUPPORT_UNIT[unitId])
+                .filter((unit): unit is SupportUnit => Boolean(unit));
+            const nextShortcutUnits = nextUnitIds
+                .map(unitId => UNIT_ID_TO_SUPPORT_UNIT[unitId])
+                .filter((unit): unit is SupportUnit => Boolean(unit));
+
+            if (hadVsUnitSelected) {
+                onSupportUnitChange(nextShortcutUnits);
+            } else {
+                const removedShortcutUnits = currentShortcutUnits.filter(unit => !nextShortcutUnits.includes(unit));
+                const addedShortcutUnits = nextShortcutUnits.filter(unit => !currentShortcutUnits.includes(unit));
+
+                const nextSupportUnits = [
+                    ...selectedSupportUnits.filter(unit => !removedShortcutUnits.includes(unit)),
+                    ...addedShortcutUnits,
+                ];
+                onSupportUnitChange([...new Set(nextSupportUnits)]);
+            }
+        }
+
+        onUnitIdsChange(nextUnitIds);
+    };
+
+    const toggleSkillType = (type: string) => {
+        if (selectedSkillTypes.includes(type)) {
+            onSkillTypeChange(selectedSkillTypes.filter(t => t !== type));
+        } else {
+            onSkillTypeChange([...selectedSkillTypes, type]);
+        }
+    };
+
+    const toggleVirtualSingerUnitTag = (supportUnit: SupportUnit) => {
+        if (selectedSupportUnits.includes(supportUnit)) {
+            onSupportUnitChange(selectedSupportUnits.filter(unit => unit !== supportUnit));
+        } else {
+            onSupportUnitChange([...new Set([...selectedSupportUnits, supportUnit])]);
+        }
+    };
+
+    const showSupportUnitFilter = selectedUnitIds.includes("vs");
+
+    const virtualSingerUnitTags = !showSupportUnitFilter
+        ? selectedUnitIds
+            .map(unitId => {
+                const supportUnit = UNIT_ID_TO_SUPPORT_UNIT[unitId];
+                if (!supportUnit) return null;
+
+                return {
+                    unitId,
+                    supportUnit,
+                    isSelected: selectedSupportUnits.includes(supportUnit),
+                };
+            })
+            .filter((tag): tag is { unitId: string; supportUnit: SupportUnit; isSelected: boolean } => tag !== null)
+        : [];
+
+    const handleAllVirtualSingerTagsToggle = (selectAll: boolean) => {
+        const visibleSupportUnits = virtualSingerUnitTags.map(tag => tag.supportUnit);
+        if (selectAll) {
+            onSupportUnitChange([...new Set([...selectedSupportUnits, ...visibleSupportUnits])]);
+        } else {
+            onSupportUnitChange(selectedSupportUnits.filter(unit => !visibleSupportUnits.includes(unit)));
+        }
+    };
 
     const hasActiveFilters =
         selectedCharacters.length > 0 ||
@@ -141,6 +225,7 @@ export default function CardFilters({
         selectedRarities.length > 0 ||
         selectedSupplyTypes.length > 0 ||
         selectedSupportUnits.length > 0 ||
+        selectedSkillTypes.length > 0 ||
         searchQuery.length > 0;
 
     const handleReset = () => {
@@ -167,11 +252,47 @@ export default function CardFilters({
                 selectedCharacters={selectedCharacters}
                 onCharacterChange={onCharacterChange}
                 selectedUnitIds={selectedUnitIds}
-                onUnitIdsChange={onUnitIdsChange}
+                onUnitIdsChange={handleUnitIdsChange}
+                characterExtraButtons={virtualSingerUnitTags.map(({ unitId, supportUnit, isSelected }) => (
+                    <button
+                        key={`vs-subunit-${unitId}`}
+                        onClick={() => toggleVirtualSingerUnitTag(supportUnit)}
+                        className={`relative transition-all ${isSelected
+                            ? "ring-2 ring-miku scale-110 z-10 rounded-full shadow-lg"
+                            : "ring-2 ring-transparent hover:ring-slate-200 dark:hover:ring-slate-600 rounded-full opacity-80 hover:opacity-100"
+                            }`}
+                        title={`虚拟歌手（${SUPPORT_UNIT_NAMES[supportUnit]}）`}
+                    >
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 p-1.5">
+                            <div className="w-full h-full relative">
+                                <Image
+                                    src={`/data/icon/${UNIT_ICON_FILES.vs}`}
+                                    alt={`虚拟歌手（${SUPPORT_UNIT_NAMES[supportUnit]}）`}
+                                    fill
+                                    className="object-contain"
+                                    unoptimized
+                                />
+                            </div>
+                        </div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center">
+                            <Image
+                                src={`/data/icon/${UNIT_ICON_FILES[unitId]}`}
+                                alt=""
+                                width={12}
+                                height={12}
+                                className="object-contain"
+                                unoptimized
+                            />
+                        </div>
+                    </button>
+                ))}
+                characterExtraCount={virtualSingerUnitTags.length}
+                selectedCharacterExtraCount={virtualSingerUnitTags.filter(tag => tag.isSelected).length}
+                onCharacterExtraAllToggle={handleAllVirtualSingerTagsToggle}
             />
 
-            {/* Support Unit Filter - Only show when virtual singers are selected */}
-            {hasVirtualSingerSelected && (
+            {/* Support Unit Filter - Only show when VS unit is selected */}
+            {showSupportUnitFilter && (
                 <FilterSection label="团体归属">
                     <div className="flex flex-wrap gap-2">
                         {/* Ordered list: follows team order, then original (none) at end */}
@@ -289,6 +410,24 @@ export default function CardFilters({
                                 className={`px-3 py-1.5 rounded-xl text-sm transition-all border ${getFilterChipStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white text-slate-700 border-transparent dark:bg-miku/12 dark:text-slate-100 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
                             >
                                 {st.name}
+                            </button>
+                        );
+                    })}
+                </div>
+            </FilterSection>
+
+            {/* Skill Type Filter */}
+            <FilterSection label="技能类型">
+                <div className="flex flex-wrap gap-2">
+                    {skillTypes.map((sk) => {
+                        const isSelected = selectedSkillTypes.includes(sk.descriptionSpriteName);
+                        return (
+                            <button
+                                key={sk.descriptionSpriteName}
+                                onClick={() => toggleSkillType(sk.descriptionSpriteName)}
+                                className={`px-3 py-1.5 rounded-xl text-sm transition-all border ${getFilterChipStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white text-slate-700 border-transparent dark:bg-miku/12 dark:text-slate-100 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
+                            >
+                                {sk.name}
                             </button>
                         );
                     })}

@@ -14,6 +14,14 @@ interface CharacterFilterProps {
     unitLabel?: string;
     /** Label for the character section, defaults to "角色" */
     characterLabel?: string;
+    /** Extra buttons rendered inside the character row, before the ALL button */
+    characterExtraButtons?: React.ReactNode;
+    /** Count of extra buttons participating in the ALL selection */
+    characterExtraCount?: number;
+    /** Number of selected extra buttons participating in the ALL selection */
+    selectedCharacterExtraCount?: number;
+    /** Called when ALL should also toggle the extra buttons */
+    onCharacterExtraAllToggle?: (selectAll: boolean) => void;
     /** Extra content rendered below the character list inside the character FilterSection */
     extraContent?: React.ReactNode;
     /** When provided, enables event mode: VS sub-unit chars are placed into their respective groups */
@@ -36,6 +44,10 @@ export default function CharacterFilter({
     onUnitIdsChange,
     unitLabel = "团体",
     characterLabel = "角色",
+    characterExtraButtons,
+    characterExtraCount = 0,
+    selectedCharacterExtraCount = 0,
+    onCharacterExtraAllToggle,
     extraContent,
     charaUnits,
 }: CharacterFilterProps) {
@@ -125,16 +137,20 @@ export default function CharacterFilter({
         ? currentUnits.flatMap(u => u.charIds)
         : [...new Set(selectedCharacters)];
 
-    const allSelected = displayedCharacters.length > 0 &&
+    const allCharactersSelected = displayedCharacters.length > 0 &&
         displayedCharacters.every(charId => selectedCharacters.includes(charId));
+    const allExtraSelected = characterExtraCount === 0 || selectedCharacterExtraCount === characterExtraCount;
+    const allSelected = allCharactersSelected && allExtraSelected;
 
     const handleAllClick = () => {
         if (allSelected) {
             const newChars = selectedCharacters.filter(charId => !displayedCharacters.includes(charId));
             onCharacterChange(newChars);
+            onCharacterExtraAllToggle?.(false);
         } else {
             const newChars = [...new Set([...selectedCharacters, ...displayedCharacters])];
             onCharacterChange(newChars);
+            onCharacterExtraAllToggle?.(true);
         }
     };
 
@@ -235,6 +251,8 @@ export default function CharacterFilter({
                                 </button>
                             );
                         })}
+
+                        {characterExtraButtons}
 
                         {/* ALL Button - placed at the end */}
                         <button
