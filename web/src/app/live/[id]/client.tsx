@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
@@ -14,9 +14,9 @@ import {
     VIRTUAL_LIVE_STATUS_DISPLAY,
     VirtualLiveType
 } from "@/types/virtualLive";
-import { getVirtualLiveBannerUrl, getMusicJacketUrl, getEventLogoUrl, getEventBannerUrl } from "@/lib/assets";
+import { getVirtualLiveBannerUrl, getMusicJacketUrl, getEventBannerUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
-import { fetchMasterData, fetchWithCompression } from "@/lib/fetch";
+import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 
@@ -44,7 +44,6 @@ const VIRTUAL_LIVE_EVENT_MAP_URL = (process.env.NEXT_PUBLIC_API_URL || "") + "/a
 
 export default function VirtualLiveDetailClient() {
     const params = useParams();
-    const router = useRouter();
     const virtualLiveId = Number(params.id);
     const { assetSource } = useTheme();
     const { setDetailName } = useBreadcrumb();

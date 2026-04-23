@@ -6,7 +6,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
-import { ICardInfo, IGachaInfo, IGachaDetail, GACHA_TYPE_LABELS, getRarityNumber, isTrainableCard, CardRarityType, IGachaBehavior, IGachaCardRarityRate, isWishGacha } from "@/types/types";
+import { ICardInfo, IGachaInfo, IGachaDetail, GACHA_TYPE_LABELS, isTrainableCard, IGachaBehavior, IGachaCardRarityRate, isWishGacha } from "@/types/types";
 import { getGachaLogoUrl, getGachaScreenUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -45,7 +45,7 @@ const cardRarityTypeToRarity: Record<string, number> = {
 
 
 // Local attribute icon mapping
-const LOCAL_ATTR_ICONS: Record<string, string> = {
+const _LOCAL_ATTR_ICONS: Record<string, string> = {
     cool: "/data/icon/Cool.webp",
     cute: "/data/icon/cute.webp",
     happy: "/data/icon/Happy.webp",
@@ -108,8 +108,7 @@ function pickByChance<T>(entries: Array<{ item: T; chance: number }>): T | null 
 }
 
 export default function GachaDetailClient() {
-    const router = useRouter();
-    const params = useParams();
+    const _router = useRouter();    const params = useParams();
     const gachaId = params.id as string;
     const searchParams = useSearchParams();
     const isScreenshotMode = searchParams.get('mode') === 'screenshot';
@@ -122,7 +121,7 @@ export default function GachaDetailClient() {
     const [imageViewerOpen, setImageViewerOpen] = useState(false);
     const [customSpinCount, setCustomSpinCount] = useState<string>("");
     const [selectedWishCardIds, setSelectedWishCardIds] = useState<number[]>([]);
-    const { isShowSpoiler, useTrainedThumbnail, assetSource } = useTheme();
+    const { useTrainedThumbnail, assetSource } = useTheme();
     const { setDetailName } = useBreadcrumb();
 
     // Gacha Simulator states
@@ -134,7 +133,7 @@ export default function GachaDetailClient() {
     const [currentGachaResult, setCurrentGachaResult] = useState<IGachaDetail[]>([]);
     const [history4Stars, setHistory4Stars] = useState<HistoryItem[]>([]);
     const [gachaRarityRates, setGachaRarityRates] = useState<IGachaCardRarityRate[]>([]);
-    const [weights, setWeights] = useState<number[]>([]);
+    const [_weights, setWeights] = useState<number[]>([]);
     const [normalRates, setNormalRates] = useState<number[]>([]);
     const [guaranteedRates, setGuaranteedRates] = useState<number[]>([]);
 
@@ -234,7 +233,7 @@ export default function GachaDetailClient() {
         return [...dreamPickNewPuCards, ...selectedWishCards];
     }, [isWishPickGacha, dreamPickNewPuCards, selectedWishCards, pickupCards]);
 
-    const fixedWishCardIds = useMemo(() => {
+    const _fixedWishCardIds = useMemo(() => {
         return new Set(fixedWishCards.map(card => card.id));
     }, [fixedWishCards]);
 
@@ -416,7 +415,7 @@ export default function GachaDetailClient() {
         let noOverRarityCount = 0;
 
         for (let i = 0; i < rollTimes; i++) {
-            let pulledCardDetail: IGachaDetail | null = null;
+
             if (i % 10 === 9 && isOverRarity && noOverRarityCount === 9 && guaranteeSum.length > 0) {
                 const roll = Math.random() * 100;
                 const idx = guaranteeSum.findIndex(rate => roll < rate);
@@ -428,15 +427,8 @@ export default function GachaDetailClient() {
                             if (targetIdx !== -1) {
                                 rollResult[targetIdx] += 1;
                             }
-                            tmpGachaResult.push(pulled);
-                            pulledCardDetail = pulled;
-                        }
-                    } else {
-                        const pulled = pickByWeight(rateCardPools[idx] || [], detail => detail.weight);
-                        if (pulled) {
-                            rollResult[idx] += 1;
-                            tmpGachaResult.push(pulled);
-                            pulledCardDetail = pulled;
+                        tmpGachaResult.push(pulled);
+
                         }
                     }
                 }
@@ -457,7 +449,6 @@ export default function GachaDetailClient() {
                             rollResult[targetIdx] += 1;
                         }
                         tmpGachaResult.push(pulled);
-                        pulledCardDetail = pulled;
 
                         if (isOverRarity && cardRarityTypeToRarity[gachaRarityRates[idx].cardRarityType] < overRarityLevel) {
                             noOverRarityCount += 1;
@@ -468,7 +459,6 @@ export default function GachaDetailClient() {
                     if (pulled) {
                         rollResult[idx] += 1;
                         tmpGachaResult.push(pulled);
-                        pulledCardDetail = pulled;
 
                         if (isOverRarity && cardRarityTypeToRarity[gachaRarityRates[idx].cardRarityType] < overRarityLevel) {
                             noOverRarityCount += 1;

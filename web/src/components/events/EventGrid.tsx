@@ -27,7 +27,7 @@ function EventSkeleton() {
     );
 }
 
-export default function EventGrid({ events, isLoading = false, basePath = "/events", eventUnitMap, eventBannerCharMap, eventBonusAttrMap, eventStoryIds }: EventGridProps) {
+export default function EventGrid({ events, isLoading = false, basePath = "/events", eventUnitMap, eventBannerCharMap: _eventBannerCharMap, eventBonusAttrMap, eventStoryIds }: EventGridProps) {
     const [now] = useState(() => Date.now());
 
     // Show skeletons while loading

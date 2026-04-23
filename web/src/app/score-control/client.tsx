@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import Image from "next/image";
 import Link from "next/link";
 import { IMusicInfo, IMusicMeta } from "@/types/music";
-import { CHAR_NAMES, ATTR_ICON_PATHS, type ICardInfo } from "@/types/types";
+import { CHAR_NAMES, type ICardInfo } from "@/types/types";
 import { fetchMasterData } from "@/lib/fetch";
 import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, SERVER_OPTIONS } from "@/lib/account";
 import AccountSelector from "@/components/AccountSelector";
@@ -12,7 +12,7 @@ import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
-import CharacterSelector from "@/components/deck-recommend/CharacterSelector";
+
 import { useTheme } from "@/contexts/ThemeContext";
 import { getMusicJacketUrl, MOE_MUSIC_META_URL } from "@/lib/assets";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -27,7 +27,7 @@ import "./score-control.css";
 
 const MUSIC_META_API = MOE_MUSIC_META_URL;
 
-const DIFFICULTY_OPTIONS = [
+const _DIFFICULTY_OPTIONS = [
     { value: "easy", label: "Easy" },
     { value: "normal", label: "Normal" },
     { value: "hard", label: "Hard" },
@@ -63,7 +63,6 @@ function groupByBoost(raw: ScoreControlResult[]): BoostGroup[] {
 
 /** Fire label helper */
 function fireLabel(boost: number): string {
-    const opt = FIRE_OPTIONS.find((f) => f.fires === boost);
     return `${boost}🔥`;
 }
 
@@ -171,7 +170,7 @@ export default function ScoreControlClient() {
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
     const [musicMetas, setMusicMetas] = useState<IMusicMeta[]>([]);
     const [musicId, setMusicId] = useState("");
-    const [difficulty, setDifficulty] = useState("master");
+    const [difficulty, _setDifficulty] = useState("master");
 
     // Calculator inputs
     const [targetPT, setTargetPT] = useState<number>(698);
@@ -191,8 +190,8 @@ export default function ScoreControlClient() {
     const [dbUserId, setDbUserId] = useState("");
     const [dbServer, setDbServer] = useState<ServerType>("jp");
     const [dbEventId, setDbEventId] = useState("");
-    const [dbLiveType, setDbLiveType] = useState("multi");
-    const [dbSupportCharacterId, setDbSupportCharacterId] = useState<number | null>(null);
+    const [dbLiveType, _setDbLiveType] = useState("multi");
+    const [dbSupportCharacterId, _setDbSupportCharacterId] = useState<number | null>(null);
     const [dbCardConfig, setDbCardConfig] = useState<Record<string, CardConfigItem>>(
         JSON.parse(JSON.stringify(DEFAULT_CARD_CONFIG))
     );
@@ -571,6 +570,7 @@ export default function ScoreControlClient() {
                 });
             }
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedEventRate, targetPT, minBonus, maxBonus, deckBuilderEnabled, dbUserId, dbServer, dbEventId, dbLiveType, dbSupportCharacterId, musicId, difficulty, dbCardConfig, smartRoutes, infiniteSearchEnabled]);
 
     // ====== Infinite Song Search Logic (Concurrent Worker Pool) ======
@@ -645,7 +645,7 @@ export default function ScoreControlClient() {
 
         const collected: InfiniteSongResult[] = [];
         let totalChecked = 0;
-        const taskIdx = 0;
+        const _taskIdx = 0;
         let capturedUploadTime: number | null = null;
         const isMobileInf = typeof window !== 'undefined' && /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const poolSize = isMobileInf ? 1 : Math.min(navigator.hardwareConcurrency || 4, 4);
@@ -780,6 +780,7 @@ export default function ScoreControlClient() {
         setInfiniteSearchDuration(performance.now() - infiniteStartTime);
         setInfiniteSearchRunning(false);
         setInfiniteSearchProgress(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [musicMetas, musics, difficulty, dbUserId, dbServer, dbEventId, dbLiveType, dbSupportCharacterId, dbCardConfig, minBonus, maxBonus, targetPT]);
 
     const handleCancelInfiniteSearch = useCallback(() => {

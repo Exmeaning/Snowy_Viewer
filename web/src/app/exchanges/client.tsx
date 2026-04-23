@@ -25,7 +25,6 @@ import {
     getExchangeLastModified,
     loadExchangeCoreData,
     parseExchangeFilterParams,
-    resolveExchangeCostGroups,
     STATUS_LABELS,
     summarizeExchangeRewards,
     type ExchangeCoreData,
@@ -35,7 +34,6 @@ import {
 } from "@/lib/exchanges";
 import type { ExchangeStatus, FlattenedMaterialExchange } from "@/types/exchange";
 import { CHARACTER_NAMES, type ICardInfo } from "@/types/types";
-import type { IMysekaiMaterial } from "@/types/mysekai";
 
 function PageHeader() {
     return (
@@ -318,7 +316,7 @@ function CostThumbnail({ cost }: { cost: { resourceType: string; resourceId: num
 }
 
 function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
-    const rewardSummary = useMemo(() => summarizeExchangeRewards(entry.rewardDetails), [entry.rewardDetails]);
+    const _rewardSummary = useMemo(() => summarizeExchangeRewards(entry.rewardDetails), [entry.rewardDetails]);
     const visibleRewards = entry.rewardDetails.slice(0, 8);
     const hiddenRewardCount = Math.max(0, entry.rewardDetails.length - 8);
     const visibleCosts = entry.costs.slice(0, 8);

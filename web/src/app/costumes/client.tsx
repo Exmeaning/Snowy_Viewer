@@ -13,7 +13,6 @@ import {
     IMoeCostumeData,
     PART_TYPE_NAMES,
     SOURCE_NAMES,
-    RARITY_NAMES,
 } from "@/types/costume";
 import { ICardInfo } from "@/types/types"; // Import ICardInfo
 import { fetchMasterData } from "@/lib/fetch";
@@ -106,11 +105,12 @@ function CostumesContent() {
                     if (filters.sortOrder) setSortOrder(filters.sortOrder);
                     if (filters.onlyRelatedCardCostumes !== undefined) setOnlyRelatedCardCostumes(filters.onlyRelatedCardCostumes);
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.log("Could not restore filters from sessionStorage");
             }
         }
         setFiltersInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Save to sessionStorage and update URL when filters change
@@ -131,7 +131,7 @@ function CostumesContent() {
         };
         try {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
-        } catch (e) {
+        } catch (_e) {
             console.log("Could not save filters to sessionStorage");
         }
 
@@ -257,6 +257,7 @@ function CostumesContent() {
         });
 
         return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [costumes, allCards, searchQuery, selectedPartTypes, selectedSources, selectedRarities, selectedGenders, selectedCharacters, onlyRelatedCardCostumes, sortBy, sortOrder, isShowSpoiler]);
 
     const displayedGroups = useMemo(() => {

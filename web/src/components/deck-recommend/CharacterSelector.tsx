@@ -31,6 +31,7 @@ export default function CharacterSelector({
     useEffect(() => {
         if (selectedUnitId === null) return;
         if (visibleUnits.some(unit => unit.id === selectedUnitId)) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedUnitId(null);
     }, [selectedUnitId, visibleUnits]);
 

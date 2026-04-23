@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -269,11 +269,12 @@ function MysekaiContent() {
                     if (filters.sortBy) setSortBy(filters.sortBy);
                     if (filters.sortOrder) setSortOrder(filters.sortOrder);
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.log("Could not restore filters from sessionStorage");
             }
         }
         setFiltersInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Only run once on mount
 
     // Save to sessionStorage and update URL when filters change
@@ -293,7 +294,7 @@ function MysekaiContent() {
         };
         try {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
-        } catch (e) {
+        } catch (_e) {
             console.log("Could not save filters to sessionStorage");
         }
 
@@ -344,7 +345,7 @@ function MysekaiContent() {
     }, []);
 
     // Separate tags by type and exclude tags matching fixture names
-    const { characterTags, unitTags, generalTags } = useMemo(() => {
+    const { characterTags, unitTags: _unitTags, generalTags } = useMemo(() => {
         const characterTags = tags.filter(t => t.mysekaiFixtureTagType === 'game_character');
         const unitTags = tags.filter(t => t.mysekaiFixtureTagType === 'unit');
 

@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
@@ -25,8 +24,6 @@ function formatDate(timestamp: number): string {
 // ==================== Component ====================
 
 function MangaContent() {
-    const searchParams = useSearchParams();
-
     const [mangas, setMangas] = useState<IMangaItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

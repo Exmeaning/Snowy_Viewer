@@ -139,6 +139,7 @@ const CanvasImage = ({ image, objectFit = "contain" }: { image: HTMLImageElement
 };
 
 function GuessWhoContent() {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -207,6 +208,7 @@ function GuessWhoContent() {
             selectedUnitIds: unitsParam ? unitsParam.split(",") : [],
             selectedRarities: raritiesParam ? raritiesParam.split(",") : DEFAULT_RARITIES,
         }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
     // Load Data
@@ -448,6 +450,7 @@ function GuessWhoContent() {
             setTimeLeft(prev => Math.max(0, prev - 0.1));
         }, 100);
         return () => clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isRoundActive, timeLeft]);
 
     const getCurrentPotentialScore = () => {

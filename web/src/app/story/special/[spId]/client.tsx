@@ -64,6 +64,7 @@ export default function StorySpecialReaderClient() {
             }
         }
         load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [spId, lang]);
 
     const storyTitle = story?.title ?? story?.episodes[0]?.title ?? `特殊剧情 ${spId}`;

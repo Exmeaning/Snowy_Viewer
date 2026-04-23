@@ -12,6 +12,7 @@ function LeavePageContent() {
     const [canClose, setCanClose] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCanClose(window.history.length === 1 || !!window.opener);
     }, []);
 

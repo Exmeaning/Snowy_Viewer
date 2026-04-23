@@ -81,7 +81,6 @@ export default function SekaiCardThumbnail({
     const STAR_START_X = 5;
     const STAR_Y = 125;
     const STAR_GAP = 24;
-    const STAR_SIZE = 26; // Estimated from gap/layout, usually stars are around this size or slightly smaller/larger. 
     // User note says "间距 24px". If gap is 24, star width should be <= 24? 
     // Actually usually the stride is 24.
     // Let's assume size is roughly 24x24 or slightly less.

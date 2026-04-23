@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
+
 import MainLayout from "@/components/MainLayout";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import Modal from "@/components/common/Modal";
@@ -728,7 +728,7 @@ export default function DesignSystemPage() {
                         <p className="text-slate-500 mb-6">
                             全局通用的快捷筛选器组件。页面通过{" "}
                             <code className="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-slate-600">useQuickFilter()</code>{" "}
-                            注册筛选内容后，页面右下角会出现一个漏斗图标的浮动按钮（位于"回到顶部"按钮上方），
+                            注册筛选内容后，页面右下角会出现一个漏斗图标的浮动按钮（位于&quot;回到顶部&quot;按钮上方），
                             点击后弹出 Modal 展示筛选面板。
                         </p>
 

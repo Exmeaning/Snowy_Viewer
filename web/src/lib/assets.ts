@@ -31,16 +31,6 @@ export function isCnSource(source: AssetSourceType): boolean {
     return source === "snowyassets_cn" || source === "haruki_cn";
 }
 
-// Helper: get corresponding snowy source for current server context
-function getSnowySource(source: AssetSourceType): AssetSourceType {
-    return isCnSource(source) ? "snowyassets_cn" : "snowyassets";
-}
-
-// Helper: get corresponding haruki source for current server context
-function getHarukiSource(source: AssetSourceType): AssetSourceType {
-    return isCnSource(source) ? "haruki_cn" : "haruki";
-}
-
 export function getCharacterIconUrl(characterId: number): string {
     return `${MOE_ASSETS_BASE_URL}/chr_ts_${characterId}.png`;
 }
@@ -210,7 +200,7 @@ export function getMusicScoreUrl(musicId: number, difficulty: string, source: As
 }
 
 // Chart SVG available on Uni and SnowyAssets
-export function getChartSvgUrl(musicId: number, difficulty: string, source: AssetSourceType = "uni"): string {
+export function getChartSvgUrl(musicId: number, difficulty: string, _source: AssetSourceType = "uni"): string {
     return `https://charts-new.unipjsk.com/moe/svg/${musicId}/${difficulty}.svg`;
 }
 
@@ -432,7 +422,7 @@ export function getCardStoryVoiceUrl(scenarioId: string, voiceId: string, source
 }
 
 // Area talk voice: fixed to Snowy base, sound/actionset/voice/{scenarioId}/{voiceId}.mp3
-export function getAreaTalkVoiceUrl(scenarioId: string, voiceId: string, source: AssetSourceType = "uni"): string {
+export function getAreaTalkVoiceUrl(scenarioId: string, voiceId: string, _source: AssetSourceType = "uni"): string {
     const baseUrl = 'https://storage.sekai.best/sekai-jp-assets/sound/actionset/voice';
     return `${baseUrl}/${scenarioId}/${voiceId}.mp3`;
 }

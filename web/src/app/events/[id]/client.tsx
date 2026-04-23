@@ -18,11 +18,11 @@ import {
 import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, getEventUnitDisplayName, buildEventBannerCharMap } from "@/lib/eventUnit";
 import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getEventStoryBannerUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
-import { CHARACTER_NAMES, getRarityNumber, RARITY_DISPLAY, isTrainableCard, UNIT_NAME_MAP } from "@/types/types";
+import { CHARACTER_NAMES, UNIT_NAME_MAP } from "@/types/types";
 import type { ICardInfo, ICharaUnitInfo, IGameChara } from "@/types/types";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
-import { fetchMasterData, fetchMasterDataForServer, fetchWithCompression } from "@/lib/fetch";
+import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 
@@ -87,7 +87,7 @@ const EVENT_VIRTUAL_LIVE_MAP_URL = (process.env.NEXT_PUBLIC_API_URL || "") + "/a
 
 export default function EventDetailPage() {
     const params = useParams();
-    const router = useRouter();
+    const _router = useRouter();
     const searchParams = useSearchParams();
     const eventId = Number(params.id);
     const isScreenshotMode = searchParams.get('mode') === 'screenshot';

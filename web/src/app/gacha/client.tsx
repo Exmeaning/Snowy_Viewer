@@ -83,11 +83,12 @@ function GachaContent() {
                     if (filters.chars) setSelectedCharacters(filters.chars);
                     if (filters.units) setSelectedUnitIds(filters.units);
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.log("Could not restore filters from sessionStorage");
             }
         }
         setFiltersInitialized(true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Save to sessionStorage and update URL when filters change
@@ -104,7 +105,7 @@ function GachaContent() {
         };
         try {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
-        } catch (e) {
+        } catch (_e) {
             console.log("Could not save filters to sessionStorage");
         }
 

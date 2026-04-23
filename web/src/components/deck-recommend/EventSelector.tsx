@@ -11,7 +11,7 @@ import { TranslatedText } from "@/components/common/TranslatedText";
 import SelectorModal from "./SelectorModal";
 import EventFilters, { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, buildEventBannerCharMap } from "@/lib/eventUnit";
-import { WL3_SIMULATION_GROUPS, type Wl3SimulationGroup, getWl3SimulationGroupByEventId } from "@/lib/world-bloom-simulation";
+import { type Wl3SimulationGroup, getWl3SimulationGroupByEventId } from "@/lib/world-bloom-simulation";
 
 // Build unit icon mapping from UNIT_DATA (same as EventItem)
 const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = Object.fromEntries(
@@ -61,6 +61,7 @@ interface EventSelectorProps {
 
 export default function EventSelector({ selectedEventId, onSelect, onEventTypeChange, onBonusCharactersChange }: EventSelectorProps) {
     const { assetSource, isShowSpoiler } = useTheme();
+    const [now] = useState(() => Date.now());
     const [events, setEvents] = useState<IEventInfo[]>([]);
     const [deckBonuses, setDeckBonuses] = useState<IEventDeckBonus[]>([]);
     const [charaUnits, setCharaUnits] = useState<ICharaUnitInfo[]>([]);
@@ -239,7 +240,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
         }
 
         if (!isShowSpoiler) {
-            result = result.filter(e => e.startAt <= Date.now());
+            result = result.filter(e => e.startAt <= now);
         }
 
         result.sort((a, b) => {
@@ -248,7 +249,8 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
         });
 
         return result;
-    }, [events, selectedTypes, selectedEventUnits, eventUnitMap, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, selectedBannerChars, eventBannerCharMapDerived, selectedBonusAttr, eventBonusAttrMap, searchQuery, sortBy, sortOrder, translations, isShowSpoiler]);
+     
+    }, [events, selectedTypes, selectedEventUnits, eventUnitMap, selectedCharacters, eventBonusCharMap, vsCharAllUnitIds, selectedBannerChars, eventBannerCharMapDerived, selectedBonusAttr, eventBonusAttrMap, searchQuery, sortBy, sortOrder, translations, isShowSpoiler, now]);
 
     // Get currently selected event object
     const selectedEvent = useMemo(() => {
@@ -267,11 +269,6 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
 
     const handleSelect = (event: IEventInfo) => {
         onSelect(event.id.toString(), event.eventType);
-        setModalOpen(false);
-    };
-
-    const handleSelectWl3Simulation = (group: Wl3SimulationGroup) => {
-        onSelect(group.eventId.toString(), "world_bloom");
         setModalOpen(false);
     };
 
@@ -421,7 +418,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                                 <EventSelectionItem
                                     key={event.id}
                                     event={event}
-                                    isSpoiler={event.startAt > Date.now()}
+                                    isSpoiler={event.startAt > now}
                                     unitType={eventUnitMap.get(event.id)}
                                     bonusAttr={eventBonusAttrMap.get(event.id)}
                                     eventStoryIds={eventStoryIds}

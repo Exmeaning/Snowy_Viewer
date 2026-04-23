@@ -105,6 +105,7 @@ export default function CostumeDetailClient() {
         if (costumeNumber) {
             fetchData();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [costumeNumber]);
 
     // Build display items from shared parts + extraParts

@@ -28,9 +28,6 @@ const MV_NAMES: Record<number, { jp: string; cn: string }> = {
     5: { jp: "悔やむと書いてミライ", cn: "写作悔恨的未来" },
 };
 
-// Asset base URL for direct scenario fetching
-const SCENARIO_BASE_URL = "https://assets.unipjsk.com/ondemand";
-
 /**
  * Fetch scenario JSON data from the provided URL
  */
@@ -50,7 +47,7 @@ async function getCharacterName(
     character2dId: number,
     character2ds: ICharacter2D[],
     mobCharacters: IMobCharacter[],
-    unitProfiles: IUnitProfile[]
+    _unitProfiles: IUnitProfile[]
 ): Promise<{ id: number; name: string; unitName?: string; unitField?: string }> {
     const chara2d = character2ds.find((c) => c.id === character2dId);
 
@@ -103,7 +100,7 @@ export async function processScenarioForDisplay(
     serverSource: "jp" | "cn" = "jp"
 ): Promise<IProcessedScenarioData> {
     // Fetch required master data
-    const [character2ds, mobCharacters, gameCharacters, unitProfiles] = await Promise.all([
+    const [character2ds, mobCharacters, _gameCharacters, unitProfiles] = await Promise.all([
         fetchMasterData<ICharacter2D[]>("character2ds.json").catch(() => []),
         fetchMasterData<IMobCharacter[]>("mobCharacters.json").catch(() => []),
         fetchMasterData<IGameChara[]>("gameCharacters.json").catch(() => []),

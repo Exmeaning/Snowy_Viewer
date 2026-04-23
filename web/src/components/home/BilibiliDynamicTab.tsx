@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 
 // Types for Bilibili Dynamic API
 interface DynamicItem {

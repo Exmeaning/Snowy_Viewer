@@ -18,7 +18,7 @@ interface TalkSnippetProps {
     unitField?: string; // Unit field for virtual singers (e.g., 'light_sound', 'school_refusal')
 }
 
-export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText, cnDisplayName, translationSource, unitName, unitField }: TalkSnippetProps) {
+export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText, cnDisplayName, translationSource: _translationSource, unitName: _unitName, unitField }: TalkSnippetProps) {
     const { useLLMTranslation } = useTheme();
     const iconUrl = characterId > 0 && characterId <= 26
         ? getCharacterIconUrl(characterId)

@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { ICardInfo, CHARACTER_NAMES, isTrainableCard, getRarityNumber, RARITY_DISPLAY } from "@/types/types";
+import { ICardInfo, CHARACTER_NAMES, isTrainableCard } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";

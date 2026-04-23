@@ -106,6 +106,7 @@ export default function PredictionClient() {
                 setEvents([]);
             })
             .finally(() => setEventsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [server]);
 
     // Fetch prediction data when event changes
@@ -236,6 +237,7 @@ export default function PredictionClient() {
 
     const isWorldBloomEvent = eventState?.banner.mockEvent.eventType === "world_bloom";
 
+     
     useEffect(() => {
         if (selectedEventId && isWorldBloomEvent) {
             setIsWlNoticeOpen(true);

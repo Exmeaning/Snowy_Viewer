@@ -217,11 +217,12 @@ function MusicMetaContent() {
                     if (filters.currentPage) setCurrentPage(filters.currentPage);
                     if (filters.pageSize) setPageSize(filters.pageSize);
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.log("Could not restore filters from sessionStorage");
             }
         }
         setFiltersInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Only run once on mount
 
     // Save to sessionStorage and update URL when filters change
@@ -241,7 +242,7 @@ function MusicMetaContent() {
         };
         try {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
-        } catch (e) {
+        } catch (_e) {
             console.log("Could not save filters to sessionStorage");
         }
 
@@ -368,6 +369,7 @@ function MusicMetaContent() {
         });
 
         return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [musicMetas, searchQuery, sortField, sortOrder, musicMap]);
 
     const paginatedMetas = useMemo(() => {

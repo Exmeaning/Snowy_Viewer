@@ -140,6 +140,7 @@ function MusicContent() {
             }
         }
         setFiltersInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Save to sessionStorage and update URL when filters change

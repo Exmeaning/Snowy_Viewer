@@ -75,6 +75,7 @@ function GuidesContent() {
         load();
     }, []);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const guides = indexData?.guides ?? [];
     const categories = indexData?.categories ?? {};
 

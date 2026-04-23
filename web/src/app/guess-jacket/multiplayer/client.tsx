@@ -800,6 +800,7 @@ function MultiplayerContent() {
 
         channelRef.current = channel;
         return channel;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mySessionId]);
 
     // Broadcast settings when player joins (if host)
@@ -814,6 +815,7 @@ function MultiplayerContent() {
             }, 1000);
             return () => clearTimeout(timer);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [players.length, isHost, phase]);
 
     const updateGameSettings = useCallback((newSettings: MultiplayerSettings | ((prev: MultiplayerSettings) => MultiplayerSettings)) => {
@@ -905,6 +907,7 @@ function MultiplayerContent() {
                 clearTimeout(safetyTimeout);
             };
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [phase, isPreloading, mySessionId]);
 
     // Host: check if all players have finished loading
@@ -922,6 +925,7 @@ function MultiplayerContent() {
             }, 1000);
             return () => clearTimeout(startDelay);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isPreloading, isHost, players, playerLoadComplete]);
 
     // Safety: re-draw canvas after preloading screen is dismissed
@@ -929,6 +933,7 @@ function MultiplayerContent() {
         if (!isPreloading && roundData && imageRef.current && canvasRef.current) {
             drawCanvas(imageRef.current, roundData);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isPreloading, roundData]);
 
     // ==================== CANVAS RENDERING ====================
@@ -968,6 +973,7 @@ function MultiplayerContent() {
                 prefetchImg.src = nextUrl;
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const drawCanvas = useCallback((img: HTMLImageElement, rd: RoundData) => {
@@ -1049,6 +1055,7 @@ function MultiplayerContent() {
         timerRef.current = interval;
 
         return () => clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isRoundActive]);
 
     // ==================== HOST GAME LOGIC ====================
@@ -1072,6 +1079,7 @@ function MultiplayerContent() {
             advanceGame(updatedPlayers);
         }, FEEDBACK_DURATION);
         feedbackTimerRef.current = feedbackTimeout;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const advanceGame = useCallback((currentPlayers: PlayerState[]) => {
@@ -1118,6 +1126,7 @@ function MultiplayerContent() {
         });
 
         setTimeout(() => startRound(nextRound), 500);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const startRound = useCallback((roundIndex: number) => {
@@ -1461,7 +1470,7 @@ function MultiplayerContent() {
 
     // ==================== MEMOS ====================
 
-    const takenCharIds = useMemo(() => {
+    const _takenCharIds = useMemo(() => {
         if (phase !== "room") return new Set<number>();
         return new Set(players.filter(p => p.id !== mySessionId).map(p => p.characterId));
     }, [players, phase, mySessionId]);
@@ -1477,6 +1486,7 @@ function MultiplayerContent() {
         });
     }, [players]);
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const myPlayer = players.find(p => p.id === mySessionId);
 
     // ========== LOBBY PHASE ==========
@@ -1814,10 +1824,10 @@ function MultiplayerContent() {
                             </h4>
                             <div className="text-sm text-slate-500 leading-relaxed pl-8 space-y-2">
                                 <p>
-                                    <strong>斩杀：</strong>在一次机会（无错误）就猜中，会发动"斩杀"，立即扣除所有在该回合还未答题玩家的血量！
+                                    <strong>斩杀：</strong>在一次机会（无错误）就猜中，会发动&quot;斩杀&quot;，立即扣除所有在该回合还未答题玩家的血量！
                                 </p>
                                 <p>
-                                    <strong>格挡：</strong>同样地，猜中也会赋予你"格挡条"。格挡条可以用来抵消其他人对你发动的斩杀伤害，猜中花费的次数越少，格挡条越多。
+                                    <strong>格挡：</strong>同样地，猜中也会赋予你&quot;格挡条&quot;。格挡条可以用来抵消其他人对你发动的斩杀伤害，猜中花费的次数越少，格挡条越多。
                                 </p>
                             </div>
                         </section>

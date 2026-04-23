@@ -105,7 +105,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                 return escapeRegExp(part);
             }).join('');
             return new RegExp(regexPattern, 'i');
-        } catch (e) {
+        } catch (_e) {
             return null;
         }
     }, [query, useWildcard]);
@@ -128,6 +128,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                     item.keywords.some((kw) => kw.toLowerCase().includes(q));
             }
         });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query, searchableNavItems, searchRegex]);
 
     // Filter dynamic search index items based on query

@@ -1,16 +1,15 @@
 "use client";
-import React, { useState, useEffect, useMemo, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import Image from "next/image";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
     IGameChara,
     ICharaProfile,
     IUnitProfile,
     ICharaUnitInfo,
     ICardInfo,
-    UNIT_DATA,
     UNIT_FIELD_TO_ID,
     UNIT_ICON_FILES,
     isTrainableCard
@@ -34,7 +33,6 @@ const UNIT_FIELD_ICONS: Record<string, string> = Object.fromEntries(
 );
 
 export default function CharacterDetailClient() {
-    const router = useRouter();
     const params = useParams();
     const { assetSource, useTrainedThumbnail } = useTheme();
     const { setDetailName } = useBreadcrumb();
@@ -48,7 +46,6 @@ export default function CharacterDetailClient() {
     const [cards, setCards] = useState<ICardInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<"trim" | "label_h" | "label_v">("trim");
-    const [activeImageIdx, setActiveImageIdx] = useState(0);
     const [imageViewerOpen, setImageViewerOpen] = useState(false);
 
     // Fetch data

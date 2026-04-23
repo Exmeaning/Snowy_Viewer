@@ -251,6 +251,7 @@ export default function ChallengeStageChart({
         } finally {
             setLoading(false);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loading, rows, server, serverSource, challengeHighScoreRewards, challengeSoloResults, challengeSoloStages]);
 
     const openDetail = useCallback(() => {

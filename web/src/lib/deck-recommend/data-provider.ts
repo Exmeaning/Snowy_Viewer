@@ -98,7 +98,6 @@ function getDefaultUserDataValue(key: string): unknown {
 }
 
 const USER_DATA_CONTAINER_KEYS = ["data", "result", "updatedData"] as const;
-const USER_DATA_ARRAY_KEYS = ["items", "updatedData", "records", "list"] as const;
 
 function toRecord(value: unknown): Record<string, unknown> | null {
     return value && typeof value === "object" && !Array.isArray(value)
@@ -139,32 +138,6 @@ function normalizeSuiteUserDataPayload(payload: unknown): UserDataMap {
     return applyDefaultUserDataKeys(record);
 }
 
-function normalizePerKeyUserDataValue(key: string, payload: unknown): unknown {
-    const direct = toRecord(payload);
-    if (!direct) {
-        return payload;
-    }
-
-    if (key in direct) {
-        return direct[key];
-    }
-
-    for (const containerKey of USER_DATA_CONTAINER_KEYS) {
-        const nested = toRecord(direct[containerKey]);
-        if (nested && key in nested) {
-            return nested[key];
-        }
-    }
-
-    for (const arrayKey of USER_DATA_ARRAY_KEYS) {
-        const candidate = direct[arrayKey];
-        if (Array.isArray(candidate)) {
-            return candidate;
-        }
-    }
-
-    return payload;
-}
 
 // ==================== Helper Functions ====================
 

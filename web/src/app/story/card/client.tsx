@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+
 import MainLayout from "@/components/MainLayout";
 import CardGrid from "@/components/cards/CardGrid";
 import CardFilters from "@/components/cards/CardFilters";
@@ -92,6 +92,7 @@ function StoryCardContent() {
             } catch { /* ignore */ }
         }
         setFiltersInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {

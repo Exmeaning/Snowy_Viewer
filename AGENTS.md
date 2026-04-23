@@ -12,7 +12,7 @@
 
 ## 技术栈
 
-- **前端**: Next.js 16 (`output: "export"`, 纯 CSR), React 19, TypeScript, **Tailwind CSS 4**, framer-motion, echarts
+- **前端**: Bun Bunx Next.js 16 (`output: "export"`, 纯 CSR), React 19, TypeScript, **Tailwind CSS 4**, framer-motion, echarts
 - **后端**: Go (net/http), Redis 缓存 + 内存回退
 
 ## 核心架构
