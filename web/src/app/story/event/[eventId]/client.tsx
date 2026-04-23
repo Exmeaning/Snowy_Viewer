@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
@@ -224,7 +224,6 @@ function ChapterItem({
 
 export default function StoryEventDetailClient() {
   const params = useParams();
-  const router = useRouter();
   const { assetSource, serverSource } = useTheme();
   const eventId = Number(params.eventId);
 
@@ -236,7 +235,7 @@ export default function StoryEventDetailClient() {
   const [fallbackChapters, setFallbackChapters] = useState<
     { chapter_no: number; title: string; scenarioId: string }[]
   >([]);
-  const [showEpImages, setShowEpImages] = useState(true);
+  const [showEpImages, _setShowEpImages] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

@@ -1,6 +1,6 @@
 "use client";
 import { Suspense } from "react";
-import Link from "next/link";
+
 import MainLayout from "@/components/MainLayout";
 import { StoryPageHeader } from "@/components/story/StoryPageHeader";
 import EventGrid from "@/components/events/EventGrid";

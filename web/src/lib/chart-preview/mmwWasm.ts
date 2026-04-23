@@ -53,15 +53,15 @@ export class MmwWasmPreview {
   }
 
   loadSusText(susText: string, normalizedOffsetMs: number) {
-    const module = this.assertReady()
+    const mod = this.assertReady()
     const encoded = new TextEncoder().encode(susText)
-    const ptr = module._malloc(encoded.length + 1)
+    const ptr = mod._malloc(encoded.length + 1)
     let ok = 0
     try {
-      module.HEAPU8.set(encoded, ptr)
-      module.HEAPU8[ptr + encoded.length] = 0
+      mod.HEAPU8.set(encoded, ptr)
+      mod.HEAPU8[ptr + encoded.length] = 0
       ok = Number(
-        module.ccall(
+        mod.ccall(
           'loadSusText',
           'number',
           ['number', 'number'],
@@ -69,7 +69,7 @@ export class MmwWasmPreview {
         ),
       )
     } finally {
-      module._free(ptr)
+      mod._free(ptr)
     }
     if (ok !== 1) {
       throw new Error(this.getLastError() || 'Failed to parse SUS.')
@@ -96,9 +96,9 @@ export class MmwWasmPreview {
   }
 
   render(chartTimeSec: number): LoadedQuadFrame {
-    const module = this.assertReady()
-    const count = Number(module.ccall('render', 'number', ['number'], [chartTimeSec]))
-    const pointer = Number(module.ccall('getQuadBufferPointer', 'number', [], []))
+    const mod = this.assertReady()
+    const count = Number(mod.ccall('render', 'number', ['number'], [chartTimeSec]))
+    const pointer = Number(mod.ccall('getQuadBufferPointer', 'number', [], []))
 
     if (!count || !pointer) {
       return { count: 0, floats: new Float32Array() }
@@ -106,7 +106,7 @@ export class MmwWasmPreview {
 
     return {
       count,
-      floats: module.HEAPF32.subarray(pointer / 4, pointer / 4 + count * FLOATS_PER_QUAD),
+      floats: mod.HEAPF32.subarray(pointer / 4, pointer / 4 + count * FLOATS_PER_QUAD),
     }
   }
 
@@ -115,16 +115,16 @@ export class MmwWasmPreview {
   }
 
   getHitEvents(): HitEvent[] {
-    const module = this.assertReady()
-    const count = Number(module.ccall('getHitEventCount', 'number', [], []))
-    const pointer = Number(module.ccall('getHitEventBufferPointer', 'number', [], []))
+    const mod = this.assertReady()
+    const count = Number(mod.ccall('getHitEventCount', 'number', [], []))
+    const pointer = Number(mod.ccall('getHitEventBufferPointer', 'number', [], []))
 
     if (!count || !pointer) {
       return []
     }
 
     const stride = 6
-    const packed = module.HEAPF32.subarray(pointer / 4, pointer / 4 + count * stride)
+    const packed = mod.HEAPF32.subarray(pointer / 4, pointer / 4 + count * stride)
     const events: HitEvent[] = []
     for (let index = 0; index < count; index += 1) {
       const offset = index * stride
@@ -157,25 +157,25 @@ export class MmwWasmPreview {
   }
 
   getSongMetadata(): SongMetadata {
-    const module = this.assertReady()
+    const mod = this.assertReady()
     return {
-      title: String(module.ccall('getMetadataTitle', 'string', [], [])),
-      artist: String(module.ccall('getMetadataArtist', 'string', [], [])),
-      designer: String(module.ccall('getMetadataDesigner', 'string', [], [])),
+      title: String(mod.ccall('getMetadataTitle', 'string', [], [])),
+      artist: String(mod.ccall('getMetadataArtist', 'string', [], [])),
+      designer: String(mod.ccall('getMetadataDesigner', 'string', [], [])),
     }
   }
 
   getHudEvents(): HudEvent[] {
-    const module = this.assertReady()
-    const count = Number(module.ccall('getHudEventCount', 'number', [], []))
-    const pointer = Number(module.ccall('getHudEventBufferPointer', 'number', [], []))
+    const mod = this.assertReady()
+    const count = Number(mod.ccall('getHudEventCount', 'number', [], []))
+    const pointer = Number(mod.ccall('getHudEventBufferPointer', 'number', [], []))
 
     if (!count || !pointer) {
       return []
     }
 
     const stride = 4
-    const packed = module.HEAPF32.subarray(pointer / 4, pointer / 4 + count * stride)
+    const packed = mod.HEAPF32.subarray(pointer / 4, pointer / 4 + count * stride)
     const events: HudEvent[] = []
     for (let index = 0; index < count; index += 1) {
       const offset = index * stride

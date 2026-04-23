@@ -12,7 +12,7 @@ interface TooltipParam {
     dataIndex: number;
 }
 
-export default function PGAIChart({ globalKline, height = 300 }: PGAIChartProps) {
+export default function PGAIChart({ globalKline, height: _height = 300 }: PGAIChartProps) {
     const latestPoint = globalKline[globalKline.length - 1];
     const prevPoint = globalKline[globalKline.length - 2];
 

@@ -48,7 +48,7 @@ export default function ProfileClient() {
     const [formServer, setFormServer] = useState<ServerType>("jp");
     const [isVerifying, setIsVerifying] = useState(false);
     const [verifyError, setVerifyError] = useState<string | null>(null);
-    const [oauthMessage, setOauthMessage] = useState<string | null>(null);
+    const [oauthMessage, _setOauthMessage] = useState<string | null>(null);
 
     // Confirm clear
     const [showClearConfirm, setShowClearConfirm] = useState(false);

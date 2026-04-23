@@ -28,8 +28,9 @@ interface MusicSelectorProps {
 
 type RecommendType = "efficiency" | "pt" | "score";
 
-export default function MusicSelector({ selectedMusicId, onSelect, showRecommendations = true, recommendMode = "event", liveType = "multi" }: MusicSelectorProps) {
+export default function MusicSelector({ selectedMusicId, onSelect, showRecommendations = true, recommendMode: _recommendMode = "event", liveType = "multi" }: MusicSelectorProps) {
     const { assetSource, isShowSpoiler } = useTheme();
+    const [now] = useState(() => Date.now());
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
     const [musicTags, setMusicTags] = useState<IMusicTagInfo[]>([]);
     const [musicMetas, setMusicMetas] = useState<IMusicMeta[]>([]);
@@ -207,7 +208,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
 
         // Spoiler filter
         if (!isShowSpoiler) {
-            result = result.filter(m => m.publishedAt <= Date.now());
+            result = result.filter(m => m.publishedAt <= now);
         }
 
         // Sort
@@ -218,6 +219,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
         });
 
         return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [musics, musicTags, selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, translations, isShowSpoiler]);
 
     // Get currently selected music object

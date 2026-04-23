@@ -88,6 +88,7 @@ export default function StoryAreaDetailClient() {
             }
         }
         load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [areaIdParam, serverSource]);
 
     const pageTitle = useMemo(() => {

@@ -73,8 +73,6 @@ const SCORE_PLUS_VISIBLE_SEC = 0.6;
 const SCORE_PLUS_SLIDE_IN_PX = 12;
 const SCORE_PLUS_FLOAT_PX = 8;
 const LIFE_MAX_VALUE = 2000;
-const AP_DELAY_SEC = 2.0;
-const AP_COLOR_GAIN = 1.6;
 
 const MIN_CHART_LEAD_IN_SEC = 9;
 const AUTO_BADGE_SHOW_AFTER_SEC = HUD_INTRO_DURATION_SEC + INTRO_CLEAN_BG_DURATION_SEC + INTRO_PLAYFIELD_FADE_IN_SEC;
@@ -329,7 +327,7 @@ export default function ChartPreviewPlayer({
     const [noteSpeed, setNoteSpeed] = useState(() => readNumber(LS_NOTE_SPEED, 10.5));
     const [seVolume, setSeVolume] = useState(() => readNumber(LS_SE_VOLUME, 0.8));
     const [bgmVolume, setBgmVolume] = useState(() => readNumber(LS_BGM_VOLUME, 0.8));
-    const [playbackRate, setPlaybackRate] = useState(() => readNumber(LS_PLAYBACK_RATE, 1));
+    const [_playbackRate, setPlaybackRate] = useState(() => readNumber(LS_PLAYBACK_RATE, 1));
     const [speedText, setSpeedText] = useState(() => String(readNumber(LS_PLAYBACK_RATE, 1)));
     const [speedError, setSpeedError] = useState(false);
     const speedInputRef = useRef<HTMLInputElement>(null);

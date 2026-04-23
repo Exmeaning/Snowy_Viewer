@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
@@ -105,7 +105,6 @@ interface MusicRankings {
 
 export default function MusicDetailPage() {
     const params = useParams();
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
     const { setDetailName } = useBreadcrumb();

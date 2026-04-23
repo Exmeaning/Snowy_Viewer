@@ -12,7 +12,7 @@ import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, SERVER_OPTIONS } from "@/lib/account";
-import { getWl3SimulationGroupByEventId, WL3_SIMULATION_GROUPS, type Wl3SimulationGroup } from "@/lib/world-bloom-simulation";
+import { getWl3SimulationGroupByEventId, WL3_SIMULATION_GROUPS } from "@/lib/world-bloom-simulation";
 import AccountSelector from "@/components/AccountSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
@@ -498,8 +498,10 @@ export default function DeckRecommendClient() {
     useEffect(() => {
         if (mode === "wl3") return; // WL3 mode manages its own support character
         if (selectedEventType === "world_bloom") {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSupportCharacterId(prev => prev === null ? 0 : prev);
         } else {
+             
             setSupportCharacterId(null);
         }
     }, [selectedEventType, mode]);
@@ -511,12 +513,14 @@ export default function DeckRecommendClient() {
         if (eventBonusCharacterIds.length === 0) return;
         if (supportCharacterId === null || supportCharacterId <= 0) return;
         if (eventBonusCharacterIds.includes(supportCharacterId)) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSupportCharacterId(0);
     }, [mode, selectedEventType, eventBonusCharacterIds, supportCharacterId]);
 
     // In WL3 mode: default to showing support character selector (set to 0 = "please select")
     useEffect(() => {
         if (mode === "wl3" && supportCharacterId === null) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSupportCharacterId(0);
         }
     }, [mode, supportCharacterId]);
@@ -525,6 +529,7 @@ export default function DeckRecommendClient() {
         if (!selectedWl3Simulation) return;
         if (supportCharacterId === null || supportCharacterId <= 0) return;
         if ((selectedWl3Simulation.members as readonly number[]).includes(supportCharacterId)) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSupportCharacterId(0);
     }, [selectedWl3Simulation, supportCharacterId]);
 

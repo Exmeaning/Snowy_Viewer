@@ -119,7 +119,7 @@ async function deckRecommendRunner(args: WorkerInput): Promise<WorkerOutput> {
         mode, userId, server, oauthAccessToken, musicId, difficulty,
         characterId, cardConfig,
         eventId, liveType: liveTypeStr, supportCharacterId,
-        leaderCharacter, strongestTarget,
+        leaderCharacter,
     } = args;
 
     sendProgress("fetching", 5, "正在获取用户数据...");
@@ -433,7 +433,7 @@ async function runCustomMode(
     const baseRecommend = new BaseDeckRecommend(dataProvider);
     const result = (await baseRecommend.recommendHighScoreDeck(
         userCards as unknown as UserCard[],
-        customScoreFunc as any,
+        customScoreFunc as unknown as Parameters<typeof baseRecommend.recommendHighScoreDeck>[1],
         {
             musicMeta,
             limit: 10,
@@ -502,7 +502,7 @@ async function runStrongestMode(
 
     const result = (await baseRecommend.recommendHighScoreDeck(
         userCards as unknown as UserCard[],
-        dummyScoreFunc as any,
+        dummyScoreFunc as unknown as Parameters<typeof baseRecommend.recommendHighScoreDeck>[1],
         {
             musicMeta,
             limit: 10,

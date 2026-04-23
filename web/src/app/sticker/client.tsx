@@ -1,6 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
@@ -26,8 +25,6 @@ interface IStampInfo {
 }
 
 function StickerContent() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
     const { isShowSpoiler, assetSource } = useTheme();
 
     const [stamps, setStamps] = useState<IStampInfo[]>([]);

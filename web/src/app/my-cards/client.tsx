@@ -23,8 +23,6 @@ import {
     getAccounts,
     getActiveAccount,
     setActiveAccount,
-    createAccount,
-    getTopCharacterId,
     fetchAccountGameData,
     normalizeAccountDataError,
     type AccountDataErrorCode,
@@ -200,11 +198,12 @@ function MyCardsContent() {
                     if (filters.sortOrder) setSortOrder(filters.sortOrder);
                     if (filters.ownershipFilter) setOwnershipFilter(filters.ownershipFilter);
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.log("Could not restore filters from sessionStorage");
             }
         }
         setFiltersInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Save to sessionStorage and update URL when filters change
@@ -225,7 +224,7 @@ function MyCardsContent() {
         };
         try {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
-        } catch (e) {
+        } catch (_e) {
             console.log("Could not save filters to sessionStorage");
         }
 

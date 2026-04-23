@@ -18,17 +18,14 @@ import {
     getAccounts,
     getActiveAccount,
     setActiveAccount,
-    createAccount,
-    getTopCharacterId,
     getCachedAvatarUrl,
     fetchAccountGameData,
     normalizeAccountDataError,
     SERVER_LABELS,
-    SERVER_OPTIONS,
+    getTopCharacterId,
     type AccountDataErrorCode,
     type MoesekaiAccount,
     type ServerType,
-    type UserCharacter,
 } from "@/lib/account";
 
 import AccountSelectorBar from "@/components/AccountSelectorBar";
@@ -349,8 +346,6 @@ function MyMusicsContent() {
         isReady: !isLoading && !isFetchingUser,
     });
 
-    const allDifficulties = ["easy", "normal", "hard", "expert", "master", "append"];
-
     // Storage key
     const STORAGE_KEY = "my_musics_filters";
 
@@ -387,11 +382,12 @@ function MyMusicsContent() {
                     if (filters.sortOrder) setSortOrder(filters.sortOrder);
                     if (filters.completionFilter) setCompletionFilter(filters.completionFilter);
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.log("Could not restore filters from sessionStorage");
             }
         }
         setFiltersInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Save to sessionStorage and update URL when filters change
@@ -410,7 +406,7 @@ function MyMusicsContent() {
 
         try {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
-        } catch (e) {
+        } catch (_e) {
             console.log("Could not save filters to sessionStorage");
         }
 
@@ -1079,7 +1075,7 @@ function MyMusicsContent() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
-                            {displayedMusicsWithSeparators.map((item, index) => {
+                            {displayedMusicsWithSeparators.map((item, _index) => {
                                 if (item.type === 'separator') {
                                     const sepData = item.data as { level: number, difficulty: string };
                                     return (

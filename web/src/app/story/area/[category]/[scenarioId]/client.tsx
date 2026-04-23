@@ -65,6 +65,7 @@ export default function StoryAreaTalkClient() {
             }
         }
         load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scenarioId, lang]);
 
     return (

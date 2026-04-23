@@ -69,6 +69,7 @@ function ChartPreviewInner() {
 
     useEffect(() => {
         if (!previewActive) {
+             
             setIsPlayerFullscreen(false);
         }
     }, [previewActive]);
@@ -76,7 +77,9 @@ function ChartPreviewInner() {
     // Load vocals, musics, and difficulties data
     useEffect(() => {
         if (urlSus) {
+             
             setPreviewActive(true);
+             
             setParamsInitialized(true);
             return;
         }
@@ -114,6 +117,7 @@ function ChartPreviewInner() {
 
         const qs = params.toString();
         router.replace(qs ? `/chart-preview?${qs}` : "/chart-preview", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mode, selectedMusicId, selectedDifficulty, selectedVocalId, previewActive, paramsInitialized, urlSus, router]);
 
     // Get first vocal for BGM
@@ -140,13 +144,16 @@ function ChartPreviewInner() {
             const hasCurrent = availableDifficulties.some((d) => d.musicDifficulty === selectedDifficulty);
             if (!hasCurrent) {
                 const master = availableDifficulties.find((d) => d.musicDifficulty === "master");
+                 
                 setSelectedDifficulty(master ? "master" : availableDifficulties[availableDifficulties.length - 1].musicDifficulty);
             }
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [availableDifficulties]);
 
     // Reset vocal selection when song changes
     useEffect(() => {
+         
         setSelectedVocalId(null);
     }, [musicIdNum]);
 

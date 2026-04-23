@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } fr
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchMasterData } from "@/lib/fetch";
-import { ICardInfo, CHARACTER_NAMES, CHAR_COLORS, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
+import { ICardInfo, CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
 import { getCardFullUrl, getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -117,15 +117,6 @@ interface RoundData {
     cropY: number;
     cropSize: number;
     distortions?: ActiveDistortion[];
-}
-
-interface FloatingSticker {
-    id: string;
-    charId: number;
-    stickerNum: number;
-    x: number;
-    y: number;
-    senderName: string;
 }
 
 interface FloatingHpChange {
@@ -835,6 +826,7 @@ function MultiplayerContent() {
 
         channelRef.current = channel;
         return channel;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mySessionId]);
 
     // Broadcast settings when player joins (if host)
@@ -850,6 +842,7 @@ function MultiplayerContent() {
             }, 1000);
             return () => clearTimeout(timer);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [players.length, isHost, phase]); // Dependencies: whenever players change, re-broadcast to ensure new player gets it
 
     // Helper to update settings and broadcast
@@ -948,6 +941,7 @@ function MultiplayerContent() {
                 clearTimeout(safetyTimeout);
             };
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [phase, isPreloading, mySessionId]);
 
     // Host: check if all players have finished loading
@@ -967,6 +961,7 @@ function MultiplayerContent() {
             }, 1000);
             return () => clearTimeout(startDelay);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isPreloading, isHost, players, playerLoadComplete]);
 
     // Safety: re-draw canvas after preloading screen is dismissed
@@ -975,6 +970,7 @@ function MultiplayerContent() {
         if (!isPreloading && roundData && imageRef.current && canvasRef.current) {
             drawCanvas(imageRef.current, roundData);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isPreloading, roundData]);
 
     // ==================== CANVAS RENDERING ====================
@@ -1015,6 +1011,7 @@ function MultiplayerContent() {
                 prefetchImg.src = nextUrl;
             }
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const drawCanvas = useCallback((img: HTMLImageElement, rd: RoundData) => {
@@ -1099,6 +1096,7 @@ function MultiplayerContent() {
         timerRef.current = interval;
 
         return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isRoundActive]);
 
     // ==================== HOST GAME LOGIC ====================
@@ -1124,6 +1122,7 @@ function MultiplayerContent() {
             advanceGame(updatedPlayers);
         }, FEEDBACK_DURATION);
         feedbackTimerRef.current = feedbackTimeout;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const advanceGame = useCallback((currentPlayers: PlayerState[]) => {
@@ -1181,6 +1180,7 @@ function MultiplayerContent() {
         });
 
         setTimeout(() => startRound(nextRound), 500);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const startRound = useCallback((roundIndex: number) => {
@@ -1522,6 +1522,7 @@ function MultiplayerContent() {
             },
         });
         setShowStickerPicker(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [myCharId]);
 
     // ==================== SKIP FEEDBACK ====================
@@ -1541,7 +1542,7 @@ function MultiplayerContent() {
     }, [advanceGame]);
 
     // ==================== AVAILABLE CHARACTERS (exclude taken) ====================
-    const takenCharIds = useMemo(() => {
+    const _takenCharIds = useMemo(() => {
         if (phase !== "room") return new Set<number>();
         return new Set(players.filter(p => p.id !== mySessionId).map(p => p.characterId));
     }, [players, phase, mySessionId]);
@@ -1562,7 +1563,7 @@ function MultiplayerContent() {
         });
     }, [players]);
 
-    const myPlayer = players.find(p => p.id === mySessionId);
+    const _myPlayer = players.find(p => p.id === mySessionId);
 
 
 

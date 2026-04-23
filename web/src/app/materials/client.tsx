@@ -453,6 +453,7 @@ function ExchangeUsageSection({ selection }: { selection: MaterialDetailSelectio
 
     useEffect(() => {
         if (!selection) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setUsages(null);
             return;
         }

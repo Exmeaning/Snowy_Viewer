@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
@@ -68,12 +68,10 @@ interface RelatedGachaInfo {
 
 export default function CardDetailPage() {
     const params = useParams();
-    const router = useRouter();
     const searchParams = useSearchParams();
     const cardId = Number(params.id);
     const isScreenshotMode = searchParams.get('mode') === 'screenshot';
     const { assetSource } = useTheme();
-    const { t } = useTranslation();
     const { setDetailName } = useBreadcrumb();
 
     const [card, setCard] = useState<ICardInfo | null>(null);
@@ -284,7 +282,7 @@ export default function CardDetailPage() {
                 if (map[cardId]) {
                     setRelatedEvent(map[cardId]);
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.log("Could not fetch event map");
             }
         }
@@ -302,7 +300,7 @@ export default function CardDetailPage() {
                         setRelatedGachas([smallest]);
                     }
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.log("Could not fetch gacha map");
             }
         }
@@ -314,7 +312,7 @@ export default function CardDetailPage() {
                     c => c.cardIds && c.cardIds.includes(cardId)
                 );
                 setRelatedCostumes(matched);
-            } catch (e) {
+            } catch (_e) {
                 console.log("Could not fetch costumes");
             }
         }
@@ -1011,25 +1009,6 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
         <div className="px-5 py-3 flex items-center justify-between">
             <span className="text-sm text-slate-500">{label}</span>
             <span className="text-sm font-medium text-slate-800">{value}</span>
-        </div>
-    );
-}
-
-// Stat Row Component
-function StatRow({ label, value, color, max }: { label: string; value: number; color: string; max: number }) {
-    const percentage = Math.min((value / max) * 100, 100);
-    return (
-        <div className="px-5 py-3">
-            <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm text-slate-600">{label}</span>
-                <span className="text-sm font-bold" style={{ color }}>{value.toLocaleString()}</span>
-            </div>
-            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{ width: `${percentage}%`, backgroundColor: color }}
-                />
-            </div>
         </div>
     );
 }

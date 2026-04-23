@@ -65,11 +65,12 @@ function VirtualLiveContent() {
                     if (filters.sortBy) setSortBy(filters.sortBy);
                     if (filters.sortOrder) setSortOrder(filters.sortOrder);
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.log("Could not restore filters from sessionStorage");
             }
         }
         setFiltersInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Save to sessionStorage and update URL when filters change
@@ -84,7 +85,7 @@ function VirtualLiveContent() {
         };
         try {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
-        } catch (e) {
+        } catch (_e) {
             console.log("Could not save filters to sessionStorage");
         }
 

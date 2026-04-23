@@ -1,6 +1,6 @@
 # Build Stage for Frontend
-FROM node:20-alpine AS builder-web
-RUN corepack enable && corepack prepare pnpm@latest --activate
+FROM oven/bun:latest AS builder-web
+RUN apt-get update && apt-get install -y --no-install-recommends nodejs && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY refer/re_sekai-calculator/ refer/re_sekai-calculator/
 
@@ -11,9 +11,9 @@ WORKDIR /app/web
 ENV NEXT_PUBLIC_API_URL=
 # OAuth2 client ID (baked into client JS at build time)
 ENV NEXT_PUBLIC_OAUTH2_CLIENT_ID=snowy-viewer-public
-RUN pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 RUN ls -la /app/refer/re_sekai-calculator/src/index.ts
-RUN pnpm run build
+RUN bun run build
 
 # Build Stage for Backend
 FROM golang:1.23-alpine AS builder-go

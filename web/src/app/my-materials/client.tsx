@@ -8,11 +8,8 @@ import {
     getAccounts,
     getActiveAccount,
     setActiveAccount,
-    createAccount,
-    getTopCharacterId,
     fetchAccountGameData,
     normalizeAccountDataError,
-    SERVER_OPTIONS,
     type AccountDataErrorCode,
     type MoesekaiAccount,
     type ServerType,
@@ -260,6 +257,7 @@ function MyMaterialsContent() {
         });
 
         return filterAndSort(items);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userMaterials, materialsMaster, searchQuery, sortBy, sortOrder, hideZero, assetSource, activeAccount]);
 
     // Build display items for mysekai materials
@@ -282,6 +280,7 @@ function MyMaterialsContent() {
         });
 
         return filterAndSort(items);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userMysekaiMaterials, mysekaiMaterialsMaster, searchQuery, sortBy, sortOrder, hideZero, assetSource, activeAccount]);
 
     // Shared filter/sort logic

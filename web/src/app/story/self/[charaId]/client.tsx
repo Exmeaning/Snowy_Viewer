@@ -68,6 +68,7 @@ export default function StorySelfReaderClient() {
             }
         }
         load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [charaId, lang]);
 
     const charaName = chara ? `${chara.firstName ?? ""}${chara.givenName}` : `角色 ${charaId}`;

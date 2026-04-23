@@ -27,6 +27,7 @@ export function BreadcrumbProvider({ children }: { children: ReactNode }) {
 
     // 路由变化时清空详情名称
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDetailName(null);
         setDetailNode(null);
     }, [pathname]);

@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { StoryReader } from "@/components/story/StoryReader";
-import { useStoryAsset } from "@/hooks/useStoryAsset";
+
 import { fetchMasterData } from "@/lib/fetch";
 import { getCardThumbnailUrl } from "@/lib/assets";
 import { ICardInfo, IGameChara } from "@/types/types";
@@ -21,7 +21,6 @@ interface ICardEpisode {
 
 export default function StoryCardReaderClient() {
     const params = useParams();
-    const router = useRouter();
     const { assetSource, serverSource } = useTheme();
     const cardId = Number(params.cardId);
     const lang: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
@@ -82,6 +81,7 @@ export default function StoryCardReaderClient() {
             }
         }
         load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cardId, lang]);
 
     const charaName = chara ? `${chara.firstName ?? ""}${chara.givenName}` : "";

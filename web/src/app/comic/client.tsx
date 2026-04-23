@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useMemo, Suspense } from "react";
+
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
 import BaseFilters from "@/components/common/BaseFilters";
@@ -23,8 +23,7 @@ interface ITipInfo {
 }
 
 function ComicContent() {
-    const searchParams = useSearchParams();
-    const { isShowSpoiler, assetSource } = useTheme();
+    const { assetSource } = useTheme();
 
     const [comics, setComics] = useState<ITipInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);

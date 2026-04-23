@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
-import { IGameChara, IUnitProfile, UNIT_DATA, UNIT_FIELD_TO_ID, UNIT_ICON_FILES } from "@/types/types";
+import { IGameChara, IUnitProfile, UNIT_FIELD_TO_ID, UNIT_ICON_FILES } from "@/types/types";
 import { getCharacterSelectUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
@@ -113,7 +113,6 @@ function CharacterListContent() {
             <div className="space-y-10">
                 {Object.entries(charactersByUnit).map(([unitId, { unit, characters: unitCharacters }]) => {
                     const iconName = UNIT_FIELD_ICONS[unitId] || "vs.webp";
-                    const internalUnitId = UNIT_FIELD_TO_ID[unitId] || unitId;
 
                     return (
                         <div key={unitId} className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">

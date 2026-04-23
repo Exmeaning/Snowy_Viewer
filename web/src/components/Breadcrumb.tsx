@@ -63,6 +63,7 @@ export default function Breadcrumb() {
 
     // 路由变化时关闭下拉
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setOpenDropdown(null);
     }, [pathname]);
 

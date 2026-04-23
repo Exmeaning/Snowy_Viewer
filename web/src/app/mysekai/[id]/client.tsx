@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
@@ -44,7 +44,6 @@ function mapCharacterIdToBase(charId: number): number {
 
 export default function MysekaiFixtureDetailClient() {
     const params = useParams();
-    const router = useRouter();
     const fixtureId = Number(params.id);
     const { assetSource } = useTheme();
     const { setDetailName } = useBreadcrumb();

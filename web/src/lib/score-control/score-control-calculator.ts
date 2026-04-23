@@ -87,7 +87,7 @@ export function getValidScores(
 
             // 二分搜索: 找到 calc() == targetPoint 的分数范围
             // 先检查是否存在任何有效分数
-            const targetVal = targetPoint / boostRate; // val = targetPoint / boostRate
+            const _targetVal = targetPoint / boostRate; // val = targetPoint / boostRate
 
             // 查找 score_max: 满足 calc() == targetPoint 的最大分数
             let lo = 0;

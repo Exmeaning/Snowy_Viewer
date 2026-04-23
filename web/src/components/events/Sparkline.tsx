@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo } from 'react';
+import React from 'react';
 
 // Simplified type for table cell usage
 interface SparklineProps {

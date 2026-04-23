@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import NextImage from "next/image";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
-import { UNIT_DATA, CHARACTER_NAMES, SUPPORT_UNIT_NAMES, SupportUnit, UNIT_ICON_FILES } from "@/types/types";
+import { UNIT_DATA, CHARACTER_NAMES, UNIT_ICON_FILES } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 
 // Types
@@ -31,11 +31,6 @@ const CHAR_ID_MAP: Record<string, number> = {
     "kanade": 17, "mafuyu": 18, "ena": 19, "mizuki": 20,
     "miku": 21, "rin": 22, "len": 23, "luka": 24, "meiko": 25, "kaito": 26
 };
-
-// Character Name mapping for display (derived from CHARACTER_NAMES)
-const CHAR_DISPLAY_NAMES: Record<string, string> = Object.fromEntries(
-    Object.entries(CHAR_ID_MAP).map(([name, id]) => [name, CHARACTER_NAMES[id] || name])
-);
 
 // Available Fonts
 const DEFAULT_FONTS = [
@@ -242,6 +237,7 @@ export default function StickerMakerContent() {
         }
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const currentUnits = selectedUnitIds.length > 0
         ? UNIT_DATA.filter(u => selectedUnitIds.includes(u.id))
         : [];

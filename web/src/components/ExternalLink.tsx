@@ -16,7 +16,7 @@ const ExternalLink: React.FC<ExternalLinkProps> = ({ href, children, className, 
                 const urlObj = new URL(url);
                 // Check if the hostname ends with exmeaning.com
                 return !urlObj.hostname.endsWith('exmeaning.com');
-            } catch (e) {
+            } catch (_e) {
                 // If URL parsing fails, assume it's not a safe external link suitable for direct navigation if it starts with http/https
                 return true;
             }
