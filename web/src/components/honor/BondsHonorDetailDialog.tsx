@@ -22,7 +22,7 @@ export default function BondsHonorDetailDialog({
     bondsHonor,
     bondsHonorWords = [],
     gameCharaUnits,
-    source = "snowyassets",
+    source = "main-jp",
 }: BondsHonorDetailDialogProps) {
     const previewRef = useRef<HTMLDivElement>(null);
     const { headerActions, errorMessage } = useSvgPreviewActions({

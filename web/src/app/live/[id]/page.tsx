@@ -1,10 +1,9 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
+import { getVirtualLiveBannerUrl } from "@/lib/assets";
 import { getVirtualLiveMeta } from "@/lib/metadata";
 import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
 import VirtualLiveDetailClient from "./client";
-
-const OG_ASSET = "https://snowyassets.exmeaning.com";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -15,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const title = live.name;
     const description = `Project Sekai 虚拟Live「${live.name}」` + DETAIL_SEO_SUFFIX;
-    const ogImage = `${OG_ASSET}/ondemand/virtual_live/select/banner/${live.asset}/${live.asset}.png`;
+    const ogImage = getVirtualLiveBannerUrl(live.asset, "main-jp");
 
     return {
         title,

@@ -96,7 +96,7 @@ function extractScenarioIdFromData(data: IScenarioData): string {
 export async function processScenarioForDisplay(
     data: IScenarioData,
     storyType: "card" | "talk" | "special" | "scenario" = "scenario",
-    source: AssetSourceType = "uni",
+    source: AssetSourceType = "main-jp",
     serverSource: "jp" | "cn" = "jp"
 ): Promise<IProcessedScenarioData> {
     // Fetch required master data

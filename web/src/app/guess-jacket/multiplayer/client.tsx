@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { CHARACTER_NAMES } from "@/types/types";
-import { getMusicJacketUrl, getCharacterIconUrl } from "@/lib/assets";
+import { getMusicJacketUrl, getCharacterIconUrl, getStampUrl } from "@/lib/assets";
 import type { AssetSourceType } from "@/contexts/ThemeContext";
 import { loadTranslations, type TranslationData } from "@/lib/translations";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -32,7 +32,7 @@ const OPTIONS_CHOICES = [4, 6, 8, 10] as const;
 // Get sticker URL from generic stamp assets (01-44 range)
 function getStickerImageUrl(stickerNum: number): string {
     const padded = String(stickerNum).padStart(4, "0");
-    return `https://snowyassets.exmeaning.com/startapp/stamp/stamp${padded}/stamp${padded}.png`;
+    return getStampUrl(`stamp${padded}`, "main-jp");
 }
 
 // Round multiplier by round index
@@ -167,7 +167,7 @@ function getDifficultyLabel(d: Difficulty): string {
 }
 
 function getAssetSourceForServer(server: ServerScope): AssetSourceType {
-    return server === "cn" ? "snowyassets_cn" : "snowyassets";
+    return server === "cn" ? "main-cn" : "main-jp";
 }
 
 function getCropSize(difficulty: Difficulty): number {

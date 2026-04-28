@@ -17,7 +17,7 @@ import {
 
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getMaterialThumbnailUrl, getMysekaiMaterialThumbnailUrl } from "@/lib/assets";
-import { useTheme } from "@/contexts/ThemeContext";
+import { replaceAssetSourceRegion, useTheme } from "@/contexts/ThemeContext";
 import type { AssetSourceType } from "@/contexts/ThemeContext";
 import type { IMysekaiMaterial } from "@/types/mysekai";
 import AccountSelectorBar from "@/components/AccountSelectorBar";
@@ -86,17 +86,7 @@ function formatUploadTime(uploadTime: string | number): string {
 }
 
 function getAssetSourceForServer(server: ServerType, assetSource: AssetSourceType): AssetSourceType {
-    if (server === "cn" || server === "tw") {
-        const cnSourceMap: Record<string, AssetSourceType> = {
-            uni: "snowyassets_cn",
-            haruki: "haruki_cn",
-            snowyassets: "snowyassets_cn",
-            snowyassets_cn: "snowyassets_cn",
-            haruki_cn: "haruki_cn",
-        };
-        return cnSourceMap[assetSource] || "snowyassets_cn";
-    }
-    return assetSource;
+    return replaceAssetSourceRegion(assetSource, server === "cn" || server === "tw" ? "cn" : "jp");
 }
 
 function getUserErrorMessage(code: AccountDataErrorCode): string {

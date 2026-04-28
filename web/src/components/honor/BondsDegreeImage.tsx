@@ -55,7 +55,7 @@ export default function BondsDegreeImage({
     viewType = "normal",
     honorLevel,
     sub = false,
-    source = "snowyassets",
+    source = "main-jp",
     className,
 }: BondsDegreeImageProps) {
     const width = sub ? 180 : 380;

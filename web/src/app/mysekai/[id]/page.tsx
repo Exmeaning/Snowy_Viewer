@@ -1,10 +1,9 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
+import { getMysekaiFixtureThumbnailUrl } from "@/lib/assets";
 import { getFixtureMeta } from "@/lib/metadata";
 import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
 import MysekaiFixtureDetailClient from "./client";
-
-const OG_ASSET = "https://snowyassets.exmeaning.com";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -17,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const description = fixture.flavor
         ? `Project Sekai 家具「${fixture.name}」- ${fixture.flavor.slice(0, 100)}` + DETAIL_SEO_SUFFIX
         : `Project Sekai 家具「${fixture.name}」` + DETAIL_SEO_SUFFIX;
-    const ogImage = `${OG_ASSET}/ondemand/mysekai/thumbnail/fixture/${fixture.asset}_1.png`;
+    const ogImage = getMysekaiFixtureThumbnailUrl(fixture.asset, "main-jp");
 
     return {
         title,

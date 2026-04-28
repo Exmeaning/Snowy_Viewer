@@ -33,6 +33,37 @@ const appearanceOptions = [
     { id: "dark", label: "深色", description: "始终深色" },
 ] as const;
 
+const assetLineOptions = [
+    {
+        key: "main",
+        label: "主线",
+        jp: "main-jp",
+        cn: "main-cn",
+        activeClassName: "bg-sky-500 text-white shadow-md ring-2 ring-sky-300",
+    },
+    {
+        key: "backup",
+        label: "备线",
+        jp: "backup-jp",
+        cn: "backup-cn",
+        activeClassName: "bg-blue-500 text-white shadow-md ring-2 ring-blue-300",
+    },
+    {
+        key: "overseas",
+        label: "海外主线",
+        jp: "overseas-jp",
+        cn: "overseas-cn",
+        activeClassName: "bg-violet-500 text-white shadow-md ring-2 ring-violet-300",
+    },
+    {
+        key: "overseas-backup",
+        label: "海外备线",
+        jp: "overseas-backup-jp",
+        cn: "overseas-backup-cn",
+        activeClassName: "bg-fuchsia-500 text-white shadow-md ring-2 ring-fuchsia-300",
+    },
+] as const;
+
 export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     const {
         themeCharId,
@@ -363,67 +394,30 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 {/* Asset Source */}
                 <div className="border-t border-slate-100 mt-4 pt-4">
                     <div className="mb-3">
-                        <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">assets源</span>
+                        <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">assets线路</span>
                     </div>
 
-                    {serverSource === "cn" ? (
-                        <div className="grid grid-cols-2 gap-2">
-                            <button
-                                onClick={() => setAssetSource("snowyassets_cn")}
-                                className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${assetSource === "snowyassets_cn"
-                                    ? "bg-sky-500 text-white shadow-md ring-2 ring-sky-300"
-                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                    }`}
-                            >
-                                Snowy
-                            </button>
-                            <button
-                                onClick={() => setAssetSource("haruki_cn")}
-                                className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${assetSource === "haruki_cn"
-                                    ? "bg-purple-500 text-white shadow-md ring-2 ring-purple-300"
-                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                    }`}
-                            >
-                                Haruki
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-3 gap-2">
-                            <button
-                                onClick={() => setAssetSource("snowyassets")}
-                                className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${assetSource === "snowyassets"
-                                    ? "bg-sky-500 text-white shadow-md ring-2 ring-sky-300"
-                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                    }`}
-                            >
-                                Snowy
-                            </button>
-                            <button
-                                onClick={() => setAssetSource("uni")}
-                                className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${assetSource === "uni"
-                                    ? "bg-blue-500 text-white shadow-md ring-2 ring-blue-300"
-                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                    }`}
-                            >
-                                Uni
-                            </button>
-                            <button
-                                onClick={() => setAssetSource("haruki")}
-                                className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${assetSource === "haruki"
-                                    ? "bg-purple-500 text-white shadow-md ring-2 ring-purple-300"
-                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                    }`}
-                            >
-                                Haruki
-                            </button>
-                        </div>
-                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                        {assetLineOptions.map((option) => {
+                            const optionValue = serverSource === "cn" ? option.cn : option.jp;
+                            const isSelected = assetSource === optionValue;
+
+                            return (
+                                <button
+                                    key={`${option.key}-${serverSource}`}
+                                    onClick={() => setAssetSource(optionValue)}
+                                    className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${isSelected
+                                        ? option.activeClassName
+                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                        }`}
+                                >
+                                    {option.label}
+                                </button>
+                            );
+                        })}
+                    </div>
                     <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
-                        {serverSource === "cn"
-                            ? (assetSource === "snowyassets_cn"
-                                ? "snowy源的简体中文服务器资源混合了日服资源 若要完全国服资源请使用haruki"
-                                : "简体中文服务器仅支持 Snowy 和 Haruki 源")
-                            : "选择游戏素材的来源服务器，切换后立即生效"}
+                        选择图片与音频资源的访问线路。切换数据服务器时，会自动切换到同线路的 {serverSource === "cn" ? "国服" : "日服"} assets。
                     </p>
                 </div>
 

@@ -24,15 +24,62 @@ const DEFAULT_COLOR = "#33ccbb";
 const DEFAULT_COLOR_SCHEME_PREFERENCE: ColorSchemePreference = "system";
 const POWER_SAVING_STORAGE_KEY = "power-saving-v4";
 
-// Asset source type (5 independent sources: 3 JP + 2 CN)
-export type AssetSourceType = "uni" | "haruki" | "snowyassets" | "snowyassets_cn" | "haruki_cn";
-const DEFAULT_ASSET_SOURCE: AssetSourceType = "snowyassets";
-const CN_ASSET_SOURCES: AssetSourceType[] = ["snowyassets_cn", "haruki_cn"];
-const VALID_ASSET_SOURCES: AssetSourceType[] = ["uni", "haruki", "snowyassets", "snowyassets_cn", "haruki_cn"];
+// Asset source type (4 lines × 2 regions)
+export type AssetSourceType =
+    | "main-jp"
+    | "backup-jp"
+    | "overseas-jp"
+    | "overseas-backup-jp"
+    | "main-cn"
+    | "backup-cn"
+    | "overseas-cn"
+    | "overseas-backup-cn";
+const DEFAULT_ASSET_SOURCE: AssetSourceType = "main-jp";
+const VALID_ASSET_SOURCES: AssetSourceType[] = [
+    "main-jp",
+    "backup-jp",
+    "overseas-jp",
+    "overseas-backup-jp",
+    "main-cn",
+    "backup-cn",
+    "overseas-cn",
+    "overseas-backup-cn",
+];
 
 // Server source type
 export type ServerSourceType = "jp" | "cn";
 const DEFAULT_SERVER_SOURCE: ServerSourceType = "jp";
+
+export function getAssetSourceRegion(source: AssetSourceType): ServerSourceType {
+    return source.endsWith("-cn") ? "cn" : "jp";
+}
+
+export function replaceAssetSourceRegion(source: AssetSourceType, targetRegion: ServerSourceType): AssetSourceType {
+    const line = source.replace(/-(jp|cn)$/, "");
+    return `${line}-${targetRegion}` as AssetSourceType;
+}
+
+function migrateLegacyAssetSource(rawSource: string | null): AssetSourceType {
+    if (!rawSource) {
+        return DEFAULT_ASSET_SOURCE;
+    }
+
+    if (VALID_ASSET_SOURCES.includes(rawSource as AssetSourceType)) {
+        return rawSource as AssetSourceType;
+    }
+
+    switch (rawSource) {
+        case "snowyassets_cn":
+        case "haruki_cn":
+            return "main-cn";
+        case "snowyassets":
+        case "haruki":
+        case "uni":
+            return "main-jp";
+        default:
+            return DEFAULT_ASSET_SOURCE;
+    }
+}
 
 interface ThemeContextType {
     themeCharId: string;
@@ -105,12 +152,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             if (savedTrainedThumbnail === "true") {
                 setUseTrainedThumbnailState(true);
             }
-            // Load asset source setting
-            let loadedAssetSource: AssetSourceType = DEFAULT_ASSET_SOURCE;
+            // Load asset source setting (with legacy migration)
             const savedAssetSource = localStorage.getItem("asset-source");
-            if (savedAssetSource && VALID_ASSET_SOURCES.includes(savedAssetSource as AssetSourceType)) {
-                loadedAssetSource = savedAssetSource as AssetSourceType;
-            }
+            let loadedAssetSource: AssetSourceType = migrateLegacyAssetSource(savedAssetSource);
             // Load LLM translation setting (default ON, so only turn off if explicitly "false")
             const savedLLMTranslation = localStorage.getItem("use-llm-translation");
             if (savedLLMTranslation === "false") {
@@ -130,19 +174,13 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             }
             // Load server source setting
             const savedServerSource = localStorage.getItem("server-source");
-            if (savedServerSource === "jp" || savedServerSource === "cn") {
-                setServerSourceState(savedServerSource);
-            }
-            // When CN server is selected, ensure asset source is a CN source
-            if (savedServerSource === "cn" && !CN_ASSET_SOURCES.includes(loadedAssetSource)) {
-                loadedAssetSource = "snowyassets_cn";
-                localStorage.setItem("asset-source", "snowyassets_cn");
-            }
-            // When JP server is selected, ensure asset source is NOT a CN source
-            if (savedServerSource !== "cn" && CN_ASSET_SOURCES.includes(loadedAssetSource)) {
-                loadedAssetSource = "snowyassets";
-                localStorage.setItem("asset-source", "snowyassets");
-            }
+            const loadedServerSource: ServerSourceType = savedServerSource === "cn" ? "cn" : "jp";
+            setServerSourceState(loadedServerSource);
+
+            // Ensure asset source region always matches current server source
+            loadedAssetSource = replaceAssetSourceRegion(loadedAssetSource, loadedServerSource);
+            localStorage.setItem("asset-source", loadedAssetSource);
+
             setAssetSourceState(loadedAssetSource);
             setHasHydratedThemeSettings(true);
         });
@@ -330,25 +368,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         } catch (e) {
             console.error("Failed to save server source setting to localStorage:", e);
         }
-        // Auto-map asset source when switching servers
-        if (source === "cn") {
-            // Map JP sources → CN equivalents
-            const sourceMap: Record<string, AssetSourceType> = {
-                "snowyassets": "snowyassets_cn",
-                "haruki": "haruki_cn",
-                "uni": "snowyassets_cn", // Uni has no CN equivalent, default to Snowy CN
-            };
-            const newAsset = sourceMap[assetSourceState] || "snowyassets_cn";
-            setAssetSource(newAsset);
-        } else {
-            // Map CN sources → JP equivalents
-            const sourceMap: Record<string, AssetSourceType> = {
-                "snowyassets_cn": "snowyassets",
-                "haruki_cn": "haruki",
-            };
-            if (sourceMap[assetSourceState]) {
-                setAssetSource(sourceMap[assetSourceState]);
-            }
+
+        const newAssetSource = replaceAssetSourceRegion(assetSourceState, source);
+        if (newAssetSource !== assetSourceState) {
+            setAssetSource(newAssetSource);
         }
     };
 

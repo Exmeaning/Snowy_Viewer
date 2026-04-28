@@ -196,7 +196,7 @@ export default function VirtualLiveDetailClient() {
         );
     }
 
-    const bannerUrl = getVirtualLiveBannerUrl(virtualLive.assetbundleName);
+    const bannerUrl = getVirtualLiveBannerUrl(virtualLive.assetbundleName, assetSource);
     const status = getVirtualLiveStatus(virtualLive);
     const statusDisplay = VIRTUAL_LIVE_STATUS_DISPLAY[status];
 

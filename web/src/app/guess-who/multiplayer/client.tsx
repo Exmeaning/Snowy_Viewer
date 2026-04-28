@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchMasterData } from "@/lib/fetch";
 import { ICardInfo, CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
-import { getCardFullUrl, getCharacterIconUrl } from "@/lib/assets";
+import { getCardFullUrl, getCharacterIconUrl, getStampUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
     generateRoomCode, createRoom, findRoom, findRoomAcrossServers,
@@ -72,7 +72,7 @@ const DEFAULT_SETTINGS: MultiplayerSettings = {
 // Get sticker URL from generic stamp assets (01-44 range)
 function getStickerImageUrl(stickerNum: number): string {
     const padded = String(stickerNum).padStart(4, "0");
-    return `https://snowyassets.exmeaning.com/startapp/stamp/stamp${padded}/stamp${padded}.png`;
+    return getStampUrl(`stamp${padded}`, "main-jp");
 }
 
 // Round multiplier by round index

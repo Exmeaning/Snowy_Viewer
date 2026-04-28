@@ -136,7 +136,7 @@ function getDifficultyLabel(difficulty: Difficulty): string {
 }
 
 function getAssetSourceForServer(server: ServerScope): AssetSourceType {
-    return server === "cn" ? "snowyassets_cn" : "snowyassets";
+    return server === "cn" ? "main-cn" : "main-jp";
 }
 
 function getServerLabel(server: ServerScope): string {

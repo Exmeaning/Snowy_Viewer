@@ -1,10 +1,9 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
+import { getGachaLogoUrl } from "@/lib/assets";
 import { getGachaMeta } from "@/lib/metadata";
 import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
 import GachaDetailClient from "./client";
-
-const OG_ASSET = "https://snowyassets.exmeaning.com";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -15,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const title = gacha.name;
     const description = `Project Sekai 卡池「${gacha.name}」` + DETAIL_SEO_SUFFIX;
-    const ogImage = `${OG_ASSET}/ondemand/gacha/${gacha.asset}/logo/logo.png`;
+    const ogImage = getGachaLogoUrl(gacha.asset, "main-jp");
 
     return {
         title,

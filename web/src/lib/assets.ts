@@ -1,4 +1,7 @@
-import type { AssetSourceType } from "@/contexts/ThemeContext";
+import {
+    getAssetSourceRegion,
+    type AssetSourceType,
+} from "@/contexts/ThemeContext";
 
 export const MOE_STATIC_BASE_URL = "https://moe.exmeaning.com";
 export const MOE_ASSETS_BASE_URL = `${MOE_STATIC_BASE_URL}/assets`;
@@ -6,29 +9,40 @@ export const MOE_LOGO_URL = `${MOE_ASSETS_BASE_URL}/logo.svg`;
 export const MOE_MUSIC_META_URL = `${MOE_STATIC_BASE_URL}/data/music_meta/music_metas.json`;
 export const MOE_RANKINGS_URL = `${MOE_STATIC_BASE_URL}/data/music_meta/rankings_best.json`;
 
-export const ASSET_BASE_URL_UNI = "https://assets.unipjsk.com";
-export const ASSET_BASE_URL_HARUKI = "https://sekai-assets-bdf29c81.seiunx.net/jp-assets";
-export const ASSET_BASE_URL_SNOWY = "https://snowyassets.exmeaning.com";
+export const ASSET_DOMAIN_MAIN = "https://storage.exmeaning.com";
+export const ASSET_DOMAIN_BACKUP = "https://storage2.exmeaning.com";
+export const ASSET_DOMAIN_OVERSEAS = "https://storage.pjsk.moe";
+export const ASSET_DOMAIN_OVERSEAS_BACKUP = "https://storage2.pjsk.moe";
 
-// CN-specific base URLs (independent sources)
-export const ASSET_BASE_URL_SNOWY_CN = "https://snowyassets.exmeaning.com/cn";
-export const ASSET_BASE_URL_HARUKI_CN = "https://sekai-assets-bdf29c81.seiunx.net/cn-assets";
+export const ASSET_BASE_URL_MAP: Record<AssetSourceType, string> = {
+    "main-jp": `${ASSET_DOMAIN_MAIN}/sekai-jp-assets`,
+    "backup-jp": `${ASSET_DOMAIN_BACKUP}/sekai-jp-assets`,
+    "overseas-jp": `${ASSET_DOMAIN_OVERSEAS}/sekai-jp-assets`,
+    "overseas-backup-jp": `${ASSET_DOMAIN_OVERSEAS_BACKUP}/sekai-jp-assets`,
+    "main-cn": `${ASSET_DOMAIN_MAIN}/sekai-cn-assets`,
+    "backup-cn": `${ASSET_DOMAIN_BACKUP}/sekai-cn-assets`,
+    "overseas-cn": `${ASSET_DOMAIN_OVERSEAS}/sekai-cn-assets`,
+    "overseas-backup-cn": `${ASSET_DOMAIN_OVERSEAS_BACKUP}/sekai-cn-assets`,
+};
 
-// Get the base URL based on asset source setting (5 independent sources)
 export function getAssetBaseUrl(source: AssetSourceType): string {
-    switch (source) {
-        case "snowyassets": return ASSET_BASE_URL_SNOWY;
-        case "haruki": return ASSET_BASE_URL_HARUKI;
-        case "uni": return ASSET_BASE_URL_UNI;
-        case "snowyassets_cn": return ASSET_BASE_URL_SNOWY_CN;
-        case "haruki_cn": return ASSET_BASE_URL_HARUKI_CN;
-        default: return ASSET_BASE_URL_SNOWY;
-    }
+    return ASSET_BASE_URL_MAP[source] ?? ASSET_BASE_URL_MAP["main-jp"];
 }
 
-// Helper: check if source is a CN source
-export function isCnSource(source: AssetSourceType): boolean {
-    return source === "snowyassets_cn" || source === "haruki_cn";
+export function isCnAssetSource(source: AssetSourceType): boolean {
+    return getAssetSourceRegion(source) === "cn";
+}
+
+function buildImageAssetUrl(source: AssetSourceType, assetPath: string): string {
+    return `${getAssetBaseUrl(source)}/${assetPath}.webp`;
+}
+
+function buildAudioAssetUrl(source: AssetSourceType, assetPath: string): string {
+    return `${getAssetBaseUrl(source)}/${assetPath}.mp3`;
+}
+
+function buildJsonAssetUrl(source: AssetSourceType, assetPath: string): string {
+    return `${getAssetBaseUrl(source)}/${assetPath}.json`;
 }
 
 export function getCharacterIconUrl(characterId: number): string {
@@ -37,143 +51,102 @@ export function getCharacterIconUrl(characterId: number): string {
 
 export function getAreaItemThumbnailUrl(
     assetbundleName: string,
-    source: AssetSourceType = "uni"
+    source: AssetSourceType = "main-jp"
 ): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/thumbnail/areaitem/${assetbundleName}.png`;
+    return buildImageAssetUrl(source, `thumbnail/areaitem/${assetbundleName}`);
 }
 
 export function getMaterialThumbnailUrl(
     materialId: number,
-    source: AssetSourceType = "uni"
+    source: AssetSourceType = "main-jp"
 ): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/thumbnail/material/material${materialId}.png`;
+    return buildImageAssetUrl(source, `thumbnail/material/material${materialId}`);
 }
 
 export function getCommonMaterialThumbnailUrl(
     assetbundleName: string,
-    source: AssetSourceType = "uni"
+    source: AssetSourceType = "main-jp"
 ): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/thumbnail/common_material/${assetbundleName}.png`;
+    return buildImageAssetUrl(source, `thumbnail/common_material/${assetbundleName}`);
 }
 
-export function getAttrIconUrl(attr: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/thumbnail/common/attribute/${attr}.png`;
+export function getAttrIconUrl(attr: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `thumbnail/common/attribute/${attr}`);
 }
 
-export function getUnitLogoUrl(unitId: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/thumbnail/common/unit/${unitId}.png`;
+export function getUnitLogoUrl(unitId: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `thumbnail/common/unit/${unitId}`);
 }
 
 export function getCardThumbnailUrl(
-    characterId: number,
+    _characterId: number,
     assetbundleName: string,
     trained: boolean = false,
-    source: AssetSourceType = "uni"
+    source: AssetSourceType = "main-jp"
 ): string {
-    const baseUrl = getAssetBaseUrl(source);
     const status = trained ? "after_training" : "normal";
-    return `${baseUrl}/startapp/thumbnail/chara/${assetbundleName}_${status}.png`;
+    return buildImageAssetUrl(source, `thumbnail/chara/${assetbundleName}_${status}`);
 }
 
 export function getCostumeThumbnailUrl(
     assetbundleName: string,
-    source: AssetSourceType = "uni"
+    source: AssetSourceType = "main-jp"
 ): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/thumbnail/costume/${assetbundleName}.png`;
+    return buildImageAssetUrl(source, `thumbnail/costume/${assetbundleName}`);
 }
 
 export function getCardFullUrl(
-    characterId: number,
+    _characterId: number,
     assetbundleName: string,
     trained: boolean = false,
-    source: AssetSourceType = "uni"
+    source: AssetSourceType = "main-jp"
 ): string {
-    const baseUrl = getAssetBaseUrl(source);
     const status = trained ? "after_training" : "normal";
-    return `${baseUrl}/startapp/character/member/${assetbundleName}/card_${status}.png`;
+    return buildImageAssetUrl(source, `character/member/${assetbundleName}/card_${status}`);
 }
 
-export function getEventBannerUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/ondemand/event/${assetbundleName}/screen/bg.png`;
+export function getEventBannerUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `event/${assetbundleName}/screen/bg`);
 }
 
-export function getEventCharacterUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/ondemand/event/${assetbundleName}/screen/character.png`;
+export function getEventCharacterUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `event/${assetbundleName}/screen/character`);
 }
 
-export function getEventLogoUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/ondemand/event/${assetbundleName}/logo/logo.png`;
+export function getEventLogoUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `event/${assetbundleName}/logo/logo`);
 }
 
-export function getEventStoryBannerUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/ondemand/event_story/${assetbundleName}/screen_image/banner_event_story.png`;
+export function getEventStoryBannerUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `event_story/${assetbundleName}/screen_image/banner_event_story`);
 }
 
-export function getEventBgmUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    // For CN sources or snowy/haruki, use their own base URL directly
-    if (isCnSource(source) || source === "snowyassets" || source === "haruki") {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/ondemand/event/${assetbundleName}/bgm/${assetbundleName}_top.mp3`;
-    }
-    // Uni source defaults to Haruki for BGM
-    const baseUrl = ASSET_BASE_URL_HARUKI;
-    return `${baseUrl}/ondemand/event/${assetbundleName}/bgm/${assetbundleName}_top.mp3`;
+export function getEventBgmUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildAudioAssetUrl(source, `event/${assetbundleName}/bgm/${assetbundleName}_top`);
 }
 
 // ==================== Gacha Asset URLs ====================
 
-export function getGachaLogoUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/ondemand/gacha/${assetbundleName}/logo/logo.png`;
+export function getGachaLogoUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `gacha/${assetbundleName}/logo/logo`);
 }
 
-export function getGachaBannerUrl(gachaId: number, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/ondemand/home/banner/banner_gacha${gachaId}/banner_gacha${gachaId}.png`;
+export function getGachaBannerUrl(gachaId: number, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `home/banner/banner_gacha${gachaId}/banner_gacha${gachaId}`);
 }
 
-export function getGachaScreenUrl(assetbundleName: string, gachaId: number, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/ondemand/gacha/${assetbundleName}/screen/texture/bg_gacha${gachaId}_1.png`;
+export function getGachaScreenUrl(assetbundleName: string, gachaId: number, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `gacha/${assetbundleName}/screen/texture/bg_gacha${gachaId}_1`);
 }
 
-// Gacha Voice always uses Haruki source (audio files not on Uni)
-// Update: SnowyAssets also has these files
-export function getCardGachaVoiceUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    // CN sources use their own base directly
-    if (isCnSource(source)) {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/startapp/sound/gacha/get_voice/${assetbundleName}/${assetbundleName}.mp3`;
-    }
-    if (source === "snowyassets") {
-        return `${ASSET_BASE_URL_SNOWY}/startapp/sound/gacha/get_voice/${assetbundleName}/${assetbundleName}.mp3`;
-    }
-    return `${ASSET_BASE_URL_HARUKI}/startapp/sound/gacha/get_voice/${assetbundleName}/${assetbundleName}.mp3`;
+export function getCardGachaVoiceUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildAudioAssetUrl(source, `sound/gacha/get_voice/${assetbundleName}/${assetbundleName}`);
 }
 
 // ==================== Comic Asset URLs ====================
 
-export function getComicUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    // CN sources use their own base directly
-    if (isCnSource(source)) {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/startapp/comic/one_frame/${assetbundleName}.png`;
-    }
-    // Comics are available on Haruki and SnowyAssets
-    if (source === "snowyassets") {
-        return `${ASSET_BASE_URL_SNOWY}/startapp/comic/one_frame/${assetbundleName}.png`;
-    }
-    return `${ASSET_BASE_URL_HARUKI}/startapp/comic/one_frame/${assetbundleName}.png`;
+export function getComicUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `comic/one_frame/${assetbundleName}`);
 }
 
 // ==================== Manga Asset URLs ====================
@@ -184,285 +157,165 @@ export function getMangaImageUrl(id: number): string {
 
 // ==================== Sticker/Stamp Asset URLs ====================
 
-export function getStampUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/stamp/${assetbundleName}/${assetbundleName}.png`;
+export function getStampUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `stamp/${assetbundleName}/${assetbundleName}`);
 }
 
 // ==================== Music Asset URLs ====================
 
-// Music score (SUS) URL for chart preview
-export function getMusicScoreUrl(musicId: number, difficulty: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    const paddedId = String(musicId).padStart(4, '0');
-    const ext = isCnSource(source) ? ".txt" : "";
-    return `${baseUrl}/startapp/music/music_score/${paddedId}_01/${difficulty}${ext}`;
+export function getMusicScoreUrl(musicId: number, difficulty: string, source: AssetSourceType = "main-jp"): string {
+    const paddedId = String(musicId).padStart(4, "0");
+    const ext = isCnAssetSource(source) ? ".txt" : "";
+    return `${getAssetBaseUrl(source)}/music/music_score/${paddedId}_01/${difficulty}${ext}`;
 }
 
-// Chart SVG available on Uni and SnowyAssets
-export function getChartSvgUrl(musicId: number, difficulty: string, _source: AssetSourceType = "uni"): string {
+export function getChartSvgUrl(musicId: number, difficulty: string, _source: AssetSourceType = "main-jp"): string {
     return `https://charts-new.unipjsk.com/moe/svg/${musicId}/${difficulty}.svg`;
 }
 
-export function getMusicJacketUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/music/jacket/${assetbundleName}/${assetbundleName}.png`;
+export function getMusicJacketUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `music/jacket/${assetbundleName}/${assetbundleName}`);
 }
 
-export function getMusicVocalAudioUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/ondemand/music/long/${assetbundleName}/${assetbundleName}.mp3`;
+export function getMusicVocalAudioUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildAudioAssetUrl(source, `music/long/${assetbundleName}/${assetbundleName}`);
 }
 
 // ==================== Virtual Live Asset URLs ====================
 
-// Virtual Live Banner available on Haruki and SnowyAssets
-export function getVirtualLiveBannerUrl(assetbundleName: string, source: AssetSourceType = "uni"): string {
-    // CN sources use their own base directly
-    if (isCnSource(source)) {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/ondemand/virtual_live/select/banner/${assetbundleName}/${assetbundleName}.png`;
-    }
-    if (source === "snowyassets") {
-        return `${ASSET_BASE_URL_SNOWY}/ondemand/virtual_live/select/banner/${assetbundleName}/${assetbundleName}.png`;
-    }
-    return `${ASSET_BASE_URL_HARUKI}/ondemand/virtual_live/select/banner/${assetbundleName}/${assetbundleName}.png`;
+export function getVirtualLiveBannerUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `virtual_live/select/banner/${assetbundleName}/${assetbundleName}`);
 }
 
 // ==================== MySEKAI Asset URLs ====================
 
-// MySEKAI Fixture Thumbnail available on Haruki and SnowyAssets
-export function getMysekaiFixtureThumbnailUrl(assetbundleName: string, source: AssetSourceType = "uni", genreId: number = 0): string {
-    // CN sources use their own base, JP defaults to Snowy or Haruki
-    let baseUrl: string;
-    if (isCnSource(source)) {
-        baseUrl = getAssetBaseUrl(source);
-    } else {
-        baseUrl = source === "snowyassets" ? ASSET_BASE_URL_SNOWY : ASSET_BASE_URL_HARUKI;
-    }
-
-    // Wall (Genre ID 7)
+export function getMysekaiFixtureThumbnailUrl(assetbundleName: string, source: AssetSourceType = "main-jp", genreId: number = 0): string {
     if (genreId === 7) {
-        return `${baseUrl}/ondemand/mysekai/thumbnail/surface_appearance/${assetbundleName}/tex_${assetbundleName}_wall_appearance_1.png`;
+        return buildImageAssetUrl(source, `mysekai/thumbnail/surface_appearance/${assetbundleName}/tex_${assetbundleName}_wall_appearance_1`);
     }
 
-    // Floor (Genre ID 8)
     if (genreId === 8) {
-        return `${baseUrl}/ondemand/mysekai/thumbnail/surface_appearance/${assetbundleName}/tex_${assetbundleName}_floor_appearance_1.png`;
+        return buildImageAssetUrl(source, `mysekai/thumbnail/surface_appearance/${assetbundleName}/tex_${assetbundleName}_floor_appearance_1`);
     }
 
-    // Default
-    return `${baseUrl}/ondemand/mysekai/thumbnail/fixture/${assetbundleName}_1.png`;
+    return buildImageAssetUrl(source, `mysekai/thumbnail/fixture/${assetbundleName}_1`);
 }
 
-// Practice Ticket Thumbnail
-// URL pattern: startapp/thumbnail/practice_ticket/ticket{resourceId}.png
-export function getPracticeTicketThumbnailUrl(resourceId: number, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/thumbnail/practice_ticket/ticket${resourceId}.png`;
+export function getPracticeTicketThumbnailUrl(resourceId: number, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `thumbnail/practice_ticket/ticket${resourceId}`);
 }
 
-// Skill Practice Ticket Thumbnail
-// URL pattern: startapp/thumbnail/skill_practice_ticket/ticket{resourceId}.png
-export function getSkillPracticeTicketThumbnailUrl(resourceId: number, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/thumbnail/skill_practice_ticket/ticket${resourceId}.png`;
+export function getSkillPracticeTicketThumbnailUrl(resourceId: number, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `thumbnail/skill_practice_ticket/ticket${resourceId}`);
 }
 
-// MySEKAI Material Thumbnail available on Haruki and SnowyAssets
-export function getMysekaiMaterialThumbnailUrl(iconAssetbundleName: string, source: AssetSourceType = "uni"): string {
-    // CN sources use their own base
-    if (isCnSource(source)) {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/ondemand/mysekai/thumbnail/material/${iconAssetbundleName}.png`;
-    }
-    if (source === "snowyassets") {
-        return `${ASSET_BASE_URL_SNOWY}/ondemand/mysekai/thumbnail/material/${iconAssetbundleName}.png`;
-    }
-    // Default to Haruki for MySEKAI as Uni doesn't have these
-    return `${ASSET_BASE_URL_HARUKI}/ondemand/mysekai/thumbnail/material/${iconAssetbundleName}.png`;
+export function getMysekaiMaterialThumbnailUrl(iconAssetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `mysekai/thumbnail/material/${iconAssetbundleName}`);
 }
 
 // ==================== Character Asset URLs ====================
 
-// Character trim image (main display image)
-export function getCharacterTrimUrl(characterId: number, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/character/character_trim/chr_trim_${characterId}.png`;
+export function getCharacterTrimUrl(characterId: number, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `character/character_trim/chr_trim_${characterId}`);
 }
 
-// Character horizontal label
-export function getCharacterLabelHUrl(characterId: number, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/character/label/chr_h_lb_${characterId}.png`;
+export function getCharacterLabelHUrl(characterId: number, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `character/label/chr_h_lb_${characterId}`);
 }
 
-// Character vertical label
-export function getCharacterLabelVUrl(characterId: number, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/character/label_vertical/chr_v_lb_${characterId}.png`;
+export function getCharacterLabelVUrl(characterId: number, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `character/label_vertical/chr_v_lb_${characterId}`);
 }
 
-// Character select thumbnail (for list view)
-export function getCharacterSelectUrl(characterId: number, source: AssetSourceType = "uni"): string {
-    const baseUrl = getAssetBaseUrl(source);
-    return `${baseUrl}/startapp/character/character_select/chr_tl_${characterId}.png`;
+export function getCharacterSelectUrl(characterId: number, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `character/character_select/chr_tl_${characterId}`);
 }
 
 // ==================== Honor/Degree Asset URLs ====================
 
-// Honor background image (degree_main or degree_sub)
-export function getHonorBgUrl(assetbundleName: string, sub: boolean = false, source: AssetSourceType = "snowyassets"): string {
-    const baseUrl = getAssetBaseUrl(isCnSource(source) ? source : (source === "uni" ? "snowyassets" : source));
-    return `${baseUrl}/startapp/honor/${assetbundleName}/degree_${sub ? "sub" : "main"}.png`;
+export function getHonorBgUrl(assetbundleName: string, sub: boolean = false, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `honor/${assetbundleName}/degree_${sub ? "sub" : "main"}`);
 }
 
-// Honor frame image (generic frames by rarity)
-export function getHonorFrameUrl(rarity: string, sub: boolean = false, source: AssetSourceType = "snowyassets"): string {
-    const baseUrl = getAssetBaseUrl(isCnSource(source) ? source : (source === "uni" ? "snowyassets" : source));
+export function getHonorFrameUrl(rarity: string, sub: boolean = false, source: AssetSourceType = "main-jp"): string {
     const rarityMap: Record<string, number> = { low: 1, middle: 2, high: 3, highest: 4 };
     const num = rarityMap[rarity] || 1;
     const size = sub ? "s" : "m";
-    return `${baseUrl}/startapp/honor/frame/frame_degree_${size}_${num}.png`;
+    return buildImageAssetUrl(source, `honor/frame/frame_degree_${size}_${num}`);
 }
 
-// Honor custom frame (for specific honor groups like birthday)
-export function getHonorCustomFrameUrl(frameName: string, rarity: string, sub: boolean = false, source: AssetSourceType = "snowyassets"): string {
-    const baseUrl = getAssetBaseUrl(isCnSource(source) ? source : (source === "uni" ? "snowyassets" : source));
+export function getHonorCustomFrameUrl(frameName: string, rarity: string, sub: boolean = false, source: AssetSourceType = "main-jp"): string {
     const rarityMap: Record<string, number> = { low: 1, middle: 2, high: 3, highest: 4 };
     const num = rarityMap[rarity] || 1;
     const size = sub ? "s" : "m";
-    return `${baseUrl}/startapp/honor_frame/${frameName}/frame_degree_${size}_${num}.png`;
+    return buildImageAssetUrl(source, `honor_frame/${frameName}/frame_degree_${size}_${num}`);
 }
 
-// Honor rank/scroll overlay image
-export function getHonorRankUrl(assetbundleName: string, type: "rank" | "scroll", sub: boolean = false, source: AssetSourceType = "snowyassets"): string {
-    const baseUrl = getAssetBaseUrl(isCnSource(source) ? source : (source === "uni" ? "snowyassets" : source));
+export function getHonorRankUrl(assetbundleName: string, type: "rank" | "scroll", sub: boolean = false, source: AssetSourceType = "main-jp"): string {
     const suffix = type === "rank" ? `rank_${sub ? "sub" : "main"}` : "scroll";
-    return `${baseUrl}/startapp/honor/${assetbundleName}/${suffix}.png`;
+    return buildImageAssetUrl(source, `honor/${assetbundleName}/${suffix}`);
 }
 
-// Honor rank match background
-export function getHonorRankMatchBgUrl(assetbundleName: string, sub: boolean = false, source: AssetSourceType = "snowyassets"): string {
-    const baseUrl = getAssetBaseUrl(isCnSource(source) ? source : (source === "uni" ? "snowyassets" : source));
-    return `${baseUrl}/startapp/rank_live/honor/${assetbundleName}/degree_${sub ? "sub" : "main"}.png`;
+export function getHonorRankMatchBgUrl(assetbundleName: string, sub: boolean = false, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `rank_live/honor/${assetbundleName}/degree_${sub ? "sub" : "main"}`);
 }
 
-// Bonds honor word image
-export function getBondsHonorWordUrl(assetbundleName: string, source: AssetSourceType = "snowyassets"): string {
-    const baseUrl = getAssetBaseUrl(isCnSource(source) ? source : (source === "uni" ? "snowyassets" : source));
-    return `${baseUrl}/startapp/bonds_honor/word/${assetbundleName}_01.png`;
+export function getBondsHonorWordUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `bonds_honor/word/${assetbundleName}_01`);
 }
 
-// Bonds honor character SD image
-export function getBondsHonorCharacterUrl(characterId: number, source: AssetSourceType = "snowyassets"): string {
-    const baseUrl = getAssetBaseUrl(isCnSource(source) ? source : (source === "uni" ? "snowyassets" : source));
+export function getBondsHonorCharacterUrl(characterId: number, source: AssetSourceType = "main-jp"): string {
     const paddedId = String(characterId).padStart(2, "0");
-    return `${baseUrl}/startapp/bonds_honor/character/chr_sd_${paddedId}_01.png`;
+    return buildImageAssetUrl(source, `bonds_honor/character/chr_sd_${paddedId}_01`);
 }
 
-// Honor degree level icon
-export function getHonorLevelIconUrl(source: AssetSourceType = "snowyassets"): string {
-    const baseUrl = getAssetBaseUrl(isCnSource(source) ? source : (source === "uni" ? "snowyassets" : source));
-    return `${baseUrl}/startapp/honor/frame/icon_degreeLv.png`;
+export function getHonorLevelIconUrl(source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, "honor/frame/icon_degreeLv");
 }
 
 // ==================== Story/Scenario Asset URLs ====================
 
-// Get scenario JSON URL (uses /ondemand/ and .json extension)
-// Rule: Use Snowy or Uni. Haruki source defaults to Snowy. CN sources use their own.
-export function getScenarioJsonUrl(scenarioPath: string, source: AssetSourceType = "uni"): string {
-    if (isCnSource(source)) {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/ondemand/${scenarioPath}.json`;
-    }
-    let targetSource = source;
-    if (source === "haruki") {
-        targetSource = "snowyassets";
-    }
-    const baseUrl = getAssetBaseUrl(targetSource);
-    // scenarioPath format: event_story/{assetbundleName}/scenario/{scenarioId}
-    return `${baseUrl}/ondemand/${scenarioPath}.json`;
+export function getScenarioJsonUrl(scenarioPath: string, source: AssetSourceType = "main-jp"): string {
+    return buildJsonAssetUrl(source, scenarioPath);
 }
 
-// Get scenario background image URL (uses /ondemand/ and .png extension)
-// Rule: Use Snowy or Haruki. Uni source defaults to Haruki. CN sources use their own.
-export function getBackgroundImageUrl(bgName: string, source: AssetSourceType = "uni"): string {
-    if (isCnSource(source)) {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/ondemand/scenario/background/${bgName}/${bgName}.png`;
-    }
-    let targetSource = source;
-    if (source === "uni") {
-        targetSource = "haruki";
-    }
-    const baseUrl = getAssetBaseUrl(targetSource);
-    return `${baseUrl}/ondemand/scenario/background/${bgName}/${bgName}.png`;
+export function getBackgroundImageUrl(bgName: string, source: AssetSourceType = "main-jp"): string {
+    return buildImageAssetUrl(source, `scenario/background/${bgName}/${bgName}`);
 }
 
-// Get story voice URL (audio only on Haruki/Snowy, not Uni)
-// Rule: Use Snowy or Haruki. Uni source defaults to Haruki. CN sources use their own.
-export function getStoryVoiceUrl(scenarioId: string, voiceId: string, source: AssetSourceType = "uni"): string {
-    if (isCnSource(source)) {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/ondemand/sound/scenario/voice/${scenarioId}/${voiceId}.mp3`;
-    }
-    const baseUrl = source === "snowyassets" ? ASSET_BASE_URL_SNOWY : ASSET_BASE_URL_HARUKI;
-    return `${baseUrl}/ondemand/sound/scenario/voice/${scenarioId}/${voiceId}.mp3`;
+export function getStoryVoiceUrl(scenarioId: string, voiceId: string, source: AssetSourceType = "main-jp"): string {
+    return buildAudioAssetUrl(source, `sound/scenario/voice/${scenarioId}/${voiceId}`);
 }
 
-// Card story voice: sound/card_scenario/voice/{scenarioId}/{voiceId}.mp3
-export function getCardStoryVoiceUrl(scenarioId: string, voiceId: string, source: AssetSourceType = "uni"): string {
-    if (isCnSource(source)) {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/ondemand/sound/card_scenario/voice/${scenarioId}/${voiceId}.mp3`;
-    }
-    const baseUrl = source === "snowyassets" ? ASSET_BASE_URL_SNOWY : ASSET_BASE_URL_HARUKI;
-    return `${baseUrl}/ondemand/sound/card_scenario/voice/${scenarioId}/${voiceId}.mp3`;
+export function getCardStoryVoiceUrl(scenarioId: string, voiceId: string, source: AssetSourceType = "main-jp"): string {
+    return buildAudioAssetUrl(source, `sound/card_scenario/voice/${scenarioId}/${voiceId}`);
 }
 
-// Area talk voice: fixed to Snowy base, sound/actionset/voice/{scenarioId}/{voiceId}.mp3
-export function getAreaTalkVoiceUrl(scenarioId: string, voiceId: string, _source: AssetSourceType = "uni"): string {
-    const baseUrl = 'https://storage.sekai.best/sekai-jp-assets/sound/actionset/voice';
-    return `${baseUrl}/${scenarioId}/${voiceId}.mp3`;
+export function getAreaTalkVoiceUrl(scenarioId: string, voiceId: string, source: AssetSourceType = "main-jp"): string {
+    return buildAudioAssetUrl(source, `sound/actionset/voice/${scenarioId}/${voiceId}`);
 }
 
-// Special story voice: startapp/sound/scenario/voice/{scenarioId}/{voiceId}.mp3
-export function getSpecialStoryVoiceUrl(scenarioId: string, voiceId: string, source: AssetSourceType = "uni"): string {
-    if (isCnSource(source)) {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/startapp/sound/scenario/voice/${scenarioId}/${voiceId}.mp3`;
-    }
-    const baseUrl = source === "snowyassets" ? ASSET_BASE_URL_SNOWY : ASSET_BASE_URL_HARUKI;
-    return `${baseUrl}/startapp/sound/scenario/voice/${scenarioId}/${voiceId}.mp3`;
+export function getSpecialStoryVoiceUrl(scenarioId: string, voiceId: string, source: AssetSourceType = "main-jp"): string {
+    return buildAudioAssetUrl(source, `sound/scenario/voice/${scenarioId}/${voiceId}`);
 }
 
-// Get story BGM URL (audio only on Haruki/Snowy)
-// Rule: Use Snowy or Haruki. Uni source defaults to Haruki. CN sources use their own.
-export function getStoryBgmUrl(bgmName: string, source: AssetSourceType = "uni"): string {
-    if (isCnSource(source)) {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/ondemand/sound/scenario/bgm/${bgmName}/${bgmName}.mp3`;
-    }
-    const baseUrl = source === "snowyassets" ? ASSET_BASE_URL_SNOWY : ASSET_BASE_URL_HARUKI;
-    return `${baseUrl}/ondemand/sound/scenario/bgm/${bgmName}/${bgmName}.mp3`;
+export function getStoryBgmUrl(bgmName: string, source: AssetSourceType = "main-jp"): string {
+    return buildAudioAssetUrl(source, `sound/scenario/bgm/${bgmName}/${bgmName}`);
 }
 
-// Get story sound effect URL (audio only on Haruki/Snowy)
-// Rule: Use Snowy or Haruki. Uni source defaults to Haruki. CN sources use their own.
-export function getStorySoundEffectUrl(seName: string, source: AssetSourceType = "uni"): string {
-    if (isCnSource(source)) {
-        const baseUrl = getAssetBaseUrl(source);
-        return `${baseUrl}/ondemand/sound/scenario/se/${seName}.mp3`;
-    }
-    const baseUrl = source === "snowyassets" ? ASSET_BASE_URL_SNOWY : ASSET_BASE_URL_HARUKI;
-    return `${baseUrl}/ondemand/sound/scenario/se/${seName}.mp3`;
+export function getStorySoundEffectUrl(seName: string, source: AssetSourceType = "main-jp"): string {
+    return buildAudioAssetUrl(source, `sound/scenario/se/${seName}`);
 }
 
-// Get story episode image URL
-// Rule: Use Snowy assets. CN sources use CN Snowy.
-export function getStoryEpisodeImageUrl(assetbundleName: string, episodeNo: number, source: AssetSourceType = "snowyassets"): string {
+export function getStoryEpisodeImageUrl(assetbundleName: string, episodeNo: number, source: AssetSourceType = "main-jp"): string {
     const paddedNo = episodeNo.toString().padStart(2, "0");
-    const baseUrl = isCnSource(source) ? ASSET_BASE_URL_SNOWY_CN : ASSET_BASE_URL_SNOWY;
-    return `${baseUrl}/ondemand/event_story/${assetbundleName}/episode_image/${assetbundleName}_${paddedNo}.png`;
+    return buildImageAssetUrl(source, `event_story/${assetbundleName}/episode_image/${assetbundleName}_${paddedNo}`);
+}
+
+export function getUnitStoryEpisodeImageUrl(
+    chapterAssetbundleName: string,
+    episodeAssetbundleName: string,
+    source: AssetSourceType = "main-jp"
+): string {
+    return buildImageAssetUrl(source, `story/episode_image/${chapterAssetbundleName}/${episodeAssetbundleName}`);
 }

@@ -1,10 +1,9 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
+import { getMusicJacketUrl } from "@/lib/assets";
 import { getMusicMeta } from "@/lib/metadata";
 import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
 import MusicDetailClient from "./client";
-
-const OG_ASSET = "https://snowyassets.exmeaning.com";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -15,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const title = music.title;
     const description = `Project Sekai 歌曲「${music.title}」- 作词: ${music.lyricist} / 作曲: ${music.composer}` + DETAIL_SEO_SUFFIX;
-    const ogImage = `${OG_ASSET}/startapp/music/jacket/${music.asset}/${music.asset}.png`;
+    const ogImage = getMusicJacketUrl(music.asset, "main-jp");
 
     return {
         title,
