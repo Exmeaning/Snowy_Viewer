@@ -6,7 +6,7 @@
  *   https://moe.exmeaning.com/story_assets/pjsk-jp-assets/  (JP)
  *   https://moe.exmeaning.com/story_assets/pjsk-cn-assets/  (CN)
  *
- * Path suffix matches haruki's post-startapp/ondemand structure.
+ * Path suffix matches the unified assets path structure after removing legacy startapp/ondemand prefixes.
  * Files are raw brotli-compressed JSON, decompressed via brotli-dec-wasm.
  */
 

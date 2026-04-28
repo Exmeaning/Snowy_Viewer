@@ -10,7 +10,7 @@ import { fetchMasterData } from "@/lib/fetch";
  */
 export function useCardThumbnail(
     cardId: number | null,
-    assetSource: AssetSourceType = "uni"
+    assetSource: AssetSourceType = "main-jp"
 ): string | null {
     const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
     const displayThumbnailUrl = cardId ? thumbnailUrl : null;

@@ -1,11 +1,10 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
+import { getCardThumbnailUrl } from "@/lib/assets";
 import { getCardMeta } from "@/lib/metadata";
 import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
 import { CHARACTER_NAMES } from "@/types/types";
 import CardDetailClient from "./client";
-
-const OG_ASSET = "https://snowyassets.exmeaning.com";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -17,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const charName = CHARACTER_NAMES[card.characterId] || "";
     const title = `${charName} - ${card.prefix}`;
     const description = `Project Sekai 卡牌「${card.prefix}」- ${charName}` + DETAIL_SEO_SUFFIX;
-    const ogImage = `${OG_ASSET}/startapp/thumbnail/chara/${card.asset}_normal.png`;
+    const ogImage = getCardThumbnailUrl(card.characterId, card.asset, false, "main-jp");
 
     return {
         title,

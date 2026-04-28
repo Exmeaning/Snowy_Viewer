@@ -11,7 +11,7 @@ import Best30ShareImage from "@/components/music/Best30ShareImage";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { loadTranslations, TranslationData } from "@/lib/translations";
-import { useTheme } from "@/contexts/ThemeContext";
+import { replaceAssetSourceRegion, useTheme } from "@/contexts/ThemeContext";
 import { getMusicJacketUrl, getCharacterIconUrl } from "@/lib/assets";
 import type { AssetSourceType } from "@/contexts/ThemeContext";
 import {
@@ -789,21 +789,9 @@ function MyMusicsContent() {
     }, []);
 
     const getMusicThumbnailUrl = useCallback((music: Music): string => {
-        // Determine asset source based on server
-        let finalAssetSource: AssetSourceType = assetSource;
-
-        // For CN/TW servers, force CN assets (ignore settings)
-        if (activeAccount && (activeAccount.server === "cn" || activeAccount.server === "tw")) {
-            // Map JP sources to CN equivalents
-            const cnSourceMap: Record<AssetSourceType, AssetSourceType> = {
-                "snowyassets": "snowyassets_cn",
-                "haruki": "haruki_cn",
-                "uni": "snowyassets_cn", // uni doesn't have CN, default to snowyassets_cn
-                "snowyassets_cn": "snowyassets_cn",
-                "haruki_cn": "haruki_cn",
-            };
-            finalAssetSource = cnSourceMap[assetSource] || "snowyassets_cn";
-        }
+        const finalAssetSource = activeAccount
+            ? replaceAssetSourceRegion(assetSource, activeAccount.server === "cn" || activeAccount.server === "tw" ? "cn" : "jp")
+            : assetSource;
 
         return getMusicJacketUrl(music.assetbundleName, finalAssetSource);
     }, [assetSource, activeAccount]);

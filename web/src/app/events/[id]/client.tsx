@@ -722,7 +722,7 @@ export default function EventDetailPage() {
                                     <Link href={`/live/${virtualLive.id}`} className="block group">
                                         <div className="relative aspect-[16/5] w-full">
                                             <Image
-                                                src={getVirtualLiveBannerUrl(virtualLive.assetbundleName)}
+                                                src={getVirtualLiveBannerUrl(virtualLive.assetbundleName, assetSource)}
                                                 alt={virtualLive.name}
                                                 fill
                                                 className="object-cover transition-transform duration-500 group-hover:scale-105"

@@ -19,7 +19,7 @@ export default function HonorDetailDialog({
     onClose,
     honor,
     honorGroup,
-    source = "snowyassets",
+    source = "main-jp",
 }: HonorDetailDialogProps) {
     const previewRef = useRef<HTMLDivElement>(null);
     const { headerActions, errorMessage } = useSvgPreviewActions({

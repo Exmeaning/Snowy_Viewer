@@ -92,13 +92,10 @@ const DIFFICULTY_SHORT: Record<string, string> = {
     append: "APD",
 };
 
-const JACKET_FALLBACK_SOURCES: AssetSourceType[] = [
-    "snowyassets",
-    "haruki",
-    "uni",
-    "snowyassets_cn",
-    "haruki_cn",
-];
+const JACKET_FALLBACK_SOURCES_BY_REGION: Record<"jp" | "cn", AssetSourceType[]> = {
+    jp: ["main-jp", "backup-jp", "overseas-jp", "overseas-backup-jp"],
+    cn: ["main-cn", "backup-cn", "overseas-cn", "overseas-backup-cn"],
+};
 
 // ==================== Helpers ====================
 
@@ -129,7 +126,8 @@ function buildJacketCandidateUrls(
     getMusicThumbnailUrl: (entry: { assetbundleName: string }) => string,
 ): string[] {
     const primaryUrl = getMusicThumbnailUrl({ assetbundleName });
-    const fallbackUrls = JACKET_FALLBACK_SOURCES.map((source) =>
+    const region: "jp" | "cn" = primaryUrl.includes("/cn-assets/") ? "cn" : "jp";
+    const fallbackUrls = JACKET_FALLBACK_SOURCES_BY_REGION[region].map((source) =>
         getMusicJacketUrl(assetbundleName, source)
     );
     return [primaryUrl, ...fallbackUrls];

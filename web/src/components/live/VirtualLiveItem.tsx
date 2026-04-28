@@ -4,6 +4,7 @@ import Image from "next/image";
 import { IVirtualLiveInfo, VIRTUAL_LIVE_TYPE_NAMES, VIRTUAL_LIVE_TYPE_COLORS, getVirtualLiveStatus, VIRTUAL_LIVE_STATUS_DISPLAY, VirtualLiveType } from "@/types/virtualLive";
 import { getVirtualLiveBannerUrl } from "@/lib/assets";
 import { TranslatedText } from "@/components/common/TranslatedText";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface VirtualLiveItemProps {
     virtualLive: IVirtualLiveInfo;
@@ -11,7 +12,8 @@ interface VirtualLiveItemProps {
 }
 
 export default function VirtualLiveItem({ virtualLive, isSpoiler }: VirtualLiveItemProps) {
-    const bannerUrl = getVirtualLiveBannerUrl(virtualLive.assetbundleName);
+    const { assetSource } = useTheme();
+    const bannerUrl = getVirtualLiveBannerUrl(virtualLive.assetbundleName, assetSource);
     const status = getVirtualLiveStatus(virtualLive);
     const statusDisplay = VIRTUAL_LIVE_STATUS_DISPLAY[status];
 

@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { fetchMasterData } from "@/lib/fetch";
-import { isCnSource, ASSET_BASE_URL_SNOWY, ASSET_BASE_URL_SNOWY_CN } from "@/lib/assets";
+import { getUnitStoryEpisodeImageUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { IUnitProfile } from "@/types/types";
 
@@ -13,8 +13,7 @@ function getUnitOutlineLogoUrl(unitCode: string, server: "jp" | "cn"): string {
 }
 
 function getUnitEpisodeImageUrl(chapterAssetbundleName: string, episodeAssetbundleName: string, assetSource: import("@/contexts/ThemeContext").AssetSourceType): string {
-    const base = isCnSource(assetSource) ? ASSET_BASE_URL_SNOWY_CN : ASSET_BASE_URL_SNOWY;
-    return `${base}/startapp/story/episode_image/${chapterAssetbundleName}/${episodeAssetbundleName}.png`;
+    return getUnitStoryEpisodeImageUrl(chapterAssetbundleName, episodeAssetbundleName, assetSource);
 }
 
 interface IUnitStoryEpisodeGroup {

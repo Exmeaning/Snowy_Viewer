@@ -43,7 +43,7 @@ export default function DegreeImage({
     honorGroup,
     honorLevel,
     sub = false,
-    source = "snowyassets",
+    source = "main-jp",
     className,
 }: DegreeImageProps) {
     const width = sub ? 180 : 380;
