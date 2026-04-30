@@ -49,6 +49,18 @@ function existingRoutesByPrefix(existingData, prefix) {
         .filter(route => typeof route?.path === 'string' && route.path.startsWith(prefix));
 }
 
+function existingLastmodForPath(existingData, routePath, fallback) {
+    const route = (Array.isArray(existingData?.detailRoutes) ? existingData.detailRoutes : [])
+        .find(item => item?.path === routePath);
+    return route?.lastmod || fallback;
+}
+
+function areRoutesChanged(existingData, nextMainRoutes, nextDetailRoutes) {
+    if (!existingData) return true;
+    return JSON.stringify(existingData.mainRoutes || []) !== JSON.stringify(nextMainRoutes)
+        || JSON.stringify(existingData.detailRoutes || []) !== JSON.stringify(nextDetailRoutes);
+}
+
 function hasUsefulDetails(detailRoutes) {
     return Array.isArray(detailRoutes) && detailRoutes.length > 0;
 }
@@ -193,14 +205,17 @@ const routeSources = [
                 key: 'characters',
                 logLabel: 'character pages',
                 prefix: '/character/',
-                build: characters => {
-                    const now = formatDate(null);
-                    return (Array.isArray(characters) ? characters : []).map(c => ({
-                        path: `/character/${c.id}/`,
-                        lastmod: now,
-                        priority: 0.6,
-                        changefreq: 'monthly',
-                    }));
+                build: (characters, existingData) => {
+                    const fallbackLastmod = existingData?.generatedAt || formatDate(null);
+                    return (Array.isArray(characters) ? characters : []).map(c => {
+                        const routePath = `/character/${c.id}/`;
+                        return {
+                            path: routePath,
+                            lastmod: existingLastmodForPath(existingData, routePath, fallbackLastmod),
+                            priority: 0.6,
+                            changefreq: 'monthly',
+                        };
+                    });
                 },
             },
         ],
@@ -232,7 +247,7 @@ const routeSources = [
 ];
 
 function buildGroupFromRaw(group, raw, existingData, sourceLabel) {
-    const routes = group.build(raw);
+    const routes = group.build(raw, existingData);
     const previous = existingRoutesByPrefix(existingData, group.prefix);
 
     if (routes.length === 0) {
@@ -271,7 +286,7 @@ async function loadRouteSource(source, existingData) {
                 return { key: group.key, logLabel: group.logLabel, routes: previous, source: 'existing' };
             }
 
-            const routes = group.build(source.fallback);
+            const routes = group.build(source.fallback, existingData);
             console.warn(`    ⚠ ${group.logLabel} failed: ${shortenError(error)}, using empty fallback`);
             return { key: group.key, logLabel: group.logLabel, routes, source: 'fallback' };
         });
@@ -303,9 +318,11 @@ async function main() {
         throw new Error('Sitemap detail routes are empty. Refusing to write an empty detail sitemap data file.');
     }
 
-    // Output
+    // Output. Keep generatedAt stable when routes did not change so scheduled workflows
+    // do not create empty hourly commits.
+    const routesChanged = areRoutesChanged(existingData, mainRoutes, detailRoutes);
     const data = {
-        generatedAt: new Date().toISOString(),
+        generatedAt: routesChanged ? new Date().toISOString() : (existingData?.generatedAt || new Date().toISOString()),
         mainRoutes,
         detailRoutes,
     };
