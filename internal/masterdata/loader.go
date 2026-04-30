@@ -14,12 +14,11 @@ import (
 )
 
 const (
-	EventsURL         = "https://sekaimaster.exmeaning.com/master/events.json"
-	EventCardsURL     = "https://sekaimaster.exmeaning.com/master/eventCards.json"
-	EventMusicsURL    = "https://sekaimaster.exmeaning.com/master/eventMusics.json"
-	VirtualLivesURL   = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/virtualLives.json"
-	GachasURL         = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/gachas.json"
-
+	EventsURL       = "https://sk.exmeaning.com/master/events.json"
+	EventCardsURL   = "https://sk.exmeaning.com/master/eventCards.json"
+	EventMusicsURL  = "https://sk.exmeaning.com/master/eventMusics.json"
+	VirtualLivesURL = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/virtualLives.json"
+	GachasURL       = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/gachas.json"
 )
 
 // Store holds all master data in memory
@@ -120,7 +119,6 @@ func (s *Store) Fetch() error {
 	if err := s.loadOrFetch("gachas.json", GachasURL, &gachas); err != nil {
 		fmt.Printf("Warning: failed to fetch gachas: %v\n", err)
 	}
-
 
 	// Build Maps
 	newCardEventMap := make(map[int]models.EventInfo)
@@ -276,4 +274,3 @@ func (s *Store) GetGachaPickups() map[int][]int {
 	defer s.mutex.RUnlock()
 	return s.GachaPickups
 }
-
