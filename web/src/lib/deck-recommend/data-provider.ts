@@ -24,8 +24,8 @@ export const MUSIC_META_URL = "https://moe.exmeaning.com/data/music_meta/music_m
 
 // Master data URLs - use project's self-hosted official source
 export const MASTER_DATA_BASES: Record<string, string> = {
-    jp: "https://sekaimaster.exmeaning.com/master",
-    cn: "https://sekaimaster-cn.exmeaning.com/master",
+    jp: "https://sk.exmeaning.com/master",
+    cn: "https://sk-cn.exmeaning.com/master",
 };
 
 // Haruki suite API base

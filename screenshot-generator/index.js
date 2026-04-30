@@ -23,7 +23,7 @@ const CONFIG = {
     webUrl: process.env.WEB_URL || 'http://localhost:3000',
     outputDir: process.env.OUTPUT_DIR || '/screenshots',
     concurrency: parseInt(process.env.CONCURRENCY) || 3,
-    masterDataUrl: 'https://sekaimaster.exmeaning.com/master',
+    masterDataUrl: 'https://sk.exmeaning.com/master',
     viewport: { width: 1200, height: 800 },
     timeout: 30000,
     waitForSelector: '.container', // Wait for main content
