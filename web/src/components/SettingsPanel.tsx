@@ -28,9 +28,9 @@ const CLOSE_OVERLAY_COMBOS = parseShortcutCombos(
 );
 
 const appearanceOptions = [
-    { id: "system", label: "自适应", description: "跟随系统" },
-    { id: "light", label: "浅色", description: "始终浅色" },
-    { id: "dark", label: "深色", description: "始终深色" },
+    { id: "system", label: "自适应" },
+    { id: "light", label: "浅色" },
+    { id: "dark", label: "深色" },
 ] as const;
 
 const assetLineOptions = [
@@ -39,28 +39,24 @@ const assetLineOptions = [
         label: "主线",
         jp: "main-jp",
         cn: "main-cn",
-        activeClassName: "bg-sky-500 text-white shadow-md ring-2 ring-sky-300",
     },
     {
         key: "backup",
         label: "备线",
         jp: "backup-jp",
         cn: "backup-cn",
-        activeClassName: "bg-blue-500 text-white shadow-md ring-2 ring-blue-300",
     },
     {
         key: "overseas",
         label: "海外主线",
         jp: "overseas-jp",
         cn: "overseas-cn",
-        activeClassName: "bg-violet-500 text-white shadow-md ring-2 ring-violet-300",
     },
     {
         key: "overseas-backup",
         label: "海外备线",
         jp: "overseas-backup-jp",
         cn: "overseas-backup-cn",
-        activeClassName: "bg-fuchsia-500 text-white shadow-md ring-2 ring-fuchsia-300",
     },
 ] as const;
 
@@ -133,18 +129,24 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         };
     }, [isOpen, onClose]);
 
+    // Get current asset line label
+    const currentAssetLabel = assetLineOptions.find((opt) => {
+        const val = serverSource === "cn" ? opt.cn : opt.jp;
+        return val === assetSource;
+    })?.label ?? "主线";
+
     return (
         <div
             id="settings-panel-content"
             ref={panelRef}
             onMouseDown={(e) => e.stopPropagation()}
-            className={`fixed sm:absolute top-16 sm:top-full right-2 sm:right-0 mt-0 sm:mt-2 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200 overflow-hidden z-[1000] transition-all duration-300 ease-out origin-top-right ${isOpen
+            className={`fixed sm:absolute top-16 sm:top-full right-2 sm:right-0 mt-0 sm:mt-2 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200 overflow-hidden z-[1000] transition-all duration-300 ease-out origin-top-right flex flex-col ${isOpen
                 ? "opacity-100 scale-100 translate-y-0"
                 : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
                 }`}
         >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-miku/10 to-transparent border-b border-slate-100">
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-miku/10 to-transparent border-b border-slate-100 shrink-0">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2">
                     <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -154,14 +156,15 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 </h3>
             </div>
 
-            {/* Content */}
-            <div className="p-4 max-h-[60vh] overflow-y-auto">
+            {/* Scrollable Content */}
+            <div className="p-4 max-h-[60vh] overflow-y-auto flex-1">
+                {/* Appearance Mode - Segmented Control */}
                 <div>
                     <div className="mb-3">
                         <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">外观模式</span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="flex bg-slate-100 rounded-xl p-1">
                         {appearanceOptions.map((option) => {
                             const isSelected = colorSchemePreference === option.id;
 
@@ -169,27 +172,25 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                 <button
                                     key={option.id}
                                     onClick={() => setColorSchemePreference(option.id)}
-                                    className={`px-3 py-2.5 rounded-xl border text-left transition-all ${isSelected
-                                        ? "border-miku/30 bg-miku/10 text-miku shadow-sm"
-                                        : "border-slate-200 bg-slate-50 text-slate-600 hover:border-miku/20 hover:bg-slate-100"
+                                    className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${isSelected
+                                        ? "bg-miku text-white shadow-sm"
+                                        : "text-slate-500 hover:text-slate-700"
                                         }`}
                                 >
-                                    <div className="text-xs font-bold leading-none">{option.label}</div>
-                                    <div className="mt-1 text-[10px] leading-none opacity-80">{option.description}</div>
+                                    {option.label}
                                 </button>
                             );
                         })}
                     </div>
-
                 </div>
 
                 <div className="border-t border-slate-100 mt-4 pt-4" />
 
+                {/* Theme Color */}
                 <div className="mb-3">
                     <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">主题色</span>
                 </div>
 
-                {/* Character Color Grid by Unit */}
                 {/* Character Selection Dropdown */}
                 <div className="relative">
                     <button
@@ -267,7 +268,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </div>
                 </div>
 
-                {/* Divider */}
+                {/* Content Display */}
                 <div className="border-t border-slate-100 mt-4 pt-4">
                     <div className="mb-3">
                         <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">内容显示</span>
@@ -391,34 +392,72 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </p>
                 </div>
 
-                {/* Asset Source */}
+                {/* Asset Source - Themed Dropdown */}
                 <div className="border-t border-slate-100 mt-4 pt-4">
                     <div className="mb-3">
-                        <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">assets线路</span>
+                        <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Assets线路</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                        {assetLineOptions.map((option) => {
-                            const optionValue = serverSource === "cn" ? option.cn : option.jp;
-                            const isSelected = assetSource === optionValue;
+                    <div className="relative">
+                        <button
+                            onClick={() => setExpandedDropdown(expandedDropdown === "asset" ? null : "asset")}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className="w-4 h-4 rounded-full bg-miku/20 flex items-center justify-center">
+                                    <span className="w-2 h-2 rounded-full bg-miku" />
+                                </span>
+                                <span className="text-sm font-bold text-slate-700">{currentAssetLabel}</span>
+                            </div>
+                            <svg
+                                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "asset" ? "rotate-180" : ""}`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
 
-                            return (
-                                <button
-                                    key={`${option.key}-${serverSource}`}
-                                    onClick={() => setAssetSource(optionValue)}
-                                    className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${isSelected
-                                        ? option.activeClassName
-                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                        }`}
-                                >
-                                    {option.label}
-                                </button>
-                            );
-                        })}
+                        {/* Asset Dropdown Menu */}
+                        <div
+                            className={`absolute top-full left-0 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-[1100] transition-all duration-200 origin-top transform ${expandedDropdown === "asset"
+                                ? "opacity-100 scale-100 visible"
+                                : "opacity-0 scale-95 invisible pointer-events-none"
+                                }`}
+                        >
+                            <div className="p-2 space-y-1">
+                                {assetLineOptions.map((option) => {
+                                    const optionValue = serverSource === "cn" ? option.cn : option.jp;
+                                    const isSelected = assetSource === optionValue;
+
+                                    return (
+                                        <button
+                                            key={`${option.key}-${serverSource}`}
+                                            onClick={() => {
+                                                setAssetSource(optionValue);
+                                                setExpandedDropdown(null);
+                                            }}
+                                            className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${isSelected
+                                                ? "bg-miku/10 text-miku"
+                                                : "text-slate-600 hover:bg-slate-50"
+                                                }`}
+                                        >
+                                            <span
+                                                className={`w-3 h-3 rounded-full shrink-0 ${isSelected ? "bg-miku" : "bg-slate-300"}`}
+                                            />
+                                            <span>{option.label}</span>
+                                            {isSelected && (
+                                                <svg className="w-3.5 h-3.5 ml-auto text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
-                        选择图片与音频资源的访问线路。切换数据服务器时，会自动切换到同线路的 {serverSource === "cn" ? "国服" : "日服"} assets。
-                    </p>
                 </div>
 
                 {/* Server Source */}
@@ -467,9 +506,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                             简体中文
                         </button>
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
-                        选择数据来源服务器，切换后页面将自动刷新（实验性）
-                    </p>
                 </div>
 
                 {/* Version Info & Cache */}
@@ -534,19 +570,16 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                 </>
                             )}
                         </button>
-                        <p className="text-[10px] text-slate-400 leading-relaxed">
-                            数据（Masterdata、翻译文本）已缓存至浏览器本地数据库（IndexedDB），版本更新时自动刷新。翻译文本每6小时在后台静默检查更新。图片资源通过 Service Worker 缓存，再次访问时秒加载。如遇数据异常可点击上方按钮清除所有缓存并重新拉取。
-                        </p>
                     </div>
                 </div>
+            </div>
 
-                {/* Footer with version */}
-                <div className="border-t border-slate-100 mt-4 pt-3 px-4 pb-3">
-                    <div className="flex items-center justify-center">
-                        <span className="text-[10px] text-slate-400 font-medium">
-                            Moesekai · BETA 1.160
-                        </span>
-                    </div>
+            {/* Footer with version - Fixed at bottom */}
+            <div className="border-t border-slate-100 px-4 py-2.5 shrink-0 bg-white">
+                <div className="flex items-center justify-center">
+                    <span className="text-[10px] text-slate-400 font-medium">
+                        Moesekai · 1.0-preview
+                    </span>
                 </div>
             </div>
         </div>
