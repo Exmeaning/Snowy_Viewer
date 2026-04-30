@@ -1,41 +1,34 @@
 /**
  * Sitemap Data Generator Script
- * 
+ *
  * 在 CI/构建阶段从远程 master API 拉取数据，
  * 生成域名无关的路由数据 JSON（sitemap-data.json）。
  * 运行时由 Next.js route handler 根据请求 Host 动态拼接 XML。
- * 
+ *
+ * 构建环境网络可能与宿主不同；当远程数据源临时不可用时，
+ * 本脚本会优先保留已存在的 detail routes，避免把 sitemap 覆盖成空详情页。
+ *
  * 使用方法: node scripts/generate-sitemaps.mjs
  */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import {
+    fetchMasterJson,
+    getBuildFetchConcurrency,
+    getConfiguredMasterDataUrls,
+    mapWithConcurrency,
+    readJsonIfExists,
+    requireFreshBuildData,
+} from './lib/build-fetch.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MASTER_DATA_URL = 'https://sk.exmeaning.com/master';
 const OUT_DIR = path.join(__dirname, '..', 'public', 'data');
-
-/**
- * Fetch master data from remote server
- */
-async function fetchMasterData(filename) {
-    const url = `${MASTER_DATA_URL}/${filename}`;
-    console.log(`  Fetching ${filename}...`);
-
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch ${filename}: ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error(`    ⚠ Error fetching ${filename}:`, error.message);
-        return [];
-    }
-}
+const OUT_FILE = path.join(OUT_DIR, 'sitemap-data.json');
+const REQUIRE_FRESH = requireFreshBuildData();
 
 /**
  * Format timestamp to ISO date string
@@ -46,109 +39,268 @@ function formatDate(timestamp) {
     return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
 }
 
+function shortenError(error) {
+    const message = error?.message || String(error);
+    return message.length > 500 ? `${message.slice(0, 500)}...` : message;
+}
+
+function existingRoutesByPrefix(existingData, prefix) {
+    return (Array.isArray(existingData?.detailRoutes) ? existingData.detailRoutes : [])
+        .filter(route => typeof route?.path === 'string' && route.path.startsWith(prefix));
+}
+
+function hasUsefulDetails(detailRoutes) {
+    return Array.isArray(detailRoutes) && detailRoutes.length > 0;
+}
+
+const mainRoutes = [
+    { path: '/', priority: 1.0, changefreq: 'daily' },
+    { path: '/about/', priority: 0.8, changefreq: 'monthly' },
+    { path: '/cards/', priority: 0.9, changefreq: 'daily' },
+    { path: '/music/', priority: 0.9, changefreq: 'daily' },
+    { path: '/events/', priority: 0.9, changefreq: 'daily' },
+    { path: '/gacha/', priority: 0.8, changefreq: 'daily' },
+    { path: '/sticker/', priority: 0.7, changefreq: 'weekly' },
+    { path: '/comic/', priority: 0.7, changefreq: 'weekly' },
+    { path: '/live/', priority: 0.7, changefreq: 'weekly' },
+    { path: '/character/', priority: 0.8, changefreq: 'weekly' },
+    { path: '/mysekai/', priority: 0.7, changefreq: 'weekly' },
+    { path: '/materials/', priority: 0.7, changefreq: 'weekly' },
+    { path: '/exchanges/', priority: 0.7, changefreq: 'weekly' },
+    { path: '/costumes/', priority: 0.7, changefreq: 'weekly' },
+    { path: '/manga/', priority: 0.6, changefreq: 'weekly' },
+    { path: '/eventstory/', priority: 0.7, changefreq: 'weekly' },
+    { path: '/honors/', priority: 0.6, changefreq: 'weekly' },
+    { path: '/prediction/', priority: 0.6, changefreq: 'daily' },
+    { path: '/deck-recommend/', priority: 0.6, changefreq: 'monthly' },
+    { path: '/score-control/', priority: 0.6, changefreq: 'monthly' },
+];
+
+const routeSources = [
+    {
+        label: 'cards',
+        filename: 'cards.json',
+        fallback: [],
+        validate: Array.isArray,
+        groups: [
+            {
+                key: 'cards',
+                logLabel: 'card pages',
+                prefix: '/cards/',
+                build: cards => (Array.isArray(cards) ? cards : []).map(c => ({
+                    path: `/cards/${c.id}/`,
+                    lastmod: formatDate(c.releaseAt),
+                    priority: 0.6,
+                    changefreq: 'weekly',
+                })),
+            },
+        ],
+    },
+    {
+        label: 'musics',
+        filename: 'musics.json',
+        fallback: [],
+        validate: Array.isArray,
+        groups: [
+            {
+                key: 'musics',
+                logLabel: 'music pages',
+                prefix: '/music/',
+                build: musics => (Array.isArray(musics) ? musics : []).map(m => ({
+                    path: `/music/${m.id}/`,
+                    lastmod: formatDate(m.publishedAt),
+                    priority: 0.6,
+                    changefreq: 'weekly',
+                })),
+            },
+        ],
+    },
+    {
+        label: 'events',
+        filename: 'events.json',
+        fallback: [],
+        validate: Array.isArray,
+        groups: [
+            {
+                key: 'events',
+                logLabel: 'event pages',
+                prefix: '/events/',
+                build: events => (Array.isArray(events) ? events : []).map(e => ({
+                    path: `/events/${e.id}/`,
+                    lastmod: formatDate(e.startAt),
+                    priority: 0.7,
+                    changefreq: 'weekly',
+                })),
+            },
+            {
+                key: 'eventStories',
+                logLabel: 'event story pages',
+                prefix: '/eventstory/',
+                build: events => (Array.isArray(events) ? events : []).map(e => ({
+                    path: `/eventstory/${e.id}/`,
+                    lastmod: formatDate(e.startAt),
+                    priority: 0.5,
+                    changefreq: 'weekly',
+                })),
+            },
+        ],
+    },
+    {
+        label: 'gachas',
+        filename: 'gachas.json',
+        fallback: [],
+        validate: Array.isArray,
+        groups: [
+            {
+                key: 'gachas',
+                logLabel: 'gacha pages',
+                prefix: '/gacha/',
+                build: gachas => (Array.isArray(gachas) ? gachas : []).map(g => ({
+                    path: `/gacha/${g.id}/`,
+                    lastmod: formatDate(g.startAt),
+                    priority: 0.6,
+                    changefreq: 'weekly',
+                })),
+            },
+        ],
+    },
+    {
+        label: 'virtualLives',
+        filename: 'virtualLives.json',
+        fallback: [],
+        validate: Array.isArray,
+        groups: [
+            {
+                key: 'virtualLives',
+                logLabel: 'virtual live pages',
+                prefix: '/live/',
+                build: virtualLives => (Array.isArray(virtualLives) ? virtualLives : []).map(v => ({
+                    path: `/live/${v.id}/`,
+                    lastmod: formatDate(v.startAt),
+                    priority: 0.5,
+                    changefreq: 'weekly',
+                })),
+            },
+        ],
+    },
+    {
+        label: 'characters',
+        filename: 'gameCharacters.json',
+        fallback: [],
+        validate: Array.isArray,
+        groups: [
+            {
+                key: 'characters',
+                logLabel: 'character pages',
+                prefix: '/character/',
+                build: characters => {
+                    const now = formatDate(null);
+                    return (Array.isArray(characters) ? characters : []).map(c => ({
+                        path: `/character/${c.id}/`,
+                        lastmod: now,
+                        priority: 0.6,
+                        changefreq: 'monthly',
+                    }));
+                },
+            },
+        ],
+    },
+    {
+        label: 'exchangeSummaries',
+        filename: 'materialExchangeSummaries.json',
+        fallback: [],
+        validate: Array.isArray,
+        groups: [
+            {
+                key: 'exchanges',
+                logLabel: 'exchange pages',
+                prefix: '/exchanges/',
+                build: exchangeSummaries => (Array.isArray(exchangeSummaries) ? exchangeSummaries : [])
+                    .flatMap(summary => (summary.materialExchanges || []).map(exchange => ({
+                        id: exchange.id,
+                        lastmod: exchange.startAt || summary.startAt || summary.endAt,
+                    })))
+                    .map(exchange => ({
+                        path: `/exchanges/${exchange.id}/`,
+                        lastmod: formatDate(exchange.lastmod),
+                        priority: 0.5,
+                        changefreq: 'weekly',
+                    })),
+            },
+        ],
+    },
+];
+
+function buildGroupFromRaw(group, raw, existingData, sourceLabel) {
+    const routes = group.build(raw);
+    const previous = existingRoutesByPrefix(existingData, group.prefix);
+
+    if (routes.length === 0) {
+        if (previous.length > 0 && !REQUIRE_FRESH) {
+            console.warn(`    ⚠ ${group.logLabel} returned 0 entries, keeping existing ${previous.length} routes`);
+            return { key: group.key, logLabel: group.logLabel, routes: previous, source: 'existing-empty-response' };
+        }
+        if (REQUIRE_FRESH) {
+            throw new Error(`${group.logLabel} returned 0 routes`);
+        }
+    }
+
+    console.log(`  - ${routes.length} ${group.logLabel} (${sourceLabel})`);
+    return { key: group.key, logLabel: group.logLabel, routes, source: sourceLabel };
+}
+
+async function loadRouteSource(source, existingData) {
+    console.log(`  Fetching ${source.filename}...`);
+
+    try {
+        const raw = await fetchMasterJson(source.filename, source.label);
+        if (source.validate && !source.validate(raw)) {
+            throw new Error(`Unexpected ${source.label} response shape`);
+        }
+
+        return source.groups.map(group => buildGroupFromRaw(group, raw, existingData, 'fresh'));
+    } catch (error) {
+        if (REQUIRE_FRESH) {
+            throw error;
+        }
+
+        return source.groups.map(group => {
+            const previous = existingRoutesByPrefix(existingData, group.prefix);
+            if (previous.length > 0) {
+                console.warn(`    ⚠ ${group.logLabel} failed: ${shortenError(error)}, keeping existing ${previous.length} routes`);
+                return { key: group.key, logLabel: group.logLabel, routes: previous, source: 'existing' };
+            }
+
+            const routes = group.build(source.fallback);
+            console.warn(`    ⚠ ${group.logLabel} failed: ${shortenError(error)}, using empty fallback`);
+            return { key: group.key, logLabel: group.logLabel, routes, source: 'fallback' };
+        });
+    }
+}
+
 async function main() {
     console.log('=== Sitemap Data Generator ===\n');
+    console.log(`Master APIs: ${getConfiguredMasterDataUrls().join(', ')}`);
+    console.log(`Require fresh build data: ${REQUIRE_FRESH ? 'yes' : 'no'}`);
+    console.log(`Output: ${OUT_FILE}\n`);
 
-    // Static routes (first-level pages)
-    const mainRoutes = [
-        { path: '/', priority: 1.0, changefreq: 'daily' },
-        { path: '/about/', priority: 0.8, changefreq: 'monthly' },
-        { path: '/cards/', priority: 0.9, changefreq: 'daily' },
-        { path: '/music/', priority: 0.9, changefreq: 'daily' },
-        { path: '/events/', priority: 0.9, changefreq: 'daily' },
-        { path: '/gacha/', priority: 0.8, changefreq: 'daily' },
-        { path: '/sticker/', priority: 0.7, changefreq: 'weekly' },
-        { path: '/comic/', priority: 0.7, changefreq: 'weekly' },
-        { path: '/live/', priority: 0.7, changefreq: 'weekly' },
-        { path: '/character/', priority: 0.8, changefreq: 'weekly' },
-        { path: '/mysekai/', priority: 0.7, changefreq: 'weekly' },
-        { path: '/materials/', priority: 0.7, changefreq: 'weekly' },
-        { path: '/exchanges/', priority: 0.7, changefreq: 'weekly' },
-        { path: '/costumes/', priority: 0.7, changefreq: 'weekly' },
-        { path: '/manga/', priority: 0.6, changefreq: 'weekly' },
-        { path: '/eventstory/', priority: 0.7, changefreq: 'weekly' },
-        { path: '/honors/', priority: 0.6, changefreq: 'weekly' },
-        { path: '/prediction/', priority: 0.6, changefreq: 'daily' },
-        { path: '/deck-recommend/', priority: 0.6, changefreq: 'monthly' },
-        { path: '/score-control/', priority: 0.6, changefreq: 'monthly' },
-    ];
+    const existingData = readJsonIfExists(OUT_FILE, null);
+    if (existingData) {
+        console.log(`Existing sitemap data: main ${existingData.mainRoutes?.length || 0}, details ${existingData.detailRoutes?.length || 0}\n`);
+    }
 
-    // Fetch detail data
     console.log('Fetching master data...');
-    const [cards, musics, events, gachas, virtualLives, characters, exchangeSummaries] = await Promise.all([
-        fetchMasterData('cards.json'),
-        fetchMasterData('musics.json'),
-        fetchMasterData('events.json'),
-        fetchMasterData('gachas.json'),
-        fetchMasterData('virtualLives.json'),
-        fetchMasterData('gameCharacters.json'),
-        fetchMasterData('materialExchangeSummaries.json'),
-    ]);
+    const groupedResults = await mapWithConcurrency(
+        routeSources,
+        getBuildFetchConcurrency(3),
+        source => loadRouteSource(source, existingData)
+    );
+    const groupResults = groupedResults.flat();
 
-    // Build detail routes (domain-agnostic, only paths)
-    const detailRoutes = [];
+    const detailRoutes = groupResults.flatMap(result => result.routes);
 
-    if (Array.isArray(cards)) {
-        console.log(`  - ${cards.length} card pages`);
-        for (const c of cards) {
-            detailRoutes.push({ path: `/cards/${c.id}/`, lastmod: formatDate(c.releaseAt), priority: 0.6, changefreq: 'weekly' });
-        }
-    }
-
-    if (Array.isArray(musics)) {
-        console.log(`  - ${musics.length} music pages`);
-        for (const m of musics) {
-            detailRoutes.push({ path: `/music/${m.id}/`, lastmod: formatDate(m.publishedAt), priority: 0.6, changefreq: 'weekly' });
-        }
-    }
-
-    if (Array.isArray(events)) {
-        console.log(`  - ${events.length} event pages`);
-        for (const e of events) {
-            detailRoutes.push({ path: `/events/${e.id}/`, lastmod: formatDate(e.startAt), priority: 0.7, changefreq: 'weekly' });
-        }
-    }
-
-    if (Array.isArray(gachas)) {
-        console.log(`  - ${gachas.length} gacha pages`);
-        for (const g of gachas) {
-            detailRoutes.push({ path: `/gacha/${g.id}/`, lastmod: formatDate(g.startAt), priority: 0.6, changefreq: 'weekly' });
-        }
-    }
-
-    if (Array.isArray(virtualLives)) {
-        console.log(`  - ${virtualLives.length} virtual live pages`);
-        for (const v of virtualLives) {
-            detailRoutes.push({ path: `/live/${v.id}/`, lastmod: formatDate(v.startAt), priority: 0.5, changefreq: 'weekly' });
-        }
-    }
-
-    if (Array.isArray(characters)) {
-        console.log(`  - ${characters.length} character pages`);
-        const now = formatDate(null);
-        for (const c of characters) {
-            detailRoutes.push({ path: `/character/${c.id}/`, lastmod: now, priority: 0.6, changefreq: 'monthly' });
-        }
-    }
-
-    if (Array.isArray(events)) {
-        console.log(`  - ${events.length} event story pages`);
-        for (const e of events) {
-            detailRoutes.push({ path: `/eventstory/${e.id}/`, lastmod: formatDate(e.startAt), priority: 0.5, changefreq: 'weekly' });
-        }
-    }
-
-    if (Array.isArray(exchangeSummaries)) {
-        const exchangeEntries = exchangeSummaries.flatMap(summary =>
-            (summary.materialExchanges || []).map(exchange => ({
-                id: exchange.id,
-                lastmod: exchange.startAt || summary.startAt || summary.endAt,
-            }))
-        );
-        console.log(`  - ${exchangeEntries.length} exchange pages`);
-        for (const exchange of exchangeEntries) {
-            detailRoutes.push({ path: `/exchanges/${exchange.id}/`, lastmod: formatDate(exchange.lastmod), priority: 0.5, changefreq: 'weekly' });
-        }
+    if (!hasUsefulDetails(detailRoutes)) {
+        throw new Error('Sitemap detail routes are empty. Refusing to write an empty detail sitemap data file.');
     }
 
     // Output
@@ -159,13 +311,14 @@ async function main() {
     };
 
     fs.mkdirSync(OUT_DIR, { recursive: true });
-    const outFile = path.join(OUT_DIR, 'sitemap-data.json');
-    fs.writeFileSync(outFile, JSON.stringify(data), 'utf-8');
+    fs.writeFileSync(OUT_FILE, JSON.stringify(data), 'utf-8');
 
-    const fileSize = fs.statSync(outFile).size;
+    const fileSize = fs.statSync(OUT_FILE).size;
+    const sources = groupResults.map(result => `${result.key}: ${result.source}`);
     console.log(`\n✓ Generated sitemap-data.json (${(fileSize / 1024).toFixed(1)} KB)`);
     console.log(`  Main routes: ${mainRoutes.length}`);
     console.log(`  Detail routes: ${detailRoutes.length}`);
+    console.log(`  Sources: ${sources.join(', ')}`);
     console.log('\n=== Sitemap data generation complete! ===');
 }
 
