@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MASTER_URL = process.env.MASTER_DATA_URL || 'https://sekaimaster.exmeaning.com/master';
+const MASTER_URL = process.env.MASTER_DATA_URL || 'https://sk.exmeaning.com/master';
 const MANGA_URL = 'https://moe.exmeaning.com/mangas/mangas.json';
 const OUT_FILE = path.join(__dirname, '..', 'public', 'data', 'metadata-map.json');
 
