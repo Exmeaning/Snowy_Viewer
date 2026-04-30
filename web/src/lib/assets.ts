@@ -45,6 +45,10 @@ function buildJsonAssetUrl(source: AssetSourceType, assetPath: string): string {
     return `${getAssetBaseUrl(source)}/${assetPath}.json`;
 }
 
+function buildPngImageAssetUrl(source: AssetSourceType, assetPath: string): string {
+    return `${getAssetBaseUrl(source)}/${assetPath}.png`;
+}
+
 export function getCharacterIconUrl(characterId: number): string {
     return `${MOE_ASSETS_BASE_URL}/chr_ts_${characterId}.png`;
 }
@@ -158,15 +162,14 @@ export function getMangaImageUrl(id: number): string {
 // ==================== Sticker/Stamp Asset URLs ====================
 
 export function getStampUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
-    return buildImageAssetUrl(source, `stamp/${assetbundleName}/${assetbundleName}`);
+    return buildPngImageAssetUrl(source, `stamp/${assetbundleName}/${assetbundleName}`);
 }
 
 // ==================== Music Asset URLs ====================
 
 export function getMusicScoreUrl(musicId: number, difficulty: string, source: AssetSourceType = "main-jp"): string {
     const paddedId = String(musicId).padStart(4, "0");
-    const ext = isCnAssetSource(source) ? ".txt" : "";
-    return `${getAssetBaseUrl(source)}/music/music_score/${paddedId}_01/${difficulty}${ext}`;
+    return `${getAssetBaseUrl(source)}/music/music_score/${paddedId}_01/${difficulty}.txt`;
 }
 
 export function getChartSvgUrl(musicId: number, difficulty: string, _source: AssetSourceType = "main-jp"): string {
@@ -191,32 +194,32 @@ export function getVirtualLiveBannerUrl(assetbundleName: string, source: AssetSo
 
 export function getMysekaiFixtureThumbnailUrl(assetbundleName: string, source: AssetSourceType = "main-jp", genreId: number = 0): string {
     if (genreId === 7) {
-        return buildImageAssetUrl(source, `mysekai/thumbnail/surface_appearance/${assetbundleName}/tex_${assetbundleName}_wall_appearance_1`);
+        return buildPngImageAssetUrl(source, `mysekai/thumbnail/surface_appearance/${assetbundleName}/tex_${assetbundleName}_wall_appearance_1`);
     }
 
     if (genreId === 8) {
-        return buildImageAssetUrl(source, `mysekai/thumbnail/surface_appearance/${assetbundleName}/tex_${assetbundleName}_floor_appearance_1`);
+        return buildPngImageAssetUrl(source, `mysekai/thumbnail/surface_appearance/${assetbundleName}/tex_${assetbundleName}_floor_appearance_1`);
     }
 
-    return buildImageAssetUrl(source, `mysekai/thumbnail/fixture/${assetbundleName}_1`);
+    return buildPngImageAssetUrl(source, `mysekai/thumbnail/fixture/${assetbundleName}_1`);
 }
 
 export function getPracticeTicketThumbnailUrl(resourceId: number, source: AssetSourceType = "main-jp"): string {
-    return buildImageAssetUrl(source, `thumbnail/practice_ticket/ticket${resourceId}`);
+    return buildPngImageAssetUrl(source, `thumbnail/practice_ticket/ticket${resourceId}`);
 }
 
 export function getSkillPracticeTicketThumbnailUrl(resourceId: number, source: AssetSourceType = "main-jp"): string {
-    return buildImageAssetUrl(source, `thumbnail/skill_practice_ticket/ticket${resourceId}`);
+    return buildPngImageAssetUrl(source, `thumbnail/skill_practice_ticket/ticket${resourceId}`);
 }
 
 export function getMysekaiMaterialThumbnailUrl(iconAssetbundleName: string, source: AssetSourceType = "main-jp"): string {
-    return buildImageAssetUrl(source, `mysekai/thumbnail/material/${iconAssetbundleName}`);
+    return buildPngImageAssetUrl(source, `mysekai/thumbnail/material/${iconAssetbundleName}`);
 }
 
 // ==================== Character Asset URLs ====================
 
 export function getCharacterTrimUrl(characterId: number, source: AssetSourceType = "main-jp"): string {
-    return buildImageAssetUrl(source, `character/character_trim/chr_trim_${characterId}`);
+    return buildImageAssetUrl(source, `character/character_select/chr_tl_${characterId}`);
 }
 
 export function getCharacterLabelHUrl(characterId: number, source: AssetSourceType = "main-jp"): string {

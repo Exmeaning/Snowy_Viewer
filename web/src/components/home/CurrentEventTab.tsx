@@ -165,7 +165,7 @@ export default function CurrentEventTab() {
                         {/* Content */}
                         <div className="space-y-1 relative z-20">
                             {/* Status Badge */}
-                            <div className="flex items-center gap-2 mb-1.5">
+                            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                                 <span
                                     className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded text-white shadow-sm"
                                     style={{ backgroundColor: statusDisplay.color }}
@@ -175,6 +175,30 @@ export default function CurrentEventTab() {
                                 <span className="text-[10px] font-bold text-slate-400">
                                     {eventTypeName}
                                 </span>
+                                {staminaReserve && (() => {
+                                    const label = staminaReserve.normalReserve === 0 && staminaReserve.passReserve === 0
+                                        ? (staminaReserve.recoverable > PASS_CAP ? "塞烤森" : null)
+                                        : staminaReserve.normalReserve >= NORMAL_CAP
+                                        ? "保持满体"
+                                        : staminaReserve.normalReserve === 0
+                                        ? `预留${staminaReserve.passReserve}体力`
+                                        : `预留${staminaReserve.normalReserve}体力`;
+                                    if (!label) return null;
+                                    return (
+                                        <span
+                                            className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-miku/10 text-miku cursor-help"
+                                            title={
+                                                staminaReserve.normalReserve > 0 && staminaReserve.passReserve > 0
+                                                    ? `普通: 预留${staminaReserve.normalReserve}体力 | 月卡: 预留${staminaReserve.passReserve}体力 — 开活恰好回满`
+                                                    : staminaReserve.passReserve > 0
+                                                    ? `月卡: 预留${staminaReserve.passReserve}体力 — 开活恰好回满`
+                                                    : undefined
+                                            }
+                                        >
+                                            ⚡ {label}
+                                        </span>
+                                    );
+                                })()}
                             </div>
 
                             {/* Title (JP Priority) */}
@@ -207,25 +231,7 @@ export default function CurrentEventTab() {
                 </div>
             </Link>
 
-            {/* Stamina Reserve Tip for Upcoming Events */}
-            {staminaReserve && (
-                <div className="mt-2 px-4 py-2.5 rounded-xl bg-amber-50/80 border border-amber-200/60 text-xs sm:text-sm flex items-center gap-2">
-                    <span className="text-amber-500 text-base" aria-hidden="true">⚡</span>
-                    <span className="text-amber-700 font-medium">
-                        {staminaReserve.normalReserve === 0 && staminaReserve.passReserve === 0 ? (
-                            staminaReserve.recoverable > PASS_CAP
-                                ? "距活动开始太久，可将多余体力塞进烤森"
-                                : "体力充裕，无需预留"
-                        ) : staminaReserve.normalReserve >= NORMAL_CAP ? (
-                            "活动即将开始，请保持满体力"
-                        ) : staminaReserve.normalReserve === 0 ? (
-                            <>预留 <span className="font-bold">{staminaReserve.passReserve}</span> 体力 / 月卡 — 开活恰好回满</>
-                        ) : (
-                            <>预留 <span className="font-bold">{staminaReserve.normalReserve}</span> 体力 / 普通 · 预留 <span className="font-bold">{staminaReserve.passReserve}</span> 体力 / 月卡 — 开活恰好回满</>
-                        )}
-                    </span>
-                </div>
-            )}
+
         </div>
     );
 }

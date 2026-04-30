@@ -105,7 +105,7 @@ const MemberCostumeAccordion: React.FC<{
         if (
           id === charaId &&
           compactCostume3ds.__ENUM__.partType[
-            compactCostume3ds.partType[idx]
+          compactCostume3ds.partType[idx]
           ] === "body"
         ) {
           costumes.push({
@@ -114,19 +114,19 @@ const MemberCostumeAccordion: React.FC<{
             costume3dGroupId: compactCostume3ds.costume3dGroupId[idx],
             costume3dType:
               compactCostume3ds.__ENUM__.costume3dType[
-                compactCostume3ds.costume3dType[idx]
+              compactCostume3ds.costume3dType[idx]
               ],
             name: compactCostume3ds.name[idx],
             partType:
               compactCostume3ds.__ENUM__.partType[
-                compactCostume3ds.partType[idx]
+              compactCostume3ds.partType[idx]
               ],
             colorId: compactCostume3ds.colorId[idx],
             colorName: compactCostume3ds.colorName[idx],
             characterId: charaId,
             costume3dRarity:
               compactCostume3ds.__ENUM__.costume3dRarity[
-                compactCostume3ds.costume3dRarity[idx]
+              compactCostume3ds.costume3dRarity[idx]
               ],
             assetbundleName: compactCostume3ds.assetbundleName[idx],
             designer: compactCostume3ds.designer[idx],
@@ -134,8 +134,8 @@ const MemberCostumeAccordion: React.FC<{
             archiveDisplayType:
               compactCostume3ds.archiveDisplayType[idx] !== null
                 ? compactCostume3ds.__ENUM__.archiveDisplayType[
-                    compactCostume3ds.archiveDisplayType[idx]
-                  ]
+                compactCostume3ds.archiveDisplayType[idx]
+                ]
                 : "",
             archivePublishedAt: compactCostume3ds.archivePublishedAt[idx] || 0,
           });
@@ -226,7 +226,7 @@ const MemberHairAccordion: React.FC<{
         if (
           id === charaId &&
           compactCostume3ds.__ENUM__.partType[
-            compactCostume3ds.partType[idx]
+          compactCostume3ds.partType[idx]
           ] === "hair"
         ) {
           costumes.push({
@@ -235,19 +235,19 @@ const MemberHairAccordion: React.FC<{
             costume3dGroupId: compactCostume3ds.costume3dGroupId[idx],
             costume3dType:
               compactCostume3ds.__ENUM__.costume3dType[
-                compactCostume3ds.costume3dType[idx]
+              compactCostume3ds.costume3dType[idx]
               ],
             name: compactCostume3ds.name[idx],
             partType:
               compactCostume3ds.__ENUM__.partType[
-                compactCostume3ds.partType[idx]
+              compactCostume3ds.partType[idx]
               ],
             colorId: compactCostume3ds.colorId[idx],
             colorName: compactCostume3ds.colorName[idx],
             characterId: charaId,
             costume3dRarity:
               compactCostume3ds.__ENUM__.costume3dRarity[
-                compactCostume3ds.costume3dRarity[idx]
+              compactCostume3ds.costume3dRarity[idx]
               ],
             assetbundleName: compactCostume3ds.assetbundleName[idx],
             designer: compactCostume3ds.designer[idx],
@@ -255,8 +255,8 @@ const MemberHairAccordion: React.FC<{
             archiveDisplayType:
               compactCostume3ds.archiveDisplayType[idx] !== null
                 ? compactCostume3ds.__ENUM__.archiveDisplayType[
-                    compactCostume3ds.archiveDisplayType[idx]
-                  ]
+                compactCostume3ds.archiveDisplayType[idx]
+                ]
                 : "",
             archivePublishedAt: compactCostume3ds.archivePublishedAt[idx] || 0,
           });
@@ -347,7 +347,7 @@ const MemberHeadAccordion: React.FC<{
         if (
           id === charaId &&
           compactCostume3ds.__ENUM__.partType[
-            compactCostume3ds.partType[idx]
+          compactCostume3ds.partType[idx]
           ] === "head"
         ) {
           costumes.push({
@@ -356,19 +356,19 @@ const MemberHeadAccordion: React.FC<{
             costume3dGroupId: compactCostume3ds.costume3dGroupId[idx],
             costume3dType:
               compactCostume3ds.__ENUM__.costume3dType[
-                compactCostume3ds.costume3dType[idx]
+              compactCostume3ds.costume3dType[idx]
               ],
             name: compactCostume3ds.name[idx],
             partType:
               compactCostume3ds.__ENUM__.partType[
-                compactCostume3ds.partType[idx]
+              compactCostume3ds.partType[idx]
               ],
             colorId: compactCostume3ds.colorId[idx],
             colorName: compactCostume3ds.colorName[idx],
             characterId: charaId,
             costume3dRarity:
               compactCostume3ds.__ENUM__.costume3dRarity[
-                compactCostume3ds.costume3dRarity[idx]
+              compactCostume3ds.costume3dRarity[idx]
               ],
             assetbundleName: compactCostume3ds.assetbundleName[idx],
             designer: compactCostume3ds.designer[idx],
@@ -376,8 +376,8 @@ const MemberHeadAccordion: React.FC<{
             archiveDisplayType:
               compactCostume3ds.archiveDisplayType[idx] !== null
                 ? compactCostume3ds.__ENUM__.archiveDisplayType[
-                    compactCostume3ds.archiveDisplayType[idx]
-                  ]
+                compactCostume3ds.archiveDisplayType[idx]
+                ]
                 : "",
             archivePublishedAt: compactCostume3ds.archivePublishedAt[idx] || 0,
           });
@@ -536,7 +536,7 @@ const MemberDetail: React.FC<unknown> = observer(() => {
 
   useEffect(() => {
     getRemoteAssetURL(
-      `character/character_trim/chr_trim_${charaId}.webp`,
+      `character/character_select/chr_tl_${charaId}.webp`,
       setCharaTrimImg,
       "minio",
       region

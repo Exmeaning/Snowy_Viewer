@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SettingsPanel from "./SettingsPanel";
@@ -31,23 +31,8 @@ export default function MainNavbar({
     onSettingsClose,
     onShortcutsHelpToggle,
 }: MainNavbarProps) {
-    const [showDomainNotice, setShowDomainNotice] = useState(false);
     const pathname = usePathname();
     const isHome = pathname === "/";
-
-    useEffect(() => {
-        const dismissed = localStorage.getItem("moesekai_domain_notice_dismissed");
-        queueMicrotask(() => {
-            setShowDomainNotice(!dismissed);
-        });
-    }, []);
-
-    const dismissDomainNotice = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setShowDomainNotice(false);
-        localStorage.setItem("moesekai_domain_notice_dismissed", "true");
-    };
 
     const sidebarShortcut = getPrimaryShortcutLabel("toggle-sidebar");
     const searchShortcut = getPrimaryShortcutLabel("toggle-search");
@@ -89,13 +74,6 @@ export default function MainNavbar({
                                 WebkitMaskRepeat: "no-repeat",
                             }}
                         />
-                        <div className="flex items-center gap-1.5 sm:gap-2 h-8 sm:h-10 ml-0.5 sm:ml-1">
-                            {/* 100 Days Stylized Text */}
-                            <div className="flex items-baseline text-miku font-black italic tracking-tighter cursor-default select-none hover:scale-105 transition-transform origin-left">
-                                <span className="text-2xl sm:text-[1.75rem] leading-none drop-shadow-sm">1</span>
-                                <span className="text-sm sm:text-base leading-none drop-shadow-sm">00<span className="text-[10px] sm:text-xs ml-0.5 tracking-normal uppercase">days</span></span>
-                            </div>
-                        </div>
                     </Link>
 
                     {/* Breadcrumb - desktop inline */}
@@ -103,22 +81,7 @@ export default function MainNavbar({
                         <Breadcrumb />
                     </div>
 
-                    {/* Domain notice */}
-                    {showDomainNotice && (
-                        <div className="hidden lg:flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-100 rounded-full animate-fade-in shrink-0">
-                            <span className="text-[10px] text-blue-600 font-bold whitespace-nowrap">
-                                新域名 pjsk.moe
-                            </span>
-                            <button
-                                onClick={dismissDomainNotice}
-                                className="w-3.5 h-3.5 flex items-center justify-center rounded-full hover:bg-blue-100 text-blue-400 transition-colors"
-                            >
-                                <svg viewBox="0 0 24 24" className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="3">
-                                    <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            </button>
-                        </div>
-                    )}
+
                 </div>
 
                 {/* Right: Search + Shortcuts Help + Settings */}
