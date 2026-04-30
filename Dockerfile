@@ -1,6 +1,6 @@
 # Build Stage for Frontend
 FROM oven/bun:latest AS builder-web
-RUN apt-get update && apt-get install -y --no-install-recommends nodejs && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates nodejs && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY refer/re_sekai-calculator/ refer/re_sekai-calculator/
 
@@ -11,6 +11,13 @@ WORKDIR /app/web
 ENV NEXT_PUBLIC_API_URL=
 # OAuth2 client ID (baked into client JS at build time)
 ENV NEXT_PUBLIC_OAUTH2_CLIENT_ID=snowy-viewer-public
+# Build-time data sources. Multiple URLs allow Docker builds to survive flaky DNS/proxy/CDN paths.
+ARG MASTER_DATA_URLS=https://sekaimaster.exmeaning.com/master,https://sk.exmeaning.com/master
+ARG MANGA_DATA_URLS=https://moe.exmeaning.com/mangas/mangas.json
+ARG REQUIRE_FRESH_BUILD_DATA=0
+ENV MASTER_DATA_URLS=$MASTER_DATA_URLS
+ENV MANGA_DATA_URLS=$MANGA_DATA_URLS
+ENV REQUIRE_FRESH_BUILD_DATA=$REQUIRE_FRESH_BUILD_DATA
 RUN bun install --frozen-lockfile
 RUN ls -la /app/refer/re_sekai-calculator/src/index.ts
 RUN bun run build

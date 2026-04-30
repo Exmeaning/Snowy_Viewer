@@ -1,89 +1,69 @@
 /**
  * Metadata Map Generator Script
- * 
+ *
  * 在 CI/构建阶段从远程 master API 拉取数据，
  * 提取每个实体的 SEO 所需最小字段，生成 metadata-map.json。
  * 运行时 generateMetadata 从本地文件读取，零网络请求。
- * 
+ *
+ * 构建环境网络可能与宿主不同；当远程数据源临时不可用时，
+ * 本脚本会优先保留已存在的 metadata-map.json，避免把完整 SEO 数据覆盖为空。
+ *
  * 使用方法: node scripts/generate-metadata-map.mjs
  */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import {
+    fetchMangaJson,
+    fetchMasterJson,
+    getBuildFetchConcurrency,
+    getConfiguredMangaDataUrls,
+    getConfiguredMasterDataUrls,
+    mapWithConcurrency,
+    readJsonIfExists,
+    requireFreshBuildData,
+} from './lib/build-fetch.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MASTER_URL = process.env.MASTER_DATA_URL || 'https://sk.exmeaning.com/master';
-const MANGA_URL = 'https://moe.exmeaning.com/mangas/mangas.json';
 const OUT_FILE = path.join(__dirname, '..', 'public', 'data', 'metadata-map.json');
+const REQUIRE_FRESH = requireFreshBuildData();
 
-/**
- * Fetch JSON with error handling
- */
-async function fetchJSON(url, label, retries = 2) {
-    console.log(`  Fetching ${label}...`);
-
-    for (let attempt = 0; attempt <= retries; attempt += 1) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch ${label}: HTTP ${response.status}`);
-            }
-            const data = await response.json();
-            const size = JSON.stringify(data).length;
-            console.log(`    ✓ ${label} (${(size / 1024 / 1024).toFixed(2)} MB raw)`);
-            return data;
-        } catch (error) {
-            if (attempt === retries) {
-                throw error;
-            }
-            console.warn(`    ↻ ${label} retry ${attempt + 1}/${retries}`);
-        }
-    }
-
-    throw new Error(`Failed to fetch ${label}`);
+function countEntries(section) {
+    return Object.keys(section || {}).length;
 }
 
-/**
- * Fetch with graceful fallback (for optional data sources)
- */
-async function fetchJSONOptional(url, label, fallback) {
-    try {
-        return await fetchJSON(url, label);
-    } catch (error) {
-        console.warn(`    ⚠ ${label} failed: ${error.message}, using fallback`);
-        return fallback;
-    }
+function shortenError(error) {
+    const message = error?.message || String(error);
+    return message.length > 500 ? `${message.slice(0, 500)}...` : message;
 }
 
-async function main() {
-    console.log('=== Metadata Map Generator ===\n');
-    console.log(`Master API: ${MASTER_URL}`);
-    console.log(`Output: ${OUT_FILE}\n`);
+function existingSection(existingMap, key) {
+    const section = existingMap?.[key];
+    return section && typeof section === 'object' && !Array.isArray(section) ? section : null;
+}
 
-    // Fetch all data in parallel
-    console.log('Fetching master data...');
-    const [cards, musics, events, gachas, characters, virtualLives, costumesRaw, fixtures, mangasRaw, exchangeSummaries] =
-        await Promise.all([
-            fetchJSONOptional(`${MASTER_URL}/cards.json`, 'cards', []),
-            fetchJSONOptional(`${MASTER_URL}/musics.json`, 'musics', []),
-            fetchJSONOptional(`${MASTER_URL}/events.json`, 'events', []),
-            fetchJSONOptional(`${MASTER_URL}/gachas.json`, 'gachas', []),
-            fetchJSONOptional(`${MASTER_URL}/gameCharacters.json`, 'characters', []),
-            fetchJSONOptional(`${MASTER_URL}/virtualLives.json`, 'virtualLives', []),
-            fetchJSONOptional(`${MASTER_URL}/moe_costume.json`, 'costumes', { costumes: [] }),
-            fetchJSONOptional(`${MASTER_URL}/mysekaiFixtures.json`, 'fixtures', []),
-            fetchJSONOptional(MANGA_URL, 'mangas', {}),
-            fetchJSONOptional(`${MASTER_URL}/materialExchangeSummaries.json`, 'exchangeSummaries', []),
-        ]);
+function hasUsefulMetadata(map) {
+    return [
+        'cards',
+        'musics',
+        'events',
+        'gachas',
+        'characters',
+        'virtualLives',
+    ].some(key => countEntries(map[key]) > 0);
+}
 
-    // Build metadata map — only extract fields needed for SEO
-    console.log('\nBuilding metadata map...');
-
-    const map = {
-        cards: Object.fromEntries(
+const datasets = [
+    {
+        key: 'cards',
+        label: 'cards',
+        filename: 'cards.json',
+        fallback: [],
+        validate: Array.isArray,
+        build: cards => Object.fromEntries(
             (Array.isArray(cards) ? cards : []).map(c => [c.id, {
                 prefix: c.prefix,
                 characterId: c.characterId,
@@ -92,7 +72,14 @@ async function main() {
                 asset: c.assetbundleName,
             }])
         ),
-        musics: Object.fromEntries(
+    },
+    {
+        key: 'musics',
+        label: 'musics',
+        filename: 'musics.json',
+        fallback: [],
+        validate: Array.isArray,
+        build: musics => Object.fromEntries(
             (Array.isArray(musics) ? musics : []).map(m => [m.id, {
                 title: m.title,
                 lyricist: m.lyricist,
@@ -100,49 +87,105 @@ async function main() {
                 asset: m.assetbundleName,
             }])
         ),
-        events: Object.fromEntries(
+    },
+    {
+        key: 'events',
+        label: 'events',
+        filename: 'events.json',
+        fallback: [],
+        validate: Array.isArray,
+        build: events => Object.fromEntries(
             (Array.isArray(events) ? events : []).map(e => [e.id, {
                 name: e.name,
                 type: e.eventType,
                 asset: e.assetbundleName,
             }])
         ),
-        gachas: Object.fromEntries(
+    },
+    {
+        key: 'gachas',
+        label: 'gachas',
+        filename: 'gachas.json',
+        fallback: [],
+        validate: Array.isArray,
+        build: gachas => Object.fromEntries(
             (Array.isArray(gachas) ? gachas : []).map(g => [g.id, {
                 name: g.name,
                 type: g.gachaType,
                 asset: g.assetbundleName,
             }])
         ),
-        characters: Object.fromEntries(
+    },
+    {
+        key: 'characters',
+        label: 'characters',
+        filename: 'gameCharacters.json',
+        fallback: [],
+        validate: Array.isArray,
+        build: characters => Object.fromEntries(
             (Array.isArray(characters) ? characters : []).map(c => [c.id, {
-                name: `${c.firstName}${c.givenName}`,
+                name: `${c.firstName || ''}${c.givenName || ''}`,
             }])
         ),
-        virtualLives: Object.fromEntries(
+    },
+    {
+        key: 'virtualLives',
+        label: 'virtualLives',
+        filename: 'virtualLives.json',
+        fallback: [],
+        validate: Array.isArray,
+        build: virtualLives => Object.fromEntries(
             (Array.isArray(virtualLives) ? virtualLives : []).map(v => [v.id, {
                 name: v.name,
                 asset: v.assetbundleName,
             }])
         ),
-        costumes: Object.fromEntries(
+    },
+    {
+        key: 'costumes',
+        label: 'costumes',
+        filename: 'moe_costume.json',
+        fallback: { costumes: [] },
+        validate: data => data && Array.isArray(data.costumes),
+        build: costumesRaw => Object.fromEntries(
             (costumesRaw?.costumes || []).map(c => [c.costumeNumber, {
                 name: c.name,
             }])
         ),
-        mysekaiFixtures: Object.fromEntries(
+    },
+    {
+        key: 'mysekaiFixtures',
+        label: 'fixtures',
+        filename: 'mysekaiFixtures.json',
+        fallback: [],
+        validate: Array.isArray,
+        build: fixtures => Object.fromEntries(
             (Array.isArray(fixtures) ? fixtures : []).map(f => [f.id, {
                 name: f.name,
                 flavor: f.flavorText || '',
                 asset: f.assetbundleName,
             }])
         ),
-        mangas: Object.fromEntries(
+    },
+    {
+        key: 'mangas',
+        label: 'mangas',
+        fallback: {},
+        validate: data => data && typeof data === 'object' && !Array.isArray(data),
+        fetch: () => fetchMangaJson('mangas'),
+        build: mangasRaw => Object.fromEntries(
             Object.entries(mangasRaw || {}).map(([k, v]) => [k, {
-                title: v.title || '',
+                title: v?.title || '',
             }])
         ),
-        exchanges: Object.fromEntries(
+    },
+    {
+        key: 'exchanges',
+        label: 'exchangeSummaries',
+        filename: 'materialExchangeSummaries.json',
+        fallback: [],
+        validate: Array.isArray,
+        build: exchangeSummaries => Object.fromEntries(
             (Array.isArray(exchangeSummaries) ? exchangeSummaries : [])
                 .flatMap(summary => (summary.materialExchanges || []).map(exchange => [exchange.id, {
                     name: exchange.displayName || summary.name || `兑换项 #${exchange.id}`,
@@ -151,11 +194,86 @@ async function main() {
                     type: summary.materialExchangeType || '',
                 }]))
         ),
-    };
+    },
+];
 
-    // Count entries
-    const counts = Object.entries(map).map(([key, val]) => `${key}: ${Object.keys(val).length}`);
+async function loadDataset(dataset, existingMap) {
+    console.log(`  Fetching ${dataset.label}...`);
+    const previous = existingSection(existingMap, dataset.key);
+    const previousCount = countEntries(previous);
+
+    try {
+        const raw = dataset.fetch
+            ? await dataset.fetch()
+            : await fetchMasterJson(dataset.filename, dataset.label);
+
+        if (dataset.validate && !dataset.validate(raw)) {
+            throw new Error(`Unexpected ${dataset.label} response shape`);
+        }
+
+        const section = dataset.build(raw);
+        const sectionCount = countEntries(section);
+
+        if (sectionCount === 0) {
+            if (previousCount > 0 && !REQUIRE_FRESH) {
+                console.warn(`    ⚠ ${dataset.label} returned 0 entries, keeping existing ${previousCount} entries`);
+                return { key: dataset.key, section: previous, source: 'existing-empty-response' };
+            }
+            if (REQUIRE_FRESH) {
+                throw new Error(`${dataset.label} returned 0 entries`);
+            }
+        }
+
+        return { key: dataset.key, section, source: 'fresh' };
+    } catch (error) {
+        if (REQUIRE_FRESH) {
+            throw error;
+        }
+
+        if (previousCount > 0) {
+            console.warn(`    ⚠ ${dataset.label} failed: ${shortenError(error)}, keeping existing ${previousCount} entries`);
+            return { key: dataset.key, section: previous, source: 'existing' };
+        }
+
+        console.warn(`    ⚠ ${dataset.label} failed: ${shortenError(error)}, using empty fallback`);
+        return { key: dataset.key, section: dataset.build(dataset.fallback), source: 'fallback' };
+    }
+}
+
+async function main() {
+    console.log('=== Metadata Map Generator ===\n');
+    console.log(`Master APIs: ${getConfiguredMasterDataUrls().join(', ')}`);
+    console.log(`Manga APIs: ${getConfiguredMangaDataUrls().join(', ')}`);
+    console.log(`Require fresh build data: ${REQUIRE_FRESH ? 'yes' : 'no'}`);
+    console.log(`Output: ${OUT_FILE}\n`);
+
+    const existingMap = readJsonIfExists(OUT_FILE, null);
+    if (existingMap) {
+        const existingCounts = Object.entries(existingMap).map(([key, val]) => `${key}: ${countEntries(val)}`);
+        console.log(`Existing metadata map: ${existingCounts.join(', ')}\n`);
+    }
+
+    // Fetch all data with bounded concurrency. Docker build networking can be more fragile
+    // than the host, so avoid opening every remote request at the exact same time.
+    console.log('Fetching master data...');
+    const results = await mapWithConcurrency(
+        datasets,
+        getBuildFetchConcurrency(3),
+        dataset => loadDataset(dataset, existingMap)
+    );
+
+    // Build metadata map — only extract fields needed for SEO
+    console.log('\nBuilding metadata map...');
+    const map = Object.fromEntries(results.map(result => [result.key, result.section]));
+
+    if (!hasUsefulMetadata(map)) {
+        throw new Error('Metadata map has no useful entries. Refusing to write an empty SEO data file.');
+    }
+
+    const counts = Object.entries(map).map(([key, val]) => `${key}: ${countEntries(val)}`);
+    const sources = results.map(result => `${result.key}: ${result.source}`);
     console.log(`  Entries: ${counts.join(', ')}`);
+    console.log(`  Sources: ${sources.join(', ')}`);
 
     // Write output
     fs.mkdirSync(path.dirname(OUT_FILE), { recursive: true });
