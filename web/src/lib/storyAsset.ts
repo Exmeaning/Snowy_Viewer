@@ -1,19 +1,16 @@
 /**
  * Story Asset Loader
- * Fetches story scenario JSON from the MoeSekai-Hub mirror.
+ * Fetches story scenario JSON from the storage mirror.
  *
- * Single source, language-based:
- *   https://moe.exmeaning.com/story_assets/pjsk-jp-assets/  (JP)
- *   https://moe.exmeaning.com/story_assets/pjsk-cn-assets/  (CN)
+ * Base URLs:
+ *   https://storage.exmeaning.com/sekai-jp-assets/  (JP)
+ *   https://storage.exmeaning.com/sekai-cn-assets/  (CN)
  *
- * Path suffix matches the unified assets path structure after removing legacy startapp/ondemand prefixes.
- * Files are raw brotli-compressed JSON, decompressed via brotli-dec-wasm.
+ * Files are direct JSON, no decompression needed.
  */
 
 import { IScenarioData } from "@/types/story";
-import brotliPromise from "brotli-dec-wasm";
-
-const MIRROR_BASE = "https://moe.exmeaning.com/story_assets/";
+import { ASSET_DOMAIN_MAIN } from "./assets";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,31 +34,21 @@ export class StoryAssetMissingError extends Error {
 // ── Path builder ──────────────────────────────────────────────────────────────
 
 function buildPath(type: StoryAssetType, lang: "jp" | "cn", params: AssetParams): string {
-    const base = `${MIRROR_BASE}pjsk-${lang}-assets/`;
+    const base = `${ASSET_DOMAIN_MAIN}/sekai-${lang}-assets/`;
     switch (type) {
         case "unit":
-            return `${base}scenario/unitstory/${params.assetbundleName}/${params.scenarioId}.asset.br`;
+            return `${base}scenario/unitstory/${params.assetbundleName}/${params.scenarioId}.json`;
         case "event":
-            return `${base}event_story/${params.assetbundleName}/scenario/${params.scenarioId}.asset.br`;
+            return `${base}event_story/${params.assetbundleName}/scenario/${params.scenarioId}.json`;
         case "card":
-            return `${base}character/member/${params.assetbundleName}/${params.scenarioId}.asset.br`;
+            return `${base}character/member/${params.assetbundleName}/${params.scenarioId}.json`;
         case "talk":
-            return `${base}scenario/actionset/group${params.group}/${params.scenarioId}.asset.br`;
+            return `${base}scenario/actionset/group${params.group}/${params.scenarioId}.json`;
         case "self":
-            return `${base}scenario/profile/${params.scenarioId}.asset.br`;
+            return `${base}scenario/profile/${params.scenarioId}.json`;
         case "special":
-            return `${base}scenario/special/${params.assetbundleName}/${params.scenarioId}.asset.br`;
+            return `${base}scenario/special/${params.assetbundleName}/${params.scenarioId}.json`;
     }
-}
-
-// ── Brotli decompression ──────────────────────────────────────────────────────
-
-async function decompressBrotli(buffer: ArrayBuffer): Promise<IScenarioData> {
-    const brotli = await brotliPromise;
-    const compressed = new Uint8Array(buffer);
-    const decompressed = brotli.decompress(compressed);
-    const text = new TextDecoder().decode(decompressed);
-    return JSON.parse(text) as IScenarioData;
 }
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
@@ -75,13 +62,13 @@ export async function fetchStoryAssetFromMirror(
     try {
         const res = await fetch(url);
         if (res.ok) {
-            return decompressBrotli(await res.arrayBuffer());
+            return await res.json() as IScenarioData;
         }
     } catch {
         // network error
     }
 
-    // Strip MIRROR_BASE prefix for display
-    const displayPath = url.replace(MIRROR_BASE, "");
+    // Strip ASSET_DOMAIN_MAIN prefix for display
+    const displayPath = url.replace(ASSET_DOMAIN_MAIN + "/", "");
     throw new StoryAssetMissingError([displayPath]);
 }
