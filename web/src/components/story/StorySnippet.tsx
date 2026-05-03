@@ -24,10 +24,10 @@ export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText
         ? getCharacterIconUrl(characterId)
         : null;
 
-    // Use CN display name when translation is enabled and available
-    const displayName = (useLLMTranslation && cnDisplayName) ? cnDisplayName : characterName;
-    // Show CN text when translation is enabled
-    const showCnText = useLLMTranslation && !!cnText;
+    // Show CN text when translation is enabled and different from original (after trimming)
+    const showCnText = useLLMTranslation && !!cnText && cnText.trim() !== text.trim();
+    // Show CN display name when translation is enabled, available, and different from original (after trimming)
+    const showCnDisplayName = useLLMTranslation && !!cnDisplayName && cnDisplayName.trim() !== characterName.trim();
 
     // Determine badge unit icon for virtual singers (21-26)
     const isVirtualSinger = characterId >= 21 && characterId <= 26;
@@ -66,7 +66,7 @@ export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText
                     ) : (
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center border-2 border-slate-300 dark:border-slate-600">
                             <span className="text-white text-sm font-bold">
-                                {displayName.charAt(0)}
+                                {characterName.charAt(0)}
                             </span>
                         </div>
                     )}
@@ -75,10 +75,15 @@ export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                     {/* Character Name Badge */}
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <span className="inline-block px-2.5 py-0.5 bg-miku/10 text-miku text-sm font-medium rounded-full border border-miku/20">
-                            {displayName}
+                            {characterName}
                         </span>
+                        {showCnDisplayName && (
+                            <span className="inline-block px-2.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-full border border-slate-200 dark:border-slate-600">
+                                {cnDisplayName}
+                            </span>
+                        )}
                     </div>
 
                     {/* Dialogue Text */}
