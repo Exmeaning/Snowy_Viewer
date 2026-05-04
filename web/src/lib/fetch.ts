@@ -282,18 +282,18 @@ export async function fetchVersionInfoNoCache(): Promise<VersionInfo> {
 export const MASTERDATA_VERSION_KEY = "masterdata-version";
 
 /**
- * Fetch master data for a specific game server (cn/jp/tw)
+ * Fetch master data for a specific game server (cn/jp/tw/kr/en)
  * Unlike fetchMasterData(), this does NOT use the global localStorage server setting.
  * Used by features that need server-specific masterdata (e.g., card progress page).
  * - cn → sekaimaster-cn
  * - jp → sekaimaster (jp)
- * - tw → sekaimaster-cn (same as cn)
+ * - tw/kr/en → sekaimaster-cn (same as cn)
  *
  * NOTE: Intentionally bypasses IndexedDB cache because this targets a specific server
  * independent of the global version, so the version-keyed cache would be incorrect.
  */
-export async function fetchMasterDataForServer<T>(server: "cn" | "jp" | "tw", path: string): Promise<T> {
-    const masterServer: "cn" | "jp" = (server === "cn" || server === "tw") ? "cn" : "jp";
+export async function fetchMasterDataForServer<T>(server: "cn" | "jp" | "tw" | "kr" | "en", path: string): Promise<T> {
+    const masterServer: "cn" | "jp" = (server === "cn" || server === "tw" || server === "kr" || server === "en") ? "cn" : "jp";
     const domain = SERVER_DOMAINS[masterServer];
     const fallbackDomain = FALLBACK_DOMAINS[masterServer];
 

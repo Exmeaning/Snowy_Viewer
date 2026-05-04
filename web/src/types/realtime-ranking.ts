@@ -1,9 +1,24 @@
 import { IHonorInfo, IHonorGroup, IBondsHonor, IBondsHonorWord, IGameCharaUnit } from "@/types/honor";
 import { ICardInfo } from "@/types/types";
 
-export type RealtimeRankingRegion = "cn" | "jp";
+export type RealtimeRankingRegion = "cn" | "jp" | "tw" | "kr" | "en";
 export type RealtimeRankingBoardMode = "overall" | "worldlink";
 export type ChurnBoardType = "overall" | "worldlink";
+
+export const REALTIME_RANKING_REGION_OPTIONS: ReadonlyArray<{
+    value: RealtimeRankingRegion;
+    label: string;
+}> = [
+    { value: "cn", label: "国服" },
+    { value: "jp", label: "日服" },
+    { value: "tw", label: "台服" },
+    { value: "kr", label: "韩服" },
+    { value: "en", label: "国际服" },
+];
+
+export function isRealtimeRankingRegion(value: string | null | undefined): value is RealtimeRankingRegion {
+    return REALTIME_RANKING_REGION_OPTIONS.some((option) => option.value === value);
+}
 
 export interface RealtimeRankingRawProfileHonor {
     seq: number;

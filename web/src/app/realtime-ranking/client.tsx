@@ -7,9 +7,8 @@ import RankingHeader from "@/components/realtime-ranking/RankingHeader";
 import RankingList from "@/components/realtime-ranking/RankingList";
 import CurrentEventCard from "@/components/realtime-ranking/CurrentEventCard";
 import { useTheme } from "@/contexts/ThemeContext";
-import { fetchMasterData } from "@/lib/fetch";
 import { fetchEventList } from "@/lib/prediction-api";
-import { fetchRealtimeRanking, fetchRealtimeRankingMasterData, fetchChurnData, fetchWorldLinkChurnData, fetchWorldLinkRanking } from "@/lib/realtime-ranking-api";
+import { fetchRealtimeRanking, fetchRealtimeRankingMasterData, fetchRealtimeRankingEvents, fetchChurnData, fetchWorldLinkChurnData, fetchWorldLinkRanking } from "@/lib/realtime-ranking-api";
 import ParkingPeriodsModal from "@/components/realtime-ranking/ParkingPeriodsModal";
 import {
     RealtimeRankingBoardMode,
@@ -17,6 +16,7 @@ import {
     RealtimeRankingMasterData,
     RealtimeRankingRegion,
     RealtimeRankingSnapshot,
+    isRealtimeRankingRegion,
     ChurnRankingEntry,
     ChurnApiResponse,
     WorldLinkGroupSnapshot,
@@ -292,7 +292,7 @@ function RealtimeRankingContent() {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const regionParam = params.get("region");
-        if (regionParam === "cn" || regionParam === "jp") {
+        if (isRealtimeRankingRegion(regionParam)) {
             setRegion(regionParam);
         }
         const boardParam = params.get("board");
@@ -499,7 +499,8 @@ function RealtimeRankingContent() {
 
     useEffect(() => {
         let cancelled = false;
-        fetchRealtimeRankingMasterData()
+        setMasterData(EMPTY_MASTER_DATA);
+        fetchRealtimeRankingMasterData(region)
             .then((data) => {
                 if (!cancelled) {
                     setMasterData(data);
@@ -514,7 +515,7 @@ function RealtimeRankingContent() {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [region]);
 
     useEffect(() => {
         const timer = window.setInterval(() => {
@@ -531,6 +532,28 @@ function RealtimeRankingContent() {
         updateUrlState(region, boardMode, boardMode === "worldlink" ? selectedWorldLinkCharacterId : null);
     }, [hasInitializedQuery, region, boardMode, selectedWorldLinkCharacterId, updateUrlState]);
 
+    const buildCurrentEventFromSnapshot = useCallback((baseSnapshot: RealtimeRankingSnapshot | null): IEventInfo | null => {
+        if (!baseSnapshot) return null;
+        return {
+            id: baseSnapshot.eventId,
+            name: `活动 #${baseSnapshot.eventId}`,
+            eventType: "marathon",
+            assetbundleName: "",
+            bgmAssetbundleName: "",
+            eventOnlyComponentDisplayStartAt: baseSnapshot.startAt,
+            startAt: baseSnapshot.startAt,
+            aggregateAt: baseSnapshot.endAt,
+            rankingAnnounceAt: baseSnapshot.endAt,
+            distributionStartAt: baseSnapshot.endAt,
+            eventOnlyComponentDisplayEndAt: baseSnapshot.endAt,
+            closedAt: baseSnapshot.endAt,
+            distributionEndAt: baseSnapshot.endAt,
+            virtualLiveId: 0,
+            unit: "",
+            isCountLeaderCharacterPlay: false,
+        };
+    }, []);
+
     useEffect(() => {
         if (!hasInitializedQuery) return;
 
@@ -538,39 +561,48 @@ function RealtimeRankingContent() {
 
         async function loadCurrentEvent() {
             try {
-                const [eventList, masterEvents] = await Promise.all([
-                    fetchEventList(region),
-                    fetchMasterData<IEventInfo[]>("events.json"),
+                const [eventListResult, masterEvents] = await Promise.all([
+                    (region === "cn" || region === "jp"
+                        ? fetchEventList(region)
+                        : Promise.resolve([] as EventListItem[])
+                    ).catch(() => [] as EventListItem[]),
+                    fetchRealtimeRankingEvents(region).catch(() => [] as IEventInfo[]),
                 ]);
 
                 if (cancelled) return;
 
-                const activeEvent = [...eventList]
+                const activeEvent = [...eventListResult]
                     .sort((a, b) => a.id - b.id)
                     .find((event: EventListItem) => event.is_active);
 
-                if (!activeEvent) {
+                const snapshotEvent = snapshotRef.current;
+                const eventId = activeEvent?.id ?? snapshotEvent?.eventId;
+                if (!eventId) {
                     setCurrentEvent(null);
                     return;
                 }
 
-                const matched = masterEvents.find((event) => event.id === activeEvent.id);
+                const matched = masterEvents.find((event) => event.id === eventId);
 
-                // Use timestamps from prediction API (reflects actual server schedule),
-                // with sec→ms normalization, falling back to master data
-                const s = activeEvent.start_at
-                    ? (activeEvent.start_at < 10000000000 ? activeEvent.start_at * 1000 : activeEvent.start_at)
-                    : matched?.startAt;
-                const e = activeEvent.end_at
-                    ? (activeEvent.end_at < 10000000000 ? activeEvent.end_at * 1000 : activeEvent.end_at)
-                    : matched?.aggregateAt;
+                // Use timestamps from realtime snapshot when available; CN/JP prediction API
+                // can provide schedule too. Normalize sec→ms and then fall back to master data.
+                const s = snapshotEvent?.eventId === eventId
+                    ? snapshotEvent.startAt
+                    : activeEvent?.start_at
+                        ? (activeEvent.start_at < 10000000000 ? activeEvent.start_at * 1000 : activeEvent.start_at)
+                        : matched?.startAt;
+                const e = snapshotEvent?.eventId === eventId
+                    ? snapshotEvent.endAt
+                    : activeEvent?.end_at
+                        ? (activeEvent.end_at < 10000000000 ? activeEvent.end_at * 1000 : activeEvent.end_at)
+                        : matched?.aggregateAt;
 
                 const startAt = s || 0;
                 const endAt = e || 0;
 
                 const correctedEvent: IEventInfo = {
-                    id: activeEvent.id,
-                    name: matched?.name || activeEvent.name || "",
+                    id: eventId,
+                    name: matched?.name || activeEvent?.name || `活动 #${eventId}`,
                     eventType: matched?.eventType || "marathon",
                     assetbundleName: matched?.assetbundleName || "",
                     bgmAssetbundleName: matched?.bgmAssetbundleName || "",
@@ -590,7 +622,7 @@ function RealtimeRankingContent() {
                 setCurrentEvent(correctedEvent);
             } catch {
                 if (!cancelled) {
-                    setCurrentEvent(null);
+                    setCurrentEvent(buildCurrentEventFromSnapshot(snapshotRef.current));
                 }
             }
         }
@@ -600,7 +632,7 @@ function RealtimeRankingContent() {
         return () => {
             cancelled = true;
         };
-    }, [hasInitializedQuery, region]);
+    }, [buildCurrentEventFromSnapshot, hasInitializedQuery, region, snapshot?.eventId, snapshot?.startAt, snapshot?.endAt]);
 
     useEffect(() => {
         if (!hasInitializedQuery) return;
