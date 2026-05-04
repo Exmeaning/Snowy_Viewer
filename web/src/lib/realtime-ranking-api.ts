@@ -1,4 +1,4 @@
-import { fetchMasterData } from "@/lib/fetch";
+import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import {
     RealtimeRankingApiResponse,
     RealtimeRankingEntry,
@@ -246,6 +246,10 @@ export async function fetchWorldLinkRanking(region: RealtimeRankingRegion): Prom
             return null;
         }
         if (!response.ok) {
+            const errorText = await response.text().catch(() => "");
+            if (errorText.includes("no worldlink data available")) {
+                return null;
+            }
             throw new Error(`获取 WL 单人榜失败：${response.status}`);
         }
 
@@ -268,14 +272,20 @@ export async function fetchWorldLinkRanking(region: RealtimeRankingRegion): Prom
     }
 }
 
-export async function fetchRealtimeRankingMasterData(): Promise<RealtimeRankingMasterData> {
+async function fetchMasterDataFromSource<T>(region: RealtimeRankingRegion, path: string): Promise<T> {
+    return region === "cn" || region === "jp"
+        ? fetchMasterData<T>(path)
+        : fetchMasterDataForServer<T>(region, path);
+}
+
+export async function fetchRealtimeRankingMasterData(region: RealtimeRankingRegion): Promise<RealtimeRankingMasterData> {
     const [cards, honors, honorGroups, bondsHonors, bondsHonorWords, gameCharaUnits] = await Promise.all([
-        fetchMasterData<ICardInfo[]>("cards.json").catch(() => []),
-        fetchMasterData<IHonorInfo[]>("honors.json").catch(() => []),
-        fetchMasterData<IHonorGroup[]>("honorGroups.json").catch(() => []),
-        fetchMasterData<IBondsHonor[]>("bondsHonors.json").catch(() => []),
-        fetchMasterData<IBondsHonorWord[]>("bondsHonorWords.json").catch(() => []),
-        fetchMasterData<IGameCharaUnit[]>("gameCharacterUnits.json").catch(() => []),
+        fetchMasterDataFromSource<ICardInfo[]>(region, "cards.json").catch(() => []),
+        fetchMasterDataFromSource<IHonorInfo[]>(region, "honors.json").catch(() => []),
+        fetchMasterDataFromSource<IHonorGroup[]>(region, "honorGroups.json").catch(() => []),
+        fetchMasterDataFromSource<IBondsHonor[]>(region, "bondsHonors.json").catch(() => []),
+        fetchMasterDataFromSource<IBondsHonorWord[]>(region, "bondsHonorWords.json").catch(() => []),
+        fetchMasterDataFromSource<IGameCharaUnit[]>(region, "gameCharacterUnits.json").catch(() => []),
     ]);
 
     return {
@@ -286,6 +296,10 @@ export async function fetchRealtimeRankingMasterData(): Promise<RealtimeRankingM
         bondsHonorWords,
         gameCharaUnits,
     };
+}
+
+export async function fetchRealtimeRankingEvents(region: RealtimeRankingRegion) {
+    return fetchMasterDataFromSource<import("@/types/events").IEventInfo[]>(region, "events.json");
 }
 
 export async function fetchChurnData(region: RealtimeRankingRegion): Promise<ChurnApiResponse> {

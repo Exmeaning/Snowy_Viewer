@@ -1,6 +1,6 @@
 "use client";
 
-import { RealtimeRankingRegion } from "@/types/realtime-ranking";
+import { REALTIME_RANKING_REGION_OPTIONS, RealtimeRankingRegion } from "@/types/realtime-ranking";
 
 interface RankingHeaderProps {
     region: RealtimeRankingRegion;
@@ -45,8 +45,8 @@ export default function RankingHeader({
             {/* Controls */}
             <div className="flex flex-wrap gap-3 mb-8 items-center">
                 {/* Region Toggle */}
-                <div className="shrink-0 flex bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
-                    {(["cn", "jp"] as const).map((value) => (
+                <div className="shrink-0 flex max-w-full overflow-x-auto bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
+                    {REALTIME_RANKING_REGION_OPTIONS.map(({ value, label }) => (
                         <button
                             key={value}
                             onClick={() => onRegionChange(value)}
@@ -55,7 +55,7 @@ export default function RankingHeader({
                                 : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                                 }`}
                         >
-                            {value === "cn" ? "国服" : "日服"}
+                            {label}
                         </button>
                     ))}
                 </div>
