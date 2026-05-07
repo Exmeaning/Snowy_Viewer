@@ -38,7 +38,6 @@ yarn-error.log*
 
 # CI-generated data (build artifacts)
 /public/data/metadata-map.json
-/public/data/sitemap-data.json
 /public/sitemap*.xml
 
 # typescript
