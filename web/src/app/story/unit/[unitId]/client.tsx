@@ -9,7 +9,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { IUnitProfile } from "@/types/types";
 
 function getUnitOutlineLogoUrl(unitCode: string, server: "jp" | "cn"): string {
-    return `https://sekai.best/images/${server}/logol_outline/logo_${unitCode}.png`;
+    return `/images/unit-logos/logo_${unitCode}_${server}.png`;
 }
 
 function getUnitEpisodeImageUrl(chapterAssetbundleName: string, episodeAssetbundleName: string, assetSource: import("@/contexts/ThemeContext").AssetSourceType): string {
