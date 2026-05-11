@@ -1,9 +1,11 @@
-import os, json, asyncio, traceback, bisect, logging
+import os, json, asyncio, traceback, bisect, logging, re, shutil
+from pathlib import Path
 from enum import Enum
 from typing import Any, Callable
 from asyncio import Semaphore
+from concurrent.futures import ThreadPoolExecutor
 
-import aiohttp, aiofiles, brotli
+import aiohttp, brotli
 
 SKIP_FETCH_ERROR = True
 
@@ -99,8 +101,17 @@ Mark_multi_lang = {
 
 
 _net_semaphore = asyncio.Semaphore(20)
-_file_semaphore = asyncio.Semaphore(20)
 _MISSING_FILE = object()
+
+_compress_executor = ThreadPoolExecutor(max_workers=min(8, (os.cpu_count() or 4)))
+
+
+def _compress_sync(json_bytes: bytes, quality: int) -> bytes:
+    return brotli.compress(json_bytes, quality=quality)
+
+
+def _decompress_sync(compressed_bytes: bytes) -> bytes:
+    return brotli.decompress(compressed_bytes)
 
 
 class Base_fetcher:
@@ -124,7 +135,6 @@ class Base_fetcher:
         self,
         session: aiohttp.ClientSession | None = None,
         network_semaphore: Semaphore | None = None,
-        file_semaphore: Semaphore | None = None,
     ) -> None:
         self.session = session
 
@@ -132,11 +142,6 @@ class Base_fetcher:
             self.network_semaphore = _net_semaphore
         else:
             self.network_semaphore = network_semaphore
-
-        if file_semaphore is None:
-            self.file_semaphore = _file_semaphore
-        else:
-            self.file_semaphore = file_semaphore
 
     async def fetch_url_json(
         self,
@@ -158,7 +163,6 @@ class Base_fetcher:
             extra_record_msg=extra_record_msg,
             session=self.session,
             network_semaphore=self.network_semaphore,
-            file_semaphore=self.file_semaphore,
             print_done=print_done,
             append_save_path=append_save_path,
             compress=compress,
@@ -228,30 +232,15 @@ def url_to_path(url: str, save_dir: str) -> str:
     return os.path.normpath(os.path.join(save_dir, url_path))
 
 
-_file_locks = {}
-
-
-def _get_lock(file_path: str) -> asyncio.Lock:
-    if file_path not in _file_locks:
-        _file_locks[file_path] = asyncio.Lock()
-    return _file_locks[file_path]
-
-
-async def write_to_file(
-    file_path: str, content: str, file_semaphore: Semaphore
-) -> None:
-    async with file_semaphore:
-        lock = _get_lock(file_path)
-        async with lock:
-            async with aiofiles.open(file_path, 'a', encoding='utf-8') as f:
-                await f.write(f"{content}\n")
+def write_to_file(file_path: str, content: str) -> None:
+    with open(file_path, 'a', encoding='utf-8') as f:
+        f.write(f"{content}\n")
 
 
 async def save_json_to_url(
     url: str,
     content: Any,
     save_dir: str,
-    file_semaphore: Semaphore,
     append_save_path: str | None,
     compress: bool,
     content_edit: Callable | None,
@@ -265,15 +254,17 @@ async def save_json_to_url(
     if content_edit is not None:
         content = content_edit(content)
 
-    async with file_semaphore:
-        if compress:
-            json_bytes = json.dumps(content, ensure_ascii=False).encode('utf-8')
-            compressed = brotli.compress(json_bytes, quality=11)
-            async with aiofiles.open(path + '.br', 'wb') as f:
-                await f.write(compressed)
-        else:
-            async with aiofiles.open(path, 'w', encoding='utf8') as f:
-                await f.write(json.dumps(content, ensure_ascii=False, indent=2))
+    if compress:
+        json_bytes = json.dumps(content, ensure_ascii=False).encode('utf-8')
+        loop = asyncio.get_event_loop()
+        compressed = await loop.run_in_executor(
+            _compress_executor, _compress_sync, json_bytes, 11
+        )
+        with open(path + '.br', 'wb') as f:
+            f.write(compressed)
+    else:
+        with open(path, 'w', encoding='utf8') as f:
+            f.write(json.dumps(content, ensure_ascii=False, indent=2))
 
 
 async def read_json_from_url(
@@ -285,7 +276,6 @@ async def read_json_from_url(
     missing_assets_file: str | None,
     session: aiohttp.ClientSession | None,
     network_semaphore: Semaphore,
-    file_semaphore: Semaphore,
     append_save_path: str | None,
     compress: bool,
     skip_read: bool,
@@ -298,17 +288,20 @@ async def read_json_from_url(
         if os.path.exists(path):
             if skip_read:
                 return 'ERROR: skip read'
-            async with file_semaphore:
-                async with aiofiles.open(path, encoding='utf8') as f:
-                    content = await f.read()
+            async with network_semaphore:
+                with open(path, encoding='utf8') as f:
+                    content = f.read()
                     return json.loads(content)
         elif os.path.exists(path + '.br'):
             if skip_read:
                 return 'ERROR: skip read'
-            async with file_semaphore:
-                async with aiofiles.open(path + '.br', 'rb') as f:
-                    compressed_bytes = await f.read()
-                    decompressed_bytes = brotli.decompress(compressed_bytes)
+            async with network_semaphore:
+                with open(path + '.br', 'rb') as f:
+                    compressed_bytes = f.read()
+                    loop = asyncio.get_event_loop()
+                    decompressed_bytes = await loop.run_in_executor(
+                        _compress_executor, _decompress_sync, compressed_bytes
+                    )
                     content = decompressed_bytes.decode("utf-8")
                     return json.loads(content)
 
@@ -324,17 +317,15 @@ async def read_json_from_url(
             missing_assets_file,
             session,
             network_semaphore,
-            file_semaphore,
             append_save_path=append_save_path,
             compress=compress,
             skip_read=skip_read,
         )
     else:
         if missing_assets_file:
-            await write_to_file(
+            write_to_file(
                 missing_assets_file,
                 f"{extra_record_msg}{': ' if extra_record_msg else ''}{', '.join(urls)}",
-                file_semaphore,
             )
         return _MISSING_FILE
 
@@ -350,7 +341,6 @@ async def fetch_url_json(
     missing_assets_file: str | None = 'assets_missing.log',
     session: aiohttp.ClientSession | None = None,
     network_semaphore: Semaphore | None = None,
-    file_semaphore: Semaphore | None = None,
     print_done: bool = False,
     append_save_path: str | None = None,
     max_retries: int = 5,
@@ -361,8 +351,6 @@ async def fetch_url_json(
 
     if network_semaphore is None:
         network_semaphore = _net_semaphore
-    if file_semaphore is None:
-        file_semaphore = _file_semaphore
 
     urls = [url] if isinstance(url, str) else url
 
@@ -379,22 +367,11 @@ async def fetch_url_json(
                         async with session.get(current_url) as res:
                             res.raise_for_status()
                             json_content = await res.json(content_type=None)
-                            if save:
-                                await save_json_to_url(
-                                    current_url,
-                                    json_content,
-                                    save_dir,
-                                    file_semaphore,
-                                    append_save_path,
-                                    compress,
-                                    content_save_edit,
-                                )
-
                             last_error = None
                             break
 
                     except Exception as e:
-                        last_error = f'ERROR: Fetch json error, attempt {attempt + 1}/{max_retries}, url: {current_url}, {traceback.format_exc()}'
+                        last_error = f'ERROR: Fetch json error, attempt {attempt + 1}/{max_retries}, url: {current_url}, {traceback.format_exc()}'.strip()
                         no_retry = (
                             isinstance(e, aiohttp.ClientResponseError)
                             and 400 <= e.status < 500
@@ -405,16 +382,24 @@ async def fetch_url_json(
                             break
 
             if last_error is None:
+                if save:
+                    await save_json_to_url(
+                        current_url,
+                        json_content,
+                        save_dir,
+                        append_save_path,
+                        compress,
+                        content_save_edit,
+                    )
                 break
 
         if last_error is not None:
             json_content = last_error
             if error_assets_file:
                 failed_urls = ', '.join(urls)
-                await write_to_file(
+                write_to_file(
                     error_assets_file,
                     f"{extra_record_msg}{': ' if extra_record_msg else ''}{failed_urls}",
-                    file_semaphore,
                 )
 
     else:  # offline
@@ -427,7 +412,6 @@ async def fetch_url_json(
             missing_assets_file,
             session,
             network_semaphore,
-            file_semaphore,
             append_save_path,
             compress,
             skip_read,
@@ -440,8 +424,63 @@ async def fetch_url_json(
     return json_content
 
 
-def judge_need_skip(*story_jsons: Any) -> bool:
+def judge_need_skip(*story_json: dict | str) -> bool:
     return SKIP_FETCH_ERROR and any(
         isinstance(json_str, str) and json_str.startswith('ERROR:')
-        for json_str in story_jsons
+        for json_str in story_json
     )
+
+
+def delete_path(path: str) -> None:
+    if not os.path.exists(path):
+        return
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+    else:
+        os.unlink(path)
+
+
+def remove_leading_zeros(s: str) -> str:
+    '''
+    001 → 1，001-02 → 1-2，000 → 0，012abc034 → 12abc34
+    '''
+
+    def process_digit(match: re.Match):
+        digit_str: str = match.group()
+        return digit_str.lstrip('0') or '0'
+
+    return re.sub(r'\d+', process_digit, s)
+
+
+def remove_olds_or_rename_old(new_path_: str | Path, name_index_reg: str) -> None:
+    '''
+    make sure new_path's parent exist
+    '''
+    new_path = Path(new_path_)
+    index_match = re.match(name_index_reg, new_path.name)
+
+    assert index_match is not None
+    new_index = index_match.group(1)
+
+    old_paths = [
+        p
+        for p in Path(new_path.parent).iterdir()
+        if (
+            (match := re.match(name_index_reg, p.name))
+            and (
+                remove_leading_zeros(match.group(1)) == remove_leading_zeros(new_index)
+            )
+        )
+    ]
+
+    if len(old_paths) == 0:
+        return
+    elif len(old_paths) == 1:
+        if old_paths[0] != new_path:
+            old_paths[0].rename(new_path)
+            logging.warning(f'Rename: {old_paths[0]} -> {new_path}')
+    else:
+        for p in old_paths:
+            if p != new_path:
+                delete_path(str(p))
+                logging.warning(f'Delete: {p}')

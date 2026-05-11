@@ -27,7 +27,7 @@ interface IUnitStory {
 }
 
 function getUnitOutlineLogoUrl(unitCode: string, server: "jp" | "cn"): string {
-    return `https://sekai.best/images/${server}/logol_outline/logo_${unitCode}.png`;
+    return `/images/unit-logos/logo_${unitCode}_${server}.png`;
 }
 
 export default function StoryUnitListClient() {

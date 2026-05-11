@@ -18,6 +18,7 @@ import { getBackgroundImageUrl, getStoryVoiceUrl, getCardStoryVoiceUrl, getAreaT
 import type { AssetSourceType } from "@/contexts/ThemeContext";
 import { CHAR_NAMES, UNIT_NAME_MAP } from "@/types/types";
 import { IGameChara, IUnitProfile } from "@/types/types";
+import { getPartVoiceUrl, getStandardVoiceUrl } from "./voiceUrlFinder";
 
 // MV names mapping (ID 1-5 for unit main stories)
 const MV_NAMES: Record<number, { jp: string; cn: string }> = {
@@ -110,6 +111,9 @@ export async function processScenarioForDisplay(
     const scenarioId = extractScenarioIdFromData(data);
     const actions: IProcessedAction[] = [];
     const characters: { id: number; name: string }[] = [];
+    
+    // Voice URL cache for part_voice resolution
+    const voiceUrlCache: Record<string, string | null> = {};
 
     // Process appear characters - only add game_character types
     // Note: We only collect characterId here, not character2d unit info
@@ -175,16 +179,62 @@ export async function processScenarioForDisplay(
                 let voiceUrl = "";
                 if (talkData.Voices?.length > 0) {
                     const voice = talkData.Voices[0];
-                    // partvoice_* are part-song voices with complex URL rules, skip for now
-                    if (!voice.VoiceId.startsWith("partvoice")) {
+                    const voiceId = voice.VoiceId;
+                    
+                    // Check if this is a part voice
+                    const isPartVoice = voiceId.startsWith("partvoice");
+                    
+                    if (isPartVoice) {
+                        console.log(`[StoryLoader] Processing part voice: ${voiceId}`);
+                        // Handle part voice with fallback logic
+                        // First, try to get standard voice URL and verify it exists
+                        let standardVoiceUrl = "";
                         if (storyType === "card") {
-                            voiceUrl = getCardStoryVoiceUrl(scenarioId, voice.VoiceId, source);
+                            standardVoiceUrl = `sound/card_scenario/voice/${scenarioId}/${voiceId}.mp3`;
                         } else if (storyType === "talk") {
-                            voiceUrl = getAreaTalkVoiceUrl(scenarioId, voice.VoiceId, source);
-                        } else if (storyType === "special") {
-                            voiceUrl = getSpecialStoryVoiceUrl(scenarioId, voice.VoiceId, source);
+                            standardVoiceUrl = `sound/actionset/voice/${scenarioId}/${voiceId}.mp3`;
                         } else {
-                            voiceUrl = getStoryVoiceUrl(scenarioId, voice.VoiceId, source);
+                            standardVoiceUrl = `sound/scenario/voice/${scenarioId}/${voiceId}.mp3`;
+                        }
+                        
+                        const verifiedStandardUrl = await getStandardVoiceUrl(
+                            voiceUrlCache,
+                            standardVoiceUrl,
+                            voiceId,
+                            source
+                        );
+                        
+                        // If standard URL doesn't exist, try part_voice paths
+                        if (!verifiedStandardUrl && character2dId) {
+                            const chara2d = character2ds.find((c) => c.id === character2dId);
+                            if (chara2d) {
+                                console.log(`[StoryLoader] Standard URL not found, trying part_voice paths for ${chara2d.assetName}_${chara2d.unit}`);
+                                voiceUrl = await getPartVoiceUrl(
+                                    voiceUrlCache,
+                                    scenarioId,
+                                    voiceId,
+                                    source,
+                                    chara2d.assetName,
+                                    chara2d.unit
+                                );
+                                console.log(`[StoryLoader] Part voice URL result: ${voiceUrl}`);
+                            } else {
+                                console.warn(`[StoryLoader] Character2D not found for ID: ${character2dId}`);
+                            }
+                        } else if (verifiedStandardUrl) {
+                            console.log(`[StoryLoader] Using standard URL: ${verifiedStandardUrl}`);
+                            voiceUrl = verifiedStandardUrl;
+                        }
+                    } else {
+                        // Standard voice (non-partvoice)
+                        if (storyType === "card") {
+                            voiceUrl = getCardStoryVoiceUrl(scenarioId, voiceId, source);
+                        } else if (storyType === "talk") {
+                            voiceUrl = getAreaTalkVoiceUrl(scenarioId, voiceId, source);
+                        } else if (storyType === "special") {
+                            voiceUrl = getSpecialStoryVoiceUrl(scenarioId, voiceId, source);
+                        } else {
+                            voiceUrl = getStoryVoiceUrl(scenarioId, voiceId, source);
                         }
                     }
                 }

@@ -4,18 +4,23 @@
         "master_lang": {
             "cn": "cn-",
             "jp": "",
-            "tw": "tc-"
+            "tw": "tc-",
+            "en": "en-",
+            "kr": "kr-"
         },
         "unit_asset": "https://storage.sekai.best/sekai-{lang}assets/scenario/unitstory/{{assetbundleName}}/{{scenarioId}}.asset",
         "event_asset": "https://storage.sekai.best/sekai-{lang}assets/event_story/{{assetbundleName}}/scenario/{{scenarioId}}.asset",
         "card_asset": "https://storage.sekai.best/sekai-{lang}assets/character/member/{{assetbundleName}}/{{scenarioId}}.asset",
+        "card_asset_en": "https://storage.sekai.best/sekai-en-assets/character/member_scenario/{assetbundleName}/{scenarioId}.asset",
         "talk_asset": "https://storage.sekai.best/sekai-{lang}assets/scenario/actionset/group{{group}}/{{scenarioId}}.asset",
         "self_asset": "https://storage.sekai.best/sekai-{lang}assets/scenario/profile/{{scenarioId}}.asset",
         "special_asset": "https://storage.sekai.best/sekai-{lang}assets/scenario/special/{{assetbundleName}}/{{scenarioId}}.asset",
         "asset_lang": {
             "cn": "cn-",
             "jp": "jp-",
-            "tw": "tc-"
+            "tw": "tc-",
+            "en": "en-",
+            "kr": "kr-"
         }
     },
     "haruki": {
@@ -23,18 +28,23 @@
         "master_lang": {
             "cn": "sc-",
             "jp": "",
-            "tw": "tc-"
+            "tw": "tc-",
+            "en": "en-",
+            "kr": "kr-"
         },
         "unit_asset": "https://sekai-assets-bdf29c81.seiunx.net/{lang}assets/startapp/scenario/unitstory/{{assetbundleName}}/{{scenarioId}}.asset",
         "event_asset": "https://sekai-assets-bdf29c81.seiunx.net/{lang}assets/ondemand/event_story/{{assetbundleName}}/scenario/{{scenarioId}}.asset",
         "card_asset": "https://sekai-assets-bdf29c81.seiunx.net/{lang}assets/startapp/character/member/{{assetbundleName}}/{{scenarioId}}.asset",
+        "card_asset_en": "https://sekai-assets-bdf29c81.seiunx.net/en-assets/startapp/character/member_scenario/{assetbundleName}/{scenarioId}.asset",
         "talk_asset": "https://sekai-assets-bdf29c81.seiunx.net/{lang}assets/startapp/scenario/actionset/group{{group}}/{{scenarioId}}.asset",
         "self_asset": "https://sekai-assets-bdf29c81.seiunx.net/{lang}assets/startapp/scenario/profile/{{scenarioId}}.asset",
         "special_asset": "https://sekai-assets-bdf29c81.seiunx.net/{lang}assets/startapp/scenario/special/{{assetbundleName}}/{{scenarioId}}.asset",
         "asset_lang": {
             "cn": "cn-",
             "jp": "jp-",
-            "tw": "tw-"
+            "tw": "tw-",
+            "en": "en-",
+            "kr": "kr-"
         }
     }
 }

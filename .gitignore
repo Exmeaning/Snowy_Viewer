@@ -38,3 +38,6 @@ scripts/translate_secret.py
 .claude/settings.local.json
 .narrafork/
 .codeartsdoer
+
+# python
+__pycache__

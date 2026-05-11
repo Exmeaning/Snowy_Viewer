@@ -3,7 +3,6 @@ from pathlib import Path
 from asyncio import Semaphore
 from typing import Any, Callable, Optional, cast
 
-import aiofiles
 from aiohttp import ClientSession, TCPConnector
 
 from . import util
@@ -54,6 +53,8 @@ class Constant:
         '''
         base_urls = []
         for src in srcs:
+            if lang not in Constant.urls[src]['master_lang']:
+                continue
             if file_type == 'master':
                 base_url: str = Constant.urls[src]['master']
                 base_urls.append(
@@ -62,10 +63,15 @@ class Constant:
                     )
                 )
             else:
-                base_url = Constant.urls[src][f'{file}_asset']
-                base_urls.append(
-                    base_url.format(lang=Constant.urls[src]['asset_lang'][lang])
-                )
+                sp_key = f'{file}_asset_{lang}'
+                if not sp_key in Constant.urls[src]:
+                    base_url = Constant.urls[src][f'{file}_asset']
+                    base_urls.append(
+                        base_url.format(lang=Constant.urls[src]['asset_lang'][lang])
+                    )
+                else:
+                    base_urls.append(Constant.urls[src][sp_key])
+        assert len(base_urls) > 0
         return base_urls
 
 
@@ -179,9 +185,8 @@ class Story_reader(Pjsk_fetcher):
         self,
         session: ClientSession | None = None,
         network_semaphore: Semaphore | None = None,
-        file_semaphore: Semaphore | None = None,
     ) -> None:
-        await super().init(session, network_semaphore, file_semaphore)
+        await super().init(session, network_semaphore)
 
         self.gameCharacters, self.character2ds = await asyncio.gather(
             self.fetch_url_json(
@@ -200,11 +205,18 @@ class Story_reader(Pjsk_fetcher):
         assert profile_index != -1
         profile: dict[str, Any] = self.gameCharacters[profile_index]
         first_name = profile.get('firstName')
-        givenName = profile['givenName']
-        full_name = first_name + givenName if first_name is not None else givenName
+        givenName: str = profile['givenName']
+        if self.lang != 'en':
+            full_name: str = (
+                (first_name + givenName) if first_name is not None else givenName
+            )
+        else:
+            full_name = (
+                (givenName + ' ' + first_name) if first_name is not None else givenName
+            )
 
         unit_abbr = Constant.unit_code_abbr[profile['unit']]
-        return (unit_abbr, full_name, givenName)
+        return (unit_abbr, full_name.strip(), givenName.strip())
 
     def get_chara2d_unitAbbr_names_isVS(
         self, chara2dId: int
@@ -410,7 +422,7 @@ class Event_story_getter(Pjsk_getter):
         self,
         reader: Story_reader,
         src: list[str] = ['haruki', 'sekai.best'],
-        save_dir: str = './story_event',
+        save_dir: str = './story_{lang}/event',
         assets_save_dir: str = './assets',
         online: bool = True,
         save_assets: bool = True,
@@ -420,10 +432,6 @@ class Event_story_getter(Pjsk_getter):
         compress_assets: bool = False,
         force_master_online: bool = False,
     ) -> None:
-        '''
-        src: sekai.best or pjsk.moe
-        '''
-
         super().__init__(
             save_dir,
             assets_save_dir,
@@ -436,6 +444,7 @@ class Event_story_getter(Pjsk_getter):
         )
 
         self.reader = reader
+        self.save_dir = self.save_dir.format(lang=self.reader.lang)
 
         self.maxlen_eventId_episode = maxlen_eventId_episode
 
@@ -461,9 +470,8 @@ class Event_story_getter(Pjsk_getter):
         self,
         session: ClientSession | None = None,
         network_semaphore: Semaphore | None = None,
-        file_semaphore: Semaphore | None = None,
     ) -> None:
-        await super().init(session, network_semaphore, file_semaphore)
+        await super().init(session, network_semaphore)
 
         (
             self.events_json,
@@ -557,6 +565,9 @@ class Event_story_getter(Pjsk_getter):
         banner_chara_unit_id = eventStory.get('bannerGameCharacterUnitId')
         event_outline = eventStory['outline'].replace('\n', ' ')
 
+        if event_id == 97:  # special case
+            banner_chara_unit_id = 10
+
         event_unit_abbr = self.get_event_unit_abbr(event_id)
 
         if event_type == 'world_bloom':
@@ -583,10 +594,10 @@ class Event_story_getter(Pjsk_getter):
             f'{event_id:0{self.maxlen_eventId_episode[0]}} {event_name} ({banner_name})'
         )
 
-        save_folder_name = self.reader.lang + '-' + save_folder_name
-
         event_save_dir = os.path.join(self.save_dir, save_folder_name)
         if self.parse:
+            os.makedirs(Path(event_save_dir).parent, exist_ok=True)
+            util.remove_olds_or_rename_old(event_save_dir, r'(\d+) ')
             os.makedirs(event_save_dir, exist_ok=True)
 
         tasks = []
@@ -644,16 +655,13 @@ class Event_story_getter(Pjsk_getter):
         if self.parse and not util.judge_need_skip(story_json):
             text = self.reader.read_story_in_json(story_json)
 
-            async with self.file_semaphore:
-                async with aiofiles.open(
-                    os.path.join(event_save_dir, episode_save_name) + '.txt',
-                    'w',
-                    encoding='utf8',
-                ) as f:
-                    if episode['episodeNo'] == 1:
-                        await f.write(event_outline + '\n\n')
-                    await f.write(episode_name + '\n\n')
-                    await f.write(text + '\n')
+            file_path = os.path.join(event_save_dir, episode_save_name) + '.txt'
+            util.remove_olds_or_rename_old(file_path, r'(\d+-\d+) ')
+            with open(file_path, 'w', encoding='utf8') as f:
+                if episode['episodeNo'] == 1:
+                    f.write(event_outline + '\n\n')
+                f.write(episode_name + '\n\n')
+                f.write(text + '\n')
 
         logging.info(f'get event {event_id} {event_name} {episode_name} done.')
 
@@ -685,22 +693,28 @@ class Event_story_getter(Pjsk_getter):
                 tasks.append(area_getter.get(i))
         await asyncio.gather(*tasks)
 
+    def tell_ids(self) -> list[int]:
+        ret = []
+        for event in self.events_json:
+            ret.append(event['id'])
+        return ret
+
 
 class Unit_story_getter(Pjsk_getter):
     def __init__(
         self,
         reader: Story_reader,
         src: list[str] = ['haruki', 'sekai.best'],
-        save_dir: str = './story_unit',
+        save_dir: str = './story_{lang}/main',
         assets_save_dir: str = './assets',
         online: bool = True,
         save_assets: bool = True,
         parse: bool = True,
         missing_download: bool = True,
+        maxlen_unitId: int = 1,
         compress_assets: bool = False,
         force_master_online: bool = False,
     ) -> None:
-
         super().__init__(
             save_dir,
             assets_save_dir,
@@ -713,6 +727,8 @@ class Unit_story_getter(Pjsk_getter):
         )
 
         self.reader = reader
+        self.save_dir = self.save_dir.format(lang=self.reader.lang)
+        self.maxlen_unitId = maxlen_unitId
 
         self.unitProfiles_url = Constant.get_srcs_url(
             self.reader.lang, src, 'master', 'unitProfiles'
@@ -733,9 +749,8 @@ class Unit_story_getter(Pjsk_getter):
         self,
         session: ClientSession | None = None,
         network_semaphore: Semaphore | None = None,
-        file_semaphore: Semaphore | None = None,
     ) -> None:
-        await super().init(session, network_semaphore, file_semaphore)
+        await super().init(session, network_semaphore)
 
         (
             self.unitProfiles_json,
@@ -777,11 +792,13 @@ class Unit_story_getter(Pjsk_getter):
             return
 
         save_folder_name = util.valid_filename(
-            self.reader.lang + '-' + f'{unit_id} {unitName}'
+            f'{unit_id:0{self.maxlen_unitId}} {unitName}'
         )
 
         unit_save_dir = os.path.join(self.save_dir, save_folder_name)
         if self.parse:
+            os.makedirs(Path(unit_save_dir).parent, exist_ok=True)
+            util.remove_olds_or_rename_old(unit_save_dir, r'(\d+) ')
             os.makedirs(unit_save_dir, exist_ok=True)
 
         tasks = []
@@ -839,16 +856,13 @@ class Unit_story_getter(Pjsk_getter):
         if self.parse and not util.judge_need_skip(story_json):
             text = self.reader.read_story_in_json(story_json)
 
-            async with self.file_semaphore:
-                async with aiofiles.open(
-                    os.path.join(unit_save_dir, episode_save_name) + '.txt',
-                    'w',
-                    encoding='utf8',
-                ) as f:
-                    if unit_outline is not None:
-                        await f.write(unit_outline + '\n\n')
-                    await f.write(episode_name + '\n\n')
-                    await f.write(text + '\n')
+            file_path = os.path.join(unit_save_dir, episode_save_name) + '.txt'
+            util.remove_olds_or_rename_old(file_path, r'([^\s]+) ')
+            with open(file_path, 'w', encoding='utf8') as f:
+                if unit_outline is not None:
+                    f.write(unit_outline + '\n\n')
+                f.write(episode_name + '\n\n')
+                f.write(text + '\n')
 
         logging.info(f'get unit {unit_id} {unitName} {episode_name} done.')
 
@@ -864,17 +878,16 @@ class Card_story_getter(Pjsk_getter):
         self,
         reader: Story_reader,
         src: list[str] = ['haruki', 'sekai.best'],
-        save_dir: str = './story_card',
+        save_dir: str = './story_{lang}/card',
         assets_save_dir: str = './assets',
         online: bool = True,
         save_assets: bool = True,
         parse: bool = True,
         missing_download: bool = True,
-        maxlen_id: int = 4,
+        maxlen_charaId_cardId: tuple[int, int] = (2, 4),
         compress_assets: bool = False,
         force_master_online: bool = False,
     ) -> None:
-
         super().__init__(
             save_dir,
             assets_save_dir,
@@ -887,7 +900,8 @@ class Card_story_getter(Pjsk_getter):
         )
 
         self.reader = reader
-        self.maxlen_id = maxlen_id
+        self.save_dir = self.save_dir.format(lang=self.reader.lang)
+        self.maxlen_charaId_cardId = maxlen_charaId_cardId
 
         self.cards_url = Constant.get_srcs_url(self.reader.lang, src, 'master', 'cards')
         self.cardEpisodes_url = Constant.get_srcs_url(
@@ -904,9 +918,8 @@ class Card_story_getter(Pjsk_getter):
         self,
         session: ClientSession | None = None,
         network_semaphore: Semaphore | None = None,
-        file_semaphore: Semaphore | None = None,
     ) -> None:
-        await super().init(session, network_semaphore, file_semaphore)
+        await super().init(session, network_semaphore)
 
         self.cards_json, self.cardEpisodes_json, ori_eventCards_json = (
             await asyncio.gather(
@@ -949,7 +962,7 @@ class Card_story_getter(Pjsk_getter):
         chara_name = self.reader.get_chara_unitAbbr_names(card['characterId'])[1]
         cardRarityType = Constant.rarity_name[card['cardRarityType']]
         card_name = card['prefix']
-        card_gachaPhrase = card['gachaPhrase'].replace('\n', ' ')
+        card_gachaPhrase = card.get('gachaPhrase', '-').replace('\n', ' ')
         sub_unit = card['supportUnit']
         assetbundleName: str = card['assetbundleName']
 
@@ -960,11 +973,10 @@ class Card_story_getter(Pjsk_getter):
 
         card_save_dir = os.path.join(
             self.save_dir,
-            util.valid_filename(self.reader.lang + '-' + chara_unit_and_name),
+            util.valid_filename(
+                f"{card['characterId']:0{self.maxlen_charaId_cardId[0]}} {chara_unit_and_name}"
+            ),
         )
-
-        if self.parse:
-            os.makedirs(card_save_dir, exist_ok=True)
 
         if sub_unit != 'none':
             sub_unit_name = f' ({Constant.unit_code_abbr[sub_unit]})'
@@ -982,7 +994,7 @@ class Card_story_getter(Pjsk_getter):
         card_story_name = f'{card_id}_{chara_name}{sub_unit_name}_{cardRarityType} {card_name}{belong_event}'
 
         card_story_filename = util.valid_filename(
-            f'{card_id:0{self.maxlen_id}}_{chara_name}{sub_unit_name}_{cardRarityType} {card_name}{belong_event}'
+            f'{card_id:0{self.maxlen_charaId_cardId[1]}}_{chara_name}{sub_unit_name}_{cardRarityType} {card_name}{belong_event}'
         )
 
         story_1_json, story_2_json = await asyncio.gather(
@@ -1011,36 +1023,37 @@ class Card_story_getter(Pjsk_getter):
         )
 
         if self.parse and not util.judge_need_skip(story_1_json, story_2_json):
+            os.makedirs(Path(card_save_dir).parent, exist_ok=True)
+            util.remove_olds_or_rename_old(card_save_dir, r'(\d+) ')
+            os.makedirs(card_save_dir, exist_ok=True)
+
             text_1 = self.reader.read_story_in_json(story_1_json)
             text_2 = self.reader.read_story_in_json(story_2_json)
 
-            async with self.file_semaphore:
-                async with aiofiles.open(
-                    os.path.join(card_save_dir, card_story_filename) + '.txt',
-                    'w',
-                    encoding='utf8',
-                ) as f:
-                    await f.write(card_story_name + '\n\n')
-                    if card_gachaPhrase != '-':
-                        await f.write(
-                            Mark_multi_lang['gacha phrase'][self.reader.mark_lang]
-                            + card_gachaPhrase
-                            + '\n\n'
-                        )
-                    await f.write(
-                        Mark_multi_lang['<'][self.reader.mark_lang]
-                        + story_1_name
-                        + Mark_multi_lang['>'][self.reader.mark_lang]
+            file_path = os.path.join(card_save_dir, card_story_filename) + '.txt'
+            util.remove_olds_or_rename_old(file_path, r'(\d+)_')
+            with open(file_path, 'w', encoding='utf8') as f:
+                f.write(card_story_name + '\n\n')
+                if card_gachaPhrase != '-':
+                    f.write(
+                        Mark_multi_lang['gacha phrase'][self.reader.mark_lang]
+                        + card_gachaPhrase
                         + '\n\n'
                     )
-                    await f.write(text_1 + '\n\n\n')
-                    await f.write(
-                        Mark_multi_lang['<'][self.reader.mark_lang]
-                        + story_2_name
-                        + Mark_multi_lang['>'][self.reader.mark_lang]
-                        + '\n\n'
-                    )
-                    await f.write(text_2 + '\n')
+                f.write(
+                    Mark_multi_lang['<'][self.reader.mark_lang]
+                    + story_1_name
+                    + Mark_multi_lang['>'][self.reader.mark_lang]
+                    + '\n\n'
+                )
+                f.write(text_1 + '\n\n\n')
+                f.write(
+                    Mark_multi_lang['<'][self.reader.mark_lang]
+                    + story_2_name
+                    + Mark_multi_lang['>'][self.reader.mark_lang]
+                    + '\n\n'
+                )
+                f.write(text_2 + '\n')
 
         logging.info(f'get card {card_story_name} done.')
 
@@ -1116,13 +1129,19 @@ class Card_story_getter(Pjsk_getter):
             tasks.append(self.get(i))
         await asyncio.gather(*tasks)
 
+    def tell_ids(self) -> list[int]:
+        ret = []
+        for card in self.cards_json:
+            ret.append(card['id'])
+        return ret
+
 
 class Area_talk_getter(Pjsk_getter):
     def __init__(
         self,
         reader: Story_reader,
         src: list[str] = ['haruki', 'sekai.best'],
-        save_dir: str = './story_area',
+        save_dir: str = './story_{lang}/area',
         assets_save_dir: str = './assets',
         online: bool = True,
         save_assets: bool = True,
@@ -1133,7 +1152,6 @@ class Area_talk_getter(Pjsk_getter):
         compress_assets: bool = False,
         force_master_online: bool = False,
     ) -> None:
-
         super().__init__(
             save_dir,
             assets_save_dir,
@@ -1146,6 +1164,7 @@ class Area_talk_getter(Pjsk_getter):
         )
 
         self.reader = reader
+        self.save_dir = self.save_dir.format(lang=self.reader.lang)
         self.maxlen_eventId_areaID = maxlen_eventId_areaID
         self.print_fetch_detial = print_fetch_detial
 
@@ -1161,9 +1180,8 @@ class Area_talk_getter(Pjsk_getter):
         self,
         session: ClientSession | None = None,
         network_semaphore: Semaphore | None = None,
-        file_semaphore: Semaphore | None = None,
     ) -> None:
-        await super().init(session, network_semaphore, file_semaphore)
+        await super().init(session, network_semaphore)
 
         self.area_name_json, self.actionSets_json = await asyncio.gather(
             self.fetch_url_json(self.areas_url, force_online=self.force_master_online),
@@ -1233,9 +1251,6 @@ class Area_talk_getter(Pjsk_getter):
             logging.info(f'talk {target} does not exist.')
             return
 
-        if self.parse:
-            os.makedirs(self.save_dir, exist_ok=True)
-
         tasks = []
         for action in actions:
             tasks.append(
@@ -1255,7 +1270,9 @@ class Area_talk_getter(Pjsk_getter):
 
         talk_jsons = await asyncio.gather(*tasks)
 
-        if self.parse and not util.judge_need_skip(talk_jsons):
+        if self.parse and not util.judge_need_skip(*talk_jsons):
+            os.makedirs(self.save_dir, exist_ok=True)
+
             texts = [
                 self.reader.read_story_in_json(talk_json) for talk_json in talk_jsons
             ]
@@ -1267,42 +1284,26 @@ class Area_talk_getter(Pjsk_getter):
             else:
                 filename = f'talk_{target}'
 
-            filename = util.valid_filename(self.reader.lang + '-' + filename)
+            filename = util.valid_filename(filename)
 
-            async with self.file_semaphore:
-                async with aiofiles.open(
-                    os.path.join(self.save_dir, filename) + '.txt',
-                    'w',
-                    encoding='utf8',
-                ) as f:
-                    for index, (action, text) in enumerate(zip(actions, texts)):
-                        area_name_index = self.area_name_lookup.find_index(
-                            action['areaId']
-                        )
-                        area_name = self.area_name_json[area_name_index]['name']
-                        sub_name = self.area_name_json[area_name_index].get('subName')
-                        if sub_name is not None:
-                            area_name += ' - ' + sub_name
+            with open(
+                os.path.join(self.save_dir, filename) + '.txt',
+                'w',
+                encoding='utf8',
+            ) as f:
+                for index, (action, text) in enumerate(zip(actions, texts)):
+                    area_name_index = self.area_name_lookup.find_index(action['areaId'])
+                    area_name = self.area_name_json[area_name_index]['name']
+                    sub_name = self.area_name_json[area_name_index].get('subName')
+                    if sub_name is not None:
+                        area_name += ' - ' + sub_name
 
-                        talk_type = ''
-                        if isinstance(target, int):
-                            if '_ev_' in action['scenarioId']:
-                                talk_type = ' event'
-                            elif '_wl_' in action['scenarioId']:
-                                talk_type = ' wl'
-                            elif '_monthly' in action['scenarioId']:
-                                talk_type = ' monthly'
-                            elif '_add_' in action['scenarioId']:
-                                talk_type = ' add'
-                            else:
-                                assert action['id'] == 618  # special case
-
-                        left = Mark_multi_lang['['][self.reader.mark_lang]
-                        right = Mark_multi_lang[']'][self.reader.mark_lang]
-                        await f.write(
-                            f"{index+1} {action['id']}{talk_type} {left}{area_name}{right}\n\n"
-                        )
-                        await f.write(text + '\n\n\n')
+                    left = Mark_multi_lang['['][self.reader.mark_lang]
+                    right = Mark_multi_lang[']'][self.reader.mark_lang]
+                    f.write(
+                        f"{index+1} {action['id']}:{action['scenarioId']}\n\n{left}{area_name}{right}\n\n"
+                    )
+                    f.write(text + '\n\n\n')
 
         logging.info(f'get talk {target} done.')
 
@@ -1358,7 +1359,6 @@ class Area_talk_getter(Pjsk_getter):
             text = self.reader.read_story_in_json(talk_json)
 
             filename = f'talk_{talk_id}'
-            filename = self.reader.lang + '-' + filename
 
             area_name_index = self.area_name_lookup.find_index(actionSet['areaId'])
             area_name = self.area_name_json[area_name_index]['name']
@@ -1366,18 +1366,17 @@ class Area_talk_getter(Pjsk_getter):
             if sub_name is not None:
                 area_name += ' - ' + sub_name
 
-            async with self.file_semaphore:
-                async with aiofiles.open(
-                    os.path.join(self.save_dir, filename) + '.txt',
-                    'w',
-                    encoding='utf8',
-                ) as f:
-                    left = Mark_multi_lang['['][self.reader.mark_lang]
-                    right = Mark_multi_lang[']'][self.reader.mark_lang]
-                    await f.write(
-                        f"{actionSet['id']} {cate} {left}{area_name}{right}\n\n"
-                    )
-                    await f.write(text + '\n')
+            with open(
+                os.path.join(self.save_dir, filename) + '.txt',
+                'w',
+                encoding='utf8',
+            ) as f:
+                left = Mark_multi_lang['['][self.reader.mark_lang]
+                right = Mark_multi_lang[']'][self.reader.mark_lang]
+                f.write(
+                    f"{actionSet['id']}:{actionSet['scenarioId']} {cate}\n\n{left}{area_name}{right}\n\n"
+                )
+                f.write(text + '\n')
 
         logging.info(f'get talk {talk_id} done.')
 
@@ -1395,12 +1394,13 @@ class Self_intro_getter(Pjsk_getter):
         self,
         reader: Story_reader,
         src: list[str] = ['haruki', 'sekai.best'],
-        save_dir: str = './story_self',
+        save_dir: str = './story_{lang}/self',
         assets_save_dir: str = './assets',
         online: bool = True,
         save_assets: bool = True,
         parse: bool = True,
         missing_download: bool = True,
+        maxlen_charaId: int = 2,
         compress_assets: bool = False,
         force_master_online: bool = False,
     ):
@@ -1416,6 +1416,8 @@ class Self_intro_getter(Pjsk_getter):
         )
 
         self.reader = reader
+        self.save_dir = self.save_dir.format(lang=self.reader.lang)
+        self.maxlen_charaId = maxlen_charaId
 
         self.characterProfiles_url = Constant.get_srcs_url(
             self.reader.lang, src, 'master', 'characterProfiles'
@@ -1428,9 +1430,8 @@ class Self_intro_getter(Pjsk_getter):
         self,
         session: ClientSession | None = None,
         network_semaphore: Semaphore | None = None,
-        file_semaphore: Semaphore | None = None,
     ) -> None:
-        await super().init(session, network_semaphore, file_semaphore)
+        await super().init(session, network_semaphore)
 
         self.characterProfiles_json: list[dict[str, Any]] = await self.fetch_url_json(
             self.characterProfiles_url, force_online=self.force_master_online
@@ -1448,12 +1449,15 @@ class Self_intro_getter(Pjsk_getter):
 
         chara_unit_name = '_'.join(self.reader.get_chara_unitAbbr_names(chara_id)[:2])
 
-        filename = util.valid_filename(self.reader.lang + '-' + chara_unit_name)
+        filename = util.valid_filename(
+            f'{chara_id:0{self.maxlen_charaId}} {chara_unit_name}'
+        )
 
         profile = self.characterProfiles_json[profile_index]
         scenarioId: str = profile['scenarioId']
 
         scenarioId_common = scenarioId[: scenarioId.rindex('_')]
+        scenarioId_2nd = scenarioId_common + '_2nd'
 
         grade1_json, grade2_json = await asyncio.gather(
             self.fetch_url_json(
@@ -1465,7 +1469,7 @@ class Self_intro_getter(Pjsk_getter):
                 skip_read=not self.parse,
             ),
             self.fetch_url_json(
-                [url.format(scenarioId=scenarioId) for url in self.self_asset_url],
+                [url.format(scenarioId=scenarioId_2nd) for url in self.self_asset_url],
                 compress=self.compress_assets,
                 skip_read=not self.parse,
             ),
@@ -1477,29 +1481,26 @@ class Self_intro_getter(Pjsk_getter):
             text_1 = self.reader.read_story_in_json(grade1_json)
             text_2 = self.reader.read_story_in_json(grade2_json)
 
-            async with self.file_semaphore:
-                async with aiofiles.open(
-                    os.path.join(self.save_dir, filename) + '.txt',
-                    'w',
-                    encoding='utf8',
-                ) as f:
-                    await f.write(
-                        f"{Mark_multi_lang['self intro'][self.reader.mark_lang]}{chara_unit_name.split('_')[1]}\n\n"
-                    )
-                    await f.write(
-                        Mark_multi_lang['<'][self.reader.mark_lang]
-                        + 'YEAR 1'
-                        + Mark_multi_lang['>'][self.reader.mark_lang]
-                        + '\n\n'
-                    )
-                    await f.write(text_1 + '\n\n\n')
-                    await f.write(
-                        Mark_multi_lang['<'][self.reader.mark_lang]
-                        + 'YEAR 2'
-                        + Mark_multi_lang['>'][self.reader.mark_lang]
-                        + '\n\n'
-                    )
-                    await f.write(text_2 + '\n')
+            file_path = os.path.join(self.save_dir, filename) + '.txt'
+            util.remove_olds_or_rename_old(file_path, r'(\d+) ')
+            with open(file_path, 'w', encoding='utf8') as f:
+                f.write(
+                    f"{Mark_multi_lang['self intro'][self.reader.mark_lang]}{self.reader.get_chara_unitAbbr_names(chara_id)[1]}\n\n"
+                )
+                f.write(
+                    Mark_multi_lang['<'][self.reader.mark_lang]
+                    + 'YEAR 1'
+                    + Mark_multi_lang['>'][self.reader.mark_lang]
+                    + '\n\n'
+                )
+                f.write(text_1 + '\n\n\n')
+                f.write(
+                    Mark_multi_lang['<'][self.reader.mark_lang]
+                    + 'YEAR 2'
+                    + Mark_multi_lang['>'][self.reader.mark_lang]
+                    + '\n\n'
+                )
+                f.write(text_2 + '\n')
 
         logging.info(f'get self intro {filename} done.')
 
@@ -1515,7 +1516,7 @@ class Special_story_getter(Pjsk_getter):
         self,
         reader: Story_reader,
         src: list[str] = ['haruki', 'sekai.best'],
-        save_dir: str = './story_special',
+        save_dir: str = './story_{lang}/special',
         assets_save_dir: str = './assets',
         online: bool = True,
         save_assets: bool = True,
@@ -1537,6 +1538,7 @@ class Special_story_getter(Pjsk_getter):
         )
 
         self.reader = reader
+        self.save_dir = self.save_dir.format(lang=self.reader.lang)
         self.maxlen_sp = maxlen_sp
 
         self.specialStories_url = Constant.get_srcs_url(
@@ -1550,9 +1552,8 @@ class Special_story_getter(Pjsk_getter):
         self,
         session: ClientSession | None = None,
         network_semaphore: Semaphore | None = None,
-        file_semaphore: Semaphore | None = None,
     ) -> None:
-        await super().init(session, network_semaphore, file_semaphore)
+        await super().init(session, network_semaphore)
 
         self.specialStories_json: list[dict[str, Any]] = await self.fetch_url_json(
             self.specialStories_url, force_online=self.force_master_online
@@ -1568,20 +1569,10 @@ class Special_story_getter(Pjsk_getter):
 
         story = self.specialStories_json[story_index]
         episodes = story['episodes']
-        title = story.get('title')
 
-        if title is None:
-            title = episodes[0]['title']
-
-        story_name = f'sp{id}_{title}'
-
-        filename = util.valid_filename(
-            self.reader.lang + '-' f'sp{id:0{self.maxlen_sp}}_{title}'
-        )
-
-        episode_tasks = []
+        tasks = []
         for episode in episodes:
-            episode_tasks.append(
+            tasks.append(
                 self.fetch_url_json(
                     [
                         url.format(
@@ -1590,14 +1581,14 @@ class Special_story_getter(Pjsk_getter):
                         )
                         for url in self.special_asset_url
                     ],
-                    filename,
+                    f"sp{id}-{episode['episodeNo']}",
                     compress=self.compress_assets,
                     skip_read=not self.parse,
                 )
             )
-        episode_story_jsons = await asyncio.gather(*episode_tasks)
+        episode_story_jsons = await asyncio.gather(*tasks)
 
-        if self.parse and not util.judge_need_skip(episode_story_jsons):
+        if self.parse and not util.judge_need_skip(*episode_story_jsons):
             os.makedirs(self.save_dir, exist_ok=True)
 
             texts = [
@@ -1605,30 +1596,25 @@ class Special_story_getter(Pjsk_getter):
                 for episode_story_json in episode_story_jsons
             ]
 
-            if len(episodes) > 1:
-                record_No = True
-            else:
-                record_No = False
+            story_name = f"sp{id} {episodes[0]['title']} ({episodes[0]['scenarioId']})"
+            filename = util.valid_filename(
+                f"sp{id:0{self.maxlen_sp}} {episodes[0]['title']}"
+            )
 
-            async with self.file_semaphore:
-                async with aiofiles.open(
-                    os.path.join(self.save_dir, filename) + '.txt',
-                    'w',
-                    encoding='utf8',
-                ) as f:
-                    await f.write(story_name + '\n\n')
+            file_path = os.path.join(self.save_dir, filename) + '.txt'
+            util.remove_olds_or_rename_old(file_path, r'sp(\d+) ')
+            with open(file_path, 'w', encoding='utf8') as f:
+                f.write(story_name + '\n\n')
+                if len(episodes) == 1:
+                    f.write(texts[0] + '\n')
+                else:
                     for episode, text in zip(episodes, texts):
-                        if record_No:
-                            await f.write(str(episode['episodeNo']) + ' ')
-                        await f.write(
-                            Mark_multi_lang['<'][self.reader.mark_lang]
-                            + episode['title']
-                            + Mark_multi_lang['>'][self.reader.mark_lang]
-                            + '\n\n'
+                        f.write(
+                            f"{episode['episodeNo']} {episode['title']} ({episode['scenarioId']})\n\n"
                         )
-                        await f.write(text + '\n\n\n')
+                        f.write(text + '\n\n\n')
 
-        logging.info(f'get special {filename} done.')
+            logging.info(f'get special {filename} done.')
 
     def tell_ids(self):
         ret = []
@@ -1639,9 +1625,7 @@ class Special_story_getter(Pjsk_getter):
 
 async def main():
 
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(message)s", datefmt="%H:%M:%S"
-    )
+    logging.basicConfig(level=logging.INFO)
 
     net_connect_limit = 20
 
