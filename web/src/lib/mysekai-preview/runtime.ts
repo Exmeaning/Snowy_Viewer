@@ -35,7 +35,8 @@ import type {
 const GLOBAL_SCALE = 4;
 const ALWAYS_ENABLED_LAYOUT_TYPES = ["floor", "rug", "road", "wall_left", "wall_right", "wall_front", "wall_back"];
 const INDOOR_TYPES = ["floor", "rug", "wall_left", "wall_right", "wall_front", "wall_back"];
-const SHADOW_Y_OFFSET = 0.004;
+const SHADOW_Y_OFFSET = 0.07;
+const ENTRY_BUILD_CONCURRENCY = 8;
 
 const GATE_ASSET_BY_ID: Record<number, string> = {
     1: "mdl_non0006_gate_lon1",
@@ -87,6 +88,14 @@ interface FloorShadowRecord {
     shadow: THREE.Mesh;
 }
 
+interface EntryBuildResult {
+    index: number;
+    entryGroup: THREE.Group | null;
+    floorPlacementRecords: FloorPlacementRecord[];
+    floorShadowRecords: FloorShadowRecord[];
+    error?: unknown;
+}
+
 interface ObjStats {
     url: string;
     volume: number;
@@ -97,6 +106,28 @@ interface FixtureRenderAsset {
     asset: string;
     isOrnament: boolean;
     useCustomAttachRoot: boolean;
+}
+
+interface FencePartSet {
+    post: THREE.Group;
+    beamShort: THREE.Group;
+    beamLong: THREE.Group;
+    baseDir: "-x";
+}
+
+type FenceDirection = "+x" | "-x" | "+z" | "-z";
+
+async function mapWithConcurrency<T, R>(items: T[], limit: number, worker: (item: T, index: number) => Promise<R>): Promise<R[]> {
+    const results = new Array<R>(items.length);
+    let nextIndex = 0;
+    const workers = Array.from({ length: Math.min(Math.max(1, limit), items.length) }, async () => {
+        while (nextIndex < items.length) {
+            const index = nextIndex++;
+            results[index] = await worker(items[index], index);
+        }
+    });
+    await Promise.all(workers);
+    return results;
 }
 
 function errorMessage(error: unknown): string {
@@ -261,6 +292,30 @@ function getXZCellKeysFromBBox(bbox: THREE.Box3): string[] {
     return keys;
 }
 
+function computeXZSize(object: THREE.Object3D): { x: number; z: number } {
+    const box = new THREE.Box3().setFromObject(object);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    return { x: size.x, z: size.z };
+}
+
+function inferFencePartRole(group: THREE.Object3D): "post" | "short" | "long" | null {
+    const names: string[] = [];
+    group.traverse((object) => {
+        if (object.name) names.push(String(object.name).toLowerCase());
+    });
+    const blob = names.join(" ");
+    if (blob.includes("wing_long")) return "long";
+    if (blob.includes("wing_short")) return "short";
+    if (blob.includes("pole_center") || blob.includes("mdl_pole")) return "post";
+    return null;
+}
+
+function yawFromBaseToTarget(baseDir: FenceDirection, targetDir: FenceDirection): number {
+    const order: FenceDirection[] = ["+x", "-z", "-x", "+z"];
+    return ((order.indexOf(targetDir) - order.indexOf(baseDir)) * Math.PI) / 2;
+}
+
 function calcBBoxXZAreaOverlayRatio(a: THREE.Box3, b: THREE.Box3): number {
     const minX = Math.max(a.min.x, b.min.x);
     const maxX = Math.min(a.max.x, b.max.x);
@@ -309,9 +364,12 @@ export class MysekaiScenePreviewRuntime {
     private readonly textureLoader = new THREE.TextureLoader();
     private readonly objLoader = new OBJLoader();
     private readonly objTextCache = new Map<string, string>();
+    private readonly objTextPromiseCache = new Map<string, Promise<string | null>>();
     private readonly objGroupCache = new Map<string, THREE.Group>();
     private readonly objStatsCache = new Map<string, ObjStats>();
+    private readonly fenceAssetPartPromiseCache = new Map<string, Promise<FencePartSet>>();
     private readonly textureCache = new Map<string, THREE.Texture>();
+    private readonly texturePromiseCache = new Map<string, Promise<THREE.Texture | null>>();
     private readonly fixtureMetaMap = new Map<number, MysekaiFixtureMaster>();
     private readonly customFixtureMetaMap = new Map<number, MysekaiCustomFixtureMaster>();
     private readonly cardAssetById = new Map<number, string>();
@@ -323,10 +381,11 @@ export class MysekaiScenePreviewRuntime {
     private rankReleases: MysekaiRankReleaseMaster[] = [];
     private siteLevels: MysekaiSiteLevelMaster[] = [];
     private siteLayouts: MysekaiSiteLayoutMaster[] = [];
-    private gridMinor: THREE.GridHelper | null = null;
-    private gridMajor: THREE.GridHelper | null = null;
+    private gridMinor: THREE.LineSegments | null = null;
+    private gridMajor: THREE.LineSegments | null = null;
     private indoorDoorObject: THREE.Object3D | null = null;
     private grass: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+    private floorShadowTexture: THREE.CanvasTexture | null = null;
     private axisHelper: THREE.AxesHelper;
     private rafId = 0;
     private disposed = false;
@@ -445,6 +504,7 @@ export class MysekaiScenePreviewRuntime {
         disposeObject(this.grass);
         this.scene.remove(this.grass);
         this.textureCache.forEach((texture) => texture.dispose());
+        this.floorShadowTexture?.dispose();
         this.renderer.dispose();
         this.axesRenderer.dispose();
         this.renderer.domElement.remove();
@@ -524,20 +584,32 @@ export class MysekaiScenePreviewRuntime {
     }
 
     private async fetchTextFirst(urls: string[]): Promise<ResourcePick | null> {
-        for (const url of urls) {
-            try {
-                if (this.objTextCache.has(url)) return { url, source: this.options.assetSource };
-                const response = await fetch(url);
-                if (!response.ok) continue;
+        const picks = await Promise.all(urls.map(async (url) => {
+            const text = await this.fetchObjText(url);
+            return text ? { url, source: this.options.assetSource } : null;
+        }));
+        return picks.find((pick): pick is ResourcePick => !!pick) ?? null;
+    }
+
+    private fetchObjText(url: string): Promise<string | null> {
+        const cached = this.objTextCache.get(url);
+        if (cached) return Promise.resolve(cached);
+        const inflight = this.objTextPromiseCache.get(url);
+        if (inflight) return inflight;
+        const promise = fetch(url)
+            .then(async (response) => {
+                if (!response.ok) return null;
                 const text = await response.text();
-                if (!text.trim()) continue;
+                if (!text.trim()) return null;
                 this.objTextCache.set(url, text);
-                return { url, source: this.options.assetSource };
-            } catch {
-                // try next candidate
-            }
-        }
-        return null;
+                return text;
+            })
+            .catch(() => null)
+            .finally(() => {
+                this.objTextPromiseCache.delete(url);
+            });
+        this.objTextPromiseCache.set(url, promise);
+        return promise;
     }
 
     private getObjCandidateUrls(assetName: string, useCustomAttachRoot: boolean, handleType?: string, fixtureType?: string): string[] {
@@ -552,10 +624,8 @@ export class MysekaiScenePreviewRuntime {
         if (cached) return cached.clone(true);
         let text = this.objTextCache.get(url);
         if (!text) {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`模型加载失败: ${url}`);
-            text = await response.text();
-            this.objTextCache.set(url, text);
+            text = await this.fetchObjText(url) ?? undefined;
+            if (!text) throw new Error(`模型加载失败: ${url}`);
         }
         const group = this.objLoader.parse(text);
         this.objGroupCache.set(url, group);
@@ -586,11 +656,8 @@ export class MysekaiScenePreviewRuntime {
     private async pickPrimaryObjUrl(urls: string[]): Promise<string | null> {
         const filtered = urls.filter((url) => !isShadowObjUrl(url));
         const candidates = filtered.length ? filtered : urls;
-        const existing: string[] = [];
-        for (const url of candidates) {
-            const pick = await this.fetchTextFirst([url]);
-            if (pick) existing.push(url);
-        }
+        const picks = await Promise.all(candidates.map((url) => this.fetchTextFirst([url])));
+        const existing = picks.filter((pick): pick is ResourcePick => !!pick).map((pick) => pick.url);
         if (!existing.length) return null;
         const stats = await Promise.all(existing.map((url) => this.getObjStats(url)));
         stats.sort((a, b) => {
@@ -604,20 +671,28 @@ export class MysekaiScenePreviewRuntime {
     }
 
     private async getTextureFromUrls(urls: string[]): Promise<THREE.Texture | null> {
-        for (const url of urls) {
-            const cached = this.textureCache.get(url);
-            if (cached) return cached;
-            try {
-                const texture = await this.textureLoader.loadAsync(url);
+        const attempts = await Promise.all(urls.map((url) => this.getTextureFromUrl(url)));
+        return attempts.find((texture): texture is THREE.Texture => !!texture) ?? null;
+    }
+
+    private getTextureFromUrl(url: string): Promise<THREE.Texture | null> {
+        const cached = this.textureCache.get(url);
+        if (cached) return Promise.resolve(cached);
+        const inflight = this.texturePromiseCache.get(url);
+        if (inflight) return inflight;
+        const promise = this.textureLoader.loadAsync(url)
+            .then((texture) => {
                 texture.colorSpace = THREE.SRGBColorSpace;
                 texture.flipY = true;
                 this.textureCache.set(url, texture);
                 return texture;
-            } catch {
-                // try next texture candidate
-            }
-        }
-        return null;
+            })
+            .catch(() => null)
+            .finally(() => {
+                this.texturePromiseCache.delete(url);
+            });
+        this.texturePromiseCache.set(url, promise);
+        return promise;
     }
 
     private async getFixtureTexture(assetName: string, textureId: number, useCustomAttachRoot: boolean, handleType?: string): Promise<THREE.Texture | null> {
@@ -974,40 +1049,129 @@ export class MysekaiScenePreviewRuntime {
 
     private makeGrid(size: MysekaiSceneSize) {
         this.clearGrid();
-        const maxSize = Math.max(size.width, size.depth);
-        this.gridMinor = new THREE.GridHelper(maxSize, maxSize, 0x9bc3ff, 0x9bc3ff);
-        this.gridMinor.material.transparent = true;
-        this.gridMinor.material.opacity = 0.2;
-        this.gridMinor.position.y = 0.01;
-        this.gridMajor = new THREE.GridHelper(maxSize, Math.max(1, Math.floor(maxSize / 4)), 0xffffff, 0xffffff);
-        this.gridMajor.material.transparent = true;
-        this.gridMajor.material.opacity = 0.35;
-        this.gridMajor.position.y = 0.012;
+        const halfW = Number(size.width || 80) / 2;
+        const halfD = Number(size.depth || 80) / 2;
+        const minX = -halfW;
+        const maxX = halfW;
+        const minZ = -halfD;
+        const maxZ = halfD;
+        const minorVerts: number[] = [];
+        const majorVerts: number[] = [];
+        const y = 0.01;
+        const xStart = Math.floor(minX);
+        const xEnd = Math.ceil(maxX);
+        const zStart = Math.floor(minZ);
+        const zEnd = Math.ceil(maxZ);
+        const isMajorX = (value: number) => Math.abs((value - minX) % 4) < 1e-6;
+        const isMajorZ = (value: number) => Math.abs((value - minZ) % 4) < 1e-6;
+
+        for (let x = xStart; x <= xEnd; x++) {
+            const target = isMajorX(x) ? majorVerts : minorVerts;
+            target.push(x, y, zStart, x, y, zEnd);
+        }
+        for (let z = zStart; z <= zEnd; z++) {
+            const target = isMajorZ(z) ? majorVerts : minorVerts;
+            target.push(xStart, y, z, xEnd, y, z);
+        }
+
+        const minorGeometry = new THREE.BufferGeometry();
+        minorGeometry.setAttribute("position", new THREE.Float32BufferAttribute(minorVerts, 3));
+        this.gridMinor = new THREE.LineSegments(
+            minorGeometry,
+            new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 }),
+        );
+
+        const majorGeometry = new THREE.BufferGeometry();
+        majorGeometry.setAttribute("position", new THREE.Float32BufferAttribute(majorVerts, 3));
+        this.gridMajor = new THREE.LineSegments(
+            majorGeometry,
+            new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 }),
+        );
         this.scene.add(this.gridMinor, this.gridMajor);
         this.applyDebugVisibility();
     }
 
+    private getFloorShadowTexture(): THREE.CanvasTexture {
+        if (this.floorShadowTexture) return this.floorShadowTexture;
+        const canvas = document.createElement("canvas");
+        canvas.width = 96;
+        canvas.height = 96;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+            this.floorShadowTexture = new THREE.CanvasTexture(canvas);
+            return this.floorShadowTexture;
+        }
+        const image = ctx.createImageData(canvas.width, canvas.height);
+        const data = image.data;
+        const halfW = canvas.width * 0.5;
+        const halfH = canvas.height * 0.5;
+        const rectHalfW = 28;
+        const rectHalfH = 22;
+        const feather = 18;
+        const maxAlpha = 0.32;
+        for (let y = 0; y < canvas.height; y++) {
+            for (let x = 0; x < canvas.width; x++) {
+                const px = Math.abs((x + 0.5) - halfW) - rectHalfW;
+                const py = Math.abs((y + 0.5) - halfH) - rectHalfH;
+                const ox = Math.max(px, 0);
+                const oy = Math.max(py, 0);
+                const outsideDist = Math.hypot(ox, oy);
+                const insideDist = Math.min(Math.max(px, py), 0);
+                const signedDist = outsideDist + insideDist;
+                const t = 1 - Math.min(Math.max(signedDist / feather, 0), 1);
+                const alpha = t * maxAlpha;
+                const index = (y * canvas.width + x) * 4;
+                data[index] = 0;
+                data[index + 1] = 0;
+                data[index + 2] = 0;
+                data[index + 3] = Math.round(alpha * 255);
+            }
+        }
+        ctx.putImageData(image, 0, 0);
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+        this.floorShadowTexture = texture;
+        return texture;
+    }
+
     private createFakeFloorShadowForObject(object: THREE.Object3D, siteSize: MysekaiSceneSize): THREE.Mesh | null {
         const bbox = captureWorldBBox(object);
-        const w = Math.max(0.5, bbox.max.x - bbox.min.x);
-        const d = Math.max(0.5, bbox.max.z - bbox.min.z);
-        if (!(w > 0 && d > 0)) return null;
+        const size = new THREE.Vector3();
+        bbox.getSize(size);
+        const cx = (bbox.min.x + bbox.max.x) * 0.5;
+        const cz = (bbox.min.z + bbox.max.z) * 0.5;
+        const sx = Math.max(0.8, size.x * 1.18);
+        const sz = Math.max(0.8, size.z * 1.18);
+        const area = sx * sz;
+        const opacity = area <= 3.2 ? 0.28 : 0.55;
         const halfW = siteSize.width / 2;
         const halfD = siteSize.depth / 2;
-        const xMin = Math.max(-halfW, bbox.min.x);
-        const xMax = Math.min(halfW, bbox.max.x);
-        const zMin = Math.max(-halfD, bbox.min.z);
-        const zMax = Math.min(halfD, bbox.max.z);
-        if (xMax <= xMin || zMax <= zMin) return null;
+        const xMin = Math.max(-halfW, cx - sx * 0.5);
+        const xMax = Math.min(halfW, cx + sx * 0.5);
+        const zMin = Math.max(-halfD, cz - sz * 0.5);
+        const zMax = Math.min(halfD, cz + sz * 0.5);
+        const clippedW = xMax - xMin;
+        const clippedD = zMax - zMin;
+        if (!(clippedW > 0.05 && clippedD > 0.05)) return null;
         const shadow = new THREE.Mesh(
             new THREE.PlaneGeometry(1, 1),
-            new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.13, depthWrite: false }),
+            new THREE.MeshBasicMaterial({
+                map: this.getFloorShadowTexture(),
+                color: 0x000000,
+                transparent: true,
+                opacity,
+                depthWrite: false,
+                depthTest: true,
+                side: THREE.DoubleSide,
+            }),
         );
-        shadow.rotation.x = -Math.PI * 0.5;
-        shadow.scale.set(xMax - xMin, zMax - zMin, 1);
+        shadow.rotation.set(-Math.PI * 0.5, 0, 0, "YXZ");
+        shadow.scale.set(clippedW, clippedD, 1);
         shadow.position.set((xMin + xMax) / 2, SHADOW_Y_OFFSET, (zMin + zMax) / 2);
         shadow.userData.isFloorShadow = true;
         shadow.visible = this.options.shadowEnabled;
+        shadow.renderOrder = -1;
         return shadow;
     }
 
@@ -1049,6 +1213,20 @@ export class MysekaiScenePreviewRuntime {
         }
     }
 
+    private buildFencePointMap(entries: ExtractedMysekaiEntry[], siteSize: MysekaiSceneSize): Map<number, Set<string>> {
+        const out = new Map<number, Set<string>>();
+        for (const { layoutType, item } of entries) {
+            if (item.__isCustomFixture) continue;
+            const fixtureId = Number(item.mysekaiFixtureId);
+            const meta = this.fixtureMetaMap.get(fixtureId);
+            if (meta?.mysekaiFixtureHandleType !== "fence") continue;
+            const position = this.mapWallLayoutToScenePos(layoutType, item.position || { x: 0, y: 0, z: 0 }, siteSize);
+            if (!out.has(fixtureId)) out.set(fixtureId, new Set());
+            out.get(fixtureId)?.add(`${Math.round(position.x)},${Math.round(position.z)}`);
+        }
+        return out;
+    }
+
     private async buildScene(forceFreshLayout: boolean) {
         this.clearBeforeBuild();
         this.setStatus({
@@ -1070,11 +1248,13 @@ export class MysekaiScenePreviewRuntime {
         const renderEntries = entries.filter((entry) => !this.getIgnoredReason(entry));
         const siteLevelId = this.getSiteLevelIdByRank(playerRank, siteId);
         const siteSize = this.getSiteSize(siteLevelId);
+        const fencePointsByFixture = this.buildFencePointMap(renderEntries, siteSize);
         const gateId = Array.isArray(layout) ? 1 : Number(layout.userMysekaiGate?.mysekaiGateId || 1);
         const floorPlacementRecords: FloorPlacementRecord[] = [];
         const floorShadowRecords: FloorShadowRecord[] = [];
         let loaded = 0;
         let failed = 0;
+        let processed = 0;
         const ignored = ignoredEntries.length;
 
         this.mergeStatus({
@@ -1090,33 +1270,42 @@ export class MysekaiScenePreviewRuntime {
             failed,
         });
 
-        for (const { layoutType, item } of renderEntries) {
+        const buildResults = await mapWithConcurrency(renderEntries, ENTRY_BUILD_CONCURRENCY, async ({ layoutType, item }, index): Promise<EntryBuildResult> => {
+            const localFloorPlacementRecords: FloorPlacementRecord[] = [];
+            const localFloorShadowRecords: FloorShadowRecord[] = [];
             try {
-                const entryGroup = await this.buildEntry(layoutType, item, siteSize, gateId, floorPlacementRecords, floorShadowRecords);
-                if (entryGroup.children.length) {
-                    this.contentGroup.add(entryGroup);
-                    loaded++;
-                } else {
-                    failed++;
-                }
+                const entryGroup = await this.buildEntry(layoutType, item, siteSize, gateId, fencePointsByFixture, localFloorPlacementRecords, localFloorShadowRecords);
+                if (!entryGroup.children.length) throw new Error("空实例");
+                loaded++;
+                return { index, entryGroup, floorPlacementRecords: localFloorPlacementRecords, floorShadowRecords: localFloorShadowRecords };
             } catch (error) {
                 failed++;
                 console.warn("[mysekai-preview-skip]", { layoutType, item, error: errorMessage(error) });
+                return { index, entryGroup: null, floorPlacementRecords: [], floorShadowRecords: [], error };
+            } finally {
+                processed++;
+                if (processed % 10 === 0 || processed === renderEntries.length) {
+                    const progress = 12 + Math.round((processed / Math.max(1, renderEntries.length)) * 76);
+                    this.mergeStatus({
+                        message: `加载中... ${processed}/${renderEntries.length}`,
+                        loaded,
+                        total: entries.length,
+                        renderableTotal: renderEntries.length,
+                        skipped: failed,
+                        ignored,
+                        failed,
+                        progress,
+                    });
+                }
             }
-            const processed = loaded + failed;
-            if (processed % 10 === 0 || processed === renderEntries.length) {
-                const progress = 12 + Math.round((processed / Math.max(1, renderEntries.length)) * 76);
-                this.mergeStatus({
-                    message: `加载中... ${processed}/${renderEntries.length}`,
-                    loaded,
-                    total: entries.length,
-                    renderableTotal: renderEntries.length,
-                    skipped: failed,
-                    ignored,
-                    failed,
-                    progress,
-                });
-            }
+        });
+
+        buildResults.sort((a, b) => a.index - b.index);
+        for (const result of buildResults) {
+            if (!result.entryGroup) continue;
+            this.contentGroup.add(result.entryGroup);
+            floorPlacementRecords.push(...result.floorPlacementRecords);
+            floorShadowRecords.push(...result.floorShadowRecords);
         }
 
         this.mergeStatus({ stage: "finalize", stageLabel: "正在整理场景", progress: 92, loaded, total: entries.length, renderableTotal: renderEntries.length, skipped: failed, ignored, failed });
@@ -1153,11 +1342,77 @@ export class MysekaiScenePreviewRuntime {
         });
     }
 
+    private async getFencePartSet(assetName: string, objUrls: string[]): Promise<FencePartSet> {
+        const cached = this.fenceAssetPartPromiseCache.get(assetName);
+        if (cached) return cached;
+        const promise = (async () => {
+            const existing = (await Promise.all(objUrls.map(async (url) => {
+                const pick = await this.fetchTextFirst([url]);
+                return pick ? url : null;
+            }))).filter((url): url is string => !!url);
+            if (!existing.length) throw new Error(`栅栏模型缺失: ${assetName}`);
+            const groups = await Promise.all(existing.map((url) => this.getObjGroup(url)));
+            const scored = groups.map((group) => ({
+                group,
+                role: inferFencePartRole(group),
+                ...computeXZSize(group),
+            }));
+            let post = scored.find((item) => item.role === "post")?.group;
+            let beamShort = scored.find((item) => item.role === "short")?.group;
+            let beamLong = scored.find((item) => item.role === "long")?.group;
+
+            const unassigned = scored.filter((item) => !item.role);
+            if (!post && unassigned.length) {
+                unassigned.sort((a, b) => Math.abs(a.x - a.z) - Math.abs(b.x - b.z));
+                post = unassigned[0].group;
+            }
+
+            const wingCandidates = scored
+                .filter((item) => item.group !== post)
+                .filter((item) => item.role === "short" || item.role === "long" || !item.role)
+                .sort((a, b) => Math.max(a.x, a.z) - Math.max(b.x, b.z));
+            const uniqueWings: typeof wingCandidates = [];
+            const seen = new Set<THREE.Group>();
+            for (const item of wingCandidates) {
+                if (seen.has(item.group)) continue;
+                seen.add(item.group);
+                uniqueWings.push(item);
+            }
+            if (!beamShort && uniqueWings.length >= 2) beamShort = uniqueWings[0].group;
+            if (!beamLong && uniqueWings.length >= 2) beamLong = uniqueWings[uniqueWings.length - 1].group;
+            if (!beamShort && uniqueWings.length === 1) beamShort = uniqueWings[0].group;
+            if (!beamLong && uniqueWings.length === 1) beamLong = uniqueWings[0].group;
+            if (!post && scored.length) post = scored[0].group;
+            beamShort ||= beamLong;
+            beamLong ||= beamShort;
+            if (!post || !beamShort || !beamLong) throw new Error(`栅栏部件识别失败: ${assetName}`);
+            return { post, beamShort, beamLong, baseDir: "-x" as const };
+        })();
+        this.fenceAssetPartPromiseCache.set(assetName, promise);
+        return promise;
+    }
+
+    private createFenceLinks(fixtureId: number, position: { x: number; y: number; z: number }, fencePointsByFixture: Map<number, Set<string>>): Array<{ dx: number; dz: number; dir: FenceDirection; step: number }> {
+        const ix = Math.round(position.x);
+        const iz = Math.round(position.z);
+        const points = fencePointsByFixture.get(fixtureId) || null;
+        if (!points) return [];
+        const links: Array<{ dx: number; dz: number; dir: FenceDirection; step: number }> = [];
+        for (const step of [1, 2]) {
+            if (points.has(`${ix - step},${iz}`)) links.push({ dx: -step, dz: 0, dir: "-x", step });
+            if (points.has(`${ix + step},${iz}`)) links.push({ dx: step, dz: 0, dir: "+x", step });
+            if (points.has(`${ix},${iz - step}`)) links.push({ dx: 0, dz: -step, dir: "-z", step });
+            if (points.has(`${ix},${iz + step}`)) links.push({ dx: 0, dz: step, dir: "+z", step });
+        }
+        return links.filter((link) => link.dx > 0 || (link.dx === 0 && link.dz > 0));
+    }
+
     private async buildEntry(
         layoutType: string,
         item: MysekaiLayoutItem,
         siteSize: MysekaiSceneSize,
         gateId: number,
+        fencePointsByFixture: Map<number, Set<string>>,
         floorPlacementRecords: FloorPlacementRecord[],
         floorShadowRecords: FloorShadowRecord[],
     ): Promise<THREE.Group> {
@@ -1196,9 +1451,6 @@ export class MysekaiScenePreviewRuntime {
 
         for (const assetInfo of renderAssets) {
             const objUrls = this.getObjCandidateUrls(assetInfo.asset, assetInfo.useCustomAttachRoot, meta?.mysekaiFixtureHandleType, meta?.mysekaiFixtureType);
-            const primaryObjUrl = await this.pickPrimaryObjUrl(objUrls);
-            if (!primaryObjUrl) throw new Error(`模型缺失: ${assetInfo.asset}`);
-            const srcObject = await this.getObjGroup(primaryObjUrl);
             const texture = await this.getFixtureTexture(assetInfo.asset, Number(item.textureId || 1), assetInfo.useCustomAttachRoot, meta?.mysekaiFixtureHandleType);
             const makeMaterial = () => new THREE.MeshLambertMaterial({
                 map: texture || null,
@@ -1212,15 +1464,40 @@ export class MysekaiScenePreviewRuntime {
             });
 
             let object: THREE.Object3D;
-            if (!isCustom && fixtureId >= 439 && fixtureId <= 444) {
-                object = this.cloneCanvasWithCardMaterial(srcObject, makeMaterial, await this.getCanvasCardTexture(item), fixtureId);
-            } else if (isCustom) {
-                const displayTexture = customFixtureId === 55 && assetInfo.isOrnament
-                    ? await this.getRecordJacketTexture(item)
-                    : this.createFallbackTexture();
-                object = this.cloneCustomWithDisplayTexture(srcObject, makeMaterial, displayTexture);
+            if (!isCustom && meta?.mysekaiFixtureHandleType === "fence") {
+                const fenceParts = await this.getFencePartSet(assetInfo.asset, objUrls);
+                object = this.cloneWithMaterial(fenceParts.post, makeMaterial);
+                for (const link of this.createFenceLinks(fixtureId, position, fencePointsByFixture)) {
+                    const beamSource = link.step <= 1 ? fenceParts.beamShort : fenceParts.beamLong;
+                    const beam = this.cloneWithMaterial(beamSource, makeMaterial);
+                    const beamPlaced = locateObject(
+                        beam,
+                        position.x + link.dx,
+                        position.z + link.dz,
+                        position.y + epsY,
+                        2,
+                        2,
+                        1,
+                        yawFromBaseToTarget(fenceParts.baseDir, link.dir),
+                        layoutType,
+                    );
+                    beamPlaced.updateMatrixWorld(true);
+                    entryGroup.add(beamPlaced);
+                }
             } else {
-                object = this.cloneWithMaterial(srcObject, makeMaterial);
+                const primaryObjUrl = await this.pickPrimaryObjUrl(objUrls);
+                if (!primaryObjUrl) throw new Error(`模型缺失: ${assetInfo.asset}`);
+                const srcObject = await this.getObjGroup(primaryObjUrl);
+                if (!isCustom && fixtureId >= 439 && fixtureId <= 444) {
+                    object = this.cloneCanvasWithCardMaterial(srcObject, makeMaterial, await this.getCanvasCardTexture(item), fixtureId);
+                } else if (isCustom) {
+                    const displayTexture = customFixtureId === 55 && assetInfo.isOrnament
+                        ? await this.getRecordJacketTexture(item)
+                        : this.createFallbackTexture();
+                    object = this.cloneCustomWithDisplayTexture(srcObject, makeMaterial, displayTexture);
+                } else {
+                    object = this.cloneWithMaterial(srcObject, makeMaterial);
+                }
             }
 
             applyDollFixtureSizeCorrection(object, assetInfo.asset);
