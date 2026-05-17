@@ -72,6 +72,7 @@ export const navigationGroups: NavGroupData[] = [
             { name: "猜角色", href: "/guess-who" },
             { name: "猜曲绘", href: "/guess-jacket" },
             { name: "谱面预览器", href: "/chart-preview" },
+            { name: "烤森预览", href: "/mysekai-preview" },
         ],
     },
     {
@@ -163,6 +164,7 @@ export const searchableNavItems: SearchableNavItem[] = [
     { name: "组卡比较", href: "/deck-comparator", group: "工具", keywords: ["deck compare", "comparator"] },
     { name: "控分计算", href: "/score-control", group: "工具", keywords: ["score control", "score", "calculator"] },
     { name: "谱面预览器", href: "/chart-preview", group: "工具", keywords: ["chart preview", "chart", "mmw", "谱面", "preview", "sus"] },
+    { name: "烤森预览", href: "/mysekai-preview", group: "工具", keywords: ["mysekai preview", "scene preview", "mysekai", "3d", "obj", "烤森", "预览", "场景"] },
     { name: "表情包制作", href: "/sticker-maker", group: "工具", keywords: ["sticker maker", "meme"] },
     { name: "谷子盲抽", href: "/goods-gacha", group: "工具", keywords: ["goods gacha", "goods", "blind box"] },
     { name: "猜角色", href: "/guess-who", group: "工具", keywords: ["guess who", "quiz", "game"] },

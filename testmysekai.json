@@ -1,0 +1,573 @@
+{
+    "userMysekaiSiteHousingLayouts": [
+        {
+            "mysekaiSiteId": 1,
+            "mysekaiSiteHousingLayouts": [
+                {
+                    "mysekaiLayoutType": "floor",
+                    "mysekaiFixtures": [
+                        {
+                            "position": {
+                                "x": -30,
+                                "y": 0,
+                                "z": -4
+                            },
+                            "rotation": 270,
+                            "mysekaiFixtureId": 136,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "09a203a7fe3b44cda6ee0321417dc75d"
+                        },
+                        {
+                            "position": {
+                                "x": -35,
+                                "y": 0,
+                                "z": 13
+                            },
+                            "rotation": 270,
+                            "mysekaiFixtureId": 900002,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "8236f50cd87f403588eb39a787138731"
+                        },
+                        {
+                            "position": {
+                                "x": -24,
+                                "y": 0,
+                                "z": 8
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 91,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "245b8aacafad43a6983d1ad522da3c71"
+                        },
+                        {
+                            "position": {
+                                "x": -24,
+                                "y": 0,
+                                "z": 5
+                            },
+                            "rotation": 270,
+                            "mysekaiFixtureId": 97,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "6ef91649044344a3af38a7f2466527be"
+                        },
+                        {
+                            "position": {
+                                "x": -29,
+                                "y": 0,
+                                "z": 4
+                            },
+                            "rotation": 270,
+                            "mysekaiFixtureId": 102,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "9557abc4842f425b9cad630ab5300b1f"
+                        },
+                        {
+                            "position": {
+                                "x": 10,
+                                "y": 0,
+                                "z": 39
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 145,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "a92a0dd7af81460aa496db5e3b46568b"
+                        },
+                        {
+                            "position": {
+                                "x": -11,
+                                "y": 0,
+                                "z": -34
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 125,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "8e0c3623a04146208ec22acd7e6039ca"
+                        },
+                        {
+                            "position": {
+                                "x": -19,
+                                "y": 0,
+                                "z": -34
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 125,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "8e3e940906f2408f9ba9dbb0d2cbb5b1"
+                        }
+                    ],
+                    "mysekaiCustomFixturePhotos": [],
+                    "mysekaiCanvases": [],
+                    "mysekaiCustomFixtureCollections": [],
+                    "mysekaiCustomFixturePenlights": [],
+                    "mysekaiCustomFixtureHonors": [],
+                    "mysekaiCustomFixtureBondsHonors": [],
+                    "mysekaiCustomFixtureRecordJackets": [],
+                    "mysekaiGrowingPlants": []
+                },
+                {
+                    "mysekaiLayoutType": "rug",
+                    "mysekaiFixtures": [],
+                    "mysekaiCustomFixturePhotos": [],
+                    "mysekaiCanvases": [],
+                    "mysekaiCustomFixtureCollections": [],
+                    "mysekaiCustomFixturePenlights": [],
+                    "mysekaiCustomFixtureHonors": [],
+                    "mysekaiCustomFixtureBondsHonors": [],
+                    "mysekaiCustomFixtureRecordJackets": [],
+                    "mysekaiGrowingPlants": []
+                },
+                {
+                    "mysekaiLayoutType": "road",
+                    "mysekaiFixtures": [
+                        {
+                            "position": {
+                                "x": -34,
+                                "y": 0,
+                                "z": 13
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "8ac19aa348bf4699a6c6534722475978"
+                        },
+                        {
+                            "position": {
+                                "x": -32,
+                                "y": 0,
+                                "z": 13
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "7f86832257704c79b726ef7a7b04a15c"
+                        },
+                        {
+                            "position": {
+                                "x": -30,
+                                "y": 0,
+                                "z": 13
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "f81749791120401685815fe5e00b6ac4"
+                        },
+                        {
+                            "position": {
+                                "x": -28,
+                                "y": 0,
+                                "z": 13
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "9376375b22044dcd9e79b1d3d7b1aaa1"
+                        },
+                        {
+                            "position": {
+                                "x": -26,
+                                "y": 0,
+                                "z": 13
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "cea50694297448c78f46d66d4b914695"
+                        },
+                        {
+                            "position": {
+                                "x": -24,
+                                "y": 0,
+                                "z": 13
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "c84aafb936c247a593702786adecbcca"
+                        },
+                        {
+                            "position": {
+                                "x": -22,
+                                "y": 0,
+                                "z": 13
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "171a4777c4db487d80405c463c7e4ad2"
+                        },
+                        {
+                            "position": {
+                                "x": -22,
+                                "y": 0,
+                                "z": 11
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "5fcc7b980efb44ecad8752b1fa4f47f9"
+                        },
+                        {
+                            "position": {
+                                "x": -22,
+                                "y": 0,
+                                "z": 9
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "898bd67446ee4f2bbc6dc4bd30b632e6"
+                        },
+                        {
+                            "position": {
+                                "x": -22,
+                                "y": 0,
+                                "z": 7
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "cb8661e759d849fd964c09075ea38796"
+                        },
+                        {
+                            "position": {
+                                "x": -22,
+                                "y": 0,
+                                "z": 5
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "1be0eff78945431a8e2b26cb7045ac4f"
+                        },
+                        {
+                            "position": {
+                                "x": -22,
+                                "y": 0,
+                                "z": 3
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "32b60cf0aeec46ce81a7d37246d90241"
+                        },
+                        {
+                            "position": {
+                                "x": -22,
+                                "y": 0,
+                                "z": 1
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "810c8e389d984403a37affbccc763c9e"
+                        },
+                        {
+                            "position": {
+                                "x": -22,
+                                "y": 0,
+                                "z": -1
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 111,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "3366c388dd054221ab174d091f4d16aa"
+                        }
+                    ],
+                    "mysekaiCustomFixturePhotos": [],
+                    "mysekaiCanvases": [],
+                    "mysekaiCustomFixtureCollections": [],
+                    "mysekaiCustomFixturePenlights": [],
+                    "mysekaiCustomFixtureHonors": [],
+                    "mysekaiCustomFixtureBondsHonors": [],
+                    "mysekaiCustomFixtureRecordJackets": [],
+                    "mysekaiGrowingPlants": []
+                }
+            ],
+            "mysekaiFixtureSurfaceAppearances": [],
+            "mysekaiPhenomenaId": 1
+        },
+        {
+            "mysekaiSiteId": 2,
+            "mysekaiSiteHousingLayouts": [
+                {
+                    "mysekaiLayoutType": "floor",
+                    "mysekaiFixtures": [
+                        {
+                            "position": {
+                                "x": -3,
+                                "y": 0,
+                                "z": 2
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 142,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "fccd73a2caa24399b69522cbecbc7915"
+                        },
+                        {
+                            "position": {
+                                "x": -3,
+                                "y": 0,
+                                "z": -1
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 143,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "b2799cc8948e4247ad9ac4f9d8b71f15"
+                        },
+                        {
+                            "position": {
+                                "x": 5,
+                                "y": 0,
+                                "z": 3
+                            },
+                            "rotation": 0,
+                            "mysekaiFixtureId": 146,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "90dd9276cdb04aacbbdec44188ac4e64"
+                        },
+                        {
+                            "position": {
+                                "x": -7,
+                                "y": 0,
+                                "z": -4
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 141,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "009c23768df14dd58d57a21cc301f706"
+                        },
+                        {
+                            "position": {
+                                "x": -4,
+                                "y": 0,
+                                "z": -6
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 140,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "ac56c4b3a7d2408193d1158345b6f875"
+                        },
+                        {
+                            "position": {
+                                "x": -2,
+                                "y": 0,
+                                "z": -6
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 317,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "75637a05f88b4c619029c78a6a24bd6f"
+                        },
+                        {
+                            "position": {
+                                "x": 4,
+                                "y": 0,
+                                "z": -8
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 402,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "30c3bf7f7c0340838eb316f0e68cbec6"
+                        },
+                        {
+                            "position": {
+                                "x": -4,
+                                "y": 0,
+                                "z": 1
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 315,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "fe00b4e6ea41405889aaad6713b9b3bf"
+                        },
+                        {
+                            "position": {
+                                "x": -2,
+                                "y": 2,
+                                "z": 2
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 173,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "9e2abaa32ec3415ca5430948f53fda0c"
+                        },
+                        {
+                            "position": {
+                                "x": 6,
+                                "y": 0,
+                                "z": -7
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 319,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "15073b5d52af4bb2a9f2401e7a5716a6"
+                        },
+                        {
+                            "position": {
+                                "x": 10,
+                                "y": 0,
+                                "z": -1
+                            },
+                            "rotation": 270,
+                            "mysekaiFixtureId": 305,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "3846628d03e440918ca2af37af9934ab"
+                        }
+                    ],
+                    "mysekaiCustomFixturePhotos": [],
+                    "mysekaiCanvases": [],
+                    "mysekaiCustomFixtureCollections": [],
+                    "mysekaiCustomFixturePenlights": [],
+                    "mysekaiCustomFixtureHonors": [],
+                    "mysekaiCustomFixtureBondsHonors": [],
+                    "mysekaiCustomFixtureRecordJackets": [],
+                    "mysekaiGrowingPlants": []
+                },
+                {
+                    "mysekaiLayoutType": "rug",
+                    "mysekaiFixtures": [],
+                    "mysekaiCustomFixturePhotos": [],
+                    "mysekaiCanvases": [],
+                    "mysekaiCustomFixtureCollections": [],
+                    "mysekaiCustomFixturePenlights": [],
+                    "mysekaiCustomFixtureHonors": [],
+                    "mysekaiCustomFixtureBondsHonors": [],
+                    "mysekaiCustomFixtureRecordJackets": [],
+                    "mysekaiGrowingPlants": []
+                },
+                {
+                    "mysekaiLayoutType": "wall_right",
+                    "mysekaiFixtures": [
+                        {
+                            "position": {
+                                "x": 1,
+                                "y": 3,
+                                "z": 0
+                            },
+                            "rotation": 90,
+                            "mysekaiFixtureId": 139,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "6648536aaab446fbb30a226650b269cb"
+                        }
+                    ],
+                    "mysekaiCustomFixturePhotos": [],
+                    "mysekaiCanvases": [],
+                    "mysekaiCustomFixtureCollections": [],
+                    "mysekaiCustomFixturePenlights": [],
+                    "mysekaiCustomFixtureHonors": [],
+                    "mysekaiCustomFixtureBondsHonors": [],
+                    "mysekaiCustomFixtureRecordJackets": [],
+                    "mysekaiGrowingPlants": []
+                },
+                {
+                    "mysekaiLayoutType": "wall_back",
+                    "mysekaiFixtures": [],
+                    "mysekaiCustomFixturePhotos": [],
+                    "mysekaiCanvases": [],
+                    "mysekaiCustomFixtureCollections": [],
+                    "mysekaiCustomFixturePenlights": [],
+                    "mysekaiCustomFixtureHonors": [],
+                    "mysekaiCustomFixtureBondsHonors": [],
+                    "mysekaiCustomFixtureRecordJackets": [],
+                    "mysekaiGrowingPlants": []
+                },
+                {
+                    "mysekaiLayoutType": "wall_left",
+                    "mysekaiFixtures": [],
+                    "mysekaiCustomFixturePhotos": [],
+                    "mysekaiCanvases": [],
+                    "mysekaiCustomFixtureCollections": [],
+                    "mysekaiCustomFixturePenlights": [],
+                    "mysekaiCustomFixtureHonors": [],
+                    "mysekaiCustomFixtureBondsHonors": [],
+                    "mysekaiCustomFixtureRecordJackets": [],
+                    "mysekaiGrowingPlants": []
+                },
+                {
+                    "mysekaiLayoutType": "wall_front",
+                    "mysekaiFixtures": [
+                        {
+                            "position": {
+                                "x": 0,
+                                "y": 3,
+                                "z": 0
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 139,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "c8bc3e6abd20442b99ba0d608164d6f4"
+                        },
+                        {
+                            "position": {
+                                "x": 5,
+                                "y": 3,
+                                "z": 0
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 139,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "2318e821b47842d0af10b0cd7c1c5820"
+                        },
+                        {
+                            "position": {
+                                "x": 0,
+                                "y": 5,
+                                "z": 0
+                            },
+                            "rotation": 180,
+                            "mysekaiFixtureId": 278,
+                            "textureId": 1,
+                            "mysekaiUniqueId": "91b997bb0bbd4f21b860b7222c55dc9c"
+                        }
+                    ],
+                    "mysekaiCustomFixturePhotos": [],
+                    "mysekaiCanvases": [],
+                    "mysekaiCustomFixtureCollections": [],
+                    "mysekaiCustomFixturePenlights": [],
+                    "mysekaiCustomFixtureHonors": [],
+                    "mysekaiCustomFixtureBondsHonors": [],
+                    "mysekaiCustomFixtureRecordJackets": [],
+                    "mysekaiGrowingPlants": []
+                }
+            ],
+            "mysekaiFixtureSurfaceAppearances": [
+                {
+                    "mysekaiFixtureSurfaceAppearanceType": "floor_appearance",
+                    "mysekaiFixtureId": 138,
+                    "textureId": 1
+                },
+                {
+                    "mysekaiFixtureSurfaceAppearanceType": "wall_appearance",
+                    "mysekaiFixtureId": 137,
+                    "textureId": 1
+                }
+            ]
+        }
+    ],
+    "userMysekaiPhotos": [],
+    "userHonors": [],
+    "userBondsHonors": [],
+    "userMysekaiMusicPlayFixtureSettings": [
+        {
+            "mysekaiSiteId": 1,
+            "mysekaiMusicRecordId": 111,
+            "musicVocalId": 388,
+            "isInstrumental": false
+        }
+    ],
+    "userMysekaiGate": {
+        "mysekaiGateId": 5,
+        "mysekaiGateSkinId": 0,
+        "mysekaiGateLevel": 40,
+        "visitCount": 418,
+        "lastRefreshedAt": 1779008471157,
+        "isSettingAtHomeSite": true
+    },
+    "mysekaiRank": 9,
+    "userName": "郁郁葱葱",
+    "updatedResources": {
+        "now": 1779018073204,
+        "refreshableTypes": []
+    }
+}
