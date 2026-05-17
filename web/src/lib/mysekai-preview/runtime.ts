@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import type { AssetSourceType } from "@/contexts/ThemeContext";
 import { getCardFullUrl } from "@/lib/assets";
@@ -33,6 +34,7 @@ import type {
 } from "./types";
 
 const GLOBAL_SCALE = 4;
+const MAX_RENDER_PIXEL_RATIO = 1.5;
 const ALWAYS_ENABLED_LAYOUT_TYPES = ["floor", "rug", "road", "wall_left", "wall_right", "wall_front", "wall_back"];
 const INDOOR_TYPES = ["floor", "rug", "wall_left", "wall_right", "wall_front", "wall_back"];
 const SHADOW_Y_OFFSET = 0.07;
@@ -106,6 +108,16 @@ interface FixtureRenderAsset {
     asset: string;
     isOrnament: boolean;
     useCustomAttachRoot: boolean;
+}
+
+interface StaticMergeBucket {
+    material: THREE.Material;
+    geometries: THREE.BufferGeometry[];
+    meshes: THREE.Mesh[];
+}
+
+interface StaticMergeTarget {
+    mesh: THREE.Mesh<THREE.BufferGeometry, THREE.Material>;
 }
 
 interface FencePartSet {
@@ -388,6 +400,8 @@ export class MysekaiScenePreviewRuntime {
     private floorShadowTexture: THREE.CanvasTexture | null = null;
     private axisHelper: THREE.AxesHelper;
     private rafId = 0;
+    private renderPending = false;
+    private continuousRenderUntil = 0;
     private disposed = false;
     private masterLoaded = false;
     private cardsLoaded = false;
@@ -403,13 +417,13 @@ export class MysekaiScenePreviewRuntime {
         this.callbacks = callbacks;
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, powerPreference: "high-performance" });
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_RENDER_PIXEL_RATIO));
         this.renderer.setSize(container.clientWidth || 1, container.clientHeight || 1);
         this.renderer.domElement.className = "absolute inset-0 h-full w-full";
         container.appendChild(this.renderer.domElement);
 
         this.axesRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        this.axesRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.axesRenderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_RENDER_PIXEL_RATIO));
         this.axesRenderer.setSize(axesContainer.clientWidth || 1, axesContainer.clientHeight || 1);
         this.axesRenderer.domElement.className = "absolute inset-0 h-full w-full";
         axesContainer.appendChild(this.axesRenderer.domElement);
@@ -422,7 +436,9 @@ export class MysekaiScenePreviewRuntime {
         this.controls.target.set(0, 0, 0);
         this.controls.enableDamping = true;
         this.controls.minDistance = 0.05;
-        this.controls.addEventListener("end", this.saveCameraState);
+        this.controls.addEventListener("change", this.handleControlsChange);
+        this.controls.addEventListener("start", this.handleControlsStart);
+        this.controls.addEventListener("end", this.handleControlsEnd);
 
         this.axesCamera = new THREE.PerspectiveCamera(50, (axesContainer.clientWidth || 1) / (axesContainer.clientHeight || 1), 0.1, 10);
         this.axisHelper = new THREE.AxesHelper(1.2);
@@ -451,7 +467,7 @@ export class MysekaiScenePreviewRuntime {
         window.addEventListener("beforeunload", this.saveCameraState);
         this.loadCameraState();
         this.handleResize();
-        this.tick();
+        this.requestRender();
     }
 
     updateOptions(options: MysekaiPreviewOptions) {
@@ -462,6 +478,7 @@ export class MysekaiScenePreviewRuntime {
         this.applyDebugVisibility();
         this.applyShadowVisibility();
         this.applyBackWallOpacity();
+        this.requestRender();
         if (oldSiteId !== options.siteId || oldLayoutUrl !== options.layoutUrl || oldAssetSource !== options.assetSource) {
             void this.reload(false);
         }
@@ -487,6 +504,7 @@ export class MysekaiScenePreviewRuntime {
         this.camera.up.set(0, 1, 0);
         this.controls.update();
         this.saveCameraState();
+        this.requestRender();
     }
 
     dispose() {
@@ -496,7 +514,9 @@ export class MysekaiScenePreviewRuntime {
         window.removeEventListener("keyup", this.handleKeyUp);
         window.removeEventListener("resize", this.handleResize);
         window.removeEventListener("beforeunload", this.saveCameraState);
-        this.controls.removeEventListener("end", this.saveCameraState);
+        this.controls.removeEventListener("change", this.handleControlsChange);
+        this.controls.removeEventListener("start", this.handleControlsStart);
+        this.controls.removeEventListener("end", this.handleControlsEnd);
         this.controls.dispose();
         this.clearContent();
         this.clearGrid();
@@ -1315,6 +1335,7 @@ export class MysekaiScenePreviewRuntime {
             const bbox = captureWorldBBox(record.object);
             if (Math.abs(bbox.min.y) > 0.06) this.contentGroup.remove(record.shadow);
         }
+        this.optimizeStaticContent();
         this.applyShadowVisibility();
 
         await this.buildBaseSurface(layout, siteId, siteSize);
@@ -1340,6 +1361,106 @@ export class MysekaiScenePreviewRuntime {
             ignored,
             failed,
         });
+        this.requestRender();
+    }
+
+    private getStaticMaterialKey(material: THREE.Material): string {
+        const meshMaterial = material as THREE.MeshBasicMaterial | THREE.MeshLambertMaterial;
+        const color = meshMaterial.color?.getHexString() || "no-color";
+        return [
+            material.type,
+            meshMaterial.map?.uuid || "no-map",
+            color,
+            material.transparent ? 1 : 0,
+            material.opacity,
+            material.alphaTest,
+            material.side,
+            material.depthWrite ? 1 : 0,
+            material.depthTest ? 1 : 0,
+            material.polygonOffset ? 1 : 0,
+            material.polygonOffsetFactor,
+            material.polygonOffsetUnits,
+        ].join("|");
+    }
+
+    private canMergeStaticMesh(mesh: THREE.Mesh): mesh is THREE.Mesh<THREE.BufferGeometry, THREE.Material> {
+        if (mesh.userData.isFloorShadow || mesh.userData.debugOnly) return false;
+        if (Array.isArray(mesh.material)) return false;
+        const geometry = mesh.geometry;
+        if (!geometry || geometry.index) return false;
+        if (!geometry.attributes.position) return false;
+        if (geometry.morphAttributes && Object.keys(geometry.morphAttributes).length) return false;
+        return true;
+    }
+
+    private collectStaticMergeTargets(): StaticMergeTarget[] {
+        const targets: StaticMergeTarget[] = [];
+        this.contentGroup.traverse((node) => {
+            if (!isMesh(node) || !node.parent || !this.canMergeStaticMesh(node)) return;
+            targets.push({ mesh: node });
+        });
+        return targets;
+    }
+
+    private optimizeStaticContent() {
+        this.contentGroup.updateMatrixWorld(true);
+        const targets = this.collectStaticMergeTargets();
+        if (targets.length < 2) return;
+
+        const buckets = new Map<string, StaticMergeBucket>();
+        for (const { mesh } of targets) {
+            const material = mesh.material;
+            const key = this.getStaticMaterialKey(material);
+            let bucket = buckets.get(key);
+            if (!bucket) {
+                bucket = { material, geometries: [], meshes: [] };
+                buckets.set(key, bucket);
+            }
+            const geometry = mesh.geometry.clone();
+            geometry.applyMatrix4(mesh.matrixWorld);
+            bucket.geometries.push(geometry);
+            bucket.meshes.push(mesh);
+        }
+
+        let mergedCount = 0;
+        const removedMeshes: THREE.Mesh[] = [];
+        for (const bucket of buckets.values()) {
+            if (bucket.meshes.length < 2) {
+                for (const geometry of bucket.geometries) geometry.dispose();
+                continue;
+            }
+            const mergedGeometry = mergeGeometries(bucket.geometries, false);
+            for (const geometry of bucket.geometries) geometry.dispose();
+            if (!mergedGeometry) continue;
+
+            const mergedMesh = new THREE.Mesh(mergedGeometry, bucket.material);
+            mergedMesh.name = `static_merged_${mergedCount++}`;
+            mergedMesh.matrixAutoUpdate = false;
+            mergedMesh.updateMatrix();
+            mergedMesh.userData.isStaticMerged = true;
+            this.contentGroup.add(mergedMesh);
+
+            for (const mesh of bucket.meshes) {
+                mesh.parent?.remove(mesh);
+                if (mesh.material !== bucket.material) mesh.material.dispose();
+                removedMeshes.push(mesh);
+            }
+        }
+
+        const removedSet = new Set(removedMeshes);
+        for (const child of [...this.contentGroup.children]) {
+            if (!child.userData.isStaticMerged && this.isEmptyAfterStaticMerge(child, removedSet)) {
+                this.contentGroup.remove(child);
+            }
+        }
+
+        for (const mesh of removedMeshes) mesh.geometry.dispose();
+    }
+
+    private isEmptyAfterStaticMerge(object: THREE.Object3D, targetSet: Set<THREE.Mesh>): boolean {
+        if (targetSet.has(object as THREE.Mesh)) return true;
+        if (object.children.length === 0) return false;
+        return object.children.every((child) => this.isEmptyAfterStaticMerge(child, targetSet));
     }
 
     private async getFencePartSet(assetName: string, objUrls: string[]): Promise<FencePartSet> {
@@ -1656,6 +1777,10 @@ export class MysekaiScenePreviewRuntime {
     }
 
     private handleResize = () => {
+        const pixelRatio = Math.min(window.devicePixelRatio, MAX_RENDER_PIXEL_RATIO);
+        this.renderer.setPixelRatio(pixelRatio);
+        this.axesRenderer.setPixelRatio(pixelRatio);
+
         const width = Math.max(this.container.clientWidth || 1, 1);
         const height = Math.max(this.container.clientHeight || 1, 1);
         this.renderer.setSize(width, height);
@@ -1667,6 +1792,7 @@ export class MysekaiScenePreviewRuntime {
         this.axesRenderer.setSize(axesWidth, axesHeight);
         this.axesCamera.aspect = axesWidth / axesHeight;
         this.axesCamera.updateProjectionMatrix();
+        this.requestRender();
     };
 
     private handleKeyDown = (event: KeyboardEvent) => {
@@ -1674,6 +1800,7 @@ export class MysekaiScenePreviewRuntime {
         if (key === "w" || key === "s" || key === "a" || key === "d") this.keyState[key] = true;
         if (event.code === "Space") this.keyState.space = true;
         if (event.code === "ShiftLeft" || event.code === "ShiftRight") this.keyState.shift = true;
+        if (this.isCameraKeyActive()) this.requestContinuousRender();
     };
 
     private handleKeyUp = (event: KeyboardEvent) => {
@@ -1681,6 +1808,24 @@ export class MysekaiScenePreviewRuntime {
         if (key === "w" || key === "s" || key === "a" || key === "d") this.keyState[key] = false;
         if (event.code === "Space") this.keyState.space = false;
         if (event.code === "ShiftLeft" || event.code === "ShiftRight") this.keyState.shift = false;
+        this.requestRender();
+    };
+
+    private isCameraKeyActive(): boolean {
+        return this.keyState.w || this.keyState.s || this.keyState.a || this.keyState.d || this.keyState.space || this.keyState.shift;
+    }
+
+    private handleControlsChange = () => {
+        this.requestContinuousRender(180);
+    };
+
+    private handleControlsStart = () => {
+        this.requestContinuousRender(500);
+    };
+
+    private handleControlsEnd = () => {
+        this.saveCameraState();
+        this.requestContinuousRender(260);
     };
 
     private moveCameraRig(offset: THREE.Vector3) {
@@ -1689,8 +1834,31 @@ export class MysekaiScenePreviewRuntime {
         this.controls.update();
     }
 
+    private requestRender() {
+        if (this.disposed || this.renderPending) return;
+        this.renderPending = true;
+        this.rafId = requestAnimationFrame(this.tick);
+    }
+
+    private requestContinuousRender(durationMs = 220) {
+        this.continuousRenderUntil = Math.max(this.continuousRenderUntil, performance.now() + durationMs);
+        this.requestRender();
+    }
+
+    private renderOnce() {
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
+        const direction = new THREE.Vector3();
+        this.camera.getWorldDirection(direction);
+        this.axesCamera.position.copy(direction.clone().multiplyScalar(-2.5));
+        this.axesCamera.up.copy(this.camera.up);
+        this.axesCamera.lookAt(0, 0, 0);
+        this.axesRenderer.render(this.axesScene, this.axesCamera);
+    }
+
     private tick = () => {
         if (this.disposed) return;
+        this.renderPending = false;
         const moveSpeed = 0.35;
         const forward = new THREE.Vector3();
         this.camera.getWorldDirection(forward);
@@ -1706,15 +1874,10 @@ export class MysekaiScenePreviewRuntime {
         if (this.keyState.shift) offset.y -= moveSpeed;
         if (offset.lengthSq() > 0) this.moveCameraRig(offset);
 
-        this.controls.update();
-        this.renderer.render(this.scene, this.camera);
-        const direction = new THREE.Vector3();
-        this.camera.getWorldDirection(direction);
-        this.axesCamera.position.copy(direction.clone().multiplyScalar(-2.5));
-        this.axesCamera.up.copy(this.camera.up);
-        this.axesCamera.lookAt(0, 0, 0);
-        this.axesRenderer.render(this.axesScene, this.axesCamera);
-        this.rafId = requestAnimationFrame(this.tick);
+        this.renderOnce();
+        if (this.isCameraKeyActive() || performance.now() < this.continuousRenderUntil) {
+            this.requestRender();
+        }
     };
 
     private saveCameraState = () => {
