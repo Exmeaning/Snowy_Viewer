@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import dynamic from "next/dynamic";
 
 import MainLayout from "@/components/MainLayout";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -8,6 +9,15 @@ import Modal from "@/components/common/Modal";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import BaseFilters, { FilterSection, FilterButton, FilterToggle } from "@/components/common/BaseFilters";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+
+const MysekaiScenePreview = dynamic(() => import("@/components/mysekai-preview/MysekaiScenePreview"), {
+    ssr: false,
+    loading: () => (
+        <div className="flex h-[560px] items-center justify-center rounded-3xl border border-slate-200 bg-slate-50 text-slate-400">
+            正在加载烤森预览器...
+        </div>
+    ),
+});
 
 export default function DesignSystemPage() {
     const [modalSize, setModalSize] = useState<"sm" | "md" | "lg" | "xl">("md");
@@ -378,6 +388,28 @@ export default function DesignSystemPage() {
                         </div>
                     </div>
 
+                </section>
+
+                {/* MySekai Preview Section */}
+                <section className="mb-16">
+                    <h2 className="text-2xl font-bold text-primary-text mb-6 flex items-center gap-2">
+                        <span className="w-1.5 h-8 bg-sky-400 rounded-full"></span>
+                        烤森预览（开发测试）
+                    </h2>
+                    <div className="glass-card p-4 sm:p-6 rounded-2xl">
+                        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-600">MySekai 3D 场景预览组件</h3>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    使用本地 <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">/data/mysekai-preview/testmysekai.json</code> 验证 OBJ 与纹理资源载入。
+                                </p>
+                            </div>
+                            <span className="text-xs font-medium text-slate-400">
+                                原作 / ルナ茶　部署 / Moe Dev Team　转载请标明原作者
+                            </span>
+                        </div>
+                        <MysekaiScenePreview heightClassName="h-[560px] min-h-[480px]" compact />
+                    </div>
                 </section>
 
                 {/* Sekai Card Thumbnail Section */}

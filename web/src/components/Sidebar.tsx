@@ -365,6 +365,16 @@ const navigationGroups: NavGroup[] = [
                     </svg>
                 ),
             },
+            {
+                name: "烤森预览",
+                href: "/mysekai-preview",
+                icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10.5L12 4l9 6.5M5 10v8.5A1.5 1.5 0 006.5 20h11a1.5 1.5 0 001.5-1.5V10" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 20v-6h8v6M9 11h.01M15 11h.01M12 8h.01" />
+                    </svg>
+                ),
+            },
         ],
     },
     {

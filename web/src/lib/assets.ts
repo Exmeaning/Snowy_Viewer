@@ -49,6 +49,26 @@ function buildPngImageAssetUrl(source: AssetSourceType, assetPath: string): stri
     return `${getAssetBaseUrl(source)}/${assetPath}.png`;
 }
 
+export function buildRawAssetUrl(source: AssetSourceType, assetPath: string): string {
+    return `${getAssetBaseUrl(source)}/${assetPath.replace(/^\/+/, "")}`;
+}
+
+export function getAssetSourceFallbackOrder(source: AssetSourceType): AssetSourceType[] {
+    const region = getAssetSourceRegion(source);
+    const candidates: AssetSourceType[] = region === "cn"
+        ? ["main-cn", "backup-cn", "overseas-cn", "overseas-backup-cn"]
+        : ["main-jp", "backup-jp", "overseas-jp", "overseas-backup-jp"];
+
+    return [source, ...candidates.filter((candidate) => candidate !== source)];
+}
+
+export function getMysekaiRawAssetUrl(assetPath: string, source: AssetSourceType = "main-jp"): string {
+    const normalizedPath = assetPath
+        .replace(/^\/+/, "")
+        .replace(/^mysekai\/+/, "");
+    return buildRawAssetUrl(source, `mysekai/${normalizedPath}`);
+}
+
 export function getCharacterIconUrl(characterId: number): string {
     return `${MOE_ASSETS_BASE_URL}/chr_ts_${characterId}.png`;
 }
