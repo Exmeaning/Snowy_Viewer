@@ -1,12 +1,12 @@
 import type { AssetSourceType } from "@/contexts/ThemeContext";
-import { getMysekaiRawAssetUrl } from "@/lib/assets";
+import { getAssetBaseUrl, getMysekaiRawAssetUrl, getStoryBgmUrl, getMusicVocalAudioUrl } from "@/lib/assets";
 
 export const MYSEKAI_PREVIEW_STORAGE_KEY = "mysekai_scene_preview_options_v2";
 export const LOCAL_TEST_LAYOUT_URL = "/data/mysekai-preview/testmysekai.json";
 
 const MASTER_DATA_BASE_URL_BY_REGION: Record<"jp" | "cn", string> = {
-    jp: "https://sekaimaster.exmeaning.com/master",
-    cn: "https://sekaimaster-cn.exmeaning.com/master",
+    jp: "https://sk.exmeaning.com/master",
+    cn: "https://sk-cn.exmeaning.com/master",
 };
 
 export function getMysekaiCandidateRawUrls(assetPath: string, source: AssetSourceType): string[] {
@@ -109,4 +109,19 @@ export function getOutdoorGrassTexturePath(): string {
 
 export function getMusicJacketTexturePath(assetbundleName: string): string {
     return `thumbnail/music_jacket/${assetbundleName}.webp`;
+}
+
+export function getMysekaiMusicVocalAudioUrl(assetbundleName: string, source: AssetSourceType): string {
+    return getMusicVocalAudioUrl(assetbundleName, source);
+}
+
+export function getMysekaiSoundTrackAudioUrl(assetbundleName: string | undefined, assetbundleFileName: string | undefined, source: AssetSourceType): string | null {
+    const fileName = String(assetbundleFileName || assetbundleName?.split("/").pop() || "").trim();
+    if (!fileName) return null;
+    const normalizedAssetPath = String(assetbundleName || "").replace(/^\/+/, "");
+    if (normalizedAssetPath.startsWith("mysekai/")) {
+        const dir = normalizedAssetPath.replace(/\/+$/, "");
+        return `${getAssetBaseUrl(source)}/${dir}/${fileName}.mp3`;
+    }
+    return getStoryBgmUrl(fileName, source);
 }

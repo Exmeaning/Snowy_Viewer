@@ -55,8 +55,16 @@ export interface UserMysekaiSiteHousingLayout {
     mysekaiFixtureSurfaceAppearances?: MysekaiSurfaceAppearance[];
 }
 
+export interface MysekaiMusicPlayFixtureSetting {
+    mysekaiSiteId?: number;
+    mysekaiMusicRecordId?: number;
+    musicVocalId?: number;
+    isInstrumental?: boolean;
+}
+
 export interface MysekaiLayoutData {
     userMysekaiSiteHousingLayouts?: UserMysekaiSiteHousingLayout[];
+    userMysekaiMusicPlayFixtureSettings?: MysekaiMusicPlayFixtureSetting[];
     userMysekaiGate?: {
         mysekaiGateId?: number;
     };
@@ -108,6 +116,34 @@ export interface MysekaiSiteLayoutMaster {
     height?: number;
 }
 
+export interface MysekaiMusicRecordMaster {
+    id?: number;
+    mysekaiMusicTrackType?: "music" | "music_sound_track" | string;
+    externalId?: number;
+}
+
+export interface MysekaiMusicMaster {
+    id?: number;
+    title?: string;
+    assetbundleName?: string;
+    fillerSec?: number;
+}
+
+export interface MysekaiMusicVocalMaster {
+    id?: number;
+    musicId?: number;
+    musicVocalType?: string;
+    caption?: string;
+    assetbundleName?: string;
+}
+
+export interface MysekaiMusicSoundTrackMaster {
+    id?: number;
+    title?: string;
+    assetbundleName?: string;
+    assetbundleFileName?: string;
+}
+
 export interface MysekaiPreviewOptions {
     layoutUrl: string;
     siteId: number;
@@ -116,6 +152,7 @@ export interface MysekaiPreviewOptions {
     shadowEnabled: boolean;
     debugEnabled: boolean;
     backWallOpacity: number;
+    lookSensitivity: number;
 }
 
 export interface MysekaiPreviewStatus {

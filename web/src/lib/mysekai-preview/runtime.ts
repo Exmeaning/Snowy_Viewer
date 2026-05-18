@@ -4,15 +4,16 @@ import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import type { AssetSourceType } from "@/contexts/ThemeContext";
-import { getCardFullUrl } from "@/lib/assets";
+import { getCardFullUrl, getMusicJacketUrl } from "@/lib/assets";
 import {
     getCustomFixtureAttachObjectPaths,
     getCustomFixtureAttachTexturePaths,
     getFixtureObjectPaths,
     getFixtureTexturePaths,
-    getMusicJacketTexturePath,
     getMysekaiCandidateRawUrls,
     getMysekaiMasterDataUrls,
+    getMysekaiMusicVocalAudioUrl,
+    getMysekaiSoundTrackAudioUrl,
     getOutdoorGrassTexturePath,
     getRoomSkinDoorObjectPaths,
     getRoomSkinDoorTexturePath,
@@ -25,6 +26,11 @@ import type {
     MysekaiFixtureMaster,
     MysekaiLayoutData,
     MysekaiLayoutItem,
+    MysekaiMusicMaster,
+    MysekaiMusicPlayFixtureSetting,
+    MysekaiMusicRecordMaster,
+    MysekaiMusicSoundTrackMaster,
+    MysekaiMusicVocalMaster,
     MysekaiPreviewOptions,
     MysekaiPreviewStatus,
     MysekaiRankReleaseMaster,
@@ -39,6 +45,36 @@ const ALWAYS_ENABLED_LAYOUT_TYPES = ["floor", "rug", "road", "wall_left", "wall_
 const INDOOR_TYPES = ["floor", "rug", "wall_left", "wall_right", "wall_front", "wall_back"];
 const SHADOW_Y_OFFSET = 0.07;
 const ENTRY_BUILD_CONCURRENCY = 8;
+const BGM_VOLUME_STORAGE_KEY = "mysekai-preview-bgm-volume";
+const DEFAULT_BGM_VOLUME = 0.45;
+const FREE_LOOK_PITCH_LIMIT = THREE.MathUtils.degToRad(85);
+const FREE_LOOK_BASE_MOUSE_SENSITIVITY = 0.0022;
+const FREE_LOOK_BASE_TOUCH_SENSITIVITY = 0.005;
+const FREE_LOOK_MOVE_SPEED = 18;
+const FREE_LOOK_FAST_MULTIPLIER = 1.75;
+
+type MysekaiViewMode = "free" | "fixed";
+
+type FullscreenElement = HTMLElement & { webkitRequestFullscreen?: () => Promise<void> | void };
+type FullscreenDocument = Document & { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => Promise<void> | void };
+
+interface FreeLookBounds {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    minZ: number;
+    maxZ: number;
+}
+
+interface SavedMysekaiCameraState {
+    cameraPos?: number[];
+    controlsTarget?: number[];
+    cameraUp?: number[];
+    viewMode?: MysekaiViewMode;
+    freeLookYaw?: number;
+    freeLookPitch?: number;
+}
 
 const GATE_ASSET_BY_ID: Record<number, string> = {
     1: "mdl_non0006_gate_lon1",
@@ -50,6 +86,7 @@ const GATE_ASSET_BY_ID: Record<number, string> = {
 
 interface RuntimeCallbacks {
     onStatus?: (status: MysekaiPreviewStatus) => void;
+    onCycleSite?: () => void;
 }
 
 interface ResourcePick {
@@ -63,6 +100,15 @@ interface RoomSkinAssetInfo {
     wallTexUrl?: string;
     doorTexUrl?: string;
     doorObjUrls: string[];
+}
+
+interface MysekaiBackgroundMusicInfo {
+    url: string;
+    title: string;
+    subtitle: string;
+    fillerSec: number;
+    kind: "music" | "music_sound_track";
+    setting: MysekaiMusicPlayFixtureSetting;
 }
 
 interface ExtractEntriesResult {
@@ -108,6 +154,29 @@ interface FixtureRenderAsset {
     asset: string;
     isOrnament: boolean;
     useCustomAttachRoot: boolean;
+}
+
+interface EntryRenderAsset extends FixtureRenderAsset {
+    handleType?: string;
+    fixtureType?: string;
+}
+
+interface SceneModelAssetRef {
+    key: string;
+    asset: string;
+    useCustomAttachRoot: boolean;
+    handleType?: string;
+    fixtureType?: string;
+    isFence: boolean;
+}
+
+interface PreparedModelAsset {
+    key: string;
+    asset: string;
+    source?: THREE.Group;
+    fenceParts?: FencePartSet;
+    primaryObjUrl?: string;
+    error?: unknown;
 }
 
 interface StaticMergeBucket {
@@ -378,7 +447,9 @@ export class MysekaiScenePreviewRuntime {
     private readonly objTextCache = new Map<string, string>();
     private readonly objTextPromiseCache = new Map<string, Promise<string | null>>();
     private readonly objGroupCache = new Map<string, THREE.Group>();
+    private readonly objGroupPromiseCache = new Map<string, Promise<THREE.Group>>();
     private readonly objStatsCache = new Map<string, ObjStats>();
+    private readonly objStatsPromiseCache = new Map<string, Promise<ObjStats>>();
     private readonly fenceAssetPartPromiseCache = new Map<string, Promise<FencePartSet>>();
     private readonly textureCache = new Map<string, THREE.Texture>();
     private readonly texturePromiseCache = new Map<string, Promise<THREE.Texture | null>>();
@@ -386,10 +457,43 @@ export class MysekaiScenePreviewRuntime {
     private readonly customFixtureMetaMap = new Map<number, MysekaiCustomFixtureMaster>();
     private readonly cardAssetById = new Map<number, string>();
     private readonly cardCharacterIdById = new Map<number, number>();
+    private readonly musicRecordById = new Map<number, MysekaiMusicRecordMaster>();
+    private readonly musicInfoById = new Map<number, MysekaiMusicMaster>();
+    private readonly musicSoundTrackById = new Map<number, MysekaiMusicSoundTrackMaster>();
+    private readonly musicVocalById = new Map<number, MysekaiMusicVocalMaster>();
+    private readonly musicVocalsByMusicId = new Map<number, MysekaiMusicVocalMaster[]>();
     private readonly externalMusicIdByMysekaiMusicRecordId = new Map<number, number>();
     private readonly musicAssetById = new Map<number, string>();
     private readonly indoorWallPlanes: THREE.Mesh[] = [];
-    private readonly keyState = { w: false, s: false, a: false, d: false, space: false, shift: false };
+    private readonly keyState = { w: false, s: false, a: false, d: false, space: false, shift: false, mobileUp: false, mobileDown: false };
+    private readonly freeLookMoveVector = new THREE.Vector3();
+    private controlsOverlay: HTMLDivElement | null = null;
+    private crosshairElement: HTMLDivElement | null = null;
+    private pointerLockButton: HTMLButtonElement | null = null;
+    private fullscreenButton: HTMLButtonElement | null = null;
+    private cycleSiteButton: HTMLButtonElement | null = null;
+    private bgmButton: HTMLButtonElement | null = null;
+    private bgmInfoElement: HTMLDivElement | null = null;
+    private bgmVolumeInput: HTMLInputElement | null = null;
+    private hintElement: HTMLDivElement | null = null;
+    private mobileControlsElement: HTMLDivElement | null = null;
+    private joystickKnobElement: HTMLDivElement | null = null;
+    private fullscreenHost: HTMLElement | null = null;
+    private fullscreenRestoreStyle: Partial<CSSStyleDeclaration> | null = null;
+    private currentSiteSize: MysekaiSceneSize = { width: 80, depth: 80, height: 10 };
+    private viewMode: MysekaiViewMode = "free";
+    private freeLookYaw = -Math.PI * 0.25;
+    private freeLookPitch = -0.45;
+    private pointerLocked = false;
+    private mouseLookDragging = false;
+    private isFullscreen = false;
+    private isPseudoFullscreen = false;
+    private lastTickTime = 0;
+    private joystickPointerId: number | null = null;
+    private joystickOrigin = { x: 0, y: 0 };
+    private joystickVector = { x: 0, y: 0 };
+    private lookPointerId: number | null = null;
+    private lastLookPoint = { x: 0, y: 0 };
     private rankReleases: MysekaiRankReleaseMaster[] = [];
     private siteLevels: MysekaiSiteLevelMaster[] = [];
     private siteLayouts: MysekaiSiteLayoutMaster[] = [];
@@ -406,7 +510,15 @@ export class MysekaiScenePreviewRuntime {
     private masterLoaded = false;
     private cardsLoaded = false;
     private musicLoaded = false;
+    private fullMusicLoaded = false;
     private restoredCameraState = false;
+    private bgmAudio: HTMLAudioElement | null = null;
+    private currentBgm: MysekaiBackgroundMusicInfo | null = null;
+    private bgmLoading = false;
+    private bgmPlaying = false;
+    private bgmError: string | null = null;
+    private bgmUserWantsPlay = false;
+    private bgmVolume = DEFAULT_BGM_VOLUME;
     private options: MysekaiPreviewOptions;
     private currentStatus: MysekaiPreviewStatus = { phase: "idle", message: "初始化中...", loaded: 0, total: 0, skipped: 0 };
 
@@ -429,6 +541,7 @@ export class MysekaiScenePreviewRuntime {
         axesContainer.appendChild(this.axesRenderer.domElement);
 
         this.textureLoader.setCrossOrigin("anonymous");
+        this.bgmVolume = this.readSavedBgmVolume();
         this.scene.background = createSkyGradientBackground();
         this.camera = new THREE.PerspectiveCamera(55, (container.clientWidth || 1) / (container.clientHeight || 1), 0.1, 1400);
         this.camera.position.set(60, 45, 60);
@@ -439,6 +552,7 @@ export class MysekaiScenePreviewRuntime {
         this.controls.addEventListener("change", this.handleControlsChange);
         this.controls.addEventListener("start", this.handleControlsStart);
         this.controls.addEventListener("end", this.handleControlsEnd);
+        this.controls.enabled = this.viewMode === "fixed";
 
         this.axesCamera = new THREE.PerspectiveCamera(50, (axesContainer.clientWidth || 1) / (axesContainer.clientHeight || 1), 0.1, 10);
         this.axisHelper = new THREE.AxesHelper(1.2);
@@ -464,8 +578,16 @@ export class MysekaiScenePreviewRuntime {
         window.addEventListener("keydown", this.handleKeyDown);
         window.addEventListener("keyup", this.handleKeyUp);
         window.addEventListener("resize", this.handleResize);
+        document.addEventListener("pointerlockchange", this.handlePointerLockChange);
+        document.addEventListener("fullscreenchange", this.handleFullscreenChange);
+        document.addEventListener("webkitfullscreenchange", this.handleFullscreenChange);
+        this.renderer.domElement.addEventListener("mousedown", this.handleCanvasMouseDown);
+        window.addEventListener("mousemove", this.handleMouseMove);
+        window.addEventListener("mouseup", this.handleMouseUp);
         window.addEventListener("beforeunload", this.saveCameraState);
+        this.createControlsOverlay();
         this.loadCameraState();
+        this.applyViewMode(this.viewMode, false);
         this.handleResize();
         this.requestRender();
     }
@@ -478,6 +600,7 @@ export class MysekaiScenePreviewRuntime {
         this.applyDebugVisibility();
         this.applyShadowVisibility();
         this.applyBackWallOpacity();
+        this.refreshOverlayState();
         this.requestRender();
         if (oldSiteId !== options.siteId || oldLayoutUrl !== options.layoutUrl || oldAssetSource !== options.assetSource) {
             void this.reload(false);
@@ -502,6 +625,8 @@ export class MysekaiScenePreviewRuntime {
         this.controls.target.set(0, 0, 0);
         this.camera.position.set(60, 45, 60);
         this.camera.up.set(0, 1, 0);
+        this.syncFreeLookAnglesFromCamera();
+        this.applyFreeLookRotation();
         this.controls.update();
         this.saveCameraState();
         this.requestRender();
@@ -510,10 +635,21 @@ export class MysekaiScenePreviewRuntime {
     dispose() {
         this.disposed = true;
         cancelAnimationFrame(this.rafId);
+        this.stopBgmAudio(true);
         window.removeEventListener("keydown", this.handleKeyDown);
         window.removeEventListener("keyup", this.handleKeyUp);
         window.removeEventListener("resize", this.handleResize);
+        document.removeEventListener("pointerlockchange", this.handlePointerLockChange);
+        document.removeEventListener("fullscreenchange", this.handleFullscreenChange);
+        document.removeEventListener("webkitfullscreenchange", this.handleFullscreenChange);
+        this.renderer.domElement.removeEventListener("mousedown", this.handleCanvasMouseDown);
+        window.removeEventListener("mousemove", this.handleMouseMove);
+        window.removeEventListener("mouseup", this.handleMouseUp);
         window.removeEventListener("beforeunload", this.saveCameraState);
+        this.exitPointerLock();
+        this.exitPseudoFullscreen();
+        this.controlsOverlay?.remove();
+        this.controlsOverlay = null;
         this.controls.removeEventListener("change", this.handleControlsChange);
         this.controls.removeEventListener("start", this.handleControlsStart);
         this.controls.removeEventListener("end", this.handleControlsEnd);
@@ -593,14 +729,51 @@ export class MysekaiScenePreviewRuntime {
     private async ensureMusicDataLoaded() {
         if (this.musicLoaded) return;
         const [records, musics] = await Promise.all([
-            this.fetchJson<Array<{ id?: number; externalId?: number }>>(getMysekaiMasterDataUrls("mysekaiMusicRecords.json", this.options.assetSource), "mysekaiMusicRecords.json"),
-            this.fetchJson<Array<{ id?: number; assetbundleName?: string }>>(getMysekaiMasterDataUrls("musics.json", this.options.assetSource), "musics.json"),
+            this.fetchJson<MysekaiMusicRecordMaster[]>(getMysekaiMasterDataUrls("mysekaiMusicRecords.json", this.options.assetSource), "mysekaiMusicRecords.json"),
+            this.fetchJson<MysekaiMusicMaster[]>(getMysekaiMasterDataUrls("musics.json", this.options.assetSource), "musics.json"),
         ]);
+        this.musicRecordById.clear();
+        this.musicInfoById.clear();
         this.externalMusicIdByMysekaiMusicRecordId.clear();
         this.musicAssetById.clear();
-        for (const record of records || []) this.externalMusicIdByMysekaiMusicRecordId.set(Number(record.id), Number(record.externalId));
-        for (const music of musics || []) this.musicAssetById.set(Number(music.id), String(music.assetbundleName || ""));
+        for (const record of records || []) {
+            const recordId = Number(record.id);
+            this.musicRecordById.set(recordId, record);
+            if (record.mysekaiMusicTrackType === "music" || !record.mysekaiMusicTrackType) {
+                this.externalMusicIdByMysekaiMusicRecordId.set(recordId, Number(record.externalId));
+            }
+        }
+        for (const music of musics || []) {
+            const musicId = Number(music.id);
+            this.musicInfoById.set(musicId, music);
+            this.musicAssetById.set(musicId, String(music.assetbundleName || ""));
+        }
         this.musicLoaded = true;
+    }
+
+    private async ensureFullMusicDataLoaded() {
+        if (this.fullMusicLoaded) return;
+        await this.ensureMusicDataLoaded();
+        const [soundTracks, vocals] = await Promise.all([
+            this.fetchJson<MysekaiMusicSoundTrackMaster[]>(getMysekaiMasterDataUrls("musicSoundTracks.json", this.options.assetSource), "musicSoundTracks.json"),
+            this.fetchJson<MysekaiMusicVocalMaster[]>(getMysekaiMasterDataUrls("musicVocals.json", this.options.assetSource), "musicVocals.json"),
+        ]);
+        this.musicSoundTrackById.clear();
+        this.musicVocalById.clear();
+        this.musicVocalsByMusicId.clear();
+        for (const track of soundTracks || []) this.musicSoundTrackById.set(Number(track.id), track);
+        for (const vocal of vocals || []) {
+            const vocalId = Number(vocal.id);
+            const musicId = Number(vocal.musicId);
+            this.musicVocalById.set(vocalId, vocal);
+            const list = this.musicVocalsByMusicId.get(musicId) || [];
+            list.push(vocal);
+            this.musicVocalsByMusicId.set(musicId, list);
+        }
+        for (const list of this.musicVocalsByMusicId.values()) {
+            list.sort((a, b) => Number(a.id || 0) - Number(b.id || 0));
+        }
+        this.fullMusicLoaded = true;
     }
 
     private async fetchTextFirst(urls: string[]): Promise<ResourcePick | null> {
@@ -639,38 +812,58 @@ export class MysekaiScenePreviewRuntime {
         return paths.flatMap((path) => getMysekaiCandidateRawUrls(path, this.options.assetSource));
     }
 
-    private async getObjGroup(url: string): Promise<THREE.Group> {
+    private async getObjSourceGroup(url: string): Promise<THREE.Group> {
         const cached = this.objGroupCache.get(url);
-        if (cached) return cached.clone(true);
-        let text = this.objTextCache.get(url);
-        if (!text) {
-            text = await this.fetchObjText(url) ?? undefined;
-            if (!text) throw new Error(`模型加载失败: ${url}`);
-        }
-        const group = this.objLoader.parse(text);
-        this.objGroupCache.set(url, group);
-        return group.clone(true);
+        if (cached) return cached;
+        const inflight = this.objGroupPromiseCache.get(url);
+        if (inflight) return inflight;
+        const promise = (async () => {
+            let text = this.objTextCache.get(url);
+            if (!text) {
+                text = await this.fetchObjText(url) ?? undefined;
+                if (!text) throw new Error(`模型加载失败: ${url}`);
+            }
+            const group = this.objLoader.parse(text);
+            this.objGroupCache.set(url, group);
+            return group;
+        })().finally(() => {
+            this.objGroupPromiseCache.delete(url);
+        });
+        this.objGroupPromiseCache.set(url, promise);
+        return promise;
+    }
+
+    private async getObjGroup(url: string): Promise<THREE.Group> {
+        return (await this.getObjSourceGroup(url)).clone(true);
     }
 
     private async getObjStats(url: string): Promise<ObjStats> {
         const cached = this.objStatsCache.get(url);
         if (cached) return cached;
-        const group = await this.getObjGroup(url);
-        const box = new THREE.Box3().setFromObject(group);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        let vertexCount = 0;
-        group.traverse((node) => {
-            if (!isMesh(node)) return;
-            vertexCount += node.geometry.attributes.position?.count ?? 0;
+        const inflight = this.objStatsPromiseCache.get(url);
+        if (inflight) return inflight;
+        const promise = (async () => {
+            const group = await this.getObjSourceGroup(url);
+            const box = new THREE.Box3().setFromObject(group);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            let vertexCount = 0;
+            group.traverse((node) => {
+                if (!isMesh(node)) return;
+                vertexCount += node.geometry.attributes.position?.count ?? 0;
+            });
+            const stats = {
+                url,
+                volume: Math.max(0, size.x) * Math.max(0, size.y) * Math.max(0, size.z),
+                vertexCount,
+            };
+            this.objStatsCache.set(url, stats);
+            return stats;
+        })().finally(() => {
+            this.objStatsPromiseCache.delete(url);
         });
-        const stats = {
-            url,
-            volume: Math.max(0, size.x) * Math.max(0, size.y) * Math.max(0, size.z),
-            vertexCount,
-        };
-        this.objStatsCache.set(url, stats);
-        return stats;
+        this.objStatsPromiseCache.set(url, promise);
+        return promise;
     }
 
     private async pickPrimaryObjUrl(urls: string[]): Promise<string | null> {
@@ -755,8 +948,83 @@ export class MysekaiScenePreviewRuntime {
         if (!musicId) return this.createFallbackTexture();
         const musicAsset = this.musicAssetById.get(musicId);
         if (!musicAsset) return this.createFallbackTexture();
-        const texture = await this.getTextureFromUrls(getMysekaiCandidateRawUrls(getMusicJacketTexturePath(musicAsset), this.options.assetSource));
+        const texture = await this.getTextureFromUrls([getMusicJacketUrl(musicAsset, this.options.assetSource)]);
         return texture ?? this.createFallbackTexture();
+    }
+
+    private selectMusicVocalForBgm(musicId: number, setting: MysekaiMusicPlayFixtureSetting): MysekaiMusicVocalMaster | null {
+        const allVocals = this.musicVocalsByMusicId.get(musicId) || [];
+        if (setting.isInstrumental) {
+            return allVocals.find((vocal) => vocal.musicVocalType === "instrumental") ?? null;
+        }
+        const requested = this.musicVocalById.get(Number(setting.musicVocalId || 0));
+        if (requested && Number(requested.musicId) === musicId && requested.assetbundleName) return requested;
+        return allVocals.find((vocal) => vocal.musicVocalType !== "instrumental" && !!vocal.assetbundleName) ?? null;
+    }
+
+    private getCurrentSiteBgmSetting(layoutData: MysekaiLayoutData | MysekaiLayoutData[], siteId: number): MysekaiMusicPlayFixtureSetting | null {
+        if (Array.isArray(layoutData)) return null;
+        return layoutData.userMysekaiMusicPlayFixtureSettings?.find((item) => Number(item.mysekaiSiteId) === siteId) ?? null;
+    }
+
+    private readSavedBgmVolume(): number {
+        try {
+            const raw = localStorage.getItem(BGM_VOLUME_STORAGE_KEY);
+            const value = raw === null ? DEFAULT_BGM_VOLUME : Number(raw);
+            return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : DEFAULT_BGM_VOLUME;
+        } catch {
+            return DEFAULT_BGM_VOLUME;
+        }
+    }
+
+    private saveBgmVolume() {
+        try {
+            localStorage.setItem(BGM_VOLUME_STORAGE_KEY, String(this.bgmVolume));
+        } catch {
+            // ignore localStorage failures
+        }
+    }
+
+    private async resolveBackgroundMusic(layoutData: MysekaiLayoutData | MysekaiLayoutData[], siteId: number): Promise<MysekaiBackgroundMusicInfo | null> {
+        const setting = this.getCurrentSiteBgmSetting(layoutData, siteId);
+        if (!setting?.mysekaiMusicRecordId) return null;
+        await this.ensureFullMusicDataLoaded();
+        const recordId = Number(setting.mysekaiMusicRecordId || 0);
+        const record = this.musicRecordById.get(recordId);
+        if (!record) throw new Error(`BGM 唱片记录不存在: ${recordId}`);
+        const externalId = Number(record.externalId || 0);
+        if (!externalId) throw new Error(`BGM 唱片记录缺少 externalId: ${recordId}`);
+
+        if (record.mysekaiMusicTrackType === "music_sound_track") {
+            const track = this.musicSoundTrackById.get(externalId);
+            if (!track) throw new Error(`原声 BGM 不存在: ${externalId}`);
+            const url = getMysekaiSoundTrackAudioUrl(track.assetbundleName, track.assetbundleFileName, this.options.assetSource);
+            if (!url) throw new Error(`原声 BGM 缺少资源名: ${externalId}`);
+            return {
+                url,
+                title: track.title || `原声 BGM ${externalId}`,
+                subtitle: "原声 BGM",
+                fillerSec: 0,
+                kind: "music_sound_track",
+                setting,
+            };
+        }
+
+        const music = this.musicInfoById.get(externalId);
+        if (!music) throw new Error(`歌曲不存在: ${externalId}`);
+        const vocal = this.selectMusicVocalForBgm(externalId, setting);
+        if (!vocal?.assetbundleName) {
+            const reason = setting.isInstrumental ? "未找到 instrumental 音源" : `未找到 vocalId=${setting.musicVocalId || "默认"} 音源`;
+            throw new Error(`${music.title || `歌曲 ${externalId}`} ${reason}`);
+        }
+        return {
+            url: getMysekaiMusicVocalAudioUrl(vocal.assetbundleName, this.options.assetSource),
+            title: music.title || `歌曲 ${externalId}`,
+            subtitle: setting.isInstrumental ? "Inst.ver." : (vocal.caption || vocal.musicVocalType || "BGM"),
+            fillerSec: Number(music.fillerSec || 0),
+            kind: "music",
+            setting,
+        };
     }
 
     private cloneWithMaterial(object: THREE.Object3D, materialFactory: () => THREE.Material): THREE.Object3D {
@@ -805,6 +1073,98 @@ export class MysekaiScenePreviewRuntime {
         });
         return out;
     }
+
+    private stopBgmAudio(resetIntent = false) {
+        if (resetIntent) this.bgmUserWantsPlay = false;
+        if (this.bgmAudio) {
+            this.bgmAudio.pause();
+            this.bgmAudio.src = "";
+            this.bgmAudio.load();
+            this.bgmAudio = null;
+        }
+        this.bgmLoading = false;
+        this.bgmPlaying = false;
+    }
+
+    private setCurrentBgm(info: MysekaiBackgroundMusicInfo | null, error: string | null = null) {
+        const previousUrl = this.currentBgm?.url || "";
+        const nextUrl = info?.url || "";
+        const shouldTryResume = this.bgmUserWantsPlay && !!info;
+        if (previousUrl !== nextUrl) this.stopBgmAudio(false);
+        this.currentBgm = info;
+        this.bgmError = error;
+        this.refreshBgmOverlayState();
+        if (shouldTryResume && previousUrl !== nextUrl) void this.playBgm();
+    }
+
+    private async playBgm() {
+        if (!this.currentBgm) return;
+        this.bgmUserWantsPlay = true;
+        this.bgmError = null;
+        let audio = this.bgmAudio;
+        if (!audio || audio.src !== this.currentBgm.url) {
+            audio = new Audio(this.currentBgm.url);
+            audio.crossOrigin = "anonymous";
+            audio.loop = true;
+            audio.volume = this.bgmVolume;
+            audio.onplay = () => {
+                this.bgmLoading = false;
+                this.bgmPlaying = true;
+                this.refreshBgmOverlayState();
+            };
+            audio.onpause = () => {
+                this.bgmPlaying = false;
+                this.refreshBgmOverlayState();
+            };
+            audio.onerror = () => {
+                this.bgmLoading = false;
+                this.bgmPlaying = false;
+                this.bgmError = "BGM 加载失败";
+                this.refreshBgmOverlayState();
+            };
+            this.bgmAudio = audio;
+        }
+        audio.volume = this.bgmVolume;
+        if (this.currentBgm.kind === "music" && this.currentBgm.fillerSec > 0 && audio.currentTime < 0.1) {
+            try {
+                audio.currentTime = this.currentBgm.fillerSec;
+            } catch {
+                // Some browsers reject seeking before metadata; keep default start.
+            }
+        }
+        try {
+            this.bgmLoading = true;
+            this.refreshBgmOverlayState();
+            await audio.play();
+        } catch (error) {
+            this.bgmLoading = false;
+            this.bgmPlaying = false;
+            this.bgmError = errorMessage(error);
+            this.refreshBgmOverlayState();
+        }
+    }
+
+    private pauseBgm(resetIntent = true) {
+        if (resetIntent) this.bgmUserWantsPlay = false;
+        this.bgmAudio?.pause();
+        this.bgmLoading = false;
+        this.bgmPlaying = false;
+        this.refreshBgmOverlayState();
+    }
+
+    private toggleBgm() {
+        if (!this.currentBgm) return;
+        if (this.bgmPlaying || this.bgmLoading) this.pauseBgm(true);
+        else void this.playBgm();
+    }
+
+    private handleBgmVolumeChange = () => {
+        const value = Number(this.bgmVolumeInput?.value || 0) / 100;
+        this.bgmVolume = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : DEFAULT_BGM_VOLUME;
+        if (this.bgmAudio) this.bgmAudio.volume = this.bgmVolume;
+        this.saveBgmVolume();
+        this.refreshBgmOverlayState();
+    };
 
     private clearContent() {
         while (this.contentGroup.children.length) {
@@ -1247,6 +1607,123 @@ export class MysekaiScenePreviewRuntime {
         return out;
     }
 
+    private getEntryRenderAssets(item: MysekaiLayoutItem, gateId: number): EntryRenderAsset[] {
+        const isCustom = !!item.__isCustomFixture;
+        const fixtureId = Number(item.mysekaiFixtureId);
+        const customFixtureId = Number(item.mysekaiCustomFixtureId);
+        const meta = isCustom ? null : this.fixtureMetaMap.get(fixtureId);
+        const customMeta = isCustom ? this.customFixtureMetaMap.get(customFixtureId) : null;
+        if (!isCustom && meta?.mysekaiFixtureHandleType === "block_transparent") return [];
+
+        const renderAssets: EntryRenderAsset[] = [];
+        if (isCustom) {
+            if (!customMeta) return renderAssets;
+            if (customMeta.baseAssetBundleName) renderAssets.push({ asset: customMeta.baseAssetBundleName, isOrnament: false, useCustomAttachRoot: false });
+            if (customMeta.ornamentAssetBundleName) renderAssets.push({ asset: customMeta.ornamentAssetBundleName, isOrnament: true, useCustomAttachRoot: true });
+            return renderAssets;
+        }
+
+        const asset = fixtureId === 900002 ? GATE_ASSET_BY_ID[gateId] : meta?.assetbundleName;
+        if (!asset) return renderAssets;
+        renderAssets.push({
+            asset,
+            isOrnament: false,
+            useCustomAttachRoot: false,
+            handleType: meta?.mysekaiFixtureHandleType,
+            fixtureType: meta?.mysekaiFixtureType,
+        });
+        return renderAssets;
+    }
+
+    private getSceneModelAssetKey(assetInfo: Pick<EntryRenderAsset, "asset" | "useCustomAttachRoot" | "handleType" | "fixtureType">): string {
+        return [
+            assetInfo.useCustomAttachRoot ? "custom" : "fixture",
+            assetInfo.asset,
+            assetInfo.handleType || "",
+            assetInfo.fixtureType || "",
+        ].join("|");
+    }
+
+    private collectSceneModelAssets(entries: ExtractedMysekaiEntry[], gateId: number): SceneModelAssetRef[] {
+        const refs = new Map<string, SceneModelAssetRef>();
+        for (const { item } of entries) {
+            for (const assetInfo of this.getEntryRenderAssets(item, gateId)) {
+                const key = this.getSceneModelAssetKey(assetInfo);
+                if (refs.has(key)) continue;
+                refs.set(key, {
+                    key,
+                    asset: assetInfo.asset,
+                    useCustomAttachRoot: assetInfo.useCustomAttachRoot,
+                    handleType: assetInfo.handleType,
+                    fixtureType: assetInfo.fixtureType,
+                    isFence: assetInfo.handleType === "fence" && !assetInfo.useCustomAttachRoot,
+                });
+            }
+        }
+        return Array.from(refs.values());
+    }
+
+    private async preloadSceneModelAsset(ref: SceneModelAssetRef): Promise<PreparedModelAsset> {
+        try {
+            const objUrls = this.getObjCandidateUrls(ref.asset, ref.useCustomAttachRoot, ref.handleType, ref.fixtureType);
+            if (ref.isFence) {
+                const fenceParts = await this.getFencePartSet(ref.asset, objUrls);
+                return { key: ref.key, asset: ref.asset, fenceParts };
+            }
+            const primaryObjUrl = await this.pickPrimaryObjUrl(objUrls);
+            if (!primaryObjUrl) throw new Error(`模型缺失: ${ref.asset}`);
+            const source = await this.getObjSourceGroup(primaryObjUrl);
+            return { key: ref.key, asset: ref.asset, source, primaryObjUrl };
+        } catch (error) {
+            return { key: ref.key, asset: ref.asset, error };
+        }
+    }
+
+    private async preloadSceneModelAssets(refs: SceneModelAssetRef[], entriesTotal: number, ignored: number): Promise<Map<string, PreparedModelAsset>> {
+        const prepared = new Map<string, PreparedModelAsset>();
+        if (!refs.length) return prepared;
+        let processed = 0;
+        this.mergeStatus({
+            stage: "assets",
+            stageLabel: "正在预加载模型资源",
+            progress: 12,
+            message: `预加载模型... 0/${refs.length}`,
+            currentAsset: undefined,
+            total: entriesTotal,
+            ignored,
+            failed: 0,
+            skipped: 0,
+        });
+        const results = await mapWithConcurrency(refs, ENTRY_BUILD_CONCURRENCY, async (ref) => {
+            try {
+                return await this.preloadSceneModelAsset(ref);
+            } finally {
+                processed++;
+                const progress = 12 + Math.round((processed / Math.max(1, refs.length)) * 38);
+                this.mergeStatus({
+                    progress,
+                    message: `预加载模型... ${processed}/${refs.length}`,
+                    currentAsset: ref.asset,
+                });
+            }
+        });
+        for (const result of results) prepared.set(result.key, result);
+        return prepared;
+    }
+
+    private async applyBackgroundMusic(layout: MysekaiLayoutData | MysekaiLayoutData[], siteId: number) {
+        this.setCurrentBgm(null);
+        try {
+            const bgm = await this.resolveBackgroundMusic(layout, siteId);
+            if (this.disposed || Number(this.options.siteId || 1) !== siteId) return;
+            this.setCurrentBgm(bgm);
+        } catch (error) {
+            console.warn("[mysekai-preview-bgm]", error);
+            if (this.disposed || Number(this.options.siteId || 1) !== siteId) return;
+            this.setCurrentBgm(null, errorMessage(error));
+        }
+    }
+
     private async buildScene(forceFreshLayout: boolean) {
         this.clearBeforeBuild();
         this.setStatus({
@@ -1263,38 +1740,43 @@ export class MysekaiScenePreviewRuntime {
         });
         const layout = await this.fetchJson<MysekaiLayoutData | MysekaiLayoutData[]>([this.options.layoutUrl], this.options.layoutUrl, forceFreshLayout);
         const siteId = Number(this.options.siteId || 1);
+        void this.applyBackgroundMusic(layout, siteId);
         const { entries, playerRank } = this.extractEntries(layout, siteId);
         const ignoredEntries = entries.filter((entry) => this.getIgnoredReason(entry));
         const renderEntries = entries.filter((entry) => !this.getIgnoredReason(entry));
         const siteLevelId = this.getSiteLevelIdByRank(playerRank, siteId);
         const siteSize = this.getSiteSize(siteLevelId);
+        this.currentSiteSize = siteSize;
         const fencePointsByFixture = this.buildFencePointMap(renderEntries, siteSize);
         const gateId = Array.isArray(layout) ? 1 : Number(layout.userMysekaiGate?.mysekaiGateId || 1);
+        const ignored = ignoredEntries.length;
+        const sceneModelAssets = this.collectSceneModelAssets(renderEntries, gateId);
+        const preparedModelAssets = await this.preloadSceneModelAssets(sceneModelAssets, entries.length, ignored);
         const floorPlacementRecords: FloorPlacementRecord[] = [];
         const floorShadowRecords: FloorShadowRecord[] = [];
         let loaded = 0;
         let failed = 0;
         let processed = 0;
-        const ignored = ignoredEntries.length;
 
         this.mergeStatus({
             stage: "assets",
-            stageLabel: "正在加载模型资源",
-            progress: 12,
-            message: `加载中... 0/${renderEntries.length}`,
+            stageLabel: "正在实例化家具",
+            progress: 50,
+            message: `实例化家具... 0/${renderEntries.length}`,
             loaded,
             total: entries.length,
             renderableTotal: renderEntries.length,
             skipped: failed,
             ignored,
             failed,
+            currentAsset: undefined,
         });
 
         const buildResults = await mapWithConcurrency(renderEntries, ENTRY_BUILD_CONCURRENCY, async ({ layoutType, item }, index): Promise<EntryBuildResult> => {
             const localFloorPlacementRecords: FloorPlacementRecord[] = [];
             const localFloorShadowRecords: FloorShadowRecord[] = [];
             try {
-                const entryGroup = await this.buildEntry(layoutType, item, siteSize, gateId, fencePointsByFixture, localFloorPlacementRecords, localFloorShadowRecords);
+                const entryGroup = await this.buildEntry(layoutType, item, siteSize, gateId, fencePointsByFixture, preparedModelAssets, localFloorPlacementRecords, localFloorShadowRecords);
                 if (!entryGroup.children.length) throw new Error("空实例");
                 loaded++;
                 return { index, entryGroup, floorPlacementRecords: localFloorPlacementRecords, floorShadowRecords: localFloorShadowRecords };
@@ -1305,9 +1787,9 @@ export class MysekaiScenePreviewRuntime {
             } finally {
                 processed++;
                 if (processed % 10 === 0 || processed === renderEntries.length) {
-                    const progress = 12 + Math.round((processed / Math.max(1, renderEntries.length)) * 76);
+                    const progress = 50 + Math.round((processed / Math.max(1, renderEntries.length)) * 38);
                     this.mergeStatus({
-                        message: `加载中... ${processed}/${renderEntries.length}`,
+                        message: `实例化家具... ${processed}/${renderEntries.length}`,
                         loaded,
                         total: entries.length,
                         renderableTotal: renderEntries.length,
@@ -1346,6 +1828,11 @@ export class MysekaiScenePreviewRuntime {
         if (!this.restoredCameraState) {
             this.controls.target.set(0, 0, 0);
             this.camera.position.set(siteSize.width * 0.75, Math.max(25, siteSize.depth * 0.55), siteSize.depth * 0.75);
+        }
+        if (this.viewMode === "free") {
+            this.syncFreeLookAnglesFromCamera();
+            this.applyFreeLookRotation();
+            this.clampFreeLookPosition();
         }
         this.controls.update();
         this.setStatus({
@@ -1442,7 +1929,7 @@ export class MysekaiScenePreviewRuntime {
 
             for (const mesh of bucket.meshes) {
                 mesh.parent?.remove(mesh);
-                if (mesh.material !== bucket.material) mesh.material.dispose();
+                if (mesh.material !== bucket.material) disposeMaterial(mesh.material);
                 removedMeshes.push(mesh);
             }
         }
@@ -1472,7 +1959,7 @@ export class MysekaiScenePreviewRuntime {
                 return pick ? url : null;
             }))).filter((url): url is string => !!url);
             if (!existing.length) throw new Error(`栅栏模型缺失: ${assetName}`);
-            const groups = await Promise.all(existing.map((url) => this.getObjGroup(url)));
+            const groups = await Promise.all(existing.map((url) => this.getObjSourceGroup(url)));
             const scored = groups.map((group) => ({
                 group,
                 role: inferFencePartRole(group),
@@ -1534,6 +2021,7 @@ export class MysekaiScenePreviewRuntime {
         siteSize: MysekaiSceneSize,
         gateId: number,
         fencePointsByFixture: Map<number, Set<string>>,
+        preparedModelAssets: Map<string, PreparedModelAsset>,
         floorPlacementRecords: FloorPlacementRecord[],
         floorShadowRecords: FloorShadowRecord[],
     ): Promise<THREE.Group> {
@@ -1545,16 +2033,8 @@ export class MysekaiScenePreviewRuntime {
         const customMeta = isCustom ? this.customFixtureMetaMap.get(customFixtureId) : null;
         if (!isCustom && meta?.mysekaiFixtureHandleType === "block_transparent") return entryGroup;
 
-        const renderAssets: FixtureRenderAsset[] = [];
-        if (isCustom) {
-            if (!customMeta) return entryGroup;
-            if (customMeta.baseAssetBundleName) renderAssets.push({ asset: customMeta.baseAssetBundleName, isOrnament: false, useCustomAttachRoot: false });
-            if (customMeta.ornamentAssetBundleName) renderAssets.push({ asset: customMeta.ornamentAssetBundleName, isOrnament: true, useCustomAttachRoot: true });
-        } else {
-            const asset = fixtureId === 900002 ? GATE_ASSET_BY_ID[gateId] : meta?.assetbundleName;
-            if (!asset) return entryGroup;
-            renderAssets.push({ asset, isOrnament: false, useCustomAttachRoot: false });
-        }
+        const renderAssets = this.getEntryRenderAssets(item, gateId);
+        if (!renderAssets.length) return entryGroup;
 
         const position = this.mapWallLayoutToScenePos(layoutType, item.position || { x: 0, y: 0, z: 0 }, siteSize);
         let epsY = 0;
@@ -1571,8 +2051,10 @@ export class MysekaiScenePreviewRuntime {
         let placedForShadow: THREE.Object3D | null = null;
 
         for (const assetInfo of renderAssets) {
-            const objUrls = this.getObjCandidateUrls(assetInfo.asset, assetInfo.useCustomAttachRoot, meta?.mysekaiFixtureHandleType, meta?.mysekaiFixtureType);
-            const texture = await this.getFixtureTexture(assetInfo.asset, Number(item.textureId || 1), assetInfo.useCustomAttachRoot, meta?.mysekaiFixtureHandleType);
+            const preparedAsset = preparedModelAssets.get(this.getSceneModelAssetKey(assetInfo));
+            if (!preparedAsset) throw new Error(`模型未预加载: ${assetInfo.asset}`);
+            if (preparedAsset.error) throw preparedAsset.error;
+            const texture = await this.getFixtureTexture(assetInfo.asset, Number(item.textureId || 1), assetInfo.useCustomAttachRoot, assetInfo.handleType);
             const makeMaterial = () => new THREE.MeshLambertMaterial({
                 map: texture || null,
                 color: 0xffffff,
@@ -1585,8 +2067,9 @@ export class MysekaiScenePreviewRuntime {
             });
 
             let object: THREE.Object3D;
-            if (!isCustom && meta?.mysekaiFixtureHandleType === "fence") {
-                const fenceParts = await this.getFencePartSet(assetInfo.asset, objUrls);
+            if (!isCustom && assetInfo.handleType === "fence") {
+                const fenceParts = preparedAsset.fenceParts;
+                if (!fenceParts) throw new Error(`栅栏模型未预加载: ${assetInfo.asset}`);
                 object = this.cloneWithMaterial(fenceParts.post, makeMaterial);
                 for (const link of this.createFenceLinks(fixtureId, position, fencePointsByFixture)) {
                     const beamSource = link.step <= 1 ? fenceParts.beamShort : fenceParts.beamLong;
@@ -1606,9 +2089,8 @@ export class MysekaiScenePreviewRuntime {
                     entryGroup.add(beamPlaced);
                 }
             } else {
-                const primaryObjUrl = await this.pickPrimaryObjUrl(objUrls);
-                if (!primaryObjUrl) throw new Error(`模型缺失: ${assetInfo.asset}`);
-                const srcObject = await this.getObjGroup(primaryObjUrl);
+                const srcObject = preparedAsset.source;
+                if (!srcObject) throw new Error(`模型未预加载: ${assetInfo.asset}`);
                 if (!isCustom && fixtureId >= 439 && fixtureId <= 444) {
                     object = this.cloneCanvasWithCardMaterial(srcObject, makeMaterial, await this.getCanvasCardTexture(item), fixtureId);
                 } else if (isCustom) {
@@ -1776,6 +2258,483 @@ export class MysekaiScenePreviewRuntime {
         }
     }
 
+    private createControlsOverlay() {
+        const host = this.container.parentElement || this.container;
+        host.style.touchAction = "none";
+
+        const overlay = document.createElement("div");
+        overlay.className = "pointer-events-none absolute inset-0 z-20";
+        overlay.style.fontFamily = "inherit";
+        overlay.style.pointerEvents = "none";
+        overlay.style.zIndex = "80";
+        this.controlsOverlay = overlay;
+
+        const panel = document.createElement("div");
+        panel.className = "pointer-events-auto absolute right-3 top-3 flex flex-wrap items-center justify-end gap-2 rounded-2xl border border-white/30 bg-white/75 p-2 text-[11px] font-black text-slate-700 shadow-lg backdrop-blur";
+        panel.style.pointerEvents = "auto";
+        panel.style.zIndex = "120";
+        panel.style.touchAction = "manipulation";
+        overlay.appendChild(panel);
+
+        const freeButton = this.createOverlayButton("自由视角", () => this.applyViewMode("free"));
+        const fixedButton = this.createOverlayButton("固定视角", () => this.applyViewMode("fixed"));
+        this.pointerLockButton = this.createIconOverlayButton(this.pointerLockIconSvg(false), "鼠标固定", () => this.togglePointerLock());
+        this.fullscreenButton = this.createIconOverlayButton(this.fullscreenIconSvg(false), "全屏", () => void this.toggleFullscreen());
+        this.cycleSiteButton = this.createIconOverlayButton(this.cycleSiteIconSvg(), "切换布局", () => this.callbacks.onCycleSite?.());
+        this.bgmButton = this.createIconOverlayButton(this.bgmIconSvg(false), "播放 BGM", () => this.toggleBgm());
+        freeButton.dataset.viewModeButton = "free";
+        fixedButton.dataset.viewModeButton = "fixed";
+        panel.append(freeButton, fixedButton, this.cycleSiteButton, this.bgmButton, this.pointerLockButton, this.fullscreenButton);
+
+        const bgmPanel = document.createElement("div");
+        bgmPanel.className = "pointer-events-auto absolute right-3 top-[4.35rem] flex max-w-[min(360px,calc(100%-1.5rem))] items-center gap-2 rounded-2xl border border-white/30 bg-slate-950/45 px-3 py-2 text-[11px] font-bold text-white shadow-lg backdrop-blur";
+        bgmPanel.style.pointerEvents = "auto";
+        bgmPanel.style.zIndex = "110";
+        this.bgmInfoElement = document.createElement("div");
+        this.bgmInfoElement.className = "min-w-0 flex-1 truncate";
+        this.bgmVolumeInput = document.createElement("input");
+        this.bgmVolumeInput.type = "range";
+        this.bgmVolumeInput.min = "0";
+        this.bgmVolumeInput.max = "100";
+        this.bgmVolumeInput.value = String(Math.round(this.bgmVolume * 100));
+        this.bgmVolumeInput.className = "w-20 accent-miku";
+        this.bgmVolumeInput.title = "BGM 音量";
+        this.bgmVolumeInput.setAttribute("aria-label", "BGM 音量");
+        this.bgmVolumeInput.addEventListener("pointerdown", (event) => event.stopPropagation());
+        this.bgmVolumeInput.addEventListener("click", (event) => event.stopPropagation());
+        this.bgmVolumeInput.addEventListener("input", this.handleBgmVolumeChange);
+        bgmPanel.append(this.bgmInfoElement, this.bgmVolumeInput);
+        overlay.appendChild(bgmPanel);
+
+        const hint = document.createElement("div");
+        hint.className = "pointer-events-none absolute left-3 top-3 max-w-[min(360px,calc(100%-1.5rem))] rounded-2xl border border-white/30 bg-slate-950/45 px-3 py-2 text-[11px] font-bold leading-relaxed text-white shadow-lg backdrop-blur";
+        hint.textContent = "快捷键：WASD 移动，Alt 鼠标固定，F10 全屏，F8 切换场景。";
+        this.hintElement = hint;
+        overlay.appendChild(hint);
+
+        const crosshair = document.createElement("div");
+        crosshair.className = "pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 text-3xl font-light leading-none text-white drop-shadow-[0_1px_6px_rgba(15,23,42,0.85)]";
+        crosshair.textContent = "+";
+        this.crosshairElement = crosshair;
+        overlay.appendChild(crosshair);
+
+        const mobileControls = document.createElement("div");
+        mobileControls.className = "pointer-events-none absolute inset-0 hidden touch-none";
+        mobileControls.style.zIndex = "20";
+        mobileControls.innerHTML = `
+            <div data-mysekai-joystick style="position:absolute;left:1.5rem;bottom:2rem;width:7rem;height:7rem;border-radius:9999px;border:1px solid rgba(255,255,255,.3);background:rgba(15,23,42,.25);box-shadow:0 10px 24px rgba(15,23,42,.25);backdrop-filter:blur(8px);pointer-events:auto;touch-action:none;">
+                <div data-mysekai-joystick-knob style="position:absolute;left:50%;top:50%;width:3rem;height:3rem;margin-left:-1.5rem;margin-top:-1.5rem;border-radius:9999px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.7);box-shadow:0 10px 18px rgba(15,23,42,.24);transform:translate(0px,0px);"></div>
+            </div>
+            <div style="position:absolute;right:1.5rem;bottom:2rem;display:flex;flex-direction:column;gap:.75rem;pointer-events:auto;touch-action:none;z-index:60;">
+                <button data-mysekai-mobile-up type="button" aria-label="上升" style="width:3.75rem;height:3.75rem;display:flex;align-items:center;justify-content:center;border-radius:9999px;border:1px solid rgba(255,255,255,.42);background:rgba(255,255,255,.72);color:#0f172a;box-shadow:0 10px 24px rgba(15,23,42,.24);backdrop-filter:blur(8px);touch-action:none;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></button>
+                <button data-mysekai-mobile-down type="button" aria-label="下降" style="width:3.75rem;height:3.75rem;display:flex;align-items:center;justify-content:center;border-radius:9999px;border:1px solid rgba(255,255,255,.42);background:rgba(255,255,255,.72);color:#0f172a;box-shadow:0 10px 24px rgba(15,23,42,.24);backdrop-filter:blur(8px);touch-action:none;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></button>
+            </div>
+            <div data-mysekai-look-zone class="pointer-events-auto absolute bottom-0 right-0 top-0 w-[58%]" style="z-index:10;"></div>
+        `;
+        this.mobileControlsElement = mobileControls;
+        const joystick = mobileControls.querySelector<HTMLElement>("[data-mysekai-joystick]");
+        const lookZone = mobileControls.querySelector<HTMLElement>("[data-mysekai-look-zone]");
+        const mobileUpButton = mobileControls.querySelector<HTMLButtonElement>("[data-mysekai-mobile-up]");
+        const mobileDownButton = mobileControls.querySelector<HTMLButtonElement>("[data-mysekai-mobile-down]");
+        this.joystickKnobElement = mobileControls.querySelector<HTMLDivElement>("[data-mysekai-joystick-knob]");
+        joystick?.addEventListener("pointerdown", this.handleJoystickPointerDown);
+        joystick?.addEventListener("pointermove", this.handleJoystickPointerMove);
+        joystick?.addEventListener("pointerup", this.handleJoystickPointerUp);
+        joystick?.addEventListener("pointercancel", this.handleJoystickPointerUp);
+        lookZone?.addEventListener("pointerdown", this.handleLookPointerDown);
+        lookZone?.addEventListener("pointermove", this.handleLookPointerMove);
+        lookZone?.addEventListener("pointerup", this.handleLookPointerUp);
+        lookZone?.addEventListener("pointercancel", this.handleLookPointerUp);
+        mobileUpButton?.addEventListener("pointerdown", this.handleMobileUpPointerDown);
+        mobileUpButton?.addEventListener("pointermove", (event) => { event.preventDefault(); event.stopPropagation(); });
+        mobileUpButton?.addEventListener("pointerup", this.handleMobileVerticalPointerUp);
+        mobileUpButton?.addEventListener("pointercancel", this.handleMobileVerticalPointerUp);
+        mobileDownButton?.addEventListener("pointerdown", this.handleMobileDownPointerDown);
+        mobileDownButton?.addEventListener("pointermove", (event) => { event.preventDefault(); event.stopPropagation(); });
+        mobileDownButton?.addEventListener("pointerup", this.handleMobileVerticalPointerUp);
+        mobileDownButton?.addEventListener("pointercancel", this.handleMobileVerticalPointerUp);
+        overlay.appendChild(mobileControls);
+
+        host.appendChild(overlay);
+        this.refreshOverlayState();
+    }
+
+    private createOverlayButton(label: string, onClick: () => void): HTMLButtonElement {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = label;
+        button.className = "rounded-xl border border-slate-200 bg-white/85 px-3 py-2 text-[11px] font-black text-slate-700 shadow-sm transition hover:bg-white active:scale-95";
+        button.style.touchAction = "manipulation";
+        button.addEventListener("pointerdown", (event) => {
+            event.stopPropagation();
+        });
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onClick();
+        });
+        return button;
+    }
+
+    private createIconOverlayButton(svg: string, label: string, onClick: () => void): HTMLButtonElement {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.innerHTML = svg;
+        button.title = label;
+        button.setAttribute("aria-label", label);
+        button.className = "flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/85 text-slate-700 shadow-sm transition hover:bg-white active:scale-95 [&_svg]:h-4 [&_svg]:w-4";
+        button.style.touchAction = "manipulation";
+        button.addEventListener("pointerdown", (event) => {
+            event.stopPropagation();
+        });
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onClick();
+        });
+        return button;
+    }
+
+    private pointerLockIconSvg(active: boolean): string {
+        return active
+            ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 11.2-3"/><rect x="4" y="10" width="16" height="10" rx="2"/><path d="m3 3 18 18"/></svg>`
+            : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="7"/><path d="M12 7v4"/><path d="M12 14h.01"/></svg>`;
+    }
+
+    private fullscreenIconSvg(active: boolean): string {
+        return active
+            ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v5H3"/><path d="M16 3v5h5"/><path d="M8 21v-5H3"/><path d="M16 21v-5h5"/></svg>`
+            : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5"/><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M16 21h5v-5"/></svg>`;
+    }
+
+    private bgmIconSvg(active: boolean): string {
+        return active
+            ? `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6z"/><path d="M14 5h4v14h-4z"/></svg>`
+            : `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.55.83l10.28-6.86a1 1 0 0 0 0-1.66L9.55 4.31A1 1 0 0 0 8 5.14Z"/><path d="M4 5h2v14H4z" opacity=".65"/></svg>`;
+    }
+
+    private cycleSiteIconSvg(): string {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18"/><path d="M7 3v4"/><path d="M17 3v4"/><rect x="4" y="7" width="16" height="14" rx="2"/><path d="m9 14 2 2 4-4"/></svg>`;
+    }
+
+    private refreshBgmOverlayState() {
+        const hasBgm = !!this.currentBgm;
+        const title = this.bgmError
+            ? `BGM 错误: ${this.bgmError}`
+            : hasBgm
+                ? `${this.bgmPlaying ? "暂停" : this.bgmLoading ? "加载中" : "播放"} BGM：${this.currentBgm?.title || ""}`
+                : "当前场景未设置 BGM";
+        if (this.bgmButton) {
+            this.bgmButton.disabled = !hasBgm || this.bgmLoading;
+            this.bgmButton.innerHTML = this.bgmIconSvg(this.bgmPlaying || this.bgmLoading);
+            this.bgmButton.title = title;
+            this.bgmButton.setAttribute("aria-label", title);
+            this.bgmButton.className = this.bgmPlaying
+                ? "flex h-9 w-9 items-center justify-center rounded-xl border border-miku/40 bg-miku text-white shadow-sm transition active:scale-95 disabled:opacity-45 [&_svg]:h-4 [&_svg]:w-4"
+                : "flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/85 text-slate-700 shadow-sm transition hover:bg-white active:scale-95 disabled:opacity-45 [&_svg]:h-4 [&_svg]:w-4";
+        }
+        if (this.bgmInfoElement) {
+            this.bgmInfoElement.textContent = this.bgmError
+                ? `BGM：${this.bgmError}`
+                : hasBgm
+                    ? `BGM：${this.currentBgm?.title}${this.currentBgm?.subtitle ? ` · ${this.currentBgm.subtitle}` : ""}`
+                    : "BGM：当前场景未设置";
+            this.bgmInfoElement.title = this.bgmInfoElement.textContent;
+        }
+        if (this.bgmVolumeInput) {
+            this.bgmVolumeInput.value = String(Math.round(this.bgmVolume * 100));
+            this.bgmVolumeInput.disabled = !hasBgm;
+        }
+    }
+
+    private refreshOverlayState() {
+        if (!this.controlsOverlay) return;
+        const touchDevice = this.isTouchDevice();
+        if (this.hintElement) this.hintElement.style.display = touchDevice ? "none" : "block";
+        for (const button of Array.from(this.controlsOverlay.querySelectorAll<HTMLButtonElement>("[data-view-mode-button]"))) {
+            const active = button.dataset.viewModeButton === this.viewMode;
+            button.className = active
+                ? "rounded-xl border border-miku/40 bg-miku px-3 py-2 text-[11px] font-black text-white shadow-sm transition active:scale-95"
+                : "rounded-xl border border-slate-200 bg-white/85 px-3 py-2 text-[11px] font-black text-slate-700 shadow-sm transition hover:bg-white active:scale-95";
+        }
+        if (this.pointerLockButton) {
+            this.pointerLockButton.disabled = this.viewMode !== "free" || touchDevice;
+            this.pointerLockButton.innerHTML = this.pointerLockIconSvg(this.pointerLocked);
+            this.pointerLockButton.title = this.pointerLocked ? "解除鼠标固定" : "鼠标固定";
+            this.pointerLockButton.setAttribute("aria-label", this.pointerLockButton.title);
+            this.pointerLockButton.style.display = touchDevice ? "none" : "flex";
+            this.pointerLockButton.className = this.pointerLocked
+                ? "flex h-9 w-9 items-center justify-center rounded-xl border border-miku/40 bg-miku text-white shadow-sm transition active:scale-95 [&_svg]:h-4 [&_svg]:w-4"
+                : "flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/85 text-slate-700 shadow-sm transition hover:bg-white active:scale-95 disabled:opacity-45 [&_svg]:h-4 [&_svg]:w-4";
+        }
+        if (this.fullscreenButton) {
+            this.fullscreenButton.innerHTML = this.fullscreenIconSvg(this.isFullscreen);
+            this.fullscreenButton.title = this.isFullscreen ? "退出全屏" : "全屏";
+            this.fullscreenButton.setAttribute("aria-label", this.fullscreenButton.title);
+        }
+        if (this.cycleSiteButton) {
+            this.cycleSiteButton.innerHTML = this.cycleSiteIconSvg();
+            this.cycleSiteButton.title = "切换布局";
+            this.cycleSiteButton.setAttribute("aria-label", "切换布局");
+        }
+        this.refreshBgmOverlayState();
+        if (this.crosshairElement) this.crosshairElement.classList.toggle("hidden", this.viewMode !== "free");
+        if (this.mobileControlsElement) this.mobileControlsElement.classList.toggle("hidden", !(this.viewMode === "free" && this.isTouchDevice()));
+    }
+
+    private isTouchDevice(): boolean {
+        return window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+    }
+
+    private applyNativeFullscreenSizing(active: boolean) {
+        const host = this.container.parentElement || this.container;
+        if (active) {
+            host.style.width = "100vw";
+            host.style.height = "100dvh";
+            host.style.minHeight = "100dvh";
+            host.style.borderRadius = "0";
+            host.style.background = "#0f172a";
+        } else if (!this.isPseudoFullscreen) {
+            host.style.width = "";
+            host.style.height = "";
+            host.style.minHeight = "";
+            host.style.borderRadius = "";
+            host.style.background = "";
+        }
+    }
+
+    private applyViewMode(mode: MysekaiViewMode, save = true) {
+        this.viewMode = mode;
+        this.controls.enabled = mode === "fixed";
+        if (mode === "free") {
+            this.syncFreeLookAnglesFromCamera();
+            this.applyFreeLookRotation();
+            this.requestContinuousRender(260);
+        } else {
+            this.exitPointerLock();
+            this.controls.target.copy(this.camera.position).add(new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion).multiplyScalar(20));
+            this.controls.update();
+        }
+        this.refreshOverlayState();
+        if (save) this.saveCameraState();
+        this.requestRender();
+    }
+
+    private syncFreeLookAnglesFromCamera() {
+        const direction = new THREE.Vector3();
+        this.camera.getWorldDirection(direction);
+        this.freeLookYaw = Math.atan2(-direction.x, -direction.z);
+        this.freeLookPitch = Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1));
+    }
+
+    private applyFreeLookRotation() {
+        this.freeLookPitch = THREE.MathUtils.clamp(this.freeLookPitch, -FREE_LOOK_PITCH_LIMIT, FREE_LOOK_PITCH_LIMIT);
+        this.camera.rotation.set(this.freeLookPitch, this.freeLookYaw, 0, "YXZ");
+    }
+
+    private getFreeLookBounds(): FreeLookBounds {
+        const width = Number(this.currentSiteSize.width || 80);
+        const depth = Number(this.currentSiteSize.depth || 80);
+        const height = Number(this.currentSiteSize.height || 10);
+        const margin = 6;
+        return { minX: -width / 2 - margin, maxX: width / 2 + margin, minY: 0.8, maxY: Math.max(height + 12, 24), minZ: -depth / 2 - margin, maxZ: depth / 2 + margin };
+    }
+
+    private clampFreeLookPosition() {
+        const b = this.getFreeLookBounds();
+        this.camera.position.set(THREE.MathUtils.clamp(this.camera.position.x, b.minX, b.maxX), THREE.MathUtils.clamp(this.camera.position.y, b.minY, b.maxY), THREE.MathUtils.clamp(this.camera.position.z, b.minZ, b.maxZ));
+    }
+
+    private togglePointerLock() {
+        if (this.viewMode !== "free") return;
+        if (this.pointerLocked) this.exitPointerLock();
+        else this.renderer.domElement.requestPointerLock?.();
+    }
+
+    private exitPointerLock() {
+        if (document.pointerLockElement === this.renderer.domElement) document.exitPointerLock?.();
+        this.pointerLocked = false;
+        this.refreshOverlayState();
+    }
+
+    private handlePointerLockChange = () => {
+        this.pointerLocked = document.pointerLockElement === this.renderer.domElement;
+        this.refreshOverlayState();
+        this.requestRender();
+    };
+
+    private handleCanvasMouseDown = (event: MouseEvent) => {
+        if (this.viewMode !== "free" || this.pointerLocked || event.button !== 0) return;
+        this.mouseLookDragging = true;
+        this.requestContinuousRender(500);
+    };
+
+    private handleMouseMove = (event: MouseEvent) => {
+        if (this.viewMode !== "free") return;
+        if (!this.pointerLocked && !this.mouseLookDragging) return;
+        this.freeLookYaw -= event.movementX * FREE_LOOK_BASE_MOUSE_SENSITIVITY * this.options.lookSensitivity;
+        this.freeLookPitch -= event.movementY * FREE_LOOK_BASE_MOUSE_SENSITIVITY * this.options.lookSensitivity;
+        this.applyFreeLookRotation();
+        this.requestContinuousRender(260);
+    };
+
+    private handleMouseUp = () => {
+        if (this.mouseLookDragging) {
+            this.mouseLookDragging = false;
+            this.saveCameraState();
+        }
+    };
+
+    private async toggleFullscreen() {
+        const host = this.container.parentElement || this.container;
+        if (!this.isFullscreen) {
+            try {
+                const element = host as FullscreenElement;
+                if (element.requestFullscreen) await element.requestFullscreen();
+                else if (element.webkitRequestFullscreen) await element.webkitRequestFullscreen();
+                else throw new Error("fullscreen unsupported");
+                try { await (screen.orientation as ScreenOrientation & { lock(o: string): Promise<void> }).lock("landscape"); } catch { /* unsupported or not allowed */ }
+            } catch {
+                this.enterPseudoFullscreen(host);
+            }
+        } else {
+            try { screen.orientation.unlock(); } catch { /* ignore */ }
+            try {
+                const fullscreenDocument = document as FullscreenDocument;
+                if (document.fullscreenElement) await document.exitFullscreen();
+                else if (fullscreenDocument.webkitFullscreenElement && fullscreenDocument.webkitExitFullscreen) await fullscreenDocument.webkitExitFullscreen();
+                else this.exitPseudoFullscreen();
+            } catch {
+                this.exitPseudoFullscreen();
+            }
+        }
+        this.handleResize();
+    }
+
+    private enterPseudoFullscreen(host: HTMLElement) {
+        this.fullscreenHost = host;
+        this.fullscreenRestoreStyle = { position: host.style.position, inset: host.style.inset, zIndex: host.style.zIndex,             width: host.style.width,
+            height: host.style.height,
+            minHeight: host.style.minHeight,
+            borderRadius: host.style.borderRadius, background: host.style.background };
+        Object.assign(host.style, { position: "fixed", inset: "0", zIndex: "9999",             width: "100vw",
+            height: "100dvh",
+            minHeight: "100dvh",
+            borderRadius: "0", background: "#0f172a" });
+        this.isPseudoFullscreen = true;
+        this.isFullscreen = true;
+        this.refreshOverlayState();
+    }
+
+    private exitPseudoFullscreen() {
+        if (this.fullscreenHost && this.fullscreenRestoreStyle) Object.assign(this.fullscreenHost.style, this.fullscreenRestoreStyle);
+        this.fullscreenHost = null;
+        this.fullscreenRestoreStyle = null;
+        this.isPseudoFullscreen = false;
+        this.isFullscreen = !!document.fullscreenElement || !!(document as FullscreenDocument).webkitFullscreenElement;
+        this.refreshOverlayState();
+        this.handleResize();
+    }
+
+    private handleFullscreenChange = () => {
+        const fullscreenDocument = document as FullscreenDocument;
+        const host = this.container.parentElement || this.container;
+        const active = document.fullscreenElement === host || fullscreenDocument.webkitFullscreenElement === host;
+        if (!active) {
+            try { screen.orientation.unlock(); } catch { /* ignore */ }
+        }
+        this.applyNativeFullscreenSizing(active);
+        if (!active && this.isPseudoFullscreen) return;
+        this.isFullscreen = active || this.isPseudoFullscreen;
+        this.refreshOverlayState();
+        this.handleResize();
+    };
+
+    private handleJoystickPointerDown = (event: PointerEvent) => {
+        if (this.viewMode !== "free" || this.joystickPointerId !== null) return;
+        const target = event.currentTarget as HTMLElement;
+        this.joystickPointerId = event.pointerId;
+        target.setPointerCapture(event.pointerId);
+        const rect = target.getBoundingClientRect();
+        this.joystickOrigin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        this.updateJoystick(event.clientX, event.clientY);
+    };
+
+    private handleJoystickPointerMove = (event: PointerEvent) => {
+        if (event.pointerId !== this.joystickPointerId) return;
+        this.updateJoystick(event.clientX, event.clientY);
+    };
+
+    private handleJoystickPointerUp = (event: PointerEvent) => {
+        if (event.pointerId !== this.joystickPointerId) return;
+        this.joystickPointerId = null;
+        this.joystickVector = { x: 0, y: 0 };
+        if (this.joystickKnobElement) this.joystickKnobElement.style.transform = "translate(0px,0px)";
+        this.saveCameraState();
+    };
+
+    private updateJoystick(clientX: number, clientY: number) {
+        const radius = 42;
+        const dx = clientX - this.joystickOrigin.x;
+        const dy = clientY - this.joystickOrigin.y;
+        const len = Math.hypot(dx, dy);
+        const scale = len > radius ? radius / len : 1;
+        const nx = dx * scale;
+        const ny = dy * scale;
+        this.joystickVector = { x: nx / radius, y: ny / radius };
+        if (this.joystickKnobElement) this.joystickKnobElement.style.transform = `translate(${nx}px, ${ny}px)`;
+        this.requestContinuousRender(260);
+    }
+
+    private handleMobileUpPointerDown = (event: PointerEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.keyState.mobileUp = true;
+        (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+        this.requestContinuousRender(260);
+    };
+
+    private handleMobileDownPointerDown = (event: PointerEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.keyState.mobileDown = true;
+        (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+        this.requestContinuousRender(260);
+    };
+
+    private handleMobileVerticalPointerUp = (event: PointerEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.keyState.mobileUp = false;
+        this.keyState.mobileDown = false;
+        this.requestRender();
+    };
+
+    private handleLookPointerDown = (event: PointerEvent) => {
+        if (this.viewMode !== "free" || this.lookPointerId !== null) return;
+        const target = event.currentTarget as HTMLElement;
+        this.lookPointerId = event.pointerId;
+        target.setPointerCapture(event.pointerId);
+        this.lastLookPoint = { x: event.clientX, y: event.clientY };
+    };
+
+    private handleLookPointerMove = (event: PointerEvent) => {
+        if (event.pointerId !== this.lookPointerId) return;
+        const dx = event.clientX - this.lastLookPoint.x;
+        const dy = event.clientY - this.lastLookPoint.y;
+        this.lastLookPoint = { x: event.clientX, y: event.clientY };
+        this.freeLookYaw -= dx * FREE_LOOK_BASE_TOUCH_SENSITIVITY * this.options.lookSensitivity;
+        this.freeLookPitch -= dy * FREE_LOOK_BASE_TOUCH_SENSITIVITY * this.options.lookSensitivity;
+        this.applyFreeLookRotation();
+        this.requestContinuousRender(260);
+    };
+
+    private handleLookPointerUp = (event: PointerEvent) => {
+        if (event.pointerId !== this.lookPointerId) return;
+        this.lookPointerId = null;
+        this.saveCameraState();
+    };
+
     private handleResize = () => {
         const pixelRatio = Math.min(window.devicePixelRatio, MAX_RENDER_PIXEL_RATIO);
         this.renderer.setPixelRatio(pixelRatio);
@@ -1796,10 +2755,30 @@ export class MysekaiScenePreviewRuntime {
     };
 
     private handleKeyDown = (event: KeyboardEvent) => {
+        const target = event.target as HTMLElement | null;
+        if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
+        if (!event.repeat && event.key === "Alt") {
+            if (this.viewMode === "free") {
+                event.preventDefault();
+                this.togglePointerLock();
+            }
+            return;
+        }
+        if (!event.repeat && event.code === "F10") {
+            event.preventDefault();
+            void this.toggleFullscreen();
+            return;
+        }
+        if (!event.repeat && event.code === "F8") {
+            event.preventDefault();
+            this.callbacks.onCycleSite?.();
+            return;
+        }
         const key = String(event.key || "").toLowerCase();
         if (key === "w" || key === "s" || key === "a" || key === "d") this.keyState[key] = true;
         if (event.code === "Space") this.keyState.space = true;
         if (event.code === "ShiftLeft" || event.code === "ShiftRight") this.keyState.shift = true;
+        if (this.viewMode === "free" && this.isCameraKeyActive()) event.preventDefault();
         if (this.isCameraKeyActive()) this.requestContinuousRender();
     };
 
@@ -1812,7 +2791,7 @@ export class MysekaiScenePreviewRuntime {
     };
 
     private isCameraKeyActive(): boolean {
-        return this.keyState.w || this.keyState.s || this.keyState.a || this.keyState.d || this.keyState.space || this.keyState.shift;
+        return this.keyState.w || this.keyState.s || this.keyState.a || this.keyState.d || this.keyState.space || this.keyState.shift || this.keyState.mobileUp || this.keyState.mobileDown;
     }
 
     private handleControlsChange = () => {
@@ -1846,7 +2825,7 @@ export class MysekaiScenePreviewRuntime {
     }
 
     private renderOnce() {
-        this.controls.update();
+        if (this.viewMode === "fixed") this.controls.update();
         this.renderer.render(this.scene, this.camera);
         const direction = new THREE.Vector3();
         this.camera.getWorldDirection(direction);
@@ -1856,26 +2835,58 @@ export class MysekaiScenePreviewRuntime {
         this.axesRenderer.render(this.axesScene, this.axesCamera);
     }
 
+    private hasMobileFreeLookInput(): boolean {
+        return Math.abs(this.joystickVector.x) > 0.01 || Math.abs(this.joystickVector.y) > 0.01 || this.lookPointerId !== null || this.pointerLocked || this.mouseLookDragging;
+    }
+
+    private updateFreeLookMovement(deltaSeconds: number) {
+        const forward = new THREE.Vector3(-Math.sin(this.freeLookYaw), 0, -Math.cos(this.freeLookYaw));
+        const right = new THREE.Vector3(Math.cos(this.freeLookYaw), 0, -Math.sin(this.freeLookYaw));
+        const offset = this.freeLookMoveVector.set(0, 0, 0);
+        if (this.keyState.w) offset.add(forward);
+        if (this.keyState.s) offset.sub(forward);
+        if (this.keyState.d) offset.add(right);
+        if (this.keyState.a) offset.sub(right);
+        if (Math.abs(this.joystickVector.y) > 0.01) offset.addScaledVector(forward, -this.joystickVector.y);
+        if (Math.abs(this.joystickVector.x) > 0.01) offset.addScaledVector(right, this.joystickVector.x);
+        if (offset.lengthSq() > 1) offset.normalize();
+        const speed = FREE_LOOK_MOVE_SPEED * (this.keyState.shift ? FREE_LOOK_FAST_MULTIPLIER : 1) * deltaSeconds;
+        this.camera.position.addScaledVector(offset, speed);
+        if (this.keyState.space || this.keyState.mobileUp) this.camera.position.y += FREE_LOOK_MOVE_SPEED * deltaSeconds;
+        if (this.keyState.mobileDown) this.camera.position.y -= FREE_LOOK_MOVE_SPEED * deltaSeconds;
+        if (this.keyState.shift && !(this.keyState.w || this.keyState.a || this.keyState.s || this.keyState.d)) this.camera.position.y -= FREE_LOOK_MOVE_SPEED * deltaSeconds;
+        this.clampFreeLookPosition();
+        this.applyFreeLookRotation();
+    }
+
     private tick = () => {
         if (this.disposed) return;
         this.renderPending = false;
-        const moveSpeed = 0.35;
-        const forward = new THREE.Vector3();
-        this.camera.getWorldDirection(forward);
-        forward.y = 0;
-        if (forward.lengthSq() > 1e-8) forward.normalize();
-        const right = new THREE.Vector3().crossVectors(forward, this.camera.up).normalize();
-        const offset = new THREE.Vector3();
-        if (this.keyState.w) offset.addScaledVector(forward, moveSpeed);
-        if (this.keyState.s) offset.addScaledVector(forward, -moveSpeed);
-        if (this.keyState.d) offset.addScaledVector(right, moveSpeed);
-        if (this.keyState.a) offset.addScaledVector(right, -moveSpeed);
-        if (this.keyState.space) offset.y += moveSpeed;
-        if (this.keyState.shift) offset.y -= moveSpeed;
-        if (offset.lengthSq() > 0) this.moveCameraRig(offset);
+        const now = performance.now();
+        const deltaSeconds = this.lastTickTime ? Math.min((now - this.lastTickTime) / 1000, 0.05) : 1 / 60;
+        this.lastTickTime = now;
+
+        if (this.viewMode === "free") {
+            this.updateFreeLookMovement(deltaSeconds);
+        } else {
+            const moveSpeed = 0.35;
+            const forward = new THREE.Vector3();
+            this.camera.getWorldDirection(forward);
+            forward.y = 0;
+            if (forward.lengthSq() > 1e-8) forward.normalize();
+            const right = new THREE.Vector3().crossVectors(forward, this.camera.up).normalize();
+            const offset = new THREE.Vector3();
+            if (this.keyState.w) offset.addScaledVector(forward, moveSpeed);
+            if (this.keyState.s) offset.addScaledVector(forward, -moveSpeed);
+            if (this.keyState.d) offset.addScaledVector(right, moveSpeed);
+            if (this.keyState.a) offset.addScaledVector(right, -moveSpeed);
+            if (this.keyState.space) offset.y += moveSpeed;
+            if (this.keyState.shift) offset.y -= moveSpeed;
+            if (offset.lengthSq() > 0) this.moveCameraRig(offset);
+        }
 
         this.renderOnce();
-        if (this.isCameraKeyActive() || performance.now() < this.continuousRenderUntil) {
+        if (this.isCameraKeyActive() || this.hasMobileFreeLookInput() || now < this.continuousRenderUntil) {
             this.requestRender();
         }
     };
@@ -1886,6 +2897,9 @@ export class MysekaiScenePreviewRuntime {
                 cameraPos: this.camera.position.toArray(),
                 controlsTarget: this.controls.target.toArray(),
                 cameraUp: this.camera.up.toArray(),
+                viewMode: this.viewMode,
+                freeLookYaw: this.freeLookYaw,
+                freeLookPitch: this.freeLookPitch,
             };
             localStorage.setItem("mysekai-preview-camera", JSON.stringify(state));
         } catch {
@@ -1897,11 +2911,18 @@ export class MysekaiScenePreviewRuntime {
         try {
             const raw = localStorage.getItem("mysekai-preview-camera");
             if (!raw) return;
-            const state = JSON.parse(raw) as { cameraPos?: number[]; controlsTarget?: number[]; cameraUp?: number[] };
+            const state = JSON.parse(raw) as SavedMysekaiCameraState;
             if (state.cameraPos?.length === 3 && state.controlsTarget?.length === 3) {
                 this.camera.position.fromArray(state.cameraPos);
                 this.controls.target.fromArray(state.controlsTarget);
                 if (state.cameraUp?.length === 3) this.camera.up.fromArray(state.cameraUp);
+                if (state.viewMode === "free" || state.viewMode === "fixed") this.viewMode = state.viewMode;
+                if (Number.isFinite(state.freeLookYaw) && Number.isFinite(state.freeLookPitch)) {
+                    this.freeLookYaw = Number(state.freeLookYaw);
+                    this.freeLookPitch = Number(state.freeLookPitch);
+                } else {
+                    this.syncFreeLookAnglesFromCamera();
+                }
                 this.controls.update();
                 this.restoredCameraState = true;
             }
