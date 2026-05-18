@@ -44,6 +44,7 @@ function persistOptions(options: MysekaiPreviewOptions) {
             shadowEnabled: options.shadowEnabled,
             debugEnabled: options.debugEnabled,
             backWallOpacity: options.backWallOpacity,
+            lookSensitivity: options.lookSensitivity,
         }));
     } catch {
         // ignore localStorage failures
@@ -73,6 +74,7 @@ export default function MysekaiScenePreview({
     const [gridEnabled, setGridEnabled] = useState(true);
     const [shadowEnabled, setShadowEnabled] = useState(true);
     const [backWallOpacity, setBackWallOpacity] = useState(0.2);
+    const [lookSensitivity, setLookSensitivity] = useState(1);
 
     useEffect(() => {
         const saved = readSavedOptions();
@@ -81,6 +83,9 @@ export default function MysekaiScenePreview({
         if (typeof saved.debugEnabled === "boolean") setDebugEnabled(saved.debugEnabled);
         if (typeof saved.gridEnabled === "boolean") setGridEnabled(saved.gridEnabled);
         if (typeof saved.shadowEnabled === "boolean") setShadowEnabled(saved.shadowEnabled);
+        if (Number.isFinite(Number(saved.lookSensitivity))) {
+            setLookSensitivity(Math.max(0.25, Math.min(2.2, Number(saved.lookSensitivity))));
+        }
         if (Number.isFinite(Number(saved.backWallOpacity))) {
             setBackWallOpacity(Math.max(0, Math.min(1, Number(saved.backWallOpacity))));
         }
@@ -94,7 +99,8 @@ export default function MysekaiScenePreview({
         shadowEnabled,
         debugEnabled,
         backWallOpacity,
-    }), [assetSource, backWallOpacity, debugEnabled, gridEnabled, layoutUrl, shadowEnabled, siteId]);
+        lookSensitivity,
+    }), [assetSource, backWallOpacity, debugEnabled, gridEnabled, layoutUrl, lookSensitivity, shadowEnabled, siteId]);
 
     useEffect(() => {
         persistOptions(options);
@@ -102,7 +108,15 @@ export default function MysekaiScenePreview({
 
     useEffect(() => {
         if (!hostRef.current || !axesRef.current) return;
-        const runtime = new MysekaiScenePreviewRuntime(hostRef.current, axesRef.current, options, { onStatus: setStatus });
+        const runtime = new MysekaiScenePreviewRuntime(hostRef.current, axesRef.current, options, {
+            onStatus: setStatus,
+            onCycleSite: () => {
+                setSiteId((current) => {
+                    const index = SITE_OPTIONS.findIndex((option) => option.id === current);
+                    return SITE_OPTIONS[(index + 1) % SITE_OPTIONS.length].id;
+                });
+            },
+        });
         runtimeRef.current = runtime;
         void runtime.reload(false);
         return () => {
@@ -163,7 +177,7 @@ export default function MysekaiScenePreview({
                     </div>
                 </div>
 
-                <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_140px_140px]">
+                <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_140px_140px_170px]">
                     <label className="block">
                         <span className="mb-1 block font-bold text-slate-500">布局 JSON</span>
                         <input
@@ -199,6 +213,21 @@ export default function MysekaiScenePreview({
                             className="mt-2 w-full accent-miku"
                         />
                     </label>
+                    <label className="block">
+                        <span className="mb-1 flex items-center justify-between font-bold text-slate-500">
+                            <span>灵敏度</span>
+                            <span>{Math.round(lookSensitivity * 100)}%</span>
+                        </span>
+                        <input
+                            type="range"
+                            min={25}
+                            max={220}
+                            step={5}
+                            value={Math.round(lookSensitivity * 100)}
+                            onChange={(event) => setLookSensitivity(Math.max(0.25, Math.min(2.2, Number(event.target.value) / 100)))}
+                            className="mt-2 w-full accent-miku"
+                        />
+                    </label>
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center gap-4 text-slate-600">
@@ -227,7 +256,7 @@ export default function MysekaiScenePreview({
                 </div>
                 {!compact && (
                     <div className="mt-2 text-[11px] leading-relaxed text-slate-500">
-                        左键旋转 / 右键移动 / 滚轮缩放；WASD + Space/Shift 可平移相机。加载时也可以直接修改上方 JSON 和调试选项。
+                        自由视角：WASD 移动，鼠标拖动/Alt 锁定转向，F10 全屏，F8 切换场景；固定视角保留旋转 / 平移 / 缩放。
                     </div>
                 )}
             </div>
