@@ -578,7 +578,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             <div className="border-t border-slate-100 px-4 py-2.5 shrink-0 bg-white">
                 <div className="flex items-center justify-center">
                     <span className="text-[10px] text-slate-400 font-medium">
-                        Moesekai · 1.0-preview
+                        Moesekai · 1.1-preview
                     </span>
                 </div>
             </div>
