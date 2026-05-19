@@ -11,6 +11,7 @@ const ITEM_DESCRIPTIONS: Record<string, string> = {
     "/cards": "浏览所有卡牌数据",
     "/music": "浏览所有歌曲信息",
     "/music/meta": "查看歌曲难度与数据分析",
+    "/soundtrack": "精致的背景音乐原声带播放器",
     "/character": "查看角色详细资料",
     "/costumes": "浏览角色服装一览",
     "/honors": "查看称号图鉴",

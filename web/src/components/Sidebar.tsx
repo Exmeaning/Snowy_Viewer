@@ -84,6 +84,17 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
+                name: "游戏原声带",
+                href: "/soundtrack",
+                icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle cx="12" cy="12" r="9" strokeWidth={2} />
+                        <circle cx="12" cy="12" r="2.5" strokeWidth={2} />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3a9 9 0 019 9" />
+                    </svg>
+                ),
+            },
+            {
                 name: "角色",
                 href: "/character",
                 icon: (
