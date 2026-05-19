@@ -1,5 +1,5 @@
 import type { AssetSourceType } from "@/contexts/ThemeContext";
-import { getAssetBaseUrl, getMysekaiRawAssetUrl, getStoryBgmUrl, getMusicVocalAudioUrl } from "@/lib/assets";
+import { buildRawAssetUrl, getAssetBaseUrl, getMysekaiRawAssetUrl, getStoryBgmUrl, getMusicVocalAudioUrl } from "@/lib/assets";
 
 export const MYSEKAI_PREVIEW_STORAGE_KEY = "mysekai_scene_preview_options_v2";
 export const LOCAL_TEST_LAYOUT_URL = "/data/mysekai-preview/testmysekai.json";
@@ -10,6 +10,7 @@ const MASTER_DATA_BASE_URL_BY_REGION: Record<"jp" | "cn", string> = {
 };
 
 export function getMysekaiCandidateRawUrls(assetPath: string, source: AssetSourceType): string[] {
+    if (/^https?:\/\//i.test(assetPath)) return [assetPath];
     return [getMysekaiRawAssetUrl(assetPath, source)];
 }
 
@@ -47,14 +48,106 @@ function customAttachTextureName(assetName: string): string {
     return shortName;
 }
 
+function uniquePaths(paths: string[]): string[] {
+    return Array.from(new Set(paths));
+}
+
+const NO_TEXTURE_FIXTURE_ASSETS = new Set([
+    "mdl_non3001_block_cl1",
+    "mdl_non3001_block_cl2",
+]);
+
+const NO_TEXTURE_CUSTOM_ATTACH_ASSETS = new Set([
+    "mdl_cst0002_attach_acrylic1stage1",
+    "mdl_cst0002_attach_acrylic1stand1",
+    "mdl_cst0002_attach_logo1board1",
+    "mdl_cst0002_attach_logo1stage1",
+    "mdl_cst0002_attach_tapestry1board1",
+    "mdl_cst0002_attach_ticketholder1stage1",
+]);
+
+const CUSTOM_ATTACH_MODEL_OBJECT_FILE_BY_ASSET: Record<string, string> = {
+    mdl_cst0006_photo_type1stand1: "mdl_cst0006_photo_type1stand1.obj",
+    mdl_viewer_photo_stand1small: "mdl_cst0006_photo_type1stand1.obj",
+};
+
+const CUSTOM_ATTACH_OBJECT_FILE_BY_ASSET: Record<string, string> = {
+    mdl_viewer_canvas_board1large1: "mdl_cst0005_canvas_large1board1.obj",
+    mdl_viewer_canvas_board1medium1: "mdl_cst0005_canvas_medium1board1.obj",
+    mdl_viewer_canvas_board1small1: "mdl_cst0005_canvas_small1board1.obj",
+    mdl_viewer_canvas_stand1large1: "mdl_cst0005_canvas_large1stand1.obj",
+    mdl_viewer_canvas_stand1medium1: "mdl_cst0005_canvas_medium1stand1.obj",
+    mdl_viewer_canvas_stand1small1: "mdl_cst0005_canvas_small1stand1.obj",
+    mdl_viewer_custom_board: "mdl_cst0002_attach_badge1board1.obj",
+    mdl_viewer_custom_stage: "mdl_cst0002_attach_badge1stage1.obj",
+    mdl_viewer_title1_board: "mdl_cst0004_title_type1board1.obj",
+    mdl_viewer_title1_stand: "mdl_cst0004_title_type1stand1.obj",
+};
+
+const CUSTOM_ATTACH_TEXTURE_FILES_BY_ASSET: Record<string, string[]> = {
+    mdl_viewer_canvas_board1large1: ["tex_cst0005_canvas_main_large1board1_1", "tex_cst0005_canvas_common_large1board1_1"],
+    mdl_viewer_canvas_board1medium1: ["tex_cst0005_canvas_main_medium1stand1_1", "tex_cst0005_canvas_common_medium1stand1_1"],
+    mdl_viewer_canvas_board1small1: ["tex_cst0005_canvas_main_small1stand1_1", "tex_cst0005_canvas_common_small1stand1_1"],
+    mdl_viewer_canvas_stand1large1: ["tex_cst0005_canvas_large1stand1_1", "tex_viewer_canvas_stand1large_main"],
+    mdl_viewer_canvas_stand1medium1: ["tex_cst0005_canvas_medium1stand1_1", "tex_viewer_canvas_stand1medium_main"],
+    mdl_viewer_canvas_stand1small1: ["tex_cst0005_canvas_small1stand1_1", "tex_viewer_canvas_stand1small_main"],
+    mdl_viewer_custom_board: ["tex_attach_badge1_main", "tex_attach_badge1_common"],
+    mdl_viewer_custom_stage: ["tex_attach_badge1_main", "tex_attach_badge1_common"],
+    mdl_viewer_custom_stand: ["tex_attach_badge1_main", "tex_attach_badge1_common"],
+    mdl_viewer_title1_board: ["tex_cst0004_title_main_type1board1_1", "tex_cst0004_title_type1board1_common_1"],
+    mdl_viewer_title1_stand: ["tex_cst0004_title_main_type1stand1_1", "tex_cst0004_title_type1stand1_common_1"],
+};
+
+function isCanvasFixtureAsset(assetName: string): boolean {
+    return assetName.startsWith("mdl_cst0005_canvas_");
+}
+
+function getFixtureAliasObjectFile(assetName: string): string | null {
+    const chr103DollMatch = assetName.match(/^mdl_chr103_fixture_doll1(large|medium|small)$/);
+    if (chr103DollMatch) return `mdl_chr103_fixture_ldoll1${chr103DollMatch[1]}.obj`;
+
+    const crystalMatch = assetName.match(/^(mdl_crs\d+_fixture_crystal1)(medium|small)$/);
+    if (crystalMatch) return `${crystalMatch[1]}large.obj`;
+
+    const pasDollMatch = assetName.match(/^(mdl_pas\d+_fixture_doll[34])(medium|small)$/);
+    if (pasDollMatch) return `${pasDollMatch[1]}large.obj`;
+
+    if (assetName === "mdl_cst0001_custom_middle3mount1") return "mdl_cst0001_custom_top3mount1.obj";
+
+    const triblockMatch = assetName.match(/^mdl_non3002_triblock_([a-z]+)([12])$/);
+    if (triblockMatch && !["brick", "concre", "grain"].includes(triblockMatch[1])) {
+        return `mdl_non3002_triblock_chip${triblockMatch[2]}.obj`;
+    }
+
+    const fanblockMatch = assetName.match(/^mdl_non3003_fanblock_([a-z]+)([12])$/);
+    if (fanblockMatch && !["brick", "concre", "grain"].includes(fanblockMatch[1])) {
+        return `mdl_non3003_fanblock_chip${fanblockMatch[2]}.obj`;
+    }
+
+    return null;
+}
+
+function customAttachTexturePath(assetName: string, fileName: string): string {
+    return `custom_fixture_attach/${assetName}/texture/${fileName}.webp`;
+}
+
+function customAttachKnownTextureIdPaths(assetName: string, baseName: string, textureId: number, validTextureIds: number[] = [1]): string[] {
+    const ids = uniquePaths([String(textureId), "1"]).filter((id) => validTextureIds.includes(Number(id)));
+    return ids.map((id) => customAttachTexturePath(assetName, `${baseName}_${id}`));
+}
+
+function getRootAssetCandidateUrls(assetPath: string, source: AssetSourceType): string[] {
+    return [buildRawAssetUrl(source, assetPath)];
+}
+
 export function getFixtureObjectPaths(assetName: string, handleType?: string, fixtureType?: string): string[] {
-    if (fixtureType === "canvas") {
+    if (fixtureType === "canvas" || isCanvasFixtureAsset(assetName)) {
         return [`fixture/${assetName}/model/${assetName}.obj`];
     }
-    if (handleType === "road") {
+    if (handleType === "road" || /^mdl_non200[13]_road_/.test(assetName)) {
         return [`fixture/${assetName}/mdl_non1002_way_basemodel1.obj`];
     }
-    if (handleType === "fence") {
+    if (handleType === "fence" || assetName.startsWith("mdl_non2002_fence_")) {
         return [
             `fixture/${assetName}/mdl_pole_center.obj`,
             `fixture/${assetName}/mdl_wing_short.obj`,
@@ -64,52 +157,128 @@ export function getFixtureObjectPaths(assetName: string, handleType?: string, fi
     if (assetName.startsWith("mdl_cst0001_custom_") && customBaseUsesPreview(assetName)) {
         return [`fixture/${assetName}/preview.obj`];
     }
+    const aliasObjectFile = getFixtureAliasObjectFile(assetName);
+    if (aliasObjectFile) return [`fixture/${assetName}/${aliasObjectFile}`];
     return [`fixture/${assetName}/${assetName}.obj`];
 }
 
 export function getCustomFixtureAttachObjectPaths(assetName: string): string[] {
-    return [`custom_fixture_attach/${assetName}/${assetName}.obj`];
+    const modelObjectFile = CUSTOM_ATTACH_MODEL_OBJECT_FILE_BY_ASSET[assetName];
+    if (modelObjectFile) return [`custom_fixture_attach/${assetName}/model/${modelObjectFile}`];
+    const objectFile = CUSTOM_ATTACH_OBJECT_FILE_BY_ASSET[assetName] || `${assetName}.obj`;
+    return [`custom_fixture_attach/${assetName}/${objectFile}`];
 }
 
 export function getFixtureTexturePaths(assetName: string, textureId: number, handleType?: string): string[] {
+    if (NO_TEXTURE_FIXTURE_ASSETS.has(assetName)) return [];
+    const shortName = withoutMdlPrefix(assetName);
     if (assetName.startsWith("mdl_cst0001_custom_") && customBaseUsesPreview(assetName)) {
-        return [customBasePreviewTexturePath(assetName, textureId)];
+        const customPreviewPath = customBasePreviewTexturePath(assetName, textureId);
+        return uniquePaths([
+            customPreviewPath,
+            textureId === 1 ? customPreviewPath : customBasePreviewTexturePath(assetName, 1),
+        ]);
     }
-    if (handleType === "idle_timeline") {
-        return [`fixture/${assetName}/texture/tex_${withoutMdlPrefix(assetName)}_body_${textureId}.webp`];
+    if (handleType === "idle_timeline" || /^mdl_clb1102_fixture_egg\d+$/.test(assetName)) {
+        return uniquePaths([
+            `fixture/${assetName}/texture/tex_${shortName}_body_${textureId}.webp`,
+            `fixture/${assetName}/texture/tex_${shortName}_body_1.webp`,
+        ]);
     }
-    return [`fixture/${assetName}/texture/tex_${withoutMdlPrefix(assetName)}_${textureId}.webp`];
+    return uniquePaths([
+        `fixture/${assetName}/texture/tex_${shortName}_${textureId}.webp`,
+        `fixture/${assetName}/texture/tex_${shortName}_1.webp`,
+    ]);
 }
 
 export function getCustomFixtureAttachTexturePaths(assetName: string, textureId: number): string[] {
-    if (assetName.startsWith("mdl_cst0002_attach_logo")) {
-        return [];
+    if (NO_TEXTURE_CUSTOM_ATTACH_ASSETS.has(assetName)) return [];
+
+    const specialTextureFiles = CUSTOM_ATTACH_TEXTURE_FILES_BY_ASSET[assetName];
+    if (specialTextureFiles) {
+        return uniquePaths(specialTextureFiles.map((fileName) => customAttachTexturePath(assetName, fileName)));
     }
-    return [`custom_fixture_attach/${assetName}/texture/tex_${customAttachTextureName(assetName)}_${textureId}.webp`];
+
+    if (assetName === "mdl_viewer_env0006_window_window1") {
+        return uniquePaths([
+            ...customAttachKnownTextureIdPaths(assetName, "tex_env0006_window_window1", textureId, [1, 2, 3]),
+            ...customAttachKnownTextureIdPaths(assetName, "tex_env0006_window_window1_dep1", textureId, [1, 2, 3]),
+        ]);
+    }
+
+    if (assetName === "mdl_cst0006_photo_type1stand1" || assetName === "mdl_viewer_photo_stand1small") {
+        return uniquePaths([
+            ...customAttachKnownTextureIdPaths(assetName, "tex_cst0006_photo_type1stand1", textureId),
+            ...customAttachKnownTextureIdPaths(assetName, "tex_cst0006_photo_main_type1stand1", textureId),
+        ]);
+    }
+
+    if (assetName === "mdl_viewer_viewer_record1_board") {
+        return uniquePaths([
+            ...customAttachKnownTextureIdPaths(assetName, "tex_cst0003_record_common_type1board1", textureId),
+            customAttachTexturePath(assetName, "jacket_customdefault_s"),
+        ]);
+    }
+
+    const textureName = customAttachTextureName(assetName);
+    const paths = customAttachKnownTextureIdPaths(assetName, `tex_${textureName}`, textureId);
+    if (assetName.startsWith("mdl_cst0003_record_")) {
+        paths.push(customAttachTexturePath(assetName, "jacket_customdefault_s"));
+    }
+    return uniquePaths(paths);
 }
 
-export function getRoomSkinFloorTexturePath(assetName: string, textureId: number): string {
-    return `site/field/my_room_asset/skin/${assetName}/texture/tex_${assetName}_floor_floor1_uvset1_${textureId}.webp`;
+function buildRoomSkinUvsetTexturePaths(assetName: string, textureId: number, prefix: "floor_floor1" | "wall_wall1"): string[] {
+    const out: string[] = [];
+    for (const texId of uniquePaths([String(textureId), "1"])) {
+        for (let uv = 1; uv <= 4; uv++) {
+            out.push(`site/field/my_room_asset/skin/${assetName}/texture/tex_${assetName}_${prefix}_uvset${uv}_${texId}.webp`);
+        }
+    }
+    return uniquePaths(out);
 }
 
-export function getRoomSkinWallTexturePath(assetName: string, textureId: number): string {
-    return `site/field/my_room_asset/skin/${assetName}/texture/tex_${assetName}_wall_wall1_uvset1_${textureId}.webp`;
+export function getRoomSkinFloorTexturePaths(assetName: string, textureId: number): string[] {
+    return buildRoomSkinUvsetTexturePaths(assetName, textureId, "floor_floor1");
 }
 
-export function getRoomSkinDoorTexturePath(assetName: string, textureId: number): string {
-    return `site/field/my_room_asset/skin/${assetName}/texture/tex_${assetName}_door_door1_${textureId}.webp`;
+export function getRoomSkinWallTexturePaths(assetName: string, textureId: number): string[] {
+    return buildRoomSkinUvsetTexturePaths(assetName, textureId, "wall_wall1");
+}
+
+export function getRoomSkinDoorTexturePaths(assetName: string, textureId: number): string[] {
+    return uniquePaths([
+        `site/field/my_room_asset/skin/${assetName}/texture/tex_${assetName}_door_door1_${textureId}.webp`,
+        `site/field/my_room_asset/skin/${assetName}/texture/tex_${assetName}_door_door1_1.webp`,
+    ]);
 }
 
 export function getRoomSkinDoorObjectPaths(assetName: string): string[] {
-    return [`site/field/my_room_asset/skin/${assetName}/mdl_${assetName}_door_door1.obj`];
+    return uniquePaths([
+        `site/field/my_room_asset/skin/${assetName}/mdl_${assetName}_door_door1.obj`,
+        `site/field/my_room_asset/skin/${assetName}/${assetName}_door_door1.obj`,
+    ]);
 }
 
 export function getOutdoorGrassTexturePath(): string {
     return "site/field/grasslands/texture/tex_site_base_grasslands_grass01.webp";
 }
 
-export function getMusicJacketTexturePath(assetbundleName: string): string {
-    return `thumbnail/music_jacket/${assetbundleName}.webp`;
+export function getMysekaiCanvasCardTextureUrls(assetbundleName: string, trained: boolean, fixtureId: number, source: AssetSourceType): string[] {
+    const status = trained ? "after_training" : "normal";
+    const path = fixtureId === 439 || fixtureId === 442
+        ? `thumbnail/chara/${assetbundleName}_${status}.webp`
+        : fixtureId === 441 || fixtureId === 444
+            ? `character/member_small/${assetbundleName}/card_${status}.webp`
+            : `character/member_cutout/${assetbundleName}/${status}.webp`;
+    return getRootAssetCandidateUrls(path, source);
+}
+
+export function getMusicJacketTexturePaths(assetbundleName: string, source: AssetSourceType): string[] {
+    return uniquePaths([
+        ...getRootAssetCandidateUrls(`thumbnail/music_jacket/${assetbundleName}.webp`, source),
+        ...getRootAssetCandidateUrls(`music/jacket/${assetbundleName}/${assetbundleName}.webp`, source),
+    ]);
 }
 
 export function getMysekaiMusicVocalAudioUrl(assetbundleName: string, source: AssetSourceType): string {
