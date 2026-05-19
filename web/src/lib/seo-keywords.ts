@@ -47,6 +47,7 @@ export const PAGE_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   deck_recommend: ["组卡推荐", "卡组推荐"],
   deck_comparator: ["组卡比较", "卡组比较"],
   chart_preview: ["谱面预览"],
+  mysekai_preview: ["烤森百景", "百景排行", "MySekai活动"],
   score_control: ["控分计算"],
   sticker_maker: ["表情包制作"],
   realtime_ranking: ["实时排行榜"],

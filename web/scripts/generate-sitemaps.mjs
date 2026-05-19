@@ -86,6 +86,9 @@ const mainRoutes = [
     { path: '/prediction/', priority: 0.6, changefreq: 'daily' },
     { path: '/deck-recommend/', priority: 0.6, changefreq: 'monthly' },
     { path: '/score-control/', priority: 0.6, changefreq: 'monthly' },
+    { path: '/mysekai-preview/', priority: 0.6, changefreq: 'daily' },
+    { path: '/mysekai-preview/ranking/', priority: 0.5, changefreq: 'daily' },
+    { path: '/mysekai-preview/scene/', priority: 0.4, changefreq: 'monthly' },
 ];
 
 const routeSources = [

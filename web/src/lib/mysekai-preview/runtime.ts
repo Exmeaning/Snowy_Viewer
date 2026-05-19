@@ -26,6 +26,7 @@ import type {
     MysekaiFixtureMaster,
     MysekaiLayoutData,
     MysekaiLayoutItem,
+    MysekaiLayoutPayload,
     MysekaiMusicMaster,
     MysekaiMusicPlayFixtureSetting,
     MysekaiMusicRecordMaster,
@@ -595,6 +596,8 @@ export class MysekaiScenePreviewRuntime {
     updateOptions(options: MysekaiPreviewOptions) {
         const oldSiteId = this.options.siteId;
         const oldLayoutUrl = this.options.layoutUrl;
+        const oldLayoutData = this.options.layoutData;
+        const oldLayoutKey = this.options.layoutKey;
         const oldAssetSource = this.options.assetSource;
         this.options = { ...options };
         this.applyDebugVisibility();
@@ -602,7 +605,13 @@ export class MysekaiScenePreviewRuntime {
         this.applyBackWallOpacity();
         this.refreshOverlayState();
         this.requestRender();
-        if (oldSiteId !== options.siteId || oldLayoutUrl !== options.layoutUrl || oldAssetSource !== options.assetSource) {
+        if (
+            oldSiteId !== options.siteId
+            || oldLayoutUrl !== options.layoutUrl
+            || oldLayoutData !== options.layoutData
+            || oldLayoutKey !== options.layoutKey
+            || oldAssetSource !== options.assetSource
+        ) {
             void this.reload(false);
         }
     }
@@ -692,6 +701,22 @@ export class MysekaiScenePreviewRuntime {
             }
         }
         throw new Error(`加载失败: ${label}${lastError ? ` (${lastError})` : ""}`);
+    }
+
+    private normalizeLayoutPayload(payload: MysekaiLayoutPayload): MysekaiLayoutData | MysekaiLayoutData[] {
+        if (Array.isArray(payload)) return payload;
+        if (payload && typeof payload === "object" && "room" in payload) {
+            const room = payload.room;
+            if (Array.isArray(room) || (room && typeof room === "object")) return room as MysekaiLayoutData | MysekaiLayoutData[];
+            throw new Error("布局响应中没有可用的 room 数据");
+        }
+        return payload as MysekaiLayoutData;
+    }
+
+    private async loadLayoutPayload(forceFreshLayout: boolean): Promise<MysekaiLayoutData | MysekaiLayoutData[]> {
+        if (this.options.layoutData) return this.normalizeLayoutPayload(this.options.layoutData);
+        const payload = await this.fetchJson<MysekaiLayoutPayload>([this.options.layoutUrl], this.options.layoutUrl, forceFreshLayout);
+        return this.normalizeLayoutPayload(payload);
     }
 
     private async ensureMasterDataLoaded() {
@@ -1738,7 +1763,7 @@ export class MysekaiScenePreviewRuntime {
             ignored: 0,
             failed: 0,
         });
-        const layout = await this.fetchJson<MysekaiLayoutData | MysekaiLayoutData[]>([this.options.layoutUrl], this.options.layoutUrl, forceFreshLayout);
+        const layout = await this.loadLayoutPayload(forceFreshLayout);
         const siteId = Number(this.options.siteId || 1);
         void this.applyBackgroundMusic(layout, siteId);
         const { entries, playerRank } = this.extractEntries(layout, siteId);

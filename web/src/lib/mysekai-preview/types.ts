@@ -24,6 +24,16 @@ export interface MysekaiLayoutItem {
     cardId?: number;
     isSpecialTraining?: boolean;
     mysekaiMusicRecordId?: number;
+    honorId?: number;
+    honorLevel?: number;
+    isFullSize?: boolean;
+    bondsHonorId?: number;
+    bondsHonorLevel?: number;
+    bondsHonorWordId?: number;
+    bondsHonorWordAssetbundleName?: string;
+    wordAssetbundleName?: string;
+    bondsHonorViewType?: "normal" | "reverse" | string;
+    customProfileResourceId?: number;
     ornamentRotation?: number;
     __isCustomFixture?: boolean;
     __customGroupKey?: string;
@@ -71,6 +81,12 @@ export interface MysekaiLayoutData {
     mysekaiRank?: number;
 }
 
+export interface MysekaiRoomApiResponse {
+    fetchedAt?: number;
+    meta?: unknown;
+    room?: MysekaiLayoutData | MysekaiLayoutData[];
+}
+
 export interface MysekaiFixtureGridSize {
     width?: number;
     depth?: number;
@@ -90,11 +106,71 @@ export interface MysekaiCustomFixtureMaster {
     id?: number;
     baseAssetBundleName?: string;
     ornamentAssetBundleName?: string;
+    mysekaiCustomFixtureType?: string;
     mysekaiCustomFixtureOrnamentType?: string;
     width?: number;
     depth?: number;
     height?: number;
 }
+
+export interface MysekaiHonorLevelMaster {
+    honorId?: number;
+    level?: number;
+    honorRarity?: string;
+    assetbundleName?: string;
+}
+
+export interface MysekaiHonorMaster {
+    id?: number;
+    seq?: number;
+    groupId?: number;
+    honorRarity?: string;
+    name?: string;
+    assetbundleName?: string;
+    levels?: MysekaiHonorLevelMaster[];
+    honorMissionType?: string;
+}
+
+export interface MysekaiHonorGroupMaster {
+    id?: number;
+    name?: string;
+    honorType?: string;
+    backgroundAssetbundleName?: string;
+    frameName?: string;
+}
+
+export interface MysekaiBondsHonorLevelMaster {
+    id?: number;
+    bondsHonorId?: number;
+    level?: number;
+}
+
+export interface MysekaiBondsHonorMaster {
+    id?: number;
+    seq?: number;
+    bondsGroupId?: number;
+    gameCharacterUnitId1?: number;
+    gameCharacterUnitId2?: number;
+    honorRarity?: string;
+    name?: string;
+    levels?: MysekaiBondsHonorLevelMaster[];
+}
+
+export interface MysekaiBondsHonorWordMaster {
+    id?: number;
+    seq?: number;
+    bondsGroupId?: number;
+    assetbundleName?: string;
+    name?: string;
+}
+
+export interface MysekaiGameCharaUnitMaster {
+    id?: number;
+    gameCharacterId?: number;
+    colorCode?: string;
+}
+
+export type MysekaiDisplayTextureKind = "card" | "music_jacket" | "honor" | "bonds_honor" | "fallback";
 
 export interface MysekaiRankReleaseMaster {
     mysekaiRankRelaseType?: string;
@@ -144,8 +220,12 @@ export interface MysekaiMusicSoundTrackMaster {
     assetbundleFileName?: string;
 }
 
+export type MysekaiLayoutPayload = MysekaiLayoutData | MysekaiLayoutData[] | MysekaiRoomApiResponse;
+
 export interface MysekaiPreviewOptions {
     layoutUrl: string;
+    layoutData?: MysekaiLayoutPayload | null;
+    layoutKey?: string;
     siteId: number;
     assetSource: AssetSourceType;
     gridEnabled: boolean;

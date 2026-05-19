@@ -19,19 +19,24 @@ interface AccountSelectorProps {
     /** 当前输入框中的 userId（用于高亮匹配） */
     currentUserId?: string;
     currentServer?: ServerType;
+    /** 可选：只展示指定服务器的账号 */
+    allowedServers?: ServerType[];
 }
 
-export default function AccountSelector({ onSelect, currentUserId, currentServer }: AccountSelectorProps) {
+export default function AccountSelector({ onSelect, currentUserId, currentServer, allowedServers }: AccountSelectorProps) {
     const [accounts, setAccounts] = useState<MoesekaiAccount[]>([]);
 
     useEffect(() => {
         const syncAccounts = () => {
-            setAccounts(getAccounts());
+            const allAccounts = getAccounts();
+            setAccounts(allowedServers?.length
+                ? allAccounts.filter((account) => allowedServers.includes(account.server))
+                : allAccounts);
         };
         syncAccounts();
         window.addEventListener("storage", syncAccounts);
         return () => window.removeEventListener("storage", syncAccounts);
-    }, []);
+    }, [allowedServers]);
 
     if (accounts.length === 0) return null;
 

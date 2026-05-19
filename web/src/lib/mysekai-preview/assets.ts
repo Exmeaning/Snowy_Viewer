@@ -42,6 +42,7 @@ function customAttachTextureName(assetName: string): string {
     if (!match) return shortName;
     const [, prefix, category, rest] = match;
     if (category === "attach") return `${prefix}_attach_common_${rest}`;
+    if (category === "record") return `${prefix}_record_common_${rest}`;
     if (category === "title") return `${prefix}_title_${rest}_common`;
     return shortName;
 }
