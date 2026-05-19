@@ -4,21 +4,22 @@ import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import type { AssetSourceType } from "@/contexts/ThemeContext";
-import { getCardFullUrl, getMusicJacketUrl } from "@/lib/assets";
 import {
     getCustomFixtureAttachObjectPaths,
     getCustomFixtureAttachTexturePaths,
     getFixtureObjectPaths,
     getFixtureTexturePaths,
+    getMusicJacketTexturePaths,
     getMysekaiCandidateRawUrls,
+    getMysekaiCanvasCardTextureUrls,
     getMysekaiMasterDataUrls,
     getMysekaiMusicVocalAudioUrl,
     getMysekaiSoundTrackAudioUrl,
     getOutdoorGrassTexturePath,
     getRoomSkinDoorObjectPaths,
-    getRoomSkinDoorTexturePath,
-    getRoomSkinFloorTexturePath,
-    getRoomSkinWallTexturePath,
+    getRoomSkinDoorTexturePaths,
+    getRoomSkinFloorTexturePaths,
+    getRoomSkinWallTexturePaths,
 } from "./assets";
 import type {
     ExtractedMysekaiEntry,
@@ -137,11 +138,18 @@ interface FloorShadowRecord {
     shadow: THREE.Mesh;
 }
 
+interface WallPlacedEntry {
+    layoutType: string;
+    object: THREE.Object3D;
+    materials: THREE.Material[];
+}
+
 interface EntryBuildResult {
     index: number;
     entryGroup: THREE.Group | null;
     floorPlacementRecords: FloorPlacementRecord[];
     floorShadowRecords: FloorShadowRecord[];
+    wallPlacedEntries: WallPlacedEntry[];
     error?: unknown;
 }
 
@@ -188,6 +196,22 @@ interface StaticMergeBucket {
 
 interface StaticMergeTarget {
     mesh: THREE.Mesh<THREE.BufferGeometry, THREE.Material>;
+}
+
+interface OrderedDitherMaterial extends THREE.Material {
+    alphaTest: number;
+    transparent: boolean;
+    alphaHash: boolean;
+    depthWrite: boolean;
+    depthTest: boolean;
+    userData: THREE.Material["userData"] & {
+        _baseAlphaTest?: number;
+        _orderedDitherReady?: boolean;
+        _orderedDitherOpacity?: number;
+        _orderedDitherPhaseX?: number;
+        _orderedDitherPhaseY?: number;
+        _orderedDitherShader?: { uniforms?: Record<string, { value: unknown }> };
+    };
 }
 
 interface FencePartSet {
@@ -466,6 +490,9 @@ export class MysekaiScenePreviewRuntime {
     private readonly externalMusicIdByMysekaiMusicRecordId = new Map<number, number>();
     private readonly musicAssetById = new Map<number, string>();
     private readonly indoorWallPlanes: THREE.Mesh[] = [];
+    private readonly wallPlacedEntries: WallPlacedEntry[] = [];
+    private readonly lastBackFacingCamPos = new THREE.Vector3(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
+    private readonly lastBackFacingCamQuat = new THREE.Quaternion();
     private readonly keyState = { w: false, s: false, a: false, d: false, space: false, shift: false, mobileUp: false, mobileDown: false };
     private readonly freeLookMoveVector = new THREE.Vector3();
     private controlsOverlay: HTMLDivElement | null = null;
@@ -500,7 +527,12 @@ export class MysekaiScenePreviewRuntime {
     private siteLayouts: MysekaiSiteLayoutMaster[] = [];
     private gridMinor: THREE.LineSegments | null = null;
     private gridMajor: THREE.LineSegments | null = null;
+    private indoorWallGridMinor: THREE.LineSegments | null = null;
+    private indoorWallGridMajor: THREE.LineSegments | null = null;
     private indoorDoorObject: THREE.Object3D | null = null;
+    private backFacingOpacityDirty = true;
+    private lastBackFacingOpacity = Number.NaN;
+    private lastBackFacingSiteId = Number.NaN;
     private grass: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
     private floorShadowTexture: THREE.CanvasTexture | null = null;
     private axisHelper: THREE.AxesHelper;
@@ -508,6 +540,7 @@ export class MysekaiScenePreviewRuntime {
     private renderPending = false;
     private continuousRenderUntil = 0;
     private disposed = false;
+    private reloadGeneration = 0;
     private masterLoaded = false;
     private cardsLoaded = false;
     private musicLoaded = false;
@@ -602,7 +635,8 @@ export class MysekaiScenePreviewRuntime {
         this.options = { ...options };
         this.applyDebugVisibility();
         this.applyShadowVisibility();
-        this.applyBackWallOpacity();
+        this.markBackFacingOpacityDirty();
+        this.applyBackFacingOpacity();
         this.refreshOverlayState();
         this.requestRender();
         if (
@@ -618,14 +652,17 @@ export class MysekaiScenePreviewRuntime {
 
     async reload(forceFreshLayout = true) {
         if (this.disposed) return;
+        const generation = ++this.reloadGeneration;
         try {
             this.saveCameraState();
-            this.setStatus({ phase: "loading", stage: "master", stageLabel: "正在加载 master data", progress: 3, message: "加载 master data...", loaded: 0, total: 0, skipped: 0, ignored: 0, failed: 0 });
+            this.setStatusForReload(generation, { phase: "loading", stage: "master", stageLabel: "正在加载 master data", progress: 3, message: "加载 master data...", loaded: 0, total: 0, skipped: 0, ignored: 0, failed: 0 });
             await this.ensureMasterDataLoaded();
-            await this.buildScene(forceFreshLayout);
+            if (!this.isReloadActive(generation)) return;
+            await this.buildScene(forceFreshLayout, generation);
         } catch (error) {
+            if (!this.isReloadActive(generation)) return;
             console.error(error);
-            this.setStatus({ phase: "error", stage: "error", stageLabel: "加载失败", progress: 100, message: `失败: ${errorMessage(error)}`, loaded: 0, total: 0, skipped: 0, ignored: 0, failed: 1 });
+            this.setStatusForReload(generation, { phase: "error", stage: "error", stageLabel: "加载失败", progress: 100, message: `失败: ${errorMessage(error)}`, loaded: 0, total: 0, skipped: 0, ignored: 0, failed: 1 });
         }
     }
 
@@ -643,6 +680,7 @@ export class MysekaiScenePreviewRuntime {
 
     dispose() {
         this.disposed = true;
+        this.reloadGeneration++;
         cancelAnimationFrame(this.rafId);
         this.stopBgmAudio(true);
         window.removeEventListener("keydown", this.handleKeyDown);
@@ -683,6 +721,26 @@ export class MysekaiScenePreviewRuntime {
 
     private mergeStatus(partial: Partial<MysekaiPreviewStatus>) {
         this.setStatus({ ...this.currentStatus, ...partial });
+    }
+
+    private isReloadActive(generation: number) {
+        return !this.disposed && generation === this.reloadGeneration;
+    }
+
+    private setStatusForReload(generation: number, status: MysekaiPreviewStatus) {
+        if (!this.isReloadActive(generation)) return;
+        this.setStatus(status);
+    }
+
+    private mergeStatusForReload(generation: number, partial: Partial<MysekaiPreviewStatus>) {
+        if (!this.isReloadActive(generation)) return;
+        this.mergeStatus(partial);
+    }
+
+    private disposeBuildResults(results: EntryBuildResult[]) {
+        for (const result of results) {
+            if (result.entryGroup) disposeObject(result.entryGroup);
+        }
     }
 
     private async fetchJson<T>(urls: string[], label: string, forceFresh = false): Promise<T> {
@@ -909,8 +967,11 @@ export class MysekaiScenePreviewRuntime {
     }
 
     private async getTextureFromUrls(urls: string[]): Promise<THREE.Texture | null> {
-        const attempts = await Promise.all(urls.map((url) => this.getTextureFromUrl(url)));
-        return attempts.find((texture): texture is THREE.Texture => !!texture) ?? null;
+        for (const url of Array.from(new Set(urls))) {
+            const texture = await this.getTextureFromUrl(url);
+            if (texture) return texture;
+        }
+        return null;
     }
 
     private getTextureFromUrl(url: string): Promise<THREE.Texture | null> {
@@ -954,15 +1015,22 @@ export class MysekaiScenePreviewRuntime {
         return texture;
     }
 
-    private async getCanvasCardTexture(item: MysekaiLayoutItem): Promise<THREE.Texture> {
+    private prepareDisplayTexture(texture: THREE.Texture): THREE.Texture {
+        texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+        texture.repeat.set(1, 1);
+        texture.offset.set(0, 0);
+        texture.needsUpdate = true;
+        return texture;
+    }
+
+    private async getCanvasCardTexture(item: MysekaiLayoutItem, fixtureId: number): Promise<THREE.Texture> {
         const cardId = Number(item.cardId || 0);
         if (!cardId) return this.createFallbackTexture();
         await this.ensureCardsLoaded();
         const cardAsset = this.cardAssetById.get(cardId);
         if (!cardAsset) return this.createFallbackTexture();
-        const cardCharacterId = this.cardCharacterIdById.get(cardId) || 0;
-        const texture = await this.getTextureFromUrls([getCardFullUrl(cardCharacterId, cardAsset, !!item.isSpecialTraining, this.options.assetSource)]);
-        return texture ?? this.createFallbackTexture();
+        const texture = await this.getTextureFromUrls(getMysekaiCanvasCardTextureUrls(cardAsset, !!item.isSpecialTraining, fixtureId, this.options.assetSource));
+        return texture ? this.prepareDisplayTexture(texture) : this.createFallbackTexture();
     }
 
     private async getRecordJacketTexture(item: MysekaiLayoutItem): Promise<THREE.Texture> {
@@ -973,8 +1041,8 @@ export class MysekaiScenePreviewRuntime {
         if (!musicId) return this.createFallbackTexture();
         const musicAsset = this.musicAssetById.get(musicId);
         if (!musicAsset) return this.createFallbackTexture();
-        const texture = await this.getTextureFromUrls([getMusicJacketUrl(musicAsset, this.options.assetSource)]);
-        return texture ?? this.createFallbackTexture();
+        const texture = await this.getTextureFromUrls(getMusicJacketTexturePaths(musicAsset, this.options.assetSource));
+        return texture ? this.prepareDisplayTexture(texture) : this.createFallbackTexture();
     }
 
     private selectMusicVocalForBgm(musicId: number, setting: MysekaiMusicPlayFixtureSetting): MysekaiMusicVocalMaster | null {
@@ -1078,14 +1146,26 @@ export class MysekaiScenePreviewRuntime {
         return out;
     }
 
+    private pickLikelyCustomDisplayMesh(root: THREE.Object3D): THREE.Mesh<THREE.BufferGeometry, THREE.Material | THREE.Material[]> | null {
+        const candidates: Array<{ mesh: THREE.Mesh<THREE.BufferGeometry, THREE.Material | THREE.Material[]>; name: string }> = [];
+        root.traverse((node) => {
+            if (!isMesh(node)) return;
+            const name = String(node.name || "").toLowerCase();
+            if (name.includes("preview")) return;
+            candidates.push({ mesh: node, name });
+        });
+        const preferredNames = ["mdl_cst0006_photo_type1stand1_0"];
+        for (const name of preferredNames) {
+            const hit = candidates.find((candidate) => candidate.name.includes(name));
+            if (hit) return hit.mesh;
+        }
+        candidates.sort((a, b) => b.name.localeCompare(a.name));
+        return candidates[0]?.mesh ?? null;
+    }
+
     private cloneCustomWithDisplayTexture(object: THREE.Object3D, materialFactory: () => THREE.MeshLambertMaterial, displayTexture: THREE.Texture | null): THREE.Object3D {
         const out = object.clone(true);
-        let target: THREE.Mesh<THREE.BufferGeometry, THREE.Material | THREE.Material[]> | null = null;
-        out.traverse((node) => {
-            if (!isMesh(node) || target) return;
-            if (String(node.name || "").toLowerCase().includes("preview")) return;
-            target = node;
-        });
+        const target = this.pickLikelyCustomDisplayMesh(out);
         out.traverse((node) => {
             if (!isMesh(node)) return;
             node.geometry = node.geometry.clone();
@@ -1219,17 +1299,31 @@ export class MysekaiScenePreviewRuntime {
             disposeObject(wall);
         }
         this.indoorWallPlanes.length = 0;
+        if (this.indoorWallGridMinor) {
+            this.scene.remove(this.indoorWallGridMinor);
+            this.indoorWallGridMinor.geometry.dispose();
+            disposeMaterial(this.indoorWallGridMinor.material);
+            this.indoorWallGridMinor = null;
+        }
+        if (this.indoorWallGridMajor) {
+            this.scene.remove(this.indoorWallGridMajor);
+            this.indoorWallGridMajor.geometry.dispose();
+            disposeMaterial(this.indoorWallGridMajor.material);
+            this.indoorWallGridMajor = null;
+        }
         if (this.indoorDoorObject) {
             this.contentGroup.remove(this.indoorDoorObject);
             disposeObject(this.indoorDoorObject);
             this.indoorDoorObject = null;
         }
+        this.markBackFacingOpacityDirty();
     }
 
     private clearBeforeBuild() {
         this.clearContent();
         this.clearGrid();
         this.clearIndoorWalls();
+        this.wallPlacedEntries.length = 0;
         this.grass.visible = false;
         this.grass.material.map = null;
         this.grass.material.color.set(0x8fb77a);
@@ -1329,27 +1423,37 @@ export class MysekaiScenePreviewRuntime {
         return out;
     }
 
+    private getRoomSkinTextureUrls(assetName: string, textureId: number, kind: "floor" | "wall" | "door"): string[] {
+        const paths = kind === "floor"
+            ? getRoomSkinFloorTexturePaths(assetName, textureId)
+            : kind === "wall"
+                ? getRoomSkinWallTexturePaths(assetName, textureId)
+                : getRoomSkinDoorTexturePaths(assetName, textureId);
+        return paths.flatMap((path) => getMysekaiCandidateRawUrls(path, this.options.assetSource));
+    }
+
+    private async pickExistingTextureUrl(urls: string[]): Promise<string | null> {
+        for (const url of urls) {
+            const texture = await this.getTextureFromUrl(url);
+            if (texture) return url;
+        }
+        return null;
+    }
+
     private async getRoomSkinAssetInfo(fixtureId: number, textureId: number, kind: "floor" | "wall"): Promise<RoomSkinAssetInfo | null> {
         const meta = this.fixtureMetaMap.get(fixtureId);
         const asset = meta?.assetbundleName;
         if (!asset) return null;
         if (kind === "floor") {
-            const floorTex = this.pickRoomSkinTextureUrl(asset, textureId, "floor");
+            const floorTex = await this.pickExistingTextureUrl(this.getRoomSkinTextureUrls(asset, textureId, "floor"));
             return { asset, floorTexUrl: floorTex || undefined, doorObjUrls: [] };
         }
-        const wallTex = this.pickRoomSkinTextureUrl(asset, textureId, "wall");
-        const doorTex = this.pickRoomSkinTextureUrl(asset, textureId, "door");
+        const [wallTex, doorTex] = await Promise.all([
+            this.pickExistingTextureUrl(this.getRoomSkinTextureUrls(asset, textureId, "wall")),
+            this.pickExistingTextureUrl(this.getRoomSkinTextureUrls(asset, textureId, "door")),
+        ]);
         const doorObjUrls = this.pickRoomSkinObjectUrls(asset);
         return { asset, wallTexUrl: wallTex || undefined, doorTexUrl: doorTex || undefined, doorObjUrls };
-    }
-
-    private pickRoomSkinTextureUrl(assetName: string, textureId: number, kind: "floor" | "wall" | "door"): string | null {
-        const path = kind === "floor"
-            ? getRoomSkinFloorTexturePath(assetName, textureId)
-            : kind === "wall"
-                ? getRoomSkinWallTexturePath(assetName, textureId)
-                : getRoomSkinDoorTexturePath(assetName, textureId);
-        return getMysekaiCandidateRawUrls(path, this.options.assetSource)[0] || null;
     }
 
     private pickRoomSkinObjectUrls(assetName: string): string[] {
@@ -1374,7 +1478,7 @@ export class MysekaiScenePreviewRuntime {
         for (const def of wallDefs) {
             const wall = new THREE.Mesh(
                 new THREE.PlaneGeometry(1, 1),
-                new THREE.MeshLambertMaterial({ color: 0xd0d0d0, side: THREE.DoubleSide, transparent: true, opacity: this.options.backWallOpacity }),
+                new THREE.MeshLambertMaterial({ color: 0xd0d0d0, side: THREE.DoubleSide }),
             );
             wall.scale.set(def.width, height, 1);
             wall.position.set(...def.position);
@@ -1383,6 +1487,58 @@ export class MysekaiScenePreviewRuntime {
             this.indoorWallPlanes.push(wall);
             this.scene.add(wall);
         }
+        this.createIndoorWallGrid(size);
+        this.markBackFacingOpacityDirty();
+    }
+
+    private createIndoorWallGrid(size: MysekaiSceneSize) {
+        if (this.indoorWallGridMinor) {
+            this.scene.remove(this.indoorWallGridMinor);
+            this.indoorWallGridMinor.geometry.dispose();
+            disposeMaterial(this.indoorWallGridMinor.material);
+            this.indoorWallGridMinor = null;
+        }
+        if (this.indoorWallGridMajor) {
+            this.scene.remove(this.indoorWallGridMajor);
+            this.indoorWallGridMajor.geometry.dispose();
+            disposeMaterial(this.indoorWallGridMajor.material);
+            this.indoorWallGridMajor = null;
+        }
+        const width = Number(size.width || 80);
+        const depth = Number(size.depth || 80);
+        const height = Number(size.height || 12);
+        const halfW = width / 2;
+        const halfD = depth / 2;
+        const minorVerts: number[] = [];
+        const majorVerts: number[] = [];
+        const pushLine = (target: number[], x0: number, y0: number, z0: number, x1: number, y1: number, z1: number) => {
+            target.push(x0, y0, z0, x1, y1, z1);
+        };
+        const pick = (value: number) => Math.abs(value % 4) < 1e-6 ? majorVerts : minorVerts;
+        for (let x = -halfW; x <= halfW; x += 1) {
+            const target = pick(Math.round(x));
+            pushLine(target, x, 0, -halfD, x, height, -halfD);
+            pushLine(target, x, 0, halfD, x, height, halfD);
+        }
+        for (let z = -halfD; z <= halfD; z += 1) {
+            const target = pick(Math.round(z));
+            pushLine(target, -halfW, 0, z, -halfW, height, z);
+            pushLine(target, halfW, 0, z, halfW, height, z);
+        }
+        for (let y = 0; y <= height; y += 1) {
+            const target = pick(y);
+            pushLine(target, -halfW, y, -halfD, halfW, y, -halfD);
+            pushLine(target, -halfW, y, halfD, halfW, y, halfD);
+            pushLine(target, -halfW, y, -halfD, -halfW, y, halfD);
+            pushLine(target, halfW, y, -halfD, halfW, y, halfD);
+        }
+        const minorGeometry = new THREE.BufferGeometry();
+        minorGeometry.setAttribute("position", new THREE.Float32BufferAttribute(minorVerts, 3));
+        this.indoorWallGridMinor = new THREE.LineSegments(minorGeometry, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 }));
+        const majorGeometry = new THREE.BufferGeometry();
+        majorGeometry.setAttribute("position", new THREE.Float32BufferAttribute(majorVerts, 3));
+        this.indoorWallGridMajor = new THREE.LineSegments(majorGeometry, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.68 }));
+        this.scene.add(this.indoorWallGridMinor, this.indoorWallGridMajor);
     }
 
     private applyIndoorFloorUV(geometry: THREE.BufferGeometry, worldMatrix: THREE.Matrix4, siteSize: MysekaiSceneSize) {
@@ -1704,16 +1860,18 @@ export class MysekaiScenePreviewRuntime {
         }
     }
 
-    private async preloadSceneModelAssets(refs: SceneModelAssetRef[], entriesTotal: number, ignored: number): Promise<Map<string, PreparedModelAsset>> {
+    private async preloadSceneModelAssets(refs: SceneModelAssetRef[], entriesTotal: number, ignored: number, generation: number): Promise<Map<string, PreparedModelAsset>> {
         const prepared = new Map<string, PreparedModelAsset>();
         if (!refs.length) return prepared;
         let processed = 0;
-        this.mergeStatus({
+        this.setStatusForReload(generation, {
+            phase: "loading",
             stage: "assets",
             stageLabel: "正在预加载模型资源",
             progress: 12,
             message: `预加载模型... 0/${refs.length}`,
             currentAsset: undefined,
+            loaded: 0,
             total: entriesTotal,
             ignored,
             failed: 0,
@@ -1721,11 +1879,12 @@ export class MysekaiScenePreviewRuntime {
         });
         const results = await mapWithConcurrency(refs, ENTRY_BUILD_CONCURRENCY, async (ref) => {
             try {
+                if (!this.isReloadActive(generation)) return { key: ref.key, asset: ref.asset };
                 return await this.preloadSceneModelAsset(ref);
             } finally {
                 processed++;
                 const progress = 12 + Math.round((processed / Math.max(1, refs.length)) * 38);
-                this.mergeStatus({
+                this.mergeStatusForReload(generation, {
                     progress,
                     message: `预加载模型... ${processed}/${refs.length}`,
                     currentAsset: ref.asset,
@@ -1736,22 +1895,24 @@ export class MysekaiScenePreviewRuntime {
         return prepared;
     }
 
-    private async applyBackgroundMusic(layout: MysekaiLayoutData | MysekaiLayoutData[], siteId: number) {
+    private async applyBackgroundMusic(layout: MysekaiLayoutData | MysekaiLayoutData[], siteId: number, generation: number) {
+        if (!this.isReloadActive(generation)) return;
         this.setCurrentBgm(null);
         try {
             const bgm = await this.resolveBackgroundMusic(layout, siteId);
-            if (this.disposed || Number(this.options.siteId || 1) !== siteId) return;
+            if (!this.isReloadActive(generation) || Number(this.options.siteId || 1) !== siteId) return;
             this.setCurrentBgm(bgm);
         } catch (error) {
+            if (!this.isReloadActive(generation) || Number(this.options.siteId || 1) !== siteId) return;
             console.warn("[mysekai-preview-bgm]", error);
-            if (this.disposed || Number(this.options.siteId || 1) !== siteId) return;
             this.setCurrentBgm(null, errorMessage(error));
         }
     }
 
-    private async buildScene(forceFreshLayout: boolean) {
+    private async buildScene(forceFreshLayout: boolean, generation: number) {
+        if (!this.isReloadActive(generation)) return;
         this.clearBeforeBuild();
-        this.setStatus({
+        this.setStatusForReload(generation, {
             phase: "loading",
             stage: "layout",
             stageLabel: "正在读取布局",
@@ -1764,8 +1925,9 @@ export class MysekaiScenePreviewRuntime {
             failed: 0,
         });
         const layout = await this.loadLayoutPayload(forceFreshLayout);
+        if (!this.isReloadActive(generation)) return;
         const siteId = Number(this.options.siteId || 1);
-        void this.applyBackgroundMusic(layout, siteId);
+        void this.applyBackgroundMusic(layout, siteId, generation);
         const { entries, playerRank } = this.extractEntries(layout, siteId);
         const ignoredEntries = entries.filter((entry) => this.getIgnoredReason(entry));
         const renderEntries = entries.filter((entry) => !this.getIgnoredReason(entry));
@@ -1776,14 +1938,15 @@ export class MysekaiScenePreviewRuntime {
         const gateId = Array.isArray(layout) ? 1 : Number(layout.userMysekaiGate?.mysekaiGateId || 1);
         const ignored = ignoredEntries.length;
         const sceneModelAssets = this.collectSceneModelAssets(renderEntries, gateId);
-        const preparedModelAssets = await this.preloadSceneModelAssets(sceneModelAssets, entries.length, ignored);
+        const preparedModelAssets = await this.preloadSceneModelAssets(sceneModelAssets, entries.length, ignored, generation);
+        if (!this.isReloadActive(generation)) return;
         const floorPlacementRecords: FloorPlacementRecord[] = [];
         const floorShadowRecords: FloorShadowRecord[] = [];
         let loaded = 0;
         let failed = 0;
         let processed = 0;
 
-        this.mergeStatus({
+        this.mergeStatusForReload(generation, {
             stage: "assets",
             stageLabel: "正在实例化家具",
             progress: 50,
@@ -1797,23 +1960,38 @@ export class MysekaiScenePreviewRuntime {
             currentAsset: undefined,
         });
 
+        const emptyBuildResult = (index: number): EntryBuildResult => ({
+            index,
+            entryGroup: null,
+            floorPlacementRecords: [],
+            floorShadowRecords: [],
+            wallPlacedEntries: [],
+        });
+
         const buildResults = await mapWithConcurrency(renderEntries, ENTRY_BUILD_CONCURRENCY, async ({ layoutType, item }, index): Promise<EntryBuildResult> => {
             const localFloorPlacementRecords: FloorPlacementRecord[] = [];
             const localFloorShadowRecords: FloorShadowRecord[] = [];
+            const localWallPlacedEntries: WallPlacedEntry[] = [];
             try {
-                const entryGroup = await this.buildEntry(layoutType, item, siteSize, gateId, fencePointsByFixture, preparedModelAssets, localFloorPlacementRecords, localFloorShadowRecords);
+                if (!this.isReloadActive(generation)) return emptyBuildResult(index);
+                const entryGroup = await this.buildEntry(layoutType, item, siteSize, gateId, fencePointsByFixture, preparedModelAssets, localFloorPlacementRecords, localFloorShadowRecords, localWallPlacedEntries);
                 if (!entryGroup.children.length) throw new Error("空实例");
+                if (!this.isReloadActive(generation)) {
+                    disposeObject(entryGroup);
+                    return emptyBuildResult(index);
+                }
                 loaded++;
-                return { index, entryGroup, floorPlacementRecords: localFloorPlacementRecords, floorShadowRecords: localFloorShadowRecords };
+                return { index, entryGroup, floorPlacementRecords: localFloorPlacementRecords, floorShadowRecords: localFloorShadowRecords, wallPlacedEntries: localWallPlacedEntries };
             } catch (error) {
+                if (!this.isReloadActive(generation)) return emptyBuildResult(index);
                 failed++;
                 console.warn("[mysekai-preview-skip]", { layoutType, item, error: errorMessage(error) });
-                return { index, entryGroup: null, floorPlacementRecords: [], floorShadowRecords: [], error };
+                return { index, entryGroup: null, floorPlacementRecords: [], floorShadowRecords: [], wallPlacedEntries: [], error };
             } finally {
                 processed++;
                 if (processed % 10 === 0 || processed === renderEntries.length) {
                     const progress = 50 + Math.round((processed / Math.max(1, renderEntries.length)) * 38);
-                    this.mergeStatus({
+                    this.mergeStatusForReload(generation, {
                         message: `实例化家具... ${processed}/${renderEntries.length}`,
                         loaded,
                         total: entries.length,
@@ -1827,15 +2005,20 @@ export class MysekaiScenePreviewRuntime {
             }
         });
 
+        if (!this.isReloadActive(generation)) {
+            this.disposeBuildResults(buildResults);
+            return;
+        }
         buildResults.sort((a, b) => a.index - b.index);
         for (const result of buildResults) {
             if (!result.entryGroup) continue;
             this.contentGroup.add(result.entryGroup);
             floorPlacementRecords.push(...result.floorPlacementRecords);
             floorShadowRecords.push(...result.floorShadowRecords);
+            this.wallPlacedEntries.push(...result.wallPlacedEntries);
         }
 
-        this.mergeStatus({ stage: "finalize", stageLabel: "正在整理场景", progress: 92, loaded, total: entries.length, renderableTotal: renderEntries.length, skipped: failed, ignored, failed });
+        this.mergeStatusForReload(generation, { stage: "finalize", stageLabel: "正在整理场景", progress: 92, loaded, total: entries.length, renderableTotal: renderEntries.length, skipped: failed, ignored, failed });
         this.applyFloorStacking(floorPlacementRecords, false);
         this.applyFloorStacking(floorPlacementRecords, true);
         for (const record of floorShadowRecords) {
@@ -1844,11 +2027,14 @@ export class MysekaiScenePreviewRuntime {
         }
         this.optimizeStaticContent();
         this.applyShadowVisibility();
+        if (!this.isReloadActive(generation)) return;
 
-        await this.buildBaseSurface(layout, siteId, siteSize);
+        await this.buildBaseSurface(layout, siteId, siteSize, generation);
+        if (!this.isReloadActive(generation)) return;
         this.makeGrid(siteSize);
         this.applyDebugVisibility();
-        this.applyBackWallOpacity();
+        this.markBackFacingOpacityDirty();
+        this.applyBackFacingOpacity();
 
         if (!this.restoredCameraState) {
             this.controls.target.set(0, 0, 0);
@@ -1860,7 +2046,7 @@ export class MysekaiScenePreviewRuntime {
             this.clampFreeLookPosition();
         }
         this.controls.update();
-        this.setStatus({
+        this.setStatusForReload(generation, {
             phase: "ready",
             stage: "ready",
             stageLabel: "加载完成",
@@ -1896,7 +2082,7 @@ export class MysekaiScenePreviewRuntime {
     }
 
     private canMergeStaticMesh(mesh: THREE.Mesh): mesh is THREE.Mesh<THREE.BufferGeometry, THREE.Material> {
-        if (mesh.userData.isFloorShadow || mesh.userData.debugOnly) return false;
+        if (mesh.userData.isFloorShadow || mesh.userData.debugOnly || mesh.userData.skipStaticMerge) return false;
         if (Array.isArray(mesh.material)) return false;
         const geometry = mesh.geometry;
         if (!geometry || geometry.index) return false;
@@ -2049,6 +2235,7 @@ export class MysekaiScenePreviewRuntime {
         preparedModelAssets: Map<string, PreparedModelAsset>,
         floorPlacementRecords: FloorPlacementRecord[],
         floorShadowRecords: FloorShadowRecord[],
+        wallPlacedEntries: WallPlacedEntry[],
     ): Promise<THREE.Group> {
         const entryGroup = new THREE.Group();
         const isCustom = !!item.__isCustomFixture;
@@ -2117,7 +2304,7 @@ export class MysekaiScenePreviewRuntime {
                 const srcObject = preparedAsset.source;
                 if (!srcObject) throw new Error(`模型未预加载: ${assetInfo.asset}`);
                 if (!isCustom && fixtureId >= 439 && fixtureId <= 444) {
-                    object = this.cloneCanvasWithCardMaterial(srcObject, makeMaterial, await this.getCanvasCardTexture(item), fixtureId);
+                    object = this.cloneCanvasWithCardMaterial(srcObject, makeMaterial, await this.getCanvasCardTexture(item, fixtureId), fixtureId);
                 } else if (isCustom) {
                     const displayTexture = customFixtureId === 55 && assetInfo.isOrnament
                         ? await this.getRecordJacketTexture(item)
@@ -2143,6 +2330,19 @@ export class MysekaiScenePreviewRuntime {
                     if (!isMesh(node)) return;
                     this.applyRoadWorldUV(node.geometry, node.matrixWorld);
                 });
+            }
+            if (layoutType.startsWith("wall_")) {
+                const materials: THREE.Material[] = [];
+                placed.traverse((node) => {
+                    if (!isMesh(node)) return;
+                    node.userData.skipStaticMerge = true;
+                    const nodeMaterials = Array.isArray(node.material) ? node.material : [node.material];
+                    for (const material of nodeMaterials) {
+                        this.rememberBaseAlphaTest(material);
+                        materials.push(material);
+                    }
+                });
+                wallPlacedEntries.push({ layoutType, object: placed, materials });
             }
             if (isCustom && customRoot) {
                 placed.userData.isCustomPart = true;
@@ -2185,13 +2385,15 @@ export class MysekaiScenePreviewRuntime {
         return entryGroup;
     }
 
-    private async buildBaseSurface(layout: MysekaiLayoutData | MysekaiLayoutData[], siteId: number, siteSize: MysekaiSceneSize) {
+    private async buildBaseSurface(layout: MysekaiLayoutData | MysekaiLayoutData[], siteId: number, siteSize: MysekaiSceneSize, generation: number) {
+        if (!this.isReloadActive(generation)) return;
         this.applyLightingPreset(siteId === 1);
         this.grass.scale.set(siteSize.width, siteSize.depth, 1);
         this.grass.position.set(0, 0, 0);
         this.grass.visible = true;
         if (siteId === 1) {
             const outdoorTexture = await this.getTextureFromUrls(getMysekaiCandidateRawUrls(getOutdoorGrassTexturePath(), this.options.assetSource));
+            if (!this.isReloadActive(generation)) return;
             if (outdoorTexture) {
                 outdoorTexture.wrapS = outdoorTexture.wrapT = THREE.RepeatWrapping;
                 this.grass.material.map = outdoorTexture;
@@ -2208,12 +2410,15 @@ export class MysekaiScenePreviewRuntime {
         const floorSkin = appearance.floor?.mysekaiFixtureId
             ? await this.getRoomSkinAssetInfo(Number(appearance.floor.mysekaiFixtureId), Number(appearance.floor.textureId || 1), "floor")
             : null;
+        if (!this.isReloadActive(generation)) return;
         const wallSkin = appearance.wall?.mysekaiFixtureId
             ? await this.getRoomSkinAssetInfo(Number(appearance.wall.mysekaiFixtureId), Number(appearance.wall.textureId || 1), "wall")
             : null;
+        if (!this.isReloadActive(generation)) return;
 
         if (floorSkin?.floorTexUrl) {
             const floorTexture = await this.getTextureFromUrls([floorSkin.floorTexUrl]);
+            if (!this.isReloadActive(generation)) return;
             if (floorTexture) {
                 floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
                 this.grass.material.map = floorTexture;
@@ -2226,6 +2431,7 @@ export class MysekaiScenePreviewRuntime {
 
         if (wallSkin?.wallTexUrl) {
             const wallTexture = await this.getTextureFromUrls([wallSkin.wallTexUrl]);
+            if (!this.isReloadActive(generation)) return;
             if (wallTexture) {
                 wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping;
                 for (const wall of this.indoorWallPlanes) {
@@ -2240,9 +2446,12 @@ export class MysekaiScenePreviewRuntime {
 
         if (wallSkin?.doorObjUrls.length) {
             const doorObjUrl = await this.pickPrimaryObjUrl(wallSkin.doorObjUrls);
+            if (!this.isReloadActive(generation)) return;
             if (doorObjUrl) {
                 const doorTexture = wallSkin.doorTexUrl ? await this.getTextureFromUrls([wallSkin.doorTexUrl]) : null;
+                if (!this.isReloadActive(generation)) return;
                 const srcDoor = await this.getObjGroup(doorObjUrl);
+                if (!this.isReloadActive(generation)) return;
                 const door = this.cloneWithMaterial(srcDoor, () => new THREE.MeshLambertMaterial({
                     map: doorTexture,
                     color: 0xffffff,
@@ -2253,8 +2462,15 @@ export class MysekaiScenePreviewRuntime {
                 const halfW = siteSize.width / 2;
                 const halfD = siteSize.depth / 2;
                 const placed = locateObject(door, halfW - 2, halfD - 0.01, 0, 4, 1, 5, 0, "wall_front");
+                placed.traverse((node) => {
+                    if (!isMesh(node)) return;
+                    node.userData.skipStaticMerge = true;
+                    const materials = Array.isArray(node.material) ? node.material : [node.material];
+                    for (const material of materials) this.rememberBaseAlphaTest(material);
+                });
                 this.contentGroup.add(placed);
                 this.indoorDoorObject = placed;
+                this.markBackFacingOpacityDirty();
             }
         }
     }
@@ -2263,6 +2479,8 @@ export class MysekaiScenePreviewRuntime {
         const gridVisible = this.options.gridEnabled;
         if (this.gridMinor) this.gridMinor.visible = gridVisible;
         if (this.gridMajor) this.gridMajor.visible = gridVisible;
+        if (this.indoorWallGridMinor) this.indoorWallGridMinor.visible = gridVisible;
+        if (this.indoorWallGridMajor) this.indoorWallGridMajor.visible = gridVisible;
         this.scene.traverse((node) => {
             if (node.userData.debugOnly) node.visible = this.options.debugEnabled;
         });
@@ -2274,12 +2492,140 @@ export class MysekaiScenePreviewRuntime {
         });
     }
 
-    private applyBackWallOpacity() {
+    private asOrderedDitherMaterial(material: THREE.Material): OrderedDitherMaterial {
+        return material as OrderedDitherMaterial;
+    }
+
+    private ensureOrderedDither(material: THREE.Material | null | undefined) {
+        if (!material) return;
+        const ditherMaterial = this.asOrderedDitherMaterial(material);
+        if (ditherMaterial.userData._orderedDitherReady) return;
+        ditherMaterial.userData._orderedDitherReady = true;
+        ditherMaterial.userData._orderedDitherOpacity = 1;
+        ditherMaterial.userData._orderedDitherPhaseX = 0;
+        ditherMaterial.userData._orderedDitherPhaseY = 0;
+        material.onBeforeCompile = (shader) => {
+            shader.uniforms.uDitherOpacity = { value: ditherMaterial.userData._orderedDitherOpacity ?? 1 };
+            shader.uniforms.uDitherPhase = { value: new THREE.Vector2(ditherMaterial.userData._orderedDitherPhaseX ?? 0, ditherMaterial.userData._orderedDitherPhaseY ?? 0) };
+            ditherMaterial.userData._orderedDitherShader = shader;
+            shader.fragmentShader = shader.fragmentShader
+                .replace(
+                    "#include <common>",
+                    `#include <common>
+                     uniform float uDitherOpacity;
+                     uniform vec2 uDitherPhase;
+                     float bayer4(vec2 p){
+                       int x = int(mod(p.x, 4.0));
+                       int y = int(mod(p.y, 4.0));
+                       int idx = y * 4 + x;
+                       float t = 0.0;
+                       if (idx == 0) t = 0.0; else if (idx == 1) t = 8.0; else if (idx == 2) t = 2.0; else if (idx == 3) t = 10.0;
+                       else if (idx == 4) t = 12.0; else if (idx == 5) t = 4.0; else if (idx == 6) t = 14.0; else if (idx == 7) t = 6.0;
+                       else if (idx == 8) t = 3.0; else if (idx == 9) t = 11.0; else if (idx == 10) t = 1.0; else if (idx == 11) t = 9.0;
+                       else if (idx == 12) t = 15.0; else if (idx == 13) t = 7.0; else if (idx == 14) t = 13.0; else t = 5.0;
+                       return (t + 0.5) / 16.0;
+                     }`,
+                )
+                .replace(
+                    "#include <dithering_fragment>",
+                    `
+                     float _op = clamp(uDitherOpacity, 0.0, 1.0);
+                     if (_op < 0.999) {
+                       float th = bayer4(gl_FragCoord.xy + uDitherPhase);
+                       if (_op < th) discard;
+                     }
+                     #include <dithering_fragment>`,
+                );
+        };
+        material.needsUpdate = true;
+    }
+
+    private setOrderedDitherOpacity(material: THREE.Material | null | undefined, opacity: number, phaseX = 0, phaseY = 0) {
+        if (!material) return;
+        this.ensureOrderedDither(material);
+        const ditherMaterial = this.asOrderedDitherMaterial(material);
+        const op = Math.max(0, Math.min(1, Number(opacity || 0)));
+        ditherMaterial.userData._orderedDitherOpacity = op;
+        ditherMaterial.userData._orderedDitherPhaseX = Number(phaseX || 0);
+        ditherMaterial.userData._orderedDitherPhaseY = Number(phaseY || 0);
+        const shader = ditherMaterial.userData._orderedDitherShader;
+        const opacityUniform = shader?.uniforms?.uDitherOpacity as { value: number } | undefined;
+        const phaseUniform = shader?.uniforms?.uDitherPhase as { value: THREE.Vector2 } | undefined;
+        if (opacityUniform) opacityUniform.value = op;
+        if (phaseUniform) phaseUniform.value.set(ditherMaterial.userData._orderedDitherPhaseX, ditherMaterial.userData._orderedDitherPhaseY);
+        ditherMaterial.transparent = false;
+        ditherMaterial.alphaHash = false;
+        ditherMaterial.depthWrite = true;
+        ditherMaterial.depthTest = true;
+        material.needsUpdate = true;
+    }
+
+    private markBackFacingOpacityDirty() {
+        this.backFacingOpacityDirty = true;
+    }
+
+    private rememberBaseAlphaTest(material: THREE.Material) {
+        const ditherMaterial = this.asOrderedDitherMaterial(material);
+        if (ditherMaterial.userData._baseAlphaTest === undefined) {
+            ditherMaterial.userData._baseAlphaTest = ditherMaterial.alphaTest ?? 0;
+        }
+    }
+
+    private applyBackFacingOpacity() {
+        const siteId = Number(this.options.siteId || 1);
+        if (siteId === 1) return;
+        const opacityRatio = Math.max(0, Math.min(1, Number(this.options.backWallOpacity ?? 1)));
+        const sameState =
+            this.lastBackFacingCamPos.distanceToSquared(this.camera.position) < 1e-10
+            && (1 - Math.abs(this.lastBackFacingCamQuat.dot(this.camera.quaternion))) < 1e-10
+            && Math.abs(this.lastBackFacingOpacity - opacityRatio) < 1e-10
+            && Number(this.lastBackFacingSiteId) === siteId;
+        if (!this.backFacingOpacityDirty && sameState) return;
+        this.backFacingOpacityDirty = false;
+        this.lastBackFacingCamPos.copy(this.camera.position);
+        this.lastBackFacingCamQuat.copy(this.camera.quaternion);
+        this.lastBackFacingOpacity = opacityRatio;
+        this.lastBackFacingSiteId = siteId;
+
+        const wallBackFacing = new Map<string, boolean>();
+        const cameraPos = this.camera.position.clone();
         for (const wall of this.indoorWallPlanes) {
-            const material = wall.material as THREE.MeshLambertMaterial;
-            material.opacity = this.options.backWallOpacity;
-            material.transparent = true;
-            material.needsUpdate = true;
+            const wallType = String(wall.userData.wallType || "");
+            const normal = new THREE.Vector3(0, 0, 1).applyQuaternion(wall.quaternion).normalize();
+            const toCamera = cameraPos.clone().sub(wall.position).normalize();
+            const backFacing = normal.dot(toCamera) < 0;
+            wallBackFacing.set(wallType, backFacing);
+            const material = Array.isArray(wall.material) ? wall.material[0] : wall.material;
+            this.setOrderedDitherOpacity(material, backFacing ? opacityRatio : 1, 0, 0);
+        }
+
+        let ditherIndex = 0;
+        for (const entry of this.wallPlacedEntries) {
+            const wallOpacity = wallBackFacing.get(entry.layoutType) ? opacityRatio : 1;
+            const targetOpacity = Math.min(1, wallOpacity * 2);
+            const phaseX = ditherIndex % 4;
+            const phaseY = Math.floor(ditherIndex / 4) % 4;
+            ditherIndex++;
+            for (const material of entry.materials) {
+                const ditherMaterial = this.asOrderedDitherMaterial(material);
+                ditherMaterial.alphaTest = targetOpacity < 0.999 ? 0 : (ditherMaterial.userData._baseAlphaTest ?? ditherMaterial.alphaTest);
+                this.setOrderedDitherOpacity(material, targetOpacity, phaseX, phaseY);
+            }
+        }
+
+        if (this.indoorDoorObject) {
+            const frontWallOpacity = wallBackFacing.get("wall_front") ? opacityRatio : 1;
+            const doorOpacity = Math.min(1, frontWallOpacity * 2);
+            this.indoorDoorObject.traverse((node) => {
+                if (!isMesh(node)) return;
+                const materials = Array.isArray(node.material) ? node.material : [node.material];
+                for (const material of materials) {
+                    this.rememberBaseAlphaTest(material);
+                    const ditherMaterial = this.asOrderedDitherMaterial(material);
+                    ditherMaterial.alphaTest = doorOpacity < 0.999 ? 0 : (ditherMaterial.userData._baseAlphaTest ?? ditherMaterial.alphaTest);
+                    this.setOrderedDitherOpacity(material, doorOpacity, 1, 1);
+                }
+            });
         }
     }
 
@@ -2851,6 +3197,7 @@ export class MysekaiScenePreviewRuntime {
 
     private renderOnce() {
         if (this.viewMode === "fixed") this.controls.update();
+        this.applyBackFacingOpacity();
         this.renderer.render(this.scene, this.camera);
         const direction = new THREE.Vector3();
         this.camera.getWorldDirection(direction);
