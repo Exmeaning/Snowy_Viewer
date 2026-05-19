@@ -39,6 +39,7 @@ export const navigationGroups: NavGroupData[] = [
             { name: "演唱会", href: "/live" },
             { name: "活动预测", href: "/prediction" },
             { name: "实时排行榜", href: "/realtime-ranking" },
+            { name: "烤森百景", href: "/mysekai-preview" },
         ],
     },
     {
@@ -72,7 +73,7 @@ export const navigationGroups: NavGroupData[] = [
             { name: "猜角色", href: "/guess-who" },
             { name: "猜曲绘", href: "/guess-jacket" },
             { name: "谱面预览器", href: "/chart-preview" },
-            { name: "烤森预览", href: "/mysekai-preview" },
+            { name: "烤森预览器", href: "/mysekai-preview/scene" },
         ],
     },
     {
@@ -94,19 +95,22 @@ export const navigationGroups: NavGroupData[] = [
  * 返回 { group, item } 或 null。
  */
 export function findNavMatch(pathname: string): { group: NavGroupData; item: NavItemData } | null {
+    let bestMatch: { group: NavGroupData; item: NavItemData } | null = null;
     for (const group of navigationGroups) {
         for (const item of group.items) {
-            // 精确匹配或子路径匹配
+            // 精确匹配或子路径匹配；保留最长前缀，避免 /mysekai-preview 抢走 /mysekai-preview/scene。
             if (pathname === item.href || pathname.startsWith(item.href + "/")) {
                 // 特殊处理：防止 /music/meta 误匹配 /music
                 if (item.href === "/music" && pathname.startsWith("/music/meta")) {
                     continue;
                 }
-                return { group, item };
+                if (!bestMatch || item.href.length > bestMatch.item.href.length) {
+                    bestMatch = { group, item };
+                }
             }
         }
     }
-    return null;
+    return bestMatch;
 }
 
 /**
@@ -158,13 +162,14 @@ export const searchableNavItems: SearchableNavItem[] = [
     { name: "活动剧情", href: "/story/event", group: "活动", keywords: ["event story", "story", "scenario"] },
     { name: "活动预测", href: "/prediction", group: "活动", keywords: ["prediction", "ranking", "forecast"] },
     { name: "实时排行榜", href: "/realtime-ranking", group: "活动", keywords: ["realtime ranking", "live ranking", "排行", "排行榜", "实时榜单"] },
+    { name: "烤森百景", href: "/mysekai-preview", group: "活动", keywords: ["baijing", "housing competition", "mysekai", "烤森百景", "百景", "排行", "top"] },
 
     // 工具
     { name: "组卡推荐", href: "/deck-recommend", group: "工具", keywords: ["deck recommend", "deck", "team"] },
     { name: "组卡比较", href: "/deck-comparator", group: "工具", keywords: ["deck compare", "comparator"] },
     { name: "控分计算", href: "/score-control", group: "工具", keywords: ["score control", "score", "calculator"] },
     { name: "谱面预览器", href: "/chart-preview", group: "工具", keywords: ["chart preview", "chart", "mmw", "谱面", "preview", "sus"] },
-    { name: "烤森预览", href: "/mysekai-preview", group: "工具", keywords: ["mysekai preview", "scene preview", "mysekai", "3d", "obj", "烤森", "预览", "场景"] },
+    { name: "烤森预览器", href: "/mysekai-preview/scene", group: "工具", keywords: ["mysekai preview", "scene preview", "mysekai", "3d", "obj", "烤森", "预览", "场景"] },
     { name: "表情包制作", href: "/sticker-maker", group: "工具", keywords: ["sticker maker", "meme"] },
     { name: "谷子盲抽", href: "/goods-gacha", group: "工具", keywords: ["goods gacha", "goods", "blind box"] },
     { name: "猜角色", href: "/guess-who", group: "工具", keywords: ["guess who", "quiz", "game"] },

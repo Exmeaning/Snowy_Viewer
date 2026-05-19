@@ -214,6 +214,16 @@ const navigationGroups: NavGroup[] = [
                     </svg>
                 ),
             },
+            {
+                name: "烤森百景",
+                href: "/mysekai-preview",
+                icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10.5L12 4l9 6.5M5 10v8.5A1.5 1.5 0 006.5 20h11a1.5 1.5 0 001.5-1.5V10" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 20v-6h8v6M9 11h.01M15 11h.01M12 8h.01" />
+                    </svg>
+                ),
+            },
         ],
     },
     {
@@ -366,12 +376,12 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "烤森预览",
-                href: "/mysekai-preview",
+                name: "烤森预览器",
+                href: "/mysekai-preview/scene",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10.5L12 4l9 6.5M5 10v8.5A1.5 1.5 0 006.5 20h11a1.5 1.5 0 001.5-1.5V10" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 20v-6h8v6M9 11h.01M15 11h.01M12 8h.01" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5.5A1.5 1.5 0 015.5 4h13A1.5 1.5 0 0120 5.5v13a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 014 18.5v-13z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14l4-8 4 8m-6.5-3h5M7 17h10" />
                     </svg>
                 ),
             },
@@ -571,17 +581,27 @@ export default function Sidebar({
         );
     };
 
-    const isActive = (href: string) => {
-        if (href === "/") return pathname === "/";
+    const activeHref = useMemo(() => {
+        if (pathname === "/") return "/";
 
-        // 特殊处理：防止 /music/meta 触发 /music 的高亮
-        if (href === "/music" && pathname.startsWith("/music/meta")) {
-            return false;
+        let bestMatch = "";
+        for (const group of navigationGroups) {
+            for (const item of group.items) {
+                if (item.href === "/music" && pathname.startsWith("/music/meta")) {
+                    continue;
+                }
+                if (pathname === item.href || pathname.startsWith(item.href + "/")) {
+                    if (item.href.length > bestMatch.length) {
+                        bestMatch = item.href;
+                    }
+                }
+            }
         }
 
-        // 精确匹配：完全相等或路径后跟 /
-        return pathname === href || pathname.startsWith(href + "/");
-    };
+        return bestMatch;
+    }, [pathname]);
+
+    const isActive = (href: string) => href === activeHref;
 
     // 仅在移动端点击导航时关闭侧边栏
     const handleNavClick = () => {

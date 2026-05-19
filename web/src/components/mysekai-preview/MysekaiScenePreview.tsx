@@ -2,17 +2,25 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import { MOE_LOGO_URL } from "@/lib/assets";
 import { LOCAL_TEST_LAYOUT_URL, MYSEKAI_PREVIEW_STORAGE_KEY } from "@/lib/mysekai-preview/assets";
 import { MysekaiScenePreviewRuntime } from "@/lib/mysekai-preview/runtime";
-import type { MysekaiPreviewOptions, MysekaiPreviewStatus } from "@/lib/mysekai-preview/types";
+import type { MysekaiLayoutPayload, MysekaiPreviewOptions, MysekaiPreviewStatus } from "@/lib/mysekai-preview/types";
 
 interface MysekaiScenePreviewProps {
     className?: string;
     heightClassName?: string;
     defaultLayoutUrl?: string;
     compact?: boolean;
+    assetSourceOverride?: AssetSourceType;
+    persistOptionsEnabled?: boolean;
+    showLayoutUrlInput?: boolean;
+    headerTitle?: string;
+    headerBadge?: string;
+    headerNote?: string;
+    layoutData?: MysekaiLayoutPayload | null;
+    layoutKey?: string;
 }
 
 const ASSET_RULE_NOTE = "资源路径由 assetbundleName / handleType 规则推导，不列桶、不轮询。";
@@ -56,8 +64,17 @@ export default function MysekaiScenePreview({
     heightClassName = "h-[min(78vh,760px)] min-h-[520px]",
     defaultLayoutUrl = LOCAL_TEST_LAYOUT_URL,
     compact = false,
+    assetSourceOverride,
+    persistOptionsEnabled = true,
+    showLayoutUrlInput = true,
+    headerTitle = "烤森预览",
+    headerBadge = "本地测试",
+    headerNote,
+    layoutData = null,
+    layoutKey,
 }: MysekaiScenePreviewProps) {
-    const { assetSource } = useTheme();
+    const { assetSource: themeAssetSource } = useTheme();
+    const assetSource = assetSourceOverride ?? themeAssetSource;
     const hostRef = useRef<HTMLDivElement>(null);
     const axesRef = useRef<HTMLDivElement>(null);
     const runtimeRef = useRef<MysekaiScenePreviewRuntime | null>(null);
@@ -68,7 +85,7 @@ export default function MysekaiScenePreview({
         total: 0,
         skipped: 0,
     });
-    const [layoutUrl, setLayoutUrl] = useState(defaultLayoutUrl);
+    const [layoutUrl, setLayoutUrl] = useState(() => defaultLayoutUrl || LOCAL_TEST_LAYOUT_URL);
     const [siteId, setSiteId] = useState(1);
     const [debugEnabled, setDebugEnabled] = useState(false);
     const [gridEnabled, setGridEnabled] = useState(true);
@@ -77,6 +94,7 @@ export default function MysekaiScenePreview({
     const [lookSensitivity, setLookSensitivity] = useState(1);
 
     useEffect(() => {
+        if (!persistOptionsEnabled) return;
         const saved = readSavedOptions();
         if (typeof saved.layoutUrl === "string" && saved.layoutUrl) setLayoutUrl(saved.layoutUrl);
         if (Number.isFinite(Number(saved.siteId))) setSiteId(Number(saved.siteId));
@@ -89,10 +107,16 @@ export default function MysekaiScenePreview({
         if (Number.isFinite(Number(saved.backWallOpacity))) {
             setBackWallOpacity(Math.max(0, Math.min(1, Number(saved.backWallOpacity))));
         }
-    }, []);
+    }, [persistOptionsEnabled]);
+
+    useEffect(() => {
+        if (!persistOptionsEnabled) setLayoutUrl(defaultLayoutUrl || LOCAL_TEST_LAYOUT_URL);
+    }, [defaultLayoutUrl, persistOptionsEnabled]);
 
     const options = useMemo<MysekaiPreviewOptions>(() => ({
         layoutUrl,
+        layoutData,
+        layoutKey,
         siteId,
         assetSource,
         gridEnabled,
@@ -100,11 +124,11 @@ export default function MysekaiScenePreview({
         debugEnabled,
         backWallOpacity,
         lookSensitivity,
-    }), [assetSource, backWallOpacity, debugEnabled, gridEnabled, layoutUrl, lookSensitivity, shadowEnabled, siteId]);
+    }), [assetSource, backWallOpacity, debugEnabled, gridEnabled, layoutData, layoutKey, layoutUrl, lookSensitivity, shadowEnabled, siteId]);
 
     useEffect(() => {
-        persistOptions(options);
-    }, [options]);
+        if (persistOptionsEnabled) persistOptions(options);
+    }, [options, persistOptionsEnabled]);
 
     useEffect(() => {
         if (!hostRef.current || !axesRef.current) return;
@@ -153,11 +177,11 @@ export default function MysekaiScenePreview({
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <div className="text-sm font-black text-primary-text">烤森预览</div>
-                            <span className="rounded-full bg-miku/10 px-2 py-1 text-[10px] font-bold text-miku ring-1 ring-miku/20">本地测试</span>
+                            <div className="text-sm font-black text-primary-text">{headerTitle}</div>
+                            {headerBadge && <span className="rounded-full bg-miku/10 px-2 py-1 text-[10px] font-bold text-miku ring-1 ring-miku/20">{headerBadge}</span>}
                             <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">{assetSource}</span>
                         </div>
-                        {!compact && <div className="mt-1 text-[11px] text-slate-500">{ASSET_RULE_NOTE}</div>}
+                        {!compact && <div className="mt-1 text-[11px] text-slate-500">{headerNote ?? ASSET_RULE_NOTE}</div>}
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <button
@@ -177,16 +201,18 @@ export default function MysekaiScenePreview({
                     </div>
                 </div>
 
-                <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_140px_140px_170px]">
-                    <label className="block">
-                        <span className="mb-1 block font-bold text-slate-500">布局 JSON</span>
-                        <input
-                            value={layoutUrl}
-                            onChange={(event) => setLayoutUrl(event.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none transition focus:border-miku focus:ring-2 focus:ring-miku/20"
-                            placeholder={LOCAL_TEST_LAYOUT_URL}
-                        />
-                    </label>
+                <div className={`mt-3 grid gap-3 ${showLayoutUrlInput ? "lg:grid-cols-[minmax(0,1fr)_140px_140px_170px]" : "lg:grid-cols-[140px_140px_170px]"}`}>
+                    {showLayoutUrlInput && (
+                        <label className="block">
+                            <span className="mb-1 block font-bold text-slate-500">布局 JSON</span>
+                            <input
+                                value={layoutUrl}
+                                onChange={(event) => setLayoutUrl(event.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none transition focus:border-miku focus:ring-2 focus:ring-miku/20"
+                                placeholder={LOCAL_TEST_LAYOUT_URL}
+                            />
+                        </label>
+                    )}
                     <label className="block">
                         <span className="mb-1 block font-bold text-slate-500">场景</span>
                         <select
