@@ -151,7 +151,7 @@ export default function AboutPage() {
                             <p className="text-md font-bold text-primary-text">站点政策与广告说明</p>
                         </div>
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            本站已接入 Google AdSense 用于覆盖部分运营成本。有关 Cookie、个性化广告与用户数据处理方式，请查看下列页面。
+                            本站已接入 Google AdSense 用于覆盖部分运营成本。有关 Cookie、个性化广告与用户数据处理方式，请查看下列页面。（实际上并没有接入）
                         </p>
                         <div className="flex flex-wrap gap-3">
                             <Link
@@ -184,7 +184,7 @@ export default function AboutPage() {
                             <p className="text-md font-bold text-primary-text">赞助者致谢 （不分先后）</p>
                         </div>
                         <p className="text-sm text-slate-600 leading-7 text-justify">
-                            cike Hakuchumu 性价比 luoxia 雪莹ちゃん 蘸色绘糖/晕星奏 tony_all 沙皮 轩 末乐回忆 metamiku madoka 垂耳兔kawayi amia 以及 两位不愿意透露具体ID的支持者
+                            cike Hakuchumu 性价比 luoxia 雪莹ちゃん 蘸色绘糖/晕星奏 tony_all 沙皮 轩 末乐回忆 metamiku madoka 垂耳兔kawayi amia 以及 三位不愿意透露具体ID的支持者
                         </p>
                     </div>
 

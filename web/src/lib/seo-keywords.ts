@@ -31,6 +31,7 @@ export const SITE_POSITIONING = [
 export const PAGE_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   cards: ["卡牌", "卡牌图鉴", "Card"],
   music: ["音乐", "歌曲图鉴", "Music"],
+  soundtrack: ["游戏原声带", "背景音乐", "BGM", "Soundtrack", "OST"],
   events: ["活动", "活动图鉴", "Event"],
   gacha: ["扭蛋", "卡池", "Gacha"],
   character: ["角色", "角色图鉴"],
