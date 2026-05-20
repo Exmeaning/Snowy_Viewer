@@ -1,7 +1,8 @@
 "use client";
 import BaseFilters, { FilterSection, getFilterChipStateClasses } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
-import { GachaCategoryType, GACHA_CATEGORY_LABELS } from "@/types/types";
+import { GachaCategoryType } from "@/types/types";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface GachaFiltersProps {
     searchQuery: string;
@@ -22,9 +23,9 @@ interface GachaFiltersProps {
     filteredGachas: number;
 }
 
-const SORT_OPTIONS = [
-    { id: "id", label: "ID" },
-    { id: "startAt", label: "开始时间" },
+const SORT_OPTIONS_BASE = [
+    { id: "id", labelKey: "common.filter.sortById" },
+    { id: "startAt", labelKey: "common.filter.sortByStartAt" },
 ];
 
 const GACHA_CATEGORIES: GachaCategoryType[] = ["all", "wish_pick", "normal_pickup"];
@@ -44,21 +45,35 @@ export default function GachaFilters({
     totalGachas,
     filteredGachas,
 }: GachaFiltersProps) {
+    const { t } = useI18n();
+    const SORT_OPTIONS = SORT_OPTIONS_BASE.map(opt => ({
+        id: opt.id,
+        label: t(opt.labelKey),
+    }));
+    const hasActiveFilters = selectedCategory !== "all" || selectedCharacters.length > 0 || searchQuery.trim() !== "";
+
     return (
         <BaseFilters
             filteredCount={filteredGachas}
             totalCount={totalGachas}
-            countUnit="个"
+            countUnit={t("page.gacha.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
-            searchPlaceholder="输入扭蛋名称或ID..."
+            searchPlaceholder={t("page.gacha.searchPlaceholder")}
             sortOptions={SORT_OPTIONS}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={(id, order) => onSortChange(id as "id" | "startAt", order)}
+            hasActiveFilters={hasActiveFilters}
+            onReset={() => {
+                onCategoryChange("all");
+                onCharacterChange([]);
+                onUnitIdsChange([]);
+                onSearchChange("");
+            }}
         >
             {/* Gacha Category Filter */}
-            <FilterSection label="扭蛋类型">
+            <FilterSection label={t("common.filter.gachaType")}>
                 <div className="flex flex-wrap gap-2">
                     {GACHA_CATEGORIES.map(category => (
                         <button
@@ -66,7 +81,7 @@ export default function GachaFilters({
                             onClick={() => onCategoryChange(category)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${getFilterChipStateClasses(selectedCategory === category)}`}
                         >
-                            {GACHA_CATEGORY_LABELS[category]}
+                            {t(`common.gachaCategories.${category}`)}
                         </button>
                     ))}
                 </div>
@@ -78,8 +93,8 @@ export default function GachaFilters({
                 onCharacterChange={onCharacterChange}
                 selectedUnitIds={selectedUnitIds}
                 onUnitIdsChange={onUnitIdsChange}
-                unitLabel="团体"
-                characterLabel="PU角色"
+                unitLabel={t("common.filter.unit")}
+                characterLabel={t("common.filter.pickupCharacter")}
             />
         </BaseFilters>
     );

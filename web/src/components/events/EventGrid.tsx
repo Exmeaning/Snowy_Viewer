@@ -2,6 +2,7 @@
 import EventItem from "./EventItem";
 import { IEventInfo } from "@/types/events";
 import { useState } from "react";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface EventGridProps {
     events: IEventInfo[];
@@ -29,6 +30,7 @@ function EventSkeleton() {
 
 export default function EventGrid({ events, isLoading = false, basePath = "/events", eventUnitMap, eventBannerCharMap: _eventBannerCharMap, eventBonusAttrMap, eventStoryIds }: EventGridProps) {
     const [now] = useState(() => Date.now());
+    const { t } = useI18n();
 
     // Show skeletons while loading
     if (isLoading) {
@@ -50,8 +52,8 @@ export default function EventGrid({ events, isLoading = false, basePath = "/even
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                 </div>
-                <h3 className="text-lg font-bold text-slate-600 mb-2">没有找到活动</h3>
-                <p className="text-slate-500 text-sm">尝试调整筛选条件</p>
+                <h3 className="text-lg font-bold text-slate-600 mb-2">{t("page.events.noResult")}</h3>
+                <p className="text-slate-500 text-sm">{t("page.events.noResultHint")}</p>
             </div>
         );
     }

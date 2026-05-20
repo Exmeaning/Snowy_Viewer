@@ -2,6 +2,7 @@
 import React from "react";
 import GachaItem from "./GachaItem";
 import { IGachaInfo } from "@/types/types";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface GachaGridProps {
     gachas: IGachaInfo[];
@@ -22,6 +23,8 @@ function GachaSkeleton() {
 }
 
 export default function GachaGrid({ gachas, isLoading = false }: GachaGridProps) {
+    const { t } = useI18n();
+
     if (isLoading) {
         return (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
@@ -38,8 +41,8 @@ export default function GachaGrid({ gachas, isLoading = false }: GachaGridProps)
                 <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
-                <p className="font-bold">没有找到扭蛋</p>
-                <p className="text-sm">尝试调整筛选条件</p>
+                <p className="font-bold">{t("page.gacha.noResult")}</p>
+                <p className="text-sm">{t("page.gacha.noResultHint")}</p>
             </div>
         );
     }

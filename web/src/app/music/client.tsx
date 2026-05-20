@@ -24,6 +24,7 @@ import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { fetchMusicAliases } from "@/lib/musicAliases";
+import { useI18n } from "@/contexts/I18nContext";
 
 // Search index item (from search-index.json)
 interface SearchIndexItem {
@@ -66,6 +67,7 @@ function MusicContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { isShowSpoiler } = useTheme();
+    const { t } = useI18n();
 
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
     const [musicTags, setMusicTags] = useState<IMusicTagInfo[]>([]);
@@ -426,7 +428,7 @@ function MusicContent() {
         />
     );
 
-    useQuickFilter("音乐筛选", quickFilterContent, [
+    useQuickFilter(t("page.music.filterTitle"), quickFilterContent, [
         selectedTag,
         selectedCategories,
         hasEventOnly,
@@ -445,30 +447,30 @@ function MusicContent() {
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
                     <span className="text-miku text-xs font-bold tracking-widest uppercase">
-                        音乐数据库
+                        {t("page.music.badge")}
                     </span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    音乐 <span className="text-miku">图鉴</span>
+                    {t("page.music.title")} <span className="text-miku">{t("page.music.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览并探索世界计划中的所有乐曲
+                    {t("page.music.description")}
                 </p>
                 <p className="text-xs text-slate-400 mt-1">
-                    音乐别名搜索支持 · 别名库来源：<a href="https://github.com/Team-Haruki" target="_blank" rel="noopener noreferrer" className="text-miku hover:underline">haruki</a>（别名由用户上传，与 Moesekai 无关）
+                    {t("page.music.aliasHint")}<a href="https://github.com/Team-Haruki" target="_blank" rel="noopener noreferrer" className="text-miku hover:underline">{t("page.music.aliasSource")}</a>{t("page.music.aliasDisclaimer")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{error}</p>
                     <button
                         onClick={() => window.location.reload()}
                         className="mt-2 text-red-500 underline hover:no-underline"
                     >
-                        重试
+                        {t("common.action.retry")}
                     </button>
                 </div>
             )}
@@ -502,10 +504,10 @@ function MusicContent() {
                         <div className="text-center py-16">
                             <div className="text-6xl mb-4">🎵</div>
                             <h3 className="text-xl font-bold text-slate-600 mb-2">
-                                没有找到匹配的音乐
+                                {t("page.music.noResult")}
                             </h3>
                             <p className="text-slate-500">
-                                尝试调整筛选条件
+                                {t("page.music.noResultHint")}
                             </p>
                         </div>
                     ) : (
@@ -539,7 +541,7 @@ function MusicContent() {
                                 data-shortcut-load-more="true"
                                 className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                             >
-                                加载更多
+                                {t("page.music.loadMore")}
                                 <span className="ml-2 text-sm opacity-80">
                                     ({displayedMusicsWithSeparators.filter(item => item.type === 'music').length} / {filteredMusics.length})
                                 </span>
@@ -552,7 +554,7 @@ function MusicContent() {
                         displayedMusicsWithSeparators.filter(item => item.type === 'music').length > 0 &&
                         displayedMusicsWithSeparators.filter(item => item.type === 'music').length >= filteredMusics.length && (
                             <div className="mt-8 text-center text-slate-400 text-sm">
-                                已显示全部 {filteredMusics.length} 首乐曲
+                                {t("page.music.allLoaded", { count: String(filteredMusics.length) })}
                             </div>
                         )}
                 </div>
@@ -564,7 +566,7 @@ function MusicContent() {
 export default function MusicClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载音乐...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">Loading music...</div>}>
                 <MusicContent />
             </Suspense>
         </MainLayout>

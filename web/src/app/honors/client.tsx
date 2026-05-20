@@ -10,10 +10,10 @@ import DegreeImage from "@/components/honor/DegreeImage";
 import BondsDegreeImage from "@/components/honor/BondsDegreeImage";
 import BaseFilters, { FilterSection, FilterToggle } from "@/components/common/BaseFilters";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { fetchMasterData } from "@/lib/fetch";
 import {
     IHonorInfo, IHonorGroup, IBondsHonor, IBondsHonorWord, IBond, IGameCharaUnit,
-    HONOR_TYPE_NAMES, HONOR_RARITY_NAMES,
 } from "@/types/honor";
 import { CHARACTER_NAMES } from "@/types/types";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
@@ -21,11 +21,29 @@ import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { getCharacterIconUrl } from "@/lib/assets";
 
 type HonorTab = "normal" | "bonds";
+type TranslationFn = ReturnType<typeof useI18n>["t"];
+
+function formatFallbackLabel(value: string): string {
+    return value.replace(/_/g, " ");
+}
+
+function getHonorTypeLabel(type: string, t: TranslationFn): string {
+    const key = `common.honor.types.${type}`;
+    const label = t(key);
+    return label === key ? formatFallbackLabel(type) : label;
+}
+
+function getHonorRarityLabel(rarity: string, t: TranslationFn): string {
+    const key = `common.honor.rarities.${rarity}`;
+    const label = t(key);
+    return label === key ? formatFallbackLabel(rarity) : label;
+}
 
 function HonorsContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
+    const { t } = useI18n();
 
     // Tab state
     const [activeTab, setActiveTab] = useState<HonorTab>("normal");
@@ -387,10 +405,10 @@ function HonorsContent() {
         <BaseFilters
             filteredCount={filteredBondsHonors.length}
             totalCount={bondsHonors.length}
-            countUnit="个"
+            countUnit={t("page.honors.countUnit")}
             searchQuery={bondsSearchQuery}
             onSearchChange={setBondsSearchQuery}
-            searchPlaceholder="搜索羁绊称号名称..."
+            searchPlaceholder={t("page.honors.searchPlaceholder.bonds")}
             sortOptions={[{ id: "id", label: "ID" }]}
             sortBy="id"
             sortOrder={bondsSortOrder}
@@ -398,7 +416,7 @@ function HonorsContent() {
             hasActiveFilters={bondsHasActiveFilters}
             onReset={handleBondsReset}
         >
-            <FilterSection label="角色 1">
+            <FilterSection label={t("common.filter.character1")}>
                 <div className="grid grid-cols-5 gap-2">
                     <button
                         onClick={() => setBondsChar1(null)}
@@ -406,7 +424,7 @@ function HonorsContent() {
                             ? "bg-miku text-white shadow-lg ring-2 ring-miku"
                             : "bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200"
                             }`}
-                        title="不限"
+                        title={t("common.filter.unlimited")}
                     >
                         ALL
                     </button>
@@ -420,7 +438,7 @@ function HonorsContent() {
                                     ? "ring-2 ring-miku shadow-lg"
                                     : "ring-1 ring-slate-200 hover:ring-miku/50"
                                     } ${!hasName ? "bg-slate-50" : ""}`}
-                                title={CHARACTER_NAMES[id] || `角色 ${id}`}
+                                title={CHARACTER_NAMES[id] || `#${id}`}
                             >
                                 {hasName ? (
                                     <Image
@@ -439,7 +457,7 @@ function HonorsContent() {
                 </div>
             </FilterSection>
 
-            <FilterSection label="角色 2">
+            <FilterSection label={t("common.filter.character2")}>
                 <div className="grid grid-cols-5 gap-2">
                     <button
                         onClick={() => setBondsChar2(null)}
@@ -447,7 +465,7 @@ function HonorsContent() {
                             ? "bg-miku text-white shadow-lg ring-2 ring-miku"
                             : "bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200"
                             }`}
-                        title="不限"
+                        title={t("common.filter.unlimited")}
                     >
                         ALL
                     </button>
@@ -461,7 +479,7 @@ function HonorsContent() {
                                     ? "ring-2 ring-miku shadow-lg"
                                     : "ring-1 ring-slate-200 hover:ring-miku/50"
                                     } ${!hasName ? "bg-slate-50" : ""}`}
-                                title={CHARACTER_NAMES[id] || `角色 ${id}`}
+                                title={CHARACTER_NAMES[id] || `#${id}`}
                             >
                                 {hasName ? (
                                     <Image
@@ -483,12 +501,12 @@ function HonorsContent() {
             <FilterToggle
                 selected={bondsGroupOnce}
                 onClick={() => setBondsGroupOnce(!bondsGroupOnce)}
-                label="每组仅显示一个"
+                label={t("common.filter.groupOnce")}
             />
         </BaseFilters>
     );
 
-    const quickFilterTitle = activeTab === "bonds" ? "羁绊称号筛选" : "称号筛选";
+    const quickFilterTitle = t(`page.honors.filterTitle.${activeTab}`);
     const quickFilterContent = activeTab === "bonds" ? bondsQuickFilterContent : normalQuickFilterContent;
 
     useQuickFilter(quickFilterTitle, quickFilterContent, [
@@ -515,13 +533,13 @@ function HonorsContent() {
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">称号成就</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.honors.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    称号 <span className="text-miku">成就</span>
+                    {t("page.honors.title")} <span className="text-miku">{t("page.honors.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览游戏中的所有称号和成就
+                    {t("page.honors.description")}
                 </p>
             </div>
 
@@ -536,7 +554,7 @@ function HonorsContent() {
                                 : "text-slate-500 hover:text-slate-700"
                         }`}
                     >
-                        普通称号
+                        {t("page.honors.tabs.normal")}
                     </button>
                     <button
                         onClick={() => setActiveTab("bonds")}
@@ -546,7 +564,7 @@ function HonorsContent() {
                                 : "text-slate-500 hover:text-slate-700"
                         }`}
                     >
-                        羁绊称号
+                        {t("page.honors.tabs.bonds")}
                     </button>
                 </div>
             </div>
@@ -554,7 +572,7 @@ function HonorsContent() {
             {/* Error */}
             {(activeTab === "normal" ? error : bondsError) && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("page.honors.loadFailed")}</p>
                     <p>{activeTab === "normal" ? error : bondsError}</p>
                 </div>
             )}
@@ -607,12 +625,12 @@ function HonorsContent() {
                                                 <div className="flex flex-wrap gap-1">
                                                     {group && (
                                                         <span className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
-                                                            {HONOR_TYPE_NAMES[group.honorType] || group.honorType}
+                                                            {getHonorTypeLabel(group.honorType, t)}
                                                         </span>
                                                     )}
                                                     {honor.honorRarity && (
                                                         <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
-                                                            {HONOR_RARITY_NAMES[honor.honorRarity] || honor.honorRarity}
+                                                            {getHonorRarityLabel(honor.honorRarity, t)}
                                                         </span>
                                                     )}
                                                 </div>
@@ -628,7 +646,7 @@ function HonorsContent() {
                                             data-shortcut-load-more="true"
                                             className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                                         >
-                                            加载更多
+                                            {t("page.honors.loadMore")}
                                             <span className="ml-2 text-sm opacity-80">
                                                 ({displayedHonors.length} / {filteredHonors.length})
                                             </span>
@@ -641,7 +659,7 @@ function HonorsContent() {
                                         <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <p>没有找到匹配的称号</p>
+                                        <p>{t("page.honors.noResult.normal")}</p>
                                     </div>
                                 )}
                             </>
@@ -701,11 +719,11 @@ function HonorsContent() {
                                                 </h3>
                                                 <div className="flex flex-wrap gap-1">
                                                     <span className="text-[10px] px-1.5 py-0.5 bg-pink-50 text-pink-500 rounded font-medium">
-                                                        羁绊
+                                                        {t("page.honors.bondsBadge")}
                                                     </span>
                                                     {bh.honorRarity && (
                                                         <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
-                                                            {HONOR_RARITY_NAMES[bh.honorRarity] || bh.honorRarity}
+                                                            {getHonorRarityLabel(bh.honorRarity, t)}
                                                         </span>
                                                     )}
                                                 </div>
@@ -721,7 +739,7 @@ function HonorsContent() {
                                             data-shortcut-load-more="true"
                                             className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                                         >
-                                            加载更多
+                                            {t("page.honors.loadMore")}
                                             <span className="ml-2 text-sm opacity-80">
                                                 ({displayedBondsHonors.length} / {filteredBondsHonors.length})
                                             </span>
@@ -734,7 +752,7 @@ function HonorsContent() {
                                         <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <p>没有找到匹配的羁绊称号</p>
+                                        <p>{t("page.honors.noResult.bonds")}</p>
                                     </div>
                                 )}
                             </>
@@ -765,10 +783,20 @@ function HonorsContent() {
     );
 }
 
+function HonorsLoadingFallback() {
+    const { t } = useI18n();
+
+    return (
+        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+            {t("page.honors.loadingFallback")}
+        </div>
+    );
+}
+
 export default function HonorsClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载称号数据...</div>}>
+            <Suspense fallback={<HonorsLoadingFallback />}>
                 <HonorsContent />
             </Suspense>
         </MainLayout>

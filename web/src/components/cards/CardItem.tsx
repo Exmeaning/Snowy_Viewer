@@ -5,6 +5,7 @@ import { ICardInfo, CHARACTER_NAMES, isTrainableCard } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface CardItemProps {
     card: ICardInfo;
@@ -14,6 +15,7 @@ interface CardItemProps {
 
 export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: CardItemProps) {
     const { useTrainedThumbnail } = useTheme();
+    const { t } = useI18n();
     const characterName = CHARACTER_NAMES[card.characterId] || `Character ${card.characterId}`;
 
     // Cards that only have trained images (no normal version)
@@ -41,7 +43,7 @@ export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: Car
                     {isSpoiler && (
                         <div className="mb-0.5">
                             <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded leading-none">
-                                剧透
+                                {t("common.badge.spoiler")}
                             </span>
                         </div>
                     )}

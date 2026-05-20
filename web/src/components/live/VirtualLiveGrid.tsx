@@ -2,6 +2,7 @@
 import VirtualLiveItem from "./VirtualLiveItem";
 import { IVirtualLiveInfo } from "@/types/virtualLive";
 import { useState } from "react";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface VirtualLiveGridProps {
     virtualLives: IVirtualLiveInfo[];
@@ -24,6 +25,7 @@ function VirtualLiveSkeleton() {
 
 export default function VirtualLiveGrid({ virtualLives, isLoading = false }: VirtualLiveGridProps) {
     const [now] = useState(() => Date.now());
+    const { t } = useI18n();
 
     // Show skeletons while loading
     if (isLoading) {
@@ -45,8 +47,8 @@ export default function VirtualLiveGrid({ virtualLives, isLoading = false }: Vir
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                     </svg>
                 </div>
-                <h3 className="text-lg font-bold text-slate-600 mb-2">没有找到演唱会</h3>
-                <p className="text-slate-500 text-sm">尝试调整筛选条件</p>
+                <h3 className="text-lg font-bold text-slate-600 mb-2">{t("page.live.noResult")}</h3>
+                <p className="text-slate-500 text-sm">{t("page.live.noResultHint")}</p>
             </div>
         );
     }

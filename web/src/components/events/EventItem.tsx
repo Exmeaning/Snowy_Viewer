@@ -1,11 +1,12 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { IEventInfo, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS, getEventStatus, EVENT_STATUS_DISPLAY, EventType } from "@/types/events";
+import { IEventInfo, EVENT_TYPE_COLORS, getEventStatus, EVENT_STATUS_DISPLAY, EventType } from "@/types/events";
 import { getEventStoryBannerUrl, getEventLogoUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { UNIT_DATA, UNIT_ICON_FILES, ATTR_ICON_PATHS, ATTR_NAMES } from "@/types/types";
+import { useI18n } from "@/contexts/I18nContext";
 
 // Build unit icon mapping from UNIT_DATA
 const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = Object.fromEntries(
@@ -23,6 +24,7 @@ interface EventItemProps {
 
 export default function EventItem({ event, isSpoiler, basePath = "/events", unitType, bonusAttr, eventStoryIds }: EventItemProps) {
     const { assetSource } = useTheme();
+    const { t, formatDate: formatLocaleDate } = useI18n();
     const hasEventStoryBanner = eventStoryIds ? eventStoryIds.has(event.id) : true;
     const thumbnailUrl = hasEventStoryBanner
         ? getEventStoryBannerUrl(event.assetbundleName, assetSource)
@@ -31,13 +33,11 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
     const statusDisplay = EVENT_STATUS_DISPLAY[status];
 
     // Format dates
-    const formatDate = (timestamp: number) => {
-        return new Date(timestamp).toLocaleDateString("zh-CN", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-        });
-    };
+    const formatDate = (timestamp: number) => formatLocaleDate(timestamp, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
 
     return (
         <Link href={`${basePath}/${event.id}`} className="group block" data-shortcut-item="true">
@@ -57,7 +57,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                         className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
                         style={{ backgroundColor: statusDisplay.color }}
                     >
-                        {statusDisplay.label}
+                        {t(`common.status.${status}`)}
                     </div>
 
                     {/* Event Type Badge */}
@@ -65,13 +65,13 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                         className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
                         style={{ backgroundColor: EVENT_TYPE_COLORS[event.eventType as EventType] }}
                     >
-                        {EVENT_TYPE_NAMES[event.eventType as EventType]}
+                        {t(`common.eventTypes.${event.eventType}`)}
                     </div>
 
                     {/* Spoiler Badge - Bottom Right */}
                     {isSpoiler && (
                         <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-orange-500 rounded-full text-[10px] sm:text-xs font-bold text-white shadow">
-                            剧透
+                            {t("common.badge.spoiler")}
                         </div>
                     )}
                 </div>
@@ -96,7 +96,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                                     />
                                 </div>
                             ) : (
-                                <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full" title="混合">混</span>
+                                <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full" title={t("common.badge.mixed")}>{t("common.badge.mixed")}</span>
                             )
                         )}
                         {bonusAttr && ATTR_ICON_PATHS[bonusAttr as keyof typeof ATTR_ICON_PATHS] && (

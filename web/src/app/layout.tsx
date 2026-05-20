@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { I18nProvider } from "@/contexts/I18nContext";
 import { MasterDataProvider } from "@/contexts/MasterDataContext";
 import { TranslationProvider } from "@/contexts/TranslationContext";
 import { QuickFilterProvider } from "@/contexts/QuickFilterContext";
@@ -21,9 +23,15 @@ import {
 } from "@/lib/ads";
 import { getRootKeywords, generateJsonLd } from "@/lib/seo-keywords";
 import { buildGoogleTagBootstrapScript } from "@/lib/googleTag";
+import {
+  UI_LOCALE_HTML_LANG,
+  UI_LOCALE_STORAGE_KEY,
+  normalizeUiLocale,
+} from "@/lib/i18n";
 
 const SITE_BASE_URL =
   process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe";
+
 
 const jsonLd = generateJsonLd(SITE_BASE_URL);
 const googleTagScript = buildGoogleTagBootstrapScript();
@@ -60,11 +68,13 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const initialUiLocale = normalizeUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value);
   // Inline script to apply theme color before React hydration
   const themeScript = `
     (function() {
@@ -146,12 +156,20 @@ export default function RootLayout({
           document.documentElement.style.setProperty('--color-miku-rgb', rr + ', ' + gg + ', ' + bb);
         }
       } catch(e) {}
+
+      try {
+        var savedUiLocale = localStorage.getItem('${UI_LOCALE_STORAGE_KEY}');
+        var resolvedUiLocale = savedUiLocale && savedUiLocale.toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN';
+        document.documentElement.lang = resolvedUiLocale;
+        document.documentElement.dataset.uiLocale = resolvedUiLocale;
+      } catch (e) {}
     })();
   `;
 
   return (
     <html
-      lang="zh-CN"
+      lang={UI_LOCALE_HTML_LANG[initialUiLocale]}
+      data-ui-locale={initialUiLocale}
       suppressHydrationWarning
     >
       <head>
@@ -169,15 +187,17 @@ export default function RootLayout({
       </head>
       <body className="font-sans">
         <ThemeProvider>
-          <MasterDataProvider>
-            <TranslationProvider>
-              <QuickFilterProvider>
-                <BreadcrumbProvider>
-                  {children}
-                </BreadcrumbProvider>
-              </QuickFilterProvider>
-            </TranslationProvider>
-          </MasterDataProvider>
+          <I18nProvider initialLocale={initialUiLocale}>
+            <MasterDataProvider>
+              <TranslationProvider>
+                <QuickFilterProvider>
+                  <BreadcrumbProvider>
+                    {children}
+                  </BreadcrumbProvider>
+                </QuickFilterProvider>
+              </TranslationProvider>
+            </MasterDataProvider>
+          </I18nProvider>
         </ThemeProvider>
         <ServiceWorkerRegistrar />
       </body>

@@ -7,6 +7,7 @@ import MainLayout from "@/components/MainLayout";
 import BaseFilters, { FilterButton, FilterSection } from "@/components/common/BaseFilters";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { getCharacterIconUrl, getCommonMaterialThumbnailUrl, getMaterialThumbnailUrl, getMysekaiMaterialThumbnailUrl, getPracticeTicketThumbnailUrl, getSkillPracticeTicketThumbnailUrl } from "@/lib/assets";
@@ -14,18 +15,16 @@ import { fetchMasterData } from "@/lib/fetch";
 import {
     areExchangeFiltersEqual,
     DEFAULT_EXCHANGE_FILTERS,
-    EXCHANGE_CATEGORY_LABELS,
     filterAndSortExchanges,
     formatExchangeTime,
     getExchangeCategoryLabel,
+    getExchangeStatusLabel,
     getExchangeTypeLabel,
     getRefreshCycleLabel,
     getRewardTypeLabel,
-    getRewardTypeLabel as getRewardLabel,
     getExchangeLastModified,
     loadExchangeCoreData,
     parseExchangeFilterParams,
-    STATUS_LABELS,
     summarizeExchangeRewards,
     type ExchangeCoreData,
     type ExchangeListFilters,
@@ -36,16 +35,18 @@ import type { ExchangeStatus, FlattenedMaterialExchange } from "@/types/exchange
 import { CHARACTER_NAMES, type ICardInfo } from "@/types/types";
 
 function PageHeader() {
+    const { t } = useI18n();
+
     return (
         <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                <span className="text-miku text-xs font-bold tracking-widest uppercase">Exchange Database</span>
+                <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.exchanges.badge")}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                兑换所 <span className="text-miku">图鉴</span>
+                {t("page.exchanges.title")} <span className="text-miku">{t("page.exchanges.titleHighlight")}</span>
             </h1>
             <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm sm:text-base">
-                浏览 Project SEKAI 各类兑换所条目，查看兑换成本、奖励内容与开放状态。
+                {t("page.exchanges.description")}
             </p>
         </div>
     );
@@ -153,6 +154,7 @@ function ScrollRow({ label, children }: { label: string; children: React.ReactNo
     );
 }
 function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceId?: number; resourceQuantity?: number } }) {
+    const { t } = useI18n();
     const { assetSource } = useTheme();
     const { coreData, cardsMap } = useExchangePageContext();
 
@@ -225,7 +227,7 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
                 alt={`practice-ticket-${detail.resourceId}`}
                 className="shrink-0 h-9 w-9 rounded-md bg-slate-50 object-contain p-0.5"
                 loading="lazy"
-                title="练习券"
+                title={getRewardTypeLabel(detail.resourceType, t)}
             />
         );
     }
@@ -237,7 +239,7 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
                 alt={`skill-practice-ticket-${detail.resourceId}`}
                 className="shrink-0 h-9 w-9 rounded-md bg-slate-50 object-contain p-0.5"
                 loading="lazy"
-                title="技能练习券"
+                title={getRewardTypeLabel(detail.resourceType, t)}
             />
         );
     }
@@ -246,7 +248,7 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
         return (
             <div
                 className="shrink-0 relative"
-                title={`角色等级经验 · ${CHARACTER_NAMES[detail.resourceId] ?? `#${detail.resourceId}`}`}
+                title={`${getRewardTypeLabel(detail.resourceType, t)} · ${CHARACTER_NAMES[detail.resourceId] ?? `#${detail.resourceId}`}`}
             >
                 <img
                     src={getCharacterIconUrl(detail.resourceId)}
@@ -263,7 +265,7 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
 
     return (
         <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-md bg-slate-50 text-[8px] font-bold text-slate-300">
-            {getRewardTypeLabel(detail.resourceType).slice(0, 2)}
+            {getRewardTypeLabel(detail.resourceType, t).slice(0, 2)}
         </div>
     );
 }
@@ -316,6 +318,7 @@ function CostThumbnail({ cost }: { cost: { resourceType: string; resourceId: num
 }
 
 function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
+    const { t, formatDate } = useI18n();
     const _rewardSummary = useMemo(() => summarizeExchangeRewards(entry.rewardDetails), [entry.rewardDetails]);
     const visibleRewards = entry.rewardDetails.slice(0, 8);
     const hiddenRewardCount = Math.max(0, entry.rewardDetails.length - 8);
@@ -329,10 +332,10 @@ function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
             className="group block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-miku/40 hover:shadow-lg"
         >
             <div className="mb-2 flex flex-wrap gap-1.5">
-                <Badge label={STATUS_LABELS[entry.status]} tone={getStatusTone(entry.status)} />
-                <Badge label={getExchangeCategoryLabel(entry.exchangeCategory)} tone="violet" />
-                <Badge label={getExchangeTypeLabel(entry.materialExchangeType)} tone="amber" />
-                {typeof entry.exchangeLimit === "number" ? <Badge label={`限 ${entry.exchangeLimit} 次`} tone="rose" /> : null}
+                <Badge label={getExchangeStatusLabel(entry.status, t)} tone={getStatusTone(entry.status)} />
+                <Badge label={getExchangeCategoryLabel(entry.exchangeCategory, t)} tone="violet" />
+                <Badge label={getExchangeTypeLabel(entry.materialExchangeType, t)} tone="amber" />
+                {typeof entry.exchangeLimit === "number" ? <Badge label={t("page.exchanges.limitTimes", { count: entry.exchangeLimit })} tone="rose" /> : null}
             </div>
 
             <h2 className="text-sm font-black leading-5 text-slate-800 transition-colors group-hover:text-miku mb-3 line-clamp-2">
@@ -342,7 +345,7 @@ function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
             <div className="flex gap-4">
                 {visibleRewards.length > 0 && (
                     <div className="flex-1 min-w-0">
-                        <ScrollRow label="奖励">
+                        <ScrollRow label={t("page.exchanges.rewards")}>
                             {visibleRewards.map((detail, i) => (
                                 <RewardThumbnail key={`r-${entry.id}-${i}`} detail={detail} />
                             ))}
@@ -357,7 +360,7 @@ function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
 
                 {visibleCosts.length > 0 && (
                     <div className="flex-1 min-w-0">
-                        <ScrollRow label="消耗">
+                        <ScrollRow label={t("page.exchanges.costs")}>
                             {visibleCosts.map((cost, i) => (
                                 <CostThumbnail key={`c-${entry.id}-${i}`} cost={cost} />
                             ))}
@@ -372,9 +375,9 @@ function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
             </div>
 
             <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">{formatExchangeTime(getExchangeLastModified(entry))}</span>
+                <span className="text-slate-400">{formatExchangeTime(getExchangeLastModified(entry), formatDate)}</span>
                 <span className="font-bold text-miku transition-transform group-hover:translate-x-0.5">
-                    详情 →
+                    {t("page.exchanges.detailLink")}
                 </span>
             </div>
         </Link>
@@ -395,6 +398,7 @@ function normalizeFilters(filters: ExchangeListFilters): ExchangeListFilters {
 
 function ExchangesContent() {
     const searchParams = useSearchParams();
+    const { t } = useI18n();
     const [coreData, setCoreData] = useState<ExchangeCoreData | null>(null);
     const [cardsMap, setCardsMap] = useState<Map<number, ICardInfo>>(new Map());
     const [isLoading, setIsLoading] = useState(true);
@@ -454,7 +458,7 @@ function ExchangesContent() {
             } catch (err) {
                 if (cancelled) return;
                 console.error("Error loading exchanges:", err);
-                setError(err instanceof Error ? err.message : "兑换所数据加载失败");
+                setError(err instanceof Error ? err.message : t("page.exchanges.loadFailed"));
             } finally {
                 if (!cancelled) {
                     setIsLoading(false);
@@ -467,7 +471,7 @@ function ExchangesContent() {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [t]);
 
     const summaryOptions = useMemo(() => {
         if (!coreData) return [];
@@ -483,14 +487,14 @@ function ExchangesContent() {
     const categoryOptions = useMemo(() => {
         if (!coreData) return [];
         return Array.from(new Set(coreData.flattenedExchanges.map((entry) => entry.exchangeCategory)))
-            .sort((a, b) => getExchangeCategoryLabel(a).localeCompare(getExchangeCategoryLabel(b), "zh-Hans-CN"));
-    }, [coreData]);
+            .sort((a, b) => getExchangeCategoryLabel(a, t).localeCompare(getExchangeCategoryLabel(b, t)));
+    }, [coreData, t]);
 
     const rewardTypeOptions = useMemo(() => {
         if (!coreData) return [];
         return Array.from(new Set(coreData.flattenedExchanges.flatMap((entry) => entry.rewardTypes)))
-            .sort((a, b) => getRewardTypeLabel(a).localeCompare(getRewardTypeLabel(b), "zh-Hans-CN"));
-    }, [coreData]);
+            .sort((a, b) => getRewardTypeLabel(a, t).localeCompare(getRewardTypeLabel(b, t)));
+    }, [coreData, t]);
 
     const hasActiveFilters =
         filters.searchQuery !== DEFAULT_EXCHANGE_FILTERS.searchQuery ||
@@ -523,19 +527,19 @@ function ExchangesContent() {
 
     const quickFilterContent = useMemo(() => (
         <BaseFilters
-            title="筛选兑换所"
+            title={t("page.exchanges.filterPanelTitle")}
             filteredCount={filteredEntries.length}
             totalCount={coreData?.flattenedExchanges.length || 0}
-            countUnit="项"
+            countUnit={t("page.exchanges.countUnit")}
             searchQuery={filters.searchQuery}
             onSearchChange={(query) => updateFilters((prev) => ({ ...prev, searchQuery: query }))}
-            searchPlaceholder="搜索名称、ID、分类或奖励类型..."
+            searchPlaceholder={t("page.exchanges.searchPlaceholder")}
             sortOptions={[
-                { id: "status_priority", label: "状态优先" },
-                { id: "seq", label: "默认" },
-                { id: "id", label: "ID" },
-                { id: "startAt", label: "开始" },
-                { id: "endAt", label: "结束" },
+                { id: "status_priority", label: t("common.filter.sortByStatusPriority") },
+                { id: "seq", label: t("common.filter.sortByDefault") },
+                { id: "id", label: t("common.filter.sortById") },
+                { id: "startAt", label: t("common.filter.sortByStartAt") },
+                { id: "endAt", label: t("common.filter.sortByEndAt") },
             ]}
             sortBy={filters.sortBy}
             sortOrder={filters.sortOrder}
@@ -547,7 +551,7 @@ function ExchangesContent() {
             hasActiveFilters={hasActiveFilters}
             onReset={resetFilters}
         >
-            <FilterSection label="兑换所">
+            <FilterSection label={t("common.filter.exchangeShop")}>
                 <select
                     className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
                     value={filters.selectedSummaryIds.length === 1 ? String(filters.selectedSummaryIds[0]) : ""}
@@ -556,7 +560,7 @@ function ExchangesContent() {
                         updateFilters((prev) => ({ ...prev, selectedSummaryIds: val }));
                     }}
                 >
-                    <option value="">全部</option>
+                    <option value="">{t("common.filter.all")}</option>
                     {summaryOptions.map((summary) => (
                         <option key={summary.id} value={summary.id}>
                             {summary.label} ({summary.count})
@@ -565,7 +569,7 @@ function ExchangesContent() {
                 </select>
             </FilterSection>
 
-            <FilterSection label="分类">
+            <FilterSection label={t("common.filter.category")}>
                 <select
                     className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
                     value={filters.selectedCategories.length === 1 ? filters.selectedCategories[0] : ""}
@@ -574,25 +578,25 @@ function ExchangesContent() {
                         updateFilters((prev) => ({ ...prev, selectedCategories: val }));
                     }}
                 >
-                    <option value="">全部</option>
+                    <option value="">{t("common.filter.all")}</option>
                     {categoryOptions.map((category) => (
                         <option key={category} value={category}>
-                            {EXCHANGE_CATEGORY_LABELS[category] || category}
+                            {getExchangeCategoryLabel(category, t)}
                         </option>
                     ))}
                 </select>
             </FilterSection>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FilterSection label="兑换类型">
+                <FilterSection label={t("common.filter.exchangeType")}>
                     <div className="flex flex-wrap gap-2">
                         <FilterButton
                             selected={filters.selectedExchangeTypes.length === 0}
                             onClick={() => updateFilters((prev) => ({ ...prev, selectedExchangeTypes: [] }))}
                         >
-                            全部
+                            {t("common.filter.all")}
                         </FilterButton>
-                        {["normal", "beginner"].map((type) => (
+                        {(["normal", "beginner"] as ExchangeListFilters["selectedExchangeTypes"]).map((type) => (
                             <FilterButton
                                 key={type}
                                 selected={filters.selectedExchangeTypes.includes(type)}
@@ -603,19 +607,19 @@ function ExchangesContent() {
                                         : [...prev.selectedExchangeTypes, type].sort((a, b) => a.localeCompare(b)),
                                 }))}
                             >
-                                {getExchangeTypeLabel(type)}
+                                {getExchangeTypeLabel(type, t)}
                             </FilterButton>
                         ))}
                     </div>
                 </FilterSection>
 
-                <FilterSection label="状态">
+                <FilterSection label={t("page.exchanges.fields.status")}>
                     <div className="flex flex-wrap gap-2">
                         <FilterButton
                             selected={filters.selectedStatuses.length === 0}
                             onClick={() => updateFilters((prev) => ({ ...prev, selectedStatuses: [] }))}
                         >
-                            全部
+                            {t("common.filter.all")}
                         </FilterButton>
                         {(["active", "upcoming", "permanent", "ended"] as ExchangeStatus[]).map((status) => (
                             <FilterButton
@@ -628,7 +632,7 @@ function ExchangesContent() {
                                         : [...prev.selectedStatuses, status],
                                 }))}
                             >
-                                {STATUS_LABELS[status]}
+                                {getExchangeStatusLabel(status, t)}
                             </FilterButton>
                         ))}
                     </div>
@@ -636,15 +640,15 @@ function ExchangesContent() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FilterSection label="刷新周期">
+                <FilterSection label={t("common.filter.refreshCycle")}>
                     <div className="flex flex-wrap gap-2">
                         <FilterButton
                             selected={filters.selectedRefreshCycles.length === 0}
                             onClick={() => updateFilters((prev) => ({ ...prev, selectedRefreshCycles: [] }))}
                         >
-                            全部
+                            {t("common.filter.all")}
                         </FilterButton>
-                        {["none", "monthly"].map((refreshCycle) => (
+                        {(["none", "monthly"] as ExchangeListFilters["selectedRefreshCycles"]).map((refreshCycle) => (
                             <FilterButton
                                 key={refreshCycle}
                                 selected={filters.selectedRefreshCycles.includes(refreshCycle)}
@@ -655,42 +659,42 @@ function ExchangesContent() {
                                         : [...prev.selectedRefreshCycles, refreshCycle].sort((a, b) => a.localeCompare(b)),
                                 }))}
                             >
-                                {getRefreshCycleLabel(refreshCycle)}
+                                {getRefreshCycleLabel(refreshCycle, t)}
                             </FilterButton>
                         ))}
                     </div>
                 </FilterSection>
 
-                <FilterSection label="成本类型">
+                <FilterSection label={t("common.filter.costType")}>
                     <div className="flex flex-wrap gap-2">
                         <FilterButton
                             selected={filters.selectedCostTypes.length === 0}
                             onClick={() => updateFilters((prev) => ({ ...prev, selectedCostTypes: [] }))}
                         >
-                            全部
+                            {t("common.filter.all")}
                         </FilterButton>
-                        {[
-                            { value: "material", label: "普通持有物" },
-                            { value: "mysekai_material", label: "MySekai 持有物" },
-                        ].map((type) => (
+                        {([
+                            "material",
+                            "mysekai_material",
+                        ] as ExchangeListFilters["selectedCostTypes"]).map((type) => (
                             <FilterButton
-                                key={type.value}
-                                selected={filters.selectedCostTypes.includes(type.value as ExchangeListFilters["selectedCostTypes"][number])}
+                                key={type}
+                                selected={filters.selectedCostTypes.includes(type)}
                                 onClick={() => updateFilters((prev) => ({
                                     ...prev,
-                                    selectedCostTypes: prev.selectedCostTypes.includes(type.value as ExchangeListFilters["selectedCostTypes"][number])
-                                        ? prev.selectedCostTypes.filter((item) => item !== type.value)
-                                        : [...prev.selectedCostTypes, type.value as ExchangeListFilters["selectedCostTypes"][number]],
+                                    selectedCostTypes: prev.selectedCostTypes.includes(type)
+                                        ? prev.selectedCostTypes.filter((item) => item !== type)
+                                        : [...prev.selectedCostTypes, type],
                                 }))}
                             >
-                                {type.label}
+                                {getRewardTypeLabel(type, t)}
                             </FilterButton>
                         ))}
                     </div>
                 </FilterSection>
             </div>
 
-            <FilterSection label="奖励类型">
+            <FilterSection label={t("common.filter.rewardType")}>
                 <select
                     className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
                     value={filters.selectedRewardTypes.length === 1 ? filters.selectedRewardTypes[0] : ""}
@@ -699,18 +703,18 @@ function ExchangesContent() {
                         updateFilters((prev) => ({ ...prev, selectedRewardTypes: val }));
                     }}
                 >
-                    <option value="">全部</option>
+                    <option value="">{t("common.filter.all")}</option>
                     {rewardTypeOptions.map((rewardType) => (
                         <option key={rewardType} value={rewardType}>
-                            {getRewardLabel(rewardType)}
+                            {getRewardTypeLabel(rewardType, t)}
                         </option>
                     ))}
                 </select>
             </FilterSection>
         </BaseFilters>
-    ), [coreData?.flattenedExchanges.length, filteredEntries.length, filters, hasActiveFilters, resetFilters, rewardTypeOptions, summaryOptions, categoryOptions, updateFilters]);
+    ), [coreData?.flattenedExchanges.length, filteredEntries.length, filters, hasActiveFilters, resetFilters, rewardTypeOptions, summaryOptions, categoryOptions, t, updateFilters]);
 
-    useQuickFilter("兑换所筛选", quickFilterContent, [quickFilterContent]);
+    useQuickFilter(t("page.exchanges.filterTitle"), quickFilterContent, [quickFilterContent, t]);
 
     if (!coreData) {
         return (
@@ -718,7 +722,7 @@ function ExchangesContent() {
                 <PageHeader />
                 {error ? (
                     <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">
-                        <p className="font-bold">加载失败</p>
+                        <p className="font-bold">{t("common.state.loadingFailed")}</p>
                         <p className="mt-1">{error}</p>
                     </div>
                 ) : (
@@ -735,21 +739,19 @@ function ExchangesContent() {
 
                 {error ? (
                     <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700">
-                        <p className="font-bold">加载提示</p>
+                        <p className="font-bold">{t("page.exchanges.loadNotice")}</p>
                         <p className="mt-1">{error}</p>
                     </div>
                 ) : null}
 
                 {!isLoading ? (
                     <div className="mb-4 text-xs text-slate-500">
-                        当前共 <span className="font-bold text-miku">{filteredEntries.length}</span>
-                        {hasActiveFilters ? (
-                            <>
-                                <span className="mx-1">/</span>
-                                <span className="font-bold text-slate-700">{coreData.flattenedExchanges.length}</span>
-                            </>
-                        ) : null}
-                        项兑换条目
+                        {t("page.exchanges.currentTotalSummary", {
+                            count: filteredEntries.length,
+                            total: hasActiveFilters
+                                ? t("page.exchanges.currentTotalSuffix", { total: coreData.flattenedExchanges.length })
+                                : "",
+                        })}
                     </div>
                 ) : null}
 
@@ -765,8 +767,8 @@ function ExchangesContent() {
                             <SkeletonList />
                         ) : filteredEntries.length === 0 ? (
                             <EmptyState
-                                title={hasActiveFilters ? "没有找到符合条件的兑换条目" : "暂无兑换所数据"}
-                                description={hasActiveFilters ? "可以尝试重置筛选后重新查看" : "当前服务器暂无可用的兑换所 masterdata 条目"}
+                                title={hasActiveFilters ? t("page.exchanges.noResult") : t("page.exchanges.noData")}
+                                description={hasActiveFilters ? t("page.exchanges.resetHint") : t("page.exchanges.noDataDescription")}
                             />
                         ) : (
                             <>
@@ -783,7 +785,7 @@ function ExchangesContent() {
                                             data-shortcut-load-more="true"
                                             className="rounded-xl bg-gradient-to-r from-miku to-miku-dark px-8 py-3 font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
                                         >
-                                            加载更多
+                                            {t("page.exchanges.loadMore")}
                                             <span className="ml-2 text-sm opacity-80">
                                                 ({displayedEntries.length} / {filteredEntries.length})
                                             </span>
@@ -791,7 +793,7 @@ function ExchangesContent() {
                                     </div>
                                 ) : (
                                     <div className="mt-8 text-center text-sm text-slate-400">
-                                        已显示全部 {filteredEntries.length} 项兑换条目
+                                        {t("page.exchanges.allLoaded", { count: filteredEntries.length })}
                                     </div>
                                 )}
                             </>
@@ -803,10 +805,20 @@ function ExchangesContent() {
     );
 }
 
+function ExchangesLoadingFallback() {
+    const { t } = useI18n();
+
+    return (
+        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+            {t("page.exchanges.loadingFallback")}
+        </div>
+    );
+}
+
 export default function ExchangesClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载兑换所数据...</div>}>
+            <Suspense fallback={<ExchangesLoadingFallback />}>
                 <ExchangesContent />
             </Suspense>
         </MainLayout>

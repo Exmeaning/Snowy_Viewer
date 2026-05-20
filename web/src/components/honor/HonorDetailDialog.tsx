@@ -1,10 +1,11 @@
 "use client";
 import React, { useRef } from "react";
 import Modal from "@/components/common/Modal";
-import { IHonorInfo, IHonorGroup, HONOR_RARITY_NAMES, HONOR_TYPE_NAMES } from "@/types/honor";
+import { IHonorInfo, IHonorGroup } from "@/types/honor";
 import DegreeImage from "./DegreeImage";
 import { AssetSourceType } from "@/contexts/ThemeContext";
 import { useSvgPreviewActions } from "@/hooks/useSvgPreviewActions";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface HonorDetailDialogProps {
     open: boolean;
@@ -21,6 +22,7 @@ export default function HonorDetailDialog({
     honorGroup,
     source = "main-jp",
 }: HonorDetailDialogProps) {
+    const { t } = useI18n();
     const previewRef = useRef<HTMLDivElement>(null);
     const { headerActions, errorMessage } = useSvgPreviewActions({
         isOpen: open,
@@ -32,7 +34,7 @@ export default function HonorDetailDialog({
         <Modal
             isOpen={open}
             onClose={onClose}
-            title={honor?.name ?? "称号详情"}
+            title={honor?.name ?? t("page.honors.normalDetailTitle")}
             size="md"
             headerActions={headerActions}
         >
@@ -51,21 +53,21 @@ export default function HonorDetailDialog({
 
                     <div className="space-y-0">
                         <InfoRow label="ID" value={String(honor.id)} />
-                        <InfoRow label="名称" value={honor.name} />
+                        <InfoRow label={t("common.field.name")} value={honor.name} />
                         {honorGroup && (
-                            <InfoRow label="称号组" value={honorGroup.name} />
+                            <InfoRow label={t("common.field.honorGroup")} value={honorGroup.name} />
                         )}
                         {honorGroup && (
-                            <InfoRow label="类型" value={HONOR_TYPE_NAMES[honorGroup.honorType] || honorGroup.honorType} />
+                            <InfoRow label={t("common.field.type")} value={t(`common.honor.types.${honorGroup.honorType}`) === `common.honor.types.${honorGroup.honorType}` ? honorGroup.honorType.replace(/_/g, " ") : t(`common.honor.types.${honorGroup.honorType}`)} />
                         )}
                         {honor.honorRarity && (
-                            <InfoRow label="稀有度" value={HONOR_RARITY_NAMES[honor.honorRarity] || honor.honorRarity} />
+                            <InfoRow label={t("common.field.rarity")} value={t(`common.honor.rarities.${honor.honorRarity}`) === `common.honor.rarities.${honor.honorRarity}` ? honor.honorRarity : t(`common.honor.rarities.${honor.honorRarity}`)} />
                         )}
                     </div>
 
                     {honor.levels.length > 0 && (
                         <div>
-                            <h3 className="mb-3 text-sm font-bold text-slate-700">等级详情</h3>
+                            <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.field.levelDetails")}</h3>
                             <div className="space-y-4">
                                 {honor.levels.map(level => (
                                     <div key={level.level} className="rounded-xl bg-slate-50 p-4 space-y-2">
@@ -73,7 +75,7 @@ export default function HonorDetailDialog({
                                             <span className="text-xs font-bold text-miku">Lv.{level.level}</span>
                                             {level.honorRarity && (
                                                 <span className="rounded-full bg-miku/10 px-2 py-0.5 text-xs font-medium text-miku">
-                                                    {HONOR_RARITY_NAMES[level.honorRarity] || level.honorRarity}
+                                                    {t(`common.honor.rarities.${level.honorRarity}`) === `common.honor.rarities.${level.honorRarity}` ? level.honorRarity : t(`common.honor.rarities.${level.honorRarity}`)}
                                                 </span>
                                             )}
                                         </div>

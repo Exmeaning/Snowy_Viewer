@@ -11,6 +11,7 @@ import BaseFilters, {
     FilterToggle,
 } from "@/components/common/BaseFilters";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { AssetSourceType } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
@@ -20,7 +21,6 @@ import { useScrollRestore } from "@/hooks/useScrollRestore";
 import {
     findMaterialExchangeUsages,
     loadExchangeCoreData,
-    STATUS_LABELS,
     type MaterialExchangeUsages,
 } from "@/lib/exchanges";
 import type { ExchangeStatus, FlattenedMaterialExchange } from "@/types/exchange";
@@ -73,42 +73,42 @@ const DEFAULT_MYSEKAI_FILTERS: MysekaiFiltersState = {
 };
 
 const MATERIAL_SORT_OPTIONS = [
-    { id: "seq", label: "默认" },
-    { id: "id", label: "ID" },
-    { id: "name", label: "名称" },
+    { id: "seq", labelKey: "common.filter.sortByDefault" },
+    { id: "id", labelKey: "common.filter.sortById" },
+    { id: "name", labelKey: "common.filter.sortByName" },
 ] as const;
 
 const MYSEKAI_SORT_OPTIONS = [
-    { id: "seq", label: "默认" },
-    { id: "id", label: "ID" },
-    { id: "name", label: "名称" },
-    { id: "rarity", label: "稀有度" },
+    { id: "seq", labelKey: "common.filter.sortByDefault" },
+    { id: "id", labelKey: "common.filter.sortById" },
+    { id: "name", labelKey: "common.filter.sortByName" },
+    { id: "rarity", labelKey: "common.filter.sortByRarity" },
 ] as const;
 
-const MATERIAL_TYPE_LABELS: Record<string, string> = {
-    common: "通用",
-    costume: "服装",
-    music: "音乐",
-    special_training: "特训",
-    master_lesson: "大师训练",
-    card_ticket: "卡牌券",
-    gacha_ceil_ticket: "天井券",
-    vocal_card_ticket: "anvo兑换券",
-    character_rank_exp_ticket: "心愿小瓶",
-    card_episode_release_ticket: "剧情解锁券",
-    auto_exchange_music_vocal_ticket: "connect live版vocal兑换券",
-    birthday_party_delivery: "祝祭的雨露",
-};
+const MATERIAL_TYPE_KEYS = [
+    "common",
+    "costume",
+    "music",
+    "special_training",
+    "master_lesson",
+    "card_ticket",
+    "gacha_ceil_ticket",
+    "vocal_card_ticket",
+    "character_rank_exp_ticket",
+    "card_episode_release_ticket",
+    "auto_exchange_music_vocal_ticket",
+    "birthday_party_delivery",
+] as const;
 
-const MYSEKAI_TYPE_LABELS: Record<string, string> = {
-    wood: "木材",
-    mineral: "矿石",
-    junk: "杂物",
-    plant: "植物",
-    tone: "音色",
-    game_character: "角色记忆",
-    birthday_party: "生日会",
-};
+const MYSEKAI_TYPE_KEYS = [
+    "wood",
+    "mineral",
+    "junk",
+    "plant",
+    "tone",
+    "game_character",
+    "birthday_party",
+] as const;
 
 const MYSEKAI_RARITY_LABELS: Record<string, string> = {
     rarity_1: "★1",
@@ -117,15 +117,15 @@ const MYSEKAI_RARITY_LABELS: Record<string, string> = {
     rarity_4: "★4",
 };
 
-const MYSEKAI_SITE_LOCAL_LABELS: Record<number, string> = {
-    5: "初始空地",
-    6: "愿望沙滩",
-    7: "浪漫花田",
-    8: "遗忘之所",
+const MYSEKAI_SITE_LABEL_KEYS: Record<number, string> = {
+    5: "common.mysekaiSites.5",
+    6: "common.mysekaiSites.6",
+    7: "common.mysekaiSites.7",
+    8: "common.mysekaiSites.8",
 };
 
-const MATERIAL_TYPE_ORDER = Object.keys(MATERIAL_TYPE_LABELS);
-const MYSEKAI_TYPE_ORDER = Object.keys(MYSEKAI_TYPE_LABELS);
+const MATERIAL_TYPE_ORDER = [...MATERIAL_TYPE_KEYS];
+const MYSEKAI_TYPE_ORDER = [...MYSEKAI_TYPE_KEYS];
 const MYSEKAI_RARITY_ORDER = ["rarity_1", "rarity_2", "rarity_3", "rarity_4"];
 
 function toSearchText(value: string | number | undefined | null): string {
@@ -206,12 +206,18 @@ function formatFallbackLabel(value: string): string {
     return value.replace(/_/g, " ");
 }
 
-function getMaterialTypeLabel(value: string): string {
-    return MATERIAL_TYPE_LABELS[value] || formatFallbackLabel(value);
+type TranslationFn = ReturnType<typeof useI18n>["t"];
+
+function getMaterialTypeLabel(value: string, t: TranslationFn): string {
+    const key = `common.materialTypes.${value}`;
+    const label = t(key);
+    return label === key ? formatFallbackLabel(value) : label;
 }
 
-function getMysekaiTypeLabel(value: string): string {
-    return MYSEKAI_TYPE_LABELS[value] || formatFallbackLabel(value);
+function getMysekaiTypeLabel(value: string, t: TranslationFn): string {
+    const key = `common.mysekaiMaterialTypes.${value}`;
+    const label = t(key);
+    return label === key ? formatFallbackLabel(value) : label;
 }
 
 function getMysekaiRarityLabel(value: string): string {
@@ -235,21 +241,25 @@ function getEffectiveMaterialDescription(material: IMaterialInfo): string {
     return material.flavorText || "";
 }
 
-function getMysekaiSiteLabel(siteId: number, siteMap: Map<number, IMysekaiSiteInfo>): string {
-    return MYSEKAI_SITE_LOCAL_LABELS[siteId] || siteMap.get(siteId)?.name || `区域 ${siteId}`;
+function getMysekaiSiteLabel(siteId: number, siteMap: Map<number, IMysekaiSiteInfo>, t: TranslationFn): string {
+    const labelKey = MYSEKAI_SITE_LABEL_KEYS[siteId];
+    if (labelKey) return t(labelKey);
+    return siteMap.get(siteId)?.name || t("common.mysekaiSites.areaFallback", { id: siteId });
 }
 
 function PageHeader() {
+    const { t } = useI18n();
+
     return (
         <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                <span className="text-miku text-xs font-bold tracking-widest uppercase">Materials Database</span>
+                <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.materials.badge")}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                持有物 <span className="text-miku">图鉴</span>
+                {t("page.materials.title")} <span className="text-miku">{t("page.materials.titleHighlight")}</span>
             </h1>
             <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm">
-                浏览 Project SEKAI 普通持有物与 MySekai 持有物
+                {t("page.materials.description")}
             </p>
         </div>
     );
@@ -324,13 +334,15 @@ function RegularMaterialCard({
     assetSource: AssetSourceType;
     onClick: () => void;
 }) {
+    const { t } = useI18n();
+
     return (
         <button
             type="button"
             onClick={onClick}
             data-shortcut-item="true"
             className="group block w-full text-left bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-4 h-full active:scale-[0.98]"
-            title={`查看 ${item.name} 详情`}
+            title={t("page.materials.viewDetailTitle", { name: item.name })}
         >
             <CardImage
                 src={getMaterialThumbnailUrl(item.id, assetSource)}
@@ -347,8 +359,8 @@ function RegularMaterialCard({
                 </div>
 
                 <div className="flex flex-wrap gap-1">
-                    <Badge label={getMaterialTypeLabel(item.materialType)} tone="miku" />
-                    {item.canUse && <Badge label="可使用" tone="emerald" />}
+                    <Badge label={getMaterialTypeLabel(item.materialType, t)} tone="miku" />
+                    {item.canUse && <Badge label={t("page.materials.usableBadge")} tone="emerald" />}
                 </div>
             </div>
         </button>
@@ -366,6 +378,7 @@ function MysekaiMaterialCard({
     siteMap: Map<number, IMysekaiSiteInfo>;
     onClick: () => void;
 }) {
+    const { t } = useI18n();
     const visibleSiteIds = item.mysekaiSiteIds.slice(0, 2);
     const extraSiteCount = Math.max(0, item.mysekaiSiteIds.length - visibleSiteIds.length);
 
@@ -375,7 +388,7 @@ function MysekaiMaterialCard({
             onClick={onClick}
             data-shortcut-item="true"
             className="group block w-full text-left bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-4 h-full active:scale-[0.98]"
-            title={`查看 ${item.name} 详情`}
+            title={t("page.materials.viewDetailTitle", { name: item.name })}
         >
             <CardImage
                 src={getMysekaiMaterialThumbnailUrl(item.iconAssetbundleName, assetSource)}
@@ -392,14 +405,14 @@ function MysekaiMaterialCard({
                 </div>
 
                 <div className="flex flex-wrap gap-1">
-                    <Badge label={getMysekaiTypeLabel(item.mysekaiMaterialType)} tone="violet" />
+                    <Badge label={getMysekaiTypeLabel(item.mysekaiMaterialType, t)} tone="violet" />
                     <Badge label={getMysekaiRarityLabel(item.mysekaiMaterialRarityType)} tone="amber" />
                     {item.mysekaiSiteIds.length === 0 ? (
-                        <Badge label="特殊来源" tone="emerald" />
+                        <Badge label={t("page.materials.specialSourceBadge")} tone="emerald" />
                     ) : (
                         <>
                             {visibleSiteIds.map((siteId) => (
-                                <Badge key={`${item.id}-${siteId}`} label={getMysekaiSiteLabel(siteId, siteMap)} tone="slate" />
+                                <Badge key={`${item.id}-${siteId}`} label={getMysekaiSiteLabel(siteId, siteMap, t)} tone="slate" />
                             ))}
                             {extraSiteCount > 0 && <Badge label={`+${extraSiteCount}`} tone="slate" />}
                         </>
@@ -429,6 +442,8 @@ function getExchangeStatusTone(status: ExchangeStatus): "miku" | "violet" | "amb
 }
 
 function ExchangeUsageLink({ entry }: { entry: FlattenedMaterialExchange }) {
+    const { t } = useI18n();
+
     return (
         <Link
             href={`/exchanges/${entry.id}`}
@@ -441,13 +456,14 @@ function ExchangeUsageLink({ entry }: { entry: FlattenedMaterialExchange }) {
                 getExchangeStatusTone(entry.status) === "violet" ? "bg-violet-500/10 text-violet-600" :
                 "bg-slate-100 text-slate-500"
             }`}>
-                {STATUS_LABELS[entry.status]}
+                {t(`common.exchange.statuses.${entry.status}`)}
             </span>
         </Link>
     );
 }
 
 function ExchangeUsageSection({ selection }: { selection: MaterialDetailSelection }) {
+    const { t } = useI18n();
     const [usages, setUsages] = useState<MaterialExchangeUsages | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -485,8 +501,8 @@ function ExchangeUsageSection({ selection }: { selection: MaterialDetailSelectio
     if (isLoading) {
         return (
             <div>
-                <h3 className="mb-3 text-sm font-bold text-slate-700">兑换所关联</h3>
-                <div className="rounded-xl bg-slate-50 p-4 text-center text-xs text-slate-400">加载中...</div>
+                <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.field.exchangeRelations")}</h3>
+                <div className="rounded-xl bg-slate-50 p-4 text-center text-xs text-slate-400">{t("common.state.loading")}</div>
             </div>
         );
     }
@@ -497,30 +513,30 @@ function ExchangeUsageSection({ selection }: { selection: MaterialDetailSelectio
 
     return (
         <div>
-            <h3 className="mb-3 text-sm font-bold text-slate-700">兑换所关联</h3>
+            <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.field.exchangeRelations")}</h3>
             <div className="space-y-3">
                 {usages.asCost.length > 0 && (
                     <div>
-                        <p className="mb-1.5 text-xs font-bold text-slate-500">作为兑换成本 ({usages.asCost.length})</p>
+                        <p className="mb-1.5 text-xs font-bold text-slate-500">{t("common.field.asExchangeCost", { count: usages.asCost.length })}</p>
                         <div className="space-y-1">
                             {usages.asCost.slice(0, 8).map((entry) => (
                                 <ExchangeUsageLink key={`cost-${entry.id}`} entry={entry} />
                             ))}
                             {usages.asCost.length > 8 && (
-                                <p className="text-xs text-slate-400 pl-3">还有 {usages.asCost.length - 8} 项...</p>
+                                <p className="text-xs text-slate-400 pl-3">{t("common.field.remainingItems", { count: usages.asCost.length - 8 })}</p>
                             )}
                         </div>
                     </div>
                 )}
                 {usages.asReward.length > 0 && (
                     <div>
-                        <p className="mb-1.5 text-xs font-bold text-slate-500">作为兑换奖励 ({usages.asReward.length})</p>
+                        <p className="mb-1.5 text-xs font-bold text-slate-500">{t("common.field.asExchangeReward", { count: usages.asReward.length })}</p>
                         <div className="space-y-1">
                             {usages.asReward.slice(0, 8).map((entry) => (
                                 <ExchangeUsageLink key={`reward-${entry.id}`} entry={entry} />
                             ))}
                             {usages.asReward.length > 8 && (
-                                <p className="text-xs text-slate-400 pl-3">还有 {usages.asReward.length - 8} 项...</p>
+                                <p className="text-xs text-slate-400 pl-3">{t("common.field.remainingItems", { count: usages.asReward.length - 8 })}</p>
                             )}
                         </div>
                     </div>
@@ -541,9 +557,10 @@ function MaterialDetailModal({
     siteMap: Map<number, IMysekaiSiteInfo>;
     onClose: () => void;
 }) {
+    const { t } = useI18n();
     const regularMaterial = selection?.kind === "material" ? selection.item : null;
     const mysekaiMaterial = selection?.kind === "mysekai" ? selection.item : null;
-    const title = selection?.item.name ?? "持有物详情";
+    const title = selection?.item.name ?? t("page.materials.detailTitle");
     const description = regularMaterial
         ? getEffectiveMaterialDescription(regularMaterial)
         : mysekaiMaterial?.description || "";
@@ -555,8 +572,8 @@ function MaterialDetailModal({
     const actionFileName = selection ? `${selection.item.name}_${selection.item.id}` : "material";
     const mysekaiSiteLabels = mysekaiMaterial
         ? mysekaiMaterial.mysekaiSiteIds.length === 0
-            ? ["特殊来源"]
-            : mysekaiMaterial.mysekaiSiteIds.map((siteId) => getMysekaiSiteLabel(siteId, siteMap))
+            ? [t("page.materials.specialSourceBadge")]
+            : mysekaiMaterial.mysekaiSiteIds.map((siteId) => getMysekaiSiteLabel(siteId, siteMap, t))
         : [];
 
     const { headerActions, errorMessage, saveClickCount } = useImageUrlActions({
@@ -579,8 +596,7 @@ function MaterialDetailModal({
                     {saveClickCount >= 2 && (
                         <div className="rounded-xl border border-miku/15 bg-gradient-to-r from-miku/5 to-luka/5 px-4 py-2.5 animate-in fade-in duration-300">
                             <p className="text-xs leading-relaxed text-slate-600">
-                                若浏览器未正常弹出下载，可尝试<strong className="text-slate-700">右键图片（移动端长按）→ 保存图像</strong>。
-                                或更换最新版浏览器后再试。
+                                {t("page.materials.downloadHint")}
                             </p>
                         </div>
                     )}
@@ -601,24 +617,24 @@ function MaterialDetailModal({
 
                     <div className="space-y-0">
                         <InfoRow label="ID" value={`#${selection.item.id}`} />
-                        <InfoRow label="名称" value={selection.item.name} />
-                        <InfoRow label="排序序号" value={String(selection.item.seq)} />
+                        <InfoRow label={t("common.field.name")} value={selection.item.name} />
+                        <InfoRow label={t("common.field.seq")} value={String(selection.item.seq)} />
                         {regularMaterial ? (
                             <>
-                                <InfoRow label="类型" value={getMaterialTypeLabel(regularMaterial.materialType)} />
-                                <InfoRow label="可使用" value={regularMaterial.canUse ? "是" : "否"} />
+                                <InfoRow label={t("common.field.type")} value={getMaterialTypeLabel(regularMaterial.materialType, t)} />
+                                <InfoRow label={t("common.field.canUse")} value={regularMaterial.canUse ? t("common.field.yes") : t("common.field.no")} />
                             </>
                         ) : mysekaiMaterial ? (
                             <>
-                                <InfoRow label="类型" value={getMysekaiTypeLabel(mysekaiMaterial.mysekaiMaterialType)} />
-                                <InfoRow label="稀有度" value={getMysekaiRarityLabel(mysekaiMaterial.mysekaiMaterialRarityType)} />
+                                <InfoRow label={t("common.field.type")} value={getMysekaiTypeLabel(mysekaiMaterial.mysekaiMaterialType, t)} />
+                                <InfoRow label={t("common.field.rarity")} value={getMysekaiRarityLabel(mysekaiMaterial.mysekaiMaterialRarityType)} />
                             </>
                         ) : null}
                     </div>
 
                     {mysekaiMaterial && (
                         <div>
-                            <h3 className="mb-3 text-sm font-bold text-slate-700">来源区域</h3>
+                            <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.filter.sourceArea")}</h3>
                             <div className="flex flex-wrap gap-2">
                                 {mysekaiSiteLabels.map((siteLabel) => (
                                     <Badge key={`${mysekaiMaterial.id}-${siteLabel}`} label={siteLabel} tone="slate" />
@@ -629,7 +645,7 @@ function MaterialDetailModal({
 
                     {description && (
                         <div>
-                            <h3 className="mb-3 text-sm font-bold text-slate-700">说明</h3>
+                            <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.field.description")}</h3>
                             <div className="rounded-xl bg-slate-50 p-4">
                                 <p className="whitespace-pre-line text-sm leading-6 text-slate-600">
                                     {description}
@@ -665,6 +681,7 @@ function SkeletonGrid() {
 function MaterialsContent() {
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
+    const { t } = useI18n();
 
     const [materials, setMaterials] = useState<IMaterialInfo[]>([]);
     const [mysekaiMaterials, setMysekaiMaterials] = useState<IMysekaiMaterial[]>([]);
@@ -776,9 +793,9 @@ function MaterialsContent() {
                 mysekaiSitesResult.status === "rejected";
 
             if (mainDataFailed) {
-                setError("持有物数据加载失败，请稍后重试。");
+                setError(t("page.materials.loadFailed"));
             } else if (partialFailed) {
-                setError("部分持有物数据加载失败，部分筛选或标签可能不完整。");
+                setError(t("page.materials.partialLoadFailed"));
             } else {
                 setError(null);
             }
@@ -791,7 +808,7 @@ function MaterialsContent() {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         if (!filtersInitialized || typeof window === "undefined") return;
@@ -875,9 +892,9 @@ function MaterialsContent() {
 
         return uniqueSiteIds.map((siteId) => ({
             id: siteId,
-            label: getMysekaiSiteLabel(siteId, mysekaiSiteMap),
+            label: getMysekaiSiteLabel(siteId, mysekaiSiteMap, t),
         }));
-    }, [mysekaiMaterials, mysekaiSiteMap]);
+    }, [mysekaiMaterials, mysekaiSiteMap, t]);
 
     const filteredMaterials = useMemo(() => {
         let result = [...materials];
@@ -1013,18 +1030,27 @@ function MaterialsContent() {
         resetDisplayCount();
     }, [resetDisplayCount]);
 
-    const quickFilterTitle = activeTab === "materials" ? "持有物筛选" : "MySekai 持有物筛选";
+    const quickFilterTitle = t(`page.materials.filterTitle.${activeTab}`);
     const quickFilterContent = useMemo(() => {
+        const materialSortOptions = MATERIAL_SORT_OPTIONS.map((option) => ({
+            id: option.id,
+            label: t(option.labelKey),
+        }));
+        const mysekaiSortOptions = MYSEKAI_SORT_OPTIONS.map((option) => ({
+            id: option.id,
+            label: t(option.labelKey),
+        }));
+
         return activeTab === "materials" ? (
             <BaseFilters
-                title="筛选持有物"
+                title={t("page.materials.filterPanelTitle.materials")}
                 filteredCount={filteredMaterials.length}
                 totalCount={materials.length}
-                countUnit="种"
+                countUnit={t("page.materials.countUnit")}
                 searchQuery={materialFilters.searchQuery}
                 onSearchChange={(query) => updateMaterialFilters((prev) => ({ ...prev, searchQuery: query }))}
-                searchPlaceholder="搜索持有物名称、说明或 ID..."
-                sortOptions={MATERIAL_SORT_OPTIONS.map((option) => ({ ...option }))}
+                searchPlaceholder={t("page.materials.searchPlaceholder.materials")}
+                sortOptions={materialSortOptions}
                 sortBy={materialFilters.sortBy}
                 sortOrder={materialFilters.sortOrder}
                 onSortChange={(sortBy, sortOrder) =>
@@ -1037,13 +1063,13 @@ function MaterialsContent() {
                 hasActiveFilters={hasActiveMaterialFilters}
                 onReset={resetMaterialFilters}
             >
-                <FilterSection label="持有物类型">
+                <FilterSection label={t("common.filter.materialType")}>
                     <div className="flex flex-wrap gap-2">
                         <FilterButton
                             selected={materialFilters.selectedTypes.length === 0}
                             onClick={() => updateMaterialFilters((prev) => ({ ...prev, selectedTypes: [] }))}
                         >
-                            全部
+                            {t("common.filter.all")}
                         </FilterButton>
                         {materialTypeOptions.map((type) => (
                             <FilterButton
@@ -1058,30 +1084,30 @@ function MaterialsContent() {
                                     }))
                                 }
                             >
-                                {getMaterialTypeLabel(type)}
+                                {getMaterialTypeLabel(type, t)}
                             </FilterButton>
                         ))}
                     </div>
                 </FilterSection>
 
-                <FilterSection label="显示">
+                <FilterSection label={t("common.filter.display")}>
                     <FilterToggle
                         selected={materialFilters.usableOnly}
                         onClick={() => updateMaterialFilters((prev) => ({ ...prev, usableOnly: !prev.usableOnly }))}
-                        label="仅显示可使用道具"
+                        label={t("page.materials.usableOnly")}
                     />
                 </FilterSection>
             </BaseFilters>
         ) : (
             <BaseFilters
-                title="筛选 MySekai 持有物"
+                title={t("page.materials.filterPanelTitle.mysekaiMaterials")}
                 filteredCount={filteredMysekaiMaterials.length}
                 totalCount={mysekaiMaterials.length}
-                countUnit="种"
+                countUnit={t("page.materials.countUnit")}
                 searchQuery={mysekaiFilters.searchQuery}
                 onSearchChange={(query) => updateMysekaiFilters((prev) => ({ ...prev, searchQuery: query }))}
-                searchPlaceholder="搜索 MySekai 持有物名称、说明或 ID..."
-                sortOptions={MYSEKAI_SORT_OPTIONS.map((option) => ({ ...option }))}
+                searchPlaceholder={t("page.materials.searchPlaceholder.mysekaiMaterials")}
+                sortOptions={mysekaiSortOptions}
                 sortBy={mysekaiFilters.sortBy}
                 sortOrder={mysekaiFilters.sortOrder}
                 onSortChange={(sortBy, sortOrder) =>
@@ -1094,13 +1120,13 @@ function MaterialsContent() {
                 hasActiveFilters={hasActiveMysekaiFilters}
                 onReset={resetMysekaiFilters}
             >
-                <FilterSection label="持有物类型">
+                <FilterSection label={t("common.filter.materialType")}>
                     <div className="flex flex-wrap gap-2">
                         <FilterButton
                             selected={mysekaiFilters.selectedTypes.length === 0}
                             onClick={() => updateMysekaiFilters((prev) => ({ ...prev, selectedTypes: [] }))}
                         >
-                            全部
+                            {t("common.filter.all")}
                         </FilterButton>
                         {mysekaiTypeOptions.map((type) => (
                             <FilterButton
@@ -1115,19 +1141,19 @@ function MaterialsContent() {
                                     }))
                                 }
                             >
-                                {getMysekaiTypeLabel(type)}
+                                {getMysekaiTypeLabel(type, t)}
                             </FilterButton>
                         ))}
                     </div>
                 </FilterSection>
 
-                <FilterSection label="稀有度">
+                <FilterSection label={t("common.filter.rarity")}>
                     <div className="flex flex-wrap gap-2">
                         <FilterButton
                             selected={mysekaiFilters.selectedRarities.length === 0}
                             onClick={() => updateMysekaiFilters((prev) => ({ ...prev, selectedRarities: [] }))}
                         >
-                            全部
+                            {t("common.filter.all")}
                         </FilterButton>
                         {mysekaiRarityOptions.map((rarity) => (
                             <FilterButton
@@ -1148,13 +1174,13 @@ function MaterialsContent() {
                     </div>
                 </FilterSection>
 
-                <FilterSection label="来源区域">
+                <FilterSection label={t("common.filter.sourceArea")}>
                     <div className="grid grid-cols-2 gap-2">
                         <FilterButton
                             selected={mysekaiFilters.selectedSites.length === 0}
                             onClick={() => updateMysekaiFilters((prev) => ({ ...prev, selectedSites: [] }))}
                         >
-                            全部
+                            {t("common.filter.all")}
                         </FilterButton>
                         {mysekaiSiteOptions.map((site) => (
                             <FilterButton
@@ -1192,13 +1218,14 @@ function MaterialsContent() {
         mysekaiTypeOptions,
         resetMaterialFilters,
         resetMysekaiFilters,
+        t,
         updateMaterialFilters,
         updateMysekaiFilters,
     ]);
 
     useQuickFilter(quickFilterTitle, quickFilterContent, [quickFilterTitle, quickFilterContent]);
 
-    const currentTabLabel = activeTab === "materials" ? "普通持有物" : "MySekai 持有物";
+    const currentTabLabel = t(`page.materials.tabs.${activeTab}`);
     const currentHasActiveFilters = activeTab === "materials" ? hasActiveMaterialFilters : hasActiveMysekaiFilters;
 
     return (
@@ -1214,8 +1241,8 @@ function MaterialsContent() {
 
             <div className="mb-4 flex items-center gap-2 flex-wrap">
                 {([
-                    { key: "materials" as TabType, label: "普通持有物" },
-                    { key: "mysekaiMaterials" as TabType, label: "MySekai 持有物" },
+                    { key: "materials" as TabType, label: t("page.materials.tabs.materials") },
+                    { key: "mysekaiMaterials" as TabType, label: t("page.materials.tabs.mysekaiMaterials") },
                 ]).map((tab) => (
                     <button
                         key={tab.key}
@@ -1236,15 +1263,19 @@ function MaterialsContent() {
 
             {!isLoading && (
                 <div className="mb-4 text-xs text-slate-500">
-                    当前为 <span className="font-bold text-miku">{currentTabLabel}</span>，
-                    共 <span className="font-bold text-miku">{currentItems.length}</span>
-                    {currentHasActiveFilters ? ` / ${currentTotalCount}` : ""} 种
+                    {t("page.materials.currentTabSummary", {
+                        tab: currentTabLabel,
+                        count: currentItems.length,
+                        total: currentHasActiveFilters
+                            ? t("page.materials.currentTabTotalSuffix", { total: currentTotalCount })
+                            : "",
+                    })}
                 </div>
             )}
 
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载提示</p>
+                    <p className="font-bold">{t("page.materials.loadNotice")}</p>
                     <p>{error}</p>
                 </div>
             )}
@@ -1261,13 +1292,11 @@ function MaterialsContent() {
                         <SkeletonGrid />
                     ) : currentItems.length === 0 ? (
                         <EmptyState
-                            title={currentHasActiveFilters ? "没有找到符合条件的持有物" : "暂无持有物数据"}
+                            title={currentHasActiveFilters ? t("page.materials.noResult") : t("common.state.noData")}
                             description={
                                 currentHasActiveFilters
-                                    ? "可以尝试重置筛选后重新查看"
-                                    : activeTab === "materials"
-                                        ? "当前普通持有物 masterdata 暂无可用条目"
-                                        : "当前 MySekai 持有物 masterdata 暂无可用条目"
+                                    ? t("page.materials.resetHint")
+                                    : t(`page.materials.noData.${activeTab}`)
                             }
                         />
                     ) : (
@@ -1300,7 +1329,7 @@ function MaterialsContent() {
                                         data-shortcut-load-more="true"
                                         className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                                     >
-                                        加载更多
+                                        {t("page.materials.loadMore")}
                                         <span className="ml-2 text-sm opacity-80">
                                             ({displayedItems.length} / {currentItems.length})
                                         </span>
@@ -1310,7 +1339,7 @@ function MaterialsContent() {
 
                             {displayedItems.length > 0 && displayedItems.length >= currentItems.length && (
                                 <div className="mt-8 text-center text-slate-400 text-sm">
-                                    已显示全部 {currentItems.length} 种{currentTabLabel}
+                                    {t("page.materials.allLoaded", { count: currentItems.length, tab: currentTabLabel })}
                                 </div>
                             )}
                         </>
@@ -1321,10 +1350,20 @@ function MaterialsContent() {
     );
 }
 
+function MaterialsLoadingFallback() {
+    const { t } = useI18n();
+
+    return (
+        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+            {t("page.materials.loadingFallback")}
+        </div>
+    );
+}
+
 export default function MaterialsClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载持有物数据...</div>}>
+            <Suspense fallback={<MaterialsLoadingFallback />}>
                 <MaterialsContent />
             </Suspense>
         </MainLayout>

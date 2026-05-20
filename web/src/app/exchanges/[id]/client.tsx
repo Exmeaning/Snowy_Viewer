@@ -7,10 +7,12 @@ import MainLayout from "@/components/MainLayout";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
     formatExchangeTime,
     getExchangeCategoryLabel,
+    getExchangeStatusLabel,
     getExchangeTypeLabel,
     getRefreshCycleLabel,
     getRewardTypeLabel,
@@ -19,7 +21,6 @@ import {
     resolveExchangeCostGroups,
     resolveExchangeDisplayResources,
     resolveExchangeRewards,
-    STATUS_LABELS,
 } from "@/lib/exchanges";
 import type { ExchangeRewardLookups } from "@/lib/exchanges";
 import type {
@@ -48,7 +49,7 @@ const EMPTY_LOOKUPS: ExchangeRewardLookups = {
     mysekaiTools: new Map(),
 };
 
-/** 同兑换所条目默认展示数量，超出后折叠 */
+/** Default number of sibling entries shown before collapsing. */
 const SIBLINGS_INITIAL_SHOW = 6;
 
 // ─── small ui helpers ─────────────────────────────────────────────────────────
@@ -86,10 +87,7 @@ function getStatusTone(status: ExchangeStatus): "emerald" | "amber" | "rose" | "
     }
 }
 
-/**
- * InfoRow — 匹配 /live/:id 风格
- * 外层容器需提供 divide-y divide-slate-100，此组件自带 px-5 py-3 间距
- */
+/** Info row styled to match the detail page layout. */
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <div className="px-5 py-3 flex items-center justify-between text-sm">
@@ -99,11 +97,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     );
 }
 
-/**
- * SectionCard — 匹配 /live/:id 卡片风格
- *
- * @param rowStyle  true → divide-y divide-slate-100（配合 InfoRow），否则 p-5 包裹
- */
+/** Section card wrapper used by detail blocks. */
 function SectionCard({
     title,
     icon,
@@ -173,6 +167,8 @@ function CostGroupBlock({ title, group }: { title?: string; group: ResolvedExcha
 }
 
 function RewardCard({ reward, lookups }: { reward: ResolvedExchangeReward; lookups: ExchangeRewardLookups }) {
+    const { t } = useI18n();
+
     if (reward.resourceType === "card" && typeof reward.resourceId === "number") {
         const cardInfo = lookups.cards.get(reward.resourceId);
         if (cardInfo) {
@@ -186,8 +182,8 @@ function RewardCard({ reward, lookups }: { reward: ResolvedExchangeReward; looku
                     </div>
                     <div>
                         <div className="mt-3 flex flex-wrap gap-2">
-                            <Badge label={getRewardTypeLabel(reward.resourceType)} tone="miku" />
-                            <Badge label={`数量 × ${reward.quantity}`} tone="slate" />
+                            <Badge label={getRewardTypeLabel(reward.resourceType, t)} tone="miku" />
+                            <Badge label={t("page.exchanges.quantity", { count: reward.quantity })} tone="slate" />
                         </div>
                         {reward.subtitle ? <div className="mt-2 text-xs text-slate-400">{reward.subtitle}</div> : null}
                     </div>
@@ -206,8 +202,8 @@ function RewardCard({ reward, lookups }: { reward: ResolvedExchangeReward; looku
                 <div className="min-w-0 flex-1">
                     <div className="break-words text-sm font-black text-slate-800">{reward.name}</div>
                     <div className="mt-1 flex flex-wrap gap-2">
-                        <Badge label={getRewardTypeLabel(reward.resourceType)} tone="miku" />
-                        <Badge label={`数量 × ${reward.quantity}`} tone="slate" />
+                        <Badge label={getRewardTypeLabel(reward.resourceType, t)} tone="miku" />
+                        <Badge label={t("page.exchanges.quantity", { count: reward.quantity })} tone="slate" />
                     </div>
                     {reward.subtitle ? <div className="mt-2 text-xs text-slate-400">{reward.subtitle}</div> : null}
                 </div>
@@ -224,6 +220,8 @@ function RewardCard({ reward, lookups }: { reward: ResolvedExchangeReward; looku
 }
 
 function DisplayResourceCard({ resource }: { resource: ResolvedExchangeDisplayResource }) {
+    const { t } = useI18n();
+
     return (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex items-start gap-3">
@@ -232,8 +230,8 @@ function DisplayResourceCard({ resource }: { resource: ResolvedExchangeDisplayRe
                     <div className="break-words text-sm font-black text-slate-800">{resource.name}</div>
                     {resource.subtitle ? <div className="mt-1 text-xs text-slate-400">{resource.subtitle}</div> : null}
                     <div className="mt-2 flex flex-wrap gap-2">
-                        <Badge label={getRewardTypeLabel(resource.resourceType)} tone="violet" />
-                        <Badge label={`组 ${resource.groupId}`} tone="slate" />
+                        <Badge label={getRewardTypeLabel(resource.resourceType, t)} tone="violet" />
+                        <Badge label={t("page.exchanges.groupNumber", { group: resource.groupId })} tone="slate" />
                     </div>
                 </div>
             </div>
@@ -241,18 +239,16 @@ function DisplayResourceCard({ resource }: { resource: ResolvedExchangeDisplayRe
     );
 }
 
-/**
- * SiblingsCard — 同兑换所其它条目，超过 SIBLINGS_INITIAL_SHOW 时折叠
- * 折叠交互参考 /live/:id 的 SchedulesCard
- */
+/** Collapsible sibling entries card. */
 function SiblingsCard({ siblings }: { siblings: FlattenedMaterialExchange[] }) {
+    const { t } = useI18n();
     const [isExpanded, setIsExpanded] = useState(false);
     const hasMore = siblings.length > SIBLINGS_INITIAL_SHOW;
     const shown = isExpanded ? siblings : siblings.slice(0, SIBLINGS_INITIAL_SHOW);
 
     return (
         <SectionCard
-            title={`同兑换所其它条目 (${siblings.length})`}
+            title={t("page.exchanges.siblingsTitle", { count: siblings.length })}
             icon={
                 <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -269,8 +265,8 @@ function SiblingsCard({ siblings }: { siblings: FlattenedMaterialExchange[] }) {
                     >
                         <div className="text-sm font-black text-slate-800">{sibling.resolvedTitle}</div>
                         <div className="mt-1 flex flex-wrap gap-2">
-                            <Badge label={STATUS_LABELS[sibling.status]} tone={getStatusTone(sibling.status)} />
-                            <Badge label={getRefreshCycleLabel(sibling.refreshCycle)} tone="slate" />
+                            <Badge label={getExchangeStatusLabel(sibling.status, t)} tone={getStatusTone(sibling.status)} />
+                            <Badge label={getRefreshCycleLabel(sibling.refreshCycle, t)} tone="slate" />
                         </div>
                     </Link>
                 ))}
@@ -289,7 +285,7 @@ function SiblingsCard({ siblings }: { siblings: FlattenedMaterialExchange[] }) {
                     >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                    {isExpanded ? "收起" : `展开其他 ${siblings.length - SIBLINGS_INITIAL_SHOW} 条`}
+                    {isExpanded ? t("page.exchanges.collapse") : t("page.exchanges.expandOthers", { count: siblings.length - SIBLINGS_INITIAL_SHOW })}
                 </button>
             )}
         </SectionCard>
@@ -297,16 +293,18 @@ function SiblingsCard({ siblings }: { siblings: FlattenedMaterialExchange[] }) {
 }
 
 function ErrorState({ message }: { message: string }) {
+    const { t } = useI18n();
+
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
             <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-600">
-                <p className="text-lg font-black">兑换项加载失败</p>
+                <p className="text-lg font-black">{t("page.exchanges.relationLoadFailed")}</p>
                 <p className="mt-2 text-sm">{message}</p>
                 <Link
                     href="/exchanges"
                     className="mt-4 inline-flex rounded-xl bg-white px-4 py-2 text-sm font-bold text-red-500 shadow-sm transition-colors hover:bg-red-100"
                 >
-                    返回兑换所列表
+                        {t("page.exchanges.backToList")}
                 </Link>
             </div>
         </div>
@@ -319,6 +317,7 @@ export default function ExchangeDetailClient() {
     const params = useParams();
     const exchangeId = Number(params.id);
     const { assetSource } = useTheme();
+    const { t, formatDate } = useI18n();
     const { setDetailName } = useBreadcrumb();
 
     const [coreData, setCoreData] = useState<Awaited<ReturnType<typeof loadExchangeCoreData>> | null>(null);
@@ -342,7 +341,7 @@ export default function ExchangeDetailClient() {
 
                 const foundEntry = loaded.flattenedExchanges.find((item) => item.id === exchangeId);
                 if (!foundEntry) {
-                    throw new Error(`未找到 ID 为 ${exchangeId} 的兑换项。`);
+                    throw new Error(t("page.exchanges.itemNotFound", { id: exchangeId }));
                 }
 
                 setCoreData(loaded);
@@ -356,7 +355,7 @@ export default function ExchangeDetailClient() {
             } catch (err) {
                 if (cancelled) return;
                 console.error("Error loading exchange detail:", err);
-                setError(err instanceof Error ? err.message : "兑换项详情加载失败");
+                setError(err instanceof Error ? err.message : t("page.exchanges.detailLoadFailed"));
             } finally {
                 if (!cancelled) setIsLoading(false);
             }
@@ -366,11 +365,11 @@ export default function ExchangeDetailClient() {
             fetchData();
         } else {
             setIsLoading(false);
-            setError("兑换项 ID 无效。");
+            setError(t("page.exchanges.invalidItemId"));
         }
 
         return () => { cancelled = true; };
-    }, [exchangeId]);
+    }, [exchangeId, t]);
 
     const costInfo = useMemo(() => {
         if (!entry || !coreData) {
@@ -379,19 +378,19 @@ export default function ExchangeDetailClient() {
                 relationParents: [] as ResolvedExchangeRelationParent[],
             };
         }
-        const resolved = resolveExchangeCostGroups(entry, coreData.materialMap, coreData.mysekaiMaterialMap, assetSource);
+        const resolved = resolveExchangeCostGroups(entry, coreData.materialMap, coreData.mysekaiMaterialMap, assetSource, t);
         return { baseCostGroups: resolved.baseCostGroups, relationParents: resolved.relationParents };
-    }, [assetSource, coreData, entry]);
+    }, [assetSource, coreData, entry, t]);
 
     const resolvedRewards = useMemo(() => {
         if (!entry || !coreData) return [] as ResolvedExchangeReward[];
-        return resolveExchangeRewards(entry, coreData.materialMap, coreData.mysekaiMaterialMap, rewardLookups, assetSource);
-    }, [assetSource, coreData, entry, rewardLookups]);
+        return resolveExchangeRewards(entry, coreData.materialMap, coreData.mysekaiMaterialMap, rewardLookups, assetSource, t);
+    }, [assetSource, coreData, entry, rewardLookups, t]);
 
     const displayResources = useMemo(() => {
         if (!entry || !coreData) return [] as ResolvedExchangeDisplayResource[];
-        return resolveExchangeDisplayResources(entry, coreData.materialMap, coreData.mysekaiMaterialMap, assetSource);
-    }, [assetSource, coreData, entry]);
+        return resolveExchangeDisplayResources(entry, coreData.materialMap, coreData.mysekaiMaterialMap, assetSource, t);
+    }, [assetSource, coreData, entry, t]);
 
     const siblingEntries = useMemo(() => {
         if (!entry || !coreData) return [] as FlattenedMaterialExchange[];
@@ -436,41 +435,45 @@ export default function ExchangeDetailClient() {
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        返回兑换所列表
+                    {t("page.exchanges.backToList")}
                     </Link>
 
-                    {/* ID chip + Badges 横排 */}
+                    {/* ID chip and badges */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-500 w-fit">
                             ID: #{entry.id}
                         </span>
-                        <Badge label={STATUS_LABELS[entry.status]} tone={getStatusTone(entry.status)} />
-                        <Badge label={getExchangeCategoryLabel(entry.exchangeCategory)} tone="violet" />
-                        <Badge label={getExchangeTypeLabel(entry.materialExchangeType)} tone="amber" />
-                        <Badge label={getRefreshCycleLabel(entry.refreshCycle)} tone="slate" />
+                        <Badge label={getExchangeStatusLabel(entry.status, t)} tone={getStatusTone(entry.status)} />
+                        <Badge label={getExchangeCategoryLabel(entry.exchangeCategory, t)} tone="violet" />
+                        <Badge label={getExchangeTypeLabel(entry.materialExchangeType, t)} tone="amber" />
+                        <Badge label={getRefreshCycleLabel(entry.refreshCycle, t)} tone="slate" />
                         {typeof entry.exchangeLimit === "number" && (
-                            <Badge label={`限 ${entry.exchangeLimit} 次`} tone="rose" />
+                            <Badge label={t("page.exchanges.limitTimes", { count: entry.exchangeLimit })} tone="rose" />
                         )}
                         {entry.materialExchangeRelationParents.length > 0 && (
-                            <Badge label="含关联成本" tone="emerald" />
+                            <Badge label={t("page.exchanges.relatedCostIncluded")} tone="emerald" />
                         )}
                     </div>
 
                     <h1 className="text-2xl sm:text-3xl font-black text-slate-800">{entry.resolvedTitle}</h1>
                     <p className="mt-2 text-sm text-slate-500">
-                        所属兑换所：<span className="font-bold text-slate-700">{entry.summaryName}</span>
+                        {t("page.exchanges.belongsToSummary", { summary: entry.summaryName })}
                     </p>
                 </div>
 
-                {/* ── Main Grid：左侧视觉 / 右侧详情 ── */}
+                {/* Main grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                    {/* ══ 左栏：奖励内容 + 展示资源组 + 兑换成本 ══ */}
+                    {/* Left column */}
                     <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
 
-                        {/* 奖励内容 */}
+                        {/* Rewards */}
                         <SectionCard
-                            title={`奖励内容${resolvedRewards.length > 0 ? ` (${resolvedRewards.length})` : ""}`}
+                            title={t("page.exchanges.rewardContent", {
+                                count: resolvedRewards.length > 0
+                                    ? t("page.exchanges.countSuffix", { count: resolvedRewards.length })
+                                    : "",
+                            })}
                             icon={
                                 <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -489,14 +492,14 @@ export default function ExchangeDetailClient() {
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-sm text-slate-400">暂无奖励内容。</p>
+                                <p className="text-sm text-slate-400">{t("page.exchanges.noRewards")}</p>
                             )}
                         </SectionCard>
 
-                        {/* 展示资源组（可选） */}
+                        {/* Display resources */}
                         {displayResources.length > 0 && (
                             <SectionCard
-                                title="展示资源组"
+                                title={t("page.exchanges.displayResourceGroup")}
                                 icon={
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -515,9 +518,9 @@ export default function ExchangeDetailClient() {
                             </SectionCard>
                         )}
 
-                        {/* 兑换成本 */}
+                        {/* Costs */}
                         <SectionCard
-                            title="兑换成本"
+                            title={t("page.exchanges.exchangeCosts")}
                             icon={
                                 <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -530,29 +533,31 @@ export default function ExchangeDetailClient() {
                                     costInfo.baseCostGroups.map((group, index) => (
                                         <CostGroupBlock
                                             key={`base-${group.costGroupId}`}
-                                            title={costInfo.baseCostGroups.length > 1 ? `基础成本组 ${index + 1}` : "基础成本"}
+                                            title={costInfo.baseCostGroups.length > 1
+                                                ? t("page.exchanges.baseCostGroup", { index: index + 1 })
+                                                : t("page.exchanges.baseCost")}
                                             group={group}
                                         />
                                     ))
                                 ) : (
-                                    <p className="text-sm text-slate-400">暂无基础成本信息。</p>
+                                    <p className="text-sm text-slate-400">{t("page.exchanges.noBaseCost")}</p>
                                 )}
                             </div>
 
                             {costInfo.relationParents.length > 0 && (
                                 <div className="mt-6 space-y-4 border-t border-slate-100 pt-6">
-                                    <h3 className="text-base font-black text-slate-800">关联成本组</h3>
+                                    <h3 className="text-base font-black text-slate-800">{t("page.exchanges.relationCostGroups")}</h3>
                                     {costInfo.relationParents.map((parent) => (
                                         <div key={parent.id} className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
                                             <div className="mb-4 flex flex-wrap items-center gap-2">
-                                                <Badge label="关联条件" tone="emerald" />
+                                                <Badge label={t("page.exchanges.relationCondition")} tone="emerald" />
                                                 <span className="text-sm font-bold text-emerald-700">{parent.description}</span>
                                             </div>
                                             <div className="space-y-4">
                                                 {parent.costGroups.map((group, index) => (
                                                     <CostGroupBlock
                                                         key={`relation-${parent.id}-${group.costGroupId}`}
-                                                        title={parent.costGroups.length > 1 ? `关联成本组 ${index + 1}` : undefined}
+                                                        title={parent.costGroups.length > 1 ? t("page.exchanges.relationCostGroup", { index: index + 1 }) : undefined}
                                                         group={group}
                                                     />
                                                 ))}
@@ -564,12 +569,12 @@ export default function ExchangeDetailClient() {
                         </SectionCard>
                     </div>
 
-                    {/* ══ 右栏：详情信息 ══ */}
+                    {/* Right column */}
                     <div className="space-y-6">
 
-                        {/* 基础信息 */}
+                        {/* Basic information */}
                         <SectionCard
-                            title="基础信息"
+                            title={t("page.exchanges.basicInfo")}
                             rowStyle
                             icon={
                                 <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -578,25 +583,25 @@ export default function ExchangeDetailClient() {
                                 </svg>
                             }
                         >
-                            <InfoRow label="兑换项 ID"   value={<span className="font-mono">#{entry.id}</span>} />
-                            <InfoRow label="兑换所 ID"   value={<span className="font-mono">#{entry.summaryId}</span>} />
-                            <InfoRow label="排序序号"    value={`${entry.summarySeq}-${entry.exchangeSeq}`} />
-                            <InfoRow label="分类"        value={getExchangeCategoryLabel(entry.exchangeCategory)} />
-                            <InfoRow label="兑换类型"    value={getExchangeTypeLabel(entry.materialExchangeType)} />
-                            <InfoRow label="刷新周期"    value={getRefreshCycleLabel(entry.refreshCycle)} />
-                            <InfoRow label="状态"        value={STATUS_LABELS[entry.status]} />
-                            <InfoRow label="开始时间"    value={formatExchangeTime(startAt)} />
-                            <InfoRow label="结束时间"    value={formatExchangeTime(endAt)} />
-                            <InfoRow label="兑换次数限制" value={typeof entry.exchangeLimit === "number" ? `${entry.exchangeLimit} 次` : "不限"} />
-                            <InfoRow label="奖励 Box ID" value={<span className="font-mono">#{entry.resourceBoxId}</span>} />
-                            <InfoRow label="显示奖励数量" value={entry.isDisplayQuantity ? "是" : "否"} />
-                            <InfoRow label="奖励类型数"  value={`${entry.rewardTypes.length} 类`} />
-                            <InfoRow label="成本条目数"  value={`${entry.costs.length} 条`} />
+                            <InfoRow label={t("page.exchanges.fields.exchangeItemId")} value={<span className="font-mono">#{entry.id}</span>} />
+                            <InfoRow label={t("page.exchanges.fields.exchangeShopId")} value={<span className="font-mono">#{entry.summaryId}</span>} />
+                            <InfoRow label={t("common.field.seq")} value={`${entry.summarySeq}-${entry.exchangeSeq}`} />
+                            <InfoRow label={t("page.exchanges.fields.category")} value={getExchangeCategoryLabel(entry.exchangeCategory, t)} />
+                            <InfoRow label={t("page.exchanges.fields.exchangeType")} value={getExchangeTypeLabel(entry.materialExchangeType, t)} />
+                            <InfoRow label={t("page.exchanges.fields.refreshCycle")} value={getRefreshCycleLabel(entry.refreshCycle, t)} />
+                            <InfoRow label={t("page.exchanges.fields.status")} value={getExchangeStatusLabel(entry.status, t)} />
+                            <InfoRow label={t("page.exchanges.fields.startTime")} value={formatExchangeTime(startAt, formatDate)} />
+                            <InfoRow label={t("page.exchanges.fields.endTime")} value={formatExchangeTime(endAt, formatDate)} />
+                            <InfoRow label={t("page.exchanges.fields.exchangeLimit")} value={typeof entry.exchangeLimit === "number" ? t("page.exchanges.times", { count: entry.exchangeLimit }) : t("page.exchanges.unlimited")} />
+                            <InfoRow label={t("page.exchanges.fields.rewardBoxId")} value={<span className="font-mono">#{entry.resourceBoxId}</span>} />
+                            <InfoRow label={t("page.exchanges.fields.displayRewardQuantity")} value={entry.isDisplayQuantity ? t("common.field.yes") : t("common.field.no")} />
+                            <InfoRow label={t("page.exchanges.fields.rewardTypeCount")} value={t("page.exchanges.rewardTypeCount", { count: entry.rewardTypes.length })} />
+                            <InfoRow label={t("page.exchanges.fields.costItemCount")} value={t("page.exchanges.costItemCount", { count: entry.costs.length })} />
                         </SectionCard>
 
-                        {/* 兑换所摘要 */}
+                        {/* Exchange summary */}
                         <SectionCard
-                            title="兑换所摘要"
+                            title={t("page.exchanges.summaryInfo")}
                             rowStyle
                             icon={
                                 <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -605,13 +610,13 @@ export default function ExchangeDetailClient() {
                                 </svg>
                             }
                         >
-                            <InfoRow label="兑换所名称"      value={entry.summaryName} />
-                            <InfoRow label="兑换所起始"      value={formatExchangeTime(entry.summaryStartAt)} />
-                            <InfoRow label="兑换所结束"      value={formatExchangeTime(entry.summaryEndAt)} />
-                            <InfoRow label="展示资源组 ID"   value={entry.summaryDisplayResourceGroupId ? `#${entry.summaryDisplayResourceGroupId}` : "—"} />
+                            <InfoRow label={t("page.exchanges.fields.exchangeShopName")} value={entry.summaryName} />
+                            <InfoRow label={t("page.exchanges.fields.exchangeShopStart")} value={formatExchangeTime(entry.summaryStartAt, formatDate)} />
+                            <InfoRow label={t("page.exchanges.fields.exchangeShopEnd")} value={formatExchangeTime(entry.summaryEndAt, formatDate)} />
+                            <InfoRow label={t("page.exchanges.fields.displayResourceGroupId")} value={entry.summaryDisplayResourceGroupId ? `#${entry.summaryDisplayResourceGroupId}` : "—"} />
                         </SectionCard>
 
-                        {/* 同兑换所其它条目（可折叠） */}
+                        {/* Sibling entries */}
                         {siblingEntries.length > 0 && (
                             <SiblingsCard siblings={siblingEntries} />
                         )}

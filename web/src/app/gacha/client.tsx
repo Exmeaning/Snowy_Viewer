@@ -10,8 +10,10 @@ import { fetchMasterData } from "@/lib/fetch";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { useI18n } from "@/contexts/I18nContext";
 
 function GachaContent() {
+    const { t } = useI18n();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { isShowSpoiler } = useTheme();
@@ -256,7 +258,7 @@ function GachaContent() {
         />
     );
 
-    useQuickFilter("扭蛋筛选", quickFilterContent, [
+    useQuickFilter(t("page.gacha.filterTitle"), quickFilterContent, [
         searchQuery,
         sortBy,
         sortOrder,
@@ -272,26 +274,26 @@ function GachaContent() {
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">扭蛋数据库</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.gacha.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    扭蛋 <span className="text-miku">列表</span>
+                    {t("page.gacha.title")} <span className="text-miku">{t("page.gacha.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览世界计划中的所有扭蛋活动
+                    {t("page.gacha.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{error}</p>
                     <button
                         onClick={() => window.location.reload()}
                         className="mt-2 text-red-500 underline hover:no-underline"
                     >
-                        重试
+                        {t("common.action.retry")}
                     </button>
                 </div>
             )}
@@ -317,7 +319,7 @@ function GachaContent() {
                                 data-shortcut-load-more="true"
                                 className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                             >
-                                加载更多
+                                {t("page.gacha.loadMore")}
                                 <span className="ml-2 text-sm opacity-80">
                                     ({displayedGachas.length} / {filteredGachas.length})
                                 </span>
@@ -328,7 +330,7 @@ function GachaContent() {
                     {/* All loaded indicator */}
                     {!isLoading && displayedGachas.length > 0 && displayedGachas.length >= filteredGachas.length && (
                         <div className="mt-8 text-center text-slate-400 text-sm">
-                            已显示全部 {filteredGachas.length} 个扭蛋
+                            {t("page.gacha.allLoaded", { count: filteredGachas.length })}
                         </div>
                     )}
                 </div>
@@ -337,10 +339,15 @@ function GachaContent() {
     );
 }
 
+function GachaLoadingFallback() {
+    const { t } = useI18n();
+    return <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.gacha.loadingFallback")}</div>;
+}
+
 export default function GachaClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载扭蛋...</div>}>
+            <Suspense fallback={<GachaLoadingFallback />}>
                 <GachaContent />
             </Suspense>
         </MainLayout>
