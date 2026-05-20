@@ -2097,6 +2097,7 @@ export class MysekaiScenePreviewRuntime {
         const targets: StaticMergeTarget[] = [];
         this.contentGroup.traverse((node) => {
             if (!isMesh(node) || !node.parent || !this.canMergeStaticMesh(node)) return;
+            if (!node.visible) return;
             targets.push({ mesh: node });
         });
         return targets;
