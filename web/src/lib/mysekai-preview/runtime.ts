@@ -54,7 +54,7 @@ const FREE_LOOK_BASE_MOUSE_SENSITIVITY = 0.0022;
 const FREE_LOOK_BASE_TOUCH_SENSITIVITY = 0.005;
 const FREE_LOOK_MOVE_SPEED = 18;
 const FREE_LOOK_FAST_MULTIPLIER = 1.75;
-const FLOOR_STACKING_BBOX_XZ_OVERLAY_RATIO_THRESHOLD = 0.4;
+const FLOOR_STACKING_BBOX_XZ_OVERLAY_RATIO_THRESHOLD = 0.2;
 
 type MysekaiViewMode = "free" | "fixed";
 
@@ -132,6 +132,7 @@ interface FloorPlacementRecord {
     topY: number;
     cellKeys: string[];
     customPartType: string | null;
+    putType: string | null;
 }
 
 interface FloorShadowRecord {
@@ -1746,27 +1747,33 @@ export class MysekaiScenePreviewRuntime {
         const cellMap = new Map<string, FloorPlacementRecord[]>();
         const eps = 0.001;
         for (const record of ordered) {
-            let supportTop: number | null = null;
-            for (const key of record.cellKeys) {
-                const belowList = cellMap.get(key);
-                if (!belowList?.length) continue;
-                for (const below of belowList) {
-                    if (below === record) continue;
-                    const isValid = customOnly
-                        ? below.customPartType === "base" && record.customPartType === "ornament"
-                        : below.topY - eps < record.bottomY && below.customPartType === null;
-                    if (!isValid) continue;
-                    if (calcBBoxXZAreaOverlayRatio(record.bbox, below.bbox) < FLOOR_STACKING_BBOX_XZ_OVERLAY_RATIO_THRESHOLD) continue;
-                    if (supportTop === null || below.topY > supportTop) supportTop = below.topY;
+            // 对于put_either类型，目前游戏中只有砖块，并且只允许放置在严格和坐标对齐的位置
+            // 所以无论在上面还是下面都不需要考虑
+            if (customOnly || record.putType === "put_target") {
+                let supportTop: number | null = null;
+                for (const key of record.cellKeys) {
+                    const belowList = cellMap.get(key);
+                    if (!belowList?.length) continue;
+                    for (const below of belowList) {
+                        if (below === record) continue;
+                        if (!customOnly && below.putType !== "put_base")
+                            continue;
+                        const isValid = customOnly
+                            ? below.customPartType === "base" && record.customPartType === "ornament"
+                            : below.topY - eps < record.bottomY && below.customPartType === null;
+                        if (!isValid) continue;
+                        if (calcBBoxXZAreaOverlayRatio(record.bbox, below.bbox) < FLOOR_STACKING_BBOX_XZ_OVERLAY_RATIO_THRESHOLD) continue;
+                        if (supportTop === null || below.topY > supportTop) supportTop = below.topY;
+                    }
+                    break;
                 }
-                break;
-            }
-            if (supportTop !== null && (customOnly || supportTop <= record.bottomY)) {
-                const dy = supportTop - record.bottomY + eps;
-                record.object.position.y += dy;
-                record.bbox = captureWorldBBox(record.object);
-                record.bottomY = record.bbox.min.y;
-                record.topY = record.bbox.max.y;
+                if (supportTop !== null && (customOnly || supportTop <= record.bottomY)) {
+                    const dy = supportTop - record.bottomY + eps;
+                    record.object.position.y += dy;
+                    record.bbox = captureWorldBBox(record.object);
+                    record.bottomY = record.bbox.min.y;
+                    record.topY = record.bbox.max.y;
+                }
             }
             for (const key of record.cellKeys) {
                 const list = cellMap.get(key) || [];
@@ -2244,7 +2251,7 @@ export class MysekaiScenePreviewRuntime {
         const isCustom = !!item.__isCustomFixture;
         const fixtureId = Number(item.mysekaiFixtureId);
         const customFixtureId = Number(item.mysekaiCustomFixtureId);
-        const meta = isCustom ? null : this.fixtureMetaMap.get(fixtureId);
+        const meta = this.fixtureMetaMap.get(fixtureId);
         const customMeta = isCustom ? this.customFixtureMetaMap.get(customFixtureId) : null;
         if (!isCustom && meta?.mysekaiFixtureHandleType === "block_transparent") return entryGroup;
 
@@ -2374,6 +2381,7 @@ export class MysekaiScenePreviewRuntime {
                     topY: bbox.max.y,
                     cellKeys: getXZCellKeysFromBBox(bbox),
                     customPartType: String(stackObject.userData.customPartType || "") || null,
+                    putType: String(meta.mysekaiFixturePutType || "") || null,
                 });
             }
             if (placedForShadow && Math.abs(Number(item.position?.y || 0)) < 1e-6) {
