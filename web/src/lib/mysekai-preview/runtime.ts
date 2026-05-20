@@ -54,6 +54,7 @@ const FREE_LOOK_BASE_MOUSE_SENSITIVITY = 0.0022;
 const FREE_LOOK_BASE_TOUCH_SENSITIVITY = 0.005;
 const FREE_LOOK_MOVE_SPEED = 18;
 const FREE_LOOK_FAST_MULTIPLIER = 1.75;
+const FLOOR_STACKING_BBOX_XZ_OVERLAY_RATIO_THRESHOLD = 0.4;
 
 type MysekaiViewMode = "free" | "fixed";
 
@@ -1755,13 +1756,13 @@ export class MysekaiScenePreviewRuntime {
                         ? below.customPartType === "base" && record.customPartType === "ornament"
                         : below.topY - eps < record.bottomY && below.customPartType === null;
                     if (!isValid) continue;
-                    if (calcBBoxXZAreaOverlayRatio(record.bbox, below.bbox) < 0.8) continue;
+                    if (calcBBoxXZAreaOverlayRatio(record.bbox, below.bbox) < FLOOR_STACKING_BBOX_XZ_OVERLAY_RATIO_THRESHOLD) continue;
                     if (supportTop === null || below.topY > supportTop) supportTop = below.topY;
                 }
                 break;
             }
             if (supportTop !== null && (customOnly || supportTop <= record.bottomY)) {
-                const dy = supportTop - record.bottomY;
+                const dy = supportTop - record.bottomY + eps;
                 record.object.position.y += dy;
                 record.bbox = captureWorldBBox(record.object);
                 record.bottomY = record.bbox.min.y;
@@ -2096,6 +2097,7 @@ export class MysekaiScenePreviewRuntime {
         const targets: StaticMergeTarget[] = [];
         this.contentGroup.traverse((node) => {
             if (!isMesh(node) || !node.parent || !this.canMergeStaticMesh(node)) return;
+            if (!node.visible) return;
             targets.push({ mesh: node });
         });
         return targets;
