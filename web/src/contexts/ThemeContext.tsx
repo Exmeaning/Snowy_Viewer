@@ -22,7 +22,6 @@ import {
 const DEFAULT_THEME_CHAR = "21";
 const DEFAULT_COLOR = "#33ccbb";
 const DEFAULT_COLOR_SCHEME_PREFERENCE: ColorSchemePreference = "system";
-const POWER_SAVING_STORAGE_KEY = "power-saving-v4";
 
 // Asset source type (4 lines × 2 regions)
 export type AssetSourceType =
@@ -90,8 +89,6 @@ interface ThemeContextType {
     setColorSchemePreference: (preference: ColorSchemePreference) => void;
     isShowSpoiler: boolean;
     setShowSpoiler: (show: boolean) => void;
-    isPowerSaving: boolean;
-    setPowerSaving: (enabled: boolean) => void;
     useTrainedThumbnail: boolean;
     setUseTrainedThumbnail: (enabled: boolean) => void;
     assetSource: AssetSourceType;
@@ -117,7 +114,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const [resolvedColorScheme, setResolvedColorScheme] = useState<ResolvedColorScheme>("light");
     const [hasHydratedThemeSettings, setHasHydratedThemeSettings] = useState(false);
     const [isShowSpoiler, setIsShowSpoiler] = useState(false);
-    const [isPowerSaving, setIsPowerSaving] = useState(true);
     const [useTrainedThumbnailState, setUseTrainedThumbnailState] = useState(false);
     const [assetSourceState, setAssetSourceState] = useState<AssetSourceType>(DEFAULT_ASSET_SOURCE);
     const [useLLMTranslationState, setUseLLMTranslationState] = useState(true); // Default ON
@@ -141,11 +137,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             const savedSpoiler = localStorage.getItem("show-spoiler");
             if (savedSpoiler === "true") {
                 setIsShowSpoiler(true);
-            }
-            // Load power saving setting (v4: default ON until the Rust/WASM renderer finishes real-device validation)
-            const savedPowerSaving = localStorage.getItem(POWER_SAVING_STORAGE_KEY);
-            if (savedPowerSaving === "false") {
-                setIsPowerSaving(false);
             }
             // Load trained thumbnail setting
             const savedTrainedThumbnail = localStorage.getItem("use-trained-thumbnail");
@@ -306,15 +297,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         }
     };
 
-    const setPowerSaving = (enabled: boolean) => {
-        setIsPowerSaving(enabled);
-        try {
-            localStorage.setItem(POWER_SAVING_STORAGE_KEY, enabled ? "true" : "false");
-        } catch (e) {
-            console.error("Failed to save power saving setting to localStorage:", e);
-        }
-    };
-
     const setUseTrainedThumbnail = (enabled: boolean) => {
         setUseTrainedThumbnailState(enabled);
         try {
@@ -376,7 +358,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     };
 
     return (
-        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, colorSchemePreference, resolvedColorScheme, setColorSchemePreference, isShowSpoiler, setShowSpoiler, isPowerSaving, setPowerSaving, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource, useLLMTranslation: useLLMTranslationState, setUseLLMTranslation, showAds: effectiveShowAds, setShowAds, serverSource: serverSourceState, setServerSource }}>
+        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, colorSchemePreference, resolvedColorScheme, setColorSchemePreference, isShowSpoiler, setShowSpoiler, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource, useLLMTranslation: useLLMTranslationState, setUseLLMTranslation, showAds: effectiveShowAds, setShowAds, serverSource: serverSourceState, setServerSource }}>
             {children}
         </ThemeContext.Provider>
     );

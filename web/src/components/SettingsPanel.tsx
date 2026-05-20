@@ -68,8 +68,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         setColorSchemePreference,
         isShowSpoiler,
         setShowSpoiler,
-        isPowerSaving,
-        setPowerSaving,
         useTrainedThumbnail,
         setUseTrainedThumbnail,
         assetSource,
@@ -364,33 +362,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     )}
                 </div>
 
-                {/* Background Animation */}
-                <div className="border-t border-slate-100 mt-4 pt-4">
-                    <div className="mb-3">
-                        <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">性能</span>
-                    </div>
-
-                    {/* Background Animation Toggle */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-                            </svg>
-                            <span className="text-sm text-slate-700">显示背景动画</span>
-                        </div>
-                        <button
-                            onClick={() => setPowerSaving(!isPowerSaving)}
-                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${!isPowerSaving ? 'bg-amber-500' : 'bg-slate-200'}`}
-                        >
-                            <span
-                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${!isPowerSaving ? 'translate-x-5' : 'translate-x-0'}`}
-                            />
-                        </button>
-                    </div>
-                    <p className="text-[10px] text-amber-500 mt-1.5 leading-relaxed font-medium">
-                        该动画可能会增加占用，请按需开启
-                    </p>
-                </div>
 
                 {/* Asset Source - Themed Dropdown */}
                 <div className="border-t border-slate-100 mt-4 pt-4">

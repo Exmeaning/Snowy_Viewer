@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import MainLayout from "@/components/MainLayout";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
-import { buildRawAssetUrl, getMysekaiRawAssetUrl, getStoryBgmUrl } from "@/lib/assets";
+import { getMysekaiRawAssetUrl } from "@/lib/assets";
 import { getMysekaiSoundTrackAudioUrl } from "@/lib/mysekai-preview/assets";
 
 // Interface definitions based on masterdata schemas
@@ -25,6 +25,19 @@ interface MysekaiMusicSoundTrackMaster {
     musicSoundTrackCategoryId: number;
     assetbundleName: string;
     assetbundleFileName: string;
+}
+
+type PlaybackMode = "sequential" | "loop-one" | "shuffle";
+
+const PLAYBACK_MODES = ["sequential", "loop-one", "shuffle"] as const satisfies readonly PlaybackMode[];
+
+function isPlaybackMode(value: string | null): value is PlaybackMode {
+    return PLAYBACK_MODES.includes(value as PlaybackMode);
+}
+
+function clampVolume(value: number) {
+    if (!Number.isFinite(value)) return 0.5;
+    return Math.min(1, Math.max(0, value));
 }
 
 // Color schemes matching each category group
@@ -61,6 +74,7 @@ function SoundtrackContent() {
 
     // Audio Ref
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const playRequestIdRef = useRef(0);
 
     // Audio states
     const [isPlaying, setIsPlaying] = useState(false);
@@ -68,8 +82,9 @@ function SoundtrackContent() {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(0.5);
-    const [playbackMode, setPlaybackMode] = useState<"sequential" | "loop-one" | "shuffle">("sequential");
+    const [playbackMode, setPlaybackMode] = useState<PlaybackMode>("sequential");
     const [showVolumePopup, setShowVolumePopup] = useState(false);
+    const [audioError, setAudioError] = useState<string | null>(null);
 
     // Filter & Search states
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -77,16 +92,21 @@ function SoundtrackContent() {
     const [sortBy, setSortBy] = useState<"seq" | "title">("seq");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
+    const setVolumeAndPersist = useCallback((nextVolume: number) => {
+        const clampedVolume = clampVolume(nextVolume);
+        setVolume(clampedVolume);
+        localStorage.setItem("soundtrack-volume", clampedVolume.toString());
+    }, []);
+
     // Load initial volume from localStorage (Client only)
     useEffect(() => {
         const savedVolume = localStorage.getItem("soundtrack-volume");
         if (savedVolume !== null) {
-            const volNum = parseFloat(savedVolume);
-            setVolume(isNaN(volNum) ? 0.5 : volNum);
+            setVolume(clampVolume(parseFloat(savedVolume)));
         }
         const savedMode = localStorage.getItem("soundtrack-playback-mode");
-        if (savedMode !== null && ["sequential", "loop-one", "shuffle"].includes(savedMode)) {
-            setPlaybackMode(savedMode as any);
+        if (isPlaybackMode(savedMode)) {
+            setPlaybackMode(savedMode);
         }
     }, []);
 
@@ -107,6 +127,8 @@ function SoundtrackContent() {
 
     // Fetch masterdata
     useEffect(() => {
+        let cancelled = false;
+
         async function loadData() {
             try {
                 setIsLoading(true);
@@ -114,6 +136,8 @@ function SoundtrackContent() {
                     fetchMasterData<MysekaiMusicSoundTrackMaster[]>("musicSoundTracks.json"),
                     fetchMasterData<MysekaiMusicSoundTrackCategory[]>("musicSoundTrackCategories.json"),
                 ]);
+
+                if (cancelled) return;
 
                 // Sort categories and tracks initially
                 const sortedCategories = [...categoriesData].sort((a, b) => a.id - b.id);
@@ -140,32 +164,35 @@ function SoundtrackContent() {
                 const urlCat = searchParams.get("category");
                 if (urlCat) {
                     const parsedCat = parseInt(urlCat, 10);
-                    if (!isNaN(parsedCat) && sortedCategories.some(c => c.id === parsedCat)) {
+                    if (!Number.isNaN(parsedCat) && sortedCategories.some(c => c.id === parsedCat)) {
                         setSelectedCategoryId(parsedCat);
+                    } else {
+                        setSelectedCategoryId(null);
                     }
+                } else {
+                    setSelectedCategoryId(null);
                 }
-                const urlSearch = searchParams.get("search");
-                if (urlSearch) {
-                    setSearchQuery(urlSearch);
-                }
-                const urlSort = searchParams.get("sort");
-                if (urlSort === "title") {
-                    setSortBy("title");
-                }
-                const urlOrder = searchParams.get("order");
-                if (urlOrder === "desc") {
-                    setSortOrder("desc");
-                }
+
+                setSearchQuery(searchParams.get("search") ?? "");
+                setSortBy(searchParams.get("sort") === "title" ? "title" : "seq");
+                setSortOrder(searchParams.get("order") === "desc" ? "desc" : "asc");
 
                 setError(null);
             } catch (err) {
+                if (cancelled) return;
                 console.error("Failed to load soundtracks masterdata:", err);
                 setError(err instanceof Error ? err.message : "获取原声带数据失败");
             } finally {
-                setIsLoading(false);
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
             }
         }
         loadData();
+
+        return () => {
+            cancelled = true;
+        };
     }, [searchParams]);
 
     // Generate stable animation heights and durations for the visualizer to prevent twitching & excessive renders
@@ -191,9 +218,9 @@ function SoundtrackContent() {
     // Sync volume state to audio element
     useEffect(() => {
         if (audioRef.current) {
-            audioRef.current.volume = volume;
+            audioRef.current.volume = clampVolume(volume);
         }
-    }, [volume, audioUrl]);
+    }, [volume]);
 
     // Save current track ID to sessionStorage for state restoration
     useEffect(() => {
@@ -202,25 +229,79 @@ function SoundtrackContent() {
         }
     }, [currentTrack]);
 
-    // Reset progress states immediately when URL shifts to prevent visual jump or stuck UI
+    // Explicitly swap the single audio element source so old tracks are stopped before a new one loads.
     useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        playRequestIdRef.current += 1;
+        audio.pause();
         setCurrentTime(0);
         setDuration(0);
+        setAudioError(null);
+
+        if (!audioUrl) {
+            audio.removeAttribute("src");
+            audio.load();
+            setIsPlaying(false);
+            return;
+        }
+
+        if (audio.src !== audioUrl) {
+            audio.src = audioUrl;
+        }
+        audio.currentTime = 0;
+        audio.load();
+
+        return () => {
+            playRequestIdRef.current += 1;
+            audio.pause();
+        };
     }, [audioUrl]);
 
-    // Declaratively control audio playback to keep state in sync
+    // Declaratively control audio playback and ignore stale play() promises from rapid track switches.
     useEffect(() => {
-        if (!audioRef.current) return;
+        const audio = audioRef.current;
+        if (!audio) return;
 
-        if (isPlaying) {
-            audioRef.current.play().catch(err => {
+        if (!audioUrl || !isPlaying) {
+            playRequestIdRef.current += 1;
+            audio.pause();
+            return;
+        }
+
+        const requestId = playRequestIdRef.current + 1;
+        playRequestIdRef.current = requestId;
+
+        audio.play()
+            .then(() => {
+                if (playRequestIdRef.current === requestId) {
+                    setAudioError(null);
+                }
+            })
+            .catch(err => {
+                if (playRequestIdRef.current !== requestId) return;
+
+                const isAbort = err instanceof DOMException && err.name === "AbortError";
+                if (isAbort) return;
+
                 console.warn("Audio play prevented or errored:", err);
                 setIsPlaying(false);
+                setAudioError("播放失败，请再次点击播放或检查音频资源连接。");
             });
-        } else {
-            audioRef.current.pause();
-        }
     }, [isPlaying, audioUrl]);
+
+    // Stop playback when leaving the route/component to avoid orphaned audio.
+    useEffect(() => {
+        const audio = audioRef.current;
+        return () => {
+            playRequestIdRef.current += 1;
+            if (!audio) return;
+            audio.pause();
+            audio.removeAttribute("src");
+            audio.load();
+        };
+    }, []);
 
     // Category dictionary for quick mapping
     const categoryMap = useMemo(() => {
@@ -318,40 +399,40 @@ function SoundtrackContent() {
 
     // Audio handlers
     const togglePlay = () => {
-        if (!audioRef.current) return;
-        setIsPlaying(!isPlaying);
+        if (!audioUrl) return;
+        setIsPlaying(prev => !prev);
     };
 
     const handleTimeUpdate = () => {
         if (audioRef.current) {
-            setCurrentTime(audioRef.current.currentTime);
+            const nextTime = audioRef.current.currentTime;
+            setCurrentTime(Number.isFinite(nextTime) ? nextTime : 0);
         }
     };
 
-    const handleDurationChange = () => {
+    const handleLoadedMetadata = () => {
         if (audioRef.current) {
-            setDuration(audioRef.current.duration);
+            const nextDuration = audioRef.current.duration;
+            setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
         }
     };
 
     const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = parseFloat(e.target.value);
-        if (audioRef.current && !isNaN(val)) {
+        if (audioRef.current && Number.isFinite(val)) {
             audioRef.current.currentTime = val;
             setCurrentTime(val);
         }
     };
 
-    const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = parseFloat(e.target.value);
-        if (!isNaN(val)) {
-            setVolume(val);
-            localStorage.setItem("soundtrack-volume", val.toString());
-        }
+    const handleVerticalVolumePointer = (event: React.PointerEvent<HTMLDivElement>) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const nextVolume = 1 - (event.clientY - rect.top) / rect.height;
+        setVolumeAndPersist(nextVolume);
     };
 
     const cyclePlaybackMode = () => {
-        let nextMode: "sequential" | "loop-one" | "shuffle";
+        let nextMode: PlaybackMode;
         if (playbackMode === "sequential") {
             nextMode = "loop-one";
         } else if (playbackMode === "loop-one") {
@@ -363,18 +444,27 @@ function SoundtrackContent() {
         localStorage.setItem("soundtrack-playback-mode", nextMode);
     };
 
+    const getPlaybackList = () => filteredTracks.length > 0 ? filteredTracks : tracks;
+
+    const pickRandomTrack = (activeList: MysekaiMusicSoundTrackMaster[]) => {
+        if (activeList.length <= 1 || !currentTrack) return activeList[0];
+
+        const candidates = activeList.filter(track => track.id !== currentTrack.id);
+        return candidates[Math.floor(Math.random() * candidates.length)] ?? activeList[0];
+    };
+
     // Audio navigation methods
     const playNext = () => {
         if (tracks.length === 0 || !currentTrack) return;
 
+        const activeList = getPlaybackList();
+        if (activeList.length === 0) return;
+
         let nextTrack: MysekaiMusicSoundTrackMaster;
 
         if (playbackMode === "shuffle") {
-            const randomIndex = Math.floor(Math.random() * tracks.length);
-            nextTrack = tracks[randomIndex];
+            nextTrack = pickRandomTrack(activeList);
         } else {
-            // Find in current filtered list or full list
-            const activeList = filteredTracks.length > 0 ? filteredTracks : tracks;
             const currentIndex = activeList.findIndex(t => t.id === currentTrack.id);
             if (currentIndex !== -1 && currentIndex < activeList.length - 1) {
                 nextTrack = activeList[currentIndex + 1];
@@ -391,13 +481,14 @@ function SoundtrackContent() {
     const playPrevious = () => {
         if (tracks.length === 0 || !currentTrack) return;
 
+        const activeList = getPlaybackList();
+        if (activeList.length === 0) return;
+
         let prevTrack: MysekaiMusicSoundTrackMaster;
 
         if (playbackMode === "shuffle") {
-            const randomIndex = Math.floor(Math.random() * tracks.length);
-            prevTrack = tracks[randomIndex];
+            prevTrack = pickRandomTrack(activeList);
         } else {
-            const activeList = filteredTracks.length > 0 ? filteredTracks : tracks;
             const currentIndex = activeList.findIndex(t => t.id === currentTrack.id);
             if (currentIndex > 0) {
                 prevTrack = activeList[currentIndex - 1];
@@ -413,10 +504,18 @@ function SoundtrackContent() {
 
     const handleEnded = () => {
         if (playbackMode === "loop-one") {
-            if (audioRef.current) {
-                audioRef.current.currentTime = 0;
-                audioRef.current.play().catch(err => console.error("Replay blocked:", err));
-            }
+            const audio = audioRef.current;
+            if (!audio) return;
+
+            const requestId = playRequestIdRef.current + 1;
+            playRequestIdRef.current = requestId;
+            audio.currentTime = 0;
+            audio.play().catch(err => {
+                if (playRequestIdRef.current !== requestId) return;
+                console.error("Replay blocked:", err);
+                setIsPlaying(false);
+                setAudioError("单曲循环播放失败，请再次点击播放。");
+            });
         } else {
             playNext();
         }
@@ -429,16 +528,10 @@ function SoundtrackContent() {
 
     // Format seconds into MM:SS
     const formatTime = (time: number) => {
-        if (isNaN(time)) return "00:00";
+        if (!Number.isFinite(time)) return "00:00";
         const mins = Math.floor(time / 60);
         const secs = Math.floor(time % 60);
         return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-    };
-
-    // Helper to dynamically adjust text contrast in light/dark mode
-    const getThemeTextClass = (themeText: string) => {
-        if (isDark) return themeText;
-        return themeText.replace(/-400/g, "-600");
     };
 
     // Calculate dynamic ambient background colors based on current track category
@@ -474,6 +567,9 @@ function SoundtrackContent() {
                 }
                 .custom-slider-thumb::-webkit-slider-thumb:hover {
                     transform: scale(1.3);
+                }
+                .vertical-volume-hitbox {
+                    touch-action: none;
                 }
                 /* Hide scrollbars completely while remaining scrollable */
                 .no-scrollbar::-webkit-scrollbar {
@@ -535,18 +631,19 @@ function SoundtrackContent() {
             `}} />
 
             {/* Hidden HTML5 Audio Element */}
-            {audioUrl && (
-                <audio
-                    ref={audioRef}
-                    src={audioUrl}
-                    onTimeUpdate={handleTimeUpdate}
-                    onDurationChange={handleDurationChange}
-                    onEnded={handleEnded}
-                    onError={(e) => {
-                        console.error("Audio playback error:", e);
-                    }}
-                />
-            )}
+            <audio
+                ref={audioRef}
+                preload="metadata"
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onDurationChange={handleLoadedMetadata}
+                onEnded={handleEnded}
+                onError={(e) => {
+                    console.error("Audio playback error:", e);
+                    setAudioError("音频资源加载失败，请尝试切换资源源或稍后再试。");
+                    setIsPlaying(false);
+                }}
+            />
 
             {/* Ambient Lighting Layers */}
             <div className={`absolute inset-0 bg-gradient-to-tr ${ambientBgGlow} opacity-70 filter blur-3xl pointer-events-none transition-all duration-1000`} />
@@ -674,6 +771,12 @@ function SoundtrackContent() {
                                     </motion.div>
                                 </AnimatePresence>
                             </div>
+
+                            {audioError && (
+                                <div className="mb-4 rounded-xl border border-rose-300/60 bg-rose-50/80 px-3 py-2 text-center text-xs font-medium text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                                    {audioError}
+                                </div>
+                            )}
 
                             {/* Custom Slider / Progress Bar */}
                             <div className="mb-6">
@@ -842,9 +945,48 @@ function SoundtrackContent() {
                                             <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
                                                 {`${Math.round(volume * 100)}%`}
                                             </span>
-                                            <div className="h-28 w-6 flex items-center justify-center relative">
-                                                <div className="h-24 w-1.5 bg-slate-200 dark:bg-white/10 rounded-full relative overflow-hidden flex items-end">
-                                                    <div 
+                                            <div
+                                                className="h-28 w-8 flex items-center justify-center relative vertical-volume-hitbox cursor-pointer"
+                                                role="slider"
+                                                tabIndex={0}
+                                                aria-label="音量"
+                                                aria-valuemin={0}
+                                                aria-valuemax={100}
+                                                aria-valuenow={Math.round(volume * 100)}
+                                                onPointerDown={(event) => {
+                                                    event.currentTarget.setPointerCapture(event.pointerId);
+                                                    handleVerticalVolumePointer(event);
+                                                }}
+                                                onPointerMove={(event) => {
+                                                    if (event.buttons !== 1) return;
+                                                    handleVerticalVolumePointer(event);
+                                                }}
+                                                onClick={(event) => event.stopPropagation()}
+                                                onKeyDown={(event) => {
+                                                    const step = event.shiftKey ? 0.1 : 0.05;
+                                                    if (event.key === "ArrowUp" || event.key === "ArrowRight") {
+                                                        event.preventDefault();
+                                                        setVolumeAndPersist(volume + step);
+                                                    } else if (event.key === "ArrowDown" || event.key === "ArrowLeft") {
+                                                        event.preventDefault();
+                                                        setVolumeAndPersist(volume - step);
+                                                    } else if (event.key === "PageUp") {
+                                                        event.preventDefault();
+                                                        setVolumeAndPersist(volume + 0.1);
+                                                    } else if (event.key === "PageDown") {
+                                                        event.preventDefault();
+                                                        setVolumeAndPersist(volume - 0.1);
+                                                    } else if (event.key === "Home") {
+                                                        event.preventDefault();
+                                                        setVolumeAndPersist(0);
+                                                    } else if (event.key === "End") {
+                                                        event.preventDefault();
+                                                        setVolumeAndPersist(1);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="h-24 w-1.5 bg-slate-200 dark:bg-white/10 rounded-full relative overflow-hidden flex items-end pointer-events-none">
+                                                    <div
                                                         className="w-full rounded-full transition-all duration-75"
                                                         style={{
                                                             height: `${volume * 100}%`,
@@ -853,21 +995,6 @@ function SoundtrackContent() {
                                                         }}
                                                     />
                                                 </div>
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max="1"
-                                                    step="0.01"
-                                                    value={volume}
-                                                    onChange={handleVolumeChange}
-                                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                                    style={{
-                                                        writingMode: 'vertical-lr',
-                                                        WebkitAppearance: 'slider-vertical',
-                                                        width: '100%',
-                                                        height: '100%',
-                                                    }}
-                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -1066,6 +1193,14 @@ function SoundtrackContent() {
                                     <div className="flex flex-col items-center justify-center h-80 gap-3">
                                         <div className="loading-spinner loading-spinner-sm" />
                                         <p className="text-slate-500 dark:text-slate-400 text-xs">正在调音，马上回来...</p>
+                                    </div>
+                                ) : error ? (
+                                    <div className="flex flex-col items-center justify-center h-80 text-center p-6 border-2 border-dashed border-rose-200 dark:border-rose-500/20 rounded-2xl m-3">
+                                        <svg className="w-10 h-10 text-rose-400 dark:text-rose-300 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                        </svg>
+                                        <p className="text-rose-600 dark:text-rose-300 font-bold text-sm">原声带数据加载失败</p>
+                                        <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{error}</p>
                                     </div>
                                 ) : filteredTracks.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center h-80 text-center p-6 border-2 border-dashed border-slate-200 dark:border-white/5 rounded-2xl m-3">
