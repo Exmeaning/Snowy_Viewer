@@ -100,6 +100,7 @@ export interface MysekaiFixtureMaster {
     mysekaiFixtureHandleType?: string;
     mysekaiFixtureType?: string;
     mysekaiSettableLayoutType?: string;
+    mysekaiFixturePutType?: string;
 }
 
 export interface MysekaiCustomFixtureMaster {
