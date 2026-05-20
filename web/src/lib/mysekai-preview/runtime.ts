@@ -983,6 +983,7 @@ export class MysekaiScenePreviewRuntime {
             .then((texture) => {
                 texture.colorSpace = THREE.SRGBColorSpace;
                 texture.flipY = true;
+                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
                 this.textureCache.set(url, texture);
                 return texture;
             })
