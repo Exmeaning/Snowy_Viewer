@@ -13,6 +13,10 @@ import {
 } from "@/lib/account";
 import { useCardThumbnail } from "@/hooks/useCardThumbnail";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
+import {
+    NAV_ITEM_LABEL_KEYS,
+} from "@/lib/navigation";
 import {
     getShortcutById,
     isEditableEventTarget,
@@ -460,6 +464,15 @@ const navigationGroups: NavGroup[] = [
     },
 ];
 
+const SIDEBAR_GROUP_LABEL_KEYS: Record<string, string> = {
+    数据库: "layout.nav.groups.database",
+    活动: "layout.nav.groups.activity",
+    剧情: "layout.nav.groups.story",
+    社区: "layout.nav.groups.community",
+    工具: "layout.nav.groups.tools",
+    个人: "layout.nav.groups.personal",
+};
+
 export default function Sidebar({
     isOpen,
     onClose,
@@ -469,6 +482,7 @@ export default function Sidebar({
     const pathname = usePathname();
     const router = useRouter();
     const { assetSource } = useTheme();
+    const { t } = useI18n();
     // 默认展开所有分组
     const [expandedGroups, setExpandedGroups] = useState<string[]>(
         navigationGroups.map(group => group.title)
@@ -613,6 +627,8 @@ export default function Sidebar({
     }, [pathname]);
 
     const isActive = (href: string) => href === activeHref;
+    const getGroupLabel = (title: string) => t(SIDEBAR_GROUP_LABEL_KEYS[title] ?? title);
+    const getItemLabel = (href: string, fallback: string) => t(NAV_ITEM_LABEL_KEYS[href] ?? fallback);
 
     // 仅在移动端点击导航时关闭侧边栏
     const handleNavClick = () => {
@@ -660,7 +676,7 @@ export default function Sidebar({
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
-                        <span>首页</span>
+                        <span>{t("layout.nav.home")}</span>
                     </Link>
 
                     <div className="border-t border-slate-100" />
@@ -674,7 +690,7 @@ export default function Sidebar({
                                     onClick={() => toggleGroup(group.title)}
                                     className="w-full flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 hover:text-miku transition-colors"
                                 >
-                                    {group.title}
+                                    {getGroupLabel(group.title)}
                                     <svg
                                         className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""
                                             }`}
@@ -709,7 +725,7 @@ export default function Sidebar({
                                                         className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium flex-1 min-w-0"
                                                     >
                                                         {item.icon}
-                                                        <span>{item.name}</span>
+                                                        <span>{getItemLabel(item.href, item.name)}</span>
                                                     </Link>
                                                 </div>
                                             </div>
@@ -757,10 +773,10 @@ export default function Sidebar({
                         {/* User Info */}
                         <div className="flex-grow min-w-0">
                             <div className="text-sm font-medium text-slate-700 truncate group-hover:text-miku transition-colors">
-                                {activeAccount?.userGamedata?.name || activeAccount?.nickname || "未登录"}
+                                {activeAccount?.userGamedata?.name || activeAccount?.nickname || t("layout.sidebar.notLoggedIn")}
                             </div>
                             <div className="text-xs text-slate-400">
-                                {activeAccount ? "点击管理账号" : "点击绑定账号"}
+                                {activeAccount ? t("layout.sidebar.manageAccount") : t("layout.sidebar.bindAccount")}
                             </div>
                         </div>
 

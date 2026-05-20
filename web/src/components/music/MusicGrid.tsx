@@ -2,6 +2,7 @@
 import MusicItem from "./MusicItem";
 import { IMusicInfo } from "@/types/music";
 import { useState } from "react";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface MusicGridProps {
     musics: IMusicInfo[];
@@ -25,6 +26,7 @@ function MusicSkeleton() {
 
 export default function MusicGrid({ musics, isLoading }: MusicGridProps) {
     const [now] = useState(() => Date.now());
+    const { t } = useI18n();
 
     if (isLoading) {
         return (
@@ -41,10 +43,10 @@ export default function MusicGrid({ musics, isLoading }: MusicGridProps) {
             <div className="text-center py-16">
                 <div className="text-6xl mb-4">🎵</div>
                 <h3 className="text-xl font-bold text-slate-600 dark:text-slate-400 mb-2">
-                    没有找到匹配的音乐
+                    {t("page.music.noResult")}
                 </h3>
                 <p className="text-slate-500 dark:text-slate-500">
-                    尝试调整筛选条件
+                    {t("page.music.noResultHint")}
                 </p>
             </div>
         );

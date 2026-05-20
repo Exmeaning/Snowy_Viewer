@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { IVirtualLiveInfo, VIRTUAL_LIVE_TYPE_NAMES, VIRTUAL_LIVE_TYPE_COLORS, getVirtualLiveStatus, VIRTUAL_LIVE_STATUS_DISPLAY, VirtualLiveType } from "@/types/virtualLive";
+import { IVirtualLiveInfo, VIRTUAL_LIVE_TYPE_COLORS, getVirtualLiveStatus, VIRTUAL_LIVE_STATUS_DISPLAY, VirtualLiveType } from "@/types/virtualLive";
 import { getVirtualLiveBannerUrl } from "@/lib/assets";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface VirtualLiveItemProps {
     virtualLive: IVirtualLiveInfo;
@@ -13,18 +14,17 @@ interface VirtualLiveItemProps {
 
 export default function VirtualLiveItem({ virtualLive, isSpoiler }: VirtualLiveItemProps) {
     const { assetSource } = useTheme();
+    const { t, formatDate: formatLocaleDate } = useI18n();
     const bannerUrl = getVirtualLiveBannerUrl(virtualLive.assetbundleName, assetSource);
     const status = getVirtualLiveStatus(virtualLive);
     const statusDisplay = VIRTUAL_LIVE_STATUS_DISPLAY[status];
 
     // Format dates
-    const formatDate = (timestamp: number) => {
-        return new Date(timestamp).toLocaleDateString("zh-CN", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-        });
-    };
+    const formatDate = (timestamp: number) => formatLocaleDate(timestamp, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
 
     return (
         <Link href={`/live/${virtualLive.id}`} className="group block" data-shortcut-item="true">
@@ -44,7 +44,7 @@ export default function VirtualLiveItem({ virtualLive, isSpoiler }: VirtualLiveI
                         className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
                         style={{ backgroundColor: statusDisplay.color }}
                     >
-                        {statusDisplay.label}
+                        {t(`common.status.${status}`)}
                     </div>
 
                     {/* Type Badge */}
@@ -52,13 +52,13 @@ export default function VirtualLiveItem({ virtualLive, isSpoiler }: VirtualLiveI
                         className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
                         style={{ backgroundColor: VIRTUAL_LIVE_TYPE_COLORS[virtualLive.virtualLiveType as VirtualLiveType] || "#9E9E9E" }}
                     >
-                        {VIRTUAL_LIVE_TYPE_NAMES[virtualLive.virtualLiveType as VirtualLiveType] || virtualLive.virtualLiveType}
+                        {t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`)}
                     </div>
 
                     {/* Spoiler Badge */}
                     {isSpoiler && (
                         <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-orange-500 rounded-full text-[10px] sm:text-xs font-bold text-white shadow">
-                            剧透
+                            {t("common.badge.spoiler")}
                         </div>
                     )}
                 </div>

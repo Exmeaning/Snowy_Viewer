@@ -2,16 +2,17 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { findNavMatch, findGroupMatch, navigationGroups } from "@/lib/navigation";
+import { findNavMatch, findGroupMatch, navigationGroups, NAV_GROUP_LABEL_KEYS, NAV_ITEM_LABEL_KEYS } from "@/lib/navigation";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
+import { useI18n } from "@/contexts/I18nContext";
 
 /** 展开箭头按钮 */
-function ExpandButton({ open, onClick }: { open: boolean; onClick: () => void }) {
+function ExpandButton({ open, onClick, ariaLabel }: { open: boolean; onClick: () => void; ariaLabel: string }) {
     return (
         <button
             onClick={onClick}
             className="p-0.5 -mr-0.5 rounded hover:bg-miku/10 transition-colors"
-            aria-label="展开导航"
+            aria-label={ariaLabel}
         >
             <svg
                 className={`w-3 h-3 transition-transform duration-100 ${open ? "rotate-180" : ""}`}
@@ -58,6 +59,7 @@ function DropdownItem({ href, isCurrent, children }: { href: string; isCurrent: 
 export default function Breadcrumb() {
     const pathname = usePathname();
     const { detailName, detailNode } = useBreadcrumb();
+    const { t } = useI18n();
     const [openDropdown, setOpenDropdown] = useState<"group" | "item" | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -92,6 +94,14 @@ export default function Breadcrumb() {
         setOpenDropdown((prev) => (prev === type ? null : type));
     }, []);
 
+    const getGroupLabel = useCallback((href: string, fallback: string) => {
+        return t(NAV_GROUP_LABEL_KEYS[href] ?? fallback);
+    }, [t]);
+
+    const getItemLabel = useCallback((href: string, fallback: string) => {
+        return t(NAV_ITEM_LABEL_KEYS[href] ?? fallback);
+    }, [t]);
+
     if (pathname === "/") return null;
 
     // 标准化 pathname（去尾部斜杠）用于比较
@@ -105,14 +115,18 @@ export default function Breadcrumb() {
                 <span className="text-miku/30 shrink-0">/</span>
                 <div className="relative flex items-center gap-0.5">
                     <span className="text-miku font-medium shrink-0 text-sm">
-                        {groupMatch.title}
+                        {getGroupLabel(groupMatch.href, groupMatch.title)}
                     </span>
-                    <ExpandButton open={openDropdown === "group"} onClick={() => toggleDropdown("group")} />
+                    <ExpandButton
+                        open={openDropdown === "group"}
+                        onClick={() => toggleDropdown("group")}
+                        ariaLabel={t("layout.breadcrumb.expandGroup")}
+                    />
                     {openDropdown === "group" && (
                         <DropdownPanel>
                             {navigationGroups.map((g) => (
                                 <DropdownItem key={g.href} href={g.href} isCurrent={g.href === groupMatch.href}>
-                                    {g.title}
+                                    {getGroupLabel(g.href, g.title)}
                                 </DropdownItem>
                             ))}
                         </DropdownPanel>
@@ -123,12 +137,16 @@ export default function Breadcrumb() {
                 <span className="text-miku/30 shrink-0">/</span>
                 <div className="relative flex items-center gap-0.5">
                     <span className="text-miku/40 shrink-0 text-sm">...</span>
-                    <ExpandButton open={openDropdown === "item"} onClick={() => toggleDropdown("item")} />
+                    <ExpandButton
+                        open={openDropdown === "item"}
+                        onClick={() => toggleDropdown("item")}
+                        ariaLabel={t("layout.breadcrumb.expandItems")}
+                    />
                     {openDropdown === "item" && (
                         <DropdownPanel>
                             {groupMatch.items.map((navItem) => (
                                 <DropdownItem key={navItem.href} href={navItem.href} isCurrent={false}>
-                                    {navItem.name}
+                                    {getItemLabel(navItem.href, navItem.name)}
                                 </DropdownItem>
                             ))}
                         </DropdownPanel>
@@ -151,20 +169,26 @@ export default function Breadcrumb() {
             {/* 一级：分组名 — 文字跳转，箭头展开 */}
             <span className="text-miku/30 shrink-0">/</span>
             <div className="relative flex items-center gap-0.5">
-                <Link
-                    href={group.href}
-                    className="text-miku/60 hover:text-miku transition-colors shrink-0 text-sm"
-                >
-                    {group.title}
-                </Link>
-                <ExpandButton open={openDropdown === "group"} onClick={() => toggleDropdown("group")} />
+                    <Link
+                        href={group.href}
+                        className="text-miku/60 hover:text-miku transition-colors shrink-0 text-sm"
+                    >
+                        {getGroupLabel(group.href, group.title)}
+                    </Link>
+                    <ExpandButton
+                        open={openDropdown === "group"}
+                        onClick={() => toggleDropdown("group")}
+                        ariaLabel={t("layout.breadcrumb.expandGroup")}
+                    />
+
                 {openDropdown === "group" && (
                     <DropdownPanel>
-                        {navigationGroups.map((g) => (
+                            {navigationGroups.map((g) => (
                             <DropdownItem key={g.href} href={g.href} isCurrent={g.href === group.href}>
-                                {g.title}
+                                {getGroupLabel(g.href, g.title)}
                             </DropdownItem>
                         ))}
+
                     </DropdownPanel>
                 )}
             </div>
@@ -177,19 +201,23 @@ export default function Breadcrumb() {
                         href={item.href}
                         className="text-miku/60 hover:text-miku transition-colors shrink-0 text-sm"
                     >
-                        {item.name}
+                        {getItemLabel(item.href, item.name)}
                     </Link>
                 ) : (
                     <span className="text-miku font-medium shrink-0 text-sm">
-                        {item.name}
+                        {getItemLabel(item.href, item.name)}
                     </span>
                 )}
-                <ExpandButton open={openDropdown === "item"} onClick={() => toggleDropdown("item")} />
+                <ExpandButton
+                    open={openDropdown === "item"}
+                    onClick={() => toggleDropdown("item")}
+                    ariaLabel={t("layout.breadcrumb.expandItems")}
+                />
                 {openDropdown === "item" && (
                     <DropdownPanel>
                         {group.items.map((navItem) => (
                             <DropdownItem key={navItem.href} href={navItem.href} isCurrent={navItem.href === item.href}>
-                                {navItem.name}
+                                {getItemLabel(navItem.href, navItem.name)}
                             </DropdownItem>
                         ))}
                     </DropdownPanel>

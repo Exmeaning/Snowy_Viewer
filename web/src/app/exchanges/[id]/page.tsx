@@ -12,15 +12,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!exchange) {
         return {
-            title: "兑换所详情",
-            description: "Project Sekai 兑换所条目详情" + DETAIL_SEO_SUFFIX,
+            title: "Exchange Entry Details",
+            description: "Project Sekai exchange entry details" + DETAIL_SEO_SUFFIX,
         };
     }
 
     const title = exchange.summaryName && exchange.summaryName !== exchange.name
         ? `${exchange.name} - ${exchange.summaryName}`
         : exchange.name;
-    const description = `Project Sekai 兑换所条目「${exchange.name}」${exchange.summaryName ? `，所属兑换所：${exchange.summaryName}` : ""}` + DETAIL_SEO_SUFFIX;
+    const description = `Project Sekai exchange entry: ${exchange.name}${exchange.summaryName ? `, exchange shop: ${exchange.summaryName}` : ""}` + DETAIL_SEO_SUFFIX;
 
     return {
         title,

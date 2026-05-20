@@ -9,6 +9,7 @@ import {
     MUSIC_CATEGORY_NAMES,
     MUSIC_CATEGORY_COLORS,
 } from "@/types/music";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface MusicFiltersProps {
     // Tag filter
@@ -52,11 +53,11 @@ const TAG_ICONS: Partial<Record<MusicTagType, string>> = {
     light_music_club: "/data/icon/ln.webp",
 };
 
-const SORT_OPTIONS = [
-    { id: "publishedAt", label: "发布日期" },
-    { id: "id", label: "ID" },
-    { id: "level", label: "难度" },
-    { id: "constant", label: "定数" },
+const SORT_OPTIONS_BASE = [
+    { id: "publishedAt", labelKey: "filter.sortByPublishedAt" },
+    { id: "id", labelKey: "filter.sortById" },
+    { id: "level", labelKey: "filter.sortByLevel" },
+    { id: "constant", labelKey: "filter.sortByConstant" },
 ];
 
 const DIFFICULTY_OPTIONS = [
@@ -89,6 +90,12 @@ export default function MusicFilters({
     totalMusics,
     filteredMusics,
 }: MusicFiltersProps) {
+    const { t } = useI18n();
+
+    const SORT_OPTIONS = SORT_OPTIONS_BASE.map(opt => ({
+        id: opt.id,
+        label: t(opt.labelKey),
+    }));
 
     const toggleCategory = (cat: MusicCategoryType) => {
         if (selectedCategories.includes(cat)) {
@@ -108,10 +115,10 @@ export default function MusicFilters({
         <BaseFilters
             filteredCount={filteredMusics}
             totalCount={totalMusics}
-            countUnit="首"
+            countUnit={t("page.music.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
-            searchPlaceholder="搜索歌曲名称或ID..."
+            searchPlaceholder={t("page.music.searchPlaceholder")}
             sortOptions={customSortOptions || SORT_OPTIONS}
             sortBy={sortBy}
             sortOrder={sortOrder}
@@ -120,7 +127,7 @@ export default function MusicFilters({
             onReset={onReset}
         >
             {/* Tag Filter */}
-            <FilterSection label="乐曲标签">
+            <FilterSection label={t("common.filter.musicTag")}>
                 <div className="flex flex-wrap gap-2">
                     {(Object.keys(MUSIC_TAG_NAMES) as MusicTagType[]).map((tag) => {
                         const isSelected = selectedTag === tag;
@@ -131,7 +138,7 @@ export default function MusicFilters({
                                 key={tag}
                                 onClick={() => onTagChange(tag)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${getFilterIconStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white border border-transparent dark:bg-miku/12 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50/50 border border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
-                                title={MUSIC_TAG_NAMES[tag]}
+                                title={t(`common.musicTags.${tag}`)}
                             >
                                 {hasIcon && (
                                     <div className="w-5 h-5 relative">
@@ -145,7 +152,7 @@ export default function MusicFilters({
                                     </div>
                                 )}
                                 <span className={`text-xs font-medium ${isSelected ? "text-slate-800 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}`}>
-                                    {MUSIC_TAG_NAMES[tag]}
+                                    {t(`common.musicTags.${tag}`)}
                                 </span>
                             </button>
                         );
@@ -154,7 +161,7 @@ export default function MusicFilters({
             </FilterSection>
 
             {/* Category Filter */}
-            <FilterSection label="MV类型">
+            <FilterSection label={t("common.filter.mvType")}>
                 <div className="flex flex-wrap gap-2">
                     {(Object.keys(MUSIC_CATEGORY_NAMES) as MusicCategoryType[]).map((cat) => {
                         const isSelected = selectedCategories.includes(cat);
@@ -173,7 +180,7 @@ export default function MusicFilters({
                                 }
                             >
                                 <span className="text-xs font-medium">
-                                    {MUSIC_CATEGORY_NAMES[cat]}
+                                    {t(`common.musicCategories.${cat}`)}
                                 </span>
                             </button>
                         );
@@ -183,7 +190,7 @@ export default function MusicFilters({
 
             {/* Difficulty Filter - Only show when sorting by level */}
             {(sortBy === "level" || sortBy === "constant") && selectedDifficulty && onDifficultyChange && (
-                <FilterSection label="难度选择">
+                <FilterSection label={t("common.filter.difficulty")}>
                     <div className="grid grid-cols-2 gap-2">
                         {DIFFICULTY_OPTIONS.map((diff) => {
                             const isSelected = selectedDifficulty === diff.id;
@@ -205,18 +212,18 @@ export default function MusicFilters({
             )}
 
             {/* Other Filters */}
-            <FilterSection label="其他筛选">
+            <FilterSection label={t("common.filter.otherFilters")}>
                 <div className="space-y-2">
                     <FilterToggle
                         selected={hasEventOnly}
                         onClick={() => onHasEventOnlyChange(!hasEventOnly)}
-                        label="仅显示活动歌曲"
+                        label={t("common.filter.eventSongsOnly")}
                     />
                     {onShowDifficultyChange && (
                         <FilterToggle
                             selected={!!showDifficulty}
                             onClick={() => onShowDifficultyChange(!showDifficulty)}
-                            label="显示歌曲难度"
+                            label={t("common.filter.showDifficulty")}
                         />
                     )}
                 </div>

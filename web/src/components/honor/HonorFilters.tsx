@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import BaseFilters, { FilterSection, FilterButton, FilterToggle } from "@/components/common/BaseFilters";
-import { HONOR_TYPE_NAMES, HONOR_RARITY_NAMES } from "@/types/honor";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface HonorFiltersProps {
     // Honor type filter
@@ -35,11 +35,29 @@ interface HonorFiltersProps {
 }
 
 const SORT_OPTIONS = [
-    { id: "id", label: "ID" },
-    { id: "seq", label: "序号" },
-];
+    { id: "id", labelKey: "common.filter.sortById" },
+    { id: "seq", labelKey: "common.filter.sortBySeq" },
+] as const;
 
 const RARITIES = ["low", "middle", "high", "highest"];
+
+type TranslationFn = ReturnType<typeof useI18n>["t"];
+
+function formatFallbackLabel(value: string): string {
+    return value.replace(/_/g, " ");
+}
+
+function getHonorTypeLabel(type: string, t: TranslationFn): string {
+    const key = `common.honor.types.${type}`;
+    const label = t(key);
+    return label === key ? formatFallbackLabel(type) : label;
+}
+
+function getHonorRarityLabel(rarity: string, t: TranslationFn): string {
+    const key = `common.honor.rarities.${rarity}`;
+    const label = t(key);
+    return label === key ? formatFallbackLabel(rarity) : label;
+}
 
 export default function HonorFilters({
     selectedTypes,
@@ -58,6 +76,8 @@ export default function HonorFilters({
     totalCount,
     filteredCount,
 }: HonorFiltersProps) {
+    const { t } = useI18n();
+
     const toggleType = (type: string) => {
         if (selectedTypes.includes(type)) {
             onTypeChange(selectedTypes.filter(t => t !== type));
@@ -84,11 +104,11 @@ export default function HonorFilters({
         <BaseFilters
             filteredCount={filteredCount}
             totalCount={totalCount}
-            countUnit="个"
+            countUnit={t("page.honors.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
-            searchPlaceholder="搜索称号名称..."
-            sortOptions={SORT_OPTIONS}
+            searchPlaceholder={t("page.honors.searchPlaceholder.normal")}
+            sortOptions={SORT_OPTIONS.map((option) => ({ id: option.id, label: t(option.labelKey) }))}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={onSortChange}
@@ -96,7 +116,7 @@ export default function HonorFilters({
             onReset={onReset}
         >
             {/* Honor Type */}
-            <FilterSection label="称号类型">
+            <FilterSection label={t("common.filter.honorType")}>
                 <div className="flex flex-wrap gap-2">
                     {availableTypes.map(type => (
                         <FilterButton
@@ -104,14 +124,14 @@ export default function HonorFilters({
                             selected={selectedTypes.includes(type)}
                             onClick={() => toggleType(type)}
                         >
-                            {HONOR_TYPE_NAMES[type] || type}
+                            {getHonorTypeLabel(type, t)}
                         </FilterButton>
                     ))}
                 </div>
             </FilterSection>
 
             {/* Rarity */}
-            <FilterSection label="稀有度">
+            <FilterSection label={t("common.filter.rarity")}>
                 <div className="flex flex-wrap gap-2">
                     {RARITIES.map(rarity => (
                         <FilterButton
@@ -119,7 +139,7 @@ export default function HonorFilters({
                             selected={selectedRarities.includes(rarity)}
                             onClick={() => toggleRarity(rarity)}
                         >
-                            {HONOR_RARITY_NAMES[rarity] || rarity}
+                            {getHonorRarityLabel(rarity, t)}
                         </FilterButton>
                     ))}
                 </div>
@@ -129,7 +149,7 @@ export default function HonorFilters({
             <FilterToggle
                 selected={groupOnce}
                 onClick={() => onGroupOnceChange(!groupOnce)}
-                label="每组仅显示一个"
+                label={t("common.filter.groupOnce")}
             />
         </BaseFilters>
     );

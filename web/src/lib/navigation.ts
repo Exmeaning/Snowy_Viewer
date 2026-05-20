@@ -2,11 +2,13 @@
 
 export interface NavItemData {
     name: string;
+    nameKey?: string;
     href: string;
 }
 
 export interface NavGroupData {
     title: string;
+    titleKey?: string;
     href: string;
     items: NavItemData[];
 }
@@ -206,4 +208,119 @@ export const SEARCH_GROUP_ROUTES: Record<string, string> = {
     mysekai: "/mysekai",
     costumes: "/costumes",
     live: "/live",
+};
+
+export const NAV_GROUP_LABEL_KEYS: Record<string, string> = {
+    "/breadcrumb-database": "layout.nav.groups.database",
+    "/breadcrumb-activity": "layout.nav.groups.activity",
+    "/breadcrumb-story": "layout.nav.groups.story",
+    "/breadcrumb-community": "layout.nav.groups.community",
+    "/breadcrumb-tools": "layout.nav.groups.tools",
+    "/breadcrumb-personal": "layout.nav.groups.personal",
+};
+
+export const NAV_ITEM_LABEL_KEYS: Record<string, string> = {
+    "/": "layout.nav.home",
+    "/cards": "layout.nav.items.cards",
+    "/music": "layout.nav.items.musicList",
+    "/music/meta": "layout.nav.items.musicMeta",
+    "/soundtrack": "layout.nav.items.soundtrack",
+    "/character": "layout.nav.items.character",
+    "/costumes": "layout.nav.items.costumes",
+    "/honors": "layout.nav.items.honors",
+    "/sticker": "layout.nav.items.sticker",
+    "/comic": "layout.nav.items.comic",
+    "/manga": "layout.nav.items.manga",
+    "/mysekai": "layout.nav.items.mysekai",
+    "/materials": "layout.nav.items.materials",
+    "/exchanges": "layout.nav.items.exchanges",
+    "/events": "layout.nav.items.events",
+    "/gacha": "layout.nav.items.gacha",
+    "/live": "layout.nav.items.live",
+    "/prediction": "layout.nav.items.prediction",
+    "/realtime-ranking": "layout.nav.items.realtimeRanking",
+    "/mysekai-preview": "layout.nav.items.mysekaiPreview",
+    "/story/unit": "layout.nav.items.mainStory",
+    "/story/event": "layout.nav.items.eventStory",
+    "/story/card": "layout.nav.items.cardStory",
+    "/story/area": "layout.nav.items.areaTalk",
+    "/story/self": "layout.nav.items.selfIntro",
+    "/story/special": "layout.nav.items.specialStory",
+    "/guides": "layout.nav.items.guides",
+    "/deck-recommend": "layout.nav.items.deckRecommend",
+    "/deck-comparator": "layout.nav.items.deckComparator",
+    "/score-control": "layout.nav.items.scoreControl",
+    "/sticker-maker": "layout.nav.items.stickerMaker",
+    "/goods-gacha": "layout.nav.items.goodsGacha",
+    "/guess-who": "layout.nav.items.guessWho",
+    "/guess-jacket": "layout.nav.items.guessJacket",
+    "/chart-preview": "layout.nav.items.chartPreview",
+    "/mysekai-preview/scene": "layout.nav.items.mysekaiPreviewScene",
+    "/profile": "layout.nav.items.profile",
+    "/my-cards": "layout.nav.items.myCards",
+    "/my-musics": "layout.nav.items.myMusics",
+    "/my-materials": "layout.nav.items.myMaterials",
+    "/patreon": "layout.nav.items.support",
+    "/about": "layout.nav.items.about",
+};
+
+export const NAV_ITEM_DESCRIPTION_KEYS: Record<string, string> = {
+    "/cards": "layout.groupPages.cards",
+    "/music": "layout.groupPages.music",
+    "/music/meta": "layout.groupPages.musicMeta",
+    "/soundtrack": "layout.groupPages.soundtrack",
+    "/character": "layout.groupPages.character",
+    "/costumes": "layout.groupPages.costumes",
+    "/honors": "layout.groupPages.honors",
+    "/sticker": "layout.groupPages.sticker",
+    "/comic": "layout.groupPages.comic",
+    "/manga": "layout.groupPages.manga",
+    "/mysekai": "layout.groupPages.mysekai",
+    "/materials": "layout.groupPages.materials",
+    "/exchanges": "layout.groupPages.exchanges",
+    "/events": "layout.groupPages.events",
+    "/gacha": "layout.groupPages.gacha",
+    "/live": "layout.groupPages.live",
+    "/story/event": "layout.groupPages.storyEvent",
+    "/story/unit": "layout.groupPages.storyUnit",
+    "/story/card": "layout.groupPages.storyCard",
+    "/story/area": "layout.groupPages.storyArea",
+    "/story/self": "layout.groupPages.storySelf",
+    "/story/special": "layout.groupPages.storySpecial",
+    "/prediction": "layout.groupPages.prediction",
+    "/guides": "layout.groupPages.guides",
+    "/deck-recommend": "layout.groupPages.deckRecommend",
+    "/deck-comparator": "layout.groupPages.deckComparator",
+    "/score-control": "layout.groupPages.scoreControl",
+    "/sticker-maker": "layout.groupPages.stickerMaker",
+    "/goods-gacha": "layout.groupPages.goodsGacha",
+    "/guess-who": "layout.groupPages.guessWho",
+    "/guess-jacket": "layout.groupPages.guessJacket",
+    "/chart-preview": "layout.groupPages.chartPreview",
+    "/mysekai-preview": "layout.groupPages.mysekaiPreview",
+    "/mysekai-preview/scene": "layout.groupPages.mysekaiPreviewScene",
+    "/profile": "layout.groupPages.profile",
+    "/my-cards": "layout.groupPages.myCards",
+    "/my-musics": "layout.groupPages.myMusics",
+    "/my-materials": "layout.groupPages.myMaterials",
+    "/patreon": "layout.groupPages.patreon",
+    "/about": "layout.groupPages.about",
+};
+
+export const SEARCH_GROUP_LABEL_KEYS: Record<string, string> = {
+    events: "search.commandPalette.dynamicGroups.events",
+    music: "search.commandPalette.dynamicGroups.music",
+    cards: "search.commandPalette.dynamicGroups.cards",
+    gacha: "search.commandPalette.dynamicGroups.gacha",
+    mysekai: "search.commandPalette.dynamicGroups.mysekai",
+    costumes: "search.commandPalette.dynamicGroups.costumes",
+    live: "search.commandPalette.dynamicGroups.live",
+};
+
+export const SEARCH_STATIC_GROUP_LABEL_KEYS: Record<string, string> = {
+    导航: "layout.nav.groups.navigation",
+    数据库: "layout.nav.groups.database",
+    活动: "layout.nav.groups.activity",
+    工具: "layout.nav.groups.tools",
+    个人: "layout.nav.groups.personal",
 };

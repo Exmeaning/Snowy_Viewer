@@ -76,25 +76,25 @@ export interface IGameCharaUnit {
 
 // Honor rarity display names
 export const HONOR_RARITY_NAMES: Record<string, string> = {
-    low: "普",
-    middle: "羽",
-    high: "花",
-    highest: "星",
+    low: "Normal",
+    middle: "Wing",
+    high: "Flower",
+    highest: "Star",
 };
 
 // Honor type display names
 export const HONOR_TYPE_NAMES: Record<string, string> = {
-    achievement: "成就",
-    event: "活动",
-    event_point: "活动点数",
-    rank_match: "排位赛",
-    character_rank: "角色",
-    bonds: "绊",
-    birthday: "生日",
-    license: "许可",
-    unit_rank: "团体等级",
-    world_bloom: "世界开花",
-    main_story: "主线剧情",
-    challenge_live: "挑战Live",
-    virtual_live: "虚拟Live",
+    achievement: "Achievement",
+    event: "Event",
+    event_point: "Event Points",
+    rank_match: "Rank Match",
+    character_rank: "Character",
+    bonds: "Bonds",
+    birthday: "Birthday",
+    license: "License",
+    unit_rank: "Unit Rank",
+    world_bloom: "World Bloom",
+    main_story: "Main Story",
+    challenge_live: "Challenge Live",
+    virtual_live: "Virtual Live",
 };

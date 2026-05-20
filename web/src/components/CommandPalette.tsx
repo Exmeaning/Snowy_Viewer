@@ -2,10 +2,11 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { searchableNavItems, SEARCH_GROUP_LABELS, SEARCH_GROUP_ROUTES } from "@/lib/navigation";
+import { searchableNavItems, SEARCH_GROUP_LABEL_KEYS, SEARCH_GROUP_ROUTES, SEARCH_STATIC_GROUP_LABEL_KEYS, NAV_ITEM_LABEL_KEYS } from "@/lib/navigation";
 import { CHARACTER_NAMES } from "@/types/types";
 import { getPrimaryShortcutLabel, isKeyboardEventComposing } from "@/lib/shortcuts";
 import { fetchMusicAliases } from "@/lib/musicAliases";
+import { useI18n } from "@/contexts/I18nContext";
 
 // Dynamic search index item from search-index.json
 interface SearchIndexItem {
@@ -49,6 +50,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
     const [isLoadingIndex, setIsLoadingIndex] = useState(false);
     const indexLoadedRef = useRef(false);
     const wildcardShortcut = getPrimaryShortcutLabel("toggle-search-wildcard");
+    const { t } = useI18n();
 
     useEffect(() => {
         try {
@@ -194,7 +196,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
 
     // Group filtered static items
     const grouped = useMemo(() => {
-        const groups: { title: string; items: typeof filtered }[] = [];
+        const groups: { titleKey: string; items: typeof filtered }[] = [];
         const groupMap = new Map<string, typeof filtered>();
         for (const item of filtered) {
             const existing = groupMap.get(item.group);
@@ -203,7 +205,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
             } else {
                 const arr = [item];
                 groupMap.set(item.group, arr);
-                groups.push({ title: item.group, items: arr });
+                groups.push({ titleKey: SEARCH_STATIC_GROUP_LABEL_KEYS[item.group] ?? item.group, items: arr });
             }
         }
         return groups;
@@ -211,17 +213,17 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
 
     // Group dynamic items
     const dynamicGrouped = useMemo(() => {
-        const groups: { title: string; items: SearchResultItem[] }[] = [];
+        const groups: { titleKey: string; items: SearchResultItem[] }[] = [];
         const groupMap = new Map<string, SearchResultItem[]>();
         for (const item of dynamicFiltered) {
-            const groupLabel = SEARCH_GROUP_LABELS[item.g] || item.g;
-            const existing = groupMap.get(groupLabel);
+            const groupKey = SEARCH_GROUP_LABEL_KEYS[item.g] || item.g;
+            const existing = groupMap.get(groupKey);
             if (existing) {
                 existing.push(item);
             } else {
                 const arr = [item];
-                groupMap.set(groupLabel, arr);
-                groups.push({ title: groupLabel, items: arr });
+                groupMap.set(groupKey, arr);
+                groups.push({ titleKey: groupKey, items: arr });
             }
         }
         return groups;
@@ -366,17 +368,17 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                     type="text"
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
-                                    placeholder="搜索页面、卡牌、歌曲、活动..."
+                                    placeholder={t("search.commandPalette.placeholder")}
                                     className="flex-1 py-1.5 sm:py-2.5 bg-transparent text-sm text-slate-800 placeholder-slate-400 outline-none min-w-0"
                                 />
                                 <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-slate-400 bg-slate-100 rounded border border-slate-200">
-                                    ESC
+                                    {t("common.shortcut.escape")}
                                 </kbd>
                             </div>
 
                             <div className="flex items-center justify-between sm:justify-end gap-2 border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0 shrink-0">
                                 <span className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
-                                    通配符 (*, ?)
+                                    {t("search.commandPalette.wildcard")}
                                     <kbd className="hidden sm:inline-flex items-center px-1 py-0.5 text-[9px] font-mono font-medium text-slate-400 bg-slate-100 rounded border border-slate-200 shadow-sm leading-none h-4">
                                         {wildcardShortcut}
                                     </kbd>
@@ -396,15 +398,15 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                         <div ref={listRef} className="overflow-y-auto flex-1 py-2">
                             {totalItems === 0 && !isLoadingIndex ? (
                                 <div className="px-4 py-8 text-center text-sm text-slate-400">
-                                    没有找到匹配的结果
+                                    {t("search.commandPalette.noResults")}
                                 </div>
                             ) : (
                                 <>
                                     {/* Static navigation results */}
                                     {grouped.map((group) => (
-                                        <div key={group.title}>
+                                        <div key={group.titleKey}>
                                             <div className="px-4 pt-3 pb-1 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                                {group.title}
+                                                {t(group.titleKey)}
                                             </div>
                                             {group.items.map((item) => {
                                                 flatIndex++;
@@ -421,7 +423,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                                             : "text-slate-600 hover:bg-slate-50"
                                                             }`}
                                                     >
-                                                        <span className="font-medium">{item.name}</span>
+                                                        <span className="font-medium">{t(NAV_ITEM_LABEL_KEYS[item.href] ?? item.name)}</span>
                                                         <span
                                                             className={`text-xs ${isActive ? "text-miku/60" : "text-slate-400"
                                                                 }`}
@@ -436,10 +438,10 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
 
                                     {/* Dynamic search results */}
                                     {dynamicGrouped.map((group) => (
-                                        <div key={`dyn-${group.title}`}>
+                                        <div key={`dyn-${group.titleKey}`}>
                                             <div className="px-4 pt-3 pb-1 text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                                {group.title}
-                                                {group.title === "歌曲" && (
+                                                {t(group.titleKey)}
+                                                {group.titleKey === SEARCH_GROUP_LABEL_KEYS.music && (
                                                     <span className="font-normal normal-case text-[10px] text-slate-400/70">
                                                         (含别名 · <a href="https://github.com/Team-Haruki" target="_blank" rel="noopener noreferrer" className="hover:text-miku">haruki</a>)
                                                     </span>
@@ -502,7 +504,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                     {/* Loading indicator for first load */}
                                     {isLoadingIndex && query && (
                                         <div className="px-4 py-3 text-center text-xs text-slate-400">
-                                            正在加载数据索引...
+                                            {t("search.commandPalette.loadingIndex")}
                                         </div>
                                     )}
                                 </>
@@ -514,15 +516,15 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                             <span className="flex items-center gap-1">
                                 <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 text-[10px]">↑</kbd>
                                 <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 text-[10px]">↓</kbd>
-                                导航
+                                {t("search.commandPalette.footer.navigate")}
                             </span>
                             <span className="flex items-center gap-1">
                                 <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 text-[10px]">Enter</kbd>
-                                跳转
+                                {t("search.commandPalette.footer.open")}
                             </span>
                             <span className="flex items-center gap-1">
                                 <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 text-[10px]">Esc</kbd>
-                                关闭
+                                {t("search.commandPalette.footer.close")}
                             </span>
                         </div>
                     </motion.div>

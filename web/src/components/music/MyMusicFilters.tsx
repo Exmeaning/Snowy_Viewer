@@ -9,6 +9,7 @@ import {
     MUSIC_CATEGORY_NAMES,
     MUSIC_CATEGORY_COLORS,
 } from "@/types/music";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface MyMusicFiltersProps {
     // Tag filter
@@ -58,12 +59,12 @@ const DIFFICULTY_OPTIONS = [
     { value: "append", label: "APPEND" },
 ];
 
-const SORT_OPTIONS = [
-    { id: "completion", label: "完成度" },
-    { id: "publishedAt", label: "发布日期" },
-    { id: "id", label: "ID" },
-    { id: "level", label: "难度" },
-    { id: "constant", label: "定数" },
+const SORT_OPTIONS_BASE = [
+    { id: "completion", labelKey: "common.filter.sortByCompletion" },
+    { id: "publishedAt", labelKey: "common.filter.sortByPublishedAt" },
+    { id: "id", labelKey: "common.filter.sortById" },
+    { id: "level", labelKey: "common.filter.sortByLevel" },
+    { id: "constant", labelKey: "common.filter.sortByConstant" },
 ];
 
 export default function MyMusicFilters({
@@ -85,6 +86,11 @@ export default function MyMusicFilters({
     filteredMusics,
     hasUserData,
 }: MyMusicFiltersProps) {
+    const { t } = useI18n();
+    const SORT_OPTIONS = SORT_OPTIONS_BASE.map((option) => ({
+        id: option.id,
+        label: t(option.labelKey),
+    }));
 
     const toggleCategory = (cat: MusicCategoryType) => {
         if (selectedCategories.includes(cat)) {
@@ -104,10 +110,10 @@ export default function MyMusicFilters({
         <BaseFilters
             filteredCount={filteredMusics}
             totalCount={totalMusics}
-            countUnit="首"
+            countUnit={t("page.music.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
-            searchPlaceholder="搜索歌曲名称或ID..."
+            searchPlaceholder={t("page.music.searchPlaceholder")}
             sortOptions={SORT_OPTIONS}
             sortBy={sortBy}
             sortOrder={sortOrder}
@@ -116,7 +122,7 @@ export default function MyMusicFilters({
             onReset={onReset}
         >
             {/* Difficulty Selection */}
-            <FilterSection label="难度">
+            <FilterSection label={t("common.filter.difficulty")}>
                 <div className="grid grid-cols-3 gap-2">
                     {DIFFICULTY_OPTIONS.map((diff) => {
                         const isSelected = selectedDifficulty === diff.value;
@@ -134,7 +140,7 @@ export default function MyMusicFilters({
             </FilterSection>
 
             {/* Tag Filter */}
-            <FilterSection label="乐曲标签">
+            <FilterSection label={t("common.filter.musicTag")}>
                 <div className="flex flex-wrap gap-2">
                     {(Object.keys(MUSIC_TAG_NAMES) as MusicTagType[]).map((tag) => {
                         const isSelected = selectedTag === tag;
@@ -145,7 +151,7 @@ export default function MyMusicFilters({
                                 key={tag}
                                 onClick={() => onTagChange(tag)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${getFilterIconStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white border border-transparent dark:bg-miku/12 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50/50 border border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
-                                title={MUSIC_TAG_NAMES[tag]}
+                                title={t(`common.musicTags.${tag}`)}
                             >
                                 {hasIcon && (
                                     <div className="w-5 h-5 relative">
@@ -159,7 +165,7 @@ export default function MyMusicFilters({
                                     </div>
                                 )}
                                 <span className={`text-xs font-medium ${isSelected ? "text-slate-800 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}`}>
-                                    {MUSIC_TAG_NAMES[tag]}
+                                    {t(`common.musicTags.${tag}`)}
                                 </span>
                             </button>
                         );
@@ -168,7 +174,7 @@ export default function MyMusicFilters({
             </FilterSection>
 
             {/* Category Filter */}
-            <FilterSection label="MV类型">
+            <FilterSection label={t("common.filter.mvType")}>
                 <div className="flex flex-wrap gap-2">
                     {(Object.keys(MUSIC_CATEGORY_NAMES) as MusicCategoryType[]).map((cat) => {
                         const isSelected = selectedCategories.includes(cat);
@@ -187,7 +193,7 @@ export default function MyMusicFilters({
                                 }
                             >
                                 <span className="text-xs font-medium">
-                                    {MUSIC_CATEGORY_NAMES[cat]}
+                                    {t(`common.musicCategories.${cat}`)}
                                 </span>
                             </button>
                         );
@@ -197,25 +203,25 @@ export default function MyMusicFilters({
 
             {/* Completion Filter */}
             {hasUserData && (
-                <FilterSection label="完成度筛选">
+                <FilterSection label={t("common.filter.completionFilter")}>
                     <div className="grid grid-cols-3 gap-2">
                         <button
                             onClick={() => onCompletionFilterChange("all")}
                             className={`px-2 py-2 rounded-lg text-xs font-bold transition-all ${getFilterChipStateClasses(completionFilter === "all")}`}
                         >
-                            全部
+                            {t("common.progress.all")}
                         </button>
                         <button
                             onClick={() => onCompletionFilterChange("no_fc")}
                             className={`px-2 py-2 rounded-lg text-xs font-bold transition-all ${getFilterChipStateClasses(completionFilter === "no_fc")}`}
                         >
-                            未FC
+                            {t("common.progress.noFc")}
                         </button>
                         <button
                             onClick={() => onCompletionFilterChange("no_ap")}
                             className={`px-2 py-2 rounded-lg text-xs font-bold transition-all ${getFilterChipStateClasses(completionFilter === "no_ap")}`}
                         >
-                            未AP
+                            {t("common.progress.noAp")}
                         </button>
                     </div>
                 </FilterSection>

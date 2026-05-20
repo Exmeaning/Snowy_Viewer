@@ -6,6 +6,7 @@ import { IGachaInfo } from "@/types/types";
 import { getGachaLogoUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface GachaItemProps {
     gacha: IGachaInfo;
@@ -13,15 +14,17 @@ interface GachaItemProps {
 
 export default function GachaItem({ gacha }: GachaItemProps) {
     const { isShowSpoiler, assetSource } = useTheme();
+    const { t, formatDate: formatLocaleDate } = useI18n();
     const [now] = useState(() => Date.now());
     const isUnreleased = gacha.startAt > now;
     const isOngoing = gacha.startAt <= now && gacha.endAt >= now;
     const logoUrl = getGachaLogoUrl(gacha.assetbundleName, assetSource);
 
-    const formatDate = (timestamp: number) => {
-        const date = new Date(timestamp);
-        return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-    };
+    const formatDate = (timestamp: number) => formatLocaleDate(timestamp, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    });
 
     return (
         <Link href={`/gacha/${gacha.id}`} className="group block" data-shortcut-item="true">
@@ -44,12 +47,12 @@ export default function GachaItem({ gacha }: GachaItemProps) {
                     <div className="absolute top-2 right-2 flex flex-col gap-1">
                         {isUnreleased && isShowSpoiler && (
                             <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full">
-                                剧透
+                                {t("common.badge.spoiler")}
                             </span>
                         )}
                         {isOngoing && (
                             <span className="px-2 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded-full animate-pulse">
-                                进行中
+                                {t("common.badge.ongoing")}
                             </span>
                         )}
                     </div>

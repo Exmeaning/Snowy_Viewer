@@ -8,10 +8,10 @@ import {
     getCharacterIconUrl,
     getTopCharacterId,
     getCachedAvatarUrl,
-    SERVER_LABELS,
     type MoesekaiAccount,
     type ServerType,
 } from "@/lib/account";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface AccountSelectorProps {
     /** 当选择账号后回调，传入 gameId 和 server */
@@ -24,6 +24,7 @@ interface AccountSelectorProps {
 }
 
 export default function AccountSelector({ onSelect, currentUserId, currentServer, allowedServers }: AccountSelectorProps) {
+    const { t } = useI18n();
     const [accounts, setAccounts] = useState<MoesekaiAccount[]>([]);
 
     useEffect(() => {
@@ -43,8 +44,8 @@ export default function AccountSelector({ onSelect, currentUserId, currentServer
     return (
         <div className="mb-3">
             <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs font-medium text-slate-500">已保存的账号</span>
-                <span className="text-[10px] text-slate-400">点击快速填入</span>
+                <span className="text-xs font-medium text-slate-500">{t("common.account.savedAccounts")}</span>
+                <span className="text-[10px] text-slate-400">{t("common.account.quickFill")}</span>
             </div>
             <div className="flex gap-2 flex-wrap">
                 {accounts.map((acc) => {
@@ -83,7 +84,7 @@ export default function AccountSelector({ onSelect, currentUserId, currentServer
                             <span className={`px-1 py-0.5 rounded text-[10px] font-bold ${
                                 isActive ? "bg-miku/20 text-miku" : "bg-slate-100 text-slate-500"
                             }`}>
-                                {SERVER_LABELS[acc.server]}
+                                {t(`common.server.${acc.server}`)}
                             </span>
                         </button>
                     );

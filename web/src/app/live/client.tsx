@@ -10,8 +10,10 @@ import { fetchMasterData } from "@/lib/fetch";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { useI18n } from "@/contexts/I18nContext";
 
 function VirtualLiveContent() {
+    const { t } = useI18n();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { isShowSpoiler } = useTheme();
@@ -209,7 +211,7 @@ function VirtualLiveContent() {
         />
     );
 
-    useQuickFilter("演唱会筛选", quickFilterContent, [
+    useQuickFilter(t("page.live.filterTitle"), quickFilterContent, [
         selectedTypes,
         searchQuery,
         sortBy,
@@ -223,26 +225,26 @@ function VirtualLiveContent() {
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">虚拟演唱会数据库</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.live.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    虚拟 <span className="text-miku">演唱会</span>
+                    {t("page.live.title")} <span className="text-miku">{t("page.live.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览并探索世界计划中的所有虚拟演唱会
+                    {t("page.live.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{error}</p>
                     <button
                         onClick={() => window.location.reload()}
                         className="mt-2 text-red-500 underline hover:no-underline"
                     >
-                        重试
+                        {t("common.action.retry")}
                     </button>
                 </div>
             )}
@@ -268,7 +270,7 @@ function VirtualLiveContent() {
                                 data-shortcut-load-more="true"
                                 className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                             >
-                                加载更多
+                                {t("page.live.loadMore")}
                                 <span className="ml-2 text-sm opacity-80">
                                     ({displayedVirtualLives.length} / {filteredVirtualLives.length})
                                 </span>
@@ -279,7 +281,7 @@ function VirtualLiveContent() {
                     {/* All loaded indicator */}
                     {!isLoading && displayedVirtualLives.length > 0 && displayedVirtualLives.length >= filteredVirtualLives.length && (
                         <div className="mt-8 text-center text-slate-400 text-sm">
-                            已显示全部 {filteredVirtualLives.length} 个演唱会
+                            {t("page.live.allLoaded", { count: filteredVirtualLives.length })}
                         </div>
                     )}
                 </div>
@@ -288,10 +290,15 @@ function VirtualLiveContent() {
     );
 }
 
+function VirtualLiveLoadingFallback() {
+    const { t } = useI18n();
+    return <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.live.loadingFallback")}</div>;
+}
+
 export default function VirtualLiveClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载演唱会...</div>}>
+            <Suspense fallback={<VirtualLiveLoadingFallback />}>
                 <VirtualLiveContent />
             </Suspense>
         </MainLayout>
