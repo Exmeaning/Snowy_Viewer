@@ -40,6 +40,65 @@ function clampVolume(value: number) {
     return Math.min(1, Math.max(0, value));
 }
 
+const SOUNDTRACK_AUDIO_CACHE_NAME = "soundtrack-audio-v1";
+
+function sanitizeDownloadFileName(value: string) {
+    return value
+        .replace(/[\\/:*?"<>|]/g, "_")
+        .replace(/\s+/g, " ")
+        .trim() || "soundtrack";
+}
+
+function getTrackDownloadFileName(track: MysekaiMusicSoundTrackMaster) {
+    const seq = track.seq.toString().padStart(3, "0");
+    return `${seq}_${sanitizeDownloadFileName(track.title || track.assetbundleFileName)}.mp3`;
+}
+
+function triggerDirectDownload(url: string, fileName: string) {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+}
+
+function triggerBlobDownload(blob: Blob, fileName: string) {
+    const objectUrl = URL.createObjectURL(blob);
+    triggerDirectDownload(objectUrl, fileName);
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
+}
+
+async function readAudioBlobFromCache(url: string): Promise<Blob | null> {
+    if (!("caches" in window)) return null;
+
+    try {
+        const response = await window.caches.match(url);
+        if (!response) return null;
+
+        const blob = await response.blob();
+        return blob.size > 0 ? blob : null;
+    } catch (err) {
+        console.warn("Failed to read soundtrack audio cache:", err);
+        return null;
+    }
+}
+
+async function storeAudioBlobInCache(url: string, blob: Blob) {
+    if (!("caches" in window) || blob.size === 0) return;
+
+    try {
+        const cache = await window.caches.open(SOUNDTRACK_AUDIO_CACHE_NAME);
+        await cache.put(url, new Response(blob, {
+            headers: { "Content-Type": blob.type || "audio/mpeg" },
+        }));
+    } catch (err) {
+        console.warn("Failed to store soundtrack audio cache:", err);
+    }
+}
+
 // Color schemes matching each category group
 const CATEGORY_THEMES: Record<number, { from: string; to: string; shadow: string; bgGlow: string; text: string }> = {
     1: { from: "#00E5CF", to: "#007D85", shadow: "shadow-cyan-500/20", bgGlow: "from-cyan-950/20 to-teal-950/20", text: "text-miku" }, // 单元综合
@@ -85,6 +144,8 @@ function SoundtrackContent() {
     const [playbackMode, setPlaybackMode] = useState<PlaybackMode>("sequential");
     const [showVolumePopup, setShowVolumePopup] = useState(false);
     const [audioError, setAudioError] = useState<string | null>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [downloadHint, setDownloadHint] = useState<string | null>(null);
 
     // Filter & Search states
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -228,6 +289,10 @@ function SoundtrackContent() {
             sessionStorage.setItem("soundtrack-current-track-id", currentTrack.id.toString());
         }
     }, [currentTrack]);
+
+    useEffect(() => {
+        setDownloadHint(null);
+    }, [audioUrl]);
 
     // Explicitly swap the single audio element source so old tracks are stopped before a new one loads.
     useEffect(() => {
@@ -526,6 +591,43 @@ function SoundtrackContent() {
         setIsPlaying(true);
     };
 
+    const handleDownloadCurrentTrack = async () => {
+        if (!currentTrack || !audioUrl || isDownloading) return;
+
+        const fileName = getTrackDownloadFileName(currentTrack);
+        setIsDownloading(true);
+        setDownloadHint(null);
+
+        try {
+            const cachedBlob = await readAudioBlobFromCache(audioUrl);
+            if (cachedBlob) {
+                triggerBlobDownload(cachedBlob, fileName);
+                setDownloadHint("已使用缓存音频下载");
+                return;
+            }
+
+            const response = await fetch(audioUrl, { cache: "force-cache" });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const blob = await response.blob();
+            if (blob.size === 0) {
+                throw new Error("EMPTY_AUDIO_BLOB");
+            }
+
+            await storeAudioBlobInCache(audioUrl, blob);
+            triggerBlobDownload(blob, fileName);
+            setDownloadHint("已缓存并开始下载");
+        } catch (err) {
+            console.warn("Soundtrack download fallback to direct link:", err);
+            triggerDirectDownload(audioUrl, fileName);
+            setDownloadHint("已改用直链下载");
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
     // Format seconds into MM:SS
     const formatTime = (time: number) => {
         if (!Number.isFinite(time)) return "00:00";
@@ -765,8 +867,30 @@ function SoundtrackContent() {
                                         <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 truncate">
                                             {currentTrack?.pronunciation || "読み込み中"}
                                         </p>
-                                        <div className="inline-block mt-3 px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                                            {currentTrack ? (categoryMap.get(currentTrack.musicSoundTrackCategoryId)?.name || "BGM") : "..."}
+                                        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                                            <div className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                                                {currentTrack ? (categoryMap.get(currentTrack.musicSoundTrackCategoryId)?.name || "BGM") : "..."}
+                                            </div>
+                                            <button
+                                                onClick={handleDownloadCurrentTrack}
+                                                disabled={!currentTrack || !audioUrl || isDownloading}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-all hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                                                title={isDownloading ? "正在准备下载..." : "下载当前音频"}
+                                            >
+                                                {isDownloading ? (
+                                                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                                    </svg>
+                                                ) : (
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                                        <path d="M12 3v12" />
+                                                        <path d="M7 10l5 5 5-5" />
+                                                        <path d="M5 21h14" />
+                                                    </svg>
+                                                )}
+                                                <span>{isDownloading ? "准备中" : "下载"}</span>
+                                            </button>
                                         </div>
                                     </motion.div>
                                 </AnimatePresence>
@@ -775,6 +899,11 @@ function SoundtrackContent() {
                             {audioError && (
                                 <div className="mb-4 rounded-xl border border-rose-300/60 bg-rose-50/80 px-3 py-2 text-center text-xs font-medium text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
                                     {audioError}
+                                </div>
+                            )}
+                            {downloadHint && !audioError && (
+                                <div className="mb-4 rounded-xl border border-miku/30 bg-miku/10 px-3 py-2 text-center text-xs font-medium text-teal-700 dark:text-miku">
+                                    {downloadHint}
                                 </div>
                             )}
 
