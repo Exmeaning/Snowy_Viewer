@@ -11,11 +11,11 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
     const card = getCardMeta(Number(id));
-    if (!card) return { title: "卡牌详情" };
+    if (!card) return { title: "Card Detail" };
 
     const charName = CHARACTER_NAMES[card.characterId] || "";
     const title = `${charName} - ${card.prefix}`;
-    const description = `Project Sekai 卡牌「${card.prefix}」- ${charName}` + DETAIL_SEO_SUFFIX;
+    const description = `Project Sekai Card "${card.prefix}" - ${charName}` + DETAIL_SEO_SUFFIX;
     const ogImage = getCardThumbnailUrl(card.characterId, card.asset, false, "main-jp");
 
     return {

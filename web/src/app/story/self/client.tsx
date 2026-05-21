@@ -6,6 +6,7 @@ import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { IGameChara, ICharaProfile, UNIT_NAME_MAP } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
 import { StoryPageHeader } from "@/components/story/StoryPageHeader";
 
@@ -13,6 +14,7 @@ const UNIT_ORDER = ["light_sound", "idol", "street", "theme_park", "school_refus
 
 export default function StorySelfListClient() {
     const { serverSource } = useTheme();
+    const { t } = useI18n();
     const [charas, setCharas] = useState<IGameChara[]>([]);
     const [profiles, setProfiles] = useState<ICharaProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -29,13 +31,13 @@ export default function StorySelfListClient() {
                 setCharas(charasData);
                 setProfiles(profilesData);
             } catch (err) {
-                setError(err instanceof Error ? err.message : "加载失败");
+                setError(err instanceof Error ? err.message : t("common.state.loadingFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
         load();
-    }, [serverSource]);
+    }, [serverSource, t]);
 
     const profileMap = new Map(profiles.map(p => [p.characterId, p]));
 

@@ -2,6 +2,7 @@
 import React from "react";
 import BaseFilters, { FilterSection, FilterButton, FilterToggle } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
+import { useI18n } from "@/contexts/I18nContext";
 import {
     PART_TYPE_NAMES,
     SOURCE_NAMES,
@@ -78,6 +79,7 @@ export default function CostumeFilters({
     totalCount,
     filteredCount,
 }: CostumeFiltersProps) {
+    const { t } = useI18n();
 
     const togglePartType = (type: string) => {
         if (selectedPartTypes.includes(type)) {
@@ -126,16 +128,16 @@ export default function CostumeFilters({
 
     return (
         <BaseFilters
-            title="筛选服装"
+            title={t("page.costumes.filterTitleAlt")}
             filteredCount={filteredCount}
             totalCount={totalCount}
-            countUnit="套"
+            countUnit={t("page.costumes.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
-            searchPlaceholder="搜索服装名称、设计者..."
+            searchPlaceholder={t("page.costumes.searchPlaceholder")}
             sortOptions={[
-                { id: "id", label: "ID" },
-                { id: "publishedAt", label: "发布时间" },
+                { id: "id", label: t("page.costumes.sortOptions.id") },
+                { id: "publishedAt", label: t("page.costumes.sortOptions.publishedAt") },
             ]}
             sortBy={sortBy}
             sortOrder={sortOrder}
@@ -155,7 +157,7 @@ export default function CostumeFilters({
                             <FilterToggle
                                 selected={onlyRelatedCardCostumes}
                                 onClick={() => onOnlyRelatedCardCostumesChange(!onlyRelatedCardCostumes)}
-                                label="卡牌服装仅显示该角色关联的服装"
+                                label={t("page.costumes.onlyRelatedCardCostumes")}
                             />
                         </div>
                     ) : undefined
@@ -164,29 +166,29 @@ export default function CostumeFilters({
 
             {/* Part Type and Source Filters */}
             <div className="grid grid-cols-1 gap-4">
-                <FilterSection label="部位">
+                <FilterSection label={t("page.costumes.sectionLabel.partType")}>
                     <div className="flex flex-wrap gap-2">
-                        {Object.entries(PART_TYPE_NAMES).map(([key, label]) => (
+                        {Object.keys(PART_TYPE_NAMES).map((key) => (
                             <FilterButton
                                 key={key}
                                 selected={selectedPartTypes.includes(key)}
                                 onClick={() => togglePartType(key)}
                             >
-                                {label}
+                                {t(`common.costume.partTypes.${key}`)}
                             </FilterButton>
                         ))}
                     </div>
                 </FilterSection>
 
-                <FilterSection label="来源">
+                <FilterSection label={t("page.costumes.sectionLabel.source")}>
                     <div className="flex flex-wrap gap-2">
-                        {Object.entries(SOURCE_NAMES).map(([key, label]) => (
+                        {Object.keys(SOURCE_NAMES).map((key) => (
                             <FilterButton
                                 key={key}
                                 selected={selectedSources.includes(key)}
                                 onClick={() => toggleSource(key)}
                             >
-                                {label}
+                                {t(`common.costume.sources.${key}`)}
                             </FilterButton>
                         ))}
                     </div>
@@ -195,33 +197,33 @@ export default function CostumeFilters({
 
             {/* Rarity & Gender */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FilterSection label="稀有度">
+                <FilterSection label={t("page.costumes.sectionLabel.rarity")}>
                     <div className="flex flex-wrap gap-2">
-                        {Object.entries(RARITY_NAMES).map(([key, label]) => (
+                        {Object.keys(RARITY_NAMES).map((key) => (
                             <FilterButton
                                 key={key}
                                 selected={selectedRarities.includes(key)}
                                 onClick={() => toggleRarity(key)}
                             >
-                                {label}
+                                {t(`common.costume.rarities.${key}`)}
                             </FilterButton>
                         ))}
                     </div>
                 </FilterSection>
 
-                <FilterSection label="性别">
+                <FilterSection label={t("page.costumes.sectionLabel.gender")}>
                     <div className="flex flex-wrap gap-2">
                         <FilterButton
                             selected={selectedGenders.includes("female")}
                             onClick={() => toggleGender("female")}
                         >
-                            女性
+                            {t("common.costume.genders.female")}
                         </FilterButton>
                         <FilterButton
                             selected={selectedGenders.includes("male")}
                             onClick={() => toggleGender("male")}
                         >
-                            男性
+                            {t("common.costume.genders.male")}
                         </FilterButton>
                     </div>
                 </FilterSection>

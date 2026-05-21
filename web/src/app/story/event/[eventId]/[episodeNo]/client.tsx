@@ -13,10 +13,12 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { loadEventStoryTranslation, IEventStoryTranslation } from "@/lib/eventStoryTranslation";
 import { loadTranslations } from "@/lib/translations";
 import { mergeStoryTitle } from "@/lib/storyLoader";
+import { useI18n } from "@/contexts/I18nContext";
 
 export default function StoryEventReaderClient() {
     const params = useParams();
     const { assetSource, serverSource, useLLMTranslation } = useTheme();
+    const { t } = useI18n();
     const eventId = parseInt(params.eventId as string);
     const episodeNo = parseInt(params.episodeNo as string);
 
@@ -49,7 +51,7 @@ export default function StoryEventReaderClient() {
                     if (ep) {
                         const title = mergeStoryTitle(ep.title, trans, episodeNo);
                         setTranslatedTitle(title);
-                        const eventName = translationsData?.events?.name?.[event?.name ?? ""] ?? event?.name ?? `活动 ${eventId}`;
+                        const eventName = translationsData?.events?.name?.[event?.name ?? ""] ?? event?.name ?? t("page.story.event.fallbackEventName", { id: eventId });
                         document.title = `${title} - ${eventName} - Moesekai`;
                     }
                 }
@@ -58,7 +60,7 @@ export default function StoryEventReaderClient() {
             }
         }
         load();
-    }, [eventId, episodeNo, serverSource]);
+    }, [eventId, episodeNo, serverSource, t]);
 
     const episode = eventStory?.eventStoryEpisodes.find(ep => ep.episodeNo === episodeNo);
     const prevEpisode = eventStory?.eventStoryEpisodes.find(ep => ep.episodeNo === episodeNo - 1);
@@ -83,7 +85,7 @@ export default function StoryEventReaderClient() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    返回章节列表
+                    {t("page.story.unit.backToChapters")}
                 </Link>
 
                 {/* Header */}
@@ -93,10 +95,10 @@ export default function StoryEventReaderClient() {
                             <img src={getEventLogoUrl(eventStory.assetbundleName, assetSource)} alt="" className="w-16 h-16 object-contain hidden sm:block" />
                         )}
                         <div className="flex-1 min-w-0">
-                            <p className="text-slate-500 text-sm">{eventInfo?.name ?? `活动 ${eventId}`}</p>
+                            <p className="text-slate-500 text-sm">{eventInfo?.name ?? t("page.story.event.fallbackEventName", { id: eventId })}</p>
                             <div className="flex items-center gap-2 flex-wrap">
                                 <h1 className="font-bold text-slate-900 dark:text-slate-100">
-                                    <span className="text-miku">第 {episodeNo} 话</span>
+                                    <span className="text-miku">{t("page.story.event.episodeLabel", { episode: episodeNo })}</span>
                                     {displayTitle && ` — ${displayTitle}`}
                                 </h1>
                                 {useLLMTranslation && translationSource && (
@@ -107,7 +109,7 @@ export default function StoryEventReaderClient() {
                                             ? "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700/50"
                                             : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700"
                                     }`}>
-                                        {translationSource === "official_cn" ? "官方CN" : translationSource === "human" ? (eventId <= 198 ? "AI翻译+人工精校" : "人工翻译") : "AI翻译"}
+                                        {translationSource === "official_cn" ? t("page.story.reader.translationSources.officialCn") : translationSource === "human" ? (eventId <= 198 ? t("page.story.reader.translationSources.aiPolishedShort") : t("page.story.reader.translationSources.human")) : t("page.story.reader.translationSources.ai")}
                                     </span>
                                 )}
                                 <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
@@ -115,7 +117,7 @@ export default function StoryEventReaderClient() {
                                         ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50"
                                         : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50"
                                 }`}>
-                                    {serverSource === "cn" ? "国服" : "日服"}
+                                    {t(`page.story.serverSource.${serverSource}`)}
                                 </span>
                             </div>
                         </div>
@@ -127,20 +129,19 @@ export default function StoryEventReaderClient() {
                     isLoading={isLoading || masterLoading}
                     error={error}
                     missingPaths={missingPaths ?? undefined}
-                    endLabel={`第 ${episodeNo} 话`}
+                    endLabel={t("page.story.event.episodeLabel", { episode: episodeNo })}
                     translationSource={translationSource}
                     storyType="event"
                     storyId={eventId}
                 />
 
-                {/* Episode navigation */}
                 {!isLoading && !masterLoading && (
                     <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-200 dark:border-slate-700 max-w-4xl mx-auto">
                         {prevEpisode ? (
                             <Link href={`/story/event/${eventId}/${prevEpisode.episodeNo}`} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-primary-text hover:bg-miku/10 hover:text-miku transition-colors">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                                 <div className="text-left">
-                                    <div className="text-xs text-slate-400">上一话</div>
+                                    <div className="text-xs text-slate-400">{t("page.story.navigation.previousEpisode")}</div>
                                     <div className="text-sm font-medium">{prevEpisode.title}</div>
                                 </div>
                             </Link>
@@ -148,7 +149,7 @@ export default function StoryEventReaderClient() {
                         {nextEpisode ? (
                             <Link href={`/story/event/${eventId}/${nextEpisode.episodeNo}`} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-primary-text hover:bg-miku/10 hover:text-miku transition-colors">
                                 <div className="text-right">
-                                    <div className="text-xs text-slate-400">下一话</div>
+                                    <div className="text-xs text-slate-400">{t("page.story.navigation.nextEpisode")}</div>
                                     <div className="text-sm font-medium">{nextEpisode.title}</div>
                                 </div>
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>

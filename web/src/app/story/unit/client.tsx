@@ -7,6 +7,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { IUnitProfile } from "@/types/types";
 import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
 import { StoryPageHeader } from "@/components/story/StoryPageHeader";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface IUnitStoryChapterEpisode {
     episodeNo: number;
@@ -32,6 +33,7 @@ function getUnitOutlineLogoUrl(unitCode: string, server: "jp" | "cn"): string {
 
 export default function StoryUnitListClient() {
     const { serverSource } = useTheme();
+    const { t } = useI18n();
     const [units, setUnits] = useState<{ profile: IUnitProfile; story: IUnitStory }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -58,13 +60,13 @@ export default function StoryUnitListClient() {
                 });
                 setUnits(merged);
             } catch (err) {
-                setError(err instanceof Error ? err.message : "加载失败");
+                setError(err instanceof Error ? err.message : t("common.state.loadingFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
         load();
-    }, [serverSource]);
+    }, [serverSource, t]);
 
     return (
         <MainLayout>
@@ -100,7 +102,7 @@ export default function StoryUnitListClient() {
                                         <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-miku transition-colors leading-tight">
                                             {profile.unitName}
                                         </h2>
-                                        <p className="text-xs text-slate-400 mt-0.5">{episodeCount} 话</p>
+                                        <p className="text-xs text-slate-400 mt-0.5">{t("page.story.unit.episodeCount", { count: episodeCount })}</p>
                                     </div>
                                 </Link>
                             );

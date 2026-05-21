@@ -11,10 +11,10 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
     const character = getCharacterMeta(Number(id));
-    if (!character) return { title: "角色详情" };
+    if (!character) return { title: "Character Details" };
 
     const title = character.name;
-    const description = `Project Sekai 角色「${character.name}」详细信息` + DETAIL_SEO_SUFFIX;
+    const description = `Detailed information for Project Sekai character "${character.name}"` + DETAIL_SEO_SUFFIX;
     const ogImage = getCharacterIconUrl(Number(id));
 
     return {
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default function CharacterDetailPage() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载角色详情...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">Loading character details...</div>}>
                 <CharacterDetailClient />
             </Suspense>
         </MainLayout>

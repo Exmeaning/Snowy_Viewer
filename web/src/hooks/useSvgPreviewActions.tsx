@@ -1,6 +1,7 @@
 "use client";
 
 import { RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { useI18n } from "@/contexts/I18nContext";
 import { copyImageBlob, createSvgPreviewBlob, saveImageBlob } from "@/lib/imageActions";
 
 interface UseSvgPreviewActionsOptions {
@@ -14,6 +15,7 @@ export function useSvgPreviewActions({
     previewRef,
     fileName,
 }: UseSvgPreviewActionsOptions) {
+    const { t } = useI18n();
     const [isCopying, setIsCopying] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
@@ -58,7 +60,7 @@ export function useSvgPreviewActions({
     const handleCopy = useCallback(async () => {
         const previewSvg = getPreviewSvg();
         if (!previewSvg) {
-            setErrorMessage("预览图片尚未准备好，请稍后重试");
+            setErrorMessage(t("common.imageActions.previewNotReady"));
             return;
         }
 
@@ -77,16 +79,16 @@ export function useSvgPreviewActions({
                 setCopySuccess(false);
             }, 1800);
         } catch {
-            setErrorMessage("复制失败：当前浏览器可能不支持，请使用保存图片");
+            setErrorMessage(t("common.imageActions.copyFailedUseSave"));
         } finally {
             setIsCopying(false);
         }
-    }, [getPreviewSvg]);
+    }, [getPreviewSvg, t]);
 
     const handleSave = useCallback(async () => {
         const previewSvg = getPreviewSvg();
         if (!previewSvg) {
-            setErrorMessage("预览图片尚未准备好，请稍后重试");
+            setErrorMessage(t("common.imageActions.previewNotReady"));
             return;
         }
 
@@ -105,11 +107,11 @@ export function useSvgPreviewActions({
                 setSaveSuccess(false);
             }, 1800);
         } catch {
-            setErrorMessage("保存失败，请稍后重试");
+            setErrorMessage(t("common.imageActions.saveFailed"));
         } finally {
             setIsSaving(false);
         }
-    }, [fileName, getPreviewSvg]);
+    }, [fileName, getPreviewSvg, t]);
 
     const headerActions = (
         <>
@@ -117,8 +119,8 @@ export function useSvgPreviewActions({
                 onClick={handleCopy}
                 disabled={isCopying || isSaving}
                 className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                aria-label="复制图片"
-                title={isCopying ? "复制中" : copySuccess ? "复制成功" : "复制图片"}
+                aria-label={t("common.imageActions.copyImage")}
+                title={isCopying ? t("common.imageActions.copying") : copySuccess ? t("common.imageActions.copySuccess") : t("common.imageActions.copyImage")}
             >
                 <span className="relative block w-4 h-4">
                     <svg
@@ -152,8 +154,8 @@ export function useSvgPreviewActions({
                 onClick={handleSave}
                 disabled={isSaving || isCopying}
                 className="p-1.5 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                aria-label="保存图片"
-                title={isSaving ? "保存中" : saveSuccess ? "保存完成" : "保存图片"}
+                aria-label={t("common.imageActions.saveImage")}
+                title={isSaving ? t("common.imageActions.saving") : saveSuccess ? t("common.imageActions.saveSuccess") : t("common.imageActions.saveImage")}
             >
                 <span className="relative block w-4 h-4">
                     <svg

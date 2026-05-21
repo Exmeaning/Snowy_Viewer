@@ -10,12 +10,12 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
     const fixture = getFixtureMeta(Number(id));
-    if (!fixture) return { title: "家具详情" };
+    if (!fixture) return { title: "Furniture Details" };
 
     const title = fixture.name;
     const description = fixture.flavor
-        ? `Project Sekai 家具「${fixture.name}」- ${fixture.flavor.slice(0, 100)}` + DETAIL_SEO_SUFFIX
-        : `Project Sekai 家具「${fixture.name}」` + DETAIL_SEO_SUFFIX;
+        ? `Project SEKAI furniture "${fixture.name}" - ${fixture.flavor.slice(0, 100)}` + DETAIL_SEO_SUFFIX
+        : `Project SEKAI furniture "${fixture.name}"` + DETAIL_SEO_SUFFIX;
     const ogImage = getMysekaiFixtureThumbnailUrl(fixture.asset, "main-jp");
 
     return {

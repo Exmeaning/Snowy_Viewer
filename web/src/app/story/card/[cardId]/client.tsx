@@ -12,6 +12,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { fetchStoryAssetFromMirror, StoryAssetMissingError } from "@/lib/storyAsset";
 import { processScenarioForDisplay } from "@/lib/storyLoader";
 import { IProcessedScenarioData } from "@/types/story";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface ICardEpisode {
     id: number; cardId: number;
@@ -22,6 +23,7 @@ interface ICardEpisode {
 export default function StoryCardReaderClient() {
     const params = useParams();
     const { assetSource, serverSource } = useTheme();
+    const { t } = useI18n();
     const cardId = Number(params.cardId);
     const lang: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
 
@@ -59,7 +61,7 @@ export default function StoryCardReaderClient() {
                 setEp1({ title: e1.title, scenarioId: e1.scenarioId });
                 setEp2({ title: e2.title, scenarioId: e2.scenarioId });
 
-                document.title = `${c.prefix} - 卡牌剧情 - Moesekai`;
+                document.title = t("page.story.card.documentTitle", { name: c.prefix });
 
                 // Load both parts
                 const loadPart = async (scenarioId: string, setData: typeof setPart1, setMissing: typeof setMissing1, setErr: typeof setError1) => {
@@ -68,7 +70,7 @@ export default function StoryCardReaderClient() {
                         setData(await processScenarioForDisplay(raw, "card", assetSource, serverSource));
                     } catch (err) {
                         if (err instanceof StoryAssetMissingError) setMissing(err.missingPaths);
-                        else setErr(err instanceof Error ? err.message : "加载失败");
+                        else setErr(err instanceof Error ? err.message : t("common.state.loadingFailed"));
                     }
                 };
 
@@ -81,8 +83,7 @@ export default function StoryCardReaderClient() {
             }
         }
         load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [cardId, lang]);
+    }, [cardId, lang, assetSource, serverSource, t]);
 
     const charaName = chara ? `${chara.firstName ?? ""}${chara.givenName}` : "";
 
@@ -100,7 +101,7 @@ export default function StoryCardReaderClient() {
                                     serverSource === "cn"
                                         ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50"
                                         : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50"
-                                }`}>{serverSource === "cn" ? "国服" : "日服"}</span>
+                                }`}>{t(`page.story.serverSource.${serverSource}`)}</span>
                             </div>
                             {card.gachaPhrase && card.gachaPhrase !== "-" && (
                                 <p className="text-xs text-slate-400 mt-1 italic">「{card.gachaPhrase}」</p>
@@ -115,38 +116,37 @@ export default function StoryCardReaderClient() {
                 {isLoading && (
                     <div className="flex flex-col items-center justify-center py-16">
                         <div className="w-12 h-12 border-4 border-miku/30 border-t-miku rounded-full animate-spin mb-4" />
-                        <p className="text-slate-500">正在加载剧情...</p>
+                        <p className="text-slate-500">{t("page.story.reader.loading")}</p>
                     </div>
                 )}
 
                 {!isLoading && (
                     <div className="max-w-4xl mx-auto">
-                        {/* 导航栏 */}
                         <div className="mb-6 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm text-slate-500 mr-2">目录</span>
+                                <span className="text-sm text-slate-500 mr-2">{t("page.story.card.tableOfContents")}</span>
                                 <button
-                                    onClick={() => document.getElementById('part-前篇')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                                    onClick={() => document.getElementById("part-episode-1")?.scrollIntoView({ behavior: "smooth", block: "start" })}
                                     className="px-3 py-1.5 text-sm font-medium text-miku hover:bg-miku/10 rounded-lg transition-colors"
                                 >
-                                    前篇
+                                    {t("page.story.card.part1")}
                                 </button>
                                 <span className="text-slate-300 dark:text-slate-600">|</span>
                                 <button
-                                    onClick={() => document.getElementById('part-后篇')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                                    onClick={() => document.getElementById("part-episode-2")?.scrollIntoView({ behavior: "smooth", block: "start" })}
                                     className="px-3 py-1.5 text-sm font-medium text-miku hover:bg-miku/10 rounded-lg transition-colors"
                                 >
-                                    后篇
+                                    {t("page.story.card.part2")}
                                 </button>
                             </div>
                         </div>
 
                         <div className="space-y-10">
                             {[
-                                { label: "前篇", title: ep1?.title, data: part1, missing: missing1, err: error1 },
-                                { label: "后篇", title: ep2?.title, data: part2, missing: missing2, err: error2 },
-                            ].map(({ label, title, data, missing, err }) => (
-                                <div key={label} id={`part-${label}`} className="scroll-mt-32">
+                                { id: "episode-1", label: t("page.story.card.part1"), title: ep1?.title, data: part1, missing: missing1, err: error1 },
+                                { id: "episode-2", label: t("page.story.card.part2"), title: ep2?.title, data: part2, missing: missing2, err: error2 },
+                            ].map(({ id, label, title, data, missing, err }) => (
+                                <div key={id} id={`part-${id}`} className="scroll-mt-32">
                                     <div className="flex items-center gap-3 mb-4">
                                         <span className="px-3 py-1 bg-miku/10 text-miku text-sm font-bold rounded-full border border-miku/20">{label}</span>
                                         {title && <h2 className="font-bold text-slate-800 dark:text-slate-200">{title}</h2>}

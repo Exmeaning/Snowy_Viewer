@@ -8,6 +8,7 @@ import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { IGameChara, ICharaProfile } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { fetchStoryAssetFromMirror, StoryAssetMissingError } from "@/lib/storyAsset";
 import { processScenarioForDisplay } from "@/lib/storyLoader";
 import { IProcessedScenarioData } from "@/types/story";
@@ -15,6 +16,7 @@ import { IProcessedScenarioData } from "@/types/story";
 export default function StorySelfReaderClient() {
     const params = useParams();
     const { serverSource, assetSource } = useTheme();
+    const { t } = useI18n();
     const charaId = Number(params.charaId);
     const lang: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
 
@@ -52,12 +54,12 @@ export default function StorySelfReaderClient() {
                         setData(await processScenarioForDisplay(raw, "scenario", assetSource, serverSource));
                     } catch (err) {
                         if (err instanceof StoryAssetMissingError) setMissing(err.missingPaths);
-                        else setErr(err instanceof Error ? err.message : "加载失败");
+                        else setErr(err instanceof Error ? err.message : t("common.state.loadingFailed"));
                     }
                 };
 
                 const charaName = `${c.firstName ?? ""}${c.givenName}`;
-                document.title = `${charaName} - 自我介绍 - Moesekai`;
+                document.title = t("page.story.self.documentTitle", { name: charaName });
 
                 await Promise.all([
                     loadPart(scenarioId1, setYear1, setMissing1, setError1),
@@ -69,9 +71,9 @@ export default function StorySelfReaderClient() {
         }
         load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [charaId, lang]);
+    }, [charaId, lang, t]);
 
-    const charaName = chara ? `${chara.firstName ?? ""}${chara.givenName}` : `角色 ${charaId}`;
+    const charaName = chara ? `${chara.firstName ?? ""}${chara.givenName}` : t("page.story.self.fallbackCharacterName", { id: charaId });
 
     return (
         <MainLayout>
@@ -80,7 +82,7 @@ export default function StorySelfReaderClient() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    返回角色列表
+                    {t("page.story.self.backToCharacters")}
                 </Link>
 
                 <div className="flex items-center gap-4 mb-8 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -92,47 +94,46 @@ export default function StorySelfReaderClient() {
                                 serverSource === "cn"
                                     ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50"
                                     : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50"
-                            }`}>{serverSource === "cn" ? "国服" : "日服"}</span>
+                            }`}>{t(`page.story.serverSource.${serverSource}`)}</span>
                         </div>
-                        <p className="text-sm text-slate-500">自我介绍</p>
+                        <p className="text-sm text-slate-500">{t("page.story.self.subtitle")}</p>
                     </div>
                 </div>
 
                 {isLoading && (
                     <div className="flex flex-col items-center justify-center py-16">
                         <div className="w-12 h-12 border-4 border-miku/30 border-t-miku rounded-full animate-spin mb-4" />
-                        <p className="text-slate-500">正在加载...</p>
+                        <p className="text-slate-500">{t("page.story.self.loading")}</p>
                     </div>
                 )}
 
                 {!isLoading && (
                     <div className="max-w-4xl mx-auto">
-                        {/* 导航栏 */}
                         <div className="mb-6 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm text-slate-500 mr-2">目录</span>
+                                <span className="text-sm text-slate-500 mr-2">{t("page.story.self.tableOfContents")}</span>
                                 <button
-                                    onClick={() => document.getElementById('part-第二学年')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                                    onClick={() => document.getElementById("part-year2")?.scrollIntoView({ behavior: "smooth", block: "start" })}
                                     className="px-3 py-1.5 text-sm font-medium text-miku hover:bg-miku/10 rounded-lg transition-colors"
                                 >
-                                    第二学年
+                                    {t("page.story.self.year2")}
                                 </button>
                                 <span className="text-slate-300 dark:text-slate-600">|</span>
                                 <button
-                                    onClick={() => document.getElementById('part-第一学年')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                                    onClick={() => document.getElementById("part-year1")?.scrollIntoView({ behavior: "smooth", block: "start" })}
                                     className="px-3 py-1.5 text-sm font-medium text-miku hover:bg-miku/10 rounded-lg transition-colors"
                                 >
-                                    第一学年
+                                    {t("page.story.self.year1")}
                                 </button>
                             </div>
                         </div>
 
                         <div className="space-y-10">
                             {[
-                                { label: "第二学年", data: year2, missing: missing2, err: error2 },
-                                { label: "第一学年", data: year1, missing: missing1, err: error1 },
-                            ].map(({ label, data, missing, err }) => (
-                                <div key={label} id={`part-${label}`} className="scroll-mt-32">
+                                { key: "year2", label: t("page.story.self.year2"), data: year2, missing: missing2, err: error2 },
+                                { key: "year1", label: t("page.story.self.year1"), data: year1, missing: missing1, err: error1 },
+                            ].map(({ key, label, data, missing, err }) => (
+                                <div key={key} id={`part-${key}`} className="scroll-mt-32">
                                     <div className="flex items-center gap-3 mb-4">
                                         <span className="px-3 py-1 bg-miku/10 text-miku text-sm font-bold rounded-full border border-miku/20">{label}</span>
                                     </div>

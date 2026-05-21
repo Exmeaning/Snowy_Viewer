@@ -69,17 +69,17 @@ export default function ProfileClient() {
         });
 
 
-        // 自动刷新所有账号的数据（uploadTime、名称、头像等）
+        // Automatically refresh account data (uploadTime, name, avatar, etc.).
         const refreshAllAccounts = async () => {
             const accs = getAccounts();
             for (const acc of accs) {
-                console.log(`刷新账号数据: ${acc.gameId} (${acc.server})`);
+                console.log(`Refreshing account data: ${acc.gameId} (${acc.server})`);
 
                 if (acc.authSource === "oauth2") {
                     try {
                         await refreshOAuthAccountData(acc.id);
                     } catch (error) {
-                        console.warn(`OAuth2 账号 ${acc.gameId} 刷新失败，保留已有数据`, error);
+                        console.warn(`OAuth2 account ${acc.gameId} refresh failed; keeping existing data`, error);
                     }
                     continue;
                 }
@@ -87,7 +87,7 @@ export default function ProfileClient() {
                 const result = await verifyHarukiApi(acc.server, acc.gameId);
 
                 if (!result.success) {
-                    console.warn(`账号 ${acc.gameId} 刷新失败，保留已有数据`);
+                    console.warn(`Account ${acc.gameId} refresh failed; keeping existing data`);
                 } else {
                     const userGamedata = result.userGamedata || null;
                     const userDecks = result.userDecks || null;
@@ -124,7 +124,7 @@ export default function ProfileClient() {
                     });
                 }
             }
-            // 刷新完成后重新加载
+            // Reload after all refreshes finish.
             reload();
         };
 
@@ -164,14 +164,14 @@ export default function ProfileClient() {
         const userMysekaiGates = result.userMysekaiGates || null;
         const uploadTime = result.uploadTime || null;
 
-        // 获取 leader 卡面 ID
+        // Resolve the leader card ID.
         const avatarCardId = getLeaderCardId(userGamedata, userDecks);
         const nickname = userGamedata?.name || "";
         const avatarCharacterId = userCharacters && userCharacters.length > 0
             ? getTopCharacterId(userCharacters)
             : null;
 
-        // 创建账号并设置新字段
+        // Create the account and populate extended fields.
         const account = createAccount(formGameId.trim(), formServer, nickname, avatarCharacterId, userCharacters, true);
         updateAccount(account.id, {
             userCharacters,
@@ -204,7 +204,7 @@ export default function ProfileClient() {
 
     const handleDelete = useCallback((id: string) => {
         void disconnectOAuthAccount(id).catch(() => {
-            // 忽略断开失败，删除本地账号仍应成功
+            // Ignore disconnect failures; local account deletion should still succeed.
         }).finally(() => {
             removeAccount(id);
             setDeleteConfirmId(null);
@@ -314,7 +314,7 @@ export default function ProfileClient() {
                         <div className="space-y-3">
                             {accounts.map((acc) => {
                                 const isActive = acc.id === activeId;
-                                // 优先使用 userGamedata.name，否则使用 nickname
+                                // Prefer userGamedata.name, otherwise use nickname.
                                 const displayName = acc.userGamedata?.name || acc.nickname;
 
                                 return (
@@ -326,7 +326,7 @@ export default function ProfileClient() {
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            {/* Avatar - 使用卡面缩略图 */}
+                                            {/* Avatar - use the leader card thumbnail. */}
                                             <AccountAvatar account={acc} size="lg" className={`ring-2 ring-offset-1 transition-all ${isActive ? "ring-miku/40" : "ring-slate-200"}`} />
 
                                             {/* Info */}
@@ -382,7 +382,7 @@ export default function ProfileClient() {
                                                 {acc.authSource === "oauth2" && (
                                                     <button
                                                         onClick={() => void refreshOAuthAccountData(acc.id).then(reload).catch((error) => {
-                                                            console.warn(`OAuth2 账号 ${acc.gameId} 手动同步失败`, error);
+                                                            console.warn(`OAuth2 account ${acc.gameId} manual sync failed`, error);
                                                             setVerifyError(t("common.harukiErrors.oauthRefreshFailed"));
                                                         })}
                                                         className="px-2.5 py-1.5 text-[11px] font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"

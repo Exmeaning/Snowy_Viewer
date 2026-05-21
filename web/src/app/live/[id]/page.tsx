@@ -10,7 +10,7 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
     const live = getVirtualLiveMeta(Number(id));
-    if (!live) return { title: "虚拟Live详情" };
+    if (!live) return { title: "Virtual Live Detail" };
 
     const title = live.name;
     const description = `Project Sekai 虚拟Live「${live.name}」` + DETAIL_SEO_SUFFIX;

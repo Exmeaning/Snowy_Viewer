@@ -13,6 +13,7 @@ import ExternalLink from "@/components/ExternalLink";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
 
+import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getMusicJacketUrl, MOE_MUSIC_META_URL } from "@/lib/assets";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -148,22 +149,25 @@ const DEFAULT_CARD_CONFIG: Record<string, CardConfigItem> = {
     rarity_birthday: { disable: false, rankMax: true, episodeRead: true, masterMax: false, skillMax: false },
 };
 
-function getErrorMessage(error: string): string {
+type ScoreControlTranslationFn = (key: string, values?: Record<string, string | number | boolean | null | undefined>) => string;
+
+function getErrorMessage(error: string, t: ScoreControlTranslationFn): string {
     switch (error) {
         case "USER_NOT_FOUND":
-            return "用户数据未找到，请确认用户ID/所选服务器是否正确，并已在 Haruki 上传数据。";
+            return t("page.scoreControl.errors.userNotFound");
         case "API_NOT_PUBLIC":
-            return "该用户的公开API未开启，请先在 Haruki 上开启公开API。";
+            return t("page.scoreControl.errors.apiNotPublic");
         case "INVALID_USER_DATA_PAYLOAD":
-            return "读取到的用户数据格式异常，请重新同步 Haruki/OAuth 数据后重试。";
+            return t("page.scoreControl.errors.invalidUserDataPayload");
         default:
-            if (error.includes("404")) return "用户数据未找到 (404)";
-            if (error.includes("403")) return "公开API未开启 (403)";
+            if (error.includes("404")) return t("page.scoreControl.errors.userNotFound404");
+            if (error.includes("403")) return t("page.scoreControl.errors.apiNotPublic403");
             return error;
     }
 }
 
 export default function ScoreControlClient() {
+    const { t, formatDate, formatNumber } = useI18n();
     const { assetSource } = useTheme();
 
     // Music selection state
@@ -221,7 +225,7 @@ export default function ScoreControlClient() {
     const [infiniteSearchDuration, setInfiniteSearchDuration] = useState<number | null>(null);
     const [infiniteSearchUploadTime, setInfiniteSearchUploadTime] = useState<number | null>(null);
 
-    /** 计算路线并设置状态（含 fallback） */
+    /** Compute routes and update state, including fallback results. */
     const computeAndSetRoutes = (
         tp: number, rate: number, bMin: number, bMax: number,
         maxScore: number, bonuses?: number[]
@@ -312,7 +316,7 @@ export default function ScoreControlClient() {
 
         fetchMasterData<CardMasterInfo[]>("cards.json").then(setCardsMaster).catch(console.error);
 
-        // 优先从账号系统读取
+        // Prefer values from the account system.
         const account = getAccount();
         if (account?.toolStates.scoreControl) {
             setDbUserId(account.toolStates.scoreControl.userId);
@@ -347,8 +351,8 @@ export default function ScoreControlClient() {
     const selectedMusicTitle = useMemo(() => {
         if (!musicId) return "";
         const music = musics.find((m) => m.id.toString() === musicId);
-        return music ? music.title : `Music ${musicId}`;
-    }, [musicId, musics]);
+        return music ? music.title : t("page.scoreControl.fallbackMusicTitle", { id: musicId });
+    }, [musicId, musics, t]);
 
     // Handle calculation
     const handleCalculate = useCallback(() => {
@@ -359,15 +363,15 @@ export default function ScoreControlClient() {
         }
 
         if (!selectedEventRate) {
-            setError("请选择歌曲，并确保所选难度有对应Meta数据");
+            setError(t("page.scoreControl.errors.musicMetaRequired"));
             return;
         }
         if (!targetPT || targetPT <= 0) {
-            setError("请输入有效的目标活动PT");
+            setError(t("page.scoreControl.errors.invalidTargetPt"));
             return;
         }
         if (minBonus > maxBonus) {
-            setError("加成下限不能大于上限");
+            setError(t("page.scoreControl.errors.invalidBonusRange"));
             return;
         }
 
@@ -387,8 +391,8 @@ export default function ScoreControlClient() {
 
                     computeAndSetRoutes(targetPT, selectedEventRate, bonusMin, bonusMax, 3000000);
                 } catch (err: unknown) {
-                    const message = err instanceof Error ? err.message : "计算出错";
-                    setError(message);
+                    const message = err instanceof Error ? err.message : t("page.scoreControl.errors.calculationFailedUnknown");
+                    setError(t("page.scoreControl.errors.calculationFailed", { message }));
                     setSmartRoutes(null);
                     setFallbackResults(null);
                 } finally {
@@ -400,12 +404,12 @@ export default function ScoreControlClient() {
         // === Deck Builder: start multi-worker if enabled ===
         if (deckBuilderEnabled) {
             if (!dbUserId.trim()) {
-                setDbError("请输入用户ID");
+                setDbError(t("page.scoreControl.errors.userRequired"));
                 setIsCalculating(false);
                 return;
             }
             if (!dbEventId.trim()) {
-                setDbError("请选择活动");
+                setDbError(t("page.scoreControl.errors.eventRequired"));
                 setIsCalculating(false);
                 return;
             }
@@ -514,7 +518,7 @@ export default function ScoreControlClient() {
                     if (data.error) {
                         if (!hasError) {
                             hasError = true;
-                            setDbError(getErrorMessage(data.error));
+                            setDbError(getErrorMessage(data.error, t));
                             // Fallback routes
                             try {
                                 computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 3000000);
@@ -542,7 +546,7 @@ export default function ScoreControlClient() {
                     completedCount++;
                     if (!hasError) {
                         hasError = true;
-                        setDbError(`Worker 错误: ${err.message}`);
+                        setDbError(t("page.scoreControl.errors.workerError", { message: err.message }));
                     }
                     if (completedCount >= chunks.length) {
                         stopFakeProgress(setDbFakeProgress, dbFakeProgressTimerRef, false);
@@ -571,14 +575,14 @@ export default function ScoreControlClient() {
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedEventRate, targetPT, minBonus, maxBonus, deckBuilderEnabled, dbUserId, dbServer, dbEventId, dbLiveType, dbSupportCharacterId, musicId, difficulty, dbCardConfig, smartRoutes, infiniteSearchEnabled]);
+    }, [selectedEventRate, targetPT, minBonus, maxBonus, deckBuilderEnabled, dbUserId, dbServer, dbEventId, dbLiveType, dbSupportCharacterId, musicId, difficulty, dbCardConfig, smartRoutes, infiniteSearchEnabled, t]);
 
     // ====== Infinite Song Search Logic (Concurrent Worker Pool) ======
     const handleInfiniteSearch = useCallback(async () => {
         if (!musicMetas.length || !musics.length) return;
-        if (!dbUserId.trim()) { setDbError("请输入用户ID"); return; }
-        if (!dbEventId.trim()) { setDbError("请选择活动"); return; }
-        if (!targetPT || targetPT <= 0) { setError("请输入有效的目标活动PT"); return; }
+        if (!dbUserId.trim()) { setDbError(t("page.scoreControl.errors.userRequired")); return; }
+        if (!dbEventId.trim()) { setDbError(t("page.scoreControl.errors.eventRequired")); return; }
+        if (!targetPT || targetPT <= 0) { setError(t("page.scoreControl.errors.invalidTargetPt")); return; }
 
         infiniteSearchCancelledRef.current = false;
         setInfiniteSearchRunning(true);
@@ -639,7 +643,7 @@ export default function ScoreControlClient() {
                 rate,
                 songsAtRate,
                 firstMusicId: firstMeta.music_id,
-                firstSongTitle: firstSongInfo ? firstSongInfo.title : `Music ${firstMeta.music_id}`,
+                firstSongTitle: firstSongInfo ? firstSongInfo.title : t("page.scoreControl.fallbackMusicTitle", { id: firstMeta.music_id }),
             });
         }
 
@@ -692,7 +696,7 @@ export default function ScoreControlClient() {
                                 const info = musics.find((mu) => mu.id === m.music_id);
                                 return {
                                     musicId: m.music_id,
-                                    musicTitle: info ? info.title : `Music ${m.music_id}`,
+                                    musicTitle: info ? info.title : t("page.scoreControl.fallbackMusicTitle", { id: m.music_id }),
                                     assetbundleName: info ? info.assetbundleName : "",
                                 };
                             });
@@ -711,7 +715,7 @@ export default function ScoreControlClient() {
                         currentRate: task.rate,
                         totalChecked,
                         found: collected.length,
-                        currentSongTitle: `${task.firstSongTitle} (系数${task.rate}%)`,
+                        currentSongTitle: t("page.scoreControl.currentSongWithRate", { title: task.firstSongTitle, rate: task.rate }),
                     });
 
                     resolve();
@@ -781,7 +785,7 @@ export default function ScoreControlClient() {
         setInfiniteSearchRunning(false);
         setInfiniteSearchProgress(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [musicMetas, musics, difficulty, dbUserId, dbServer, dbEventId, dbLiveType, dbSupportCharacterId, dbCardConfig, minBonus, maxBonus, targetPT]);
+    }, [musicMetas, musics, difficulty, dbUserId, dbServer, dbEventId, dbLiveType, dbSupportCharacterId, dbCardConfig, minBonus, maxBonus, targetPT, t]);
 
     const handleCancelInfiniteSearch = useCallback(() => {
         infiniteSearchCancelledRef.current = true;
@@ -852,10 +856,10 @@ export default function ScoreControlClient() {
             <table className="w-full text-sm">
                 <thead>
                     <tr className="text-xs text-slate-400 border-b border-slate-50">
-                        <th className="text-left px-5 py-2.5 font-medium">卡组活动加成</th>
-                        <th className="text-left px-5 py-2.5 font-medium">得分下界</th>
-                        <th className="text-left px-5 py-2.5 font-medium">得分上界</th>
-                        <th className="text-left px-5 py-2.5 font-medium">得分窗口</th>
+                        <th className="text-left px-5 py-2.5 font-medium">{t("page.scoreControl.table.eventBonus")}</th>
+                        <th className="text-left px-5 py-2.5 font-medium">{t("page.scoreControl.table.scoreMin")}</th>
+                        <th className="text-left px-5 py-2.5 font-medium">{t("page.scoreControl.table.scoreMax")}</th>
+                        <th className="text-left px-5 py-2.5 font-medium">{t("page.scoreControl.table.scoreWindow")}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -869,7 +873,7 @@ export default function ScoreControlClient() {
                                         <span className="font-bold text-primary-text">{r.eventBonus}%</span>
                                         {isAFK && (
                                             <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">
-                                                放置
+                                                {t("page.scoreControl.table.afk")}
                                             </span>
                                         )}
                                     </span>
@@ -878,11 +882,11 @@ export default function ScoreControlClient() {
                                     {isAFK ? (
                                         <span className="text-emerald-600 font-bold">0</span>
                                     ) : (
-                                        r.scoreMin.toLocaleString()
+                                        formatNumber(r.scoreMin)
                                     )}
                                 </td>
                                 <td className="px-5 py-2.5 font-mono text-slate-600">
-                                    {r.scoreMax.toLocaleString()}
+                                    {formatNumber(r.scoreMax)}
                                 </td>
                                 <td className="px-5 py-2.5">
                                     <div className="flex items-center gap-2">
@@ -896,9 +900,9 @@ export default function ScoreControlClient() {
                                         </div>
                                         <span className="text-xs text-slate-400 font-mono whitespace-nowrap">
                                             {isAFK ? (
-                                                <span className="text-emerald-500">可放置</span>
+                                                <span className="text-emerald-500">{t("page.scoreControl.table.afkAvailable")}</span>
                                             ) : (
-                                                <>+/-{Math.floor((r.scoreMax - r.scoreMin) / 2).toLocaleString()}</>
+                                                <>+/-{formatNumber(Math.floor((r.scoreMax - r.scoreMin) / 2))}</>
                                             )}
                                         </span>
                                     </div>
@@ -917,13 +921,13 @@ export default function ScoreControlClient() {
                 {/* Page Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                        <span className="text-miku text-xs font-bold tracking-widest uppercase">Score Control</span>
+                        <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.scoreControl.badge")}</span>
                     </div>
                     <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                        控分<span className="text-miku">计算器</span>
+                        {t("page.scoreControl.title")}<span className="text-miku">{t("page.scoreControl.titleHighlight")}</span>
                     </h1>
                     <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm sm:text-base">
-                        输入目标活动PT，智能规划放置路线
+                        {t("page.scoreControl.description")}
                     </p>
                 </div>
 
@@ -931,7 +935,7 @@ export default function ScoreControlClient() {
                 <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6">
                     <h2 className="text-lg font-bold text-primary-text mb-4 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-miku rounded-full"></span>
-                        歌曲与目标
+                        {t("page.scoreControl.musicAndTarget")}
                     </h2>
 
                     {/* Song + Difficulty */}
@@ -945,12 +949,12 @@ export default function ScoreControlClient() {
                             />
                             {musicId && selectedEventRate === null && (
                                 <p className="mt-1 text-xs text-amber-500">
-                                    该歌曲的 {difficulty.toUpperCase()} 难度暂无Meta数据
+                                    {t("page.scoreControl.noMetaForDifficulty", { difficulty: difficulty.toUpperCase() })}
                                 </p>
                             )}
                             {selectedEventRate !== null && (
                                 <p className="mt-1 text-xs text-slate-400">
-                                    歌曲PT系数: <span className="font-bold text-miku">{selectedEventRate}%</span>
+                                    {t("page.scoreControl.musicRate", { rate: selectedEventRate })}
                                 </p>
                             )}
                         </div>
@@ -960,7 +964,7 @@ export default function ScoreControlClient() {
                                     <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    难度选择不影响控分结果
+                                    {t("page.scoreControl.difficultyIrrelevant")}
                                 </span>
                             </p>
                         </div>
@@ -970,7 +974,7 @@ export default function ScoreControlClient() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                                目标活动PT <span className="text-red-400">*</span>
+                                {t("page.scoreControl.targetPt")} <span className="text-red-400">*</span>
                             </label>
                             <input
                                 type="number"
@@ -981,12 +985,12 @@ export default function ScoreControlClient() {
                                 className="sc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                             />
                             <p className="mt-1 text-xs text-slate-400">
-                                希望获得的活动PT点数
+                                {t("page.scoreControl.targetPtHint")}
                             </p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                                加成下限 (%)
+                                {t("page.scoreControl.minBonus")}
                             </label>
                             <input
                                 type="number"
@@ -998,12 +1002,12 @@ export default function ScoreControlClient() {
                                 className="sc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                             />
                             <p className="mt-1 text-xs text-slate-400">
-                                卡组活动加成最低值
+                                {t("page.scoreControl.minBonusHint")}
                             </p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                                加成上限 (%)
+                                {t("page.scoreControl.maxBonus")}
                             </label>
                             <input
                                 type="number"
@@ -1015,7 +1019,7 @@ export default function ScoreControlClient() {
                                 className="sc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                             />
                             <p className="mt-1 text-xs text-slate-400">
-                                卡组活动加成最高值
+                                {t("page.scoreControl.maxBonusHint")}
                             </p>
                         </div>
                     </div>
@@ -1024,8 +1028,8 @@ export default function ScoreControlClient() {
                     <div className="mb-5 p-4 rounded-xl border border-slate-200/60 bg-slate-50/50">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold text-primary-text">控分组卡</span>
-                                <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">Beta</span>
+                                <span className="text-sm font-bold text-primary-text">{t("page.scoreControl.deckBuilder")}</span>
+                                <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">{t("page.scoreControl.beta")}</span>
                             </div>
                             <button
                                 onClick={() => setDeckBuilderEnabled(!deckBuilderEnabled)}
@@ -1039,7 +1043,7 @@ export default function ScoreControlClient() {
                                 <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                                 </svg>
-                                <span>启用控分组卡时，计算时间将大幅增加，请尽量采用 PC / iPad；没有计算出来是算法的问题，因为它正在测试，你仍然可以尝试在游戏手动组卡</span>
+                                <span>{t("page.scoreControl.deckBuilderWarning")}</span>
                             </div>
                         )}
                     </div>
@@ -1049,7 +1053,7 @@ export default function ScoreControlClient() {
                         <div className="mb-5 space-y-4 p-4 rounded-xl border border-miku/20 bg-miku/5">
                             <h3 className="text-sm font-bold text-primary-text flex items-center gap-2">
                                 <span className="w-1 h-4 bg-miku rounded-full"></span>
-                                控分组卡设置
+                                {t("page.scoreControl.deckBuilderSettings")}
                             </h3>
 
                             {/* Account Selector + User ID + Server */}
@@ -1069,7 +1073,7 @@ export default function ScoreControlClient() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        用户ID <span className="text-red-400">*</span>
+                                        {t("page.scoreControl.userId")} <span className="text-red-400">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -1078,11 +1082,11 @@ export default function ScoreControlClient() {
                                             setDbUserId(e.target.value);
                                             if (dbAllowSave) localStorage.setItem("deck_recommend_userid", e.target.value);
                                         }}
-                                        placeholder="输入游戏ID"
+                                        placeholder={t("page.scoreControl.userIdPlaceholder")}
                                         className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                                     />
                                     <div className="flex items-center justify-between mt-2 px-1">
-                                        <span className="text-xs text-slate-500">保存在浏览器本地</span>
+                                        <span className="text-xs text-slate-500">{t("page.scoreControl.saveLocally")}</span>
                                         <button
                                             onClick={() => {
                                                 const n = !dbAllowSave;
@@ -1102,11 +1106,11 @@ export default function ScoreControlClient() {
                                         </button>
                                     </div>
                                     <p className="mt-1 text-xs text-slate-400">
-                                        需先在 <ExternalLink href="https://haruki.seiunx.com" className="text-miku hover:underline">Haruki工具箱</ExternalLink> 上传数据并开启公开API
+                                        {t("page.scoreControl.harukiHintStart")} <ExternalLink href="https://haruki.seiunx.com" className="text-miku hover:underline">{t("page.scoreControl.harukiToolbox")}</ExternalLink> {t("page.scoreControl.harukiHintEnd")}
                                     </p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">服务器</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.scoreControl.server")}</label>
                                     <div className="flex flex-wrap gap-2">
                                         {SERVER_OPTIONS.map((s) => (
                                             <button
@@ -1131,7 +1135,7 @@ export default function ScoreControlClient() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        活动 <span className="text-red-400">*</span>
+                                        {t("page.scoreControl.event")} <span className="text-red-400">*</span>
                                     </label>
                                     <EventSelector
                                         selectedEventId={dbEventId}
@@ -1154,19 +1158,19 @@ export default function ScoreControlClient() {
                                     >
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                     </svg>
-                                    卡牌养成设置
+                                    {t("page.scoreControl.cardTrainingSettings")}
                                 </button>
                                 {dbShowCardConfig && (
                                     <div className="mt-3 overflow-x-auto">
                                         <table className="dr-config-table w-full text-sm">
                                             <thead>
                                                 <tr>
-                                                    <th className="text-left py-2 px-2 text-slate-500 font-medium">稀有度</th>
-                                                    <th className="py-2 px-2 text-slate-500 font-medium">禁用</th>
-                                                    <th className="py-2 px-2 text-slate-500 font-medium">满级</th>
-                                                    <th className="py-2 px-2 text-slate-500 font-medium">前后篇</th>
-                                                    <th className="py-2 px-2 text-slate-500 font-medium">满突破</th>
-                                                    <th className="py-2 px-2 text-slate-500 font-medium">满技能</th>
+                                                    <th className="text-left py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.rarity")}</th>
+                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.disable")}</th>
+                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.maxLevel")}</th>
+                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.episodes")}</th>
+                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.maxMaster")}</th>
+                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.maxSkill")}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1217,8 +1221,8 @@ export default function ScoreControlClient() {
                             <div className="mt-4 p-3 rounded-xl border border-orange-200/60 bg-orange-50/30">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-sm font-bold text-primary-text">无限查找</span>
-                                        <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">实验性</span>
+                                        <span className="text-sm font-bold text-primary-text">{t("page.scoreControl.infiniteSearch")}</span>
+                                        <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">{t("page.scoreControl.experimental")}</span>
                                     </div>
                                     <button
                                         onClick={() => setInfiniteSearchEnabled(!infiniteSearchEnabled)}
@@ -1233,10 +1237,10 @@ export default function ScoreControlClient() {
                                             <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                                             </svg>
-                                            <span>此功能会按歌曲PT系数从100%到130%逐一搜索可组出纯放置路线的歌曲，耗费极多时间（可能需要数十分钟），找到10个结果后停止。手机端可能会出现性能问题，请使用 PC / iPad 运行。</span>
+                                            <span>{t("page.scoreControl.infiniteWarning")}</span>
                                         </div>
-                                        <p className="text-[10px] text-slate-400">搜索系数: 100%, 103%~128%, 130% · 跳过 101%, 102%, 129% (无歌曲)</p>
-                                        <p className="text-[10px] text-slate-500">开启后点击下方「无限查找」按钮即可开始搜索，歌曲选择将被忽略。</p>
+                                        <p className="text-[10px] text-slate-400">{t("page.scoreControl.searchRatesHint")}</p>
+                                        <p className="text-[10px] text-slate-500">{t("page.scoreControl.infiniteStartHint")}</p>
                                         {infiniteSearchRunning && (
                                             <button
                                                 onClick={handleCancelInfiniteSearch}
@@ -1245,7 +1249,7 @@ export default function ScoreControlClient() {
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
-                                                停止搜索
+                                                {t("page.scoreControl.stopSearch")}
                                             </button>
                                         )}
                                     </div>
@@ -1266,14 +1270,14 @@ export default function ScoreControlClient() {
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                 </svg>
-                                {infiniteSearchRunning ? "搜索中..." : "计算中..."}
+                                {infiniteSearchRunning ? t("page.scoreControl.searching") : t("page.scoreControl.calculating")}
                             </>
                         ) : (
                             <>
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
-                                {infiniteSearchEnabled && deckBuilderEnabled ? "无限查找" : "智能计算"}
+                                {infiniteSearchEnabled && deckBuilderEnabled ? t("page.scoreControl.infiniteSearchButton") : t("page.scoreControl.smartCalculate")}
                             </>
                         )}
                     </button>
@@ -1294,16 +1298,16 @@ export default function ScoreControlClient() {
                 {/* Deck Builder Duration & Upload Time - above results */}
                 {deckBuilderEnabled && !dbIsCalculating && (dbDuration !== null || dbUploadTime) && (
                     <div className="flex items-center gap-3 mb-3 flex-wrap">
-                        {dbDuration !== null && <span className="text-xs text-slate-400">计算耗时 {(dbDuration / 1000).toFixed(1)}s</span>}
-                        {dbUploadTime && <span className="text-xs text-slate-400">数据时间: {new Date(dbUploadTime * 1000).toLocaleString()}</span>}
+                        {dbDuration !== null && <span className="text-xs text-slate-400">{t("page.scoreControl.calculationDuration", { seconds: (dbDuration / 1000).toFixed(1) })}</span>}
+                        {dbUploadTime && <span className="text-xs text-slate-400">{t("page.scoreControl.dataTime", { time: formatDate(dbUploadTime * 1000, { dateStyle: "short", timeStyle: "short" }) })}</span>}
                     </div>
                 )}
 
                 {/* Infinite Search Duration - above results */}
                 {infiniteSearchEnabled && deckBuilderEnabled && !infiniteSearchRunning && (infiniteSearchDuration !== null || infiniteSearchUploadTime) && (
                     <div className="flex items-center gap-3 mb-3 flex-wrap">
-                        {infiniteSearchDuration !== null && <span className="text-xs text-slate-400">搜索耗时 {(infiniteSearchDuration / 1000).toFixed(1)}s</span>}
-                        {infiniteSearchUploadTime && <span className="text-xs text-slate-400">数据时间: {new Date(infiniteSearchUploadTime * 1000).toLocaleString()}</span>}
+                        {infiniteSearchDuration !== null && <span className="text-xs text-slate-400">{t("page.scoreControl.searchDuration", { seconds: (infiniteSearchDuration / 1000).toFixed(1) })}</span>}
+                        {infiniteSearchUploadTime && <span className="text-xs text-slate-400">{t("page.scoreControl.dataTime", { time: formatDate(infiniteSearchUploadTime * 1000, { dateStyle: "short", timeStyle: "short" }) })}</span>}
                     </div>
                 )}
 
@@ -1313,13 +1317,13 @@ export default function ScoreControlClient() {
                         <div className="flex items-center gap-3 mb-4">
                             <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                                 <span className="w-1.5 h-6 bg-gradient-to-b from-emerald-400 to-miku rounded-full"></span>
-                                智能路线规划
+                                {t("page.scoreControl.smartRoutesTitle")}
                             </h2>
                             <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-full">
-                                {smartRoutes.length} 条路线
+                                {t("page.scoreControl.routeCount", { count: formatNumber(smartRoutes.length) })}
                             </span>
                             <span className="text-xs text-slate-400">
-                                加成范围 {minBonus}% ~ {maxBonus}%
+                                {t("page.scoreControl.bonusRange", { min: minBonus, max: maxBonus })}
                             </span>
                         </div>
 
@@ -1334,21 +1338,21 @@ export default function ScoreControlClient() {
                                         >
                                             <div className="flex items-center gap-2.5 flex-wrap min-w-0">
                                                 <span className="text-sm font-black text-primary-text whitespace-nowrap">
-                                                    路线 {idx + 1}
+                                                    {t("page.scoreControl.routeLabel", { index: idx + 1 })}
                                                 </span>
                                                 {plan.isPureAFK ? (
                                                     <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full whitespace-nowrap">
-                                                        纯放置
+                                                        {t("page.scoreControl.pureAfk")}
                                                     </span>
                                                 ) : (
                                                     <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full whitespace-nowrap">
-                                                        放置+控分
+                                                        {t("page.scoreControl.afkAndControl")}
                                                     </span>
                                                 )}
                                                 <span className="text-xs text-slate-400 whitespace-nowrap">
-                                                    {plan.totalPlays} 场游戏
+                                                    {t("page.scoreControl.playCount", { count: formatNumber(plan.totalPlays) })}
                                                     {plan.afkCount > 0 && (
-                                                        <span className="text-emerald-500 ml-1">({plan.afkCount} 场放置)</span>
+                                                        <span className="text-emerald-500 ml-1">{t("page.scoreControl.afkPlayCount", { count: formatNumber(plan.afkCount) })}</span>
                                                     )}
                                                 </span>
                                                 <span className="text-xs font-bold text-orange-500 whitespace-nowrap">
@@ -1366,37 +1370,37 @@ export default function ScoreControlClient() {
                                                     <div key={si} className={`rounded-xl p-4 border ${step.isAFK ? "bg-emerald-50/60 border-emerald-200/50" : "bg-blue-50/60 border-blue-200/50"}`}>
                                                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                                                             <span className={`text-xs font-bold px-2 py-0.5 rounded ${step.isAFK ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
-                                                                {step.isAFK ? "放置" : "控分"}
+                                                                {step.isAFK ? t("page.scoreControl.stepAfk") : t("page.scoreControl.stepControl")}
                                                             </span>
                                                             <span className="text-sm font-bold text-primary-text">x{step.count}</span>
-                                                            <span className="text-xs text-slate-400">每次 {step.pt} PT</span>
+                                                            <span className="text-xs text-slate-400">{t("page.scoreControl.eachTimePt", { pt: formatNumber(step.pt) })}</span>
                                                             <span className="text-xs text-slate-400">
-                                                                小计 <span className="font-bold text-primary-text">{step.pt * step.count} PT</span>
+                                                                {t("page.scoreControl.subtotal")} <span className="font-bold text-primary-text">{formatNumber(step.pt * step.count)} PT</span>
                                                             </span>
                                                         </div>
                                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                                                             <div>
-                                                                <span className="text-slate-400">火罐</span>
+                                                                <span className="text-slate-400">{t("page.scoreControl.fire")}</span>
                                                                 <div className="font-bold text-primary-text mt-0.5">{fireLabel(step.boost)} <span className="text-slate-400 font-normal">x{step.boostRate}</span></div>
                                                             </div>
                                                             <div>
-                                                                <span className="text-slate-400">卡组加成</span>
+                                                                <span className="text-slate-400">{t("page.scoreControl.deckBonus")}</span>
                                                                 <div className="font-bold text-primary-text mt-0.5">{step.eventBonus}%</div>
                                                             </div>
                                                             <div>
-                                                                <span className="text-slate-400">得分范围</span>
+                                                                <span className="text-slate-400">{t("page.scoreControl.scoreRange")}</span>
                                                                 <div className="font-bold text-primary-text mt-0.5 font-mono">
-                                                                    {step.isAFK ? <span className="text-emerald-600">0 ~ {step.scoreMax.toLocaleString()}</span> : <span>{step.scoreMin.toLocaleString()} ~ {step.scoreMax.toLocaleString()}</span>}
+                                                                    {step.isAFK ? <span className="text-emerald-600">0 ~ {formatNumber(step.scoreMax)}</span> : <span>{formatNumber(step.scoreMin)} ~ {formatNumber(step.scoreMax)}</span>}
                                                                 </div>
                                                             </div>
                                                             <div>
-                                                                <span className="text-slate-400">操作</span>
+                                                                <span className="text-slate-400">{t("page.scoreControl.action")}</span>
                                                                 <div className="font-bold mt-0.5">
                                                                     {step.isAFK ? (
-                                                                        <span className="text-emerald-600">直接放置即可</span>
+                                                                        <span className="text-emerald-600">{t("page.scoreControl.afkAction")}</span>
                                                                     ) : (
                                                                         <span className="text-blue-600">
-                                                                            {step.scoreMin === step.scoreMax ? <>目标得分 {step.scoreMin.toLocaleString()}</> : <>控分到 {step.scoreMin.toLocaleString()}~{step.scoreMax.toLocaleString()}</>}
+                                                                            {step.scoreMin === step.scoreMax ? <>{t("page.scoreControl.targetScore", { score: formatNumber(step.scoreMin) })}</> : <>{t("page.scoreControl.controlToRange", { min: formatNumber(step.scoreMin), max: formatNumber(step.scoreMax) })}</>}
                                                                         </span>
                                                                     )}
                                                                 </div>
@@ -1405,8 +1409,8 @@ export default function ScoreControlClient() {
                                                         {dbResultsByBonus && dbResultsByBonus[step.eventBonus] && (
                                                             <div className="mt-2 pt-2 border-t border-slate-100/50">
                                                                 <div className="text-[10px] text-slate-400 mb-1 flex items-center justify-between">
-                                                                    <span>推荐卡组 (加成 {step.eventBonus}%)</span>
-                                                                    <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{dbResultsByBonus[step.eventBonus].length} 个方案</span>
+                                                                    <span>{t("page.scoreControl.recommendedDeckWithBonus", { bonus: step.eventBonus })}</span>
+                                                                    <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{t("page.scoreControl.planCount", { count: formatNumber(dbResultsByBonus[step.eventBonus].length) })}</span>
                                                                 </div>
                                                                 <div className="space-y-2">
                                                                     {dbResultsByBonus[step.eventBonus].map((deck, deckIdx: number) => (
@@ -1422,9 +1426,9 @@ export default function ScoreControlClient() {
                                                     </div>
                                                 ))}
                                                 <div className="flex items-center justify-end gap-2 pt-1">
-                                                    <span className="text-xs text-slate-400">总计:</span>
-                                                    <span className="text-sm font-black text-orange-500 font-mono">{plan.steps.reduce((sum, s) => sum + s.pt * s.count, 0)} PT</span>
-                                                    <span className="text-emerald-500 text-xs font-bold">恰好达成</span>
+                                                    <span className="text-xs text-slate-400">{t("page.scoreControl.total")}</span>
+                                                    <span className="text-sm font-black text-orange-500 font-mono">{formatNumber(plan.steps.reduce((sum, s) => sum + s.pt * s.count, 0))} PT</span>
+                                                    <span className="text-emerald-500 text-xs font-bold">{t("page.scoreControl.exactlyAchieved")}</span>
                                                 </div>
                                             </div>
                                         )}
@@ -1442,15 +1446,15 @@ export default function ScoreControlClient() {
                             <div className="flex items-start gap-3">
                                 <svg className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <div>
-                                    <p className="text-sm font-medium text-amber-800">未找到放置路线方案，以下是常规单次达成方案</p>
-                                    <p className="text-xs text-amber-600 mt-0.5">加成范围 {minBonus}% ~ {maxBonus}% · 目标 {targetPT} PT</p>
+                                    <p className="text-sm font-medium text-amber-800">{t("page.scoreControl.fallbackNotice")}</p>
+                                    <p className="text-xs text-amber-600 mt-0.5">{t("page.scoreControl.fallbackSummary", { min: minBonus, max: maxBonus, target: formatNumber(targetPT) })}</p>
                                 </div>
                             </div>
                         </div>
                         {fallbackResults.length === 0 ? (
                             <div className="glass-card p-8 rounded-2xl text-center">
-                                <p className="text-slate-500 font-medium">未找到满足条件的方案</p>
-                                <p className="text-xs text-slate-400 mt-1">尝试调整目标PT、加成范围或更换歌曲</p>
+                                <p className="text-slate-500 font-medium">{t("page.scoreControl.noPlan")}</p>
+                                <p className="text-xs text-slate-400 mt-1">{t("page.scoreControl.noPlanHint")}</p>
                             </div>
                         ) : (
                             <>
@@ -1458,14 +1462,14 @@ export default function ScoreControlClient() {
                                     <div className="flex items-center justify-between flex-wrap gap-2">
                                         <div className="flex items-center gap-3">
                                             <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
-                                                <span className="w-1.5 h-6 bg-miku rounded-full"></span>常规单次方案
+                                                <span className="w-1.5 h-6 bg-miku rounded-full"></span>{t("page.scoreControl.fallbackTitle")}
                                             </h2>
-                                            <span className="px-2.5 py-1 bg-miku/10 text-miku text-xs font-bold rounded-full">{fallbackCount} 种方案</span>
+                                            <span className="px-2.5 py-1 bg-miku/10 text-miku text-xs font-bold rounded-full">{t("page.scoreControl.planCount", { count: formatNumber(fallbackCount) })}</span>
                                         </div>
                                         <div className="text-xs text-slate-400 flex items-center gap-2 flex-wrap">
-                                            <span>目标PT: <span className="font-bold text-orange-500">{targetPT}</span></span>
+                                            <span>{t("page.scoreControl.targetPtLabel", { target: formatNumber(targetPT) })}</span>
                                             <span>·</span>
-                                            <span>歌曲系数: {selectedEventRate}%</span>
+                                            <span>{t("page.scoreControl.songRateLabel", { rate: selectedEventRate })}</span>
                                             {selectedMusicTitle && (<><span>·</span><span className="truncate max-w-[200px]">{selectedMusicTitle}</span></>)}
                                         </div>
                                     </div>
@@ -1475,9 +1479,9 @@ export default function ScoreControlClient() {
                                         <div className="sc-boost-header px-5 py-3 border-b border-slate-100 flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <span className="text-lg">{group.label}</span>
-                                                <span className="text-xs text-slate-400">倍率 x{group.boostRate}</span>
+                                                <span className="text-xs text-slate-400">{t("page.scoreControl.multiplier", { rate: group.boostRate })}</span>
                                             </div>
-                                            <span className="text-xs text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full">{group.results.length} 种方案</span>
+                                            <span className="text-xs text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full">{t("page.scoreControl.planCount", { count: formatNumber(group.results.length) })}</span>
                                         </div>
                                         {renderResultsTable(group.results)}
                                     </div>
@@ -1490,8 +1494,8 @@ export default function ScoreControlClient() {
                 {/* No results at all */}
                 {smartRoutes !== null && smartRoutes.length === 0 && fallbackResults === null && (
                     <div className="glass-card p-8 rounded-2xl text-center sc-result-enter">
-                        <p className="text-slate-500 font-medium">未找到满足条件的方案</p>
-                        <p className="text-xs text-slate-400 mt-1">尝试调整目标PT、加成范围或更换歌曲</p>
+                        <p className="text-slate-500 font-medium">{t("page.scoreControl.noPlan")}</p>
+                        <p className="text-xs text-slate-400 mt-1">{t("page.scoreControl.noPlanHint")}</p>
                     </div>
                 )}
 
@@ -1506,8 +1510,8 @@ export default function ScoreControlClient() {
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                     </svg>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-primary-text">正在搜索满足条件的卡组...</p>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">使用 {Math.min(navigator.hardwareConcurrency || 4, 4)} 个并行线程计算</p>
+                                        <p className="text-sm font-medium text-primary-text">{t("page.scoreControl.searchingDecks")}</p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">{t("page.scoreControl.parallelWorkers", { count: Math.min(navigator.hardwareConcurrency || 4, 4) })}</p>
                                     </div>
                                     <span className="text-xs font-bold text-miku tabular-nums">{Math.round(dbFakeProgress)}%</span>
                                 </div>
@@ -1526,8 +1530,8 @@ export default function ScoreControlClient() {
                         )}
                         {!dbIsCalculating && dbResults !== null && dbResults.length === 0 && (
                             <div className="glass-card p-6 rounded-2xl text-center">
-                                <p className="text-slate-500 font-medium text-sm">未找到匹配目标加成的卡组</p>
-                                <p className="text-xs text-slate-400 mt-1">请尝试调整加成范围，或检查是否启用了足够的卡牌用于计算</p>
+                                <p className="text-slate-500 font-medium text-sm">{t("page.scoreControl.noMatchingDeck")}</p>
+                                <p className="text-xs text-slate-400 mt-1">{t("page.scoreControl.noMatchingDeckHint")}</p>
                             </div>
                         )}
                     </div>
@@ -1543,27 +1547,27 @@ export default function ScoreControlClient() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                     </svg>
-                                    <span className="text-sm font-bold text-primary-text">无限组卡进行中...</span>
+                                    <span className="text-sm font-bold text-primary-text">{t("page.scoreControl.infiniteInProgress")}</span>
                                 </div>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                                    <div><span className="text-slate-400">当前系数</span><div className="font-bold text-orange-600 mt-0.5">{infiniteSearchProgress.currentRate}%</div></div>
-                                    <div><span className="text-slate-400">已检查</span><div className="font-bold text-primary-text mt-0.5">{infiniteSearchProgress.totalChecked} 首</div></div>
-                                    <div><span className="text-slate-400">已找到</span><div className="font-bold text-emerald-600 mt-0.5">{infiniteSearchProgress.found} / 10</div></div>
-                                    <div><span className="text-slate-400">当前歌曲</span><div className="font-bold text-primary-text mt-0.5 truncate">{infiniteSearchProgress.currentSongTitle}</div></div>
+                                    <div><span className="text-slate-400">{t("page.scoreControl.currentRate")}</span><div className="font-bold text-orange-600 mt-0.5">{infiniteSearchProgress.currentRate}%</div></div>
+                                    <div><span className="text-slate-400">{t("page.scoreControl.checkedCount")}</span><div className="font-bold text-primary-text mt-0.5">{t("page.scoreControl.checkedSongs", { count: formatNumber(infiniteSearchProgress.totalChecked) })}</div></div>
+                                    <div><span className="text-slate-400">{t("page.scoreControl.foundCount")}</span><div className="font-bold text-emerald-600 mt-0.5">{infiniteSearchProgress.found} / 10</div></div>
+                                    <div><span className="text-slate-400">{t("page.scoreControl.currentSong")}</span><div className="font-bold text-primary-text mt-0.5 truncate">{infiniteSearchProgress.currentSongTitle}</div></div>
                                 </div>
                                 <div className="mt-3 w-full bg-slate-200 rounded-full h-1.5">
                                     <div className="bg-gradient-to-r from-orange-400 to-red-500 h-1.5 rounded-full transition-all duration-300" style={{ width: `${Math.min(100, (VALID_EVENT_RATES.indexOf(infiniteSearchProgress.currentRate) + 1) / VALID_EVENT_RATES.length * 100)}%` }} />
                                 </div>
                                 {infiniteStepProgress > 0 && (
                                     <div className="mt-2 flex items-center gap-2">
-                                        <span className="text-[10px] text-slate-400 whitespace-nowrap">当前步骤</span>
+                                        <span className="text-[10px] text-slate-400 whitespace-nowrap">{t("page.scoreControl.currentStep")}</span>
                                         <div className="sc-fake-progress-track flex-1">
                                             <div className="sc-fake-progress-fill !bg-gradient-to-r !from-orange-400 !to-red-400" style={{ width: `${infiniteStepProgress}%` }} />
                                         </div>
                                         <span className="text-[10px] font-bold text-orange-500 tabular-nums w-8 text-right">{Math.round(infiniteStepProgress)}%</span>
                                     </div>
                                 )}
-                                <p className="mt-1.5 text-[10px] text-slate-400">使用 {Math.min(navigator.hardwareConcurrency || 4, 4)} 个并行线程</p>
+                                <p className="mt-1.5 text-[10px] text-slate-400">{t("page.scoreControl.parallelWorkersShort", { count: Math.min(navigator.hardwareConcurrency || 4, 4) })}</p>
                             </div>
                         )}
 
@@ -1571,15 +1575,15 @@ export default function ScoreControlClient() {
                             <div className="glass-card p-4 rounded-2xl mb-4 bg-emerald-50/80 border border-emerald-200/50">
                                 <div className="flex items-center gap-2">
                                     <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                    <span className="text-sm font-bold text-emerald-700">搜索完成，找到 {infiniteSearchResults.length} 个系数可纯放置（共 {infiniteSearchResults.reduce((s, r) => s + r.songs.length, 0)} 首歌曲）</span>
+                                    <span className="text-sm font-bold text-emerald-700">{t("page.scoreControl.infiniteComplete", { rateCount: formatNumber(infiniteSearchResults.length), songCount: formatNumber(infiniteSearchResults.reduce((s, r) => s + r.songs.length, 0)) })}</span>
                                 </div>
                             </div>
                         )}
 
                         {!infiniteSearchRunning && infiniteSearchResults.length === 0 && (
                             <div className="glass-card p-6 rounded-2xl mb-4 text-center">
-                                <p className="text-slate-500 font-medium text-sm">未找到可组出纯放置路线的歌曲</p>
-                                <p className="text-xs text-slate-400 mt-1">请尝试调整加成范围或目标PT</p>
+                                <p className="text-slate-500 font-medium text-sm">{t("page.scoreControl.noInfiniteSongs")}</p>
+                                <p className="text-xs text-slate-400 mt-1">{t("page.scoreControl.noInfiniteSongsHint")}</p>
                             </div>
                         )}
 
@@ -1588,9 +1592,9 @@ export default function ScoreControlClient() {
                                 <div className="flex items-center gap-3 mb-4">
                                     <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                                         <span className="w-1.5 h-6 bg-gradient-to-b from-red-400 to-orange-500 rounded-full"></span>
-                                        无限组卡结果
+                                        {t("page.scoreControl.infiniteResultsTitle")}
                                     </h2>
-                                    <span className="px-2.5 py-1 bg-red-50 text-red-600 text-xs font-bold rounded-full">{infiniteSearchResults.length} 个系数</span>
+                                    <span className="px-2.5 py-1 bg-red-50 text-red-600 text-xs font-bold rounded-full">{t("page.scoreControl.rateCount", { count: formatNumber(infiniteSearchResults.length) })}</span>
                                 </div>
                                 <div className="space-y-3">
                                     {infiniteSearchResults.map((result, idx) => {
@@ -1600,9 +1604,9 @@ export default function ScoreControlClient() {
                                                 <button onClick={() => setInfiniteExpandedIdx(isExpanded ? null : idx)} className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors text-left">
                                                     <div className="flex items-center gap-2.5 flex-wrap min-w-0">
                                                         <span className="text-sm font-black text-primary-text whitespace-nowrap">#{idx + 1}</span>
-                                                        <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full whitespace-nowrap">系数 {result.eventRate}%</span>
-                                                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full whitespace-nowrap">纯放置</span>
-                                                        <span className="text-xs text-slate-400 whitespace-nowrap">{result.songs.length} 首歌曲 · {result.routes.length} 条路线</span>
+                                                        <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full whitespace-nowrap">{t("page.scoreControl.rateBadge", { rate: result.eventRate })}</span>
+                                                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full whitespace-nowrap">{t("page.scoreControl.pureAfk")}</span>
+                                                        <span className="text-xs text-slate-400 whitespace-nowrap">{t("page.scoreControl.songsAndRoutes", { songs: formatNumber(result.songs.length), routes: formatNumber(result.routes.length) })}</span>
                                                     </div>
                                                     <svg className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ml-2 ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -1613,7 +1617,7 @@ export default function ScoreControlClient() {
                                                     <div className="border-t border-slate-100 px-5 py-4 space-y-3">
                                                         {/* Songs with cover images */}
                                                         <div className="rounded-xl p-3 border border-slate-200/50 bg-slate-50/50">
-                                                            <div className="text-[10px] text-slate-400 mb-1.5">可用歌曲 ({result.songs.length} 首)</div>
+                                                            <div className="text-[10px] text-slate-400 mb-1.5">{t("page.scoreControl.availableSongs", { count: formatNumber(result.songs.length) })}</div>
                                                             <div className="flex flex-wrap gap-2">
                                                                 {result.songs.map((song, si) => (
 
@@ -1634,16 +1638,16 @@ export default function ScoreControlClient() {
                                                         {result.routes.slice(0, 5).map((plan, pi) => (
                                                             <div key={pi} className="rounded-xl p-4 border bg-emerald-50/60 border-emerald-200/50">
                                                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                                                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">路线 {pi + 1}</span>
-                                                                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">纯放置</span>
-                                                                    <span className="text-xs text-slate-400">{plan.totalPlays} 场游戏 = {plan.totalPT} PT</span>
+                                                                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">{t("page.scoreControl.routeLabel", { index: pi + 1 })}</span>
+                                                                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">{t("page.scoreControl.pureAfk")}</span>
+                                                                    <span className="text-xs text-slate-400">{t("page.scoreControl.routeSummary", { plays: formatNumber(plan.totalPlays), pt: formatNumber(plan.totalPT) })}</span>
                                                                 </div>
                                                                 {plan.steps.map((step, si) => (
                                                                     <div key={si} className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs mt-1">
-                                                                        <div><span className="text-slate-400">步骤</span><div className="font-bold text-emerald-600 mt-0.5">放置 x{step.count}</div></div>
-                                                                        <div><span className="text-slate-400">火罐</span><div className="font-bold text-primary-text mt-0.5">{fireLabel(step.boost)} <span className="text-slate-400 font-normal">x{step.boostRate}</span></div></div>
-                                                                        <div><span className="text-slate-400">卡组加成</span><div className="font-bold text-primary-text mt-0.5">{step.eventBonus}%</div></div>
-                                                                        <div><span className="text-slate-400">每次PT</span><div className="font-bold text-orange-500 mt-0.5">{step.pt} PT</div></div>
+                                                                        <div><span className="text-slate-400">{t("page.scoreControl.step")}</span><div className="font-bold text-emerald-600 mt-0.5">{t("page.scoreControl.afkTimes", { count: formatNumber(step.count) })}</div></div>
+                                                                        <div><span className="text-slate-400">{t("page.scoreControl.fire")}</span><div className="font-bold text-primary-text mt-0.5">{fireLabel(step.boost)} <span className="text-slate-400 font-normal">x{step.boostRate}</span></div></div>
+                                                                        <div><span className="text-slate-400">{t("page.scoreControl.deckBonus")}</span><div className="font-bold text-primary-text mt-0.5">{step.eventBonus}%</div></div>
+                                                                        <div><span className="text-slate-400">{t("page.scoreControl.perPlayPt")}</span><div className="font-bold text-orange-500 mt-0.5">{step.pt} PT</div></div>
                                                                     </div>
                                                                 ))}
                                                                 {/* Matching decks with full card display */}
@@ -1657,13 +1661,13 @@ export default function ScoreControlClient() {
                                                                     if (matchingDecks.length === 0) return null;
                                                                     return (
                                                                         <div className="mt-2 pt-2 border-t border-emerald-200/50">
-                                                                            <div className="text-[10px] text-slate-400 mb-1">推荐卡组</div>
+                                                                            <div className="text-[10px] text-slate-400 mb-1">{t("page.scoreControl.recommendedDeck")}</div>
                                                                             {matchingDecks.slice(0, 2).map((deck, di: number) => (
                                                                                 <div key={di} className="bg-white/50 rounded-lg p-2 border border-slate-100 mb-1">
                                                                                     <div className="flex gap-1 flex-wrap mb-1">
                                                                                         {deck.cards?.slice(0, 5).map((card: DeckCardInfo, ci: number) => renderDeckCard(card, ci, "sm"))}
                                                                                     </div>
-                                                                                    <span className="text-[10px] text-slate-400">加成 {Math.round((deck.eventBonus ?? deck.score ?? 0) * 10) / 10}%</span>
+                                                                                    <span className="text-[10px] text-slate-400">{t("page.scoreControl.bonusLabel", { bonus: Math.round((deck.eventBonus ?? deck.score ?? 0) * 10) / 10 })}</span>
                                                                                 </div>
                                                                             ))}
                                                                         </div>
@@ -1685,12 +1689,12 @@ export default function ScoreControlClient() {
                 {/* Footer */}
                 <div className="mt-12 text-center text-xs text-slate-400">
                     <p className="mb-1">
-                        组卡代码采用xfl03(33)的 <ExternalLink href="https://github.com/xfl03/sekai-calculator" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-calculator</ExternalLink>
+                        {t("page.scoreControl.sourceCreditPrefix")} <ExternalLink href="https://github.com/xfl03/sekai-calculator" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-calculator</ExternalLink>
                     </p>
                     <p className="mb-1">
-                        部分算法优化修改于 <ExternalLink href="https://github.com/NeuraXmy/sekai-deck-recommend-cpp" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-deck-recommend-cpp</ExternalLink>（作者: luna茶）
+                        {t("page.scoreControl.algorithmCreditPrefix")} <ExternalLink href="https://github.com/NeuraXmy/sekai-deck-recommend-cpp" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-deck-recommend-cpp</ExternalLink>{t("page.scoreControl.algorithmCreditAuthor")}
                     </p>
-                    <p>控分公式参考自社区，计算结果仅供参考</p>
+                    <p>{t("page.scoreControl.licenseNotice")}</p>
                 </div>
             </div>
         </MainLayout>

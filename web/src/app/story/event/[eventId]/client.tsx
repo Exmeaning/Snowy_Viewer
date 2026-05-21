@@ -19,6 +19,7 @@ import {
 import { useTheme } from "@/contexts/ThemeContext";
 import { IStoryAdminResponse, IStoryAdminChapter } from "@/types/storyAdmin";
 import ExternalLink from "@/components/ExternalLink";
+import { useI18n } from "@/contexts/I18nContext";
 
 const STORY_DETAIL_MIRROR_BASE_URL = "https://moe.exmeaning.com/story/detail";
 
@@ -145,6 +146,7 @@ function ChapterItem({
   showImage: boolean;
 }) {
   const { assetSource } = useTheme();
+  const { t } = useI18n();
   const imageUrl = getStoryEpisodeImageUrl(
     assetBundleName,
     chapter.chapter_no,
@@ -198,7 +200,7 @@ function ChapterItem({
                 {chapter.summary_cn}
               </p>
             ) : (
-              <p className="text-sm text-slate-400 italic mt-1">暂无章节总结</p>
+              <p className="text-sm text-slate-400 italic mt-1">{t("page.story.event.noChapterSummary")}</p>
             )}
           </div>
           <div className="hidden sm:block text-slate-400 group-hover:text-miku transition-colors self-center">
@@ -225,6 +227,7 @@ function ChapterItem({
 export default function StoryEventDetailClient() {
   const params = useParams();
   const { assetSource, serverSource } = useTheme();
+  const { t } = useI18n();
   const eventId = Number(params.eventId);
 
   const [adminData, setAdminData] = useState<IStoryAdminResponse | null>(null);
@@ -264,7 +267,7 @@ export default function StoryEventDetailClient() {
         if (cancelled) return;
 
         const event = eventsData.find((e) => e.id === eventId);
-        if (!event) throw new Error("活动不存在");
+        if (!event) throw new Error(t("page.story.event.eventNotFound"));
 
         const story = storiesData.find((s) => s.eventId === eventId);
         const nextFallbackChapters = story
@@ -288,11 +291,11 @@ export default function StoryEventDetailClient() {
         setFallbackChapters(nextFallbackChapters);
         if (summaryData) setAdminData(summaryData);
         if (bEvent) setBilibiliEvent(bEvent);
-        document.title = `${event.name} - 活动剧情 - Moesekai`;
+        document.title = t("page.story.event.documentTitle", { name: event.name });
         setIsLoading(false);
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "加载失败");
+        setError(err instanceof Error ? err.message : t("common.state.loadingFailed"));
         setIsLoading(false);
       }
     }
@@ -302,13 +305,13 @@ export default function StoryEventDetailClient() {
     return () => {
       cancelled = true;
     };
-  }, [eventId, serverSource]);
+  }, [eventId, serverSource, t]);
 
   if (isLoading) {
     return (
       <MainLayout>
         <div className="flex h-[50vh] w-full items-center justify-center">
-          <div className="loading-spinner mr-2"></div>正在加载...
+          <div className="loading-spinner mr-2"></div>{t("common.state.loading")}
         </div>
       </MainLayout>
     );
@@ -317,13 +320,29 @@ export default function StoryEventDetailClient() {
   if (error || !eventInfo) {
     return (
       <MainLayout>
-        <div className="container mx-auto px-4 py-16 text-center">
-          <h2 className="text-xl font-bold text-slate-700 mb-2">
-            {error || "未找到活动"}
-          </h2>
-          <Link href="/story/event" className="text-miku hover:underline">
-            返回列表
-          </Link>
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-md mx-auto text-center">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center">
+              <svg className="w-12 h-12 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">
+              {t("page.events.notFoundTitle", { id: eventId })}
+            </h2>
+            <p className="text-slate-500 mb-6">
+              {error || t("page.events.notFoundDesc")}
+            </p>
+            <Link
+              href="/story/event"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              {t("page.events.backToList")}
+            </Link>
+          </div>
         </div>
       </MainLayout>
     );
@@ -392,10 +411,10 @@ export default function StoryEventDetailClient() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-miku transition-colors">
-                      活动详情
+                      {t("page.story.event.eventDetailTitle")}
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                      查看加成、歌曲及卡牌信息
+                      {t("page.story.event.eventDetailDescription")}
                     </p>
                   </div>
                   <svg
@@ -439,10 +458,10 @@ export default function StoryEventDetailClient() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-[#fb7299] transition-colors">
-                        资讯站汉化
+                        {t("page.story.event.bilibiliTranslationTitle")}
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                        前往 Bilibili 观看本活动剧情汉化
+                        {t("page.story.event.bilibiliTranslationDescription")}
                       </p>
                     </div>
                     <svg
@@ -478,19 +497,19 @@ export default function StoryEventDetailClient() {
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                活动概要
+                {t("page.story.event.summaryTitle")}
               </h2>
               {adminData?.summary_cn ? (
                 <div className="prose prose-sm dark:prose-invert text-slate-600 dark:text-slate-400">
                   <p>{adminData.summary_cn}</p>
                 </div>
               ) : (
-                <p className="text-slate-400 italic text-sm">暂无活动总结</p>
+                <p className="text-slate-400 italic text-sm">{t("page.story.event.noEventSummary")}</p>
               )}
               {adminData?.outline_cn && (
                 <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700">
                   <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                    背景提要
+                    {t("page.story.event.outlineTitle")}
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     {adminData.outline_cn}
@@ -500,7 +519,7 @@ export default function StoryEventDetailClient() {
               {adminData && (
                 <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
                   <p className="text-xs text-slate-400 italic text-right">
-                    剧情总结和章节翻译文本来源于moesekai（@雪莹ちゃん），转载请表明出处。
+                    {t("page.story.event.summaryCredit")}
                   </p>
                 </div>
               )}
@@ -524,11 +543,11 @@ export default function StoryEventDetailClient() {
                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                   />
                 </svg>
-                章节列表
+                {t("page.story.event.chapterListTitle")}
               </h2>
               <div className="flex items-center gap-4">
                 <span className="text-sm text-slate-500 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
-                  共 {totalChapters} 话
+                  {t("page.story.event.chapterCount", { count: totalChapters })}
                 </span>
               </div>
             </div>
@@ -568,7 +587,7 @@ export default function StoryEventDetailClient() {
                 ))
               ) : (
                 <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
-                  <p className="text-slate-500 mb-2">暂无章节信息</p>
+                  <p className="text-slate-500 mb-2">{t("page.story.event.noChapters")}</p>
                 </div>
               )}
             </div>

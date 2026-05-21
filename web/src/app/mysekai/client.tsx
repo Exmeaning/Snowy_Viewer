@@ -19,184 +19,14 @@ import { TranslatedText } from "@/components/common/TranslatedText";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
-
-// Genre name translation map (Japanese -> Chinese)
-const GENRE_NAME_MAP: Record<string, string> = {
-    "すべて": "全部",
-    "一般": "一般",
-    "小物": "小物件",
-    "壁掛け": "壁挂",
-    "ディスプレイ": "展示",
-    "キャンバス": "画布",
-    "壁": "墙壁",
-    "床": "地板",
-    "ラグ": "地毯",
-    "地面": "地面",
-    "家": "房屋",
-    "道": "道路",
-    "柵": "围栏",
-    "バーチャル・シンガー": "虚拟歌手",
-    "Leo/need": "Leo/need",
-    "MORE MORE JUMP！": "MORE MORE JUMP!",
-    "Vivid BAD SQUAD": "Vivid BAD SQUAD",
-    "ワンダーランズ×ショウタイム": "Wonderlands×Showtime",
-    "25時、ナイトコードで。": "25时，在Night Code。",
-    "キャラクター": "角色",
-    "キズナ": "羁绊",
-    "アチーブメント": "成就",
-    "イベント": "活动",
-    "オノ": "斧头",
-    "ツルハシ": "镐子",
-    "植物": "植物",
-    "グッズ": "周边",
-    "メンバー": "成员",
-    "ぬいぐるみ": "玩偶",
-    "その他": "其他",
-    "カラータイル": "彩色瓷砖",
-    "ブロック": "方块",
-};
-
-// Helper function to get translated genre name
-function getTranslatedGenreName(name: string): string {
-    return GENRE_NAME_MAP[name] || name;
-}
-
-// Tag name translation map (Japanese -> Chinese)
-const TAG_NAME_MAP: Record<string, string> = {
-    // Basic
-    "公園": "公园",
-    "ガ一デン": "花园",
-    "ナチュラル": "自然",
-    "シンプルポップキッチン": "简约波普厨房",
-    "クリーンパウダールーム": "整洁化妆室",
-    "素朴な和室": "朴素和室",
-    "キッズルーム": "儿童房",
-    "カジュアル": "休闲",
-    "キュート": "可爱",
-    "フレンチスタイル": "法式风格",
-    "トレーニングルーム": "训练室",
-    "音楽スタジオ": "音乐工作室",
-    "イベント会場": "活动会场",
-    "ゲームセンター": "游戏中心",
-    "ぽかぽかなピクニック": "暖洋洋的野餐",
-    "天文学者の研究室": "天文学者的研究室",
-    "作業テーブル": "工作桌",
-    "チェスト": "柜子",
-    "ひみつのおみせ": "秘密小店",
-    "ヘンカンマシン": "转换机",
-    "マイセカイ情報": "MySekai信息",
-    "ミュージックプレイヤー": "音乐播放器",
-    "アバタ一チェンジ": "虚拟形象更换",
-    "グッズ": "周边",
-    "きらめく流星ル一ム": "闪耀流星房间 (Ln)",
-    "かがやくクローバールーム": "光辉四叶草房间 (MMJ)",
-    "鮮やかなユニゾンルーム": "鲜艳齐奏房间 (VBS)",
-    "はじけるクラウンルーム": "跃动小丑房间 (WxS)",
-    "ひび割れたハートルーム": "破碎之心房间 (25ji)",
-    "はじまりのメロディルーム": "起始旋律房间 (VS)",
-    "旅人のキャンプ": "旅人的露营地",
-    "照明": "照明",
-    "グリーン": "绿植",
-    "楽器": "乐器",
-    "コラボ": "联动",
-    "あんさんぶるスターズ！！コラボ": "偶像梦幻祭!!联动",
-    "雷神祭": "雷神祭",
-    "虹色アトリエルーム": "虹色画室",
-    "リゾト": "度假村",
-    "リゾート": "度假村",
-    "ガレージ": "车库",
-    "ドリーミィベビールーム": "梦幻婴儿房",
-    "サイバーシティ": "赛博城市",
-    "水色くじら": "水色鲸鱼",
-    "ペルソナ５ ザ・ロイヤルタイアップ": "女神异闻录5 皇家版联动",
-    "にっこりたい焼き屋さん": "微笑鲷鱼烧店",
-    "もこもこおさんぽ": "毛茸茸散步",
-    "たまごっちコラボ": "拓麻歌子联动",
-    "セカイステ一ジ": "世界舞台",
-    "ハロウィン": "万圣节",
-    "ロマンティックガーデン": "浪漫花园",
-    "ヴィンテージスタイル": "复古风格",
-    "ほっこり温泉": "暖心温泉",
-    "クリスマス": "圣诞节",
-    "正月": "正月",
-    "カラータイル": "彩色瓷砖",
-    "スポーツ": "运动",
-
-    // Legacy mapping just in case
-    "机": "桌子",
-    "椅子": "椅子",
-    "ベッド": "床",
-    "収納": "收纳",
-    "装飾": "装饰",
-    "壁": "墙壁",
-    "床": "地板",
-    "窓": "窗户",
-    "ドア": "门",
-    "家電": "家电",
-    "植物": "植物",
-    "雑貨": "杂货",
-    "ぬいぐるみ": "玩偶",
-    "その他": "其他",
-    "ラグ": "地毯",
-    "パーテーション": "隔断",
-    "ソファ": "沙发",
-    "テーブル": "桌子",
-    "ポスター": "海报",
-    "カーテン": "窗帘",
-    "小物": "小物件",
-    "壁紙": "壁纸",
-    "ライト": "灯",
-    "チェア": "椅子",
-    "デスク": "书桌",
-    "シェルフ": "架子",
-    "キャビネット": "柜子",
-    "ベンチ": "长椅",
-    "フェンス": "围栏",
-    "フラワー": "花",
-    "プランター": "花盆",
-    "スタンド": "支架/立牌",
-    "ボックス": "盒子",
-    "マット": "垫子",
-    "キッチン": "厨房",
-    "バス": "浴室",
-    "トイレ": "厕所",
-    "花壇": "花坛",
-    "街灯": "路灯",
-    "看板": "看板",
-    "ポスト": "邮筒",
-    "柵": "围栏",
-    "道": "道路",
-    "地面": "地面",
-    "屋根": "屋顶",
-    "外壁": "外墙",
-};
-
-function getTranslatedTagName(name: string): string {
-    // Try exact match
-    if (TAG_NAME_MAP[name]) return TAG_NAME_MAP[name];
-
-    // Try to handle some common OCR errors or variations in the user provided list
-    const cleanName = name.replace(/ー/g, '一').replace(/ベ/g, 'べ').replace(/ビ/g, 'び');
-    if (TAG_NAME_MAP[cleanName]) return TAG_NAME_MAP[cleanName];
-
-    // Try simple partial matches
-    if (name.includes("テーブル") || name.includes("テ一ブル")) return name.replace(/テ[^ブル]*ブル/, "桌子");
-    if (name.includes("チェア")) return name.replace("チェア", "椅子");
-    if (name.includes("ソファ")) return name.replace("ソファ", "沙发");
-    if (name.includes("ベッド")) return name.replace("ベッド", "床");
-    if (name.includes("ライト")) return name.replace("ライト", "灯");
-    if (name.includes("キッチン")) return name.replace("キッチン", "厨房");
-    if (name.includes("ル—ム") || name.includes("ル一ム") || name.includes("ルーム")) {
-        return name.replace(/ル[^ム]*ム/, "房间");
-    }
-
-    return name;
-}
+import { useI18n } from "@/contexts/I18nContext";
+import { getMysekaiGenreDisplayName, getMysekaiTagDisplayName } from "@/lib/mysekai-i18n";
 
 function MysekaiContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
+    const { t } = useI18n();
 
     const [fixtures, setFixtures] = useState<IMysekaiFixtureInfo[]>([]);
     const [genres, setGenres] = useState<IMysekaiFixtureGenre[]>([]);
@@ -315,7 +145,6 @@ function MysekaiContent() {
     }, [selectedGenre, selectedSubGenre, selectedTag, selectedCharacters, selectedUnitIds, searchQuery, sortBy, sortOrder, router, filtersInitialized]);
 
     useEffect(() => {
-        // document.title = "Snowy SekaiViewer - 家具图鉴"; // Moved to metadata
         async function fetchData() {
             try {
                 setIsLoading(true);
@@ -336,13 +165,13 @@ function MysekaiContent() {
                 setError(null);
             } catch (err) {
                 console.error("Error fetching mysekai data:", err);
-                setError(err instanceof Error ? err.message : "Unknown error");
+                setError(err instanceof Error ? err.message : t("page.mysekai.unknownError"));
             } finally {
                 setIsLoading(false);
             }
         }
         fetchData();
-    }, []);
+    }, [t]);
 
     // Separate tags by type and exclude tags matching fixture names
     const { characterTags, unitTags: _unitTags, generalTags } = useMemo(() => {
@@ -440,7 +269,7 @@ function MysekaiContent() {
     // Helper to get genre name (translated)
     const getGenreName = (id: number) => {
         const genre = genres.find(g => g.id === id);
-        return genre ? getTranslatedGenreName(genre.name) : "";
+        return genre ? getMysekaiGenreDisplayName(genre.name, t) : "";
     };
 
     // Reset all filters
@@ -458,12 +287,13 @@ function MysekaiContent() {
 
     const quickFilterContent = (
         <BaseFilters
-            title="筛选家具"
+            title={t("page.mysekai.filterPanelTitle")}
             filteredCount={filteredFixtures.length}
             totalCount={fixtures.length}
-            countUnit="个"
+            countUnit={t("page.mysekai.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            searchPlaceholder={t("page.mysekai.searchPlaceholder")}
             sortOptions={[{ id: "id", label: "ID" }]}
             sortBy={sortBy}
             sortOrder={sortOrder}
@@ -481,7 +311,7 @@ function MysekaiContent() {
                 onUnitIdsChange={setSelectedUnitIds}
             />
 
-            <FilterSection label="主类别">
+            <FilterSection label={t("page.mysekai.sectionLabel.mainGenre")}>
                 <select
                     className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
                     value={selectedGenre || ""}
@@ -491,21 +321,21 @@ function MysekaiContent() {
                         if (val !== selectedSubGenre) setSelectedSubGenre(null);
                     }}
                 >
-                    <option value="">全部</option>
+                    <option value="">{t("page.mysekai.allOption")}</option>
                     {availableGenres.map(g => (
-                        <option key={g.id} value={g.id}>{getTranslatedGenreName(g.name)}</option>
+                        <option key={g.id} value={g.id}>{getMysekaiGenreDisplayName(g.name, t)}</option>
                     ))}
                 </select>
             </FilterSection>
 
             {selectedGenre && (
-                <FilterSection label="子类别">
+                <FilterSection label={t("page.mysekai.sectionLabel.subGenre")}>
                     <select
                         className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
                         value={selectedSubGenre || ""}
                         onChange={(e) => setSelectedSubGenre(e.target.value ? Number(e.target.value) : null)}
                     >
-                        <option value="">全部</option>
+                        <option value="">{t("page.mysekai.allOption")}</option>
                         {subGenres
                             .filter(sg => sg.mysekaiFixtureMainGenreId === selectedGenre)
                             .map(sg => (
@@ -516,18 +346,21 @@ function MysekaiContent() {
                 </FilterSection>
             )}
 
-            <FilterSection label="标签">
+            <FilterSection label={t("page.mysekai.sectionLabel.tag")}>
                 <select
                     className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
                     value={selectedTag || ""}
                     onChange={(e) => setSelectedTag(e.target.value ? Number(e.target.value) : null)}
                 >
-                    <option value="">全部</option>
-                    {generalTags.map(t => (
-                        <option key={t.id} value={t.id}>
-                            {getTranslatedTagName(t.name)} {getTranslatedTagName(t.name) !== t.name ? `(${t.name})` : ''}
-                        </option>
-                    ))}
+                    <option value="">{t("page.mysekai.allOption")}</option>
+                    {generalTags.map(tag => {
+                        const tagLabel = getMysekaiTagDisplayName(tag.name, t);
+                        return (
+                            <option key={tag.id} value={tag.id}>
+                                {tagLabel} {tagLabel !== tag.name ? `(${tag.name})` : ""}
+                            </option>
+                        );
+                    })}
                 </select>
             </FilterSection>
 
@@ -535,7 +368,7 @@ function MysekaiContent() {
         </BaseFilters>
     );
 
-    useQuickFilter("家具筛选", quickFilterContent, [
+    useQuickFilter(t("page.mysekai.filterTitle"), quickFilterContent, [
         searchQuery,
         selectedGenre,
         selectedSubGenre,
@@ -546,6 +379,7 @@ function MysekaiContent() {
         sortOrder,
         filteredFixtures.length,
         fixtures.length,
+        t,
     ]);
 
     return (
@@ -553,20 +387,20 @@ function MysekaiContent() {
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">MySEKAI 图鉴</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.mysekai.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    家具 <span className="text-miku">列表</span>
+                    {t("page.mysekai.title")} <span className="text-miku">{t("page.mysekai.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览 MySEKAI 中的所有家具
+                    {t("page.mysekai.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("page.mysekai.loadFailed")}</p>
                     <p>{error}</p>
                 </div>
             )}
@@ -635,7 +469,7 @@ function MysekaiContent() {
                                         data-shortcut-load-more="true"
                                         className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                                     >
-                                        加载更多
+                                        {t("page.mysekai.loadMore")}
                                         <span className="ml-2 text-sm opacity-80">
                                             ({displayedFixtures.length} / {filteredFixtures.length})
                                         </span>
@@ -649,7 +483,7 @@ function MysekaiContent() {
                                     <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <p>没有找到匹配的家具</p>
+                                    <p>{t("page.mysekai.noResult")}</p>
                                 </div>
                             )}
                         </>
@@ -661,9 +495,11 @@ function MysekaiContent() {
 }
 
 export default function MysekaiClient() {
+    const { t } = useI18n();
+
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载家具数据...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.mysekai.loadingFallback")}</div>}>
                 <MysekaiContent />
             </Suspense>
         </MainLayout>

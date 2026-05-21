@@ -1,31 +1,17 @@
 "use client";
-/**
- * StoryReader — 通用剧情阅读器组件
- *
- * 负责：
- * - 根据 serverSource 决定 lang（jp/cn）
- * - JP 时尝试加载翻译并 merge
- * - asset 缺失时显示路径提示
- * - 统一的加载/错误/内容 UI
- */
 import { StorySnippet } from "@/components/story/StorySnippet";
-import { IProcessedScenarioData } from "@/types/story";
+import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { IProcessedScenarioData } from "@/types/story";
 
 interface StoryReaderProps {
-    /** 已处理好的剧情数据（含翻译） */
     scenarioData: IProcessedScenarioData | null;
     isLoading: boolean;
     error: string | null;
-    /** 如果是 StoryAssetMissingError，传入缺失路径 */
     missingPaths?: string[];
-    /** 结尾标签，如"第 1 话" */
     endLabel?: string;
-    /** 翻译来源标记 */
     translationSource?: "official_cn" | "llm" | "human";
-    /** 剧情类型，用于翻译来源文案判断 */
     storyType?: "event" | "unit" | "card" | "area" | "self" | "special";
-    /** 剧情 ID，用于翻译来源文案判断 */
     storyId?: number;
 }
 
@@ -40,12 +26,13 @@ export function StoryReader({
     storyId,
 }: StoryReaderProps) {
     const { useLLMTranslation } = useTheme();
+    const { t } = useI18n();
 
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-16">
                 <div className="w-12 h-12 border-4 border-miku/30 border-t-miku rounded-full animate-spin mb-4" />
-                <p className="text-slate-500">正在加载剧情...</p>
+                <p className="text-slate-500">{t("page.story.reader.loading")}</p>
             </div>
         );
     }
@@ -53,9 +40,9 @@ export function StoryReader({
     if (missingPaths && missingPaths.length > 0) {
         return (
             <div className="p-5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl text-sm">
-                <p className="font-bold text-amber-800 dark:text-amber-300 mb-2">Asset 文件缺失</p>
+                <p className="font-bold text-amber-800 dark:text-amber-300 mb-2">{t("page.story.reader.assetMissingTitle")}</p>
                 <p className="text-amber-700 dark:text-amber-400 mb-3">
-                    该剧情的 asset 文件尚未收录到镜像仓库，以下路径均不存在：
+                    {t("page.story.reader.assetMissingDescription")}
                 </p>
                 <ul className="space-y-1">
                     {missingPaths.map((p) => (
@@ -71,13 +58,13 @@ export function StoryReader({
     if (error) {
         return (
             <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
-                <p className="font-bold">加载失败</p>
+                <p className="font-bold">{t("common.state.loadingFailed")}</p>
                 <p>{error}</p>
                 <button
                     onClick={() => window.location.reload()}
                     className="mt-2 text-red-500 underline hover:no-underline"
                 >
-                    重试
+                    {t("common.action.retry")}
                 </button>
             </div>
         );
@@ -87,10 +74,9 @@ export function StoryReader({
 
     return (
         <div className="max-w-4xl mx-auto">
-            {/* 出场角色 */}
             {scenarioData.characters.length > 0 && (
                 <div className="mb-6 p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-slate-700">
-                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">出场角色</h3>
+                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">{t("page.story.reader.charactersTitle")}</h3>
                     <div className="flex flex-wrap gap-2">
                         {scenarioData.characters.map((char) => (
                             <span
@@ -104,25 +90,24 @@ export function StoryReader({
                 </div>
             )}
 
-            {/* 剧情内容 */}
             <div className="space-y-1">
                 {scenarioData.actions.map((action, index) => (
                     <StorySnippet key={index} action={action} />
                 ))}
             </div>
 
-            {/* 结尾 */}
             {scenarioData.actions.length > 0 && (
                 <div className="text-center py-8 text-slate-400">
-                    <p>— {endLabel ?? "结束"} —</p>
+                    <p>— {endLabel ?? t("page.story.reader.defaultEndLabel")} —</p>
                     {useLLMTranslation && (translationSource === "llm" || translationSource === "human") && (
                         <p className="text-xs mt-2 italic">
-                            翻译文本来源于 moesekai（@雪莹ちゃん） 的
-                            {translationSource === "human"
-                                ? (storyType === "event" && storyId !== undefined && storyId <= 198
-                                    ? "AI翻译（经人工精校）"
-                                    : "人工翻译")
-                                : "AI翻译"}，转载请表明出处。
+                            {t("page.story.reader.translationCredit", {
+                                source: translationSource === "human"
+                                    ? (storyType === "event" && storyId !== undefined && storyId <= 198
+                                        ? t("page.story.reader.translationSources.aiPolished")
+                                        : t("page.story.reader.translationSources.human"))
+                                    : t("page.story.reader.translationSources.ai"),
+                            })}
                         </p>
                     )}
                 </div>

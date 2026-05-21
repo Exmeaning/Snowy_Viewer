@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ExternalLink from "@/components/ExternalLink";
+import { useI18n } from "@/contexts/I18nContext";
 import { IMusicInfo, IMusicMeta } from "@/types/music";
 import { fetchMasterData } from "@/lib/fetch";
 import MainLayout from "@/components/MainLayout";
@@ -20,12 +21,12 @@ import "./deck-comparator.css";
 const MUSIC_META_API = "https://moe.exmeaning.com/data/music_meta/music_metas.json";
 
 const DIFFICULTY_OPTIONS = [
-    { value: "easy", label: "Easy" },
-    { value: "normal", label: "Normal" },
-    { value: "hard", label: "Hard" },
-    { value: "expert", label: "Expert" },
-    { value: "master", label: "Master" },
-    { value: "append", label: "Append" },
+    { value: "easy", labelKey: "page.deckComparator.difficulties.easy" },
+    { value: "normal", labelKey: "page.deckComparator.difficulties.normal" },
+    { value: "hard", labelKey: "page.deckComparator.difficulties.hard" },
+    { value: "expert", labelKey: "page.deckComparator.difficulties.expert" },
+    { value: "master", labelKey: "page.deckComparator.difficulties.master" },
+    { value: "append", labelKey: "page.deckComparator.difficulties.append" },
 ];
 
 interface HistoryItem {
@@ -52,6 +53,8 @@ interface MusicMetaApiItem extends IMusicMeta {
 
 // ==================== Main Component ====================
 export default function DeckComparatorClient() {
+    const { t, formatDate, formatNumber } = useI18n();
+
     // Music selection state
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
     const [musicMetas, setMusicMetas] = useState<MusicMetaApiItem[]>([]);
@@ -116,7 +119,7 @@ export default function DeckComparatorClient() {
         if (!ptResult || !result || !musicId) return;
 
         const music = musics.find(m => m.id.toString() === musicId);
-        const title = music ? music.title : `Music ${musicId}`;
+        const title = music ? music.title : t("page.deckComparator.fallbackMusicTitle", { id: musicId });
 
         const item: HistoryItem = {
             id: Date.now().toString(),
@@ -174,11 +177,11 @@ export default function DeckComparatorClient() {
     // Handle calculation
     const handleCalculate = useCallback(() => {
         if (!selectedMeta) {
-            setError("请选择歌曲，并确保所选难度有对应Meta数据");
+            setError(t("page.deckComparator.errors.musicMetaRequired"));
             return;
         }
         if (!userPower || userPower <= 0) {
-            setError("请输入有效的综合力");
+            setError(t("page.deckComparator.errors.invalidPower"));
             return;
         }
 
@@ -201,16 +204,22 @@ export default function DeckComparatorClient() {
             const res = calc.calculate(userPower, userEffectiveness, selectedMeta);
             setResult(res);
 
-            // PT 计算
+            // PT calculation
             const pt = calc.calculatePT(res, selectedMeta, deckBonus, fires);
             setPtResult(pt);
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "计算出错";
-            setError(message);
+            const message = err instanceof Error ? err.message : t("page.deckComparator.errors.calculationFailedUnknown");
+            const cause = err instanceof Error && typeof err.cause === "object" && err.cause !== null
+                ? err.cause as Record<string, string | number>
+                : undefined;
+            const translated = message.startsWith("page.deckComparator.")
+                ? t(message, cause)
+                : t("page.deckComparator.errors.calculationFailed", { message });
+            setError(translated);
             setResult(null);
             setPtResult(null);
         }
-    }, [selectedMeta, userPower, userEffectiveness, allSameTeammate, teammatePower, teammateEffectiveness, teammates, skill6Mode, skill15Strategy, deckBonus, fires]);
+    }, [selectedMeta, userPower, userEffectiveness, allSameTeammate, teammatePower, teammateEffectiveness, teammates, skill6Mode, skill15Strategy, deckBonus, fires, t]);
 
     // Score breakdown colors
     const breakdownColors = {
@@ -226,13 +235,13 @@ export default function DeckComparatorClient() {
                 {/* Page Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                        <span className="text-miku text-xs font-bold tracking-widest uppercase">Deck Comparator</span>
+                        <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.deckComparator.badge")}</span>
                     </div>
                     <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                        组卡<span className="text-miku">比较器</span>
+                        {t("page.deckComparator.title")}<span className="text-miku">{t("page.deckComparator.titleHighlight")}</span>
                     </h1>
                     <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm sm:text-base">
-                        多人Live PT简易计算器，快速比较不同歌曲和配置的得分差异
+                        {t("page.deckComparator.description")}
                     </p>
                 </div>
 
@@ -241,14 +250,14 @@ export default function DeckComparatorClient() {
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>无需上传数据，手动输入综合力和实效即可快速计算PT。</span>
+                    <span>{t("page.deckComparator.mobileInfo")}</span>
                 </div>
 
                 {/* Input Form */}
                 <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6">
                     <h2 className="text-lg font-bold text-primary-text mb-4 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-miku rounded-full"></span>
-                        歌曲与难度
+                        {t("page.deckComparator.musicAndDifficulty")}
                     </h2>
 
                     {/* Song + Difficulty */}
@@ -263,12 +272,12 @@ export default function DeckComparatorClient() {
                             {/* Meta availability hint */}
                             {musicId && !selectedMeta && (
                                 <p className="mt-1 text-xs text-amber-500">
-                                    ⚠️ 该歌曲的 {difficulty.toUpperCase()} 难度暂无Meta数据
+                                    ⚠️ {t("page.deckComparator.noMetaForDifficulty", { difficulty: difficulty.toUpperCase() })}
                                 </p>
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">难度</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckComparator.difficulty")}</label>
                             <div className="flex flex-wrap gap-2">
                                 {DIFFICULTY_OPTIONS.map((d) => {
                                     let activeClass = "";
@@ -290,7 +299,7 @@ export default function DeckComparatorClient() {
                                                 : "bg-slate-100 text-slate-600 hover:bg-slate-200 shadow-none"
                                                 }`}
                                         >
-                                            {d.label}
+                                            {t(d.labelKey)}
                                         </button>
                                     );
                                 })}
@@ -303,14 +312,14 @@ export default function DeckComparatorClient() {
                 <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6">
                     <h2 className="text-lg font-bold text-primary-text mb-4 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-miku rounded-full"></span>
-                        玩家配置
+                        {t("page.deckComparator.playerConfig")}
                     </h2>
 
                     {/* User Power + Effectiveness + Deck Bonus */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                                我的综合力 <span className="text-red-400">*</span>
+                                {t("page.deckComparator.myPower")} <span className="text-red-400">*</span>
                             </label>
                             <input
                                 type="number"
@@ -322,7 +331,7 @@ export default function DeckComparatorClient() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                                我的实效 (%)
+                                {t("page.deckComparator.myEffectiveness")}
                             </label>
                             <input
                                 type="number"
@@ -334,7 +343,7 @@ export default function DeckComparatorClient() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                                卡组加成 (%)
+                                {t("page.deckComparator.deckBonus")}
                             </label>
                             <input
                                 type="number"
@@ -343,7 +352,7 @@ export default function DeckComparatorClient() {
                                 placeholder="150"
                                 className="dc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                             />
-                            <p className="mt-1 text-xs text-slate-400">活动卡组加成百分比，如150表示150%</p>
+                            <p className="mt-1 text-xs text-slate-400">{t("page.deckComparator.deckBonusHint")}</p>
                         </div>
                     </div>
 
@@ -351,10 +360,10 @@ export default function DeckComparatorClient() {
                     <div className="mb-5">
                         <div className="flex items-center justify-between mb-3">
                             <label className="text-sm font-medium text-slate-700">
-                                队友配置 (4人)
+                                {t("page.deckComparator.teammateConfig")}
                             </label>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-slate-500">全队相同</span>
+                                <span className="text-xs text-slate-500">{t("page.deckComparator.wholeTeamSame")}</span>
                                 <button
                                     onClick={() => setAllSameTeammate(!allSameTeammate)}
                                     className={`dc-toggle relative w-11 h-6 rounded-full ${allSameTeammate ? 'bg-miku' : 'bg-slate-200'}`}
@@ -369,7 +378,7 @@ export default function DeckComparatorClient() {
                         {allSameTeammate ? (
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs text-slate-500 mb-1">综合力</label>
+                                    <label className="block text-xs text-slate-500 mb-1">{t("page.deckComparator.power")}</label>
                                     <input
                                         type="number"
                                         value={teammatePower}
@@ -378,7 +387,7 @@ export default function DeckComparatorClient() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-slate-500 mb-1">实效 (%)</label>
+                                    <label className="block text-xs text-slate-500 mb-1">{t("page.deckComparator.effectiveness")}</label>
                                     <input
                                         type="number"
                                         value={teammateEffectiveness}
@@ -398,14 +407,14 @@ export default function DeckComparatorClient() {
                                             type="number"
                                             value={tm.power}
                                             onChange={(e) => updateTeammate(i, 'power', Number(e.target.value))}
-                                            placeholder="综合力"
+                                            placeholder={t("page.deckComparator.powerPlaceholder")}
                                             className="dc-number-input w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                                         />
                                         <input
                                             type="number"
                                             value={tm.effectiveness}
                                             onChange={(e) => updateTeammate(i, 'effectiveness', Number(e.target.value))}
-                                            placeholder="实效%"
+                                            placeholder={t("page.deckComparator.effectivenessPlaceholder")}
                                             className="dc-number-input w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                                         />
                                     </div>
@@ -417,7 +426,7 @@ export default function DeckComparatorClient() {
                     {/* Skill6 Mode + Skill1-5 Strategy */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Skill6 模式</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckComparator.skill6Mode")}</label>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setSkill6Mode(Skill6Mode.TEAM_AVERAGE)}
@@ -426,7 +435,7 @@ export default function DeckComparatorClient() {
                                         : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"
                                         }`}
                                 >
-                                    全队平均实效
+                                    {t("page.deckComparator.skill6Modes.teamAverage")}
                                 </button>
                                 <button
                                     onClick={() => setSkill6Mode(Skill6Mode.HIGHEST_POWER)}
@@ -435,17 +444,17 @@ export default function DeckComparatorClient() {
                                         : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"
                                         }`}
                                 >
-                                    最高综合实效
+                                    {t("page.deckComparator.skill6Modes.highestPower")}
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Skill1-5 策略</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckComparator.skill15Strategy")}</label>
                             <div className="flex gap-2">
                                 {[
-                                    { value: Skill15Strategy.EXPECTED, label: "期望值" },
-                                    { value: Skill15Strategy.BEST, label: "最优" },
-                                    { value: Skill15Strategy.WORST, label: "最差" },
+                                    { value: Skill15Strategy.EXPECTED, labelKey: "page.deckComparator.skill15Strategies.expected" },
+                                    { value: Skill15Strategy.BEST, labelKey: "page.deckComparator.skill15Strategies.best" },
+                                    { value: Skill15Strategy.WORST, labelKey: "page.deckComparator.skill15Strategies.worst" },
                                 ].map((s) => (
                                     <button
                                         key={s.value}
@@ -455,7 +464,7 @@ export default function DeckComparatorClient() {
                                             : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"
                                             }`}
                                     >
-                                        {s.label}
+                                        {t(s.labelKey)}
                                     </button>
                                 ))}
                             </div>
@@ -466,7 +475,7 @@ export default function DeckComparatorClient() {
                     <div className="mb-5">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                                火罐数量 (0-10)
+                                {t("page.deckComparator.fireCount")}
                             </label>
                             <div className="flex items-center gap-3">
                                 <input
@@ -478,7 +487,7 @@ export default function DeckComparatorClient() {
                                     className="dc-number-input w-24 px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                                 />
                                 <span className="text-sm text-slate-500">
-                                    当前倍率: <span className="font-bold text-orange-500">×{getBoostRate(fires)}</span>
+                                    {t("page.deckComparator.currentMultiplier", { rate: getBoostRate(fires) })}
                                 </span>
                             </div>
                         </div>
@@ -493,7 +502,7 @@ export default function DeckComparatorClient() {
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
-                        计算 PT
+                        {t("page.deckComparator.calculatePt")}
                     </button>
                 </div>
 
@@ -515,7 +524,7 @@ export default function DeckComparatorClient() {
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                                 <span className="w-1.5 h-6 bg-miku rounded-full"></span>
-                                计算结果
+                                {t("page.deckComparator.resultsTitle")}
                             </h2>
                             <button
                                 onClick={handleSaveHistory}
@@ -524,38 +533,38 @@ export default function DeckComparatorClient() {
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                                 </svg>
-                                保存结果
+                                {t("page.deckComparator.saveResult")}
                             </button>
                         </div>
 
                         {/* Main PT */}
                         {ptResult && (
                             <div className="text-center mb-6 pb-6 border-b border-slate-100">
-                                <div className="text-xs text-slate-400 uppercase tracking-widest mb-1">活动 PT</div>
+                                <div className="text-xs text-slate-400 uppercase tracking-widest mb-1">{t("page.deckComparator.result.eventPt")}</div>
                                 <div className="text-5xl sm:text-6xl font-black bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent font-mono">
-                                    {ptResult.pt.toLocaleString()}
+                                    {formatNumber(ptResult.pt)}
                                 </div>
                                 <div className="flex items-center justify-center gap-3 mt-2 text-xs text-slate-400">
-                                    <span>基础PT: {ptResult.basePT}</span>
+                                    <span>{t("page.deckComparator.result.basePt", { value: formatNumber(ptResult.basePT) })}</span>
                                     <span>·</span>
-                                    <span>歌曲倍率: {ptResult.eventRate}%</span>
+                                    <span>{t("page.deckComparator.result.musicRate", { value: ptResult.eventRate })}</span>
                                     <span>·</span>
-                                    <span>卡组: ×{ptResult.deckRate.toFixed(2)}</span>
+                                    <span>{t("page.deckComparator.result.deckRate", { value: ptResult.deckRate.toFixed(2) })}</span>
                                     <span>·</span>
-                                    <span>火罐: ×{ptResult.boostRate}</span>
+                                    <span>{t("page.deckComparator.result.boostRate", { value: ptResult.boostRate })}</span>
                                 </div>
                             </div>
                         )}
 
                         {/* Main Score */}
                         <div className="text-center mb-6">
-                            <div className="text-xs text-slate-400 uppercase tracking-widest mb-1">预计得分</div>
+                            <div className="text-xs text-slate-400 uppercase tracking-widest mb-1">{t("page.deckComparator.result.estimatedScore")}</div>
                             <div className="text-4xl sm:text-5xl font-black text-miku font-mono">
-                                {result.score.toLocaleString()}
+                                {formatNumber(result.score)}
                             </div>
                             {ptResult && (
                                 <div className="text-xs text-slate-400 mt-1">
-                                    队友总得分: {ptResult.otherScore.toLocaleString()}
+                                    {t("page.deckComparator.result.teammateTotalScore", { value: formatNumber(ptResult.otherScore) })}
                                 </div>
                             )}
                         </div>
@@ -599,10 +608,10 @@ export default function DeckComparatorClient() {
                         {/* Breakdown Details */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                             {[
-                                { label: "基础分", value: result.baseScorePart, color: breakdownColors.base },
-                                { label: "Skill1-5", value: result.skill15Part, color: breakdownColors.skill15 },
-                                { label: "Skill6", value: result.skill6Part, color: breakdownColors.skill6 },
-                                { label: "活跃加分", value: result.activeBonus, color: breakdownColors.active },
+                                { label: t("page.deckComparator.result.baseScore"), value: result.baseScorePart, color: breakdownColors.base },
+                                { label: t("page.deckComparator.result.skill15"), value: result.skill15Part, color: breakdownColors.skill15 },
+                                { label: t("page.deckComparator.result.skill6"), value: result.skill6Part, color: breakdownColors.skill6 },
+                                { label: t("page.deckComparator.result.activeBonus"), value: result.activeBonus, color: breakdownColors.active },
                             ].map((item) => (
                                 <div key={item.label} className="dc-result-card rounded-xl p-3 border border-slate-100">
                                     <div className="flex items-center gap-1.5 mb-1">
@@ -610,7 +619,7 @@ export default function DeckComparatorClient() {
                                         <span className="text-xs text-slate-500">{item.label}</span>
                                     </div>
                                     <div className="text-sm font-bold text-primary-text font-mono">
-                                        {item.value.toLocaleString()}
+                                        {formatNumber(item.value)}
                                     </div>
                                 </div>
                             ))}
@@ -619,21 +628,21 @@ export default function DeckComparatorClient() {
                         {/* Additional Info */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                             <div className="dc-result-card rounded-xl p-3 border border-slate-100">
-                                <div className="text-xs text-slate-500 mb-1">全队综合力</div>
+                                <div className="text-xs text-slate-500 mb-1">{t("page.deckComparator.result.totalPower")}</div>
                                 <div className="text-sm font-bold text-primary-text font-mono">
-                                    {result.totalPower.toLocaleString()}
+                                    {formatNumber(result.totalPower)}
                                 </div>
                             </div>
                             <div className="dc-result-card rounded-xl p-3 border border-slate-100">
-                                <div className="text-xs text-slate-500 mb-1">Skill6 实效</div>
+                                <div className="text-xs text-slate-500 mb-1">{t("page.deckComparator.result.skill6Effectiveness")}</div>
                                 <div className="text-sm font-bold text-primary-text font-mono">
                                     {result.skill6Effectiveness.toFixed(1)}%
                                 </div>
                             </div>
                             <div className="dc-result-card rounded-xl p-3 border border-slate-100 col-span-2 sm:col-span-1">
-                                <div className="text-xs text-slate-500 mb-1">波动幅度</div>
+                                <div className="text-xs text-slate-500 mb-1">{t("page.deckComparator.result.fluctuationRange")}</div>
                                 <div className="text-sm font-bold text-primary-text font-mono">
-                                    ±{((result.details.scoreBest - result.details.scoreWorst) / 2).toLocaleString()}
+                                    ±{formatNumber((result.details.scoreBest - result.details.scoreWorst) / 2)}
                                 </div>
                             </div>
                         </div>
@@ -641,15 +650,15 @@ export default function DeckComparatorClient() {
                         {/* Best / Worst Reference */}
                         <div className="grid grid-cols-2 gap-3">
                             <div className="dc-result-card rounded-xl p-3 border border-emerald-100 bg-emerald-50/50">
-                                <div className="text-xs text-emerald-600 mb-1">最优排列得分</div>
+                                <div className="text-xs text-emerald-600 mb-1">{t("page.deckComparator.result.bestScore")}</div>
                                 <div className="text-sm font-bold text-emerald-700 font-mono">
-                                    {result.details.scoreBest.toLocaleString()}
+                                    {formatNumber(result.details.scoreBest)}
                                 </div>
                             </div>
                             <div className="dc-result-card rounded-xl p-3 border border-red-100 bg-red-50/50">
-                                <div className="text-xs text-red-500 mb-1">最差排列得分</div>
+                                <div className="text-xs text-red-500 mb-1">{t("page.deckComparator.result.worstScore")}</div>
                                 <div className="text-sm font-bold text-red-600 font-mono">
-                                    {result.details.scoreWorst.toLocaleString()}
+                                    {formatNumber(result.details.scoreWorst)}
                                 </div>
                             </div>
                         </div>
@@ -662,10 +671,10 @@ export default function DeckComparatorClient() {
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                                 <span className="w-1.5 h-6 bg-slate-400 rounded-full"></span>
-                                历史记录
+                                {t("page.deckComparator.historyTitle")}
                             </h2>
                             <span className="text-xs text-slate-400">
-                                {history.length} 条记录
+                                {t("page.deckComparator.historyCount", { count: formatNumber(history.length) })}
                             </span>
                         </div>
 
@@ -687,11 +696,11 @@ export default function DeckComparatorClient() {
                                             </span>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
-                                            <span>{new Date(item.timestamp).toLocaleString()}</span>
+                                            <span>{formatDate(item.timestamp, { dateStyle: "short", timeStyle: "short" })}</span>
                                             <span className="hidden sm:inline">·</span>
-                                            <span>综合: {(item.userPower / 10000).toFixed(1)}w</span>
+                                            <span>{t("page.deckComparator.historyPower", { power: `${(item.userPower / 10000).toFixed(1)}w` })}</span>
                                             <span className="hidden sm:inline">·</span>
-                                            <span>加成: {item.deckBonus}%</span>
+                                            <span>{t("page.deckComparator.historyBonus", { bonus: item.deckBonus })}</span>
                                             <span className="hidden sm:inline">·</span>
                                             <span>{item.fires}🔥</span>
                                         </div>
@@ -700,10 +709,10 @@ export default function DeckComparatorClient() {
                                     {/* Score Info */}
                                     <div className="text-right flex-shrink-0">
                                         <div className="text-sm font-bold text-miku font-mono">
-                                            {item.pt.toLocaleString()} PT
+                                            {formatNumber(item.pt)} PT
                                         </div>
                                         <div className="text-xs text-slate-400 font-mono">
-                                            {item.score.toLocaleString()}
+                                            {formatNumber(item.score)}
                                         </div>
                                     </div>
 
@@ -711,7 +720,7 @@ export default function DeckComparatorClient() {
                                     <button
                                         onClick={() => handleDeleteHistory(item.id)}
                                         className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all shadow-sm hover:bg-red-200 hover:scale-110"
-                                        title="删除"
+                                        title={t("page.deckComparator.deleteHistory")}
                                     >
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -726,10 +735,10 @@ export default function DeckComparatorClient() {
                 {/* Footer */}
                 <div className="mt-12 text-center text-xs text-slate-400">
                     <p className="mb-1">
-                        计算公式修改于 xfl03(33) 的 <ExternalLink href="https://github.com/xfl03/sekai-calculator" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-calculator</ExternalLink>
+                        {t("page.deckComparator.sourceCreditPrefix")} <ExternalLink href="https://github.com/xfl03/sekai-calculator" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-calculator</ExternalLink>
                     </p>
                     <p>
-                        sekai-calculator 采用 LGPL-2.1 开源协议，计算结果仅供参考
+                        {t("page.deckComparator.licenseNotice")}
                     </p>
                 </div>
             </div>

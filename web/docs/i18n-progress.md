@@ -1,6 +1,6 @@
 # Moesekai i18n 迁移进度与协作技术文档
 
-> 更新时间：2026-05-20  
+> 更新时间：2026-05-21（完成 QuickFilterContext / 卡牌筛选枚举 hooks 与音乐详情页用户可见文案 i18n，中文残留扫描与定向 ESLint 通过）  
 > 适用范围：`web/` 前端 Next.js 应用  
 > 当前目标：逐步将硬编码中文 UI 文案迁移到内置 i18n 字典，支持 `zh-CN` / `en-US`，并为后续更多语言预留结构。
 
@@ -228,30 +228,50 @@ const { t } = useI18n();
 | `MainFooter` | 已完成 | Footer 固定文案接入 i18n |
 | `CommandPalette` | 已完成 | 命令面板基础文案接入 i18n |
 | `BaseFilters` | 已完成 | 搜索、排序、重置、折叠等基础文案接入 i18n |
+| 图片预览/复制下载共享组件 | 已完成 | `useSvgPreviewActions`、`useImageUrlActions`、`ImagePreviewModal` 固定中文文案已接入 `common.imageActions`，中文残留扫描与定向 ESLint 通过 |
+| 共享弹窗/快捷筛选/分组页 | 已完成 | `Modal` 关闭按钮、`QuickFilterButton` aria-label 已接入 i18n；`BreadcrumbGroupPage` 已移除中文描述 fallback，改为完全依赖 `layout.groupPages` 字典，中文残留扫描与定向 ESLint 通过 |
+| 全局错误页 | 已完成 | `app/error.tsx` 标题、描述、刷新/重试按钮已接入 `common.errorBoundary` / `common.action.retry`，中文残留扫描与定向 ESLint 通过 |
+| 快捷筛选 Context / 卡牌筛选枚举 hooks | 已完成 | `QuickFilterContext` 默认标题改为 `common.filter.title`；`useCardSupplyTypeMapping` / `useSkillMapping` 改为仅返回稳定枚举 id，显示文案由现有 `common.cardSupplyTypes` / `common.skillTypes` 字典负责，中文残留扫描与定向 ESLint 通过 |
 | 账号相关组件 | 已完成/进行中 | `AccountSelector`、`AccountSelectorBar`、`QuickBindForm` 等已大量接入 |
 
 ### 5.3 数据库/活动类页面
 
 | 路由 | 状态 | 说明 |
 |---|---:|---|
-| `/cards` | 已完成表层 | 列表、筛选、卡片基础文案已迁移；详情仍需单独确认 |
-| `/events` | 已完成表层 | 列表、筛选、活动状态等已迁移；详情仍需单独确认 |
-| `/gacha` | 已完成表层 | 列表、筛选、扭蛋状态等已迁移；详情仍需单独确认 |
-| `/music` | 已完成表层 | 列表基础文案已迁移；详情与复杂 metadata 仍需确认 |
-| `/live` | 已完成表层 | 列表基础文案已迁移；详情仍需确认 |
+| `/cards` | 已完成 | 列表、筛选、卡片基础文案、详情页（`/cards/[id]`）均已完全迁移至新 i18n 字典，支持卡池/活动关联与服装展示 |
+| `/events` 与 `/events/[id]` | 已完成 | 列表、筛选、活动状态已迁移；详情页（含 EventBgmPlayer）已完全迁移 |
+| `/gacha` 与 `/gacha/[id]` | 已完成 | 列表、筛选、扭蛋状态等已迁移；详情页完全迁移（包含基本信息、概率、模拟器、自选 Wish 机制与 404 反馈） |
+| `/music` 与 `/music/[id]` | 已完成 | 列表基础文案、详情页 404、详情页基础信息/封面预览/META 排行/难度区/演唱版本/相关活动/返回按钮均已迁移；音乐详情页中文残留扫描与定向 ESLint 通过，复杂 metadata 仍需确认 |
+| `/live` 与 `/live/[id]` | 已完成 | 列表与详情页（包含演出时间表、节目单、相关活动和 metadata）已全部迁移 |
 | `/materials` | 已完成 | 列表、筛选、详情弹窗、metadata 已迁移 |
 | `/exchanges` | 已完成 | 列表、筛选、metadata 已迁移 |
 | `/exchanges/[id]` | 已完成 | 详情页、字段、奖励/成本区、metadata 已迁移 |
 | `/honors` | 已完成 | 普通称号/羁绊称号列表、筛选、详情弹窗、metadata 已迁移 |
+| `/mysekai` 与 `/mysekai/[id]` | 已完成 | 列表页、筛选器、详情页字段/状态、genre/tag 显示名、metadata 与 404 反馈已迁移 |
+| `/story/**` | 已完成/待构建 | 剧情总入口、主线剧情、活动剧情、卡牌剧情、区域对话、自我介绍与特殊剧情列表/详情/阅读页 metadata 与固定 UI 文案已接入 `page.story`；共享 `StoryPageHeader`、`StoryReader`、`StorySnippet` 已迁移；story 目标范围中文残留扫描与定向 ESLint 通过，待后续统一 Next 构建确认 |
+| `/character` 与 `/character/[id]` | 已完成 | 列表页、详情页、metadata 与详情页广告标题已迁移 |
+| `/costumes` 与 `/costumes/[id]` | 已完成 | 列表页、筛选器（CostumeFilters）、详情页、metadata 与共享枚举（partTypes/sources/rarities/genders）已迁移 |
+| `/sticker` | 已完成 | 列表页、筛选、预览弹窗、metadata 已迁移 |
+| `/comic` | 已完成 | 列表页、筛选、预览弹窗、metadata 已迁移 |
+| `/manga` 与 `/manga/[id]` | 已完成 | 列表页、详情页、上下话跳转、贡献者/来源信息、metadata 已迁移 |
 
 ### 5.4 个人页/工具页
 
 | 路由 | 状态 | 说明 |
 |---|---:|---|
-| `/profile` | 已完成 | 账号管理、危险操作、快捷入口等已迁移 |
-| `/my-cards` | 已完成/进行中 | 主流程和空态已迁移，仍建议后续扫详情/分享功能 |
-| `/my-musics` | 已完成/进行中 | 主流程和部分分享功能已迁移，仍建议后续扫图像生成文案 |
-| `/my-materials` | 已完成/进行中 | 资源查询主体已迁移 |
+| `/profile` | 已完成 | 账号管理、危险操作、快捷入口等已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("profile")`；`client.tsx` 调试日志/注释中文残留已清理 |
+| `/deck-recommend` | 已完成 | 主页面、metadata、Event/Music 选择器、结果区、校验错误与 worker 进度文案已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/deck-comparator` | 已完成 | 主页面、metadata、结果区、历史记录、校验错误与 calculator 工具错误/注释已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/score-control` | 已完成 | 主页面、metadata、控分组卡、无限查找、结果区、错误提示、calculator 与 deck-builder worker 注释已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/sticker-maker` | 已完成 | metadata 已改为英文兜底；主 UI、控件、空态、上传/复制下载提示、license 声明已接入 `page.stickerMaker` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/goods-gacha` | 已完成 | metadata 已改为英文兜底；主 UI、卡池选择、抽选按钮、统计、重置确认、空态、图片 alt 与免责声明已接入 `page.goodsGacha` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/guess-who` 与 `/guess-who/multiplayer` | 已完成 | metadata 已改为英文兜底；单人页设置/对战/结算、联机大厅/房间/加载/对战反馈/结算/错误提示已接入 `page.guessWho` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/guess-jacket` 与 `/guess-jacket/multiplayer` | 已完成 | metadata 已改为英文兜底；单人页设置/对战/结算、联机大厅/房间/加载/对战反馈/结算/错误提示已接入 `page.guessJacket` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/chart-preview` | 已完成 | metadata 已改为英文兜底；页面头部、模式切换、歌曲/URL 表单、预览页按钮、播放器加载状态、音频提示、控制栏、iOS 提示与 credits 文案已接入 `page.chartPreview` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/mysekai-preview`、`/mysekai-preview/ranking`、`/mysekai-preview/scene` | 已完成 | 已新增 `page.mysekaiPreview` 中英字典；列表/排行详情/UID+JSON 入口页、metadata、共享 `MysekaiScenePreview` 控制面板与 `lib/mysekai-preview/runtime.ts` 浮层/状态/错误文案已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/my-cards` | 已完成/进行中 | 主流程和空态已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("my_cards")`；仍建议后续扫详情/分享功能 |
+| `/my-musics` | 已完成/进行中 | 主流程和部分分享功能已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("my_musics")`；`client.tsx` 数据源/排序注释中文残留已清理；仍建议后续扫图像生成文案 |
+| `/my-materials` | 已完成/进行中 | 资源查询主体已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("my_materials")` |
 
 ## 6. 高风险/待推进区域
 
@@ -266,28 +286,17 @@ const { t } = useI18n();
 
 建议优先级：
 
-1. `/cards/[id]`
-2. `/events/[id]`
-3. `/gacha/[id]`
-4. `/music/[id]`
-5. `/live/[id]`
-6. `/costumes/[id]`
-7. `/mysekai/[id]`
-8. story 相关动态路由
+1. story 相关动态路由（已完成本轮目标范围：`/story` 入口、`/story/unit/**`、`/story/event/**`、`/story/card/**`、`/story/area/**`、`/story/self/**`、`/story/special/**`；后续建议统一跑 Next 构建）
+2. 个人页详情/分享生成相关动态逻辑
+3. 其他新增长尾详情页
+
+已完成的核心动态详情页包括 `/cards/[id]`、`/events/[id]`、`/gacha/[id]`、`/music/[id]`、`/live/[id]`、`/costumes/[id]`、`/manga/[id]`、`/mysekai/[id]`。
 
 ### 6.2 复杂工具页
 
 复杂工具页有大量表单、状态机、错误提示和结果展示，迁移前建议先读一遍业务逻辑：
 
-- `/deck-recommend`
-- `/deck-comparator`
-- `/score-control`
-- `/sticker-maker`
-- `/goods-gacha`
-- `/guess-who`
-- `/guess-jacket`
-- `/chart-preview`
-- `/mysekai-preview/scene`
+- `/mysekai-preview/scene`（已完成：页面、metadata、共享 3D 预览组件与 runtime 均已迁移）
 
 ### 6.3 图片/分享生成逻辑
 
@@ -418,29 +427,25 @@ npm run build:next --prefix web
 
 ## 9. 最近一批已验证结果
 
-最近一次完成迁移并验证的范围：
+最近一批推进的范围：
 
 ```text
-web/src/app/materials/client.tsx
-web/src/app/materials/page.tsx
-web/src/app/exchanges/client.tsx
-web/src/app/exchanges/page.tsx
-web/src/app/exchanges/[id]/client.tsx
-web/src/app/exchanges/[id]/page.tsx
-web/src/app/honors/client.tsx
-web/src/app/honors/page.tsx
-web/src/components/honor/HonorFilters.tsx
-web/src/components/honor/HonorDetailDialog.tsx
-web/src/components/honor/BondsHonorDetailDialog.tsx
-web/src/lib/exchanges.ts
-web/src/types/honor.ts
+web/src/contexts/QuickFilterContext.tsx
+web/src/hooks/useCardSupplyType.ts
+web/src/hooks/useSkillMapping.ts
+web/src/app/music/[id]/client.tsx
+web/src/lib/i18n/messages/zh-CN/index.ts (补充 page.music 详情页文案)
+web/src/lib/i18n/messages/en-US/index.ts (补充 page.music 详情页文案)
 ```
 
-验证结果：
+阶段进度：
 
-- 中文残留扫描：通过。
-- 定向 ESLint：通过。
-- `npm run build:next --prefix web`：通过。
+- 已将 `QuickFilterContext` 默认标题接入 `common.filter.title`，避免 Context 内残留中文 fallback。
+- 已将 `useCardSupplyTypeMapping` / `useSkillMapping` 改为仅返回稳定枚举 id，卡牌筛选显示继续由 `common.cardSupplyTypes` / `common.skillTypes` 字典负责。
+- 已补充 `page.music` 中英详情页字典，覆盖封面预览标题、点击放大、基础信息字段、解锁条件、META 排行 tab、难度详情、社区定数提示、谱面预览按钮、演唱版本、下载音频、相关活动与返回按钮。
+- 已将 `/music/[id]` 详情页日期/数字格式化改为 `formatDate` / `formatNumber`，音乐 tag / category 显示改为读取现有 `common.musicTags` / `common.musicCategories` 字典。
+- 中文残留扫描：通过（`web/src/app/music/[id]/client.tsx`、`web/src/contexts/QuickFilterContext.tsx`、`web/src/hooks/useCardSupplyType.ts`、`web/src/hooks/useSkillMapping.ts` 已无中文硬编码残留）。
+- 定向 ESLint：通过（`npm run lint --prefix web -- src/app/music/[id]/client.tsx src/contexts/QuickFilterContext.tsx src/hooks/useCardSupplyType.ts src/hooks/useSkillMapping.ts src/lib/i18n/messages/zh-CN/index.ts src/lib/i18n/messages/en-US/index.ts`）。
 
 ## 10. 协作注意事项
 
@@ -499,31 +504,32 @@ useEffect(() => {
 
 ### P0：继续完成核心动态详情页
 
-- [ ] `/cards/[id]`
-- [ ] `/events/[id]`
-- [ ] `/gacha/[id]`
-- [ ] `/music/[id]`
-- [ ] `/live/[id]`
+- [x] `/cards/[id]`
+- [x] `/events/[id]`
+- [x] `/gacha/[id]`
+- [x] `/music/[id]`（404 已标准化，复杂 metadata 仍待确认）
+- [x] `/live/[id]`
 
 ### P1：完成数据库补充页
 
-- [ ] `/character` 与 `/character/[id]`
-- [ ] `/costumes` 与 `/costumes/[id]`
-- [ ] `/sticker`
-- [ ] `/comic`
-- [ ] `/manga`
-- [ ] `/mysekai` 与 `/mysekai/[id]`
+- [x] `/character` 与 `/character/[id]`
+- [x] `/costumes` 与 `/costumes/[id]`
+- [x] `/sticker`
+- [x] `/comic`
+- [x] `/manga` 与 `/manga/[id]`
+- [x] `/mysekai` 与 `/mysekai/[id]`
 
 ### P2：复杂工具页
 
-- [ ] `/deck-recommend`
-- [ ] `/deck-comparator`
-- [ ] `/score-control`
-- [ ] `/sticker-maker`
-- [ ] `/goods-gacha`
-- [ ] `/guess-who`
-- [ ] `/guess-jacket`
-- [ ] `/chart-preview`
+- [x] `/deck-recommend`
+- [x] `/deck-comparator`
+- [x] `/score-control`
+- [x] `/sticker-maker`
+- [x] `/goods-gacha`
+- [x] `/guess-who`
+- [x] `/guess-jacket`
+- [x] `/chart-preview`
+- [x] `/mysekai-preview`（含 `/ranking` 与 `/scene`）
 
 ### P3：自动化保障
 

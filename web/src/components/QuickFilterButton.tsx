@@ -1,6 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Modal from "@/components/common/Modal";
+import { useI18n } from "@/contexts/I18nContext";
 import { useQuickFilterContext } from "@/contexts/QuickFilterContext";
 
 /**
@@ -12,6 +13,7 @@ import { useQuickFilterContext } from "@/contexts/QuickFilterContext";
  * `useQuickFilter()`.
  */
 export default function QuickFilterButton() {
+    const { t } = useI18n();
     const { filterContent, filterTitle, isOpen, open, close } = useQuickFilterContext();
     const [isVisible, setIsVisible] = useState(false);
     const [isTapAnimating, setIsTapAnimating] = useState(false);
@@ -91,7 +93,7 @@ export default function QuickFilterButton() {
                         ? "opacity-100 translate-y-0 scale-100"
                         : "opacity-0 translate-y-10 scale-90 pointer-events-none"
                     }`}
-                aria-label="打开快捷筛选"
+                aria-label={t("common.filter.openQuickFilter")}
             >
                 <svg
                     className={`w-6 h-6 transition-transform duration-500 group-hover:rotate-12 ${isInteracting ? "rotate-12" : ""} ${isTapAnimating ? "quick-filter-icon-tap" : ""}`}

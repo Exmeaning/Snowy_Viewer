@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Modal from "@/components/common/Modal";
+import { useI18n } from "@/contexts/I18nContext";
 import { copyImageFromUrl, saveImageFromUrl } from "@/lib/imageActions";
 
 interface ImagePreviewModalProps {
@@ -23,6 +24,7 @@ export default function ImagePreviewModal({
     fileName,
     size = "xl",
 }: ImagePreviewModalProps) {
+    const { t } = useI18n();
     const [isCopying, setIsCopying] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
@@ -76,11 +78,11 @@ export default function ImagePreviewModal({
                 setCopySuccess(false);
             }, 1800);
         } catch {
-            setErrorMessage("复制失败：当前浏览器可能不支持，请使用保存图片");
+            setErrorMessage(t("common.imageActions.copyFailedUseSave"));
         } finally {
             setIsCopying(false);
         }
-    }, [imageUrl]);
+    }, [imageUrl, t]);
 
     const handleSave = useCallback(async () => {
         setIsSaving(true);
@@ -97,11 +99,11 @@ export default function ImagePreviewModal({
                 setSaveSuccess(false);
             }, 1800);
         } catch {
-            setErrorMessage("保存失败，请稍后重试");
+            setErrorMessage(t("common.imageActions.saveFailed"));
         } finally {
             setIsSaving(false);
         }
-    }, [fileName, imageUrl]);
+    }, [fileName, imageUrl, t]);
 
     const headerActions = (
         <>
@@ -109,8 +111,8 @@ export default function ImagePreviewModal({
                 onClick={handleCopy}
                 disabled={isCopying || isSaving}
                 className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                aria-label="复制图片"
-                title={isCopying ? "复制中" : copySuccess ? "复制成功" : "复制图片"}
+                aria-label={t("common.imageActions.copyImage")}
+                title={isCopying ? t("common.imageActions.copying") : copySuccess ? t("common.imageActions.copySuccess") : t("common.imageActions.copyImage")}
             >
                 <span className="relative block w-4 h-4">
                     <svg
@@ -144,8 +146,8 @@ export default function ImagePreviewModal({
                 onClick={handleSave}
                 disabled={isSaving || isCopying}
                 className="p-1.5 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                aria-label="保存图片"
-                title={isSaving ? "保存中" : saveSuccess ? "保存完成" : "保存图片"}
+                aria-label={t("common.imageActions.saveImage")}
+                title={isSaving ? t("common.imageActions.saving") : saveSuccess ? t("common.imageActions.saveSuccess") : t("common.imageActions.saveImage")}
             >
                 <span className="relative block w-4 h-4">
                     <svg
@@ -190,11 +192,10 @@ export default function ImagePreviewModal({
                 {saveClickCount >= 2 && (
                     <div className="rounded-xl bg-gradient-to-r from-miku/5 to-luka/5 border border-miku/15 px-4 py-2.5 animate-in fade-in duration-300">
                         <p className="text-xs text-slate-600 leading-relaxed">
-                            若未能正常开启下载，请尝试<strong className="text-slate-700">右键点击图片（移动端长按）→ 保存图像</strong>。
-                            或下载最新版浏览器：
+                            {t("common.imageActions.downloadHintPrefix")}<strong className="text-slate-700">{t("common.imageActions.downloadHintAction")}</strong>{t("common.imageActions.downloadHintSuffix")}
                             <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer" className="text-miku font-medium hover:underline ml-1">Chrome</a>
                             <span className="mx-0.5 text-slate-300">/</span>
-                            <a href="https://www.firefox.com/zh-CN/" target="_blank" rel="noopener noreferrer" className="text-miku font-medium hover:underline">Firefox</a>
+                            <a href="https://www.firefox.com/" target="_blank" rel="noopener noreferrer" className="text-miku font-medium hover:underline">Firefox</a>
                         </p>
                     </div>
                 )}
