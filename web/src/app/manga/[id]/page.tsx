@@ -10,8 +10,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
     const manga = getMangaMeta(Number(id));
 
-    const title = manga?.title || `第${id}话`;
-    const description = `Project Sekai 官方四格漫画 - ${title}` + DETAIL_SEO_SUFFIX;
+    const title = manga?.title || `Episode ${id}`;
+    const description = `Project Sekai official four-panel comic - ${title}` + DETAIL_SEO_SUFFIX;
     const ogImage = `https://moe.exmeaning.com/mangas/${id}.png`;
 
     return {

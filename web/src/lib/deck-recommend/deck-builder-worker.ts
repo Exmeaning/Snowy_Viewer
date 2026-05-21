@@ -2,8 +2,8 @@
  * Web Worker for score-control deck building
  * Uses EventBonusDeckRecommend to find decks with exact target event bonus
  *
- * 组卡代码来源: sekai-calculator (https://github.com/pjsek-ai/sekai-calculator)
- * 部分算法优化修改于: https://github.com/NeuraXmy/sekai-deck-recommend-cpp  作者: luna茶
+ * Deck-building code source: sekai-calculator (https://github.com/pjsek-ai/sekai-calculator)
+ * Some algorithm optimizations are adapted from: https://github.com/NeuraXmy/sekai-deck-recommend-cpp.
  */
 import {
     type CardConfig,

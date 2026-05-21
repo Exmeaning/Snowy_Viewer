@@ -8,6 +8,7 @@ import MainLayout from "@/components/MainLayout";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "@/contexts/TranslationContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { getCostumeThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
 import { CHARACTER_NAMES, ICardInfo, isTrainableCard } from "@/types/types";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -50,6 +51,7 @@ export default function CostumeDetailClient() {
     const costumeNumber = Number(params.id);
     const { assetSource, useTrainedThumbnail } = useTheme();
     const { t } = useTranslation();
+    const { t: tI18n, formatDate } = useI18n();
     const { setDetailName } = useBreadcrumb();
 
     const [costumeGroup, setCostumeGroup] = useState<ICostumeInfo | null>(null);
@@ -182,15 +184,17 @@ export default function CostumeDetailClient() {
     const includedPartTypes = useMemo(() => {
         const types = new Set<string>();
         displayItems.forEach(item => {
-            const label = PART_TYPE_NAMES[item.partType] || item.partType;
+            const i18nKey = `common.costume.partTypes.${item.partType}`;
+            const i18nLabel = tI18n(i18nKey);
+            const label = i18nLabel === i18nKey ? (PART_TYPE_NAMES[item.partType] || item.partType) : i18nLabel;
             if (item.characterId) {
-                types.add(`${label} (专属)`);
+                types.add(tI18n("page.costumes.extraPartTag", { label }));
             } else {
                 types.add(label);
             }
         });
         return Array.from(types).sort();
-    }, [displayItems]);
+    }, [displayItems, tI18n]);
 
     // Available color variants (from shared parts only)
     const availableColors = useMemo(() => {
@@ -217,8 +221,8 @@ export default function CostumeDetailClient() {
 
     const displayGender = useMemo(() => {
         if (!representative) return "";
-        return representative.gender === "female" ? "女性" : "男性";
-    }, [representative]);
+        return tI18n(`common.costume.genders.${representative.gender}`);
+    }, [representative, tI18n]);
 
     if (isLoading) {
         return (
@@ -226,7 +230,7 @@ export default function CostumeDetailClient() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">加载中...</p>
+                        <p className="mt-4 text-slate-500">{tI18n("page.costumes.detailLoadingFallback")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -243,8 +247,8 @@ export default function CostumeDetailClient() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">服装 {costumeNumber} 未找到</h2>
-                        <p className="text-slate-500 mb-6">该服装可能尚未收录</p>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">{tI18n("page.costumes.notFoundTitle", { id: costumeNumber })}</h2>
+                        <p className="text-slate-500 mb-6">{tI18n("page.costumes.notFoundDesc")}</p>
                         <Link
                             href="/costumes"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
@@ -252,7 +256,7 @@ export default function CostumeDetailClient() {
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            返回服装图鉴
+                            {tI18n("page.costumes.backToList")}
                         </Link>
                     </div>
                 </div>
@@ -273,10 +277,14 @@ export default function CostumeDetailClient() {
                             ? "bg-amber-100 text-amber-700"
                             : "bg-slate-100 text-slate-500"
                             }`}>
-                            {RARITY_NAMES[representative.costume3dRarity] || representative.costume3dRarity}
+                            {tI18n(`common.costume.rarities.${representative.costume3dRarity}`) !== `common.costume.rarities.${representative.costume3dRarity}`
+                                ? tI18n(`common.costume.rarities.${representative.costume3dRarity}`)
+                                : (RARITY_NAMES[representative.costume3dRarity] || representative.costume3dRarity)}
                         </span>
                         <span className="px-3 py-1 text-xs font-bold rounded-full bg-miku/10 text-miku">
-                            {SOURCE_NAMES[representative.source] || representative.source}
+                            {tI18n(`common.costume.sources.${representative.source}`) !== `common.costume.sources.${representative.source}`
+                                ? tI18n(`common.costume.sources.${representative.source}`)
+                                : (SOURCE_NAMES[representative.source] || representative.source)}
                         </span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-slate-800">
@@ -354,7 +362,7 @@ export default function CostumeDetailClient() {
                                 })}
                                 {displayItems.length === 0 && (
                                     <div className="col-span-4 aspect-[4/1] flex items-center justify-center text-slate-400 text-sm">
-                                        暂无部件数据
+                                        {tI18n("page.costumes.noPartsData")}
                                     </div>
                                 )}
                             </div>
@@ -362,7 +370,7 @@ export default function CostumeDetailClient() {
                             {/* Color Selector */}
                             {availableColors.length > 1 && (
                                 <div className="p-4 bg-slate-50/50 border-t border-slate-100">
-                                    <p className="text-xs font-bold text-slate-500 mb-2">配色方案</p>
+                                    <p className="text-xs font-bold text-slate-500 mb-2">{tI18n("page.costumes.colorSchemesLabel")}</p>
                                     <div className="flex flex-wrap gap-2">
                                         {availableColors.map(variant => {
                                             const isSelected = selectedColorId === variant.colorId;
@@ -403,13 +411,13 @@ export default function CostumeDetailClient() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    服装信息
+                                    {tI18n("page.costumes.basicInfo")}
                                 </h2>
                             </div>
                             <div className="divide-y divide-slate-100">
-                                <InfoRow label="编号" value={`#${costumeNumber}`} />
+                                <InfoRow label={tI18n("page.costumes.fields.id")} value={`#${costumeNumber}`} />
                                 <InfoRow
-                                    label="名称"
+                                    label={tI18n("page.costumes.fields.name")}
                                     value={
                                         <TranslatedText
                                             original={representative.name}
@@ -420,35 +428,35 @@ export default function CostumeDetailClient() {
                                         />
                                     }
                                 />
-                                <InfoRow label="类型" value={representative.costume3dType} />
-                                <InfoRow label="来源" value={
+                                <InfoRow label={tI18n("page.costumes.fields.type")} value={representative.costume3dType} />
+                                <InfoRow label={tI18n("page.costumes.fields.source")} value={
                                     <span className={`px-2 py-0.5 rounded text-xs font-bold ${representative.source === "card" ? "bg-blue-100 text-blue-600" :
                                         representative.source === "shop" ? "bg-green-100 text-green-600" :
                                             "bg-amber-100 text-amber-600"
                                         }`}>
-                                        {SOURCE_NAMES[representative.source] || representative.source}
+                                        {tI18n(`common.costume.sources.${representative.source}`) !== `common.costume.sources.${representative.source}`
+                                            ? tI18n(`common.costume.sources.${representative.source}`)
+                                            : (SOURCE_NAMES[representative.source] || representative.source)}
                                     </span>
                                 } />
-                                <InfoRow label="稀有度" value={
+                                <InfoRow label={tI18n("page.costumes.fields.rarity")} value={
                                     <span className={`px-2 py-0.5 rounded text-xs font-bold ${representative.costume3dRarity === "rare"
                                         ? "bg-amber-100 text-amber-700"
                                         : "bg-slate-100 text-slate-500"
                                         }`}>
-                                        {RARITY_NAMES[representative.costume3dRarity] || representative.costume3dRarity}
+                                        {tI18n(`common.costume.rarities.${representative.costume3dRarity}`) !== `common.costume.rarities.${representative.costume3dRarity}`
+                                            ? tI18n(`common.costume.rarities.${representative.costume3dRarity}`)
+                                            : (RARITY_NAMES[representative.costume3dRarity] || representative.costume3dRarity)}
                                     </span>
                                 } />
-                                <InfoRow label="性别" value={displayGender} />
+                                <InfoRow label={tI18n("page.costumes.fields.gender")} value={displayGender} />
                                 {representative.designer && representative.designer !== "-" && (
-                                    <InfoRow label="设计者" value={t("costumes", "designer", representative.designer) || representative.designer} />
+                                    <InfoRow label={tI18n("page.costumes.fields.designer")} value={t("costumes", "designer", representative.designer) || representative.designer} />
                                 )}
-                                <InfoRow label="发布时间" value={
+                                <InfoRow label={tI18n("page.costumes.fields.publishedAt")} value={
                                     mounted && representative.publishedAt
-                                        ? new Date(representative.publishedAt).toLocaleDateString("zh-CN", {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                        })
-                                        : representative.publishedAt ? "..." : "未知"
+                                        ? formatDate(representative.publishedAt, { dateStyle: "long" })
+                                        : representative.publishedAt ? "..." : tI18n("page.costumes.unknownPublishedAt")
                                 } />
                             </div>
                         </div>
@@ -460,7 +468,7 @@ export default function CostumeDetailClient() {
                                     <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                     </svg>
-                                    包含部件
+                                    {tI18n("page.costumes.partsListTitle")}
                                 </h2>
                             </div>
                             <div className="p-5 flex flex-wrap gap-2">
@@ -480,9 +488,9 @@ export default function CostumeDetailClient() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                         </svg>
-                                        可穿戴角色
+                                        {tI18n("page.costumes.charactersTitle")}
                                         <span className="text-xs font-normal text-slate-400 ml-1">
-                                            ({representative.characterIds.length})
+                                            {tI18n("page.costumes.charactersCount", { count: representative.characterIds.length })}
                                         </span>
                                     </h2>
                                 </div>
@@ -524,7 +532,7 @@ export default function CostumeDetailClient() {
                                         <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                         </svg>
-                                        关联卡牌
+                                        {tI18n("page.costumes.relatedCardsTitle")}
                                     </h2>
                                 </div>
                                 <div className="p-5">
@@ -559,7 +567,7 @@ export default function CostumeDetailClient() {
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        返回服装图鉴
+                        {tI18n("page.costumes.backToList")}
                     </button>
                 </div>
             </div>

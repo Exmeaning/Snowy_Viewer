@@ -5,6 +5,7 @@ import { type ChangeEvent, type FormEvent, useEffect, useMemo, useRef, useState 
 import AccountSelector from "@/components/AccountSelector";
 import MainLayout from "@/components/MainLayout";
 import MysekaiScenePreview from "@/components/mysekai-preview/MysekaiScenePreview";
+import { useI18n } from "@/contexts/I18nContext";
 import { replaceAssetSourceRegion, type AssetSourceType, useTheme } from "@/contexts/ThemeContext";
 import type { ServerType } from "@/lib/account";
 import { type BaijingServer, getUserMysekaiRoomUrl } from "@/lib/mysekai-preview/baijing";
@@ -56,11 +57,6 @@ declare global {
     }
 }
 
-const JSON_SOURCE_OPTIONS: Array<{ value: JsonSourceMode; label: string; desc: string }> = [
-    { value: "file", label: "选择文件", desc: "从本地选择布局 JSON" },
-    { value: "url", label: "填写 URL", desc: "输入布局 JSON 地址" },
-];
-
 function errorMessage(error: unknown) {
     return error instanceof Error ? error.message : String(error);
 }
@@ -71,10 +67,12 @@ function responseErrorDetail(data: unknown) {
     return typeof detail === "string" ? detail : "";
 }
 
-function jsonLoadErrorMessage(error: unknown) {
+type TranslationFn = ReturnType<typeof useI18n>["t"];
+
+function jsonLoadErrorMessage(error: unknown, t: TranslationFn) {
     const message = errorMessage(error);
     if (message === "Failed to fetch" || message.includes("NetworkError") || message.includes("Load failed")) {
-        return "浏览器无法直接读取该 URL（可能是 CORS 或网络限制），请下载 JSON 后改用文件模式";
+        return t("page.mysekaiPreview.scene.errors.urlCors");
     }
     return message;
 }
@@ -83,38 +81,38 @@ function normalizeUid(value: string) {
     return value.replace(/\s+/g, "").trim();
 }
 
-function normalizeHttpUrl(value: string) {
+function normalizeHttpUrl(value: string, t: TranslationFn) {
     const trimmed = value.trim();
-    if (!trimmed) throw new Error("请输入布局 JSON URL");
+    if (!trimmed) throw new Error(t("page.mysekaiPreview.scene.errors.urlRequired"));
     let url: URL;
     try {
         url = new URL(trimmed);
     } catch {
-        throw new Error("请输入完整的 http(s) JSON URL，或选择本地 JSON 文件");
+        throw new Error(t("page.mysekaiPreview.scene.errors.urlInvalid"));
     }
     if (url.protocol !== "http:" && url.protocol !== "https:") {
-        throw new Error("布局 JSON URL 仅支持 http(s) 地址");
+        throw new Error(t("page.mysekaiPreview.scene.errors.urlUnsupported"));
     }
     return url.toString();
 }
 
-function parseLayoutJsonText(text: string, label: string) {
+function parseLayoutJsonText(text: string, label: string, t: TranslationFn) {
     const trimmed = text.trim();
-    if (!trimmed) throw new Error(`${label} 没有可读取的 JSON 内容`);
+    if (!trimmed) throw new Error(t("page.mysekaiPreview.scene.errors.emptyJson", { label }));
     try {
         return JSON.parse(trimmed) as MysekaiLayoutPayload;
     } catch {
-        throw new Error(`${label} 不是有效的 JSON`);
+        throw new Error(t("page.mysekaiPreview.scene.errors.invalidJson", { label }));
     }
 }
 
-async function fetchLayoutPayloadFromUrl(url: string) {
+async function fetchLayoutPayloadFromUrl(url: string, t: TranslationFn) {
     const response = await fetch(url, { cache: "no-store" });
     const text = await response.text();
     if (!response.ok) {
-        throw new Error(`${response.status} ${response.statusText || "布局 JSON 读取失败"}`);
+        throw new Error(`${response.status} ${response.statusText || t("page.mysekaiPreview.scene.errors.jsonFetchFailedFallback")}`);
     }
-    return parseLayoutJsonText(text, url);
+    return parseLayoutJsonText(text, url, t);
 }
 
 function isValidRoomPayload(payload: MysekaiLayoutPayload) {
@@ -129,10 +127,11 @@ function getInitialAssetSource(assetSource: AssetSourceType, server: BaijingServ
 }
 
 function TurnstileBox({ onToken, resetSeed }: { onToken: (token: string) => void; resetSeed: number }) {
+    const { t } = useI18n();
     const hostRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
     const [scriptReady, setScriptReady] = useState(() => typeof window !== "undefined" && Boolean(window.turnstile));
-    const [message, setMessage] = useState("正在加载 Cloudflare 验证…");
+    const [message, setMessage] = useState(() => t("page.mysekaiPreview.scene.turnstile.loading"));
 
     useEffect(() => {
         if (window.turnstile) return;
@@ -148,9 +147,9 @@ function TurnstileBox({ onToken, resetSeed }: { onToken: (token: string) => void
         script.src = `${TURNSTILE_SCRIPT_SRC}&onload=__mysekaiTurnstileLoaded`;
         script.async = true;
         script.defer = true;
-        script.onerror = () => setMessage("Cloudflare 验证脚本加载失败，请检查网络后刷新页面");
+        script.onerror = () => setMessage(t("page.mysekaiPreview.scene.turnstile.scriptFailed"));
         document.head.appendChild(script);
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         if (!scriptReady || !hostRef.current || !window.turnstile) return;
@@ -161,15 +160,15 @@ function TurnstileBox({ onToken, resetSeed }: { onToken: (token: string) => void
             theme: "light",
             size: "normal",
             callback: (token) => {
-                setMessage("验证完成，可以查询 UID 啦");
+                setMessage(t("page.mysekaiPreview.scene.turnstile.completed"));
                 onToken(token);
             },
             "expired-callback": () => {
-                setMessage("验证已过期，请重新完成人机验证");
+                setMessage(t("page.mysekaiPreview.scene.turnstile.expired"));
                 onToken("");
             },
             "error-callback": () => {
-                setMessage("验证失败，请重新尝试");
+                setMessage(t("page.mysekaiPreview.scene.turnstile.failed"));
                 onToken("");
             },
         });
@@ -180,7 +179,7 @@ function TurnstileBox({ onToken, resetSeed }: { onToken: (token: string) => void
                 widgetIdRef.current = null;
             }
         };
-    }, [onToken, scriptReady]);
+    }, [onToken, scriptReady, t]);
 
     useEffect(() => {
         if (!resetSeed || !widgetIdRef.current) return;
@@ -202,9 +201,10 @@ function TurnstileBox({ onToken, resetSeed }: { onToken: (token: string) => void
 }
 
 function ModeTabs({ mode, onChange }: { mode: EntryMode; onChange: (mode: EntryMode) => void }) {
+    const { t } = useI18n();
     const options: Array<{ value: EntryMode; label: string; desc: string }> = [
-        { value: "uid", label: "UID 查询", desc: "输入 JP / CN UID 自动读取烤森布局" },
-        { value: "json", label: "布局 JSON", desc: "选择本地文件或直接读取 JSON URL" },
+        { value: "uid", label: t("page.mysekaiPreview.scene.modes.uidLabel"), desc: t("page.mysekaiPreview.scene.modes.uidDesc") },
+        { value: "json", label: t("page.mysekaiPreview.scene.modes.jsonLabel"), desc: t("page.mysekaiPreview.scene.modes.jsonDesc") },
     ];
 
     return (
@@ -228,6 +228,7 @@ function ModeTabs({ mode, onChange }: { mode: EntryMode; onChange: (mode: EntryM
 }
 
 export default function MysekaiPreviewSceneClient() {
+    const { t } = useI18n();
     const { assetSource } = useTheme();
     const [mode, setMode] = useState<EntryMode>("uid");
     const [server, setServer] = useState<BaijingServer>("jp");
@@ -246,15 +247,20 @@ export default function MysekaiPreviewSceneClient() {
         return assetSource;
     }, [assetSource, previewState]);
 
+    const jsonSourceOptions = useMemo<Array<{ value: JsonSourceMode; label: string; desc: string }>>(() => [
+        { value: "file", label: t("page.mysekaiPreview.scene.jsonSources.fileLabel"), desc: t("page.mysekaiPreview.scene.jsonSources.fileDesc") },
+        { value: "url", label: t("page.mysekaiPreview.scene.jsonSources.urlLabel"), desc: t("page.mysekaiPreview.scene.jsonSources.urlDesc") },
+    ], [t]);
+
     const handleUidSubmit = async (event: FormEvent) => {
         event.preventDefault();
         const normalizedUid = normalizeUid(uid);
         if (!/^\d+$/.test(normalizedUid)) {
-            setError("请输入正确的数字 UID");
+            setError(t("page.mysekaiPreview.scene.errors.invalidUid"));
             return;
         }
         if (!turnstileToken) {
-            setError("请先完成 Cloudflare 验证");
+            setError(t("page.mysekaiPreview.scene.errors.turnstileRequired"));
             return;
         }
 
@@ -277,7 +283,7 @@ export default function MysekaiPreviewSceneClient() {
                 throw new Error(detail ? `${response.status} ${detail}` : `${response.status} ${response.statusText}`);
             }
             if (!data || !isValidRoomPayload(data as MysekaiLayoutPayload)) {
-                throw new Error("接口未返回可用的 room 布局数据");
+                throw new Error(t("page.mysekaiPreview.scene.errors.noRoomData"));
             }
             setUid(normalizedUid);
             setPreviewState({
@@ -316,20 +322,20 @@ export default function MysekaiPreviewSceneClient() {
             let layoutKey: string;
 
             if (jsonSourceMode === "file") {
-                if (!layoutFile) throw new Error("请选择布局 JSON 文件");
-                data = parseLayoutJsonText(await layoutFile.text(), layoutFile.name);
+                if (!layoutFile) throw new Error(t("page.mysekaiPreview.scene.errors.fileRequired"));
+                data = parseLayoutJsonText(await layoutFile.text(), layoutFile.name, t);
                 sourceLabel = layoutFile.name;
                 layoutKey = `file-${layoutFile.name}-${layoutFile.size}-${layoutFile.lastModified}-${Date.now()}`;
             } else {
-                const nextUrl = normalizeHttpUrl(customLayoutUrl);
-                data = await fetchLayoutPayloadFromUrl(nextUrl);
+                const nextUrl = normalizeHttpUrl(customLayoutUrl, t);
+                data = await fetchLayoutPayloadFromUrl(nextUrl, t);
                 sourceLabel = nextUrl;
                 sourceUrl = nextUrl;
                 layoutKey = `url-${nextUrl}-${Date.now()}`;
             }
 
             if (!isValidRoomPayload(data)) {
-                throw new Error("JSON 中没有找到可用的 room / layout 布局数据");
+                throw new Error(t("page.mysekaiPreview.scene.errors.invalidLayoutData"));
             }
 
             setPreviewState({
@@ -341,7 +347,7 @@ export default function MysekaiPreviewSceneClient() {
                 layoutKey,
             });
         } catch (submitError) {
-            setError(jsonSourceMode === "url" ? jsonLoadErrorMessage(submitError) : errorMessage(submitError));
+            setError(jsonSourceMode === "url" ? jsonLoadErrorMessage(submitError, t) : errorMessage(submitError));
         } finally {
             setLoading(false);
         }
@@ -349,11 +355,11 @@ export default function MysekaiPreviewSceneClient() {
 
     if (previewState) {
         const isUidPreview = previewState.kind === "uid";
-        const title = isUidPreview ? `UID ${previewState.uid}` : "自定义布局";
-        const badge = isUidPreview ? `${previewState.server.toUpperCase()} UID` : previewState.sourceType === "file" ? "JSON 文件" : "JSON URL";
+        const title = isUidPreview ? `UID ${previewState.uid}` : t("page.mysekaiPreview.scene.preview.customTitle");
+        const badge = isUidPreview ? `${previewState.server.toUpperCase()} UID` : previewState.sourceType === "file" ? t("page.mysekaiPreview.scene.preview.fileBadge") : t("page.mysekaiPreview.scene.preview.urlBadge");
         const sourceLabel = isUidPreview ? `${previewState.server.toUpperCase()} · UID ${previewState.uid}` : previewState.sourceLabel;
         const layoutSource = isUidPreview ? getUserMysekaiRoomUrl(previewState.server, previewState.uid) : previewState.sourceUrl ?? `browser-file:${previewState.sourceLabel}`;
-        const headerNote = isUidPreview ? "已通过 UID 查询获取布局，资源路径按当前区服自动匹配。" : "自定义布局 JSON 预览。";
+        const headerNote = isUidPreview ? t("page.mysekaiPreview.scene.preview.uidHeaderNote") : t("page.mysekaiPreview.scene.preview.jsonHeaderNote");
 
         return (
             <MainLayout>
@@ -367,7 +373,7 @@ export default function MysekaiPreviewSceneClient() {
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6.75 15.75 3 12m0 0 3.75-3.75M3 12h18" />
                             </svg>
-                            返回查询入口
+                            {t("page.mysekaiPreview.scene.preview.backToEntry")}
                         </button>
                         <div className="max-w-full truncate rounded-2xl border border-white/60 bg-white/70 px-4 py-2 text-sm font-black text-slate-500 shadow-sm backdrop-blur">
                             {sourceLabel}
@@ -400,13 +406,13 @@ export default function MysekaiPreviewSceneClient() {
             <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
                 <div className="mb-8 text-center">
                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-miku/30 bg-miku/5 px-4 py-2">
-                        <span className="text-xs font-bold uppercase tracking-widest text-miku">MySekai Scene Preview</span>
+                        <span className="text-xs font-bold uppercase tracking-widest text-miku">{t("page.mysekaiPreview.badges.scene")}</span>
                     </div>
                     <h1 className="text-3xl font-black text-primary-text sm:text-4xl">
-                        烤森 <span className="text-miku">3D 预览器</span>
+                        {t("page.mysekaiPreview.scene.title")} <span className="text-miku">{t("page.mysekaiPreview.scene.titleHighlight")}</span>
                     </h1>
                     <p className="mx-auto mt-2 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
-                        输入 JP / CN UID 查询 MySekai 房间布局，或在浏览器端选择布局 JSON 文件 / URL 后再进入 3D 预览。默认不会自动加载预览，减少资源消耗。
+                        {t("page.mysekaiPreview.scene.description")}
                     </p>
                 </div>
 
@@ -421,8 +427,8 @@ export default function MysekaiPreviewSceneClient() {
                 {mode === "uid" ? (
                     <form onSubmit={handleUidSubmit} className="mx-auto mt-6 max-w-3xl rounded-[2rem] border border-white/60 bg-white/72 p-5 shadow-2xl shadow-slate-900/8 backdrop-blur-2xl sm:p-6">
                         <div className="mb-5">
-                            <h2 className="text-lg font-black text-primary-text">UID 查询入口</h2>
-                            <p className="mt-1 text-sm leading-6 text-slate-500">可以手动输入 UID，也可以点击 /profile 已保存账号快速填入。</p>
+                            <h2 className="text-lg font-black text-primary-text">{t("page.mysekaiPreview.scene.uidForm.title")}</h2>
+                            <p className="mt-1 text-sm leading-6 text-slate-500">{t("page.mysekaiPreview.scene.uidForm.description")}</p>
                         </div>
 
                         <AccountSelector
@@ -444,12 +450,12 @@ export default function MysekaiPreviewSceneClient() {
                                     value={uid}
                                     onChange={(event) => setUid(event.target.value)}
                                     inputMode="numeric"
-                                    placeholder="输入游戏 UID"
+                                    placeholder={t("page.mysekaiPreview.scene.uidForm.uidPlaceholder")}
                                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none transition focus:border-miku focus:ring-2 focus:ring-miku/20"
                                 />
                             </label>
                             <label className="block">
-                                <span className="mb-1 block text-sm font-bold text-slate-600">服务器</span>
+                                <span className="mb-1 block text-sm font-bold text-slate-600">{t("page.mysekaiPreview.scene.uidForm.server")}</span>
                                 <div className="flex gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
                                     {(["jp", "cn"] as BaijingServer[]).map((item) => (
                                         <button
@@ -474,20 +480,20 @@ export default function MysekaiPreviewSceneClient() {
                             disabled={loading || !normalizeUid(uid) || !turnstileToken}
                             className="mt-5 w-full rounded-2xl bg-gradient-to-r from-miku to-miku-dark px-5 py-3 text-sm font-black text-white shadow-lg shadow-miku/20 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg"
                         >
-                            {loading ? "查询布局中…" : "查询并进入预览"}
+                            {loading ? t("page.mysekaiPreview.scene.uidForm.loading") : t("page.mysekaiPreview.scene.uidForm.submit")}
                         </button>
                     </form>
                 ) : (
                     <form onSubmit={handleJsonSubmit} className="mx-auto mt-6 max-w-3xl rounded-[2rem] border border-white/60 bg-white/72 p-5 shadow-2xl shadow-slate-900/8 backdrop-blur-2xl sm:p-6">
                         <div className="mb-5">
-                            <h2 className="text-lg font-black text-primary-text">布局 JSON</h2>
+                            <h2 className="text-lg font-black text-primary-text">{t("page.mysekaiPreview.scene.jsonForm.title")}</h2>
                             <p className="mt-1 text-sm leading-6 text-slate-500">
-                                选择本地 JSON 文件，或输入公开 JSON URL。
+                                {t("page.mysekaiPreview.scene.jsonForm.description")}
                             </p>
                         </div>
 
                         <div className="mb-4 grid gap-2 sm:grid-cols-2">
-                            {JSON_SOURCE_OPTIONS.map((item) => (
+                            {jsonSourceOptions.map((item) => (
                                 <button
                                     key={item.value}
                                     type="button"
@@ -508,7 +514,7 @@ export default function MysekaiPreviewSceneClient() {
 
                         {jsonSourceMode === "file" ? (
                             <label className="block">
-                                <span className="mb-1 block text-sm font-bold text-slate-600">本地 JSON 文件</span>
+                                <span className="mb-1 block text-sm font-bold text-slate-600">{t("page.mysekaiPreview.scene.jsonForm.fileLabel")}</span>
                                 <input
                                     type="file"
                                     accept=".json,application/json"
@@ -517,13 +523,13 @@ export default function MysekaiPreviewSceneClient() {
                                 />
                                 {layoutFile && (
                                     <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                                        已选择：{layoutFile.name}（{Math.max(1, Math.round(layoutFile.size / 1024))} KB）
+                                        {t("page.mysekaiPreview.scene.jsonForm.selectedFile", { name: layoutFile.name, size: Math.max(1, Math.round(layoutFile.size / 1024)) })}
                                     </p>
                                 )}
                             </label>
                         ) : (
                             <label className="block">
-                                <span className="mb-1 block text-sm font-bold text-slate-600">布局 JSON URL</span>
+                                <span className="mb-1 block text-sm font-bold text-slate-600">{t("page.mysekaiPreview.scene.jsonForm.urlLabel")}</span>
                                 <input
                                     value={customLayoutUrl}
                                     onChange={(event) => setCustomLayoutUrl(event.target.value)}
@@ -531,7 +537,7 @@ export default function MysekaiPreviewSceneClient() {
                                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none transition focus:border-miku focus:ring-2 focus:ring-miku/20"
                                 />
                                 <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                                    如果 URL 读取失败，请下载 JSON 后改用文件模式。
+                                    {t("page.mysekaiPreview.scene.jsonForm.urlHint")}
                                 </p>
                             </label>
                         )}
@@ -541,7 +547,7 @@ export default function MysekaiPreviewSceneClient() {
                             disabled={loading || (jsonSourceMode === "file" ? !layoutFile : !customLayoutUrl.trim())}
                             className="mt-5 w-full rounded-2xl bg-gradient-to-r from-miku to-miku-dark px-5 py-3 text-sm font-black text-white shadow-lg shadow-miku/20 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg"
                         >
-                            {loading ? "读取布局中…" : "读取并进入预览"}
+                            {loading ? t("page.mysekaiPreview.scene.jsonForm.loading") : t("page.mysekaiPreview.scene.jsonForm.submit")}
                         </button>
                     </form>
                 )}

@@ -7,17 +7,25 @@ export interface ICardSupply {
     name: string;
 }
 
+const CARD_SUPPLY_TYPES = [
+    "normal",
+    "birthday",
+    "term_limited",
+    "colorful_festival_limited",
+    "bloom_festival_limited",
+    "unit_event_limited",
+    "collaboration_limited",
+] as const;
+
+export type CardSupplyTypeId = typeof CARD_SUPPLY_TYPES[number];
+
+export interface CardSupplyTypeMapping {
+    type: CardSupplyTypeId;
+}
+
 export function useCardSupplyTypeMapping() {
-    return useMemo(
-        () => [
-            { type: "normal", name: "常驻" },
-            { type: "birthday", name: "生日" },
-            { type: "term_limited", name: "期间限定" },
-            { type: "colorful_festival_limited", name: "CFES限定" },
-            { type: "bloom_festival_limited", name: "BFES限定" },
-            { type: "unit_event_limited", name: "WorldLink限定" },
-            { type: "collaboration_limited", name: "联动限定" },
-        ],
+    return useMemo<CardSupplyTypeMapping[]>(
+        () => CARD_SUPPLY_TYPES.map((type) => ({ type })),
         []
     );
 }

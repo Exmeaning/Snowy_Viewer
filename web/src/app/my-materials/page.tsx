@@ -1,9 +1,11 @@
 import { Metadata } from "next";
 import MyMaterialsClient from "./client";
+import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
 
 export const metadata: Metadata = {
-    title: "资源查询",
-    description: "Project Sekai 玩家资源与材料查询",
+    title: "Resource Inventory",
+    description: "Check your Project Sekai resources and materials" + SEO_SUFFIX,
+    keywords: getPageKeywords("my_materials"),
 };
 
 export default function MyMaterialsPage() {

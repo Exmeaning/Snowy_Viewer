@@ -7,6 +7,7 @@ import { fetchMasterData } from "@/lib/fetch";
 import { getUnitStoryEpisodeImageUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { IUnitProfile } from "@/types/types";
+import { useI18n } from "@/contexts/I18nContext";
 
 function getUnitOutlineLogoUrl(unitCode: string, server: "jp" | "cn"): string {
     return `/images/unit-logos/logo_${unitCode}_${server}.png`;
@@ -47,6 +48,7 @@ interface IUnitStory {
 export default function StoryUnitDetailClient() {
     const params = useParams();
     const { serverSource, assetSource } = useTheme();
+    const { t } = useI18n();
     const unitId = Number(params.unitId);
 
     const [profile, setProfile] = useState<IUnitProfile | null>(null);
@@ -65,21 +67,21 @@ export default function StoryUnitDetailClient() {
                     fetchMasterData<IUnitStoryEpisodeGroup[]>("unitStoryEpisodeGroups.json"),
                 ]);
                 const p = profiles.find(x => x.seq === unitId);
-                if (!p) throw new Error("组合不存在");
+                if (!p) throw new Error(t("page.story.unit.unitNotFound"));
                 const s = stories.find(x => x.seq === unitId);
-                if (!s) throw new Error("剧情数据不存在");
+                if (!s) throw new Error(t("page.story.unit.storyDataNotFound"));
                 setProfile(p);
                 setStory(s);
                 setEpisodeGroups(groups.filter(g => g.unit === p.unit));
-                document.title = `${p.unitName} - 主线剧情 - Moesekai`;
+                document.title = t("page.story.unit.documentTitle", { name: p.unitName });
             } catch (err) {
-                setError(err instanceof Error ? err.message : "加载失败");
+                setError(err instanceof Error ? err.message : t("common.state.loadingFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
         load();
-    }, [unitId, serverSource]);
+    }, [unitId, serverSource, t]);
 
     if (isLoading) {
         return (
@@ -95,8 +97,8 @@ export default function StoryUnitDetailClient() {
         return (
             <MainLayout>
                 <div className="container mx-auto px-4 py-16 text-center">
-                    <p className="text-red-500 mb-4">{error ?? "未找到数据"}</p>
-                    <Link href="/story/unit" className="text-miku hover:underline">返回列表</Link>
+                    <p className="text-red-500 mb-4">{error ?? t("common.state.noData")}</p>
+                    <Link href="/story/unit" className="text-miku hover:underline">{t("page.story.unit.backToList")}</Link>
                 </div>
             </MainLayout>
         );
@@ -129,19 +131,17 @@ export default function StoryUnitDetailClient() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    返回主线列表
+                    {t("page.story.unit.backToUnitList")}
                 </Link>
 
-                {/* Header */}
                 <div className="flex items-center gap-5 mb-8 p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
                     <img src={logoUrl} alt={profile.unitName} className="w-24 h-12 object-contain shrink-0" />
                     <div>
                         <h1 className="text-2xl font-black text-slate-800 dark:text-white">{profile.unitName}</h1>
-                        <p className="text-sm text-slate-500 mt-1">共 {episodes.length} 话</p>
+                        <p className="text-sm text-slate-500 mt-1">{t("page.story.unit.episodeCount", { count: episodes.length })}</p>
                     </div>
                 </div>
 
-                {/* Episode groups */}
                 <div className="space-y-6">
                     {displayGroups.map(({ group, episodes: eps }, gi) => (
                         <div key={gi}>

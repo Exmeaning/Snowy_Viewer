@@ -8,6 +8,7 @@ import { getCharacterSelectUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
+import { useI18n } from "@/contexts/I18nContext";
 
 // Derive unit field → icon filename from centralized maps
 const UNIT_FIELD_ICONS: Record<string, string> = Object.fromEntries(
@@ -16,6 +17,7 @@ const UNIT_FIELD_ICONS: Record<string, string> = Object.fromEntries(
 
 function CharacterListContent() {
     const { assetSource } = useTheme();
+    const { t } = useI18n();
     const [characters, setCharacters] = useState<IGameChara[]>([]);
     const [unitProfiles, setUnitProfiles] = useState<IUnitProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -23,7 +25,7 @@ function CharacterListContent() {
 
     // Fetch data
     useEffect(() => {
-        // document.title = "Snowy SekaiViewer 角色"; // Moved to metadata
+        // document.title is handled by metadata.
         async function fetchData() {
             try {
                 setIsLoading(true);
@@ -71,7 +73,7 @@ function CharacterListContent() {
             <div className="flex h-[50vh] w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-miku border-t-transparent rounded-full animate-spin" />
-                    <span className="text-slate-500">正在加载角色数据...</span>
+                    <span className="text-slate-500">{t("page.character.loadingData")}</span>
                 </div>
             </div>
         );
@@ -81,13 +83,13 @@ function CharacterListContent() {
         return (
             <div className="container mx-auto px-4 py-8">
                 <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("page.character.loadFailed")}</p>
                     <p>{error}</p>
                     <button
                         onClick={() => window.location.reload()}
                         className="mt-2 text-red-500 underline hover:no-underline"
                     >
-                        重试
+                        {t("common.action.retry")}
                     </button>
                 </div>
             </div>
@@ -99,13 +101,13 @@ function CharacterListContent() {
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">角色图鉴</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.character.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    角色 <span className="text-miku">图鉴</span>
+                    {t("page.character.title")} <span className="text-miku">{t("page.character.titleHighlight")}</span>
                 </h1>
-                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览世界计划中的所有角色
+                    <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                    {t("page.character.description")}
                 </p>
             </div>
 
@@ -192,9 +194,11 @@ function CharacterListContent() {
 }
 
 export default function CharacterClient() {
+    const { t } = useI18n();
+
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载角色...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.character.loadingFallback")}</div>}>
                 <CharacterListContent />
             </Suspense>
         </MainLayout>

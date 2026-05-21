@@ -10,10 +10,10 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
     const event = getEventMeta(Number(id));
-    if (!event) return { title: "活动详情" };
+    if (!event) return { title: "Event Detail" };
 
     const title = event.name;
-    const description = `Project Sekai 活动「${event.name}」` + DETAIL_SEO_SUFFIX;
+    const description = `Project Sekai Event "${event.name}"` + DETAIL_SEO_SUFFIX;
     const ogImage = getEventBannerUrl(event.asset, "main-jp");
 
     return {

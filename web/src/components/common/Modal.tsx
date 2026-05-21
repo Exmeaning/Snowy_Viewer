@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface ModalProps {
     isOpen: boolean;
@@ -32,6 +33,7 @@ export default function Modal({
     headerActions,
     syncHistory = true,
 }: ModalProps) {
+    const { t } = useI18n();
     const [mounted, setMounted] = useState(false);
 
     // Keep a stable ref to onClose so the history effect doesn't re-run
@@ -136,7 +138,7 @@ export default function Modal({
                                 <button
                                     onClick={onClose}
                                     className="p-1.5 -mr-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                                    aria-label="关闭"
+                                    aria-label={t("common.action.close")}
                                 >
                                     <svg
                                         className="w-5 h-5"

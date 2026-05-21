@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import MultiplayerClient from "./client";
 
 export const metadata: Metadata = {
-    title: "联机模式 我是谁",
-    description: "Project Sekai 猜角色联机对战",
+    title: "Guess Who Multiplayer",
+    description: "Project Sekai character guessing multiplayer battle",
 };
 
 export default function MultiplayerPage() {

@@ -7,6 +7,7 @@ import { StoryReader } from "@/components/story/StoryReader";
 import { useStoryAsset } from "@/hooks/useStoryAsset";
 import { fetchMasterData } from "@/lib/fetch";
 import { IUnitProfile } from "@/types/types";
+import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
 function getUnitOutlineLogoUrl(unitCode: string, server: "jp" | "cn"): string {
@@ -26,6 +27,7 @@ interface IUnitStory { id: number; seq: number; unit: string; chapters: IUnitSto
 export default function StoryUnitReaderClient() {
     const params = useParams();
     const { serverSource } = useTheme();
+    const { t } = useI18n();
     const unitId = Number(params.unitId);
     const episodeId = decodeURIComponent(params.episodeId as string);
 
@@ -78,14 +80,14 @@ export default function StoryUnitReaderClient() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    返回章节列表
+                    {t("page.story.unit.backToChapters")}
                 </Link>
 
                 <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-3">
                         {logoUrl && <img src={logoUrl} alt="" className="w-16 h-8 object-contain hidden sm:block" />}
                         <div className="flex-1 min-w-0">
-                            <p className="text-slate-500 text-sm">{profile?.unitName ?? `组合 ${unitId}`}</p>
+                            <p className="text-slate-500 text-sm">{profile?.unitName ?? t("page.story.unit.fallbackUnitName", { id: unitId })}</p>
                             <div className="flex items-center gap-2 flex-wrap">
                                 <h1 className="font-bold text-slate-900 dark:text-slate-100">
                                     {currentEp && <span className="text-miku">{currentEp.episodeNoLabel} — </span>}
@@ -95,7 +97,7 @@ export default function StoryUnitReaderClient() {
                                     serverSource === "cn"
                                         ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50"
                                         : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50"
-                                }`}>{serverSource === "cn" ? "国服" : "日服"}</span>
+                                }`}>{t(`page.story.serverSource.${serverSource}`)}</span>
                             </div>
                         </div>
                     </div>
@@ -106,7 +108,7 @@ export default function StoryUnitReaderClient() {
                     isLoading={isLoading || masterLoading}
                     error={error}
                     missingPaths={missingPaths ?? undefined}
-                    endLabel={currentEp ? currentEp.episodeNoLabel : "本话"}
+                    endLabel={currentEp ? currentEp.episodeNoLabel : t("page.story.unit.currentEpisode")}
                 />
 
                 {!isLoading && !masterLoading && (
@@ -114,12 +116,12 @@ export default function StoryUnitReaderClient() {
                         {prevEp ? (
                             <Link href={`/story/unit/${unitId}/${encodeURIComponent(prevEp.scenarioId)}`} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-primary-text hover:bg-miku/10 hover:text-miku transition-colors">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                                <div className="text-left"><div className="text-xs text-slate-400">上一话</div><div className="text-sm font-medium">{prevEp.title}</div></div>
+                                <div className="text-left"><div className="text-xs text-slate-400">{t("page.story.navigation.previousEpisode")}</div><div className="text-sm font-medium">{prevEp.title}</div></div>
                             </Link>
                         ) : <div />}
                         {nextEp ? (
                             <Link href={`/story/unit/${unitId}/${encodeURIComponent(nextEp.scenarioId)}`} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-primary-text hover:bg-miku/10 hover:text-miku transition-colors">
-                                <div className="text-right"><div className="text-xs text-slate-400">下一话</div><div className="text-sm font-medium">{nextEp.title}</div></div>
+                                <div className="text-right"><div className="text-xs text-slate-400">{t("page.story.navigation.nextEpisode")}</div><div className="text-sm font-medium">{nextEp.title}</div></div>
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                             </Link>
                         ) : <div />}

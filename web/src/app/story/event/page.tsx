@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import StoryEventListClient from "./client";
+import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
 
 export const metadata: Metadata = {
-    title: "活动剧情",
-    description: "浏览 Project Sekai 活动剧情故事",
+    title: "Event Stories",
+    description: "Browse Project Sekai event stories" + SEO_SUFFIX,
+    keywords: getPageKeywords("story_event"),
 };
 
 export default function StoryEventListPage() {

@@ -24,6 +24,8 @@ import {
 } from "@/types/mysekai";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
+import { useI18n } from "@/contexts/I18nContext";
+import { getMysekaiGenreDisplayName, getMysekaiTagDisplayName } from "@/lib/mysekai-i18n";
 
 // Map virtual singer unit-specific character IDs to base character IDs
 // 27-31: Miku (L/n, MMJ, VBS, WxS, 25-ji versions) -> 21
@@ -47,6 +49,7 @@ export default function MysekaiFixtureDetailClient() {
     const fixtureId = Number(params.id);
     const { assetSource } = useTheme();
     const { setDetailName } = useBreadcrumb();
+    const { t } = useI18n();
 
     const [fixture, setFixture] = useState<IMysekaiFixtureInfo | null>(null);
     const [genres, setGenres] = useState<IMysekaiFixtureGenre[]>([]);
@@ -106,7 +109,7 @@ export default function MysekaiFixtureDetailClient() {
                 setError(null);
             } catch (err) {
                 console.error("Error fetching fixture:", err);
-                setError(err instanceof Error ? err.message : "Unknown error");
+                setError(err instanceof Error ? err.message : t("page.mysekai.unknownError"));
             } finally {
                 setIsLoading(false);
             }
@@ -114,7 +117,7 @@ export default function MysekaiFixtureDetailClient() {
         if (fixtureId) {
             fetchData();
         }
-    }, [fixtureId]);
+    }, [fixtureId, t]);
 
     // Set breadcrumb detail name
     useEffect(() => {
@@ -124,14 +127,16 @@ export default function MysekaiFixtureDetailClient() {
     // Get genre name
     const genreName = useMemo(() => {
         if (!fixture) return "";
-        return genres.find(g => g.id === fixture.mysekaiFixtureMainGenreId)?.name || "";
-    }, [fixture, genres]);
+        const genre = genres.find(g => g.id === fixture.mysekaiFixtureMainGenreId);
+        return genre ? getMysekaiGenreDisplayName(genre.name, t) : "";
+    }, [fixture, genres, t]);
 
     // Get sub genre name
     const subGenreName = useMemo(() => {
         if (!fixture || !fixture.mysekaiFixtureSubGenreId) return "";
-        return subGenres.find(sg => sg.id === fixture.mysekaiFixtureSubGenreId)?.name || "";
-    }, [fixture, subGenres]);
+        const subGenre = subGenres.find(sg => sg.id === fixture.mysekaiFixtureSubGenreId);
+        return subGenre ? getMysekaiGenreDisplayName(subGenre.name, t) : "";
+    }, [fixture, subGenres, t]);
 
     // Get tag names (deduplicated and excluding tags that match fixture name)
     const tagNames = useMemo(() => {
@@ -141,13 +146,13 @@ export default function MysekaiFixtureDetailClient() {
             if (key !== 'id' && val) {
                 const tag = tags.find(t => t.id === val);
                 if (tag && tag.name !== fixture.name) {
-                    names.push(tag.name);
+                    names.push(getMysekaiTagDisplayName(tag.name, t));
                 }
             }
         });
         // Deduplicate tag names
         return [...new Set(names)];
-    }, [fixture, tags]);
+    }, [fixture, tags, t]);
 
     // Get material costs for this fixture
     const fixtureMaterialCosts = useMemo(() => {
@@ -223,7 +228,7 @@ export default function MysekaiFixtureDetailClient() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">加载中...</p>
+                        <p className="mt-4 text-slate-500">{t("common.state.loading")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -240,8 +245,8 @@ export default function MysekaiFixtureDetailClient() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">家具 {fixtureId} 正在由SnowyViewer抓紧构建</h2>
-                        <p className="text-slate-500 mb-6">少安毋躁~预计12H内更新</p>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">{t("page.mysekai.notFoundTitle", { id: fixtureId })}</h2>
+                        <p className="text-slate-500 mb-6">{t("page.mysekai.notFoundDesc")}</p>
                         <Link
                             href="/mysekai"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
@@ -249,7 +254,7 @@ export default function MysekaiFixtureDetailClient() {
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            返回家具列表
+                            {t("page.mysekai.backToList")}
                         </Link>
                     </div>
                 </div>
@@ -292,7 +297,7 @@ export default function MysekaiFixtureDetailClient() {
                     <div>
                         <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden lg:sticky lg:top-24">
                             <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                                <span className="text-sm font-bold text-slate-600">缩略图</span>
+                                <span className="text-sm font-bold text-slate-600">{t("page.mysekai.detail.thumbnail")}</span>
                             </div>
                             <div className="relative aspect-[4/3] bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
                                 <div className="relative w-32 h-32">
@@ -318,13 +323,13 @@ export default function MysekaiFixtureDetailClient() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    家具信息
+                                    {t("page.mysekai.detail.basicInfo")}
                                 </h2>
                             </div>
                             <div className="divide-y divide-slate-100">
                                 <InfoRow label="ID" value={`#${fixture.id}`} />
                                 <InfoRow
-                                    label="名称"
+                                    label={t("common.field.name")}
                                     value={
                                         <TranslatedText
                                             original={fixture.name}
@@ -335,19 +340,19 @@ export default function MysekaiFixtureDetailClient() {
                                         />
                                     }
                                 />
-                                <InfoRow label="类型" value={fixture.mysekaiFixtureType} />
-                                {genreName && <InfoRow label="主类别" value={genreName} />}
-                                {subGenreName && <InfoRow label="子类别" value={subGenreName} />}
+                                <InfoRow label={t("page.mysekai.detail.fields.type")} value={fixture.mysekaiFixtureType} />
+                                {genreName && <InfoRow label={t("page.mysekai.detail.fields.mainGenre")} value={genreName} />}
+                                {subGenreName && <InfoRow label={t("page.mysekai.detail.fields.subGenre")} value={subGenreName} />}
                                 {gridSize && gridSize.width > 0 && (
                                     <InfoRow
-                                        label="尺寸"
+                                        label={t("page.mysekai.detail.fields.size")}
                                         value={`${gridSize.width} × ${gridSize.depth} × ${gridSize.height}`}
                                     />
                                 )}
-                                <InfoRow label="放置类型" value={fixture.mysekaiSettableLayoutType} />
-                                <InfoRow label="场地类型" value={fixture.mysekaiSettableSiteType} />
+                                <InfoRow label={t("page.mysekai.detail.fields.layoutType")} value={fixture.mysekaiSettableLayoutType} />
+                                <InfoRow label={t("page.mysekai.detail.fields.siteType")} value={fixture.mysekaiSettableSiteType} />
                                 <InfoRow
-                                    label="内部资源名称"
+                                    label={t("page.mysekai.detail.fields.assetBundleName")}
                                     value={<span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{fixture.assetbundleName}</span>}
                                 />
                             </div>
@@ -360,27 +365,27 @@ export default function MysekaiFixtureDetailClient() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    状态信息
+                                    {t("page.mysekai.detail.statusInfo")}
                                 </h2>
                             </div>
                             <div className="divide-y divide-slate-100">
                                 <InfoRow
-                                    label="可组装"
+                                    label={t("page.mysekai.detail.fields.canAssemble")}
                                     value={
                                         <span className={`px-2 py-0.5 rounded text-xs font-bold ${fixture.isAssembled ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                                            {fixture.isAssembled ? "是" : "否"}
+                                            {fixture.isAssembled ? t("common.field.yes") : t("common.field.no")}
                                         </span>
                                     }
                                 />
                                 <InfoRow
-                                    label="可拆解"
+                                    label={t("page.mysekai.detail.fields.canDisassemble")}
                                     value={
                                         <span className={`px-2 py-0.5 rounded text-xs font-bold ${fixture.isDisassembled ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                                            {fixture.isDisassembled ? "是" : "否"}
+                                            {fixture.isDisassembled ? t("common.field.yes") : t("common.field.no")}
                                         </span>
                                     }
                                 />
-                                <InfoRow label="序号" value={fixture.seq} />
+                                <InfoRow label={t("page.mysekai.detail.fields.seq")} value={fixture.seq} />
                             </div>
                         </div>
 
@@ -392,7 +397,7 @@ export default function MysekaiFixtureDetailClient() {
                                         <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                         </svg>
-                                        制作材料
+                                        {t("page.mysekai.detail.materialCost")}
                                     </h2>
                                 </div>
                                 <div className="p-5">
@@ -433,7 +438,7 @@ export default function MysekaiFixtureDetailClient() {
                                         <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                         </svg>
-                                        角色对话
+                                        {t("page.mysekai.detail.characterTalks")}
                                     </h2>
                                 </div>
                                 <div className="p-5">
@@ -474,7 +479,7 @@ export default function MysekaiFixtureDetailClient() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                         </svg>
-                                        标签
+                                        {t("page.mysekai.detail.tags")}
                                     </h2>
                                 </div>
                                 <div className="p-5">
@@ -500,7 +505,7 @@ export default function MysekaiFixtureDetailClient() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
                                         </svg>
-                                        描述
+                                        {t("page.mysekai.detail.flavorText")}
                                     </h2>
                                 </div>
                                 <div className="p-5">
@@ -524,7 +529,7 @@ export default function MysekaiFixtureDetailClient() {
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        返回家具列表
+                        {t("page.mysekai.backToList")}
                     </Link>
                 </div>
             </div>

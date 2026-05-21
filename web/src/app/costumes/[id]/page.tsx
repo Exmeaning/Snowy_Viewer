@@ -9,10 +9,10 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
     const costume = getCostumeMeta(Number(id));
-    if (!costume) return { title: "服装详情" };
+    if (!costume) return { title: "Costume Details" };
 
     const title = costume.name;
-    const description = `Project Sekai 服装「${costume.name}」` + DETAIL_SEO_SUFFIX;
+    const description = `Project SEKAI costume "${costume.name}"` + DETAIL_SEO_SUFFIX;
 
     return {
         title,

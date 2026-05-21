@@ -19,6 +19,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface IMusic {
     id: number;
@@ -47,6 +48,7 @@ export default function VirtualLiveDetailClient() {
     const virtualLiveId = Number(params.id);
     const { assetSource } = useTheme();
     const { setDetailName } = useBreadcrumb();
+    const { t, formatDate: formatLocaleDate } = useI18n();
 
     const [virtualLive, setVirtualLive] = useState<IVirtualLiveInfo | null>(null);
     const [allMusics, setAllMusics] = useState<IMusic[]>([]);
@@ -136,7 +138,7 @@ export default function VirtualLiveDetailClient() {
     // Format date helper
     const formatDate = (timestamp: number) => {
         if (!mounted) return "...";
-        return new Date(timestamp).toLocaleString("zh-CN", {
+        return formatLocaleDate(timestamp, {
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -148,7 +150,7 @@ export default function VirtualLiveDetailClient() {
     // Format short date helper
     const formatShortDate = (timestamp: number) => {
         if (!mounted) return "...";
-        return new Date(timestamp).toLocaleString("zh-CN", {
+        return formatLocaleDate(timestamp, {
             month: "short",
             day: "numeric",
             hour: "2-digit",
@@ -162,7 +164,7 @@ export default function VirtualLiveDetailClient() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">加载中...</p>
+                        <p className="mt-4 text-slate-500">{t("common.state.loading")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -179,8 +181,10 @@ export default function VirtualLiveDetailClient() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">演唱会 {virtualLiveId} 正在由SnowyViewer抓紧构建</h2>
-                        <p className="text-slate-500 mb-6">少安毋躁~预计12H内更新</p>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                            {t("page.live.notFoundTitle", { id: virtualLiveId })}
+                        </h2>
+                        <p className="text-slate-500 mb-6">{t("page.live.notFoundDesc")}</p>
                         <Link
                             href="/live"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
@@ -188,7 +192,7 @@ export default function VirtualLiveDetailClient() {
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            返回演唱会列表
+                            {t("page.live.backToList")}
                         </Link>
                     </div>
                 </div>
@@ -205,9 +209,9 @@ export default function VirtualLiveDetailClient() {
             <ImagePreviewModal
                 isOpen={imageViewerOpen}
                 onClose={() => setImageViewerOpen(false)}
-                title={`${virtualLive.name} Banner 大图`}
+                title={t("page.live.bannerDetailTitle", { name: virtualLive.name })}
                 imageUrl={bannerUrl}
-                alt={`${virtualLive.name} Banner`}
+                alt={t("page.live.bannerDetailAlt", { name: virtualLive.name })}
                 fileName={`live_${virtualLive.id}_banner.png`}
             />
 
@@ -222,13 +226,15 @@ export default function VirtualLiveDetailClient() {
                             className="px-3 py-1 text-xs font-bold rounded-full text-white w-fit"
                             style={{ backgroundColor: VIRTUAL_LIVE_TYPE_COLORS[virtualLive.virtualLiveType as VirtualLiveType] || "#9E9E9E" }}
                         >
-                            {VIRTUAL_LIVE_TYPE_NAMES[virtualLive.virtualLiveType as VirtualLiveType] || virtualLive.virtualLiveType}
+                            {t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`) !== `common.virtualLiveTypes.${virtualLive.virtualLiveType}`
+                                ? t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`)
+                                : (VIRTUAL_LIVE_TYPE_NAMES[virtualLive.virtualLiveType as VirtualLiveType] || virtualLive.virtualLiveType)}
                         </span>
                         <span
                             className="px-3 py-1 text-xs font-bold rounded-full text-white w-fit"
                             style={{ backgroundColor: statusDisplay.color }}
                         >
-                            {statusDisplay.label}
+                            {t("common.status." + status)}
                         </span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-slate-800">
@@ -248,7 +254,7 @@ export default function VirtualLiveDetailClient() {
                     <div>
                         <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden lg:sticky lg:top-24">
                             <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
-                                <span className="text-sm font-bold text-slate-600">演唱会 Banner</span>
+                                <span className="text-sm font-bold text-slate-600">{t("page.live.bannerTitle")}</span>
                             </div>
                             <div
                                 className="relative aspect-[16/5] bg-gradient-to-br from-slate-50 to-slate-100 cursor-zoom-in"
@@ -256,7 +262,7 @@ export default function VirtualLiveDetailClient() {
                             >
                                 <Image
                                     src={bannerUrl}
-                                    alt={`${virtualLive.name} Banner`}
+                                    alt={t("page.live.bannerDetailAlt", { name: virtualLive.name })}
                                     fill
                                     className="object-cover"
                                     unoptimized
@@ -266,7 +272,7 @@ export default function VirtualLiveDetailClient() {
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                     </svg>
-                                    点击放大
+                                    {t("page.live.clickExpand")}
                                 </div>
                             </div>
                         </div>
@@ -281,13 +287,13 @@ export default function VirtualLiveDetailClient() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    基本信息
+                                    {t("page.live.basicInfo")}
                                 </h2>
                             </div>
                             <div className="divide-y divide-slate-100">
                                 <InfoRow label="ID" value={`#${virtualLive.id}`} />
                                 <InfoRow
-                                    label="名称"
+                                    label={t("common.field.name")}
                                     value={
                                         <TranslatedText
                                             original={virtualLive.name}
@@ -298,12 +304,19 @@ export default function VirtualLiveDetailClient() {
                                         />
                                     }
                                 />
-                                <InfoRow label="类型" value={VIRTUAL_LIVE_TYPE_NAMES[virtualLive.virtualLiveType as VirtualLiveType] || virtualLive.virtualLiveType} />
-                                <InfoRow label="平台" value={virtualLive.virtualLivePlatform} />
-                                <InfoRow label="开始时间" value={formatDate(virtualLive.startAt)} />
-                                <InfoRow label="结束时间" value={formatDate(virtualLive.endAt)} />
                                 <InfoRow
-                                    label="内部资源名称"
+                                    label={t("common.field.type")}
+                                    value={
+                                        t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`) !== `common.virtualLiveTypes.${virtualLive.virtualLiveType}`
+                                            ? t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`)
+                                            : (VIRTUAL_LIVE_TYPE_NAMES[virtualLive.virtualLiveType as VirtualLiveType] || virtualLive.virtualLiveType)
+                                    }
+                                />
+                                <InfoRow label={t("page.live.platformLabel")} value={virtualLive.virtualLivePlatform} />
+                                <InfoRow label={t("page.live.startTimeLabel")} value={formatDate(virtualLive.startAt)} />
+                                <InfoRow label={t("page.live.endTimeLabel")} value={formatDate(virtualLive.endAt)} />
+                                <InfoRow
+                                    label={t("page.live.assetNameLabel")}
                                     value={<span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{virtualLive.assetbundleName}</span>}
                                 />
                             </div>
@@ -325,7 +338,7 @@ export default function VirtualLiveDetailClient() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        相关活动
+                                        {t("page.live.relatedEventTitle")}
                                     </h2>
                                 </div>
                                 <div className="p-0">
@@ -369,7 +382,7 @@ export default function VirtualLiveDetailClient() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                         </svg>
-                                        节目单 ({setlistWithMusic.length})
+                                        {t("page.live.setlistTitle", { count: setlistWithMusic.length })}
                                     </h2>
                                 </div>
                                 <div className="divide-y divide-slate-50">
@@ -405,12 +418,12 @@ export default function VirtualLiveDetailClient() {
                                                                         translationClassName="text-xs text-slate-500 truncate block font-normal"
                                                                     />
                                                                 </p>
-                                                                <p className="text-xs text-slate-500">🎵 音乐</p>
+                                                                <p className="text-xs text-slate-500">{t("page.live.setlistMusicLabel")}</p>
                                                             </div>
                                                         </Link>
                                                     ) : item.virtualLiveSetlistType === "mc" ? (
                                                         <div>
-                                                            <p className="font-medium text-slate-700">MC 环节</p>
+                                                            <p className="font-medium text-slate-700">{t("page.live.setlistMcLabel")}</p>
                                                             <p className="text-xs text-slate-400 font-mono">{item.assetbundleName}</p>
                                                         </div>
                                                     ) : (
@@ -424,7 +437,7 @@ export default function VirtualLiveDetailClient() {
                                                     ? "bg-miku/10 text-miku"
                                                     : "bg-slate-100 text-slate-500"
                                                     }`}>
-                                                    {item.virtualLiveSetlistType === "music" ? "音乐" : "MC"}
+                                                    {item.virtualLiveSetlistType === "music" ? t("page.live.setlistTypeMusic") : t("page.live.setlistTypeMc")}
                                                 </span>
                                             </div>
                                         </div>
@@ -446,7 +459,7 @@ export default function VirtualLiveDetailClient() {
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        返回演唱会列表
+                        {t("page.live.backToList")}
                     </Link>
                 </div>
             </div>
@@ -473,6 +486,7 @@ interface ISchedule {
 }
 
 function SchedulesCard({ schedules, formatShortDate }: { schedules: ISchedule[], formatShortDate: (ts: number) => string }) {
+    const { t } = useI18n();
     const [isExpanded, setIsExpanded] = useState(false);
 
     const firstSchedule = schedules[0];
@@ -487,15 +501,15 @@ function SchedulesCard({ schedules, formatShortDate }: { schedules: ISchedule[],
                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    演出时间表 ({schedules.length} 场)
+                    {t("page.live.schedulesTitle", { count: schedules.length })}
                 </h2>
             </div>
             <div className="p-4 space-y-3">
                 {/* First Schedule */}
                 <div className="p-3 bg-miku/5 rounded-xl border border-miku/20">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-miku">首场</span>
-                        <span className="text-xs text-slate-500">第 {firstSchedule.seq} 场</span>
+                        <span className="text-xs font-bold text-miku">{t("page.live.scheduleFirst")}</span>
+                        <span className="text-xs text-slate-500">{t("page.live.scheduleSeq", { seq: firstSchedule.seq })}</span>
                     </div>
                     <div className="text-sm font-medium text-slate-700">
                         {formatShortDate(firstSchedule.startAt)}
@@ -520,14 +534,14 @@ function SchedulesCard({ schedules, formatShortDate }: { schedules: ISchedule[],
                             >
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
-                            {isExpanded ? '收起' : `展开其他 ${middleSchedules.length} 场演出`}
+                            {isExpanded ? t("page.live.scheduleMiddleCollapse") : t("page.live.scheduleMiddleExpand", { count: middleSchedules.length })}
                         </button>
 
                         {isExpanded && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
                                 {middleSchedules.map((schedule) => (
                                     <div key={schedule.id} className="p-2 bg-slate-50 rounded-lg">
-                                        <div className="text-xs text-slate-500 mb-0.5">第 {schedule.seq} 场</div>
+                                        <div className="text-xs text-slate-500 mb-0.5">{t("page.live.scheduleSeq", { seq: schedule.seq })}</div>
                                         <div className="text-xs font-medium text-slate-700">
                                             {formatShortDate(schedule.startAt)}
                                         </div>
@@ -542,8 +556,8 @@ function SchedulesCard({ schedules, formatShortDate }: { schedules: ISchedule[],
                 {schedules.length > 1 && (
                     <div className="p-3 bg-orange-50 rounded-xl border border-orange-200">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-bold text-orange-600">末场</span>
-                            <span className="text-xs text-slate-500">第 {lastSchedule.seq} 场</span>
+                            <span className="text-xs font-bold text-orange-600">{t("page.live.scheduleLast")}</span>
+                            <span className="text-xs text-slate-500">{t("page.live.scheduleSeq", { seq: lastSchedule.seq })}</span>
                         </div>
                         <div className="text-sm font-medium text-slate-700">
                             {formatShortDate(lastSchedule.startAt)}

@@ -438,7 +438,7 @@ function MyMusicsContent() {
             try {
                 const server = activeAccount!.server;
 
-                // 台服和国服都使用国服数据
+                // TW and CN both use CN masterdata.
                 const dataServer: ServerType = server === "tw" || server === "cn" ? "cn" : "jp";
 
                 const [musicsData, difficultiesData, tagsData, translationsData] = await Promise.all([
@@ -450,7 +450,7 @@ function MyMusicsContent() {
 
                 if (cancelled) return;
 
-                // 如果是台服，检查是否需要从日服补充数据
+                // For TW, supplement missing songs from JP masterdata when needed.
                 if (server === "tw") {
                     const cnMusicIds = new Set(musicsData.map(m => m.id));
                     try {
@@ -469,7 +469,7 @@ function MyMusicsContent() {
                             setMusicDifficulties(difficultiesData);
                         }
                     } catch {
-                        // 日服数据获取失败，仅使用国服数据
+                        // If JP masterdata fails, keep using CN masterdata only.
                         setAllMusics(musicsData);
                         setMusicDifficulties(difficultiesData);
                     }
@@ -616,7 +616,7 @@ function MyMusicsContent() {
                 const levelB = musicDifficultiesMap[b.id]?.[selectedDifficulty] || 0;
                 cmp = levelA - levelB;
                 if (cmp === 0) {
-                    // Same level, sort by completion (AP > FC > C > 未完成)
+                    // Same level, sort by completion (AP > FC > C > incomplete)
                     const rankA = userMusicResults.get(a.id)?.[selectedDifficulty] || "";
                     const rankB = userMusicResults.get(b.id)?.[selectedDifficulty] || "";
                     const priority: Record<string, number> = { "": 0, "C": 1, "FC": 2, "AP": 3 };
@@ -628,7 +628,7 @@ function MyMusicsContent() {
                 cmp = constA - constB;
                 if (cmp === 0) cmp = a.publishedAt - b.publishedAt;
             } else if (sortBy === "completion") {
-                // Sort by completion status (AP > FC > C > 未完成)
+                // Sort by completion status (AP > FC > C > incomplete)
                 const rankA = userMusicResults.get(a.id)?.[selectedDifficulty] || "";
                 const rankB = userMusicResults.get(b.id)?.[selectedDifficulty] || "";
                 const priority: Record<string, number> = { "": 0, "C": 1, "FC": 2, "AP": 3 };

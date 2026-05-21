@@ -10,10 +10,10 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
     const gacha = getGachaMeta(Number(id));
-    if (!gacha) return { title: "卡池详情" };
+    if (!gacha) return { title: "Gacha Detail" };
 
     const title = gacha.name;
-    const description = `Project Sekai 卡池「${gacha.name}」` + DETAIL_SEO_SUFFIX;
+    const description = `Project SEKAI Gacha: ${gacha.name}` + DETAIL_SEO_SUFFIX;
     const ogImage = getGachaLogoUrl(gacha.asset, "main-jp");
 
     return {

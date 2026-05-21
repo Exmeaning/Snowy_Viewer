@@ -1,10 +1,12 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import ProfileClient from "./client";
+import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
 
 export const metadata: Metadata = {
-    title: "我的主页",
-    description: "Moesekai 个人主页",
+    title: "My Profile",
+    description: "Moesekai user profile and connected account management" + SEO_SUFFIX,
+    keywords: getPageKeywords("profile"),
 };
 
 export default function ProfilePage() {

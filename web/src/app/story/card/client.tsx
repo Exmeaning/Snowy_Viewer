@@ -12,6 +12,7 @@ import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { StoryPageHeader } from "@/components/story/StoryPageHeader";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface ICardSupply {
     id: number;
@@ -24,6 +25,7 @@ function StoryCardContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { isShowSpoiler } = useTheme();
+    const { t } = useI18n();
 
     const [cards, setCards] = useState<ICardInfo[]>([]);
     const [translations, setTranslations] = useState<TranslationData | null>(null);
@@ -216,10 +218,10 @@ function StoryCardContent() {
         />
     );
 
-    useQuickFilter("卡牌筛选", quickFilterContent, [
+    useQuickFilter(t("page.story.card.filterTitle"), quickFilterContent, [
         selectedCharacters, selectedUnitIds, selectedAttrs, selectedRarities,
         selectedSupplyTypes, selectedSupportUnits, searchQuery, sortBy, sortOrder,
-        cards.length, filteredCards.length,
+        cards.length, filteredCards.length, t,
     ]);
 
     return (
@@ -228,7 +230,7 @@ function StoryCardContent() {
 
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p><p>{error}</p>
+                    <p className="font-bold">{t("common.state.loadingFailed")}</p><p>{error}</p>
                 </div>
             )}
 
@@ -246,13 +248,13 @@ function StoryCardContent() {
                                 onClick={loadMore}
                                 className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                             >
-                                加载更多
+                                {t("page.story.card.loadMore")}
                                 <span className="ml-2 text-sm opacity-80">({displayedCards.length} / {filteredCards.length})</span>
                             </button>
                         </div>
                     )}
                     {!isLoading && displayedCards.length > 0 && displayedCards.length >= filteredCards.length && (
-                        <div className="mt-8 text-center text-slate-400 text-sm">已显示全部 {filteredCards.length} 张卡牌</div>
+                        <div className="mt-8 text-center text-slate-400 text-sm">{t("page.story.card.allLoaded", { count: filteredCards.length })}</div>
                     )}
                 </div>
             </div>
@@ -261,9 +263,11 @@ function StoryCardContent() {
 }
 
 export default function StoryCardListClient() {
+    const { t } = useI18n();
+
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载卡牌...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.story.card.loadingFallback")}</div>}>
                 <StoryCardContent />
             </Suspense>
         </MainLayout>
