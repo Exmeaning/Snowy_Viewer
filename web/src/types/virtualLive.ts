@@ -50,14 +50,14 @@ export interface IVirtualLiveInfo {
     virtualLiveSchedules?: IVirtualLiveSchedule[];
 }
 
-// Virtual live type display names
-export const VIRTUAL_LIVE_TYPE_NAMES: Record<VirtualLiveType, string> = {
-    normal: "普通",
-    beginner: "新手",
-    archive: "归档",
-    cheerful_carnival: "欢乐嘉年华",
-    connect_live: "联动Live",
-    streaming: "串流",
+export const VIRTUAL_LIVE_TYPE_IDS = ["normal", "beginner", "archive", "cheerful_carnival", "connect_live", "streaming"] as const;
+export const VIRTUAL_LIVE_TYPE_LABEL_KEYS: Record<VirtualLiveType, string> = {
+    normal: "common.virtualLiveTypes.normal",
+    beginner: "common.virtualLiveTypes.beginner",
+    archive: "common.virtualLiveTypes.archive",
+    cheerful_carnival: "common.virtualLiveTypes.cheerful_carnival",
+    connect_live: "common.virtualLiveTypes.connect_live",
+    streaming: "common.virtualLiveTypes.streaming",
 };
 
 // Virtual live type colors
@@ -85,8 +85,8 @@ export function getVirtualLiveStatus(virtualLive: IVirtualLiveInfo): VirtualLive
 /**
  * Get virtual live status display info
  */
-export const VIRTUAL_LIVE_STATUS_DISPLAY: Record<VirtualLiveStatus, { label: string; color: string }> = {
-    upcoming: { label: "即将开始", color: "#42A5F5" },
-    ongoing: { label: "进行中", color: "#66BB6A" },
-    ended: { label: "已结束", color: "#9E9E9E" },
+export const VIRTUAL_LIVE_STATUS_DISPLAY: Record<VirtualLiveStatus, { labelKey: string; color: string }> = {
+    upcoming: { labelKey: "common.status.upcoming", color: "#42A5F5" },
+    ongoing: { labelKey: "common.status.ongoing", color: "#66BB6A" },
+    ended: { labelKey: "common.status.ended", color: "#9E9E9E" },
 };

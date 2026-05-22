@@ -1124,7 +1124,7 @@ export default function ScoreControlClient() {
                                                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                                     }`}
                                             >
-                                                {s.label}
+                                                {t(s.labelKey)}
                                             </button>
                                         ))}
                                     </div>

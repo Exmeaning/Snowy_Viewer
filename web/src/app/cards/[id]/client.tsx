@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -29,7 +29,7 @@ import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
-import { ICostumeInfo, IMoeCostumeData, PART_TYPE_NAMES } from "@/types/costume";
+import { ICostumeInfo, IMoeCostumeData, PART_TYPE_LABEL_KEYS } from "@/types/costume";
 
 // Max levels by rarity
 const MAX_LEVELS: Record<string, { normal: number; trained?: number }> = {
@@ -1095,6 +1095,11 @@ function CostumeInlineDetail({ costume, assetSource }: { costume: ICostumeInfo, 
     const [selectedColorId, setSelectedColorId] = useState(1);
     const { t } = useI18n();
     const { t: translateGameData } = useTranslation();
+    const translateWithFallback = useCallback((key: string | undefined, fallback: string) => {
+        if (!key) return fallback;
+        const label = t(key);
+        return label === key ? fallback : label;
+    }, [t]);
 
     // Build display items (same logic as /costumes/:ID)
     const displayItems = useMemo(() => {
@@ -1221,7 +1226,7 @@ function CostumeInlineDetail({ costume, assetSource }: { costume: ICostumeInfo, 
                             </div>
                             <div className="absolute inset-x-0 bottom-0 p-0.5 pointer-events-none">
                                 <span className="inline-block px-1 py-0.5 bg-white/90 backdrop-blur text-[9px] font-bold text-slate-600 rounded shadow-sm">
-                                    {PART_TYPE_NAMES[item.partType] || item.partType}
+                                    {translateWithFallback(PART_TYPE_LABEL_KEYS[item.partType], item.partType)}
                                 </span>
                             </div>
                             {item.characterId && (

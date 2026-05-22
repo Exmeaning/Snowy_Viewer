@@ -2,10 +2,11 @@ import React from "react";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { Metadata } from "next";
+import { enUSMessages } from "@/lib/i18n/messages/en-US";
 
 export const metadata: Metadata = {
-    title: "隐私政策",
-    description: "Moesekai 隐私政策",
+    title: enUSMessages.layout.footer.privacyPolicy,
+    description: enUSMessages.layout.footer.privacyPolicy,
 };
 
 export default function PrivacyPolicyPage() {

@@ -1,7 +1,7 @@
 /**
- * Moesekai 多账号系统
- * 使用 localStorage 存储，不涉及任何服务端通信
- * 支持绑定多个服务器的多个账号
+ * Moesekai multi-account system.
+ * Uses localStorage only and does not communicate with backend services directly.
+ * Supports multiple accounts across multiple servers.
  */
 
 export type ServerType = "jp" | "cn" | "tw";
@@ -15,12 +15,12 @@ export interface OAuthTokenInfo {
 }
 
 export interface MoesekaiAccount {
-    id: string;                       // 唯一标识 = `${server}_${gameId}`
+    id: string;                       // Unique id = `${server}_${gameId}`
     gameId: string;                   // UID
     server: ServerType;
-    nickname: string;                 // 个性签名 (word) 或用户自定义（已废弃，使用 userGamedata.name）
-    avatarCharacterId: number | null; // 头像角色ID（已废弃，使用 avatarCardId）
-    avatarCardId: number | null;      // 头像卡面ID（来自当前卡组的 leader）
+    nickname: string;                 // Legacy nickname fallback; prefer userGamedata.name.
+    avatarCharacterId: number | null; // Legacy character avatar id; prefer avatarCardId.
+    avatarCardId: number | null;      // Avatar card id from the current deck leader.
     isApiPublic: boolean;
     authSource?: "public_api" | "oauth2";
     oauthSubject?: string | null;
@@ -40,7 +40,7 @@ export interface MoesekaiAccount {
     userAreas: UserArea[] | null;
     userMysekaiFixtureGameCharacterPerformanceBonuses: UserMysekaiFixtureGameCharacterPerformanceBonus[] | null;
     userMysekaiGates: UserMysekaiGate[] | null;
-    uploadTime: number | null;        // 数据上传时间戳
+    uploadTime: number | null;        // Data upload timestamp
     createdAt: number;
     updatedAt: number;
 }
@@ -160,18 +160,18 @@ function makeAccountId(server: ServerType, gameId: string): string {
     return `${server}_${gameId}`;
 }
 
-/** 获取角色头像URL */
+/** Get the character avatar URL. */
 export function getCharacterIconUrl(characterId: number): string {
     return `https://moe.exmeaning.com/assets/chr_ts_${characterId}.png`;
 }
 
-/** 获取等级最高的角色ID */
+/** Get the character id with the highest rank. */
 export function getTopCharacterId(characters: UserCharacter[]): number {
-    if (!characters || characters.length === 0) return 21; // 默认miku
+    if (!characters || characters.length === 0) return 21; // Default Miku
     return characters.reduce((top, c) => c.characterRank > top.characterRank ? c : top, characters[0]).characterId;
 }
 
-/** 获取当前卡组的 leader 卡面 ID */
+/** Get the current deck leader card id. */
 export function getLeaderCardId(userGamedata: UserGamedata | null, userDecks: UserDeck[] | null): number | null {
     if (!userGamedata || !userDecks || userDecks.length === 0) return null;
     const currentDeck = userDecks.find(d => d.deckId === userGamedata.deck);
@@ -347,7 +347,7 @@ function normalizeHarukiApiResponse(data: unknown): HarukiApiResult {
     };
 }
 
-/** 调用 Haruki API 验证用户数据可用性 */
+/** Verify user data availability through the Haruki API. */
 export async function verifyHarukiApi(server: ServerType, gameId: string): Promise<HarukiApiResult> {
     const url = `${HARUKI_PUBLIC_API_BASE}/${server}/suite/${gameId}?key=userGamedata,userDecks,userCharacters,userChallengeLiveSoloStages,userChallengeLiveSoloResults,userChallengeLiveSoloHighScoreRewards,userBonds,userMaterials,userAreas,userMysekaiFixtureGameCharacterPerformanceBonuses,userMysekaiGates,upload_time`;
     try {
@@ -538,16 +538,16 @@ export async function fetchOAuthBindingInitialData(
     }
 }
 
-// ==================== 多账号 CRUD ====================
+// ==================== Multi-account CRUD ====================
 
-/** 获取所有账号 */
+/** Get all accounts. */
 export function getAccounts(): MoesekaiAccount[] {
     if (typeof window === "undefined") return [];
     try {
         const raw = localStorage.getItem(ACCOUNTS_KEY);
         if (raw) return JSON.parse(raw) as MoesekaiAccount[];
 
-        // 尝试从旧数据迁移
+        // Try migrating from legacy data.
         return migrateFromLegacy();
     } catch {
         return [];
@@ -559,13 +559,13 @@ function notifyAccountsChanged(): void {
     window.dispatchEvent(new Event(ACCOUNTS_CHANGED_EVENT));
 }
 
-/** 保存所有账号 */
+/** Save all accounts. */
 function saveAccounts(accounts: MoesekaiAccount[]): void {
     if (typeof window === "undefined") return;
     localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
 }
 
-/** 获取当前选中的账号 */
+/** Get the currently selected account. */
 export function getActiveAccount(): MoesekaiAccount | null {
     const accounts = getAccounts();
     if (accounts.length === 0) return null;
@@ -575,7 +575,7 @@ export function getActiveAccount(): MoesekaiAccount | null {
         const found = accounts.find(a => a.id === activeId);
         if (found) return found;
     }
-    // 默认返回第一个
+    // Fall back to the first account.
     return accounts[0];
 }
 
@@ -592,11 +592,11 @@ export function getOAuthAccessTokenForGameUser(server: ServerType, gameId: strin
     return account.oauthToken?.accessToken || undefined;
 }
 
-/** 设置当前选中的账号 */
+/** Set the currently selected account. */
 export function setActiveAccount(accountId: string): void {
     if (typeof window === "undefined") return;
     localStorage.setItem(ACTIVE_KEY, accountId);
-    // 同步旧 key 以保持向后兼容
+    // Sync legacy keys for backward compatibility.
     const accounts = getAccounts();
     const account = accounts.find(a => a.id === accountId);
     if (account) {
@@ -606,7 +606,7 @@ export function setActiveAccount(accountId: string): void {
     notifyAccountsChanged();
 }
 
-/** 添加账号 */
+/** Add an account. */
 export function addAccount(account: MoesekaiAccount): void {
     const accounts = getAccounts();
     const existing = accounts.findIndex(a => a.id === account.id);
@@ -616,7 +616,7 @@ export function addAccount(account: MoesekaiAccount): void {
         accounts.push(account);
     }
     saveAccounts(accounts);
-    // 如果是第一个账号，自动设为活跃
+    // Automatically activate the first account.
     if (accounts.length === 1) {
         setActiveAccount(account.id);
         return;
@@ -624,7 +624,7 @@ export function addAccount(account: MoesekaiAccount): void {
     notifyAccountsChanged();
 }
 
-/** 创建并添加账号 */
+/** Create and add an account. */
 export function createAccount(
     gameId: string,
     server: ServerType,
@@ -667,7 +667,7 @@ export function createAccount(
     return account;
 }
 
-/** 更新账号 */
+/** Update an account. */
 export function updateAccount(accountId: string, updates: Partial<MoesekaiAccount>): void {
     const accounts = getAccounts();
     const idx = accounts.findIndex(a => a.id === accountId);
@@ -677,12 +677,12 @@ export function updateAccount(accountId: string, updates: Partial<MoesekaiAccoun
     notifyAccountsChanged();
 }
 
-/** 删除账号 */
+/** Remove an account. */
 export function removeAccount(accountId: string): void {
     let accounts = getAccounts();
     accounts = accounts.filter(a => a.id !== accountId);
     saveAccounts(accounts);
-    // 如果删除的是当前活跃账号，切换到第一个
+    // If the active account was removed, switch to the first remaining account.
     const activeId = typeof window !== "undefined" ? localStorage.getItem(ACTIVE_KEY) : null;
     if (activeId === accountId) {
         if (accounts.length > 0) {
@@ -696,7 +696,7 @@ export function removeAccount(accountId: string): void {
     notifyAccountsChanged();
 }
 
-/** 清除所有账号 */
+/** Clear all accounts. */
 export function clearAllAccounts(): void {
     if (typeof window === "undefined") return;
     localStorage.removeItem(ACCOUNTS_KEY);
@@ -707,21 +707,21 @@ export function clearAllAccounts(): void {
     notifyAccountsChanged();
 }
 
-/** 检查是否有账号 */
+/** Check whether any accounts exist. */
 export function hasAccounts(): boolean {
     return getAccounts().length > 0;
 }
 
-// ==================== 向后兼容 ====================
+// ==================== Backward compatibility ====================
 
-/** 从旧数据迁移 */
+/** Migrate from legacy data. */
 function migrateFromLegacy(): MoesekaiAccount[] {
     if (typeof window === "undefined") return [];
 
     const accounts: MoesekaiAccount[] = [];
 
     try {
-        // 尝试从旧的单账号 key 迁移
+        // Try migrating from the legacy single-account key.
         const oldRaw = localStorage.getItem(LEGACY_ACCOUNT_KEY);
         if (oldRaw) {
             const old = JSON.parse(oldRaw);
@@ -760,7 +760,7 @@ function migrateFromLegacy(): MoesekaiAccount[] {
             }
         }
 
-        // 尝试从 legacy userid key 迁移
+        // Try migrating from the legacy userid key.
         if (accounts.length === 0) {
             const legacyId = localStorage.getItem(LEGACY_USERID_KEY);
             const legacyServer = localStorage.getItem(LEGACY_SERVER_KEY);
@@ -811,9 +811,9 @@ function migrateFromLegacy(): MoesekaiAccount[] {
     return accounts;
 }
 
-// ==================== 兼容旧接口 (供 worker 等使用) ====================
+// ==================== Legacy interfaces for workers ====================
 
-/** 兼容旧的 getAccount 接口 */
+/** Legacy-compatible getAccount interface. */
 export function getAccount(): { gameId: string; server: ServerType; toolStates: { deckRecommend: { userId: string; server: ServerType } | null; scoreControl: { userId: string; server: ServerType } | null } } | null {
     const active = getActiveAccount();
     if (!active) return null;
@@ -828,7 +828,7 @@ export function getAccount(): { gameId: string; server: ServerType; toolStates: 
     };
 }
 
-/** 兼容旧的 saveToolState */
+/** Legacy-compatible saveToolState interface. */
 export function saveToolState(
     _tool: "deckRecommend" | "scoreControl",
     userId: string,
@@ -838,17 +838,17 @@ export function saveToolState(
     const id = makeAccountId(server, userId);
     const existing = accounts.find(a => a.id === id);
     if (!existing) {
-        // 自动创建账号
+        // Auto-create the account.
         createAccount(userId, server, "", null, null, true);
     }
     setActiveAccount(id);
 }
 
-// ==================== 头像缓存 ====================
+// ==================== Avatar cache ====================
 
 const AVATAR_CACHE_KEY = "moesekai_avatar_cache";
 
-/** 获取缓存的头像 URL */
+/** Get the cached avatar URL. */
 export function getCachedAvatarUrl(accountId: string): string | null {
     if (typeof window === "undefined") return null;
     try {
@@ -861,7 +861,7 @@ export function getCachedAvatarUrl(accountId: string): string | null {
     }
 }
 
-/** 缓存头像 URL */
+/** Cache the avatar URL. */
 export function setCachedAvatarUrl(accountId: string, url: string): void {
     if (typeof window === "undefined") return;
     try {
@@ -874,10 +874,12 @@ export function setCachedAvatarUrl(accountId: string, url: string): void {
     }
 }
 
-export const SERVER_LABELS: Record<ServerType, string> = {
-    cn: "简中服",
-    jp: "日服",
-    tw: "繁中服",
+export const SERVER_IDS: ServerType[] = ["cn", "jp", "tw"];
+
+export const SERVER_LABEL_KEYS: Record<ServerType, string> = {
+    cn: "common.server.cn",
+    jp: "common.server.jp",
+    tw: "common.server.tw",
 };
 
 export interface CreateOrUpdateOAuthAccountInput {
@@ -1019,7 +1021,7 @@ export async function disconnectOAuthAccount(accountId: string): Promise<void> {
     try {
         await revokeOAuthToken(account.oauthToken.accessToken);
     } catch {
-        // 忽略撤销失败，仍允许本地断开
+        // Ignore revoke failures and still allow local disconnect.
     }
 
     updateAccount(accountId, {
@@ -1032,8 +1034,7 @@ export async function disconnectOAuthAccount(accountId: string): Promise<void> {
     });
 }
 
-export const SERVER_OPTIONS: { value: ServerType; label: string }[] = [
-    { value: "cn", label: "简中服 (CN)" },
-    { value: "jp", label: "日服 (JP)" },
-    { value: "tw", label: "繁中服 (TW)" },
-];
+export const SERVER_OPTIONS: { value: ServerType; labelKey: string }[] = SERVER_IDS.map((value) => ({
+    value,
+    labelKey: SERVER_LABEL_KEYS[value],
+}));

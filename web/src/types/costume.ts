@@ -1,21 +1,21 @@
 // Costume Types for Moesekai
 // Based on moe_costume.json master data structure
 
-/** 服装部件颜色变体 */
+/** Color variant for a costume part. */
 export interface ICostumePart {
     colorId: number;
     colorName: string;
     assetbundleName: string;
 }
 
-/** 角色专属部件（extraParts 中的条目） */
+/** Character-specific part entry from extraParts. */
 export interface ICostumeExtraPart {
     characterId: number;
     partType: string;           // "head" | "hair" | "body"
-    variants: ICostumePart[];   // 该角色该部位的颜色变体列表
+    variants: ICostumePart[];   // Color variants for this character and part type
 }
 
-/** 商店信息 */
+/** Shop metadata for shop-sourced costumes. */
 export interface ICostumeShopInfo {
     shopItemId: number;
     shopGroupId: number;
@@ -26,7 +26,7 @@ export interface ICostumeShopInfo {
     startAt: number;
 }
 
-/** 服装统计信息（顶层 stats 字段） */
+/** Top-level costume stats. */
 export interface ICostumeStats {
     total: number;
     totalDefaults: number;
@@ -36,47 +36,47 @@ export interface ICostumeStats {
     by_rarity: Record<string, number>;
 }
 
-/** 服装主体信息 — 一个对象 = 一套服装 */
+/** Main costume record; one object represents one costume set. */
 export interface ICostumeInfo {
-    costumeNumber: number;              // 唯一标识（替代旧 id / costume3dGroupId）
+    costumeNumber: number;              // Stable ID replacing the old id / costume3dGroupId
     name: string;
     costume3dType: string;              // "normal"
     costume3dRarity: string;            // "rare" | "normal"
     designer: string;
     partTypes: string[];                // "head" | "hair" | "body"
-    characterIds: number[];             // 可穿戴角色列表
+    characterIds: number[];             // Wearable character IDs
     gender: string;                     // "female" | "male"
-    parts: Record<string, ICostumePart[]>;  // 共享部件，key=partType
-    extraParts?: ICostumeExtraPart[];   // 角色专属部件
+    parts: Record<string, ICostumePart[]>;  // Shared parts keyed by partType
+    extraParts?: ICostumeExtraPart[];   // Character-specific parts
     source: string;                     // "card" | "shop" | "other"
-    cardIds?: number[];                 // 关联卡牌 ID（source === "card" 时）
-    shopInfo?: ICostumeShopInfo;        // 商店信息（source === "shop" 时）
-    publishedAt?: number;               // 发布时间（可选，部分条目无此字段）
-    archivePublishedAt: number;         // 归档发布时间
+    cardIds?: number[];                 // Related card IDs when source === "card"
+    shopInfo?: ICostumeShopInfo;        // Shop data when source === "shop"
+    publishedAt?: number;               // Optional release time; some entries omit this field
+    archivePublishedAt: number;         // Archive release time
 }
 
-/** 顶层数据包装 */
+/** Top-level costume data wrapper. */
 export interface IMoeCostumeData {
     stats: ICostumeStats;
     costumes: ICostumeInfo[];
 }
 
-// Part type display names
-export const PART_TYPE_NAMES: Record<string, string> = {
-    head: "发饰",
-    hair: "发型",
-    body: "服装",
+export const PART_TYPE_IDS = ["head", "hair", "body"] as const;
+export const PART_TYPE_LABEL_KEYS: Record<string, string> = {
+    head: "common.costume.partTypes.head",
+    hair: "common.costume.partTypes.hair",
+    body: "common.costume.partTypes.body",
 };
 
-// Source display names
-export const SOURCE_NAMES: Record<string, string> = {
-    card: "卡牌服装",
-    shop: "商店购买",
-    other: "未分类",
+export const SOURCE_IDS = ["card", "shop", "other"] as const;
+export const SOURCE_LABEL_KEYS: Record<string, string> = {
+    card: "common.costume.sources.card",
+    shop: "common.costume.sources.shop",
+    other: "common.costume.sources.other",
 };
 
-// Rarity display names
-export const RARITY_NAMES: Record<string, string> = {
-    rare: "稀有",
-    normal: "普通",
+export const RARITY_IDS = ["rare", "normal"] as const;
+export const RARITY_LABEL_KEYS: Record<string, string> = {
+    rare: "common.costume.rarities.rare",
+    normal: "common.costume.rarities.normal",
 };

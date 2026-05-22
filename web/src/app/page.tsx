@@ -11,13 +11,14 @@ import UpcomingLiveTab from "@/components/home/UpcomingLiveTab";
 import BilibiliDynamicTab from "@/components/home/BilibiliDynamicTab";
 import BirthdaySection from "@/components/home/BirthdaySection";
 import { MOE_LOGO_URL } from "@/lib/assets";
+import { useI18n } from "@/contexts/I18nContext";
 
 type TabType = "event" | "cards" | "music" | "live";
 
-const TABS: { id: TabType; label: string; icon: React.ReactNode }[] = [
+const TABS: { id: TabType; labelKey: string; icon: React.ReactNode }[] = [
   {
     id: "event",
-    label: "当前活动",
+    labelKey: "page.home.tabs.event",
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -26,7 +27,7 @@ const TABS: { id: TabType; label: string; icon: React.ReactNode }[] = [
   },
   {
     id: "cards",
-    label: "最新卡牌",
+    labelKey: "page.home.tabs.cards",
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -35,7 +36,7 @@ const TABS: { id: TabType; label: string; icon: React.ReactNode }[] = [
   },
   {
     id: "music",
-    label: "最新歌曲",
+    labelKey: "page.home.tabs.music",
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
@@ -44,7 +45,7 @@ const TABS: { id: TabType; label: string; icon: React.ReactNode }[] = [
   },
   {
     id: "live",
-    label: "演唱会",
+    labelKey: "page.home.tabs.live",
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <rect x="2" y="7" width="20" height="15" rx="2" ry="2" strokeWidth={2} />
@@ -71,7 +72,7 @@ function TabLoading() {
 const SHORTCUTS = [
   {
     href: "/cards",
-    label: "卡牌",
+    labelKey: "page.home.shortcuts.cards",
     subLabel: "CARD",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -84,7 +85,7 @@ const SHORTCUTS = [
   },
   {
     href: "/music",
-    label: "音乐",
+    labelKey: "page.home.shortcuts.music",
     subLabel: "MUSIC",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -96,7 +97,7 @@ const SHORTCUTS = [
   },
   {
     href: "/events",
-    label: "活动",
+    labelKey: "page.home.shortcuts.events",
     subLabel: "EVENT",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -109,7 +110,7 @@ const SHORTCUTS = [
   },
   {
     href: "/gacha",
-    label: "扭蛋",
+    labelKey: "page.home.shortcuts.gacha",
     subLabel: "GACHA",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -119,7 +120,7 @@ const SHORTCUTS = [
   },
   {
     href: "/character",
-    label: "角色",
+    labelKey: "page.home.shortcuts.character",
     subLabel: "CHARA",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -130,7 +131,7 @@ const SHORTCUTS = [
   },
   {
     href: "/sticker",
-    label: "贴纸",
+    labelKey: "page.home.shortcuts.sticker",
     subLabel: "STICKER",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -143,7 +144,7 @@ const SHORTCUTS = [
   },
   {
     href: "/comic",
-    label: "漫画",
+    labelKey: "page.home.shortcuts.comic",
     subLabel: "COMIC",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -154,7 +155,7 @@ const SHORTCUTS = [
   },
   {
     href: "/live",
-    label: "演唱会",
+    labelKey: "page.home.shortcuts.live",
     subLabel: "LIVE",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -165,7 +166,7 @@ const SHORTCUTS = [
   },
   {
     href: "/mysekai",
-    label: "家具",
+    labelKey: "page.home.shortcuts.mysekai",
     subLabel: "MYSEKAI",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -176,7 +177,7 @@ const SHORTCUTS = [
   },
   {
     href: "/costumes",
-    label: "服装",
+    labelKey: "page.home.shortcuts.costumes",
     subLabel: "COSTUME",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -186,7 +187,7 @@ const SHORTCUTS = [
   },
   {
     href: "/honors",
-    label: "称号",
+    labelKey: "page.home.shortcuts.honors",
     subLabel: "HONOR",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -196,7 +197,7 @@ const SHORTCUTS = [
   },
   {
     href: "/profile",
-    label: "主页",
+    labelKey: "page.home.shortcuts.profile",
     subLabel: "PROFILE",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -206,7 +207,7 @@ const SHORTCUTS = [
   },
   {
     href: "/deck-recommend",
-    label: "组卡",
+    labelKey: "page.home.shortcuts.deckRecommend",
     subLabel: "DECK",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -216,7 +217,7 @@ const SHORTCUTS = [
   },
   {
     href: "/prediction",
-    label: "预测",
+    labelKey: "page.home.shortcuts.prediction",
     subLabel: "PREDICT",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -226,7 +227,7 @@ const SHORTCUTS = [
   },
   {
     href: "/guess-who",
-    label: "猜角色",
+    labelKey: "page.home.shortcuts.guessWho",
     subLabel: "GUESS",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -236,7 +237,7 @@ const SHORTCUTS = [
   },
   {
     href: "/chart-preview",
-    label: "谱面",
+    labelKey: "page.home.shortcuts.chartPreview",
     subLabel: "CHART",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
@@ -248,6 +249,7 @@ const SHORTCUTS = [
 ];
 
 export default function Home() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabType>("event");
 
   return (
@@ -274,7 +276,7 @@ export default function Home() {
             />
             <span className="sr-only">Moesekai</span>
           </h1>
-          <span className="text-xs text-slate-400 opacity-60 font-medium">(原 Snowy SekaiViewer)</span>
+          <span className="text-xs text-slate-400 opacity-60 font-medium">{t("page.home.formerName")}</span>
         </div>
 
         {/* ─── Hero Carousel ─── */}
@@ -282,11 +284,11 @@ export default function Home() {
           <HeroCarousel />
         </div>
 
-        {/* ─── 最新 Tabs ─── */}
+        {/* ─── Latest Tabs ─── */}
         <div className="w-full max-w-5xl">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-6 w-1 rounded-full bg-miku"></div>
-            <h2 className="text-xl font-bold text-primary-text opacity-80">最新</h2>
+            <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.home.sections.latest")}</h2>
           </div>
 
           {/* Tab Navigation */}
@@ -304,7 +306,7 @@ export default function Home() {
                 `}
               >
                 {tab.icon}
-                {tab.label}
+                {t(tab.labelKey)}
               </button>
             ))}
           </div>
@@ -320,11 +322,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ─── 捷径 (Shortcuts) ─── */}
+        {/* ─── Shortcuts ─── */}
         <div className="w-full max-w-5xl">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-6 w-1 rounded-full bg-miku"></div>
-            <h2 className="text-xl font-bold text-primary-text opacity-80">捷径</h2>
+            <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.home.sections.shortcuts")}</h2>
           </div>
           <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
             {SHORTCUTS.map((shortcut, index) => (
@@ -334,7 +336,7 @@ export default function Home() {
                     {shortcut.icon}
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-primary-text group-hover:text-miku transition-colors leading-tight">{shortcut.label}</h3>
+                    <h3 className="text-xs font-bold text-primary-text group-hover:text-miku transition-colors leading-tight">{t(shortcut.labelKey)}</h3>
                     <p className="text-[8px] text-slate-400 font-bold tracking-wider uppercase hidden sm:block">{shortcut.subLabel}</p>
                   </div>
                 </div>
@@ -343,29 +345,29 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ─── 动态 (Bilibili) ─── */}
+        {/* ─── Bilibili Dynamics ─── */}
         <div className="w-full max-w-5xl text-left">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-6 w-1 rounded-full bg-miku"></div>
-            <h2 className="text-xl font-bold text-primary-text opacity-80">动态</h2>
+            <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.home.sections.dynamics")}</h2>
           </div>
           <BilibiliDynamicTab />
         </div>
 
-        {/* ─── 生日/纪念日 ─── */}
+        {/* ─── Birthdays / Anniversaries ─── */}
         <BirthdaySection />
 
-        {/* ─── 友链 ─── */}
+        {/* ─── Friend Links ─── */}
         <div className="w-full max-w-5xl">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-6 w-1 rounded-full bg-miku"></div>
-            <h2 className="text-xl font-bold text-primary-text opacity-80">友链</h2>
+            <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.home.sections.friends")}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <ExternalLink href="https://haruki.seiunx.com" target="_blank" className="relative group overflow-hidden rounded-xl h-16 shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100">
               <div className="relative z-10 h-full flex items-center justify-between px-5">
                 <div className="text-left">
-                  <h3 className="text-sm font-bold text-primary-text">Haruki工具箱</h3>
+                  <h3 className="text-sm font-bold text-primary-text">{t("page.home.friends.harukiTitle")}</h3>
                   <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Haruki Toolbox</p>
                 </div>
                 <svg className="w-4 h-4 text-slate-300 group-hover:text-miku transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
@@ -394,13 +396,13 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ─── 鸣谢 ─── */}
+        {/* ─── Credits ─── */}
         <div className="w-full max-w-5xl pt-6 border-t border-slate-200/50">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">鸣谢</h2>
+            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">{t("page.home.sections.specialThanks")}</h2>
             <div className="flex flex-wrap gap-x-2 gap-y-1 justify-center text-sm">
-              <span className="text-slate-400">Special Thanks:</span>
-              <ExternalLink href="https://github.com/MejiroRina" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">Haruki（希凪）</ExternalLink>
+              <span className="text-slate-400">{t("page.home.specialThanksPrefix")}</span>
+              <ExternalLink href="https://github.com/MejiroRina" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">{t("page.home.specialThanksHaruki")}</ExternalLink>
               <span className="text-slate-300">|</span>
               <ExternalLink href="https://sekai.best" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">Sekai.best</ExternalLink>
               <span className="text-slate-300">|</span>

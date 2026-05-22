@@ -126,7 +126,7 @@ export default function AccountSelectorBar({
                     })}
                 </div>
 
-                {/* Inline Add Form */}
+                {/* Inline add form */}
                 {showAddForm && (
                     <div className="mt-3 pt-3 border-t border-slate-100">
                         <div className="flex flex-wrap items-end gap-2">

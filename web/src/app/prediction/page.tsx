@@ -1,11 +1,12 @@
 
 import { Metadata } from "next";
 import PredictionClient from "./client";
+import { enUSMessages } from "@/lib/i18n/messages/en-US";
 import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
 
 export const metadata: Metadata = {
-    title: "活动预测",
-    description: "Project Sekai 活动排名预测工具" + SEO_SUFFIX,
+    title: enUSMessages.layout.nav.items.prediction,
+    description: enUSMessages.layout.groupPages.prediction + SEO_SUFFIX,
     keywords: getPageKeywords("prediction"),
 };
 

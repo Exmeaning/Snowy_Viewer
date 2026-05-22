@@ -8,9 +8,10 @@ import PredictionChart from "@/components/events/PredictionChart";
 import PGAIChart from "@/components/events/PGAIChart";
 import Sparkline from "@/components/events/Sparkline";
 import ActivityStats from "@/components/events/ActivityStats";
+import { useI18n } from "@/contexts/I18nContext";
 import { fetchPredictionData, fetchEventList } from "@/lib/prediction-api";
 import { PredictionData, EventListItem, ServerType, TierKLine } from "@/types/prediction";
-import { IEventInfo, getEventStatus, EVENT_TYPE_NAMES, EVENT_STATUS_DISPLAY } from "@/types/events";
+import { IEventInfo, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { getEventBannerUrl, getEventLogoUrl } from "@/lib/assets";
@@ -29,6 +30,7 @@ interface LegacyTierKline {
 const RANK_TIERS = [50, 100, 200, 300, 400, 500, 1000, 2000, 3000, 5000, 10000];
 
 export default function PredictionClient() {
+    const { t, formatDate, formatNumber } = useI18n();
     const { assetSource, themeColor } = useTheme();
     const [server, setServer] = useState<ServerType>('cn');
     const [events, setEvents] = useState<EventListItem[]>([]);
@@ -102,12 +104,12 @@ export default function PredictionClient() {
             })
             .catch(err => {
                 console.error('Failed to fetch events:', err);
-                setError('获取活动列表失败');
+                setError(t("page.prediction.errors.eventsFetchFailed"));
                 setEvents([]);
             })
             .finally(() => setEventsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [server]);
+    }, [server, t]);
 
     // Fetch prediction data when event changes
     useEffect(() => {
@@ -121,11 +123,11 @@ export default function PredictionClient() {
             })
             .catch(err => {
                 console.error('Failed to fetch prediction:', err);
-                setError('获取预测数据失败，该活动可能暂无数据');
+                setError(t("page.prediction.errors.predictionFetchFailed"));
                 setPredictionData(null);
             })
             .finally(() => setLoading(false));
-    }, [selectedEventId, server]);
+    }, [selectedEventId, server, t]);
 
     // Process chart data (trim 1% from start/end) - Replacing original currentChart definition
     const currentChart = useMemo(() => {
@@ -190,7 +192,8 @@ export default function PredictionClient() {
 
         const status = getEventStatus(mockEvent);
         const statusDisplay = EVENT_STATUS_DISPLAY[status];
-        const eventTypeName = EVENT_TYPE_NAMES[eventType] || eventType;
+        const eventTypeLabel = t(`common.eventTypes.${eventType}`);
+        const eventTypeName = eventTypeLabel === `common.eventTypes.${eventType}` ? eventType : eventTypeLabel;
 
         const totalDuration = endAt - startAt;
         const elapsed = Math.max(0, now - startAt);
@@ -203,10 +206,12 @@ export default function PredictionClient() {
         }
 
 
-        const formatDate = (ts: number) => {
-            const d = new Date(ts);
-            return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
-        };
+        const formatEventDate = (ts: number) => formatDate(ts, {
+            month: "numeric",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
 
         const isActive = predEvent?.is_active || (status === 'ongoing');
 
@@ -215,9 +220,9 @@ export default function PredictionClient() {
         if (predictionData?.timestamp) {
             const diff = now - predictionData.timestamp;
             const diffSec = Math.max(0, Math.floor(diff / 1000));
-            if (diffSec < 60) updateTime = `${diffSec}秒前`;
-            else if (diffSec < 3600) updateTime = `${Math.floor(diffSec / 60)}分钟前`;
-            else updateTime = new Date(predictionData.timestamp).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            if (diffSec < 60) updateTime = t("page.prediction.relativeTime.secondsAgo", { seconds: diffSec });
+            else if (diffSec < 3600) updateTime = t("page.prediction.relativeTime.minutesAgo", { minutes: Math.floor(diffSec / 60) });
+            else updateTime = formatDate(predictionData.timestamp, { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
         }
 
         return {
@@ -227,13 +232,13 @@ export default function PredictionClient() {
                 statusDisplay,
                 eventTypeName,
                 progressPercent,
-                formatDate,
+                formatEventDate,
                 updateTime,
                 hasBanner: !!assetbundleName
             },
             isActive
         };
-    }, [selectedEventId, events, masterEvents, predictionData, now]);
+    }, [selectedEventId, events, masterEvents, predictionData, now, t, formatDate]);
 
     const isWorldBloomEvent = eventState?.banner.mockEvent.eventType === "world_bloom";
 
@@ -252,13 +257,13 @@ export default function PredictionClient() {
                 {/* Page Header - matching events page style */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                        <span className="text-miku text-xs font-bold tracking-widest uppercase">榜线预测</span>
+                        <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.prediction.badge")}</span>
                     </div>
                     <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                        活动 <span className="text-miku">预测</span>
+                        {t("page.prediction.title")} <span className="text-miku">{t("page.prediction.titleHighlight")}</span>
                     </h1>
                     <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                        实时榜线预测与PGAI全服积极指数
+                        {t("page.prediction.description")}
                     </p>
                 </div>
 
@@ -273,7 +278,7 @@ export default function PredictionClient() {
                                 : 'text-slate-600 hover:bg-slate-50'
                                 }`}
                         >
-                            国服
+                            {t("page.prediction.servers.cn")}
                         </button>
                         <button
                             onClick={() => handleServerChange('jp')}
@@ -282,7 +287,7 @@ export default function PredictionClient() {
                                 : 'text-slate-600 hover:bg-slate-50'
                                 }`}
                         >
-                            日服
+                            {t("page.prediction.servers.jp")}
                         </button>
                     </div>
 
@@ -295,9 +300,9 @@ export default function PredictionClient() {
                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku disabled:opacity-50"
                         >
                             {eventsLoading ? (
-                                <option>加载活动列表...</option>
+                                <option>{t("page.prediction.events.loading")}</option>
                             ) : events.length === 0 ? (
-                                <option>暂无活动数据</option>
+                                <option>{t("page.prediction.events.empty")}</option>
                             ) : (
                                 events.map(event => (
                                     <option key={event.id} value={event.id}>
@@ -315,7 +320,7 @@ export default function PredictionClient() {
                             <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
                             </svg>
-                            WL 说明
+                            {t("page.prediction.wl.noticeButton")}
                         </button>
                     )}
                     {/* Warning for >99% progress */}
@@ -340,7 +345,7 @@ export default function PredictionClient() {
                                 }}
                             />
                             <span className="text-sm font-medium whitespace-nowrap" style={{ color: themeColor }}>
-                                活动结束前数小时 Snowy停止预测
+                                {t("page.prediction.stopPredictionNotice")}
                             </span>
                         </div>
                     )}
@@ -358,7 +363,7 @@ export default function PredictionClient() {
                     <div className="flex items-center justify-center py-20">
                         <div className="flex flex-col items-center gap-3">
                             <div className="w-10 h-10 border-4 border-miku/30 border-t-miku rounded-full animate-spin" />
-                            <span className="text-slate-500">加载预测数据...</span>
+                            <span className="text-slate-500">{t("page.prediction.loading")}</span>
                         </div>
                     </div>
                 )}
@@ -369,6 +374,9 @@ export default function PredictionClient() {
                         {/* Event Banner */}
                         {eventState && (() => {
                             const { banner, isActive } = eventState;
+                            const statusLabel = t(`common.status.${banner.status}`);
+                            const fallbackStatusLabel = t(banner.statusDisplay.labelKey);
+                            const resolvedStatusLabel = statusLabel === `common.status.${banner.status}` ? fallbackStatusLabel : statusLabel;
                             return (
                                 <>
                                     <Link href={`/events/${banner.mockEvent.id}`} className="block group mb-6">
@@ -428,7 +436,7 @@ export default function PredictionClient() {
                                                             className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded text-white shadow-sm"
                                                             style={{ backgroundColor: banner.statusDisplay.color }}
                                                         >
-                                                            {banner.statusDisplay.label}
+                                                            {resolvedStatusLabel}
                                                         </span>
                                                         <span className="text-[10px] font-bold text-slate-400">
                                                             {banner.eventTypeName}
@@ -438,13 +446,13 @@ export default function PredictionClient() {
                                                         {banner.mockEvent.name}
                                                     </h3>
                                                     <div className="pt-2 text-[10px] sm:text-xs text-slate-400 font-mono flex flex-col sm:flex-row sm:gap-2">
-                                                        <span>{banner.formatDate(banner.mockEvent.startAt)}</span>
+                                                        <span>{banner.formatEventDate(banner.mockEvent.startAt)}</span>
                                                         <span className="hidden sm:inline">-</span>
-                                                        <span>{banner.formatDate(banner.mockEvent.aggregateAt)}</span>
+                                                        <span>{banner.formatEventDate(banner.mockEvent.aggregateAt)}</span>
                                                     </div>
                                                     {banner.updateTime && (
                                                         <div className="text-[10px] sm:text-xs text-slate-500/80 font-mono mt-0.5">
-                                                            Data Update: {banner.updateTime}
+                                                            {t("page.prediction.dataUpdate", { time: banner.updateTime })}
                                                         </div>
                                                     )}
                                                 </div>
@@ -482,22 +490,22 @@ export default function PredictionClient() {
                                     <div className="bg-white rounded-xl border border-slate-100 overflow-hidden mb-6">
                                         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
                                             <h3 className="font-bold text-slate-700">
-                                                {isActive ? '各榜线预测一览' : '活动最终结榜分数'}
+                                                {isActive ? t("page.prediction.table.activeTitle") : t("page.prediction.table.finalTitle")}
                                             </h3>
-                                            {isActive && <span className="text-xs text-slate-400">点击行可查看底部详情</span>}
+                                            {isActive && <span className="text-xs text-slate-400">{t("page.prediction.table.detailHint")}</span>}
                                         </div>
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-sm">
                                                 <thead className="bg-slate-50">
                                                     <tr>
-                                                        <th className="px-4 py-3 text-left text-slate-500 font-medium w-24">榜线</th>
+                                                        <th className="px-4 py-3 text-left text-slate-500 font-medium w-24">{t("page.prediction.table.tier")}</th>
                                                         <th className="px-4 py-3 text-right text-slate-500 font-medium">
-                                                            {isActive ? '当前分数' : '最终分数'}
+                                                            {isActive ? t("page.prediction.table.currentScore") : t("page.prediction.table.finalScore")}
                                                         </th>
-                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">预测分数</th>}
-                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">差距</th>}
-                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">速度</th>}
-                                                        {isActive && <th className="px-4 py-3 text-center text-slate-500 font-medium w-32">趋势</th>}
+                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.predictedScore")}</th>}
+                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.gap")}</th>}
+                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.speed")}</th>}
+                                                        {isActive && <th className="px-4 py-3 text-center text-slate-500 font-medium w-32">{t("page.prediction.table.trend")}</th>}
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -540,20 +548,20 @@ export default function PredictionClient() {
                                                             >
                                                                 <td className="px-4 py-3 font-bold text-miku">T{chart.Rank}</td>
                                                                 <td className="px-4 py-3 text-right text-slate-700 font-mono font-bold">
-                                                                    {chart.CurrentScore.toLocaleString()}
+                                                                    {formatNumber(chart.CurrentScore)}
                                                                 </td>
                                                                 {isActive && (
                                                                     <>
                                                                         <td className="px-4 py-3 text-right text-amber-600 font-mono font-bold">
-                                                                            {chart.Rank > 10000 ? '-' : chart.PredictedScore.toLocaleString()}
+                                                                            {chart.Rank > 10000 ? '-' : formatNumber(chart.PredictedScore)}
                                                                         </td>
                                                                         <td className="px-4 py-3 text-right text-slate-500 font-mono">
-                                                                            {chart.Rank > 10000 ? '-' : `+${(chart.PredictedScore - chart.CurrentScore).toLocaleString()}`}
+                                                                            {chart.Rank > 10000 ? '-' : `+${formatNumber(chart.PredictedScore - chart.CurrentScore)}`}
                                                                         </td>
                                                                         <td className="px-4 py-3 text-right font-mono">
                                                                             {tierStats ? (
                                                                                 <div className="flex flex-col items-end">
-                                                                                    <span className="text-slate-700">{tierStats.Speed?.toLocaleString() ?? '-'} /h</span>
+                                                                                    <span className="text-slate-700">{tierStats.Speed != null ? formatNumber(tierStats.Speed) : '-'} /h</span>
                                                                                     <span className={`text-[10px] ${tierStats.ChangePct >= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                                                                                         {tierStats.ChangePct >= 0 ? '+' : ''}{tierStats.ChangePct?.toFixed(1) ?? '0'}%
                                                                                     </span>
@@ -587,7 +595,7 @@ export default function PredictionClient() {
                                             <div className="bg-white rounded-xl border border-slate-200 p-6">
                                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                                                     <h3 className="text-lg font-bold text-slate-800 shrink-0">
-                                                        T{selectedRank} 详细趋势预测
+                                                        {t("page.prediction.chart.detailTitle", { rank: selectedRank })}
                                                     </h3>
                                                     {/* Rank Selector for Chart */}
                                                     <div className="flex gap-2 overflow-x-auto pb-2 w-full sm:w-auto sm:flex-wrap sm:justify-end no-scrollbar">
@@ -610,7 +618,7 @@ export default function PredictionClient() {
                                                     <PredictionChart data={currentChart} className="h-[350px] sm:h-[450px]" />
                                                 ) : (
                                                     <div className="h-[350px] sm:h-[450px] flex items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl">
-                                                        暂无 T{selectedRank} 榜线数据
+                                                        {t("page.prediction.chart.noTierData", { rank: selectedRank })}
                                                     </div>
                                                 )}
                                             </div>
@@ -618,8 +626,8 @@ export default function PredictionClient() {
                                     )}
                                     {/* Footer Sources */}
                                     <div className="text-center text-xs text-slate-400 pb-8 space-y-1">
-                                        <p>榜线来源：Moe-API</p>
-                                        <p>预测来源：AkiYome v1.2.0-Uta（诗）</p>
+                                        <p>{t("page.prediction.sources.tier")}</p>
+                                        <p>{t("page.prediction.sources.prediction")}</p>
                                     </div>
                                 </>
                             );
@@ -635,7 +643,7 @@ export default function PredictionClient() {
                             <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
-                            <p>请选择一个活动查看预测数据</p>
+                            <p>{t("page.prediction.empty")}</p>
                         </div>
                     )
                 }
@@ -643,13 +651,13 @@ export default function PredictionClient() {
             <Modal
                 isOpen={isWlNoticeOpen}
                 onClose={() => setIsWlNoticeOpen(false)}
-                title="WL 活动预测说明"
+                title={t("page.prediction.wl.title")}
                 size="sm"
                 syncHistory={false}
             >
                 <div>
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-                        WL 活动几乎无法预测，数据完全图一乐。
+                        {t("page.prediction.wl.description")}
                     </div>
                 </div>
             </Modal>

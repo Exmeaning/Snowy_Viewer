@@ -4,8 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { getUpcomingBirthdays } from "@/lib/birthdays";
 import { getCharacterIconUrl } from "@/lib/assets";
+import { useI18n } from "@/contexts/I18nContext";
 
 export default function BirthdaySection() {
+    const { t, formatDate } = useI18n();
     // Get all upcoming birthdays
     const allUpcoming = useMemo(() => getUpcomingBirthdays(), []);
 
@@ -20,7 +22,7 @@ export default function BirthdaySection() {
             <div>
                 <div className="flex items-center gap-2 mb-4">
                     <div className="h-6 w-1 rounded-full bg-miku"></div>
-                    <h2 className="text-xl font-bold text-primary-text opacity-80">即将到来的生日/纪念日</h2>
+                    <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.home.sections.upcomingBirthdays")}</h2>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -48,7 +50,7 @@ export default function BirthdaySection() {
                                 />
                                 {birthday.isToday && (
                                     <div className="absolute -top-1 -right-1 bg-miku text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse z-10">
-                                        TODAY
+                                        {t("page.home.birthdays.today")}
                                     </div>
                                 )}
                             </div>
@@ -57,7 +59,7 @@ export default function BirthdaySection() {
                                     {birthday.name}
                                 </div>
                                 <div className={`text-xs mt-0.5 ${birthday.isToday ? "text-miku/80 font-bold" : "text-slate-400"}`}>
-                                    {birthday.month}月{birthday.day}日
+                                    {formatDate(new Date(2000, birthday.month - 1, birthday.day), { month: "long", day: "numeric" })}
                                 </div>
                             </div>
                         </Link>

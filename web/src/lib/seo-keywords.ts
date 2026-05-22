@@ -67,6 +67,7 @@ export const PAGE_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   story_area: ["区域对话", "Area Conversation", "Area Talk"],
   story_self: ["自我介绍", "角色介绍", "Character Introduction"],
   story_special: ["特殊剧情", "Special Story", "周年剧情"],
+  guides: ["攻略", "社区攻略", "Guide"],
   about: ["关于"],
   patreon: ["支持我们"],
 } as const;

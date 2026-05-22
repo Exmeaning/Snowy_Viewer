@@ -8,7 +8,6 @@ import MainLayout from "@/components/MainLayout";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
 import {
     IVirtualLiveInfo,
-    VIRTUAL_LIVE_TYPE_NAMES,
     VIRTUAL_LIVE_TYPE_COLORS,
     getVirtualLiveStatus,
     VIRTUAL_LIVE_STATUS_DISPLAY,
@@ -226,9 +225,7 @@ export default function VirtualLiveDetailClient() {
                             className="px-3 py-1 text-xs font-bold rounded-full text-white w-fit"
                             style={{ backgroundColor: VIRTUAL_LIVE_TYPE_COLORS[virtualLive.virtualLiveType as VirtualLiveType] || "#9E9E9E" }}
                         >
-                            {t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`) !== `common.virtualLiveTypes.${virtualLive.virtualLiveType}`
-                                ? t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`)
-                                : (VIRTUAL_LIVE_TYPE_NAMES[virtualLive.virtualLiveType as VirtualLiveType] || virtualLive.virtualLiveType)}
+                            {t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`)}
                         </span>
                         <span
                             className="px-3 py-1 text-xs font-bold rounded-full text-white w-fit"
@@ -307,9 +304,7 @@ export default function VirtualLiveDetailClient() {
                                 <InfoRow
                                     label={t("common.field.type")}
                                     value={
-                                        t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`) !== `common.virtualLiveTypes.${virtualLive.virtualLiveType}`
-                                            ? t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`)
-                                            : (VIRTUAL_LIVE_TYPE_NAMES[virtualLive.virtualLiveType as VirtualLiveType] || virtualLive.virtualLiveType)
+                                        t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`)
                                     }
                                 />
                                 <InfoRow label={t("page.live.platformLabel")} value={virtualLive.virtualLivePlatform} />

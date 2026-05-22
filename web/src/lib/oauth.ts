@@ -74,10 +74,10 @@ function getDefaultRedirectUri(): string {
 function assertOAuthConfig() {
     const config = getOAuthConfig();
     if (!config.clientId) {
-        throw new Error("缺少 NEXT_PUBLIC_OAUTH2_CLIENT_ID 配置");
+        throw new Error("OAUTH_CLIENT_ID_MISSING");
     }
     if (!config.redirectUri) {
-        throw new Error("缺少 OAuth2 redirect URI 配置");
+        throw new Error("OAUTH_REDIRECT_URI_MISSING");
     }
     return config;
 }
@@ -217,21 +217,83 @@ export function getOAuthReturnTo(state?: string | null): string {
     return getPendingOAuthState(state)?.returnTo || "/profile";
 }
 
-export function formatOAuthErrorMessage(error: string): string {
-    if (error === "access_denied") return "你已取消授权，未绑定任何账号。";
-    if (error === "OAUTH_PENDING_MISSING") return "授权会话已失效，请重新发起 OAuth2 绑定。";
-    if (error === "OAUTH_STATE_MISMATCH") return "授权状态校验失败，请重新发起 OAuth2 绑定。";
-    if (error === "OAUTH_REAUTH_REQUIRED") return "当前授权已失效，请重新授权后再试。";
-    if (error === "OAUTH_REQUEST_TIMEOUT") return "OAuth2 服务响应超时，请稍后重试。";
-    if (error.startsWith("TOKEN_EXCHANGE_FAILED_")) return "授权码交换失败，请确认回调地址配置正确并重新授权。";
-    if (error.startsWith("TOKEN_REFRESH_FAILED_")) return "授权刷新失败，请重新授权后再试。";
-    if (error.startsWith("AUTHORIZED_REQUEST_FAILED_401")) return "授权已过期，请重新授权后再试。";
-    if (error.startsWith("AUTHORIZED_REQUEST_FAILED_403")) return "当前授权权限不足或无权访问该账号数据。";
-    if (error.startsWith("AUTHORIZED_REQUEST_FAILED_404")) return "未找到对应的授权资源或绑定数据。";
-    if (error === "OAUTH_TOKEN_MISSING") return "当前账号缺少授权凭据，请重新授权后再试。";
-    if (error === "INVALID_OAUTH_BINDING") return "无法识别当前授权账号绑定信息，请重新授权后再试。";
-    if (error === "OAuth2 回调参数不完整") return error;
-    return error || "OAuth2 处理失败，请稍后重试。";
+type OAuthErrorTranslator = (key: string) => string;
+
+type OAuthErrorMessageKey =
+    | "accessDenied"
+    | "pendingMissing"
+    | "stateMismatch"
+    | "reauthRequired"
+    | "requestTimeout"
+    | "tokenExchangeFailed"
+    | "tokenRefreshFailed"
+    | "authorizedExpired"
+    | "authorizedForbidden"
+    | "authorizedNotFound"
+    | "tokenMissing"
+    | "invalidBinding"
+    | "callbackParamsMissing"
+    | "processFailed"
+    | "syncAccountFailed"
+    | "initFailed"
+    | "clientIdMissing"
+    | "redirectUriMissing"
+    | "noBindings"
+    | "bindingParseFailed";
+
+const OAUTH_ERROR_FALLBACKS: Record<OAuthErrorMessageKey, string> = {
+    accessDenied: "You canceled authorization, so no account was linked.",
+    pendingMissing: "The authorization session expired. Please start OAuth2 linking again.",
+    stateMismatch: "Authorization state verification failed. Please start OAuth2 linking again.",
+    reauthRequired: "This authorization is no longer valid. Please authorize again and retry.",
+    requestTimeout: "The OAuth2 service timed out. Please try again later.",
+    tokenExchangeFailed: "Failed to exchange the authorization code. Check the callback URL configuration and authorize again.",
+    tokenRefreshFailed: "Failed to refresh the authorization. Please authorize again and retry.",
+    authorizedExpired: "This authorization has expired. Please authorize again and retry.",
+    authorizedForbidden: "This authorization does not have permission to access the account data.",
+    authorizedNotFound: "The corresponding authorization resource or linked data was not found.",
+    tokenMissing: "This account is missing authorization credentials. Please authorize again and retry.",
+    invalidBinding: "The linked account information could not be recognized. Please authorize again and retry.",
+    callbackParamsMissing: "The OAuth2 callback parameters are incomplete.",
+    processFailed: "OAuth2 processing failed. Please try again later.",
+    syncAccountFailed: "Failed to sync the authorized account data. Please try again later.",
+    initFailed: "OAuth2 authorization initialization failed.",
+    clientIdMissing: "NEXT_PUBLIC_OAUTH2_CLIENT_ID is not configured.",
+    redirectUriMissing: "OAuth2 redirect URI is not configured.",
+    noBindings: "This authorization returned no usable bindings. Please confirm the Haruki account has linked and verified a game account.",
+    bindingParseFailed: "Could not parse the server or UID from the OAuth2 binding.",
+};
+
+function getOAuthErrorMessageKey(error: string): OAuthErrorMessageKey | null {
+    if (error === "access_denied") return "accessDenied";
+    if (error === "OAUTH_PENDING_MISSING") return "pendingMissing";
+    if (error === "OAUTH_STATE_MISMATCH") return "stateMismatch";
+    if (error === "OAUTH_REAUTH_REQUIRED") return "reauthRequired";
+    if (error === "OAUTH_REQUEST_TIMEOUT") return "requestTimeout";
+    if (error.startsWith("TOKEN_EXCHANGE_FAILED_")) return "tokenExchangeFailed";
+    if (error.startsWith("TOKEN_REFRESH_FAILED_")) return "tokenRefreshFailed";
+    if (error.startsWith("AUTHORIZED_REQUEST_FAILED_401")) return "authorizedExpired";
+    if (error.startsWith("AUTHORIZED_REQUEST_FAILED_403")) return "authorizedForbidden";
+    if (error.startsWith("AUTHORIZED_REQUEST_FAILED_404")) return "authorizedNotFound";
+    if (error === "OAUTH_TOKEN_MISSING") return "tokenMissing";
+    if (error === "INVALID_OAUTH_BINDING") return "invalidBinding";
+    if (error === "OAUTH_CALLBACK_PARAMS_MISSING") return "callbackParamsMissing";
+    if (error === "OAUTH_PROCESS_FAILED") return "processFailed";
+    if (error === "OAUTH_SYNC_ACCOUNT_FAILED") return "syncAccountFailed";
+    if (error === "OAUTH_INIT_FAILED") return "initFailed";
+    if (error === "OAUTH_CLIENT_ID_MISSING") return "clientIdMissing";
+    if (error === "OAUTH_REDIRECT_URI_MISSING") return "redirectUriMissing";
+    if (error === "OAUTH_NO_BINDINGS") return "noBindings";
+    if (error === "OAUTH_BINDING_PARSE_FAILED") return "bindingParseFailed";
+    return null;
+}
+
+export function formatOAuthErrorMessage(error: string, t?: OAuthErrorTranslator): string {
+    const key = getOAuthErrorMessageKey(error);
+    if (key) {
+        return t?.(`common.oauthErrors.${key}`) ?? OAUTH_ERROR_FALLBACKS[key];
+    }
+    return error || t?.("common.oauthErrors.processFailed") || OAUTH_ERROR_FALLBACKS.processFailed;
 }
 
 async function oauthFetch(input: string, init?: RequestInit): Promise<Response> {

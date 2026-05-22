@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import GuideDetailClient from "./client";
 
 export const metadata: Metadata = {
-    title: "攻略详情",
+    title: "Guide Details",
 };
 
 export default function GuideDetailPage() {

@@ -1,8 +1,6 @@
 // Music Types for Moesekai
 // Based on sekai.best and sekaimaster data structure
 
-import { UNIT_NAME_MAP } from "@/types/types";
-
 export type MusicCategoryType = "mv" | "mv_2d" | "original" | "image";
 
 export type MusicTagType =
@@ -79,24 +77,34 @@ export interface IOutsideCharacter {
     name: string;
 }
 
-// Music tag display names (Chinese)
-export const MUSIC_TAG_NAMES: Record<MusicTagType, string> = {
-    all: "全部",
-    vocaloid: UNIT_NAME_MAP.piapro,
-    light_music_club: UNIT_NAME_MAP.light_sound,
-    idol: UNIT_NAME_MAP.idol,
-    street: UNIT_NAME_MAP.street,
-    theme_park: UNIT_NAME_MAP.theme_park,
-    school_refusal: UNIT_NAME_MAP.school_refusal,
-    other: "其他",
+export const MUSIC_TAG_IDS = [
+    "all",
+    "vocaloid",
+    "light_music_club",
+    "idol",
+    "street",
+    "theme_park",
+    "school_refusal",
+    "other",
+] as const satisfies readonly MusicTagType[];
+
+export const MUSIC_TAG_LABEL_KEYS: Record<MusicTagType, string> = {
+    all: "common.musicTags.all",
+    vocaloid: "common.musicTags.vocaloid",
+    light_music_club: "common.musicTags.light_music_club",
+    idol: "common.musicTags.idol",
+    street: "common.musicTags.street",
+    theme_park: "common.musicTags.theme_park",
+    school_refusal: "common.musicTags.school_refusal",
+    other: "common.musicTags.other",
 };
 
-// Music category display names (Chinese)
-export const MUSIC_CATEGORY_NAMES: Record<MusicCategoryType, string> = {
-    mv: "3D MV",
-    mv_2d: "2D MV",
-    original: "原创MV",
-    image: "静态图片",
+export const MUSIC_CATEGORY_IDS = ["mv", "mv_2d", "original", "image"] as const satisfies readonly MusicCategoryType[];
+export const MUSIC_CATEGORY_LABEL_KEYS: Record<MusicCategoryType, string> = {
+    mv: "common.musicCategories.mv",
+    mv_2d: "common.musicCategories.mv_2d",
+    original: "common.musicCategories.original",
+    image: "common.musicCategories.image",
 };
 
 // Music category colors

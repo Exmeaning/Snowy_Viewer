@@ -5,8 +5,8 @@ import BaseFilters, { FilterSection, getFilterChipStateClasses, getFilterIconSta
 import {
     MusicTagType,
     MusicCategoryType,
-    MUSIC_TAG_NAMES,
-    MUSIC_CATEGORY_NAMES,
+    MUSIC_TAG_IDS,
+    MUSIC_CATEGORY_IDS,
     MUSIC_CATEGORY_COLORS,
 } from "@/types/music";
 import { useI18n } from "@/contexts/I18nContext";
@@ -142,7 +142,7 @@ export default function MyMusicFilters({
             {/* Tag Filter */}
             <FilterSection label={t("common.filter.musicTag")}>
                 <div className="flex flex-wrap gap-2">
-                    {(Object.keys(MUSIC_TAG_NAMES) as MusicTagType[]).map((tag) => {
+                    {MUSIC_TAG_IDS.map((tag) => {
                         const isSelected = selectedTag === tag;
                         const hasIcon = TAG_ICONS[tag];
 
@@ -176,7 +176,7 @@ export default function MyMusicFilters({
             {/* Category Filter */}
             <FilterSection label={t("common.filter.mvType")}>
                 <div className="flex flex-wrap gap-2">
-                    {(Object.keys(MUSIC_CATEGORY_NAMES) as MusicCategoryType[]).map((cat) => {
+                    {MUSIC_CATEGORY_IDS.map((cat) => {
                         const isSelected = selectedCategories.includes(cat);
                         return (
                             <button

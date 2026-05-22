@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (!live) return { title: "Virtual Live Detail" };
 
     const title = live.name;
-    const description = `Project Sekai 虚拟Live「${live.name}」` + DETAIL_SEO_SUFFIX;
+    const description = `Project Sekai Virtual Live "${live.name}"` + DETAIL_SEO_SUFFIX;
     const ogImage = getVirtualLiveBannerUrl(live.asset, "main-jp");
 
     return {

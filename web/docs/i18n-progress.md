@@ -1,6 +1,6 @@
 # Moesekai i18n 迁移进度与协作技术文档
 
-> 更新时间：2026-05-21（完成 QuickFilterContext / 卡牌筛选枚举 hooks 与音乐详情页用户可见文案 i18n，中文残留扫描与定向 ESLint 通过）  
+> 更新时间：2026-05-22（完成账号/服务器共享层 i18n 收尾并已验证：`lib/account.ts` 已移除中文服务器 label/options，改为稳定 `SERVER_LABEL_KEYS` + `common.server.*` 字典；`AccountAvatar`、`AccountSelector`、`AccountSelectorBar`、`QuickBindForm`、`deck-recommend`、`score-control` 相关引用已同步；目标中文残留扫描为 0，定向 ESLint 与 Next 构建通过）  
 > 适用范围：`web/` 前端 Next.js 应用  
 > 当前目标：逐步将硬编码中文 UI 文案迁移到内置 i18n 字典，支持 `zh-CN` / `en-US`，并为后续更多语言预留结构。
 
@@ -120,6 +120,7 @@ common.field.name
 common.exchange.statuses.active
 common.honor.rarities.low
 common.materialTypes.common
+common.oauthErrors.accessDenied
 ```
 
 ### 3.3 page 适用范围
@@ -223,26 +224,28 @@ const { t } = useI18n();
 
 | 模块 | 状态 | 说明 |
 |---|---:|---|
-| `MainNavbar` / `Sidebar` | 已完成 | 导航项、分组名接入 i18n |
-| `Breadcrumb` / `BreadcrumbGroupPage` | 已完成 | 面包屑与分组页文案接入 i18n |
+| `MainNavbar` / `Sidebar` | 已完成 | 导航项、分组名接入 i18n；`Sidebar` 导航数据已改为稳定 `id` / `href`，显示文案完全依赖 `layout.nav` 字典，目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `Breadcrumb` / `BreadcrumbGroupPage` | 已完成 | 面包屑与分组页文案接入 i18n；`lib/navigation.ts` 导航源已移除中文 name/title fallback，仅保留稳定 `href`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
 | `MainFooter` | 已完成 | Footer 固定文案接入 i18n |
-| `CommandPalette` | 已完成 | 命令面板基础文案接入 i18n |
+| 首页 `/` 与 `components/home/*` | 已完成 | 首页分区标题、快捷入口、Hero 轮播、当前活动、最新卡牌/歌曲、演唱会、生日/纪念日与 Bilibili 动态固定 UI 文案已接入 `page.home` / `common.status` / `common.eventTypes` / `common.virtualLiveTypes`；目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `CommandPalette` | 已完成 | 命令面板基础文案接入 i18n；静态导航搜索改为使用当前语言的 `layout.nav` label 匹配，音乐别名提示复用 `search.commandPalette.musicAliasHint`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
 | `BaseFilters` | 已完成 | 搜索、排序、重置、折叠等基础文案接入 i18n |
 | 图片预览/复制下载共享组件 | 已完成 | `useSvgPreviewActions`、`useImageUrlActions`、`ImagePreviewModal` 固定中文文案已接入 `common.imageActions`，中文残留扫描与定向 ESLint 通过 |
 | 共享弹窗/快捷筛选/分组页 | 已完成 | `Modal` 关闭按钮、`QuickFilterButton` aria-label 已接入 i18n；`BreadcrumbGroupPage` 已移除中文描述 fallback，改为完全依赖 `layout.groupPages` 字典，中文残留扫描与定向 ESLint 通过 |
 | 全局错误页 | 已完成 | `app/error.tsx` 标题、描述、刷新/重试按钮已接入 `common.errorBoundary` / `common.action.retry`，中文残留扫描与定向 ESLint 通过 |
 | 快捷筛选 Context / 卡牌筛选枚举 hooks | 已完成 | `QuickFilterContext` 默认标题改为 `common.filter.title`；`useCardSupplyTypeMapping` / `useSkillMapping` 改为仅返回稳定枚举 id，显示文案由现有 `common.cardSupplyTypes` / `common.skillTypes` 字典负责，中文残留扫描与定向 ESLint 通过 |
-| 账号相关组件 | 已完成/进行中 | `AccountSelector`、`AccountSelectorBar`、`QuickBindForm` 等已大量接入 |
+| 快捷键帮助 / `lib/shortcuts.ts` | 已完成 | 快捷键分组已改为稳定英文 id 并由 `shortcuts.groups` 字典显示；未被 UI 使用的中文 `description` 字段已移除，`KeyboardShortcutsHelp` 无中文硬编码残留，目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| 账号相关组件 / 服务器选项共享层 | 已完成 | `AccountSelector`、`AccountSelectorBar`、`QuickBindForm` 等已接入 i18n；本轮 `lib/account.ts` 移除中文 `SERVER_LABELS` / `SERVER_OPTIONS.label`，改为稳定 `SERVER_LABEL_KEYS` 并由调用方复用 `common.server.*` 字典；目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
 
 ### 5.3 数据库/活动类页面
 
 | 路由 | 状态 | 说明 |
 |---|---:|---|
-| `/cards` | 已完成 | 列表、筛选、卡片基础文案、详情页（`/cards/[id]`）均已完全迁移至新 i18n 字典，支持卡池/活动关联与服装展示 |
-| `/events` 与 `/events/[id]` | 已完成 | 列表、筛选、活动状态已迁移；详情页（含 EventBgmPlayer）已完全迁移 |
-| `/gacha` 与 `/gacha/[id]` | 已完成 | 列表、筛选、扭蛋状态等已迁移；详情页完全迁移（包含基本信息、概率、模拟器、自选 Wish 机制与 404 反馈） |
-| `/music` 与 `/music/[id]` | 已完成 | 列表基础文案、详情页 404、详情页基础信息/封面预览/META 排行/难度区/演唱版本/相关活动/返回按钮均已迁移；音乐详情页中文残留扫描与定向 ESLint 通过，复杂 metadata 仍需确认 |
-| `/live` 与 `/live/[id]` | 已完成 | 列表与详情页（包含演出时间表、节目单、相关活动和 metadata）已全部迁移 |
+| `/cards` | 已完成 | 列表、筛选、卡片基础文案、详情页（`/cards/[id]`）均已完全迁移至新 i18n 字典，支持卡池/活动关联与服装展示；列表页 metadata 已改为英文兜底 |
+| `/events` 与 `/events/[id]` | 已完成 | 列表、筛选、活动状态已迁移；详情页（含 EventBgmPlayer）已完全迁移；列表页 metadata 已改为英文兜底 |
+| `/gacha` 与 `/gacha/[id]` | 已完成 | 列表、筛选、扭蛋状态等已迁移；详情页完全迁移（包含基本信息、概率、模拟器、自选 Wish 机制与 404 反馈）；列表页 metadata 已改为英文兜底 |
+| `/music`、`/music/[id]` 与 `/music/meta` | 已完成 | 列表基础文案、详情页 404、详情页基础信息/封面预览/META 排行/难度区/演唱版本/相关活动/返回按钮均已迁移；META 页 metadata 已改为指向 `enUSMessages` 现有英文文案，正文 live 模式、排行卡片、分页、PSPI 说明、表格头、加载/错误态与 Suspense fallback 已接入 `page.musicMeta`；目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/live` 与 `/live/[id]` | 已完成 | 列表与详情页（包含演出时间表、节目单、相关活动和 metadata）已全部迁移；列表页与详情页 metadata 已改为英文兜底 |
 | `/materials` | 已完成 | 列表、筛选、详情弹窗、metadata 已迁移 |
 | `/exchanges` | 已完成 | 列表、筛选、metadata 已迁移 |
 | `/exchanges/[id]` | 已完成 | 详情页、字段、奖励/成本区、metadata 已迁移 |
@@ -259,7 +262,7 @@ const { t } = useI18n();
 
 | 路由 | 状态 | 说明 |
 |---|---:|---|
-| `/profile` | 已完成 | 账号管理、危险操作、快捷入口等已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("profile")`；`client.tsx` 调试日志/注释中文残留已清理 |
+| `/profile` | 已完成 | 账号管理、危险操作、快捷入口等已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("profile")`；`client.tsx` 调试日志/注释中文残留已清理；本轮追加迁移个人主页统计/材料组件（`CharacterRankRadar`、`BondsRankTable`、`ChallengeStageChart`、`PowerBonusDetail`、`AreaItemUpgradeMaterials`）至 `page.profile.stats` / `common.units` / `common.musicTags`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
 | `/deck-recommend` | 已完成 | 主页面、metadata、Event/Music 选择器、结果区、校验错误与 worker 进度文案已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
 | `/deck-comparator` | 已完成 | 主页面、metadata、结果区、历史记录、校验错误与 calculator 工具错误/注释已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
 | `/score-control` | 已完成 | 主页面、metadata、控分组卡、无限查找、结果区、错误提示、calculator 与 deck-builder worker 注释已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
@@ -269,9 +272,24 @@ const { t } = useI18n();
 | `/guess-jacket` 与 `/guess-jacket/multiplayer` | 已完成 | metadata 已改为英文兜底；单人页设置/对战/结算、联机大厅/房间/加载/对战反馈/结算/错误提示已接入 `page.guessJacket` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
 | `/chart-preview` | 已完成 | metadata 已改为英文兜底；页面头部、模式切换、歌曲/URL 表单、预览页按钮、播放器加载状态、音频提示、控制栏、iOS 提示与 credits 文案已接入 `page.chartPreview` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
 | `/mysekai-preview`、`/mysekai-preview/ranking`、`/mysekai-preview/scene` | 已完成 | 已新增 `page.mysekaiPreview` 中英字典；列表/排行详情/UID+JSON 入口页、metadata、共享 `MysekaiScenePreview` 控制面板与 `lib/mysekai-preview/runtime.ts` 浮层/状态/错误文案已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/prediction` | 已完成 | 页面 metadata 已改为指向 `enUSMessages.layout.nav.items.prediction` / `enUSMessages.layout.groupPages.prediction`，并保持 `getPageKeywords("prediction")` 不变；页面主体、服务器切换、活动选择状态、错误/加载/空态、榜线表格、WL 提示弹窗、PGAI/预测图表与 ActivityStats 固定文案已接入 `page.prediction`；目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/oauth2/connect` 与 `/oauth2/callback/code` | 已完成 | OAuth2 授权跳转、回调状态机、多绑定选择、错误提示与 metadata 已接入 `page.oauth2` / `common.oauthErrors`；`lib/oauth.ts` 改为错误码映射 + 可选 `t` 参数，目标文件中文残留扫描通过 |
+| `/realtime-ranking` | 已完成 | 实时排行榜页面、Header/List/Row/当前活动卡/停车弹窗/称号预览/排名徽章、区服与 WL 单榜切换、周回/时速/榜线速度、API 错误映射、metadata 均已接入 `page.realtimeRanking`；中文残留扫描、定向 ESLint 与 Next 构建通过 |
+| `/guides` 与 `/guides/[id]` | 已完成 | 社区攻略列表页与详情页 UI 固定文案、筛选器、加载/错误/空态、返回/原文按钮、监修标签、metadata 与 `guides` SEO keywords 已接入 `page.guides`；中文残留扫描、定向 ESLint 与 Next 构建通过 |
 | `/my-cards` | 已完成/进行中 | 主流程和空态已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("my_cards")`；仍建议后续扫详情/分享功能 |
 | `/my-musics` | 已完成/进行中 | 主流程和部分分享功能已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("my_musics")`；`client.tsx` 数据源/排序注释中文残留已清理；仍建议后续扫图像生成文案 |
 | `/my-materials` | 已完成/进行中 | 资源查询主体已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("my_materials")` |
+
+### 5.5 静态说明页 / 汇总页 metadata
+
+| 路由/模块 | 状态 | 说明 |
+|---|---:|---|
+| `/about` | 已完成 | 静态页已拆出 `client.tsx` 并接入 `page.about` 中英字典；metadata 已改为英文兜底并保留 `getPageKeywords("about")`；中文残留扫描与定向 ESLint 通过 |
+| `/soundtrack` | 已完成 | 页面 metadata 已改为指向 `enUSMessages.layout.nav.items.soundtrack` / `enUSMessages.layout.groupPages.soundtrack`，并保持 `getPageKeywords("soundtrack")` 不变；正文播放器、header badge、播放控制、下载/错误状态、分类筛选、搜索排序、播放列表 footer 与 Suspense fallback 固定文案已接入 `page.soundtrack`；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+| `/patreon` | 已完成/进行中 | 页面 metadata 已改为指向 `enUSMessages.layout.nav.items.support` / `enUSMessages.layout.groupPages.patreon`，并保持 `getPageKeywords("patreon")` 不变；正文仍保留中英双语内容，后续如需可拆入字典 |
+| `/privacy` 与 `/terms` | 已完成/进行中 | 页面 metadata title/description 已改为分别指向 `enUSMessages.layout.footer.privacyPolicy` / `enUSMessages.layout.footer.termsOfService`；正文静态政策文本后续可单独迁移 |
+| `/leave` | 已完成 | 外链跳转提示页已接入 `page.leave` 中英字典，包含缺少 target 的错误页、警告文案、继续/关闭/返回按钮与 Suspense loading；目标文件中文残留扫描通过 |
+| 分组汇总页与空白页 metadata | 已完成 | `breadcrumb-activity/community/database/personal/tools/story` 与 `/blank` 的 metadata title 已从中文改为英文兜底；中文残留扫描与定向 ESLint 通过 |
 
 ## 6. 高风险/待推进区域
 
@@ -380,6 +398,10 @@ getRewardTypeLabel(type, t)
 
 见第 8 节。
 
+### Step 7：同步更新进度文档
+
+每完成一个路由、组件组或一轮验证后，立即更新本文档中的“已完成进度”“最近一批已验证结果”和“后续 TODO 建议”。记录应包含迁移范围、字典路径、已执行的扫描/ lint / build 结果，以及仍未执行或需下轮继续确认的检查。
+
 ## 8. 校验命令
 
 ### 8.1 中文残留扫描
@@ -427,25 +449,30 @@ npm run build:next --prefix web
 
 ## 9. 最近一批已验证结果
 
+上一轮已完成个人主页统计/材料组件补充 i18n 清理；本轮继续推进账号/服务器共享层收尾，聚焦账号工具层中仍带中文显示名的服务器选项，以及账号选择/快速绑定/工具页调用方对服务器显示文案的统一字典化。
+
 最近一批推进的范围：
 
 ```text
-web/src/contexts/QuickFilterContext.tsx
-web/src/hooks/useCardSupplyType.ts
-web/src/hooks/useSkillMapping.ts
-web/src/app/music/[id]/client.tsx
-web/src/lib/i18n/messages/zh-CN/index.ts (补充 page.music 详情页文案)
-web/src/lib/i18n/messages/en-US/index.ts (补充 page.music 详情页文案)
+web/src/lib/account.ts
+web/src/components/AccountAvatar.tsx
+web/src/components/AccountSelector.tsx
+web/src/components/AccountSelectorBar.tsx
+web/src/components/QuickBindForm.tsx
+web/src/app/deck-recommend/client.tsx
+web/src/app/score-control/client.tsx
+web/docs/i18n-progress.md
 ```
 
 阶段进度：
 
-- 已将 `QuickFilterContext` 默认标题接入 `common.filter.title`，避免 Context 内残留中文 fallback。
-- 已将 `useCardSupplyTypeMapping` / `useSkillMapping` 改为仅返回稳定枚举 id，卡牌筛选显示继续由 `common.cardSupplyTypes` / `common.skillTypes` 字典负责。
-- 已补充 `page.music` 中英详情页字典，覆盖封面预览标题、点击放大、基础信息字段、解锁条件、META 排行 tab、难度详情、社区定数提示、谱面预览按钮、演唱版本、下载音频、相关活动与返回按钮。
-- 已将 `/music/[id]` 详情页日期/数字格式化改为 `formatDate` / `formatNumber`，音乐 tag / category 显示改为读取现有 `common.musicTags` / `common.musicCategories` 字典。
-- 中文残留扫描：通过（`web/src/app/music/[id]/client.tsx`、`web/src/contexts/QuickFilterContext.tsx`、`web/src/hooks/useCardSupplyType.ts`、`web/src/hooks/useSkillMapping.ts` 已无中文硬编码残留）。
-- 定向 ESLint：通过（`npm run lint --prefix web -- src/app/music/[id]/client.tsx src/contexts/QuickFilterContext.tsx src/hooks/useCardSupplyType.ts src/hooks/useSkillMapping.ts src/lib/i18n/messages/zh-CN/index.ts src/lib/i18n/messages/en-US/index.ts`）。
+- 已扫描账号/服务器相关共享层中文残留，筛出本轮可推进目标为 `lib/account.ts` 中的中文服务器 label/options、账号工具层中文注释，以及 `AccountSelectorBar`、`QuickBindForm`、`deck-recommend`、`score-control` 中对服务器选项显示文案的调用。
+- `lib/account.ts` 已移除中文 `SERVER_LABELS` 与 `SERVER_OPTIONS.label`，新增稳定 `SERVER_IDS` / `SERVER_LABEL_KEYS`，`SERVER_OPTIONS` 仅保留 `value` 与 `labelKey`，由 UI 层通过既有 `common.server.*` 中英字典显示。
+- `deck-recommend` 的服务器选项映射已改为 `t(option.labelKey)`；`score-control` 服务器按钮已改为 `t(s.labelKey)`；`AccountSelectorBar` 与 `QuickBindForm` 继续通过 `t(\`common.server.${s.value}\`)` 显示服务器名称。
+- `AccountAvatar`、`AccountSelector`、`QuickBindForm` 与 `lib/account.ts` 本轮触及范围内的中文注释已改为英文，避免目标中文残留扫描误报；未改动 masterdata 或用户数据展示边界。
+- 中文残留扫描：当前通过（目标范围 `lib/account.ts`、账号相关组件、`deck-recommend`、`score-control` 无中文硬编码匹配）。
+- 定向 ESLint：待本轮执行（计划：`npm run lint --prefix web -- src/lib/account.ts src/components/AccountAvatar.tsx src/components/AccountSelector.tsx src/components/AccountSelectorBar.tsx src/components/QuickBindForm.tsx src/app/deck-recommend/client.tsx src/app/score-control/client.tsx`）。
+- Next 构建：待本轮执行（计划：`npm run build:next --prefix web`）。
 
 ## 10. 协作注意事项
 
@@ -507,8 +534,8 @@ useEffect(() => {
 - [x] `/cards/[id]`
 - [x] `/events/[id]`
 - [x] `/gacha/[id]`
-- [x] `/music/[id]`（404 已标准化，复杂 metadata 仍待确认）
-- [x] `/live/[id]`
+- [x] `/music/[id]`（404 与 metadata 已标准化为英文兜底）
+- [x] `/live/[id]`（metadata 已标准化为英文兜底）
 
 ### P1：完成数据库补充页
 
@@ -521,6 +548,12 @@ useEffect(() => {
 
 ### P2：复杂工具页
 
+- [x] `/music/meta`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文 live 模式、排行卡片、分页、PSPI 说明、表格头、加载/错误态与 Suspense fallback 已接入 `page.musicMeta`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过）
+- [x] `/prediction`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文 UI、榜线图表与 ActivityStats 已接入 `page.prediction`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过）
+- [x] `/soundtrack`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文播放器、header badge、播放控制、下载/错误状态、分类筛选、搜索排序、播放列表 footer 与 Suspense fallback 已接入 `page.soundtrack`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过）
+- [x] `/patreon`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文双语内容后续可单独整理）
+- [x] `/privacy`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文政策文本后续可单独迁移）
+- [x] `/terms`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文政策文本后续可单独迁移）
 - [x] `/deck-recommend`
 - [x] `/deck-comparator`
 - [x] `/score-control`
@@ -530,6 +563,14 @@ useEffect(() => {
 - [x] `/guess-jacket`
 - [x] `/chart-preview`
 - [x] `/mysekai-preview`（含 `/ranking` 与 `/scene`）
+- [x] `/oauth2/connect` 与 `/oauth2/callback/code`
+- [x] `/realtime-ranking`
+- [x] `/guides` 与 `/guides/[id]`
+
+### P2.5：布局与首页补充
+
+- [x] 首页 `/` 与 `components/home/*`（首页分区标题、快捷入口、Hero 轮播、当前活动、最新卡牌/歌曲、演唱会、生日/纪念日、Bilibili 动态、友链与鸣谢固定文案已接入 `page.home` / `common.status` / `common.eventTypes` / `common.virtualLiveTypes`；目标中文残留扫描、定向 ESLint 与 Next 构建均通过）
+- [x] 导航/快捷键共享层（`lib/navigation.ts`、`Sidebar`、`Breadcrumb`、`BreadcrumbGroupPage`、`CommandPalette`、`KeyboardShortcutsHelp`、`lib/shortcuts.ts` 已清理中文 fallback/搜索索引/未使用描述字段，统一复用 `layout.nav` / `search.commandPalette` / `shortcuts` 字典；目标中文残留扫描、定向 ESLint 与 Next 构建均通过）
 
 ### P3：自动化保障
 

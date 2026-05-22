@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { CHAR_NAMES, CHARACTER_NAMES, UNIT_NAME_MAP, UNIT_DATA, UNIT_FIELD_TO_ID, UNIT_ICON_FILES, type CardAttribute } from "@/types/types";
+import { CHAR_NAMES, CHARACTER_NAMES, UNIT_DATA, UNIT_FIELD_TO_ID, UNIT_ICON_FILES, type CardAttribute } from "@/types/types";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import Modal from "@/components/common/Modal";
 import type {
     ServerType,
@@ -68,6 +69,14 @@ interface AttrBonus {
 }
 
 const UNIT_ORDER = ["light_sound", "idol", "street", "theme_park", "school_refusal", "piapro"] as const;
+const UNIT_LABEL_KEYS: Record<(typeof UNIT_ORDER)[number], string> = {
+    light_sound: "common.musicTags.light_music_club",
+    idol: "common.musicTags.idol",
+    street: "common.musicTags.street",
+    theme_park: "common.musicTags.theme_park",
+    school_refusal: "common.musicTags.school_refusal",
+    piapro: "common.musicTags.vocaloid",
+};
 const ATTR_ORDER: CardAttribute[] = ["cool", "cute", "happy", "mysterious", "pure"];
 const ATTR_ICON_FILES: Record<CardAttribute, string> = {
     cool: "Cool.webp",
@@ -100,6 +109,7 @@ export default function PowerBonusDetail({
     userMysekaiGates,
 }: Props) {
     const { themeColor } = useTheme();
+    const { t } = useI18n();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
@@ -131,14 +141,14 @@ export default function PowerBonusDetail({
                 });
                 setUnitNameMap(uMap);
             } catch {
-                if (!cancelled) setError("加成主数据加载失败，请稍后重试");
+                if (!cancelled) setError(t("page.profile.stats.powerBonusLoadFailed"));
             } finally {
                 if (!cancelled) setLoading(false);
             }
         };
         void load();
         return () => { cancelled = true; };
-    }, [server]);
+    }, [server, t]);
 
     useEffect(() => {
         setShowDetailModal(false);
@@ -223,7 +233,7 @@ export default function PowerBonusDetail({
             {UNIT_ORDER.map((unitKey) => {
                 const unitBonus = bonus.unit.get(unitKey)!;
                 const charIds = UNIT_CHAR_IDS[unitKey];
-                const unitLabel = unitNameMap.get(unitKey) || UNIT_NAME_MAP[unitKey] || unitKey;
+                const unitLabel = unitNameMap.get(unitKey) || t(UNIT_LABEL_KEYS[unitKey]);
                 const isVirtualSinger = unitKey === "piapro";
 
                 return (
@@ -254,9 +264,9 @@ export default function PowerBonusDetail({
                         {showBreakdown && (
                             <div className="mt-3 pt-2 border-t border-slate-100 space-y-1.5">
                                 <div className="text-[11px] text-slate-500">
-                                    <span className="font-bold text-slate-600">团体加成</span>
+                                    <span className="font-bold text-slate-600">{t("page.profile.stats.unitBonus")}</span>
                                     <span className="ml-1.5">{fmt(unitBonus.total)}</span>
-                                    <span className="ml-1 text-slate-400">= 区域道具 {fmt(unitBonus.areaItem)} + MySekai门 {fmt(unitBonus.gate)}</span>
+                                    <span className="ml-1 text-slate-400">{t("page.profile.stats.unitBonusFormula", { areaItem: fmt(unitBonus.areaItem), gate: fmt(unitBonus.gate) })}</span>
                                 </div>
                                 {charIds.map((cid) => {
                                     const cb = bonus.chara.get(cid);
@@ -268,7 +278,7 @@ export default function PowerBonusDetail({
                                                 <Image src={getCharacterIconUrl(cid)} alt={name} fill className="object-cover" unoptimized />
                                             </div>
                                             <span className="font-bold text-slate-600">{fmt(cb.total)}</span>
-                                            <span className="text-slate-400">= 区域道具 {fmt(cb.areaItem)} + 角色等级 {fmt(cb.rank)} + MySekai玩偶 {fmt(cb.fixture)}</span>
+                                            <span className="text-slate-400">{t("page.profile.stats.characterBonusFormula", { areaItem: fmt(cb.areaItem), rank: fmt(cb.rank), fixture: fmt(cb.fixture) })}</span>
                                         </div>
                                     );
                                 })}
@@ -282,7 +292,7 @@ export default function PowerBonusDetail({
 
     const renderAttrCards = () => (
         <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
-            <div className="text-sm font-bold text-slate-700 mb-3">属性加成</div>
+            <div className="text-sm font-bold text-slate-700 mb-3">{t("page.profile.stats.attributeBonus")}</div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {ATTR_ORDER.map((a) => {
                     const b = bonus.attr.get(a)!;
@@ -304,19 +314,19 @@ export default function PowerBonusDetail({
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                     <span className="w-1.5 h-6 rounded-full" style={{ backgroundColor: themeColor }}></span>
-                    加成信息
+                    {t("page.profile.stats.powerBonus")}
                 </h2>
                 {!loading && !error && (
                     <button
                         onClick={() => setShowDetailModal(true)}
                         className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:border-miku/40 hover:text-miku transition-colors"
                     >
-                        查看详情
+                        {t("page.profile.stats.viewDetails")}
                     </button>
                 )}
             </div>
 
-            {loading && <div className="py-8 text-center text-sm text-slate-500">正在加载加成信息...</div>}
+            {loading && <div className="py-8 text-center text-sm text-slate-500">{t("page.profile.stats.loadingPowerBonus")}</div>}
             {!loading && error && <div className="py-8 text-center text-sm text-red-500">{error}</div>}
 
             {!loading && !error && (
@@ -330,16 +340,16 @@ export default function PowerBonusDetail({
                 <Modal
                     isOpen={showDetailModal}
                     onClose={() => setShowDetailModal(false)}
-                    title="加成信息详情"
+                    title={t("page.profile.stats.powerBonusDetails")}
                     size="xl"
                 >
                     <div className="space-y-5">
                         <section className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 sm:p-4 space-y-3">
-                            <h3 className="text-sm font-bold text-slate-700">团体与角色加成拆解</h3>
+                            <h3 className="text-sm font-bold text-slate-700">{t("page.profile.stats.unitCharacterBonusBreakdown")}</h3>
                             {renderUnitCards(true)}
                         </section>
                         <section className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 sm:p-4 space-y-3">
-                            <h3 className="text-sm font-bold text-slate-700">属性加成</h3>
+                            <h3 className="text-sm font-bold text-slate-700">{t("page.profile.stats.attributeBonus")}</h3>
                             {renderAttrCards()}
                         </section>
                     </div>

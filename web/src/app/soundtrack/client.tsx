@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import MainLayout from "@/components/MainLayout";
+import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { getMysekaiRawAssetUrl } from "@/lib/assets";
@@ -101,26 +102,27 @@ async function storeAudioBlobInCache(url: string, blob: Blob) {
 
 // Color schemes matching each category group
 const CATEGORY_THEMES: Record<number, { from: string; to: string; shadow: string; bgGlow: string; text: string }> = {
-    1: { from: "#00E5CF", to: "#007D85", shadow: "shadow-cyan-500/20", bgGlow: "from-cyan-950/20 to-teal-950/20", text: "text-miku" }, // 单元综合
-    2: { from: "#FF45A4", to: "#7D1BFF", shadow: "shadow-fuchsia-500/20", bgGlow: "from-fuchsia-950/20 to-purple-950/20", text: "text-fuchsia-400" }, // 虚拟歌手
+    1: { from: "#00E5CF", to: "#007D85", shadow: "shadow-cyan-500/20", bgGlow: "from-cyan-950/20 to-teal-950/20", text: "text-miku" }, // Unit overview
+    2: { from: "#FF45A4", to: "#7D1BFF", shadow: "shadow-fuchsia-500/20", bgGlow: "from-fuchsia-950/20 to-purple-950/20", text: "text-fuchsia-400" }, // Virtual Singer
     3: { from: "#33A2FF", to: "#102E7A", shadow: "shadow-blue-500/20", bgGlow: "from-blue-950/20 to-indigo-950/20", text: "text-blue-400" }, // Leo/need
     4: { from: "#52FF45", to: "#EBE81B", shadow: "shadow-green-500/20", bgGlow: "from-emerald-950/20 to-lime-950/20", text: "text-green-400" }, // MORE MORE JUMP!
     5: { from: "#FF6E1A", to: "#A60E0E", shadow: "shadow-orange-500/20", bgGlow: "from-orange-950/20 to-red-950/20", text: "text-orange-400" }, // Vivid BAD SQUAD
     6: { from: "#FFDF00", to: "#FF5E00", shadow: "shadow-yellow-500/20", bgGlow: "from-yellow-950/20 to-amber-950/20", text: "text-yellow-400" }, // Wonderlands x Showtime
-    7: { from: "#C655FF", to: "#1F0F3D", shadow: "shadow-purple-500/20", bgGlow: "from-purple-950/20 to-slate-950/20", text: "text-purple-400" }, // 25点
-    11: { from: "#00E5CF", to: "#007D85", shadow: "shadow-teal-500/20", bgGlow: "from-teal-950/20 to-cyan-950/20", text: "text-miku" }, // 游戏内
-    12: { from: "#00CCBB", to: "#006655", shadow: "shadow-cyan-500/20", bgGlow: "from-emerald-950/25 to-teal-950/25", text: "text-teal-400" }, // マイセカイ
-    13: { from: "#94A3B8", to: "#334155", shadow: "shadow-slate-500/10", bgGlow: "from-slate-950/20 to-slate-900/20", text: "text-slate-400" }, // シナリオ
-    14: { from: "#38BDF8", to: "#0369A1", shadow: "shadow-sky-500/20", bgGlow: "from-sky-950/20 to-blue-950/20", text: "text-sky-400" }, // ライブ
-    15: { from: "#F43F5E", to: "#9F1239", shadow: "shadow-rose-500/20", bgGlow: "from-rose-950/20 to-pink-950/20", text: "text-rose-400" }, // バーチャルライブ
-    16: { from: "#F59E0B", to: "#B45309", shadow: "shadow-amber-500/20", bgGlow: "from-amber-950/20 to-yellow-950/20", text: "text-amber-400" }, // ガチャ
-    20: { from: "#64748B", to: "#1E293B", shadow: "shadow-slate-500/10", bgGlow: "from-slate-950/20 to-zinc-950/20", text: "text-slate-400" }, // 其他
-    30: { from: "#EC4899", to: "#BE185D", shadow: "shadow-pink-500/20", bgGlow: "from-pink-950/20 to-rose-950/20", text: "text-pink-400" }, // コラボ
+    7: { from: "#C655FF", to: "#1F0F3D", shadow: "shadow-purple-500/20", bgGlow: "from-purple-950/20 to-slate-950/20", text: "text-purple-400" }, // Nightcord
+    11: { from: "#00E5CF", to: "#007D85", shadow: "shadow-teal-500/20", bgGlow: "from-teal-950/20 to-cyan-950/20", text: "text-miku" }, // In-game
+    12: { from: "#00CCBB", to: "#006655", shadow: "shadow-cyan-500/20", bgGlow: "from-emerald-950/25 to-teal-950/25", text: "text-teal-400" }, // Mysekai
+    13: { from: "#94A3B8", to: "#334155", shadow: "shadow-slate-500/10", bgGlow: "from-slate-950/20 to-slate-900/20", text: "text-slate-400" }, // Scenario
+    14: { from: "#38BDF8", to: "#0369A1", shadow: "shadow-sky-500/20", bgGlow: "from-sky-950/20 to-blue-950/20", text: "text-sky-400" }, // Live
+    15: { from: "#F43F5E", to: "#9F1239", shadow: "shadow-rose-500/20", bgGlow: "from-rose-950/20 to-pink-950/20", text: "text-rose-400" }, // Virtual Live
+    16: { from: "#F59E0B", to: "#B45309", shadow: "shadow-amber-500/20", bgGlow: "from-amber-950/20 to-yellow-950/20", text: "text-amber-400" }, // Gacha
+    20: { from: "#64748B", to: "#1E293B", shadow: "shadow-slate-500/10", bgGlow: "from-slate-950/20 to-zinc-950/20", text: "text-slate-400" }, // Other
+    30: { from: "#EC4899", to: "#BE185D", shadow: "shadow-pink-500/20", bgGlow: "from-pink-950/20 to-rose-950/20", text: "text-pink-400" }, // Collaboration
 };
 
 const DEFAULT_THEME = { from: "#00CCBB", to: "#1E293B", shadow: "shadow-slate-500/10", bgGlow: "from-slate-950/20 to-zinc-950/20", text: "text-slate-400" };
 
 function SoundtrackContent() {
+    const { t, formatNumber } = useI18n();
     const { assetSource, resolvedColorScheme } = useTheme();
     const isDark = resolvedColorScheme === "dark";
     const searchParams = useSearchParams();
@@ -242,7 +244,7 @@ function SoundtrackContent() {
             } catch (err) {
                 if (cancelled) return;
                 console.error("Failed to load soundtracks masterdata:", err);
-                setError(err instanceof Error ? err.message : "获取原声带数据失败");
+                setError(err instanceof Error ? err.message : t("page.soundtrack.errors.fetchFailed"));
             } finally {
                 if (!cancelled) {
                     setIsLoading(false);
@@ -254,7 +256,7 @@ function SoundtrackContent() {
         return () => {
             cancelled = true;
         };
-    }, [searchParams]);
+    }, [searchParams, t]);
 
     // Generate stable animation heights and durations for the visualizer to prevent twitching & excessive renders
     const visualizerHeights = useMemo(() => {
@@ -352,9 +354,9 @@ function SoundtrackContent() {
 
                 console.warn("Audio play prevented or errored:", err);
                 setIsPlaying(false);
-                setAudioError("播放失败，请再次点击播放或检查音频资源连接。");
+                setAudioError(t("page.soundtrack.errors.audioPlayFailed"));
             });
-    }, [isPlaying, audioUrl]);
+    }, [isPlaying, audioUrl, t]);
 
     // Stop playback when leaving the route/component to avoid orphaned audio.
     useEffect(() => {
@@ -579,7 +581,7 @@ function SoundtrackContent() {
                 if (playRequestIdRef.current !== requestId) return;
                 console.error("Replay blocked:", err);
                 setIsPlaying(false);
-                setAudioError("单曲循环播放失败，请再次点击播放。");
+                setAudioError(t("page.soundtrack.errors.loopReplayFailed"));
             });
         } else {
             playNext();
@@ -602,7 +604,7 @@ function SoundtrackContent() {
             const cachedBlob = await readAudioBlobFromCache(audioUrl);
             if (cachedBlob) {
                 triggerBlobDownload(cachedBlob, fileName);
-                setDownloadHint("已使用缓存音频下载");
+                setDownloadHint(t("page.soundtrack.download.cachedHint"));
                 return;
             }
 
@@ -618,11 +620,11 @@ function SoundtrackContent() {
 
             await storeAudioBlobInCache(audioUrl, blob);
             triggerBlobDownload(blob, fileName);
-            setDownloadHint("已缓存并开始下载");
+            setDownloadHint(t("page.soundtrack.download.cachedAndStartedHint"));
         } catch (err) {
             console.warn("Soundtrack download fallback to direct link:", err);
             triggerDirectDownload(audioUrl, fileName);
-            setDownloadHint("已改用直链下载");
+            setDownloadHint(t("page.soundtrack.download.directHint"));
         } finally {
             setIsDownloading(false);
         }
@@ -742,7 +744,7 @@ function SoundtrackContent() {
                 onEnded={handleEnded}
                 onError={(e) => {
                     console.error("Audio playback error:", e);
-                    setAudioError("音频资源加载失败，请尝试切换资源源或稍后再试。");
+                    setAudioError(t("page.soundtrack.errors.audioLoadFailed"));
                     setIsPlaying(false);
                 }}
             />
@@ -758,14 +760,14 @@ function SoundtrackContent() {
                     <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1 border border-miku/30 bg-miku/10 rounded-full mb-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-miku animate-pulse" />
-                            <span className="text-miku text-[10px] font-bold tracking-widest uppercase">OST PLAYER</span>
+                            <span className="text-miku text-[10px] font-bold tracking-widest uppercase">{t("page.soundtrack.badge")}</span>
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-800 dark:text-white">
-                            游戏 <span className="text-transparent bg-clip-text bg-gradient-to-r from-miku to-cyan-400">原声带</span>
+                            {t("page.soundtrack.title")} <span className="text-transparent bg-clip-text bg-gradient-to-r from-miku to-cyan-400">{t("page.soundtrack.titleHighlight")}</span>
                         </h1>
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md md:text-right hidden sm:block">
-                        收录 Project Sekai 中的所有背景音乐（BGM）
+                        {t("page.soundtrack.description")}
                     </p>
                 </div>
 
@@ -862,10 +864,10 @@ function SoundtrackContent() {
                                         transition={{ duration: 0.2 }}
                                     >
                                         <h3 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white truncate max-w-full">
-                                            {currentTrack?.title || "未选定音轨"}
+                                            {currentTrack?.title || t("page.soundtrack.emptyTrack")}
                                         </h3>
                                         <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 truncate">
-                                            {currentTrack?.pronunciation || "読み込み中"}
+                                            {currentTrack?.pronunciation || t("page.soundtrack.pronunciationLoading")}
                                         </p>
                                         <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                                             <div className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[10px] font-bold text-slate-600 dark:text-slate-300">
@@ -875,7 +877,7 @@ function SoundtrackContent() {
                                                 onClick={handleDownloadCurrentTrack}
                                                 disabled={!currentTrack || !audioUrl || isDownloading}
                                                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-all hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                                                title={isDownloading ? "正在准备下载..." : "下载当前音频"}
+                                                title={isDownloading ? t("page.soundtrack.download.preparingTitle") : t("page.soundtrack.download.currentTitle")}
                                             >
                                                 {isDownloading ? (
                                                     <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -889,7 +891,7 @@ function SoundtrackContent() {
                                                         <path d="M5 21h14" />
                                                     </svg>
                                                 )}
-                                                <span>{isDownloading ? "准备中" : "下载"}</span>
+                                                <span>{isDownloading ? t("page.soundtrack.download.preparing") : t("page.soundtrack.download.button")}</span>
                                             </button>
                                         </div>
                                     </motion.div>
@@ -949,10 +951,10 @@ function SoundtrackContent() {
                                     }
                                     title={
                                         playbackMode === "sequential"
-                                            ? "列表循环 (点击切换)"
+                                            ? t("page.soundtrack.playbackModes.sequential")
                                             : playbackMode === "loop-one"
-                                            ? "单曲循环 (点击切换)"
-                                            : "随机播放 (点击切换)"
+                                            ? t("page.soundtrack.playbackModes.loopOne")
+                                            : t("page.soundtrack.playbackModes.shuffle")
                                     }
                                 >
                                     {playbackMode === "sequential" && (
@@ -990,7 +992,7 @@ function SoundtrackContent() {
                                     <button
                                         onClick={playPrevious}
                                         className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-all active:scale-95 border border-transparent"
-                                        title="上一首"
+                                        title={t("page.soundtrack.controls.previous")}
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                                             <polygon points="19 20 9 12 19 4 19 20"/>
@@ -1011,7 +1013,7 @@ function SoundtrackContent() {
                                                 ? `0 8px 24px ${currentTheme.from}15, inset 0 1px 0 rgba(255,255,255,0.05)`
                                                 : `0 8px 24px ${currentTheme.from}10, inset 0 1px 0 rgba(255,255,255,0.4)`
                                         }}
-                                        title={isPlaying ? "暂停" : "播放"}
+                                        title={isPlaying ? t("page.soundtrack.controls.pause") : t("page.soundtrack.controls.play")}
                                     >
                                         {isPlaying ? (
                                             <svg 
@@ -1043,7 +1045,7 @@ function SoundtrackContent() {
                                     <button
                                         onClick={playNext}
                                         className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-all active:scale-95 border border-transparent"
-                                        title="下一首"
+                                        title={t("page.soundtrack.controls.next")}
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                                             <polygon points="5 4 15 12 5 20 5 4"/>
@@ -1078,7 +1080,7 @@ function SoundtrackContent() {
                                                 className="h-28 w-8 flex items-center justify-center relative vertical-volume-hitbox cursor-pointer"
                                                 role="slider"
                                                 tabIndex={0}
-                                                aria-label="音量"
+                                                aria-label={t("page.soundtrack.controls.volume")}
                                                 aria-valuemin={0}
                                                 aria-valuemax={100}
                                                 aria-valuenow={Math.round(volume * 100)}
@@ -1134,7 +1136,7 @@ function SoundtrackContent() {
                                             setShowVolumePopup(!showVolumePopup);
                                         }}
                                         className="p-2.5 rounded-full transition-all duration-300 border border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 active:scale-95"
-                                        title="音量调节"
+                                        title={t("page.soundtrack.controls.volumeAdjust")}
                                     >
                                         {volume === 0 ? (
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -1170,7 +1172,7 @@ function SoundtrackContent() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581a2.25 2.25 0 003.182 0l5.178-5.178a2.25 2.25 0 000-3.182l-9.581-9.58a2.25 2.25 0 00-1.591-.659z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                                 </svg>
-                                选择原声带板块
+                                {t("page.soundtrack.filters.categoryTitle")}
                             </h4>
                             
                             {/* Horizontal sliding categories list (scrollbars hidden via no-scrollbar) */}
@@ -1185,7 +1187,7 @@ function SoundtrackContent() {
                                     }`}
                                 >
                                     <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">ALL</span>
-                                    <span className={`text-xs font-bold ${selectedCategoryId === null ? "text-miku" : "text-slate-800 dark:text-white"}`}>全部原声带</span>
+                                    <span className={`text-xs font-bold ${selectedCategoryId === null ? "text-miku" : "text-slate-800 dark:text-white"}`}>{t("page.soundtrack.allCategory")}</span>
                                 </button>
 
                                 {/* List of Categories */}
@@ -1243,7 +1245,7 @@ function SoundtrackContent() {
                                 </svg>
                                 <input
                                     type="text"
-                                    placeholder="搜索原声带或拼音假名..."
+                                    placeholder={t("page.soundtrack.filters.searchPlaceholder")}
                                     value={searchQuery}
                                     onChange={(e) => handleSearch(e.target.value)}
                                     className="w-full bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-miku/50 focus:ring-1 focus:ring-miku/50 transition-colors"
@@ -1279,7 +1281,7 @@ function SoundtrackContent() {
                                             : undefined
                                     }
                                 >
-                                    按序号排序
+                                    {t("page.soundtrack.filters.sortBySeq")}
                                     {sortBy === "seq" && (
                                         <span className="text-[10px]">
                                             {sortOrder === "asc" ? "▲" : "▼"}
@@ -1303,7 +1305,7 @@ function SoundtrackContent() {
                                             : undefined
                                     }
                                 >
-                                    按标题排序
+                                    {t("page.soundtrack.filters.sortByTitle")}
                                     {sortBy === "title" && (
                                         <span className="text-[10px]">
                                             {sortOrder === "asc" ? "▲" : "▼"}
@@ -1321,14 +1323,14 @@ function SoundtrackContent() {
                                 {isLoading ? (
                                     <div className="flex flex-col items-center justify-center h-80 gap-3">
                                         <div className="loading-spinner loading-spinner-sm" />
-                                        <p className="text-slate-500 dark:text-slate-400 text-xs">正在调音，马上回来...</p>
+                                        <p className="text-slate-500 dark:text-slate-400 text-xs">{t("page.soundtrack.states.loading")}</p>
                                     </div>
                                 ) : error ? (
                                     <div className="flex flex-col items-center justify-center h-80 text-center p-6 border-2 border-dashed border-rose-200 dark:border-rose-500/20 rounded-2xl m-3">
                                         <svg className="w-10 h-10 text-rose-400 dark:text-rose-300 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                                         </svg>
-                                        <p className="text-rose-600 dark:text-rose-300 font-bold text-sm">原声带数据加载失败</p>
+                                        <p className="text-rose-600 dark:text-rose-300 font-bold text-sm">{t("page.soundtrack.states.loadFailedTitle")}</p>
                                         <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{error}</p>
                                     </div>
                                 ) : filteredTracks.length === 0 ? (
@@ -1336,8 +1338,8 @@ function SoundtrackContent() {
                                         <svg className="w-10 h-10 text-slate-400 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 0v1.5a2.25 2.25 0 001.713 2.185l.09.025a.75.75 0 01.05 1.488l-.05.012a2.25 2.25 0 01-1.723 2.2 4.5 4.5 0 00-2.822 2.624L15 13.5M9 9v1.5M9 9H7.5A2.25 2.25 0 005.25 11.25v6.75a2.25 2.25 0 002.25 2.25H9A2.25 2.25 0 0011.25 18v-6.75A2.25 2.25 0 009 9zM15 13.5v1.5m0-1.5H13.5a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25H15a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25z" />
                                         </svg>
-                                        <p className="text-slate-700 dark:text-slate-400 font-bold text-sm">找不到符合的曲目</p>
-                                        <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">请尝试修改分类标签或搜索关键词。</p>
+                                        <p className="text-slate-700 dark:text-slate-400 font-bold text-sm">{t("page.soundtrack.states.noResultsTitle")}</p>
+                                        <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{t("page.soundtrack.states.noResultsDescription")}</p>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col gap-1.5">
@@ -1423,7 +1425,13 @@ function SoundtrackContent() {
 
                             {/* Playlist footer statistics */}
                             <div className="bg-slate-100/80 dark:bg-slate-950/80 border-t border-slate-200 dark:border-white/5 py-3 px-6 text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                                正在显示 {filteredTracks.length} / {tracks.length} 音轨 • {selectedCategoryId !== null ? `${categoryMap.get(selectedCategoryId)?.name || "分类"}` : "全部原声带"}
+                                {t("page.soundtrack.footer", {
+                                    shown: formatNumber(filteredTracks.length),
+                                    total: formatNumber(tracks.length),
+                                    category: selectedCategoryId !== null
+                                        ? categoryMap.get(selectedCategoryId)?.name || t("page.soundtrack.categoryFallback")
+                                        : t("page.soundtrack.allCategory"),
+                                })}
                             </div>
                         </div>
 
@@ -1435,13 +1443,15 @@ function SoundtrackContent() {
 }
 
 export default function SoundtrackClient() {
+    const { t } = useI18n();
+
     return (
         <MainLayout>
             <Suspense fallback={
                 <div className="flex h-[80vh] w-full items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-500 select-none">
                     <div className="flex flex-col items-center gap-3">
                         <div className="loading-spinner loading-spinner-sm" />
-                        <p className="text-xs">加载原声带模块中...</p>
+                        <p className="text-xs">{t("page.soundtrack.states.suspenseLoading")}</p>
                     </div>
                 </div>
             }>

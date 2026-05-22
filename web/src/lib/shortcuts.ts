@@ -1,11 +1,10 @@
-export type ShortcutGroup = "导航" | "界面" | "搜索" | "其它";
+export type ShortcutGroup = "navigation" | "interface" | "search" | "other";
 export type ShortcutScope = "global" | "sidebar" | "commandPalette" | "page";
 
 export interface ShortcutDefinition {
     id: string;
     group: ShortcutGroup;
     scope: ShortcutScope;
-    description: string;
     combos: string[];
 }
 
@@ -64,175 +63,151 @@ const DISPLAY_TOKEN_MAP: Record<string, string> = {
     space: "Space",
 };
 
-export const SHORTCUT_GROUP_ORDER: ShortcutGroup[] = ["导航", "界面", "搜索", "其它"];
+export const SHORTCUT_GROUP_ORDER: ShortcutGroup[] = ["navigation", "interface", "search", "other"];
 
 export const SHORTCUTS: ShortcutDefinition[] = [
     {
         id: "sidebar-focus-prev",
-        group: "导航",
+        group: "navigation",
         scope: "sidebar",
-        description: "侧边栏上移",
         combos: ["arrowup"],
     },
     {
         id: "sidebar-focus-next",
-        group: "导航",
+        group: "navigation",
         scope: "sidebar",
-        description: "侧边栏下移",
         combos: ["arrowdown"],
     },
     {
         id: "sidebar-open-focused",
-        group: "导航",
+        group: "navigation",
         scope: "sidebar",
-        description: "打开选中项",
         combos: ["enter"],
     },
     {
         id: "list-focus-next",
-        group: "导航",
+        group: "navigation",
         scope: "page",
-        description: "列表下一项",
         combos: ["j"],
     },
     {
         id: "list-focus-prev",
-        group: "导航",
+        group: "navigation",
         scope: "page",
-        description: "列表上一项",
         combos: ["k"],
     },
     {
         id: "list-open-focused",
-        group: "导航",
+        group: "navigation",
         scope: "page",
-        description: "打开聚焦项",
         combos: ["enter"],
     },
     {
         id: "navigate-home",
-        group: "导航",
+        group: "navigation",
         scope: "global",
-        description: "前往首页",
         combos: ["g h"],
     },
     {
         id: "navigate-cards",
-        group: "导航",
+        group: "navigation",
         scope: "global",
-        description: "前往卡牌",
         combos: ["g c"],
     },
     {
         id: "navigate-music",
-        group: "导航",
+        group: "navigation",
         scope: "global",
-        description: "前往音乐",
         combos: ["g m"],
     },
     {
         id: "navigate-events",
-        group: "导航",
+        group: "navigation",
         scope: "global",
-        description: "前往活动",
         combos: ["g e"],
     },
     {
         id: "navigate-profile",
-        group: "导航",
+        group: "navigation",
         scope: "global",
-        description: "前往个人主页",
         combos: ["g p"],
     },
     {
         id: "navigate-back",
-        group: "导航",
+        group: "navigation",
         scope: "global",
-        description: "返回上一页",
         combos: ["alt+arrowleft"],
     },
     {
         id: "navigate-forward",
-        group: "导航",
+        group: "navigation",
         scope: "global",
-        description: "前进下一页",
         combos: ["alt+arrowright"],
     },
     {
         id: "toggle-sidebar",
-        group: "界面",
+        group: "interface",
         scope: "global",
-        description: "切换侧边栏",
         combos: ["["],
     },
     {
         id: "toggle-trained-thumbnail",
-        group: "界面",
+        group: "interface",
         scope: "global",
-        description: "3★/4★缩略图默认特训后",
         combos: ["]"],
     },
     {
         id: "toggle-settings",
-        group: "界面",
+        group: "interface",
         scope: "global",
-        description: "打开设置",
         combos: ["mod+x"],
     },
     {
         id: "list-focus-filters",
-        group: "界面",
+        group: "interface",
         scope: "page",
-        description: "聚焦筛选区",
         combos: ["f"],
     },
     {
         id: "list-load-more",
-        group: "界面",
+        group: "interface",
         scope: "page",
-        description: "加载更多",
         combos: ["l"],
     },
     {
         id: "toggle-search",
-        group: "搜索",
+        group: "search",
         scope: "global",
-        description: "打开搜索",
         combos: ["mod+k"],
     },
     {
         id: "list-focus-search",
-        group: "搜索",
+        group: "search",
         scope: "page",
-        description: "聚焦页内搜索",
         combos: ["s"],
     },
     {
         id: "toggle-search-wildcard",
-        group: "搜索",
+        group: "search",
         scope: "commandPalette",
-        description: "切换通配符搜索",
         combos: ["mod+q"],
     },
     {
         id: "toggle-shortcuts-help",
-        group: "其它",
+        group: "other",
         scope: "global",
-        description: "快捷键帮助",
         combos: ["/", "?"],
     },
     {
         id: "close-overlay",
-        group: "其它",
+        group: "other",
         scope: "commandPalette",
-        description: "关闭弹窗",
         combos: ["escape"],
     },
     {
         id: "list-clear-focus",
-        group: "其它",
+        group: "other",
         scope: "page",
-        description: "清除列表聚焦",
         combos: ["escape"],
     },
 ];

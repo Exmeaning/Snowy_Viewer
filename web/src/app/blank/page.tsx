@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import BackgroundPattern from "@/components/BackgroundPattern";
 
 export const metadata: Metadata = {
-    title: "空白素材页",
+    title: "Blank Asset Page",
 };
 
 export default function BlankPage() {

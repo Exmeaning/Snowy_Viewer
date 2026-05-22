@@ -10,7 +10,6 @@ import { useI18n } from "@/contexts/I18nContext";
 import {
     IEventInfo,
     IEventDeckBonus,
-    EVENT_TYPE_NAMES,
     EVENT_TYPE_COLORS,
     getEventStatus,
     EVENT_STATUS_DISPLAY,
@@ -318,7 +317,7 @@ export default function EventDetailPage() {
     const status = getEventStatus(event);
     const statusDisplay = EVENT_STATUS_DISPLAY[status];
 
-    // Events with no banner character hide the "角色" tab, except for whitelisted IDs
+    // Events with no banner character hide the character tab, except for whitelisted IDs
     const CHARACTER_TAB_WHITELIST = [180];
     const hasBannerChar = event.eventType !== "world_bloom" && bannerCharId !== null;
     const showCharacterTab = hasBannerChar || CHARACTER_TAB_WHITELIST.includes(event.id);
@@ -402,7 +401,7 @@ export default function EventDetailPage() {
                                     </div>
                                 </div>
                                 )}
-                                {/* 标题 (Title Logo) */}
+                                {/* Title Logo */}
                                 <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
                                     <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
                                         <span className="text-sm font-bold text-slate-600">
@@ -578,7 +577,7 @@ export default function EventDetailPage() {
                                 />
                                 <InfoRow
                                     label={t("page.events.eventTypeLabel")}
-                                    value={t(`common.eventTypes.${event.eventType}`) || EVENT_TYPE_NAMES[event.eventType as EventType]}
+                                    value={t(`common.eventTypes.${event.eventType}`)}
                                 />
                                 <InfoRow label={t("page.events.startTimeLabel")} value={formatDate(event.startAt)} />
                                 <InfoRow label={t("page.events.endTimeLabel")} value={formatDate(event.aggregateAt)} />
