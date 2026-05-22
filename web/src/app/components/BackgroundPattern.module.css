@@ -23,6 +23,15 @@
     contain: paint size layout style;
 }
 
+:global(.theme-switching) .bgPatternContainer,
+:global(.theme-switching) .bgPatternContainer::before,
+:global(.theme-switching) .bgPatternContainer::after,
+:global(.theme-switching) .parallaxLayer,
+:global(.theme-switching) .shape {
+    transition: none !important;
+    animation-play-state: paused !important;
+}
+
 .bgPatternContainer::before,
 .bgPatternContainer::after,
 .parallaxLayer,

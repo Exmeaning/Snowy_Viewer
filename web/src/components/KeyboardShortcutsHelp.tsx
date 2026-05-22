@@ -47,6 +47,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
     // Prevent body scroll & close on Escape
     useEffect(() => {
         if (!isOpen) return;
+        const previousBodyOverflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
 
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -58,7 +59,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
         document.addEventListener("keydown", handleKeyDown);
 
         return () => {
-            document.body.style.overflow = "unset";
+            document.body.style.overflow = previousBodyOverflow;
             document.removeEventListener("keydown", handleKeyDown);
         };
     }, [isOpen, onClose]);
@@ -68,10 +69,10 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
     return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[min(20vh,8rem)] px-4">
+                <div className="fixed inset-0 z-[200] isolate flex items-start justify-center px-3 pt-4 sm:px-4 sm:pt-[min(20vh,8rem)]">
                     {/* Backdrop */}
                     <motion.div
-                        className="absolute inset-0 bg-black/35 backdrop-blur-[8px]"
+                        className="absolute inset-0 transform-gpu bg-black/35 backdrop-blur-[8px]"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -81,7 +82,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
 
                     {/* Dialog */}
                     <motion.div
-                        className="relative w-full max-w-md liquid-glass-modal rounded-2xl overflow-hidden flex flex-col max-h-[70vh]"
+                        className="relative w-full max-w-md transform-gpu will-change-transform liquid-glass-modal rounded-2xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[70vh]"
                         initial={{ opacity: 0, scale: 0.95, y: -10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -10 }}
