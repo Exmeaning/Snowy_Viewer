@@ -908,6 +908,10 @@ export default function BackgroundPattern() {
         };
     }, [themeColor, resolvedColorScheme, backgroundAnimationBudget, isPerformanceBudget]);
 
+    const layer1Elements = React.useMemo(() => renderParallaxShapes(1), []);
+    const layer2Elements = React.useMemo(() => renderParallaxShapes(2), []);
+    const layer3Elements = React.useMemo(() => renderParallaxShapes(3), []);
+
     return (
         <div
             ref={containerRef}
@@ -918,13 +922,13 @@ export default function BackgroundPattern() {
             {(isPerformanceBudget || isPowerSaveBudget) && (
                 <>
                     <div className={`${styles.parallaxLayer} ${styles.parallaxLayer1}`}>
-                        {renderParallaxShapes(1)}
+                        {layer1Elements}
                     </div>
                     <div className={`${styles.parallaxLayer} ${styles.parallaxLayer2}`}>
-                        {renderParallaxShapes(2)}
+                        {layer2Elements}
                     </div>
                     <div className={`${styles.parallaxLayer} ${styles.parallaxLayer3}`}>
-                        {renderParallaxShapes(3)}
+                        {layer3Elements}
                     </div>
                     {isPerformanceBudget && <canvas ref={canvasRef} className={styles.bgPatternCanvas} />}
                 </>
