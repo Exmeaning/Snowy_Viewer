@@ -1,9 +1,7 @@
-import type { Metadata } from "next";
 import BreadcrumbActivityClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "Activity",
-};
+export const generateMetadata = pageMetadata("breadcrumb_activity");
 
 export default function Page() {
     return <BreadcrumbActivityClient />;

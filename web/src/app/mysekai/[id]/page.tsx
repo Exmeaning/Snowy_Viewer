@@ -2,28 +2,48 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 import { getMysekaiFixtureThumbnailUrl } from "@/lib/assets";
 import { getFixtureMeta } from "@/lib/metadata";
-import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
+import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
+import {
+    formatDetailSeoDescription,
+    formatMysekaiFlavorSuffix,
+    getDetailFallbackTitle,
+} from "@/lib/seo-keywords";
 import MysekaiFixtureDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
+    const locale = await getRequestSeoLocale();
     const fixture = getFixtureMeta(Number(id));
-    if (!fixture) return { title: "Furniture Details" };
+    if (!fixture) {
+        return buildDetailMetadata({
+            locale,
+            title: getDetailFallbackTitle("mysekai", locale),
+            description: getDetailFallbackTitle("mysekai", locale),
+            path: `/mysekai/${id}`,
+        });
+    }
 
     const title = fixture.name;
-    const description = fixture.flavor
-        ? `Project SEKAI furniture "${fixture.name}" - ${fixture.flavor.slice(0, 100)}` + DETAIL_SEO_SUFFIX
-        : `Project SEKAI furniture "${fixture.name}"` + DETAIL_SEO_SUFFIX;
+    const description = formatDetailSeoDescription(
+        "mysekai",
+        {
+            name: fixture.name,
+            flavorSuffix: formatMysekaiFlavorSuffix(fixture.flavor, locale),
+        },
+        locale,
+    );
     const ogImage = getMysekaiFixtureThumbnailUrl(fixture.asset, "main-jp");
 
-    return {
+    return buildDetailMetadata({
+        locale,
         title,
         description,
-        openGraph: { title, description, images: [ogImage] },
-        twitter: { card: "summary", title, description, images: [ogImage] },
-    };
+        path: `/mysekai/${id}`,
+        images: [ogImage],
+        twitterCard: "summary",
+    });
 }
 
 export default function MysekaiFixtureDetailPage() {

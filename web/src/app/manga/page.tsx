@@ -1,13 +1,7 @@
-
-import { Metadata } from "next";
 import MangaClient from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "Official 4-Koma",
-    description: "Browse Project Sekai official four-panel comics" + SEO_SUFFIX,
-    keywords: getPageKeywords("manga"),
-};
+export const generateMetadata = pageMetadata("manga");
 
 export default function MangaPage() {
     return <MangaClient />;

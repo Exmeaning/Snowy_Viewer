@@ -21,43 +21,22 @@ import {
   DEFAULT_SHOW_ADS,
   SHOW_ADS_STORAGE_KEY,
 } from "@/lib/ads";
-import { getRootKeywords, generateJsonLd } from "@/lib/seo-keywords";
+import { generateJsonLd } from "@/lib/seo-keywords";
+import { generateRootMetadata, getSiteBaseUrl } from "@/lib/seo-metadata";
 import { buildGoogleTagBootstrapScript } from "@/lib/googleTag";
 import {
+  SUPPORTED_UI_LOCALES,
   UI_LOCALE_HTML_LANG,
   UI_LOCALE_STORAGE_KEY,
   normalizeUiLocale,
 } from "@/lib/i18n";
 
-const SITE_BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe";
-
-
-const jsonLd = generateJsonLd(SITE_BASE_URL);
+const SITE_BASE_URL = getSiteBaseUrl();
 const googleTagScript = buildGoogleTagBootstrapScript();
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_BASE_URL),
-  title: {
-    default: "Moesekai - 新一代PJSK WIKI",
-    template: "%s | Moesekai",
-  },
-  description:
-    "Moesekai (原Snowy SekaiViewer) — 新一代PJSK WIKI，世界计划彩色舞台feat.初音未来游戏数据查看器，提供卡牌、音乐、活动、扭蛋等全面图鉴与工具。",
-  keywords: getRootKeywords(),
-  icons: { icon: "/data/icon/icon.jpg" },
-  openGraph: {
-    title: "Moesekai - 新一代PJSK WIKI",
-    type: "website",
-    siteName: "Moesekai",
-    locale: "zh_CN",
-    images: [{ url: "/data/icon/icon.jpg", width: 512, height: 512 }],
-  },
-  twitter: {
-    card: "summary",
-    images: ["/data/icon/icon.jpg"],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return generateRootMetadata();
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -75,6 +54,8 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const initialUiLocale = normalizeUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value);
+  const jsonLd = generateJsonLd(SITE_BASE_URL, initialUiLocale);
+  const supportedUiLocales = JSON.stringify(SUPPORTED_UI_LOCALES);
   // Inline script to apply theme color before React hydration
   const themeScript = `
     (function() {
@@ -158,8 +139,12 @@ export default async function RootLayout({
       } catch(e) {}
 
       try {
+        var supportedUiLocales = ${supportedUiLocales};
         var savedUiLocale = localStorage.getItem('${UI_LOCALE_STORAGE_KEY}');
-        var resolvedUiLocale = savedUiLocale && savedUiLocale.toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN';
+        var normalizedUiLocale = savedUiLocale ? savedUiLocale.toLowerCase() : '';
+        var resolvedUiLocale = supportedUiLocales.find(function(locale) {
+          return normalizedUiLocale === locale.toLowerCase() || normalizedUiLocale.split('-')[0] === locale.toLowerCase().split('-')[0];
+        }) || '${initialUiLocale}';
         document.documentElement.lang = resolvedUiLocale;
         document.documentElement.dataset.uiLocale = resolvedUiLocale;
       } catch (e) {}

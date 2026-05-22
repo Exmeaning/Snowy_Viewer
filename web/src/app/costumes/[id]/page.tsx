@@ -1,25 +1,35 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { getCostumeMeta } from "@/lib/metadata";
-import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
+import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
+import { formatDetailSeoDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
 import CostumeDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
+    const locale = await getRequestSeoLocale();
     const costume = getCostumeMeta(Number(id));
-    if (!costume) return { title: "Costume Details" };
+    if (!costume) {
+        return buildDetailMetadata({
+            locale,
+            title: getDetailFallbackTitle("costume", locale),
+            description: getDetailFallbackTitle("costume", locale),
+            path: `/costumes/${id}`,
+        });
+    }
 
     const title = costume.name;
-    const description = `Project SEKAI costume "${costume.name}"` + DETAIL_SEO_SUFFIX;
+    const description = formatDetailSeoDescription("costume", { name: costume.name }, locale);
 
-    return {
+    return buildDetailMetadata({
+        locale,
         title,
         description,
-        openGraph: { title, description },
-        twitter: { card: "summary", title, description },
-    };
+        path: `/costumes/${id}`,
+        twitterCard: "summary",
+    });
 }
 
 export default function CostumeDetailPage() {

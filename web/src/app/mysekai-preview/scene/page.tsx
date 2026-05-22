@@ -1,13 +1,7 @@
-import { Metadata } from "next";
-
 import MysekaiPreviewSceneClient from "./client";
-import { SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "MySekai 3D Previewer",
-    description: "Preview MySekai room layouts by JP / CN UID, local JSON files, or public JSON URLs" + SEO_SUFFIX,
-    keywords: ["MySekai", "UID", "layout JSON", "scene preview", "3D", "OBJ", "Project Sekai"],
-};
+export const generateMetadata = pageMetadata("mysekai_preview_scene");
 
 export default function MysekaiPreviewScenePage() {
     return <MysekaiPreviewSceneClient />;

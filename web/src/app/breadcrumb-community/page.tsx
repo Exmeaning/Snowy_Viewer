@@ -1,9 +1,7 @@
-import type { Metadata } from "next";
 import BreadcrumbCommunityClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "Community",
-};
+export const generateMetadata = pageMetadata("breadcrumb_community");
 
 export default function Page() {
     return <BreadcrumbCommunityClient />;

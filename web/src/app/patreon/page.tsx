@@ -3,15 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
-import { Metadata } from "next";
-import { enUSMessages } from "@/lib/i18n/messages/en-US";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: enUSMessages.layout.nav.items.support,
-    description: enUSMessages.layout.groupPages.patreon + SEO_SUFFIX,
-    keywords: getPageKeywords("patreon"),
-};
+export const generateMetadata = pageMetadata("patreon");
 
 export default function PatreonPage() {
     return (

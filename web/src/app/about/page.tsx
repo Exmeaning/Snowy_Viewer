@@ -1,12 +1,7 @@
-import { Metadata } from "next";
 import AboutClient from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "About",
-    description: "About Moesekai (formerly Snowy SekaiViewer)" + SEO_SUFFIX,
-    keywords: getPageKeywords("about"),
-};
+export const generateMetadata = pageMetadata("about");
 
 export default function AboutPage() {
     return <AboutClient />;

@@ -1,13 +1,7 @@
-
-import { Metadata } from "next";
 import EventsContent from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "Event Encyclopedia",
-    description: "Browse all Project Sekai events and view event details and rankings" + SEO_SUFFIX,
-    keywords: getPageKeywords("events"),
-};
+export const generateMetadata = pageMetadata("events");
 
 export default function EventsPage() {
     return <EventsContent />;

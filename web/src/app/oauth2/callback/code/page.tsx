@@ -1,10 +1,8 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
 import CallbackClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "OAuth2 Callback",
-};
+export const generateMetadata = pageMetadata("oauth2_callback");
 
 export default function OAuth2CallbackCodePage() {
     return (

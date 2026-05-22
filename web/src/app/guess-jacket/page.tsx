@@ -1,12 +1,7 @@
-import { Metadata } from "next";
 import GuessJacketClient from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "Guess Jacket",
-    description: "Project Sekai music jacket guessing game" + SEO_SUFFIX,
-    keywords: getPageKeywords("guess_jacket"),
-};
+export const generateMetadata = pageMetadata("guess_jacket");
 
 export default function GuessJacketPage() {
     return <GuessJacketClient />;

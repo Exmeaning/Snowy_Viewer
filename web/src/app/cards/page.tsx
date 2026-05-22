@@ -1,13 +1,7 @@
-
-import { Metadata } from "next";
 import CardsClient from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "Card Encyclopedia",
-    description: "Browse all Project Sekai cards with character, rarity, and attribute filters" + SEO_SUFFIX,
-    keywords: getPageKeywords("cards"),
-};
+export const generateMetadata = pageMetadata("cards");
 
 export default function CardsPage() {
     return <CardsClient />;
