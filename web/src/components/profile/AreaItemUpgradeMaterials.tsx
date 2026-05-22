@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { UNIT_DATA, CHARACTER_NAMES, UNIT_ICON_FILES, UNIT_FIELD_TO_ID, type CardAttribute } from "@/types/types";
+import { UNIT_DATA, UNIT_ICON_FILES, UNIT_FIELD_TO_ID, type CardAttribute } from "@/types/types";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getAreaItemThumbnailUrl, getCharacterIconUrl, getMaterialThumbnailUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 import type { ServerType, UserArea, UserGamedata, UserMaterial } from "@/lib/account";
 
 type AttrFilter = CardAttribute | "all";
@@ -325,6 +326,7 @@ export default function AreaItemUpgradeMaterials({
                 <div className="flex flex-wrap items-center gap-2">
                     {displayedCharacters.map((characterId) => {
                         const selected = selectedCharacterId === characterId;
+                        const characterName = getCharacterName(t, characterId);
                         return (
                             <button
                                 key={characterId}
@@ -333,12 +335,12 @@ export default function AreaItemUpgradeMaterials({
                                     ? "ring-2 ring-miku scale-110 z-10 rounded-full"
                                     : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-85 hover:opacity-100"
                                     }`}
-                                title={CHARACTER_NAMES[characterId]}
+                                title={characterName}
                             >
                                 <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-100">
                                     <Image
                                         src={getCharacterIconUrl(characterId)}
-                                        alt={CHARACTER_NAMES[characterId]}
+                                        alt={characterName}
                                         width={36}
                                         height={36}
                                         className="w-full h-full object-cover"

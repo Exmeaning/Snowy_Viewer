@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { CHAR_COLORS, CHAR_NAMES } from "@/types/types";
+import { CHAR_COLORS } from "@/types/types";
 import {
     COLOR_SCHEME_STORAGE_KEY,
     DARK_MEDIA_QUERY,
@@ -410,5 +410,5 @@ function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
     } : null;
 }
 
-// Export character data for use in settings
-export { CHAR_NAMES, CHAR_COLORS };
+// Export character color data for use in settings
+export { CHAR_COLORS };

@@ -22,7 +22,7 @@ import {
     DIFFICULTY_COLORS,
     MusicCategoryType,
 } from "@/types/music";
-import { CHARACTER_NAMES } from "@/types/types";
+import { getCharacterName } from "@/lib/i18n";
 import { useTheme, AssetSourceType } from "@/contexts/ThemeContext";
 import { getCharacterIconUrl, getEventBannerUrl, MOE_MUSIC_META_URL, MOE_RANKINGS_URL } from "@/lib/assets";
 import { fetchMasterData } from "@/lib/fetch";
@@ -869,7 +869,7 @@ function VocalPlayer({ vocal, fillerSec, assetSource, outsideCharacters, downloa
                         {vocal.characters?.map((chara) => {
                             const isGameChar = chara.characterType === "game_character";
                             const charName = isGameChar
-                                ? CHARACTER_NAMES[chara.characterId] || `Character ${chara.characterId}`
+                                ? getCharacterName(t, chara.characterId)
                                 : outsideCharacters[chara.characterId] || `Guest ${chara.characterId}`;
                             const hasIcon = isGameChar && chara.characterId <= 26;
 

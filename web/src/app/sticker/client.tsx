@@ -5,7 +5,7 @@ import MainLayout from "@/components/MainLayout";
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
-import { CHARACTER_NAMES } from "@/types/types";
+import { getCharacterName } from "@/lib/i18n";
 import { getStampUrl, getCharacterIconUrl } from "@/lib/assets";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
@@ -164,7 +164,7 @@ function StickerContent() {
                         ALL
                     </button>
                     {characters.map(id => {
-                        const hasName = !!CHARACTER_NAMES[id];
+                        const characterName = getCharacterName(t, id);
                         return (
                             <button
                                 key={`char1-${id}`}
@@ -172,20 +172,16 @@ function StickerContent() {
                                 className={`relative aspect-square rounded-full overflow-hidden transition-all flex items-center justify-center ${selectedChar1 === id
                                     ? "ring-2 ring-miku shadow-lg"
                                     : "ring-1 ring-slate-200 hover:ring-miku/50"
-                                    } ${!hasName ? "bg-slate-50" : ""}`}
-                                title={CHARACTER_NAMES[id] || t("page.sticker.characterFallback", { id })}
+                                    }`}
+                                title={characterName}
                             >
-                                {hasName ? (
-                                    <Image
-                                        src={getCharacterIconUrl(id)}
-                                        alt={CHARACTER_NAMES[id]}
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                ) : (
-                                    <span className="text-xs text-slate-500 font-bold">{t("page.sticker.otherCharacter")}</span>
-                                )}
+                                <Image
+                                    src={getCharacterIconUrl(id)}
+                                    alt={characterName}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
                             </button>
                         );
                     })}
@@ -206,7 +202,7 @@ function StickerContent() {
                         ALL
                     </button>
                     {characters.map(id => {
-                        const hasName = !!CHARACTER_NAMES[id];
+                        const characterName = getCharacterName(t, id);
                         return (
                             <button
                                 key={`char2-${id}`}
@@ -214,20 +210,16 @@ function StickerContent() {
                                 className={`relative aspect-square rounded-full overflow-hidden transition-all flex items-center justify-center ${selectedChar2 === id
                                     ? "ring-2 ring-miku shadow-lg"
                                     : "ring-1 ring-slate-200 hover:ring-miku/50"
-                                    } ${!hasName ? "bg-slate-50" : ""}`}
-                                title={CHARACTER_NAMES[id] || t("page.sticker.characterFallback", { id })}
+                                    }`}
+                                title={characterName}
                             >
-                                {hasName ? (
-                                    <Image
-                                        src={getCharacterIconUrl(id)}
-                                        alt={CHARACTER_NAMES[id]}
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                ) : (
-                                    <span className="text-xs text-slate-500 font-bold">{t("page.sticker.otherCharacter")}</span>
-                                )}
+                                <Image
+                                    src={getCharacterIconUrl(id)}
+                                    alt={characterName}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
                             </button>
                         );
                     })}

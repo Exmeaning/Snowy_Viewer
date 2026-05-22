@@ -4,8 +4,9 @@ import NextImage from "next/image";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
-import { UNIT_DATA, CHARACTER_NAMES, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
+import { UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
+import { getCharacterName } from "@/lib/i18n";
 
 // Types
 interface CharacterData {
@@ -532,28 +533,31 @@ export default function StickerMakerContent() {
                             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100">
                                 <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">{t("page.stickerMaker.sections.characterSelect")}</h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {availableCharacterIds.map(charId => (
-                                        <button
-                                            key={charId}
-                                            onClick={() => handleCharacterClick(charId)}
-                                            className={`relative transition-all ${selectedCharacterId === charId
-                                                ? "ring-2 ring-miku scale-110 z-10 rounded-full shadow-md"
-                                                : "ring-2 ring-transparent hover:ring-slate-200/50 rounded-full opacity-80 hover:opacity-100 grayscale hover:grayscale-0"
-                                                }`}
-                                            title={CHARACTER_NAMES[charId]}
-                                        >
-                                            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
-                                                <NextImage
-                                                    src={getCharacterIconUrl(charId)}
-                                                    alt={CHARACTER_NAMES[charId]}
-                                                    width={40}
-                                                    height={40}
-                                                    className="w-full h-full object-cover"
-                                                    unoptimized
-                                                />
-                                            </div>
-                                        </button>
-                                    ))}
+                                    {availableCharacterIds.map(charId => {
+                                        const characterName = getCharacterName(t, charId);
+                                        return (
+                                            <button
+                                                key={charId}
+                                                onClick={() => handleCharacterClick(charId)}
+                                                className={`relative transition-all ${selectedCharacterId === charId
+                                                    ? "ring-2 ring-miku scale-110 z-10 rounded-full shadow-md"
+                                                    : "ring-2 ring-transparent hover:ring-slate-200/50 rounded-full opacity-80 hover:opacity-100 grayscale hover:grayscale-0"
+                                                    }`}
+                                                title={characterName}
+                                            >
+                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
+                                                    <NextImage
+                                                        src={getCharacterIconUrl(charId)}
+                                                        alt={characterName}
+                                                        width={40}
+                                                        height={40}
+                                                        className="w-full h-full object-cover"
+                                                        unoptimized
+                                                    />
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 

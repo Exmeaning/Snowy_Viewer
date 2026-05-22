@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
+import { UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 import Modal from "@/components/common/Modal";
 import type { UserBond, UserCharacter } from "@/lib/account";
 
@@ -129,6 +130,8 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
     const renderRow = (row: BondRow) => {
         const c1Rank = characterRankMap.get(row.c1) || 0;
         const c2Rank = characterRankMap.get(row.c2) || 0;
+        const c1Name = getCharacterName(t, row.c1);
+        const c2Name = getCharacterName(t, row.c2);
         const progress = row.rank ? Math.max(0, Math.min((row.rank / MAX_BOND_LEVEL) * 100, 100)) : 0;
         const expText = row.rank === null ? "-" : row.rank >= MAX_BOND_LEVEL ? "MAX" : String(row.exp || 0);
 
@@ -137,10 +140,10 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
                 <div className="flex items-center justify-between gap-2">
                     <div className="flex -space-x-2">
                         <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-slate-100">
-                            <Image src={getCharacterIconUrl(row.c1)} alt={CHARACTER_NAMES[row.c1]} fill className="object-cover" unoptimized />
+                            <Image src={getCharacterIconUrl(row.c1)} alt={c1Name} fill className="object-cover" unoptimized />
                         </div>
                         <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-slate-100">
-                            <Image src={getCharacterIconUrl(row.c2)} alt={CHARACTER_NAMES[row.c2]} fill className="object-cover" unoptimized />
+                            <Image src={getCharacterIconUrl(row.c2)} alt={c2Name} fill className="object-cover" unoptimized />
                         </div>
                     </div>
                     <div className="text-xs font-bold text-slate-700">Lv {c1Rank} &amp; {c2Rank}</div>
@@ -165,6 +168,8 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
     const renderDesktopRow = (row: BondRow) => {
         const c1Rank = characterRankMap.get(row.c1) || 0;
         const c2Rank = characterRankMap.get(row.c2) || 0;
+        const c1Name = getCharacterName(t, row.c1);
+        const c2Name = getCharacterName(t, row.c2);
         const progress = row.rank ? Math.max(0, Math.min((row.rank / MAX_BOND_LEVEL) * 100, 100)) : 0;
         const expText = row.rank === null ? "-" : row.rank >= MAX_BOND_LEVEL ? "MAX" : String(row.exp || 0);
 
@@ -173,10 +178,10 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
                 <div className="w-[92px] shrink-0 flex items-center gap-3 min-w-0">
                     <div className="flex -space-x-2">
                         <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white bg-slate-100">
-                            <Image src={getCharacterIconUrl(row.c1)} alt={CHARACTER_NAMES[row.c1]} fill className="object-cover" unoptimized />
+                            <Image src={getCharacterIconUrl(row.c1)} alt={c1Name} fill className="object-cover" unoptimized />
                         </div>
                         <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white bg-slate-100">
-                            <Image src={getCharacterIconUrl(row.c2)} alt={CHARACTER_NAMES[row.c2]} fill className="object-cover" unoptimized />
+                            <Image src={getCharacterIconUrl(row.c2)} alt={c2Name} fill className="object-cover" unoptimized />
                         </div>
                     </div>
                 </div>
@@ -259,6 +264,7 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
                             <div className="flex flex-wrap items-center gap-2">
                                 {displayedCharacters.map((characterId) => {
                                     const selected = selectedCharacterId === characterId;
+                                    const characterName = getCharacterName(t, characterId);
                                     return (
                                         <button
                                             key={characterId}
@@ -267,10 +273,10 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
                                                 ? "ring-2 ring-miku scale-110 z-10 rounded-full"
                                                 : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-85 hover:opacity-100"
                                                 }`}
-                                            title={CHARACTER_NAMES[characterId]}
+                                            title={characterName}
                                         >
                                             <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
-                                                <Image src={getCharacterIconUrl(characterId)} alt={CHARACTER_NAMES[characterId]} width={40} height={40} className="w-full h-full object-cover" unoptimized />
+                                                <Image src={getCharacterIconUrl(characterId)} alt={characterName} width={40} height={40} className="w-full h-full object-cover" unoptimized />
                                             </div>
                                         </button>
                                     );

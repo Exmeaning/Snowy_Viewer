@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { CHAR_NAMES, CHARACTER_NAMES, UNIT_DATA, UNIT_FIELD_TO_ID, UNIT_ICON_FILES, type CardAttribute } from "@/types/types";
+import { UNIT_DATA, UNIT_FIELD_TO_ID, UNIT_ICON_FILES, type CardAttribute } from "@/types/types";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 import Modal from "@/components/common/Modal";
 import type {
     ServerType,
@@ -248,10 +249,11 @@ export default function PowerBonusDetail({
                         <div className={`flex justify-center flex-wrap ${isVirtualSinger ? "gap-1.5 sm:gap-2" : "gap-3"}`}>
                             {charIds.map((cid) => {
                                 const cb = bonus.chara.get(cid);
+                                const characterName = getCharacterName(t, cid);
                                 return (
                                     <div key={cid} className="flex flex-col items-center gap-0.5">
                                         <div className={`relative rounded-full overflow-hidden bg-slate-100 ${isVirtualSinger ? "w-7 h-7" : "w-8 h-8"}`}>
-                                            <Image src={getCharacterIconUrl(cid)} alt={CHARACTER_NAMES[cid]} fill className="object-cover" unoptimized />
+                                            <Image src={getCharacterIconUrl(cid)} alt={characterName} fill className="object-cover" unoptimized />
                                         </div>
                                         <span className={`font-bold text-slate-600 ${isVirtualSinger ? "text-[9px]" : "text-[10px]"}`}>
                                             {cb ? fmt(cb.total) : "-"}
@@ -271,7 +273,7 @@ export default function PowerBonusDetail({
                                 {charIds.map((cid) => {
                                     const cb = bonus.chara.get(cid);
                                     if (!cb) return null;
-                                    const name = CHAR_NAMES[cid] || CHARACTER_NAMES[cid] || `ID ${cid}`;
+                                    const name = getCharacterName(t, cid, "short");
                                     return (
                                         <div key={cid} className="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
                                             <div className="relative w-4 h-4 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">

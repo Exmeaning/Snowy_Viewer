@@ -4,9 +4,9 @@ import Modal from "@/components/common/Modal";
 import { IBondsHonor, IBondsHonorWord, IGameCharaUnit } from "@/types/honor";
 import BondsDegreeImage from "./BondsDegreeImage";
 import { AssetSourceType } from "@/contexts/ThemeContext";
-import { CHARACTER_NAMES } from "@/types/types";
 import { useSvgPreviewActions } from "@/hooks/useSvgPreviewActions";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 
 interface BondsHonorDetailDialogProps {
     open: boolean;
@@ -70,10 +70,10 @@ export default function BondsHonorDetailDialog({
                         <InfoRow label={t("common.field.name")} value={bondsHonor.name} />
                         <InfoRow label={t("common.field.rarity")} value={t(`common.honor.rarities.${bondsHonor.honorRarity}`) === `common.honor.rarities.${bondsHonor.honorRarity}` ? bondsHonor.honorRarity : t(`common.honor.rarities.${bondsHonor.honorRarity}`)} />
                         {gcu1 && (
-                            <InfoRow label={t("common.filter.character1")} value={CHARACTER_NAMES[gcu1.gameCharacterId] || `#${gcu1.gameCharacterId}`} />
+                            <InfoRow label={t("common.filter.character1")} value={getCharacterName(t, gcu1.gameCharacterId)} />
                         )}
                         {gcu2 && (
-                            <InfoRow label={t("common.filter.character2")} value={CHARACTER_NAMES[gcu2.gameCharacterId] || `#${gcu2.gameCharacterId}`} />
+                            <InfoRow label={t("common.filter.character2")} value={getCharacterName(t, gcu2.gameCharacterId)} />
                         )}
                     </div>
 

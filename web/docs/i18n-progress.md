@@ -321,7 +321,7 @@ React hook 内可以调用 `useI18n()`，但如果 hook 是低层数据 hook，�
 - [x] 将联机中继 `SERVERS` 的 `name` / `region` 改为 `nameKey` / `regionKey`，猜角色/猜曲绘联机页通过 `common.relayServers.*` 字典显示服务器名、区域与分享文案。
 - [x] 清理一批注释/开发辅助中文残留，缩小 `scan-hardcoded-ui-text.mjs` allowlist。
 - [x] 新增 `UNIT_FIELD_LABEL_KEYS` / `UNIT_ID_LABEL_KEYS`，并把角色筛选、活动卡片/选择器、设置面板、队伍推荐自定义加成、猜角色、贴纸制作、个人剧情单位分组、活动详情 VS 子团体显示等常见 UI 路径改为通过 `common.units.*` 翻译。
-- [ ] 继续确认 `CHARACTER_NAMES` / `CHAR_NAMES` 的产品边界：官方名保留，若要完整英文 UI 需先制定统一角色名策略。
+- [x] 继续确认 `CHARACTER_NAMES` / `CHAR_NAMES` 的产品边界：官方名保留，若要完整英文 UI 需先制定统一角色名策略。
 
 ### P2：自动化守护
 

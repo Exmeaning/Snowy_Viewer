@@ -8,7 +8,7 @@ import MainLayout from "@/components/MainLayout";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getMysekaiFixtureThumbnailUrl, getMysekaiMaterialThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
-import { CHARACTER_NAMES } from "@/types/types";
+import { getCharacterName } from "@/lib/i18n";
 import {
     IMysekaiFixtureInfo,
     IMysekaiFixtureGenre,
@@ -452,11 +452,11 @@ export default function MysekaiFixtureDetailClient() {
                                                     <div
                                                         key={charId}
                                                         className="w-8 h-8 rounded-full overflow-hidden bg-white ring-1 ring-slate-200"
-                                                        title={CHARACTER_NAMES[charId] || `Character ${charId}`}
+                                                        title={getCharacterName(t, charId)}
                                                     >
                                                         <Image
                                                             src={getCharacterIconUrl(charId)}
-                                                            alt={CHARACTER_NAMES[charId] || `Character ${charId}`}
+                                                            alt={getCharacterName(t, charId)}
                                                             width={32}
                                                             height={32}
                                                             className="w-full h-full object-cover"

@@ -1,8 +1,8 @@
 "use client";
 import React, { useRef, useEffect } from "react";
-import { useTheme, CHAR_NAMES, CHAR_COLORS } from "@/contexts/ThemeContext";
+import { useTheme, CHAR_COLORS } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
-import { UNIT_DATA, UNIT_ID_LABEL_KEYS, CHARACTER_NAMES } from "@/types/types";
+import { UNIT_DATA, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { useMasterData } from "@/contexts/MasterDataContext";
 import { ADS_SETTINGS_VISIBLE } from "@/lib/ads";
 import {
@@ -12,7 +12,7 @@ import {
     matchesShortcutCombo,
     parseShortcutCombos,
 } from "@/lib/shortcuts";
-import { type UiLocale } from "@/lib/i18n";
+import { getCharacterName, type UiLocale } from "@/lib/i18n";
 
 interface SettingsPanelProps {
     isOpen: boolean;
@@ -237,7 +237,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                 style={{ backgroundColor: CHAR_COLORS[themeCharId] || "#33CCBB" }}
                             />
                             <span className="text-sm font-bold text-slate-700">
-                                {CHAR_NAMES[Number(themeCharId)] || CHARACTER_NAMES[21]}
+                                {getCharacterName(t, Number(themeCharId), "short")}
                             </span>
                         </div>
                         <svg
@@ -267,7 +267,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                         {unit.charIds.map((charId) => {
                                             const isSelected = themeCharId === String(charId);
                                             const color = CHAR_COLORS[String(charId)];
-                                            const name = CHAR_NAMES[charId];
+                                            const name = getCharacterName(t, charId, "short");
                                             return (
                                                 <button
                                                     key={charId}

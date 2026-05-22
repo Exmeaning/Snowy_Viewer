@@ -6,9 +6,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
 import { fetchMasterData } from "@/lib/fetch";
-import { ICardInfo, UNIT_DATA, CHARACTER_NAMES, CHAR_COLORS, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
+import { ICardInfo, UNIT_DATA, CHAR_COLORS, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCardFullUrl, getCharacterIconUrl } from "@/lib/assets";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 
 // Game Constants
 const ROUNDS_PER_GAME = 10;
@@ -286,7 +287,7 @@ function GuessWhoContent() {
 
     // Available Characters
     const availableCharacters = useMemo(() => {
-        if (settings.selectedUnitIds.length === 0) return Object.keys(CHARACTER_NAMES).map(Number);
+        if (settings.selectedUnitIds.length === 0) return UNIT_DATA.flatMap((unit) => unit.charIds);
         const chars: number[] = [];
         UNIT_DATA.forEach(unit => {
             if (settings.selectedUnitIds.includes(unit.id)) {
@@ -675,9 +676,9 @@ function GuessWhoContent() {
                                                         <div className={`font-black text-lg leading-tight mb-1 ${res.isCorrect ? "text-green-700" : "text-red-700"}`}>
                                                             {res.isCorrect ? t("page.guessWho.common.correct") : t("page.guessWho.common.wrong")}
                                                         </div>
-                                                        {!res.isCorrect && <div className="text-xs text-red-600 font-bold bg-white/50 inline-block px-1 rounded block w-fit mb-1">{t("page.guessWho.common.selectedGuess", { name: res.userGuess ? CHARACTER_NAMES[res.userGuess] : t("page.guessWho.common.timeout") })}</div>}
+                                                        {!res.isCorrect && <div className="text-xs text-red-600 font-bold bg-white/50 inline-block px-1 rounded block w-fit mb-1">{t("page.guessWho.common.selectedGuess", { name: res.userGuess ? getCharacterName(t, res.userGuess) : t("page.guessWho.common.timeout") })}</div>}
                                                         <div className="text-xs text-slate-600 truncate flex items-center gap-1">
-                                                            <span className="font-bold shrink-0">{CHARACTER_NAMES[res.card.characterId]}</span>
+                                                            <span className="font-bold shrink-0">{getCharacterName(t, res.card.characterId)}</span>
                                                             <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0"></span>
                                                             <span className="opacity-80 truncate">{res.card.prefix}</span>
                                                         </div>
@@ -719,7 +720,7 @@ function GuessWhoContent() {
         currentTotalScore, timeLeft, isRoundActive,
         currentRound, showFeedback, feedbackResult, currentCanvasImage,
         canvasRef, currentDistortions, handleGuess, handleNextRound,
-        availableCharacters, startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime,
+        availableCharacters, getCharacterLabel: (characterId) => getCharacterName(t, characterId), startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime,
         potentialScore: getCurrentPotentialScore(),
         combo, strikes,
         loadError, loadCards, isLoading
@@ -752,6 +753,7 @@ interface GuessWhoPlayingAndSetupProps {
     handleGuess: (charId: number | null) => void;
     handleNextRound: () => void;
     availableCharacters: number[];
+    getCharacterLabel: (characterId: number) => string;
     startGame: () => void;
     handleRarityToggle: (rarityId: string) => void;
     handleUnitToggle: (unitId: string) => void;
@@ -771,7 +773,7 @@ function GuessWhoClientPlayingAndSetup({
     currentTotalScore, timeLeft, isRoundActive,
     currentRound, showFeedback, feedbackResult, currentCanvasImage,
     canvasRef, currentDistortions, handleGuess, handleNextRound,
-    availableCharacters, startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime, potentialScore,
+    availableCharacters, getCharacterLabel, startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime, potentialScore,
 
     combo, strikes,
     loadError, loadCards, isLoading
@@ -793,7 +795,7 @@ function GuessWhoClientPlayingAndSetup({
                                     {feedbackResult.isCorrect ? t("page.guessWho.single.feedbackCorrect") : t("page.guessWho.single.feedbackWrong")}
                                 </div>
                                 <div className="mt-4 text-center text-white">
-                                    <div className="text-2xl font-bold mb-1">{CHARACTER_NAMES[feedbackResult.card.characterId]}</div>
+                                    <div className="text-2xl font-bold mb-1">{getCharacterLabel(feedbackResult.card.characterId)}</div>
                                     <div className="text-slate-300">{feedbackResult.card.prefix}</div>
                                 </div>
                                 <div className="mt-8 text-slate-400 text-sm animate-pulse">{t("page.guessWho.single.clickContinue", { seconds: FEEDBACK_DURATION / 1000 })}</div>
@@ -858,10 +860,10 @@ function GuessWhoClientPlayingAndSetup({
                             </div>
 
                             <div className="w-full max-w-5xl flex flex-wrap justify-center gap-2 sm:gap-3 p-4 bg-white/80 backdrop-blur-md rounded-3xl shadow-sm transition-opacity">
-                                {Object.entries(CHARACTER_NAMES).map(([idStr, name]) => {
-                                    const id = Number(idStr);
+                                {availableCharacters.map((id) => {
+                                    const name = getCharacterLabel(id);
+                                    const idStr = String(id);
                                     const color = CHAR_COLORS[idStr];
-                                    if (!availableCharacters.includes(id)) return null;
                                     return (
                                         <button key={id} onClick={() => isRoundActive && handleGuess(id)} disabled={!isRoundActive} className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl overflow-hidden relative group transition-transform active:scale-95 hover:scale-105 disabled:opacity-50 disabled:scale-100 ring-2 ring-transparent hover:ring-miku shadow-sm" title={name}>
                                             <Image src={getCharacterIconUrl(id)} alt={name} fill className="object-cover" unoptimized />

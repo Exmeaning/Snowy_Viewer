@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import ReactECharts from "echarts-for-react";
-import { CHAR_NAMES, CHAR_COLORS } from "@/types/types";
+import { CHAR_COLORS } from "@/types/types";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 import Modal from "@/components/common/Modal";
 import type {
     ServerType,
@@ -35,9 +36,6 @@ interface BoxDetailMasterRow {
     resourceId?: number | null;
     resourceQuantity?: number | null;
 }
-interface CharMaster { id: number; firstName?: string; givenName?: string; }
-interface UnitMaster { unit: string; unitName: string; }
-
 const GROUPS = [
     { key: "ln" as const, unit: "light_sound", labelKey: "common.musicTags.light_music_club", icon: "/data/icon/ln.webp", ids: [1, 2, 3, 4] },
     { key: "mmj" as const, unit: "idol", labelKey: "common.musicTags.idol", icon: "/data/icon/mmj.webp", ids: [5, 6, 7, 8] },
@@ -83,9 +81,6 @@ export default function ChallengeStageChart({
     const [rows, setRows] = useState<Row[] | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [charNames, setCharNames] = useState<Map<number, string>>(new Map());
-    const [unitNames, setUnitNames] = useState<Map<string, string>>(new Map());
-
     useEffect(() => {
         const fn = () => setMobile(window.innerWidth <= 420);
         fn(); window.addEventListener("resize", fn); return () => window.removeEventListener("resize", fn);
@@ -123,7 +118,7 @@ export default function ChallengeStageChart({
         },
         xAxis: {
             type: "category" as const,
-            data: sortedChars.map((c) => CHAR_NAMES[c.id] || `ID ${c.id}`),
+            data: sortedChars.map((c) => getCharacterName(t, c.id, "short")),
             axisLabel: {
                 fontSize: mobile ? 8 : 10,
                 color: "#6e6e6e",
@@ -162,32 +157,20 @@ export default function ChallengeStageChart({
         if (loading || rows) return;
         setLoading(true); setError(null);
         try {
-                const nameServer: "jp" | "cn" = "cn"; // Always use CN for Chinese names
-            const [rewardPack, chars, units] = await Promise.all([
-                (async () => {
-                    const loadPack = async (targetServer: ServerType) => {
-                        const [rewards, boxes, boxDetails] = await Promise.all([
-                            fetchMasterDataForServer<RewardMaster[]>(targetServer, "challengeLiveHighScoreRewards.json"),
-                            fetchMasterDataForServer<BoxMaster[]>(targetServer, "resourceBoxes.json"),
-                            fetchMasterDataForServer<BoxDetailMasterRow[]>(targetServer, "resourceBoxDetails.json").catch(() => []),
-                        ]);
-                        return { rewards, boxes, boxDetails };
-                    };
+            const rewardPack = await (async () => {
+                const loadPack = async (targetServer: ServerType) => {
+                    const [rewards, boxes, boxDetails] = await Promise.all([
+                        fetchMasterDataForServer<RewardMaster[]>(targetServer, "challengeLiveHighScoreRewards.json"),
+                        fetchMasterDataForServer<BoxMaster[]>(targetServer, "resourceBoxes.json"),
+                        fetchMasterDataForServer<BoxDetailMasterRow[]>(targetServer, "resourceBoxDetails.json").catch(() => []),
+                    ]);
+                    return { rewards, boxes, boxDetails };
+                };
 
-                    const current = await loadPack(server);
-                    if (current.rewards.length) return current;
-                    return loadPack("jp");
-                })(),
-                fetchMasterDataForServer<CharMaster[]>(nameServer, "gameCharacters.json"),
-                fetchMasterDataForServer<UnitMaster[]>(nameServer, "unitProfiles.json"),
-            ]);
-
-            const cMap = new Map<number, string>();
-            chars.forEach((c) => { const n = `${c.firstName || ""}${c.givenName || ""}`.trim() || c.givenName || c.firstName; if (n) cMap.set(c.id, n); });
-            setCharNames(cMap);
-            const uMap = new Map<string, string>();
-            units.forEach((u) => { if (u.unit && u.unitName) uMap.set(u.unit, u.unitName); });
-            setUnitNames(uMap);
+                const current = await loadPack(server);
+                if (current.rewards.length) return current;
+                return loadPack("jp");
+            })();
 
             const rewardById = new Map<number, RewardMaster>(); rewardPack.rewards.forEach((r) => rewardById.set(r.id, r));
             const completed = new Map<number, Set<number>>();
@@ -332,10 +315,10 @@ export default function ChallengeStageChart({
                                 </div>
                                 {groupedRows.map((g) => (
                                     <div key={g.key} className="space-y-2">
-                                        <div className="flex items-center gap-2 px-1 py-1 text-xs font-bold text-slate-600">{g.icon && <img src={g.icon} alt={unitNames.get(g.unit) || t(g.labelKey)} className="w-4 h-4 object-contain" />}<span>{unitNames.get(g.unit) || t(g.labelKey)}</span></div>
+                                        <div className="flex items-center gap-2 px-1 py-1 text-xs font-bold text-slate-600">{g.icon && <img src={g.icon} alt={t(g.labelKey)} className="w-4 h-4 object-contain" />}<span>{t(g.labelKey)}</span></div>
                                         {g.rows.map((r) => {
                                             const prog = Math.max(0, Math.min((r.score / scoreCap(server)) * 100, 100));
-                                            const cname = charNames.get(r.characterId) || CHAR_NAMES[r.characterId] || `ID ${r.characterId}`;
+                                                    const cname = getCharacterName(t, r.characterId, "short");
                                             return (
                                                 <div key={r.characterId} className="rounded-xl border border-slate-200 bg-white p-3 space-y-2">
                                                     <div className="flex items-center justify-between gap-2">
@@ -378,11 +361,11 @@ export default function ChallengeStageChart({
                                     </div>
                                     {groupedRows.map((g) => (
                                         <div key={g.key} className="space-y-2">
-                                            <div className="flex items-center gap-2 px-3 py-1 text-xs font-bold text-slate-600">{g.icon && <img src={g.icon} alt={unitNames.get(g.unit) || t(g.labelKey)} className="w-4 h-4 object-contain" />}<span>{unitNames.get(g.unit) || t(g.labelKey)}</span></div>
+                                            <div className="flex items-center gap-2 px-3 py-1 text-xs font-bold text-slate-600">{g.icon && <img src={g.icon} alt={t(g.labelKey)} className="w-4 h-4 object-contain" />}<span>{t(g.labelKey)}</span></div>
                                             <div className="space-y-2">
                                                 {g.rows.map((r) => {
                                                     const prog = Math.max(0, Math.min((r.score / scoreCap(server)) * 100, 100));
-                                                    const cname = charNames.get(r.characterId) || CHAR_NAMES[r.characterId] || `ID ${r.characterId}`;
+                                            const cname = getCharacterName(t, r.characterId, "short");
                                                     return (
                                                         <div key={r.characterId} className="grid grid-cols-[170px_70px_130px_minmax(240px,1fr)_90px_110px] items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2">
                                                             <div className="flex items-center gap-2 min-w-0"><div className="relative w-9 h-9 rounded-full overflow-hidden border border-slate-200"><Image src={getCharacterIconUrl(r.characterId)} alt={cname} fill className="object-cover" unoptimized /></div><span className="text-sm font-semibold text-slate-700 truncate">{cname}</span></div>

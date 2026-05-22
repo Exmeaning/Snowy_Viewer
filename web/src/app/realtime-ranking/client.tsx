@@ -25,7 +25,7 @@ import {
 } from "@/types/realtime-ranking";
 import { IEventInfo } from "@/types/events";
 import { EventListItem } from "@/types/prediction";
-import { CHARACTER_NAMES } from "@/types/types";
+import { getCharacterName } from "@/lib/i18n";
 
 const DEFAULT_REGION: RealtimeRankingRegion = "cn";
 const POLL_INTERVAL = 10_000;
@@ -673,7 +673,7 @@ function RealtimeRankingContent() {
     const activeSnapshot = isWorldLinkMode ? activeWorldLinkGroup : snapshot;
     const activePreviousSnapshot = isWorldLinkMode ? previousWorldLinkGroup : previousSnapshot;
     const activeWorldLinkCharacterName = activeWorldLinkGroup
-        ? CHARACTER_NAMES[activeWorldLinkGroup.gameCharacterId] || t("page.realtimeRanking.board.characterFallback", { id: activeWorldLinkGroup.gameCharacterId })
+        ? getCharacterName(t, activeWorldLinkGroup.gameCharacterId)
         : "";
     const activeScopeLabel = isWorldLinkMode && activeWorldLinkGroup
         ? t("page.realtimeRanking.board.scopeWorldLink", { character: activeWorldLinkCharacterName })
@@ -828,7 +828,7 @@ function RealtimeRankingContent() {
                                                     : "border border-slate-200 bg-white text-slate-600 hover:border-miku/40 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                                             }`}
                                         >
-                                            {CHARACTER_NAMES[group.gameCharacterId] || t("page.realtimeRanking.board.characterFallback", { id: group.gameCharacterId })}
+                                            {getCharacterName(t, group.gameCharacterId)}
                                         </button>
                                     );
                                 })}

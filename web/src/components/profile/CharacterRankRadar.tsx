@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
-import { CHAR_NAMES } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 
 type UnitKey = "overview" | "ln" | "mmj" | "vbs" | "wxs" | "n25" | "vs";
 
@@ -59,7 +59,7 @@ export default function CharacterRankRadar({ characterRanks }: Props) {
         radar: {
             startAngle: 90,
             clockwise: true,
-            indicator: orderedIds.map((id) => ({ name: CHAR_NAMES[id] || `ID ${id}`, max: chartData.max })),
+            indicator: orderedIds.map((id) => ({ name: getCharacterName(t, id, "short"), max: chartData.max })),
             center: ["50%", "54%"],
             radius: mobile ? (unit === "overview" ? "58%" : "64%") : (unit === "overview" ? "67%" : "74%"),
             splitNumber: 10,
@@ -77,7 +77,7 @@ export default function CharacterRankRadar({ characterRanks }: Props) {
                 symbol: "none",
             }],
         }],
-    }), [orderedIds, chartData, unit, mobile, themeColor]);
+    }), [orderedIds, chartData, unit, mobile, themeColor, t]);
 
     const refreshOverlay = useCallback(() => {
         const chart = chartRef.current?.getEchartsInstance();

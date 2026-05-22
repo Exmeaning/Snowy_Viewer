@@ -31,8 +31,9 @@ import {
     type ExchangeSortBy,
     type ExchangeSortOrder,
 } from "@/lib/exchanges";
+import { getCharacterName } from "@/lib/i18n";
 import type { ExchangeStatus, FlattenedMaterialExchange } from "@/types/exchange";
-import { CHARACTER_NAMES, type ICardInfo } from "@/types/types";
+import type { ICardInfo } from "@/types/types";
 
 function PageHeader() {
     const { t } = useI18n();
@@ -248,7 +249,7 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
         return (
             <div
                 className="shrink-0 relative"
-                title={`${getRewardTypeLabel(detail.resourceType, t)} · ${CHARACTER_NAMES[detail.resourceId] ?? `#${detail.resourceId}`}`}
+                title={`${getRewardTypeLabel(detail.resourceType, t)} · ${getCharacterName(t, detail.resourceId)}`}
             >
                 <img
                     src={getCharacterIconUrl(detail.resourceId)}

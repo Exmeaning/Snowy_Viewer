@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import Image from "next/image";
 import Link from "next/link";
 import { IMusicInfo, IMusicMeta } from "@/types/music";
-import { CHAR_NAMES, type ICardInfo } from "@/types/types";
+import type { ICardInfo } from "@/types/types";
 import { fetchMasterData } from "@/lib/fetch";
 import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, SERVER_OPTIONS } from "@/lib/account";
 import AccountSelector from "@/components/AccountSelector";
@@ -15,6 +15,7 @@ import EventSelector from "@/components/deck-recommend/EventSelector";
 
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { getCharacterName } from "@/lib/i18n";
 import { getMusicJacketUrl, MOE_MUSIC_META_URL } from "@/lib/assets";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import {
@@ -824,8 +825,10 @@ export default function ScoreControlClient() {
 
         const thumbWidth = size === "sm" ? 40 : 48;
 
+        const characterName = getCharacterName(t, masterCard.characterId, "short");
+
         return (
-            <div key={i} className="relative flex flex-col items-center gap-0.5 flex-shrink-0" title={`ID:${card.cardId} ${masterCard.prefix || ""} ${CHAR_NAMES[masterCard.characterId]}`}>
+            <div key={i} className="relative flex flex-col items-center gap-0.5 flex-shrink-0" title={`ID:${card.cardId} ${masterCard.prefix || ""} ${characterName}`}>
                 <Link href={`/cards/${card.cardId}`} className="block relative" target="_blank">
                     <SekaiCardThumbnail
                         card={masterCard}
