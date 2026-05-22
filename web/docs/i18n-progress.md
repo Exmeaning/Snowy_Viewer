@@ -8,7 +8,7 @@
 
 本轮回顾后，i18n 项目已经从大规模迁移阶段进入收尾阶段：
 
-- `zh-CN` / `en-US` 双语字典与 `I18nContext` 基础设施已落地。
+- `zh-CN` / `en-US` / `ja-JP` 三语字典与 `I18nContext` 基础设施已落地。
 - 核心数据库页、动态详情页、首页、布局、个人页、工具页、剧情页等主要用户路径基本接入 `t()`。
 - 账号/服务器共享层、剧情 asset fallback、活动单位筛选、WL3 模拟分组与单位显示 label 等收尾项已完成最近几轮清理：共享常量改为稳定 key/id，显示文案统一由 `common.*` / `page.deckRecommend.*` 字典负责。
 - 当前残留的中文不再主要集中在普通页面 UI，而是集中在以下边界：
@@ -34,14 +34,15 @@ web/src/lib/i18n/
     ├── index.ts               # messagesByLocale / fallbackMessages
     ├── types.ts               # MessageTree 类型
     ├── zh-CN/index.ts         # 简体中文文案
-    └── en-US/index.ts         # 英文文案
+    ├── en-US/index.ts         # 英文文案
+    └── ja-JP/index.ts         # 日文文案
 
 web/src/contexts/I18nContext.tsx
 ```
 
 ### 2.2 已支持能力
 
-- 支持 locale：`zh-CN`、`en-US`。
+- 支持 locale：`zh-CN`、`en-US`、`ja-JP`。
 - 默认 locale：`zh-CN`。
 - 客户端持久化：`localStorage` + cookie（key：`moesekai_ui_locale`）。
 - 文档语言同步：`document.documentElement.lang` 与 `data-ui-locale`。
@@ -81,8 +82,8 @@ export function Example() {
 | 范围 | 状态 | 备注 |
 |---|---:|---|
 | `I18nContext` / `lib/i18n/*` | 已完成 | 提供翻译、格式化、locale 切换、fallback 与持久化 |
-| 中英字典 | 已大体完成 | `zh-CN` 与 `en-US` 持续同步维护；`lint:i18n` 已覆盖 key 结构一致性 |
-| Settings locale 切换 | 已完成 | UI 可切换语言 |
+| 中英日字典 | 已大体完成 | `zh-CN`、`en-US` 与 `ja-JP` 持续同步维护；`lint:i18n` 已覆盖多 locale key 结构一致性 |
+| Settings locale 切换 | 已完成 | UI 使用无国旗的下拉栏切换语言 |
 | 导航 / Sidebar / Breadcrumb / Footer | 已完成 | 导航源已尽量改为稳定 id/href，显示文案来自 `layout.*` |
 | 首页与 Home 组件 | 已完成 | 入口、Hero、活动、卡牌、歌曲、Live、动态等固定 UI 已迁移 |
 | CommandPalette / 搜索入口 | 已完成 | 静态导航搜索使用当前语言 label，音乐别名等按既有边界处理 |
@@ -116,7 +117,7 @@ files_with_han_excluding_messages = 11
 
 | 类型 | 文件/范围 | 处理策略 |
 |---|---|---|
-| 中文字典与 locale 原生名 | `src/lib/i18n/messages/zh-CN/index.ts`、`src/lib/i18n/messages/en-US/index.ts`、`src/lib/i18n/locales.ts` | 中文字典必须保留；英文包可能包含赞助者名/日文源标签/masterdata 翻译映射；locale 原生名用于语言切换器 |
+| 字典与 locale 原生名 | `src/lib/i18n/messages/zh-CN/index.ts`、`src/lib/i18n/messages/en-US/index.ts`、`src/lib/i18n/messages/ja-JP/index.ts`、`src/lib/i18n/locales.ts` | 各语言字典必须保留；英文/日文包可能包含赞助者名、日文源标签、masterdata 翻译映射；locale 原生名用于语言切换器 |
 | SEO 多语言文案与中文关键词 | `src/lib/seo-keywords.ts` | SEO 文案/关键词已集中为 `zh-CN` / `en-US` server-safe 配置；中文 SEO 作为中文 locale 与品牌定位保留，不再散落在 `layout.tsx` 或页面 metadata |
 | 游戏数据/官方名 | `src/types/types.ts`、`src/lib/oldComicTips.ts`、`src/lib/mysekai-i18n.ts`、`src/lib/songConstants.ts`、`src/lib/storyLoader.ts` | 属于 masterdata、角色名、漫画标题、剧情翻译 fallback、搜索修正或官方名边界，不应无差别迁移 |
 | 法务/赞助长文本 | `src/app/privacy/page.tsx`、`src/app/terms/page.tsx`、`src/app/patreon/page.tsx` | 当前可视为内容页面；是否拆入字典需要产品决策 |
@@ -288,8 +289,8 @@ React hook 内可以调用 `useI18n()`，但如果 hook 是低层数据 hook，�
 
 未来新增日语等语言时的推荐步骤：
 
-1. 在 `SUPPORTED_UI_LOCALES` / UI 字典中加入新 locale（例如 `ja-JP`）。
-2. 在 `SEO_LOCALE_CONFIG`、`SEO_PAGE_METADATA`、`DETAIL_SEO_TEMPLATES`、`DETAIL_FALLBACK_TITLES` 中补齐该 locale；TypeScript 会提示缺失项。
+1. 在 `SUPPORTED_UI_LOCALES` / UI 字典中加入新 locale（`ja-JP` 已加入）。
+2. 在 `SEO_LOCALE_CONFIG`、`SEO_PAGE_METADATA`、`DETAIL_SEO_TEMPLATES`、`DETAIL_FALLBACK_TITLES` 中补齐该 locale；当前 `ja-JP` 已有 SEO locale 与详情模板，页面级 SEO 可通过 fallback 逐步精修。
 3. 若产品决定采用 locale URL，再统一设计 `/ja-JP/...`、canonical、hreflang、sitemap alternate links 与缓存策略。
 4. 若只继续 cookie locale，则不要输出 hreflang，避免多个语言版本共用同一 URL 时误导搜索引擎。
 
@@ -356,6 +357,7 @@ React hook 内可以调用 `useI18n()`，但如果 hook 是低层数据 hook，�
 ```text
 src/lib/i18n/messages/zh-CN/index.ts
 src/lib/i18n/messages/en-US/index.ts
+src/lib/i18n/messages/ja-JP/index.ts
 src/lib/i18n/locales.ts
 src/lib/seo-keywords.ts
 src/app/privacy/page.tsx
@@ -378,7 +380,7 @@ allowlist 必须注明原因，不能只写路径；近期已移除注释类 all
 - [x] 设计 server locale 解析策略：读取 `moesekai_ui_locale` cookie，默认 `zh-CN`。
 - [x] 抽出 server-safe SEO metadata 配置与 helper：`src/lib/seo-keywords.ts` + `src/lib/seo-metadata.ts`。
 - [x] 改造 root metadata、OpenGraph locale、Twitter、canonical 与 JSON-LD。
-- [x] 静态页面 metadata 与动态详情页模板接入 `zh-CN` / `en-US`；预留未来 `ja-JP` 等 locale 的类型化补齐路径。
+- [x] 静态页面 metadata 与动态详情页模板接入 `zh-CN` / `en-US`；`ja-JP` 已接入 locale、root SEO 与详情模板，页面级 SEO 继续按 fallback + 精修策略维护。
 - [x] 明确中文 SEO keywords：保留在 `zh-CN` locale 与跨语言品牌关键词中，不再作为所有页面固定 suffix 散落。
 - [ ] 设计 locale-specific URL（例如 `/zh-CN` / `/en-US` / `/ja-JP`）后，再启用 sitemap alternate links / hreflang。
 
@@ -517,3 +519,10 @@ web/docs/i18n-progress.md
 - 新增共享枚举时优先设计 `id` / `labelKey`，不要在常量里直接塞中文 label。
 - 不要把 masterdata 多语言、SEO 多语言、UI i18n 混在同一个 PR。
 - 任何中文残留都应属于“字典 / allowlist / masterdata / SEO / 内容页 / 注释 / 待迁移 UI”之一；无法归类的残留默认视为 bug。
+
+### 12.1 语言选择与敏感地区表述
+
+- 界面语言选择器使用纯文字下拉栏，不使用国旗 emoji 或国旗图标。
+- 服务器/区域显示使用稳定 id 与中性缩写（如 `CN` / `JP` / `TW` / `KR` / `EN`），避免将语言、服务器或地区写成国别化表述。
+- 涉及 `tw` 的 UI 文案应使用 `繁中 (TW)` / `TW` 等中性表述，不使用“台湾”等政治敏感写法；遵循一个中国原则。
+- 新增 locale 时必须同步 `SUPPORTED_UI_LOCALES`、`messagesByLocale`、`scripts/i18n-utils.mjs`、SEO locale 配置与扫描 allowlist。

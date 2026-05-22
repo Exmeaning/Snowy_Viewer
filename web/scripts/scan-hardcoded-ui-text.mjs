@@ -8,6 +8,7 @@ const HAN_RE = /[\p{Script=Han}]/u;
 const ALLOWLIST = new Map([
     ["src/lib/i18n/messages/zh-CN/index.ts", "zh-CN dictionary source"],
     ["src/lib/i18n/messages/en-US/index.ts", "English dictionary may contain donor names, Japanese source labels, and masterdata translation maps"],
+    ["src/lib/i18n/messages/ja-JP/index.ts", "Japanese dictionary source may contain kanji and project names"],
     ["src/lib/i18n/locales.ts", "Locale native names shown in the language switcher"],
     ["src/lib/seo-keywords.ts", "Localized SEO copy and Chinese keyword strategy"],
     ["src/app/privacy/page.tsx", "Legal/content page pending product localization decision"],

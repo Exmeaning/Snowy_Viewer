@@ -1,6 +1,6 @@
 export const UI_LOCALE_STORAGE_KEY = "moesekai_ui_locale";
 
-export const SUPPORTED_UI_LOCALES = ["zh-CN", "en-US"] as const;
+export const SUPPORTED_UI_LOCALES = ["zh-CN", "en-US", "ja-JP"] as const;
 
 export type UiLocale = (typeof SUPPORTED_UI_LOCALES)[number];
 
@@ -9,16 +9,19 @@ export const DEFAULT_UI_LOCALE: UiLocale = "zh-CN";
 export const UI_LOCALE_LABELS: Record<UiLocale, string> = {
     "zh-CN": "简体中文",
     "en-US": "English",
+    "ja-JP": "日本語",
 };
 
 export const UI_LOCALE_NATIVE_NAMES: Record<UiLocale, string> = {
     "zh-CN": "简体中文",
     "en-US": "English",
+    "ja-JP": "日本語",
 };
 
 export const UI_LOCALE_HTML_LANG: Record<UiLocale, string> = {
     "zh-CN": "zh-CN",
     "en-US": "en-US",
+    "ja-JP": "ja-JP",
 };
 
 export function isUiLocale(value: unknown): value is UiLocale {
@@ -31,6 +34,7 @@ export function normalizeUiLocale(value: unknown): UiLocale {
 
     const normalized = value.toLowerCase();
     if (normalized.startsWith("en")) return "en-US";
+    if (normalized.startsWith("ja")) return "ja-JP";
     if (normalized.startsWith("zh")) return "zh-CN";
 
     return DEFAULT_UI_LOCALE;

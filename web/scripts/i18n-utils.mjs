@@ -8,6 +8,13 @@ export const SRC_ROOT = path.join(WEB_ROOT, "src");
 export const MESSAGE_FILES = {
     "zh-CN": path.join(SRC_ROOT, "lib/i18n/messages/zh-CN/index.ts"),
     "en-US": path.join(SRC_ROOT, "lib/i18n/messages/en-US/index.ts"),
+    "ja-JP": path.join(SRC_ROOT, "lib/i18n/messages/ja-JP/index.ts"),
+};
+
+export const MESSAGE_EXPORTS = {
+    "zh-CN": "zhCNMessages",
+    "en-US": "enUSMessages",
+    "ja-JP": "jaJPMessages",
 };
 
 export const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
@@ -73,10 +80,12 @@ export function loadMessageObject(filePath, exportName) {
 }
 
 export function loadAllMessages() {
-    return {
-        "zh-CN": loadMessageObject(MESSAGE_FILES["zh-CN"], "zhCNMessages"),
-        "en-US": loadMessageObject(MESSAGE_FILES["en-US"], "enUSMessages"),
-    };
+    return Object.fromEntries(
+        Object.entries(MESSAGE_FILES).map(([locale, filePath]) => [
+            locale,
+            loadMessageObject(filePath, MESSAGE_EXPORTS[locale]),
+        ])
+    );
 }
 
 export function formatLine(filePath, lineNumber, message) {
