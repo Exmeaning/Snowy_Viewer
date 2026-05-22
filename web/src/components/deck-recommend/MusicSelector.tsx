@@ -12,6 +12,8 @@ import MusicFilters from "@/components/music/MusicFilters";
 
 const MUSIC_META_API = MOE_MUSIC_META_URL;
 
+type RawMusicCategory = MusicCategoryType | { musicCategoryName: MusicCategoryType };
+
 /** Sort options for MusicSelector (no level/constant since there's no difficulty context) */
 const SELECTOR_SORT_OPTION_IDS = ["publishedAt", "id"] as const;
 
@@ -86,7 +88,16 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
         }
         Promise.all(fetches)
             .then(([musicsData, tagsData, translationsData, metasData]) => {
-                setMusics(musicsData as IMusicInfo[]);
+                const rawMusics = musicsData as IMusicInfo[];
+                const normalizedMusics = rawMusics.map((music) => ({
+                    ...music,
+                    categories: (music.categories as unknown as RawMusicCategory[]).map((cat) =>
+                        typeof cat === "object" && cat !== null && "musicCategoryName" in cat
+                            ? cat.musicCategoryName
+                            : cat
+                    ),
+                }));
+                setMusics(normalizedMusics);
                 setMusicTags(tagsData as IMusicTagInfo[]);
                 setTranslations(translationsData as TranslationData);
                 if (metasData) setMusicMetas(metasData as IMusicMeta[]);

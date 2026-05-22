@@ -50,6 +50,8 @@ interface Music {
     categories: string[];
 }
 
+type RawMusicCategory = string | { musicCategoryName: string };
+
 interface MusicDifficulty {
     musicId: number;
     musicDifficulty: string;
@@ -450,31 +452,48 @@ function MyMusicsContent() {
 
                 if (cancelled) return;
 
+                const normalizedMusicsData = (musicsData as Music[]).map((music) => ({
+                    ...music,
+                    categories: (music.categories as unknown as RawMusicCategory[]).map((cat) =>
+                        typeof cat === "object" && cat !== null && "musicCategoryName" in cat
+                            ? cat.musicCategoryName
+                            : cat
+                    ),
+                }));
+
                 // For TW, supplement missing songs from JP masterdata when needed.
                 if (server === "tw") {
-                    const cnMusicIds = new Set(musicsData.map(m => m.id));
+                    const cnMusicIds = new Set(normalizedMusicsData.map(m => m.id));
                     try {
                         const jpMusics = await fetchMasterDataForServer<Music[]>("jp", "musics.json");
+                        const normalizedJpMusics = jpMusics.map((music) => ({
+                            ...music,
+                            categories: (music.categories as unknown as RawMusicCategory[]).map((cat) =>
+                                typeof cat === "object" && cat !== null && "musicCategoryName" in cat
+                                    ? cat.musicCategoryName
+                                    : cat
+                            ),
+                        }));
                         const jpDifficulties = await fetchMasterDataForServer<MusicDifficulty[]>("jp", "musicDifficulties.json");
 
-                        const extraMusics = jpMusics.filter(m => !cnMusicIds.has(m.id));
+                        const extraMusics = normalizedJpMusics.filter(m => !cnMusicIds.has(m.id));
                         const extraDifficulties = jpDifficulties.filter(d => !cnMusicIds.has(d.musicId));
 
                         if (extraMusics.length > 0) {
                             setIsTwFallback(true);
-                            setAllMusics([...musicsData, ...extraMusics]);
+                            setAllMusics([...normalizedMusicsData, ...extraMusics]);
                             setMusicDifficulties([...difficultiesData, ...extraDifficulties]);
                         } else {
-                            setAllMusics(musicsData);
+                            setAllMusics(normalizedMusicsData);
                             setMusicDifficulties(difficultiesData);
                         }
                     } catch {
                         // If JP masterdata fails, keep using CN masterdata only.
-                        setAllMusics(musicsData);
+                        setAllMusics(normalizedMusicsData);
                         setMusicDifficulties(difficultiesData);
                     }
                 } else {
-                    setAllMusics(musicsData);
+                    setAllMusics(normalizedMusicsData);
                     setMusicDifficulties(difficultiesData);
                 }
 
