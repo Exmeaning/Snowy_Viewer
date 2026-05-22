@@ -99,13 +99,13 @@ const updateURL = (params: Record<string, string>) => {
 
 新功能、新页面、重大 UI 变更必须同步补齐 i18n，不能只写中文或只写英文：
 
-- 用户可见固定文案（标题、说明、按钮、占位符、空态、错误、toast、tooltip、筛选项、tab、badge、弹窗、表单校验）必须放入 `web/src/lib/i18n/messages/zh-CN/index.ts` 与 `web/src/lib/i18n/messages/en-US/index.ts`，组件中通过 `useI18n().t("...")` 使用。
-- 新增字典 key 时保持中英文结构一致；优先按现有分区放置：通用复用放 `common.*`，页面专属放 `page.<module>.*`，布局/导航放 `layout.*`。
+- 用户可见固定文案（标题、说明、按钮、占位符、空态、错误、toast、tooltip、筛选项、tab、badge、弹窗、表单校验）必须放入 `web/src/lib/i18n/messages/zh-CN/index.ts`、`web/src/lib/i18n/messages/en-US/index.ts` 与 `web/src/lib/i18n/messages/ja-JP/index.ts`，组件中通过 `useI18n().t("...")` 使用。
+- 新增字典 key 时保持中英日结构一致；优先按现有分区放置：通用复用放 `common.*`，页面专属放 `page.<module>.*`，布局/导航放 `layout.*`。
 - 新增枚举/常量给 UI 显示时，常量保存 stable `id` / `value` / `labelKey`，不要直接把中文 label 写进共享常量或工具函数返回值。
 - Project SEKAI masterdata、官方角色名/歌曲名/活动名、用户输入、内容页正文可作为边界保留；如果要作为 UI 固定文案展示，需要先设计统一翻译策略。
 - 新增页面或路由时必须补 SEO：在 `web/src/lib/seo-keywords.ts` 的 `SEO_PAGE_METADATA` 增加 page key（`zh-CN` / `en-US` title、description、keywords），并在 `page.tsx` 使用 `pageMetadata("<key>")`。
 - 新增动态详情页类型时必须补 `DETAIL_SEO_TEMPLATES` / `DETAIL_FALLBACK_TITLES`，并用 `buildDetailMetadata()` 输出 OpenGraph/Twitter/canonical。
-- 预留未来日语等 locale：不要写死 `zh-CN` / `en-US` 二分逻辑；应优先复用 `SUPPORTED_UI_LOCALES`、`UiLocale`、`normalizeUiLocale()`、`SEO_LOCALE_CONFIG`。
+- 不要写死 `zh-CN` / `en-US` 二分逻辑；应优先复用 `SUPPORTED_UI_LOCALES`、`UiLocale`、`normalizeUiLocale()`、`SEO_LOCALE_CONFIG`。语言选择器不使用国旗；涉及 `tw` / `TW` 的显示使用中性服务器/区域缩写（如 `繁中 (TW)` / `TW`），避免政治敏感或国别化表述。
 - 当前没有 locale-specific URL，不要擅自输出 hreflang / sitemap alternate links；等 `/zh-CN`、`/en-US`、未来 `/ja-JP` 等 URL 策略确定后再做。
 - 完成 i18n/SEO 相关改动后至少运行：`npm run lint:i18n --prefix web`、`npm run lint:i18n-usage --prefix web`、`npm run lint --prefix web`；影响 metadata/路由较多时运行 `npm run build:next --prefix web`。
 

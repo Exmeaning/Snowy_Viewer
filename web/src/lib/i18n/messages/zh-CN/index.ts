@@ -66,9 +66,9 @@ export const zhCNMessages = {
             server: "服务器",
         },
         server: {
-            cn: "简中服 (CN)",
+            cn: "简中 (CN)",
             jp: "日服 (JP)",
-            tw: "繁中服 (TW)",
+            tw: "繁中 (TW)",
         },
         relayServers: {
             tokyo1: {
@@ -84,9 +84,9 @@ export const zhCNMessages = {
                 name: "新加坡1区",
             },
             regions: {
-                japan: "🇯🇵 日本",
-                korea: "🇰🇷 韩国",
-                singapore: "🇸🇬 新加坡",
+                japan: "日本",
+                korea: "韩国",
+                singapore: "新加坡",
             },
         },
         account: {
@@ -133,9 +133,9 @@ export const zhCNMessages = {
         data: {
             uploadTimeTitle: "数据上传时间",
             dataTime: "数据时间: {time}",
-            twMasterdataWarning: "繁中服使用国服 masterdata，数据可能不准确",
-            twMasterdataFallbackWarning: "繁中服使用国服 masterdata，部分国服未实装卡牌已使用日服数据补充，数据可能不准确",
-            twMusicFallbackWarning: "繁中服使用国服数据，部分国服未实装歌曲已使用日服数据补充，可能存在兼容性问题",
+            twMasterdataWarning: "繁中 (TW) 使用简中 (CN) masterdata，数据可能不准确",
+            twMasterdataFallbackWarning: "繁中 (TW) 使用简中 (CN) masterdata，部分简中 (CN) 未实装卡牌已使用日服数据补充，数据可能不准确",
+            twMusicFallbackWarning: "繁中 (TW) 使用简中 (CN) 数据，部分简中 (CN) 未实装歌曲已使用日服数据补充，可能存在兼容性问题",
             suiteUploadHint: "请确认已在 Haruki 上传 Suite 数据",
         },
         harukiErrors: {
@@ -701,9 +701,11 @@ export const zhCNMessages = {
             sectionTitle: "界面语言",
             label: "界面语言",
             description: "切换站点界面显示语言",
+            machineTranslationNotice: "部分文本使用机器翻译，可能存在不准确之处。",
             options: {
                 zhCN: "简体中文",
                 enUS: "English",
+                jaJP: "日本語",
             },
         },
         themeColor: {
@@ -888,7 +890,7 @@ export const zhCNMessages = {
             bilibili: {
                 accounts: {
                     jp: "日服资讯 (Project_SEKAI资讯站)",
-                    cn: "国服资讯 (初音未来缤纷舞台)",
+                    cn: "简中资讯 (初音未来：缤纷舞台)",
                 },
                 visitHome: "访问主页",
                 loadFailedTitle: "获取动态失败",
@@ -1919,7 +1921,7 @@ export const zhCNMessages = {
             regions: {
                 cn: "国服",
                 jp: "日服",
-                tw: "台服",
+                tw: "繁中 (TW)",
                 kr: "韩服",
                 en: "国际服",
             },
@@ -2826,7 +2828,7 @@ export const zhCNMessages = {
                 },
                 serverLabels: {
                     jp: "JP（日服）",
-                    cn: "CN（国服）",
+                    cn: "CN（简中）",
                 },
                 distortions: {
                     none: "不操作",
@@ -3309,9 +3311,9 @@ export const zhCNMessages = {
                 optionCountSentence: "每题 {count} 选 1",
                 serverLabels: {
                     jp: "JP（日服）",
-                    cn: "CN（国服）",
+                    cn: "CN（简中）",
                     jpShort: "日服",
-                    cnShort: "国服",
+                    cnShort: "简中",
                 },
                 difficultyLabels: {
                     easy: "简单",

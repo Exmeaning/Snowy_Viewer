@@ -66,9 +66,9 @@ export const enUSMessages = {
             server: "Server",
         },
         server: {
-            cn: "CN Server",
-            jp: "JP Server",
-            tw: "TW Server",
+            cn: "CN",
+            jp: "JP",
+            tw: "TW",
         },
         relayServers: {
             tokyo1: {
@@ -84,9 +84,9 @@ export const enUSMessages = {
                 name: "Singapore 1",
             },
             regions: {
-                japan: "🇯🇵 Japan",
-                korea: "🇰🇷 Korea",
-                singapore: "🇸🇬 Singapore",
+                japan: "Japan",
+                korea: "Korea",
+                singapore: "Singapore",
             },
         },
         account: {
@@ -133,9 +133,9 @@ export const enUSMessages = {
         data: {
             uploadTimeTitle: "Data upload time",
             dataTime: "Data time: {time}",
-            twMasterdataWarning: "TW server uses CN masterdata, so data may be inaccurate",
-            twMasterdataFallbackWarning: "TW server uses CN masterdata; some cards not yet implemented on CN have been supplemented with JP data, so data may be inaccurate",
-            twMusicFallbackWarning: "TW server uses CN data; some songs not yet implemented on CN have been supplemented with JP data and may have compatibility issues",
+            twMasterdataWarning: "TW uses CN masterdata, so data may be inaccurate",
+            twMasterdataFallbackWarning: "TW uses CN masterdata; some cards not yet implemented on CN have been supplemented with JP data, so data may be inaccurate",
+            twMusicFallbackWarning: "TW uses CN data; some songs not yet implemented on CN have been supplemented with JP data and may have compatibility issues",
             suiteUploadHint: "Please make sure Suite data has been uploaded to Haruki",
         },
         harukiErrors: {
@@ -702,9 +702,11 @@ export const enUSMessages = {
             sectionTitle: "Interface language",
             label: "Interface language",
             description: "Change the display language of the site UI",
+            machineTranslationNotice: "Some text uses machine translation and may be inaccurate.",
             options: {
                 zhCN: "Chinese (Simplified)",
                 enUS: "English",
+                jaJP: "Japanese",
             },
         },
         themeColor: {

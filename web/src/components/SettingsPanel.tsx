@@ -12,7 +12,7 @@ import {
     matchesShortcutCombo,
     parseShortcutCombos,
 } from "@/lib/shortcuts";
-import { getCharacterName, type UiLocale } from "@/lib/i18n";
+import { getCharacterName, SUPPORTED_UI_LOCALES, UI_LOCALE_LABELS } from "@/lib/i18n";
 
 interface SettingsPanelProps {
     isOpen: boolean;
@@ -84,10 +84,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     const { locale, setLocale, t } = useI18n();
     const { cloudVersion, localVersion, isLoading, isRefreshing, forceRefreshData } = useMasterData();
     const [expandedDropdown, setExpandedDropdown] = React.useState<string | null>(null);
-    const languageOptions = [
-        { id: "zh-CN" as UiLocale, labelKey: "settings.uiLanguage.options.zhCN" },
-        { id: "en-US" as UiLocale, labelKey: "settings.uiLanguage.options.enUS" },
-    ] as const;
+    const languageOptions = SUPPORTED_UI_LOCALES.map((id) => ({ id, label: UI_LOCALE_LABELS[id] }));
+    const currentLanguageLabel = UI_LOCALE_LABELS[locale];
     const panelRef = useRef<HTMLDivElement>(null);
 
     // Close on click outside
@@ -196,25 +194,75 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                             {t("settings.uiLanguage.sectionTitle")}
                         </span>
                     </div>
-                    <div className="flex bg-slate-100 rounded-xl p-1">
-                        {languageOptions.map((option) => {
-                            const isSelected = locale === option.id;
-                            return (
-                                <button
-                                    key={option.id}
-                                    onClick={() => setLocale(option.id)}
-                                    className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${isSelected
-                                        ? "bg-miku text-white shadow-sm"
-                                        : "text-slate-500 hover:text-slate-700"
-                                        }`}
-                                >
-                                    {t(option.labelKey)}
-                                </button>
-                            );
-                        })}
+                    <div className="relative">
+                        <button
+                            onClick={() => setExpandedDropdown(expandedDropdown === "language" ? null : "language")}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
+                            aria-haspopup="listbox"
+                            aria-expanded={expandedDropdown === "language"}
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className="w-4 h-4 rounded-full bg-miku/20 flex items-center justify-center">
+                                    <span className="w-2 h-2 rounded-full bg-miku" />
+                                </span>
+                                <span className="text-sm font-bold text-slate-700">{currentLanguageLabel}</span>
+                            </div>
+                            <svg
+                                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "language" ? "rotate-180" : ""}`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <div
+                            className={`absolute top-full left-0 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-[1100] transition-all duration-200 origin-top transform ${expandedDropdown === "language"
+                                ? "opacity-100 scale-100 visible"
+                                : "opacity-0 scale-95 invisible pointer-events-none"
+                                }`}
+                            role="listbox"
+                            aria-label={t("settings.uiLanguage.label")}
+                        >
+                            <div className="p-2 space-y-1">
+                                {languageOptions.map((option) => {
+                                    const isSelected = locale === option.id;
+                                    return (
+                                        <button
+                                            key={option.id}
+                                            onClick={() => {
+                                                setLocale(option.id);
+                                                setExpandedDropdown(null);
+                                            }}
+                                            className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${isSelected
+                                                ? "bg-miku/10 text-miku"
+                                                : "text-slate-600 hover:bg-slate-50"
+                                                }`}
+                                            role="option"
+                                            aria-selected={isSelected}
+                                        >
+                                            <span
+                                                className={`w-3 h-3 rounded-full shrink-0 ${isSelected ? "bg-miku" : "bg-slate-300"}`}
+                                            />
+                                            <span>{option.label}</span>
+                                            {isSelected && (
+                                                <svg className="w-3.5 h-3.5 ml-auto text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                     <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
                         {t("settings.uiLanguage.description")}
+                    </p>
+                    <p className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 px-2 py-1.5 text-[10px] leading-relaxed text-amber-700">
+                        <span className="mt-0.5 inline-flex h-3 w-3 shrink-0 items-center justify-center rounded-full bg-amber-200 text-[8px] font-black text-amber-700">!</span>
+                        <span>{t("settings.uiLanguage.machineTranslationNotice")}</span>
                     </p>
                 </div>
 

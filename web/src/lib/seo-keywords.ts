@@ -32,8 +32,8 @@ interface SeoLocaleConfig {
   };
 }
 
-type LocalizedText = Record<UiLocale, string>;
-type LocalizedKeywords = Record<UiLocale, readonly string[]>;
+type LocalizedText = Partial<Record<UiLocale, string>> & { "zh-CN": string };
+type LocalizedKeywords = Partial<Record<UiLocale, readonly string[]>> & { "zh-CN": readonly string[] };
 
 type SeoPageDefinition = {
   readonly path: string;
@@ -53,7 +53,7 @@ export const SEO_LOCALE_CONFIG = {
     htmlLang: "zh-CN",
     hreflang: "zh-CN",
     openGraphLocale: "zh_CN",
-    alternateOpenGraphLocales: ["en_US"],
+    alternateOpenGraphLocales: ["en_US", "ja_JP"],
     titleTemplate: "%s | Moesekai",
     suffix: " — 新一代PJSK WIKI",
     detailSuffix: " | PJSK WIKI",
@@ -82,7 +82,7 @@ export const SEO_LOCALE_CONFIG = {
     htmlLang: "en-US",
     hreflang: "en-US",
     openGraphLocale: "en_US",
-    alternateOpenGraphLocales: ["zh_CN"],
+    alternateOpenGraphLocales: ["zh_CN", "ja_JP"],
     titleTemplate: "%s | Moesekai",
     suffix: " — Next-generation PJSK Wiki",
     detailSuffix: " | PJSK Wiki",
@@ -107,6 +107,34 @@ export const SEO_LOCALE_CONFIG = {
         "A next-generation PJSK wiki and Project SEKAI data viewer for cards, songs, events, gachas, stories, MySekai, and fan tools.",
     },
   },
+  "ja-JP": {
+    htmlLang: "ja-JP",
+    hreflang: "ja-JP",
+    openGraphLocale: "ja_JP",
+    alternateOpenGraphLocales: ["zh_CN", "en_US"],
+    titleTemplate: "%s | Moesekai",
+    suffix: " — 次世代PJSK Wiki",
+    detailSuffix: " | PJSK Wiki",
+    root: {
+      title: "Moesekai - 次世代PJSK Wiki",
+      description:
+        "Moesekai（旧 Snowy SekaiViewer）は、カード、楽曲、イベント、ガチャ、ストーリー、MySekai、便利ツールを扱う Project SEKAI データビューアです。",
+      keywords: [
+        "プロジェクトセカイ wiki",
+        "PJSK wiki",
+        "Project SEKAI データベース",
+        "プロセカ カード",
+        "プロセカ 楽曲",
+        "プロセカ イベント",
+        "Moesekai",
+        "Snowy SekaiViewer",
+        "Project Sekai",
+      ],
+      jsonLdAlternateName: ["Snowy SekaiViewer", "PJSK Wiki", "Project SEKAI Database"],
+      jsonLdDescription:
+        "Project SEKAI のカード、楽曲、イベント、ガチャ、ストーリー、MySekai、便利ツールを扱うデータビューアです。",
+    },
+  },
 } as const satisfies Record<UiLocale, SeoLocaleConfig>;
 
 export function getSeoLocaleConfig(locale: UiLocale = DEFAULT_UI_LOCALE): SeoLocaleConfig {
@@ -118,13 +146,25 @@ export function getSeoLocaleConfig(locale: UiLocale = DEFAULT_UI_LOCALE): SeoLoc
 const COMMON_BRAND_KEYWORDS = {
   "zh-CN": ["Project Sekai", "PJSK", "世界计划", "Moesekai"],
   "en-US": ["Project Sekai", "PJSK", "Moesekai", "Project SEKAI database"],
-} as const satisfies LocalizedKeywords;
+  "ja-JP": ["Project Sekai", "PJSK", "プロジェクトセカイ", "Moesekai"],
+} as const satisfies Record<UiLocale, readonly string[]>;
 
-function withBrandKeywords(keywords: LocalizedKeywords): LocalizedKeywords {
-  return {
-    "zh-CN": [...new Set([...keywords["zh-CN"], ...COMMON_BRAND_KEYWORDS["zh-CN"]])],
-    "en-US": [...new Set([...keywords["en-US"], ...COMMON_BRAND_KEYWORDS["en-US"]])],
-  };
+function localizedText(value: LocalizedText, locale: UiLocale): string {
+  return value[locale] ?? value["en-US"] ?? value["zh-CN"];
+}
+
+function localizedKeywordsValue(value: LocalizedKeywords, locale: UiLocale): readonly string[] {
+  return value[locale] ?? value["en-US"] ?? value["zh-CN"];
+}
+
+function withBrandKeywords(keywords: LocalizedKeywords): Record<UiLocale, readonly string[]> {
+  const localizedKeywords = {} as Record<UiLocale, readonly string[]>;
+
+  for (const locale of Object.keys(COMMON_BRAND_KEYWORDS) as UiLocale[]) {
+    localizedKeywords[locale] = [...new Set([...localizedKeywordsValue(keywords, locale), ...COMMON_BRAND_KEYWORDS[locale]])];
+  }
+
+  return localizedKeywords;
 }
 
 function definePage(path: string, title: LocalizedText, description: LocalizedText, keywords: LocalizedKeywords): SeoPageDefinition {
@@ -735,15 +775,15 @@ export function getRootKeywords(locale: UiLocale = DEFAULT_UI_LOCALE): string[] 
 export function getPageKeywords(pageName: string, locale: UiLocale = DEFAULT_UI_LOCALE): string[] {
   const page = SEO_PAGE_METADATA[pageName as SeoPageKey];
   if (!page) return getRootKeywords(locale).slice(0, 10);
-  return [...page.keywords[locale]];
+  return [...localizedKeywordsValue(page.keywords, locale)];
 }
 
 export function getPageSeo(pageKey: SeoPageKey, locale: UiLocale = DEFAULT_UI_LOCALE) {
   const page = SEO_PAGE_METADATA[pageKey];
   return {
     path: page.path,
-    title: page.title[locale],
-    description: `${page.description[locale]}${getSeoLocaleConfig(locale).suffix}`,
+    title: localizedText(page.title, locale),
+    description: `${localizedText(page.description, locale)}${getSeoLocaleConfig(locale).suffix}`,
     keywords: getPageKeywords(pageKey, locale),
   };
 }
@@ -764,67 +804,78 @@ export const DETAIL_SEO_SUFFIX = SEO_LOCALE_CONFIG[DEFAULT_UI_LOCALE].detailSuff
 // ==================== Detail Metadata Templates ====================
 
 export const DETAIL_FALLBACK_TITLES = {
-  card: { "zh-CN": "卡牌详情", "en-US": "Card Details" },
-  character: { "zh-CN": "角色详情", "en-US": "Character Details" },
-  costume: { "zh-CN": "服装详情", "en-US": "Costume Details" },
-  event: { "zh-CN": "活动详情", "en-US": "Event Details" },
-  exchange: { "zh-CN": "兑换条目详情", "en-US": "Exchange Entry Details" },
-  gacha: { "zh-CN": "扭蛋详情", "en-US": "Gacha Details" },
-  live: { "zh-CN": "虚拟 Live 详情", "en-US": "Virtual Live Details" },
-  manga: { "zh-CN": "漫画详情", "en-US": "Comic Details" },
-  music: { "zh-CN": "歌曲详情", "en-US": "Music Details" },
-  mysekai: { "zh-CN": "家具详情", "en-US": "Furniture Details" },
+  card: { "zh-CN": "卡牌详情", "en-US": "Card Details", "ja-JP": "カード詳細" },
+  character: { "zh-CN": "角色详情", "en-US": "Character Details", "ja-JP": "キャラクター詳細" },
+  costume: { "zh-CN": "服装详情", "en-US": "Costume Details", "ja-JP": "衣装詳細" },
+  event: { "zh-CN": "活动详情", "en-US": "Event Details", "ja-JP": "イベント詳細" },
+  exchange: { "zh-CN": "兑换条目详情", "en-US": "Exchange Entry Details", "ja-JP": "交換アイテム詳細" },
+  gacha: { "zh-CN": "扭蛋详情", "en-US": "Gacha Details", "ja-JP": "ガチャ詳細" },
+  live: { "zh-CN": "虚拟 Live 详情", "en-US": "Virtual Live Details", "ja-JP": "バーチャルライブ詳細" },
+  manga: { "zh-CN": "漫画详情", "en-US": "Comic Details", "ja-JP": "コミック詳細" },
+  music: { "zh-CN": "歌曲详情", "en-US": "Music Details", "ja-JP": "楽曲詳細" },
+  mysekai: { "zh-CN": "家具详情", "en-US": "Furniture Details", "ja-JP": "家具詳細" },
 } as const satisfies Record<string, LocalizedText>;
 
 export const DETAIL_SEO_TEMPLATES = {
   card: {
     "zh-CN": "Project SEKAI 卡牌「{prefix}」— {character}",
     "en-US": "Project Sekai card \"{prefix}\" — {character}",
+    "ja-JP": "Project SEKAI カード「{prefix}」— {character}",
   },
   character: {
     "zh-CN": "Project SEKAI 角色「{name}」的详细资料、组合与相关信息",
     "en-US": "Detailed information for Project Sekai character \"{name}\"",
+    "ja-JP": "Project SEKAI キャラクター「{name}」の詳細情報",
   },
   costume: {
     "zh-CN": "Project SEKAI 服装「{name}」详情",
     "en-US": "Project SEKAI costume \"{name}\"",
+    "ja-JP": "Project SEKAI 衣装「{name}」詳細",
   },
   event: {
     "zh-CN": "Project SEKAI 活动「{name}」详情",
     "en-US": "Project Sekai event \"{name}\"",
+    "ja-JP": "Project SEKAI イベント「{name}」詳細",
   },
   exchange: {
     "zh-CN": "Project SEKAI 兑换条目：{name}{shopSuffix}",
     "en-US": "Project Sekai exchange entry: {name}{shopSuffix}",
+    "ja-JP": "Project SEKAI 交換アイテム：{name}{shopSuffix}",
   },
   exchangeFallback: {
     "zh-CN": "Project SEKAI 兑换条目详情",
     "en-US": "Project Sekai exchange entry details",
+    "ja-JP": "Project SEKAI 交換アイテム詳細",
   },
   gacha: {
     "zh-CN": "Project SEKAI 扭蛋「{name}」详情",
     "en-US": "Project SEKAI gacha: {name}",
+    "ja-JP": "Project SEKAI ガチャ「{name}」詳細",
   },
   live: {
     "zh-CN": "Project SEKAI 虚拟 Live「{name}」详情",
     "en-US": "Project Sekai virtual live \"{name}\"",
+    "ja-JP": "Project SEKAI バーチャルライブ「{name}」詳細",
   },
   manga: {
     "zh-CN": "Project SEKAI 官方四格漫画：{title}",
     "en-US": "Project Sekai official four-panel comic — {title}",
+    "ja-JP": "Project SEKAI 公式4コマ：{title}",
   },
   music: {
     "zh-CN": "Project SEKAI 歌曲「{title}」— 作词：{lyricist} / 作曲：{composer}",
     "en-US": "Project Sekai song \"{title}\" — Lyricist: {lyricist} / Composer: {composer}",
+    "ja-JP": "Project SEKAI 楽曲「{title}」— 作詞：{lyricist} / 作曲：{composer}",
   },
   mysekai: {
     "zh-CN": "Project SEKAI MySekai 家具「{name}」{flavorSuffix}",
     "en-US": "Project SEKAI furniture \"{name}\"{flavorSuffix}",
+    "ja-JP": "Project SEKAI MySekai 家具「{name}」{flavorSuffix}",
   },
 } as const satisfies Record<string, LocalizedText>;
 
 export function getDetailFallbackTitle(kind: DetailFallbackKind, locale: UiLocale = DEFAULT_UI_LOCALE): string {
-  return DETAIL_FALLBACK_TITLES[kind][locale];
+  return localizedText(DETAIL_FALLBACK_TITLES[kind], locale);
 }
 
 export function formatDetailSeoDescription(
@@ -832,19 +883,21 @@ export function formatDetailSeoDescription(
   values: MessageInterpolationValues,
   locale: UiLocale = DEFAULT_UI_LOCALE,
 ): string {
-  const template = DETAIL_SEO_TEMPLATES[kind][locale];
+  const template = localizedText(DETAIL_SEO_TEMPLATES[kind], locale);
   return `${interpolateMessage(template, values)}${getSeoLocaleConfig(locale).detailSuffix}`;
 }
 
 export function formatExchangeShopSuffix(summaryName: string | undefined, locale: UiLocale = DEFAULT_UI_LOCALE): string {
   if (!summaryName) return "";
-  return locale === "zh-CN" ? `，兑换所：${summaryName}` : `, exchange shop: ${summaryName}`;
+  if (locale === "zh-CN") return `，兑换所：${summaryName}`;
+  if (locale === "ja-JP") return `、交換所：${summaryName}`;
+  return `, exchange shop: ${summaryName}`;
 }
 
 export function formatMysekaiFlavorSuffix(flavor: string | undefined, locale: UiLocale = DEFAULT_UI_LOCALE): string {
   if (!flavor) return "";
   const clipped = flavor.slice(0, 100);
-  return locale === "zh-CN" ? ` — ${clipped}` : ` - ${clipped}`;
+  return locale === "zh-CN" || locale === "ja-JP" ? ` — ${clipped}` : ` - ${clipped}`;
 }
 
 // ==================== JSON-LD Structured Data ====================
