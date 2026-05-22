@@ -712,6 +712,15 @@ export const enUSMessages = {
         themeColor: {
             sectionTitle: "Theme color",
         },
+        backgroundAnimationBudget: {
+            sectionTitle: "Background animation budget",
+            performance: "Performance",
+            powerSave: "Power saving",
+            off: "Off",
+            performanceDescription: "Keeps richer background motion, suitable for desktops or faster devices.",
+            powerSaveDescription: "Recommended default: lowers background FPS and particle count to reduce GPU and battery usage.",
+            offDescription: "Disables the animated background completely, ideal for low-end devices or screen recording.",
+        },
         contentDisplay: {
             sectionTitle: "Content display",
         },
@@ -833,6 +842,7 @@ export const enUSMessages = {
             themeTitle: "Appearance & Theme",
             themeDesc: "Choose a character-inspired theme color and appearance preference.",
             appearanceTitle: "Appearance",
+            backgroundAnimationTitle: "Background animation budget",
             themeColorTitle: "Theme Color (Character Signature)",
             contentTitle: "Content Preferences",
             contentDesc: "Configure how content and card graphics are loaded and displayed.",

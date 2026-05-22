@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useTheme, type ServerSourceType, type AssetSourceType, CHAR_COLORS } from "@/contexts/ThemeContext";
+import { useTheme, type ServerSourceType, type AssetSourceType, type BackgroundAnimationBudget, CHAR_COLORS } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { getCharacterName, SUPPORTED_UI_LOCALES, UI_LOCALE_LABELS, UI_LOCALE_STORAGE_KEY, detectBrowserUiLocale, type UiLocale } from "@/lib/i18n";
 import { MOE_LOGO_URL } from "@/lib/assets";
@@ -23,6 +23,24 @@ const SELECTED_THEME_CHARACTERS = [
   { id: "13" }, { id: "14" }, { id: "15" }, { id: "16" },
   // 25-ji
   { id: "17" }, { id: "18" }, { id: "19" }, { id: "20" }
+];
+
+const BACKGROUND_ANIMATION_BUDGET_OPTIONS: { id: BackgroundAnimationBudget; labelKey: string; descriptionKey: string }[] = [
+  {
+    id: "performance",
+    labelKey: "settings.backgroundAnimationBudget.performance",
+    descriptionKey: "settings.backgroundAnimationBudget.performanceDescription",
+  },
+  {
+    id: "power-save",
+    labelKey: "settings.backgroundAnimationBudget.powerSave",
+    descriptionKey: "settings.backgroundAnimationBudget.powerSaveDescription",
+  },
+  {
+    id: "off",
+    labelKey: "settings.backgroundAnimationBudget.off",
+    descriptionKey: "settings.backgroundAnimationBudget.offDescription",
+  },
 ];
 
 // Helper to measure latency to a CDN server
@@ -84,6 +102,8 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
     setThemeCharacter,
     colorSchemePreference,
     setColorSchemePreference,
+    backgroundAnimationBudget,
+    setBackgroundAnimationBudget,
     isShowSpoiler,
     setShowSpoiler,
     useTrainedThumbnail,
@@ -597,6 +617,40 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                         >
                           <div className="w-8 h-4 rounded bg-white/20 border border-white/10" />
                           <span className="text-[10px] leading-none truncate w-full">{pref.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Background animation budget */}
+                <div className="space-y-2">
+                  <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    {t("page.setup.backgroundAnimationTitle")}
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {BACKGROUND_ANIMATION_BUDGET_OPTIONS.map((option) => {
+                      const isSelected = backgroundAnimationBudget === option.id;
+                      return (
+                        <button
+                          key={option.id}
+                          onClick={() => setBackgroundAnimationBudget(option.id)}
+                          className={`p-3 rounded-xl border text-center transition-all duration-300 flex flex-col items-center gap-1 ${
+                            isSelected
+                              ? "bg-white dark:bg-slate-800 shadow-md scale-[1.02] font-bold"
+                              : "bg-white/40 dark:bg-slate-900/30 border-slate-200/50 dark:border-slate-800/40 opacity-75 hover:opacity-100"
+                          }`}
+                          style={{
+                            boxShadow: isSelected ? `0 0 0 2px ${themeColor}` : undefined,
+                            borderColor: isSelected ? themeColor : undefined,
+                          }}
+                        >
+                          <span className="text-[11px] leading-none truncate w-full text-slate-700 dark:text-slate-100">
+                            {t(option.labelKey)}
+                          </span>
+                          <span className="text-[9px] leading-tight text-slate-400 dark:text-slate-500 line-clamp-2">
+                            {t(option.descriptionKey)}
+                          </span>
                         </button>
                       );
                     })}

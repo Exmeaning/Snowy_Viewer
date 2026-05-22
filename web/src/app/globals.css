@@ -29,8 +29,8 @@
 :root[data-theme="dark"] {
   --glass-border: rgba(148, 163, 184, 0.18);
   --glass-bg: rgba(15, 23, 42, 0.55);
-  --page-bg-start: #08111b;
-  --page-bg-end: #101b2d;
+  --page-bg-start: var(--theme-body-bg-start, #08111b);
+  --page-bg-end: var(--theme-body-bg-end, #101b2d);
   --surface-base: rgba(15, 23, 42, 0.92);
   --surface-soft: rgba(15, 23, 42, 0.72);
   --surface-muted: rgba(30, 41, 59, 0.88);
@@ -114,6 +114,31 @@ body {
     inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
     inset 0 -1px 0 0 rgba(255, 255, 255, 0.2);
 }
+
+/* Liquid Glass Modal Utility */
+.liquid-glass-modal {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.3);
+}
+
+:root[data-theme="dark"] .liquid-glass-modal {
+  background: rgba(15, 23, 42, 0.68) !important;
+  backdrop-filter: blur(28px) saturate(220%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(220%) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+}
+
 
 :root[data-theme="dark"] {
   color-scheme: dark;

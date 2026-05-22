@@ -42,7 +42,8 @@ export default function MainNavbar({
     const helpShortcut = getPrimaryShortcutLabel("toggle-shortcuts-help");
 
     return (
-        <nav className="fixed top-0 w-full z-[100] bg-white/95 backdrop-blur-lg border-b border-slate-200">
+        <nav className="fixed top-0 w-full z-[100] border-b border-slate-200/50 dark:border-slate-800/30 shadow-[0_8px_32px_0_rgba(31,38,135,0.04)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.25)]">
+            <div className="absolute inset-0 bg-white/45 dark:bg-slate-900/40 backdrop-blur-2xl -z-10" />
             {/* Row 1: Logo + buttons */}
             <div className="container mx-auto px-4 sm:px-6 h-[3.5rem] sm:h-[4.5rem] flex items-center justify-between">
                 {/* Left: Menu Toggle + Logo + Breadcrumb (desktop) */}
@@ -147,7 +148,7 @@ export default function MainNavbar({
 
             {/* Row 2: Breadcrumb - mobile only, hidden on home page */}
             {!isHome && (
-                <div className="sm:hidden border-t border-slate-100">
+                <div className="sm:hidden border-t border-slate-200/50 dark:border-slate-800/30">
                     <div className="container mx-auto px-4 h-8 flex items-center gap-1.5 overflow-visible text-xs">
                         <Breadcrumb />
                     </div>
