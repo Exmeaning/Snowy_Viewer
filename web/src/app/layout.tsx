@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -28,7 +28,8 @@ import {
   SUPPORTED_UI_LOCALES,
   UI_LOCALE_HTML_LANG,
   UI_LOCALE_STORAGE_KEY,
-  normalizeUiLocale,
+  resolveAcceptLanguageUiLocale,
+  resolveUiLocale,
 } from "@/lib/i18n";
 
 const SITE_BASE_URL = getSiteBaseUrl();
@@ -53,7 +54,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const initialUiLocale = normalizeUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value);
+  const requestHeaders = await headers();
+  const initialUiLocale =
+    resolveUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value) ??
+    resolveAcceptLanguageUiLocale(requestHeaders.get("accept-language"));
   const jsonLd = generateJsonLd(SITE_BASE_URL, initialUiLocale);
   const supportedUiLocales = JSON.stringify(SUPPORTED_UI_LOCALES);
   // Inline script to apply theme color before React hydration
@@ -141,10 +145,19 @@ export default async function RootLayout({
       try {
         var supportedUiLocales = ${supportedUiLocales};
         var savedUiLocale = localStorage.getItem('${UI_LOCALE_STORAGE_KEY}');
-        var normalizedUiLocale = savedUiLocale ? savedUiLocale.toLowerCase() : '';
-        var resolvedUiLocale = supportedUiLocales.find(function(locale) {
-          return normalizedUiLocale === locale.toLowerCase() || normalizedUiLocale.split('-')[0] === locale.toLowerCase().split('-')[0];
-        }) || '${initialUiLocale}';
+        var browserUiLocales = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+        var localeCandidates = savedUiLocale ? [savedUiLocale] : browserUiLocales;
+        var resolvedUiLocale = '${initialUiLocale}';
+        for (var i = 0; i < localeCandidates.length; i++) {
+          var normalizedUiLocale = String(localeCandidates[i] || '').toLowerCase();
+          var matchedUiLocale = supportedUiLocales.find(function(locale) {
+            return normalizedUiLocale === locale.toLowerCase() || normalizedUiLocale.split('-')[0] === locale.toLowerCase().split('-')[0];
+          });
+          if (matchedUiLocale) {
+            resolvedUiLocale = matchedUiLocale;
+            break;
+          }
+        }
         document.documentElement.lang = resolvedUiLocale;
         document.documentElement.dataset.uiLocale = resolvedUiLocale;
       } catch (e) {}

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 import {
     DEFAULT_UI_LOCALE,
     UI_LOCALE_STORAGE_KEY,
-    normalizeUiLocale,
+    resolveAcceptLanguageUiLocale,
+    resolveUiLocale,
     type UiLocale,
 } from "@/lib/i18n/locales";
 import {
@@ -28,7 +29,11 @@ export function getSiteBaseUrl(): string {
 export async function getRequestSeoLocale(): Promise<UiLocale> {
     try {
         const cookieStore = await cookies();
-        return normalizeUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value);
+        const cookieLocale = resolveUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value);
+        if (cookieLocale) return cookieLocale;
+
+        const requestHeaders = await headers();
+        return resolveAcceptLanguageUiLocale(requestHeaders.get("accept-language"), DEFAULT_UI_LOCALE);
     } catch {
         return DEFAULT_UI_LOCALE;
     }

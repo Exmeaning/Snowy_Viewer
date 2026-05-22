@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTheme, type ServerSourceType, type AssetSourceType, CHAR_COLORS } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
-import { getCharacterName, SUPPORTED_UI_LOCALES, UI_LOCALE_LABELS } from "@/lib/i18n";
+import { getCharacterName, SUPPORTED_UI_LOCALES, UI_LOCALE_LABELS, UI_LOCALE_STORAGE_KEY, detectBrowserUiLocale, type UiLocale } from "@/lib/i18n";
 import { MOE_LOGO_URL } from "@/lib/assets";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -45,6 +45,20 @@ const pingServer = async (url: string): Promise<number> => {
     return 9999; // Return high latency for failed pings
   }
 };
+
+const SETUP_STORAGE_KEYS = {
+  completed: "moesekai_setup_completed",
+  inProgress: "moesekai_setup_in_progress",
+  step: "moesekai_setup_step",
+} as const;
+
+function getLanguageGuideCopy(t: (key: string) => string, locale: UiLocale) {
+  return {
+    title: t("page.setup.languageBilingualTitle"),
+    description: t("page.setup.languageBilingualDesc"),
+    subtitle: t(`page.setup.languageOptionSubtitles.${locale}`),
+  };
+}
 
 // Hello greetings list to cycle in Step 0
 const GREETINGS = [
@@ -97,22 +111,28 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
     const handle = requestAnimationFrame(() => {
       setMounted(true);
 
-      // Read stored in-progress step if any
-      const inProgress = localStorage.getItem("moesekai_setup_in_progress");
-      const savedStep = localStorage.getItem("moesekai_setup_step");
+      const completed = localStorage.getItem(SETUP_STORAGE_KEYS.completed) === "true";
+      const inProgress = localStorage.getItem(SETUP_STORAGE_KEYS.inProgress);
+      const savedStep = localStorage.getItem(SETUP_STORAGE_KEYS.step);
+      const savedLocale = localStorage.getItem(UI_LOCALE_STORAGE_KEY);
+
+      if (!completed && !savedLocale) {
+        setLocale((currentLocale) => detectBrowserUiLocale(currentLocale));
+      }
+
       if (inProgress === "true" && savedStep) {
         setCurrentStep(Number(savedStep));
       }
     });
     return () => cancelAnimationFrame(handle);
-  }, []);
+  }, [setLocale]);
 
   // Sync step changes to localStorage in case of page reload/refresh
   const handleStepChange = (step: number) => {
     setCurrentStep(step);
     if (step > 0 && step < 6) {
-      localStorage.setItem("moesekai_setup_in_progress", "true");
-      localStorage.setItem("moesekai_setup_step", String(step));
+      localStorage.setItem(SETUP_STORAGE_KEYS.inProgress, "true");
+      localStorage.setItem(SETUP_STORAGE_KEYS.step, String(step));
     }
   };
 
@@ -153,24 +173,26 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
   if (!mounted || isExiting) return null;
 
   // Render check for completed setup
-  const isCompleted = localStorage.getItem("moesekai_setup_completed") === "true";
+  const isCompleted = localStorage.getItem(SETUP_STORAGE_KEYS.completed) === "true";
   if (isCompleted) return null;
 
-  const handleFinish = () => {
+  const completeSetup = () => {
     setIsExiting(true);
-    localStorage.setItem("moesekai_setup_completed", "true");
-    localStorage.removeItem("moesekai_setup_in_progress");
-    localStorage.removeItem("moesekai_setup_step");
+    localStorage.setItem(SETUP_STORAGE_KEYS.completed, "true");
+    localStorage.removeItem(SETUP_STORAGE_KEYS.inProgress);
+    localStorage.removeItem(SETUP_STORAGE_KEYS.step);
     onComplete?.(true);
+  };
+
+  const handleFinish = () => {
+    completeSetup();
   };
 
   const handleSkip = () => {
-    setIsExiting(true);
-    localStorage.setItem("moesekai_setup_completed", "true");
-    localStorage.removeItem("moesekai_setup_in_progress");
-    localStorage.removeItem("moesekai_setup_step");
-    onComplete?.(true);
+    completeSetup();
   };
+
+  const languageCopy = getLanguageGuideCopy(t, locale);
 
   // iOS-style container variants
   const slideVariants = {
@@ -244,7 +266,7 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
               onClick={handleSkip}
               className="text-xs font-bold tracking-wider text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors uppercase cursor-pointer"
             >
-              {t("page.setup.skip")}
+              {currentStep <= 1 ? t("page.setup.skipBilingual") : t("page.setup.skip")}
             </button>
           ) : (
             <div />
@@ -306,10 +328,13 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                   <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
                     {t("page.home.formerName")}
                   </p>
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                    {t("page.setup.welcomeBilingual")}
+                  </p>
                 </div>
 
-                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
-                  {t("page.setup.welcomeDesc")}
+                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed whitespace-pre-line">
+                  {t("page.setup.welcomeBilingualDesc")}
                 </p>
               </motion.div>
             )}
@@ -326,10 +351,10 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
               >
                 <div className="space-y-2">
                   <h2 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
-                    {t("page.setup.languageTitle")}
+                    {languageCopy.title}
                   </h2>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {t("page.setup.languageDesc")}
+                    {languageCopy.description}
                   </p>
                 </div>
 
@@ -341,6 +366,9 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                         key={l}
                         onClick={() => {
                           setLocale(l);
+                          if (l !== "zh-CN") {
+                            setUseLLMTranslation(false);
+                          }
                           handleStepChange(2);
                         }}
                         className={`w-full p-4 rounded-2xl flex items-center justify-between border text-left font-bold transition-all duration-300 ${
@@ -357,7 +385,7 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                             {UI_LOCALE_LABELS[l]}
                           </span>
                           <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
-                            {l === "zh-CN" ? "Simplified Chinese" : l === "en-US" ? "English" : "Japanese"}
+                            {getLanguageGuideCopy(t, l).subtitle}
                           </span>
                         </div>
                         {isSelected && (
@@ -759,7 +787,7 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                 boxShadow: `0 8px 24px -4px ${themeColor}40`,
               }}
             >
-              {t("page.setup.getStarted")}
+              {t("page.setup.getStartedBilingual")}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
               </svg>

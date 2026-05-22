@@ -28,16 +28,48 @@ export function isUiLocale(value: unknown): value is UiLocale {
     return typeof value === "string" && (SUPPORTED_UI_LOCALES as readonly string[]).includes(value);
 }
 
-export function normalizeUiLocale(value: unknown): UiLocale {
+export function resolveUiLocale(value: unknown): UiLocale | null {
     if (isUiLocale(value)) return value;
-    if (typeof value !== "string") return DEFAULT_UI_LOCALE;
+    if (typeof value !== "string") return null;
 
-    const normalized = value.toLowerCase();
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return null;
     if (normalized.startsWith("en")) return "en-US";
     if (normalized.startsWith("ja")) return "ja-JP";
     if (normalized.startsWith("zh")) return "zh-CN";
 
-    return DEFAULT_UI_LOCALE;
+    return null;
+}
+
+export function normalizeUiLocale(value: unknown): UiLocale {
+    return resolveUiLocale(value) ?? DEFAULT_UI_LOCALE;
+}
+
+export function resolvePreferredUiLocale(values: readonly unknown[], fallback: UiLocale = DEFAULT_UI_LOCALE): UiLocale {
+    for (const value of values) {
+        const locale = resolveUiLocale(value);
+        if (locale) return locale;
+    }
+
+    return fallback;
+}
+
+export function resolveAcceptLanguageUiLocale(header: string | null | undefined, fallback: UiLocale = DEFAULT_UI_LOCALE): UiLocale {
+    if (!header) return fallback;
+
+    const languages = header
+        .split(",")
+        .map((part) => part.trim().split(";")[0])
+        .filter(Boolean);
+
+    return resolvePreferredUiLocale(languages, fallback);
+}
+
+export function detectBrowserUiLocale(fallback: UiLocale = DEFAULT_UI_LOCALE): UiLocale {
+    if (typeof navigator === "undefined") return fallback;
+
+    const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
+    return resolvePreferredUiLocale(languages, fallback);
 }
 
 export function applyUiLocaleToDocument(locale: UiLocale) {
