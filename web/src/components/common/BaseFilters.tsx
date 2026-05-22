@@ -18,7 +18,7 @@ export interface BaseFiltersProps {
     /** Count display format: "filtered / total" or just "total" */
     filteredCount: number;
     totalCount: number;
-    /** Unit name for count display (e.g., "张", "首", "个") */
+    /** Unit name for count display (e.g., cards, songs, items) */
     countUnit?: string;
 
     // Search

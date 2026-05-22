@@ -15,7 +15,7 @@ import {
     EVENT_STATUS_DISPLAY,
     EventType
 } from "@/types/events";
-import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, getEventUnitDisplayName, buildEventBannerCharMap } from "@/lib/eventUnit";
+import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, getEventUnitFilterId, buildEventBannerCharMap } from "@/lib/eventUnit";
 import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getEventStoryBannerUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
 import { CHARACTER_NAMES, UNIT_NAME_MAP } from "@/types/types";
@@ -561,8 +561,8 @@ export default function EventDetailPage() {
                                 <InfoRow
                                     label={t("page.events.unitLabel")}
                                     value={(() => {
-                                        const filterId = eventUnitMap.get(event.id);
-                                        return filterId ? (t(`common.units.${filterId}`) || getEventUnitDisplayName(event.id, eventUnitMap)) : t("page.events.none");
+                                        const filterId = getEventUnitFilterId(event.id, eventUnitMap);
+                                        return filterId ? t(`common.units.${filterId}`) : t("page.events.none");
                                     })()}
                                 />
                                 <InfoRow

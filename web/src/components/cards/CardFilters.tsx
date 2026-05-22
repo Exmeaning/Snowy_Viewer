@@ -3,7 +3,7 @@ import React from "react";
 import Image from "next/image";
 import BaseFilters, { FilterSection, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
-import { CardRarityType, CardAttribute, ATTR_NAMES, SupportUnit, SUPPORT_UNIT_NAMES, UNIT_ICON_FILES, UNIT_FIELD_TO_ID } from "@/types/types";
+import { CardRarityType, CardAttribute, ATTR_NAMES, SupportUnit, SUPPORT_UNIT_LABEL_KEYS, UNIT_ICON_FILES, UNIT_FIELD_TO_ID } from "@/types/types";
 import { useCardSupplyTypeMapping } from "@/hooks/useCardSupplyType";
 import { useSkillMapping } from "@/hooks/useSkillMapping";
 import { useI18n } from "@/contexts/I18nContext";
@@ -111,7 +111,7 @@ export default function CardFilters({
     const { t } = useI18n();
     const supplyTypes = useCardSupplyTypeMapping();
     const skillTypes = useSkillMapping();
-    const getSupportUnitLabel = (unit: SupportUnit) => unit === "none" ? t("common.supportUnits.none") : SUPPORT_UNIT_NAMES[unit];
+    const getSupportUnitLabel = (unit: SupportUnit) => t(SUPPORT_UNIT_LABEL_KEYS[unit]);
 
     const SORT_OPTIONS = [
         { id: "id", label: t("common.filter.sortById") },

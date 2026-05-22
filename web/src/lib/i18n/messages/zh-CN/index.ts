@@ -70,6 +70,25 @@ export const zhCNMessages = {
             jp: "日服 (JP)",
             tw: "繁中服 (TW)",
         },
+        relayServers: {
+            tokyo1: {
+                name: "东京1区",
+            },
+            tokyo2: {
+                name: "东京2区",
+            },
+            seoul1: {
+                name: "首尔1区",
+            },
+            singapore1: {
+                name: "新加坡1区",
+            },
+            regions: {
+                japan: "🇯🇵 日本",
+                korea: "🇰🇷 韩国",
+                singapore: "🇸🇬 新加坡",
+            },
+        },
         account: {
             selectAccount: "选择账号",
             savedAccounts: "已保存的账号",
@@ -258,6 +277,13 @@ export const zhCNMessages = {
         },
         supportUnits: {
             none: "原版",
+        },
+        gachaTypes: {
+            ceil: "天井扭蛋",
+            normal: "普通扭蛋",
+            limited: "限定扭蛋",
+            birthday: "生日扭蛋",
+            colorful_festival: "Colorful Festival",
         },
         units: {
             ln: "Leo/need",
@@ -1927,6 +1953,7 @@ export const zhCNMessages = {
             fixedCharacter: "固定角色",
             fixedCharacterDescription: "指定必须添加一个角色到编组",
             wl3Group: "模拟分组",
+            wl3GroupTitle: "第{group}组",
             liveType: "Live类型",
             supportCharacter: "支援角色",
             mysekaiNoMusicHint: "烤森模式不需要选歌，根据综合力和活动加成计算最优烤森PT",

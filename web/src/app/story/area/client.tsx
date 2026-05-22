@@ -125,6 +125,7 @@ export default function StoryAreaListClient() {
                 <StoryPageHeader storyKey="area" />
 
                 <input
+                    data-shortcut-search="true"
                     type="text"
                     placeholder={t("page.story.area.searchPlaceholder")}
                     value={searchQuery}

@@ -69,6 +69,7 @@ export default function StoryUnitReaderClient() {
     const { scenarioData, isLoading, error, missingPaths } = useStoryAsset({
         type: "unit",
         params: assetbundleName ? { assetbundleName, scenarioId: episodeId } : null,
+        fallbackErrorMessage: t("common.state.loadingFailed"),
     });
 
     const logoUrl = profile ? getUnitOutlineLogoUrl(profile.unit, serverSource) : null;

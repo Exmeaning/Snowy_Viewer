@@ -180,7 +180,6 @@ function MusicContent() {
 
     // Fetch data
     useEffect(() => {
-        // document.title = "Snowy SekaiViewer 音乐"; // Moved to metadata
         async function fetchData() {
             try {
                 setIsLoading(true);

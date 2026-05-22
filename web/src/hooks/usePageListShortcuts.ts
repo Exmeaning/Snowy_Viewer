@@ -84,21 +84,9 @@ function getListItems(root: HTMLElement): HTMLElement[] {
 }
 
 function getSearchInput(root: HTMLElement): HTMLInputElement | null {
-    const explicit = Array.from(
+    return Array.from(
         root.querySelectorAll<HTMLInputElement>("input[data-shortcut-search='true']")
-    ).find((input) => isElementEligible(input) && !input.readOnly);
-
-    if (explicit) return explicit;
-
-    const fallback = Array.from(
-        root.querySelectorAll<HTMLInputElement>("input[type='search'], input[type='text']")
-    ).find((input) => {
-        if (!isElementEligible(input) || input.readOnly) return false;
-        const descriptor = `${input.placeholder ?? ""} ${input.getAttribute("aria-label") ?? ""}`;
-        return /search|搜索/i.test(descriptor);
-    });
-
-    return fallback ?? null;
+    ).find((input) => isElementEligible(input) && !input.readOnly) ?? null;
 }
 
 function getFilterTarget(root: HTMLElement): HTMLElement | null {
@@ -113,20 +101,9 @@ function getFilterTarget(root: HTMLElement): HTMLElement | null {
 }
 
 function getLoadMoreButton(root: HTMLElement): HTMLButtonElement | null {
-    const explicit = Array.from(
+    return Array.from(
         root.querySelectorAll<HTMLButtonElement>("button[data-shortcut-load-more='true']")
-    ).find((button) => isElementEligible(button));
-
-    if (explicit) return explicit;
-
-    const fallback = Array.from(root.querySelectorAll<HTMLButtonElement>("button"))
-        .find((button) => {
-            if (!isElementEligible(button)) return false;
-            const text = button.textContent ?? "";
-            return /加载更多|load\s*more/i.test(text);
-        });
-
-    return fallback ?? null;
+    ).find((button) => isElementEligible(button)) ?? null;
 }
 
 function getCurrentFocusedIndex(items: HTMLElement[], focusedItem: HTMLElement | null): number {

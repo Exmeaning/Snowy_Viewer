@@ -17,7 +17,7 @@ import {
     isTrainableCard,
     getRarityNumber,
     CardAttribute,
-    SUPPORT_UNIT_NAMES,
+    SUPPORT_UNIT_LABEL_KEYS,
 } from "@/types/types";
 import { getCardFullUrl, getCardThumbnailUrl, getEventBannerUrl, getGachaLogoUrl, getCardGachaVoiceUrl, getCostumeThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
 import { useRef } from "react";
@@ -183,7 +183,7 @@ export default function CardDetailPage() {
         if (cardId) {
             fetchCard();
         }
-    }, [cardId]);
+    }, [cardId, t]);
 
     // Computed values
     const trainable = card ? isTrainableCard(card) : false;
@@ -683,7 +683,7 @@ export default function CardDetailPage() {
                                                     <div className="w-5 h-5 relative">
                                                         <Image
                                                             src={`/data/icon/${UNIT_ICON_FILES[UNIT_FIELD_TO_ID[card.supportUnit]]}`}
-                                                            alt={SUPPORT_UNIT_NAMES[card.supportUnit]}
+                                                            alt={t(SUPPORT_UNIT_LABEL_KEYS[card.supportUnit])}
                                                             fill
                                                             className="object-contain"
                                                             unoptimized
@@ -691,7 +691,7 @@ export default function CardDetailPage() {
                                                     </div>
                                                 )}
                                                 <span className={card.supportUnit === "none" ? "text-slate-400" : ""}>
-                                                    {SUPPORT_UNIT_NAMES[card.supportUnit]}
+                                                    {t(SUPPORT_UNIT_LABEL_KEYS[card.supportUnit])}
                                                 </span>
                                             </div>
                                         }

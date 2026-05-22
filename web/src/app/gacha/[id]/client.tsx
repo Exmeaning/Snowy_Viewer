@@ -6,7 +6,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
-import { ICardInfo, IGachaInfo, IGachaDetail, GACHA_TYPE_LABELS, isTrainableCard, IGachaBehavior, IGachaCardRarityRate, isWishGacha } from "@/types/types";
+import { ICardInfo, IGachaInfo, IGachaDetail, GACHA_TYPE_LABEL_KEYS, isTrainableCard, IGachaBehavior, IGachaCardRarityRate, isWishGacha } from "@/types/types";
 import { getGachaLogoUrl, getGachaScreenUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -269,9 +269,9 @@ export default function GachaDetailClient() {
     const getGachaStatus = () => {
         if (!gacha) return { label: "Unknown", color: "#888" };
         const now = Date.now();
-        if (gacha.startAt > now) return { label: t("gacha.states.notStarted"), color: "#f59e0b" };
-        if (gacha.endAt >= now) return { label: t("gacha.states.ongoing"), color: "#22c55e" };
-        return { label: t("gacha.states.ended"), color: "#94a3b8" };
+        if (gacha.startAt > now) return { label: t("page.gacha.states.notStarted"), color: "#f59e0b" };
+        if (gacha.endAt >= now) return { label: t("page.gacha.states.ongoing"), color: "#22c55e" };
+        return { label: t("page.gacha.states.ended"), color: "#94a3b8" };
     };
 
     // Initialize gacha rates when gacha data is loaded
@@ -554,7 +554,7 @@ export default function GachaDetailClient() {
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            {t("gacha.backToList")}
+                            {t("page.gacha.backToList")}
                         </Link>
                     </div>
                 </div>
@@ -565,7 +565,9 @@ export default function GachaDetailClient() {
     const logoUrl = getGachaLogoUrl(gacha.assetbundleName, assetSource);
     const bgUrl = getGachaScreenUrl(gacha.assetbundleName, gacha.id, assetSource);
     const status = getGachaStatus();
-    const activeImageLabel = t(`gacha.imageTabs.${activeImageTab}`);
+    const gachaTypeLabelKey = GACHA_TYPE_LABEL_KEYS[gacha.gachaType];
+    const gachaTypeLabel = gachaTypeLabelKey ? t(gachaTypeLabelKey) : gacha.gachaType;
+    const activeImageLabel = t(`page.gacha.imageTabs.${activeImageTab}`);
     const activeImageUrl = activeImageTab === "logo" ? logoUrl : bgUrl;
 
     return (
@@ -573,9 +575,9 @@ export default function GachaDetailClient() {
             <ImagePreviewModal
                 isOpen={imageViewerOpen}
                 onClose={() => setImageViewerOpen(false)}
-                title={t("gacha.imageDetailTitle", { name: gacha.name, tab: activeImageLabel })}
+                title={t("page.gacha.imageDetailTitle", { name: gacha.name, tab: activeImageLabel })}
                 imageUrl={activeImageUrl}
-                alt={t("gacha.imageDetailAlt", { name: gacha.name, tab: activeImageLabel })}
+                alt={t("page.gacha.imageDetailAlt", { name: gacha.name, tab: activeImageLabel })}
                 fileName={`gacha_${gacha.id}_${activeImageTab}.png`}
             />
 
@@ -587,7 +589,7 @@ export default function GachaDetailClient() {
                             ID: {gacha.id}
                         </span>
                         <span className="px-3 py-1 text-xs font-bold rounded-full text-white w-fit bg-purple-500">
-                            {GACHA_TYPE_LABELS[gacha.gachaType] || gacha.gachaType}
+                            {gachaTypeLabel}
                         </span>
                         <span
                             className="px-3 py-1 text-xs font-bold rounded-full text-white w-fit"
@@ -633,7 +635,7 @@ export default function GachaDetailClient() {
                                 {/* Background */}
                                 <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
                                     <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-                                        <span className="text-sm font-bold text-slate-600">{t("gacha.imageTabs.bg")}</span>
+                                        <span className="text-sm font-bold text-slate-600">{t("page.gacha.imageTabs.bg")}</span>
                                     </div>
                                     <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100">
                                         <Image
@@ -653,7 +655,7 @@ export default function GachaDetailClient() {
                                 <div className="flex border-b border-slate-200">
                                     {[
                                         { key: "logo", label: "Logo" },
-                                        { key: "bg", label: t("gacha.imageTabs.bg") },
+                                        { key: "bg", label: t("page.gacha.imageTabs.bg") },
                                     ].map((tab) => (
                                         <button
                                             key={tab.key}
@@ -695,7 +697,7 @@ export default function GachaDetailClient() {
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                         </svg>
-                                        {t("gacha.clickExpand")}
+                                        {t("page.gacha.clickExpand")}
                                     </div>
                                 </div>
                             </div>
@@ -711,13 +713,13 @@ export default function GachaDetailClient() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    {t("gacha.basicInfo")}
+                                    {t("page.gacha.basicInfo")}
                                 </h2>
                             </div>
                             <div className="divide-y divide-slate-100">
-                                <InfoRow label={t("gacha.idLabel")} value={`#${gacha.id}`} />
+                                <InfoRow label={t("page.gacha.idLabel")} value={`#${gacha.id}`} />
                                 <InfoRow
-                                    label={t("gacha.nameLabel")}
+                                    label={t("page.gacha.nameLabel")}
                                     value={
                                         <TranslatedText
                                             original={gacha.name}
@@ -728,11 +730,11 @@ export default function GachaDetailClient() {
                                         />
                                     }
                                 />
-                                <InfoRow label={t("gacha.typeLabel")} value={GACHA_TYPE_LABELS[gacha.gachaType] || gacha.gachaType} />
-                                <InfoRow label={t("gacha.startTimeLabel")} value={formatTimestamp(gacha.startAt)} />
-                                <InfoRow label={t("gacha.endTimeLabel")} value={formatTimestamp(gacha.endAt)} />
+                                <InfoRow label={t("page.gacha.typeLabel")} value={gachaTypeLabel} />
+                                <InfoRow label={t("page.gacha.startTimeLabel")} value={formatTimestamp(gacha.startAt)} />
+                                <InfoRow label={t("page.gacha.endTimeLabel")} value={formatTimestamp(gacha.endAt)} />
                                 <InfoRow
-                                    label={t("gacha.assetNameLabel")}
+                                    label={t("page.gacha.assetNameLabel")}
                                     value={<span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{gacha.assetbundleName}</span>}
                                 />
                             </div>
@@ -746,14 +748,14 @@ export default function GachaDetailClient() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                         </svg>
-                                        {t("gacha.ratesTitle")}
+                                        {t("page.gacha.ratesTitle")}
                                     </h2>
                                 </div>
                                 <div className="divide-y divide-slate-100">
                                     {gacha.gachaCardRarityRates.map(rate => {
                                         const rarityLabel = rate.cardRarityType === "rarity_birthday"
-                                            ? t("gacha.birthdayLabel")
-                                            : t("gacha.starLabel", { star: rate.cardRarityType.replace("rarity_", "") });
+                                            ? t("page.gacha.birthdayLabel")
+                                            : t("page.gacha.starLabel", { star: rate.cardRarityType.replace("rarity_", "") });
                                         return (
                                             <div key={rate.id} className="px-5 py-3 flex items-center justify-between text-sm">
                                                 <span className="text-slate-500 font-medium">{rarityLabel}</span>
@@ -775,16 +777,16 @@ export default function GachaDetailClient() {
                                                 <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                                 </svg>
-                                                {t("gacha.wishSelectTitle")}
+                                                {t("page.gacha.wishSelectTitle")}
                                             </h2>
                                         </div>
                                         <div className="p-4 space-y-4">
                                             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
                                                 <div className="flex items-center justify-between gap-3 mb-3">
                                                     <div>
-                                                        <h3 className="text-sm font-bold text-slate-800">{t("gacha.wishSelectSubTitle")}</h3>
+                                                        <h3 className="text-sm font-bold text-slate-800">{t("page.gacha.wishSelectSubTitle")}</h3>
                                                         <p className="text-xs text-slate-500 mt-1">
-                                                            {t("gacha.wishSelectDesc", { limit: dreamPickSelectionLimit })}
+                                                            {t("page.gacha.wishSelectDesc", { limit: dreamPickSelectionLimit })}
                                                         </p>
                                                     </div>
                                                     <span className="shrink-0 px-2.5 py-1 rounded-full bg-miku/10 text-miku text-xs font-bold">
@@ -818,7 +820,7 @@ export default function GachaDetailClient() {
                                                             >
                                                                 <SekaiCardThumbnail card={card} trained={showTrained} className="w-full" />
                                                                 <div className={`text-center text-[10px] font-black py-1 leading-none ${isSelected ? 'bg-miku text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                                                    {isSelected ? t("gacha.selected") : t("gacha.clickSelect")}
+                                                                    {isSelected ? t("page.gacha.selected") : t("page.gacha.clickSelect")}
                                                                 </div>
                                                             </button>
                                                         );
@@ -865,8 +867,8 @@ export default function GachaDetailClient() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                             </svg>
                                             {isWishPickGacha 
-                                                ? t("gacha.newPuCardsTitle", { count: dreamPickNewPuCards.length }) 
-                                                : t("gacha.pickupCardsTitle", { count: pickupCards.length })
+                                                ? t("page.gacha.newPuCardsTitle", { count: dreamPickNewPuCards.length }) 
+                                                : t("page.gacha.pickupCardsTitle", { count: pickupCards.length })
                                             }
                                         </h2>
                                     </div>
@@ -908,7 +910,7 @@ export default function GachaDetailClient() {
                         {/* No pickup cards message */}
                         {pickupCards.length === 0 && (
                             <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden p-6 text-center text-slate-400">
-                                <p>{t("gacha.noPickupCards")}</p>
+                                <p>{t("page.gacha.noPickupCards")}</p>
                             </div>
                         )}
 
@@ -919,7 +921,7 @@ export default function GachaDetailClient() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    {t("gacha.simulatorTitle")}
+                                    {t("page.gacha.simulatorTitle")}
                                 </h2>
                             </div>
                             <div className="p-5 flex flex-col gap-6">
@@ -936,8 +938,8 @@ export default function GachaDetailClient() {
 
                                             return uniqueBehaviors.map((behavior, idx) => {
                                                 const label = behavior.spinCount === 1 
-                                                    ? t("gacha.spinSingle") 
-                                                    : t("gacha.spinMulti", { count: behavior.spinCount });
+                                                    ? t("page.gacha.spinSingle") 
+                                                    : t("page.gacha.spinMulti", { count: behavior.spinCount });
                                                 return (
                                                     <button
                                                         key={idx}
@@ -952,7 +954,7 @@ export default function GachaDetailClient() {
 
                                         {/* Custom Spin Count Input */}
                                         <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1 pl-3 w-full sm:w-auto mt-2 sm:mt-0">
-                                            <span className="text-xs font-bold text-slate-500 whitespace-nowrap">{t("gacha.customSpinCountLabel")}</span>
+                                            <span className="text-xs font-bold text-slate-500 whitespace-nowrap">{t("page.gacha.customSpinCountLabel")}</span>
                                             <input
                                                 type="number"
                                                 min="1"
@@ -992,12 +994,12 @@ export default function GachaDetailClient() {
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between w-full px-1">
-                                        <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">{t("gacha.totalSpinCount")} <span className="text-lg text-slate-800 ml-1">{statistic.spinCount}</span></div>
+                                        <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">{t("page.gacha.totalSpinCount")} <span className="text-lg text-slate-800 ml-1">{statistic.spinCount}</span></div>
                                         <button
                                             onClick={resetGacha}
                                             className="text-slate-400 hover:text-slate-600 text-sm hover:underline transition-colors"
                                         >
-                                            {t("gacha.resetData")}
+                                            {t("page.gacha.resetData")}
                                         </button>
                                     </div>
                                 </div>
@@ -1010,17 +1012,17 @@ export default function GachaDetailClient() {
                                     <table className="w-full text-sm">
                                         <thead>
                                             <tr className="bg-slate-50 border-b border-slate-100">
-                                                <th className="text-left py-2 px-3 font-bold text-slate-600">{t("gacha.thRarity")}</th>
-                                                <th className="text-center py-2 px-3 font-bold text-slate-600">{t("gacha.thCount")}</th>
-                                                <th className="text-center py-2 px-3 font-bold text-slate-600">{t("gacha.thProbability")}</th>
+                                                <th className="text-left py-2 px-3 font-bold text-slate-600">{t("page.gacha.thRarity")}</th>
+                                                <th className="text-center py-2 px-3 font-bold text-slate-600">{t("page.gacha.thCount")}</th>
+                                                <th className="text-center py-2 px-3 font-bold text-slate-600">{t("page.gacha.thProbability")}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {/* UP Rate Row */}
                                             <tr className="border-b border-slate-100 last:border-0 hover:bg-pink-50/50 transition-colors bg-pink-50/30">
                                                 <td className="py-2 px-3 font-bold text-pink-500 flex items-center gap-1">
-                                                    <span className="bg-pink-500 text-white text-[10px] px-1 rounded">{t("gacha.upLabel")}</span>
-                                                    {isWishPickGacha ? t("gacha.dreamPickPuLabel") : t("gacha.memberLabel")}
+                                                    <span className="bg-pink-500 text-white text-[10px] px-1 rounded">{t("page.gacha.upLabel")}</span>
+                                                    {isWishPickGacha ? t("page.gacha.dreamPickPuLabel") : t("page.gacha.memberLabel")}
                                                 </td>
                                                 <td className="text-center py-2 px-3 text-slate-600">{statistic.pickupCount || 0}</td>
                                                 <td className="text-center py-2 px-3 text-pink-500 font-bold">
@@ -1029,12 +1031,12 @@ export default function GachaDetailClient() {
                                             </tr>
                                             {gachaRarityRates.map((rate, idx) => {
                                                 const rarityLabel = rate.cardRarityType === "rarity_birthday"
-                                                    ? t("gacha.birthdayLabel")
+                                                    ? t("page.gacha.birthdayLabel")
                                                     : rate.cardRarityType === "rarity_4" && isWishPickGacha
                                                         ? rate.lotteryType === "categorized_wish"
-                                                            ? t("gacha.rarityWishMode", { star: cardRarityTypeToRarity[rate.cardRarityType] })
-                                                            : t("gacha.rarityNormalMode", { star: cardRarityTypeToRarity[rate.cardRarityType] })
-                                                        : t("gacha.starLabel", { star: cardRarityTypeToRarity[rate.cardRarityType] });
+                                                            ? t("page.gacha.rarityWishMode", { star: cardRarityTypeToRarity[rate.cardRarityType] })
+                                                            : t("page.gacha.rarityNormalMode", { star: cardRarityTypeToRarity[rate.cardRarityType] })
+                                                        : t("page.gacha.starLabel", { star: cardRarityTypeToRarity[rate.cardRarityType] });
                                                 const count = statistic.counts[idx] || 0;
                                                 const percentage = statistic.spinCount > 0
                                                     ? ((count / statistic.spinCount) * 100).toFixed(2)
@@ -1061,7 +1063,7 @@ export default function GachaDetailClient() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                         </svg>
-                                        {t("gacha.recentResultsTitle")}
+                                        {t("page.gacha.recentResultsTitle")}
                                     </h2>
                                 </div>
                                 <div className="p-4">
@@ -1091,7 +1093,7 @@ export default function GachaDetailClient() {
                                                         <SekaiCardThumbnail card={card} trained={showTrained} className="w-full" />
                                                         {(isPickup || is4Star) && (
                                                             <div className={`text-center text-white text-[8px] sm:text-[9px] font-black py-0.5 leading-none ${isPickup ? 'bg-gradient-to-r from-pink-500 to-pink-400' : 'bg-gradient-to-r from-yellow-400 to-yellow-300'}`}>
-                                                                {isPickup ? t("gacha.upLabel") : t("gacha.star4Label")}
+                                                                {isPickup ? t("page.gacha.upLabel") : t("page.gacha.star4Label")}
                                                             </div>
                                                         )}
                                                     </div>
@@ -1111,7 +1113,7 @@ export default function GachaDetailClient() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                                         </svg>
-                                        {t("gacha.history4StarsTitle")}
+                                        {t("page.gacha.history4StarsTitle")}
                                     </h2>
                                 </div>
                                 <div className="p-4">
@@ -1146,10 +1148,10 @@ export default function GachaDetailClient() {
                                                         }`}>
                                                         <SekaiCardThumbnail card={card} trained={showTrained} className="w-full" />
                                                         <div className={`flex items-center justify-between text-white text-[8px] sm:text-[9px] font-black py-0.5 px-1 leading-none ${isPickup ? 'bg-gradient-to-r from-pink-500 to-pink-400' : 'bg-gradient-to-r from-yellow-400 to-yellow-300'}`}>
-                                                            <span>{isPickup ? t("gacha.upLabel") : t("gacha.star4Label")}</span>
+                                                            <span>{isPickup ? t("page.gacha.upLabel") : t("page.gacha.star4Label")}</span>
                                                             {pityCount > 0 && (
                                                                 <span className={`px-1 py-0.5 rounded text-[8px] sm:text-[9px] font-bold ${pityColorClass} text-white`}>
-                                                                    {t("gacha.pityPull", { count: pityCount })}
+                                                                    {t("page.gacha.pityPull", { count: pityCount })}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -1175,7 +1177,7 @@ export default function GachaDetailClient() {
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        {t("gacha.backToList")}
+                        {t("page.gacha.backToList")}
                     </Link>
                 </div>
             </div>

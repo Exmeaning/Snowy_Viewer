@@ -159,7 +159,6 @@ function CardsContent() {
 
     // Fetch cards data
     useEffect(() => {
-        // document.title = "Snowy SekaiViewer - 卡牌图鉴"; // Moved to metadata
         async function fetchCards() {
             try {
                 setIsLoading(true);

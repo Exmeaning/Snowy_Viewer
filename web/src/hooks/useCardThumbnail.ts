@@ -33,7 +33,7 @@ export function useCardThumbnail(
                     const url = getCardThumbnailUrl(
                         card.characterId,
                         card.assetbundleName,
-                        false, // 默认使用未特训状态
+                        false, // Default to the untrained card thumbnail
                         assetSource
                     );
                     setThumbnailUrl(url);

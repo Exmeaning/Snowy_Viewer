@@ -773,10 +773,10 @@ export default function Sidebar({
                         {/* User Info */}
                         <div className="flex-grow min-w-0">
                             <div className="text-sm font-medium text-slate-700 truncate group-hover:text-miku transition-colors">
-                                {activeAccount?.userGamedata?.name || activeAccount?.nickname || t("layout.sidebar.notLoggedIn")}
+                                {activeAccount?.userGamedata?.name || activeAccount?.nickname || t("settings.sidebar.notLoggedIn")}
                             </div>
                             <div className="text-xs text-slate-400">
-                                {activeAccount ? t("layout.sidebar.manageAccount") : t("layout.sidebar.bindAccount")}
+                                {activeAccount ? t("settings.sidebar.manageAccount") : t("settings.sidebar.bindAccount")}
                             </div>
                         </div>
 

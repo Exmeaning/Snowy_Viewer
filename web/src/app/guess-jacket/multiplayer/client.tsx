@@ -187,6 +187,14 @@ function MultiplayerContent() {
     const searchParams = useSearchParams();
     const { themeColor } = useTheme();
     const { t } = useI18n();
+    const getRelayServerName = useCallback((serverId: string) => {
+        const server = SERVERS.find(s => s.id === serverId);
+        return server ? t(server.nameKey) : serverId;
+    }, [t]);
+    const getRelayServerRegion = useCallback((serverId: string) => {
+        const server = SERVERS.find(s => s.id === serverId);
+        return server ? t(server.regionKey) : "";
+    }, [t]);
 
     // Phase & identity
     const [phase, setPhase] = useState<Phase>("lobby");
@@ -1589,10 +1597,10 @@ function MultiplayerContent() {
                                     >
                                         <div className="mp-server-info">
                                             <div className="mp-server-name">
-                                                {SERVERS.find(s => s.id === selectedServerId)?.name || selectedServerId}
+                                                {getRelayServerName(selectedServerId)}
                                                 <span className="bg-miku/10 text-miku text-[10px] px-1.5 py-0.5 rounded ml-2">{t("page.guessJacket.multiplayer.currentSelected")}</span>
                                             </div>
-                                            <div className="mp-server-region">{SERVERS.find(s => s.id === selectedServerId)?.region}</div>
+                                            <div className="mp-server-region">{getRelayServerRegion(selectedServerId)}</div>
                                         </div>
                                         <div className={`mp-server-latency ${(serverLatencies.get(selectedServerId) || 999) < 100 ? "signal-good" :
                                             (serverLatencies.get(selectedServerId) || 999) < 200 ? "signal-ok" : "signal-bad"
@@ -1631,8 +1639,8 @@ function MultiplayerContent() {
                                                     }}
                                                 >
                                                     <div className="mp-server-info">
-                                                        <div className="mp-server-name">{server.name}</div>
-                                                        <div className="mp-server-region">{server.region}</div>
+                                                        <div className="mp-server-name">{t(server.nameKey)}</div>
+                                                        <div className="mp-server-region">{t(server.regionKey)}</div>
                                                     </div>
                                                     <div className={`mp-server-latency ${signalClass}`}>
                                                         <span className="mp-server-signal">{signalIcon}</span>
@@ -1906,7 +1914,7 @@ function MultiplayerContent() {
                             onClick={() => {
                                 const difficulty = getDifficultyLabel(gameSettings.difficulty);
                                 const server = getServerShortLabel(gameSettings.server);
-                                const serverName = SERVERS.find(s => s.id === currentServerId)?.name || currentServerId;
+                                const serverName = getRelayServerName(currentServerId);
                                 const shareUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}&server=${currentServerId}`;
                                 const shareText = t("page.guessJacket.multiplayer.shareText", { server, difficulty, roomCode, serverName, shareUrl });
                                 navigator.clipboard.writeText(shareText);
@@ -1916,7 +1924,7 @@ function MultiplayerContent() {
                             {t("page.guessJacket.multiplayer.shareLink")}
                         </button>
                         <div style={{ textAlign: "center", marginTop: "0.25rem", fontSize: "0.7rem", color: "#94a3b8" }}>
-                            🌐 {SERVERS.find(s => s.id === currentServerId)?.name || currentServerId}
+                            🌐 {getRelayServerName(currentServerId)}
                         </div>
                     </div>
 

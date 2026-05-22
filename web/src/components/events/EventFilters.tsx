@@ -9,9 +9,14 @@ import { useI18n } from "@/contexts/I18nContext";
 /** Filter IDs for event unit (group) filter */
 export type EventUnitFilterId = "ln" | "mmj" | "vbs" | "ws" | "25ji" | "vs" | "mixed";
 
-export const EVENT_UNIT_FILTERS: { id: EventUnitFilterId; name: string; icon?: string }[] = [
-    ...UNIT_DATA.map(u => ({ id: u.id as EventUnitFilterId, name: u.name, icon: UNIT_ICON_FILES[u.id] })),
-    { id: "mixed", name: "混合" },
+export const EVENT_UNIT_FILTERS: { id: EventUnitFilterId; labelKey: string; fallbackName: string; icon?: string }[] = [
+    ...UNIT_DATA.map(u => ({
+        id: u.id as EventUnitFilterId,
+        labelKey: `common.units.${u.id}`,
+        fallbackName: u.name,
+        icon: UNIT_ICON_FILES[u.id],
+    })),
+    { id: "mixed", labelKey: "common.units.mixed", fallbackName: "Mixed" },
 ];
 
 /** Map raw event_type from actionSets to filter ID */
@@ -96,7 +101,10 @@ export default function EventFilters({
         id: opt.id,
         label: t(opt.labelKey),
     }));
-    const getEventUnitName = (unit: { id: EventUnitFilterId; name: string }) => unit.id === "mixed" ? t("common.badge.mixed") : unit.name;
+    const getEventUnitName = (unit: { labelKey: string; fallbackName: string }) => {
+        const label = t(unit.labelKey);
+        return label === unit.labelKey ? unit.fallbackName : label;
+    };
 
     const toggleType = (type: EventType) => {
         if (selectedTypes.includes(type)) {

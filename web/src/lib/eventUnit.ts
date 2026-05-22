@@ -1,4 +1,4 @@
-import { EVENT_TYPE_TO_FILTER_ID, EVENT_UNIT_FILTERS, type EventUnitFilterId } from "@/components/events/EventFilters";
+import { EVENT_TYPE_TO_FILTER_ID, type EventUnitFilterId } from "@/components/events/EventFilters";
 import type { ICharaUnitInfo } from "@/types/types";
 
 export interface IActionSet {
@@ -50,14 +50,11 @@ export function rawUnitToFilterId(raw: string): EventUnitFilterId {
 }
 
 /**
- * Get the display name for an event's unit given the eventUnitMap (filterId map).
- * Returns "无" if the event has no entry in the map.
+ * Get the stable unit filter ID for an event from the eventUnitMap.
+ * UI layers should translate the returned ID via common.units.*.
  */
-export function getEventUnitDisplayName(eventId: number, eventUnitMap: Map<number, EventUnitFilterId>): string {
-    const filterId = eventUnitMap.get(eventId);
-    if (!filterId) return "无";
-    const unitInfo = EVENT_UNIT_FILTERS.find(u => u.id === filterId);
-    return unitInfo?.name ?? "其他";
+export function getEventUnitFilterId(eventId: number, eventUnitMap: Map<number, EventUnitFilterId>): EventUnitFilterId | null {
+    return eventUnitMap.get(eventId) ?? null;
 }
 
 /**
