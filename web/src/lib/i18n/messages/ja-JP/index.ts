@@ -1820,6 +1820,20 @@ export const jaJPMessages = {
         cachedAndStartedHint: 'Cached and started downloading',
         directHint: 'Switched to direct-link download'
       },
+      share: {
+        currentTitle: 'Share current track',
+        button: '共有',
+        nativeText: 'Listen to this soundtrack: {title}',
+        sharedHint: 'Opened the system share sheet',
+        copiedHint: 'Share link copied',
+        failedHint: 'Could not share the link. Please try again later.'
+      },
+      spoiler: {
+        categoryName: 'Spoiler',
+        unlistedTitle: 'Unlisted BGM: {name}',
+        durationLoadFailed: 'Failed to load extra spoiler BGM durations. Showing masterdata tracks only.'
+      },
+      durationLabel: 'Track duration',
       playbackModes: {
         sequential: 'List loop (click to switch)',
         loopOne: 'Single-track loop (click to switch)',

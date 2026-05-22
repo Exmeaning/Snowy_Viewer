@@ -1796,6 +1796,20 @@ export const zhCNMessages = {
                 cachedAndStartedHint: "已缓存并开始下载",
                 directHint: "已改用直链下载",
             },
+            share: {
+                currentTitle: "分享当前音轨",
+                button: "分享",
+                nativeText: "来听这首原声带：{title}",
+                sharedHint: "已打开系统分享",
+                copiedHint: "分享链接已复制",
+                failedHint: "分享失败，请稍后再试",
+            },
+            spoiler: {
+                categoryName: "剧透",
+                unlistedTitle: "未收录 BGM：{name}",
+                durationLoadFailed: "额外剧透 BGM 时长数据加载失败，仅显示 masterdata 音轨。",
+            },
+            durationLabel: "音轨时长",
             playbackModes: {
                 sequential: "列表循环（点击切换）",
                 loopOne: "单曲循环（点击切换）",
