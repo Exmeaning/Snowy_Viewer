@@ -716,9 +716,9 @@ export const zhCNMessages = {
             performance: "性能",
             powerSave: "省电",
             off: "关闭",
-            performanceDescription: "保留更丰富的背景动效，适合桌面端或性能较好的设备。",
-            powerSaveDescription: "默认推荐：降低背景动画帧率与粒子数量，减少 GPU 与电量消耗。",
-            offDescription: "完全关闭背景动画，仅保留页面内容，适合低配设备或录屏场景。",
+            performanceDescription: "完整背景动效：保留漂浮碎片、Canvas 粒子与鼠标响应，适合桌面端或性能较好的设备。",
+            powerSaveDescription: "低成本方案：关闭 Canvas 连续重绘，仅使用静态层与滚动视差，减少 GPU 与电量消耗。",
+            offDescription: "关闭动画：仅保留静态主题渐变遮罩，无动画、无滚动视差。"
         },
         contentDisplay: {
             sectionTitle: "内容显示",
@@ -768,7 +768,7 @@ export const zhCNMessages = {
             refreshing: "刷新中...",
         },
         footer: {
-            version: "Moesekai · 1.2-preview-beta1",
+            version: "Moesekai · 1.2-preview-beta2",
         },
         sidebar: {
             notLoggedIn: "未登录",
