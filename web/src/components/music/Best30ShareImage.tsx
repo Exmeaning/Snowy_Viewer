@@ -731,6 +731,7 @@ export default function Best30ShareImage({
             onClose={onClose}
             title={t("page.best30Share.title")}
             size="xl"
+            syncHistory={false}
             headerActions={headerActions}
         >
             <div className="space-y-4">
