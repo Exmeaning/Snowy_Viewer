@@ -15,7 +15,7 @@ interface TalkSnippetProps {
     cnText?: string;
     cnDisplayName?: string;
     translationSource?: 'official_cn' | 'llm' | 'human';
-    unitName?: string; // Localized unit name for virtual singers
+    unitName?: string; // Legacy unit name for virtual singers
     unitField?: string; // Unit field for virtual singers (e.g., 'light_sound', 'school_refusal')
 }
 

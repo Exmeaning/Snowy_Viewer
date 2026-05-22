@@ -4,7 +4,7 @@ import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
-import { IGameChara, ICharaProfile, UNIT_NAME_MAP } from "@/types/types";
+import { IGameChara, ICharaProfile, UNIT_FIELD_LABEL_KEYS } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
@@ -44,7 +44,7 @@ export default function StorySelfListClient() {
     // Group by unit
     const unitGroups = UNIT_ORDER.map(unit => ({
         unit,
-        name: UNIT_NAME_MAP[unit] ?? unit,
+        labelKey: UNIT_FIELD_LABEL_KEYS[unit],
         charas: charas.filter(c => c.unit === unit && profileMap.has(c.id)),
     })).filter(g => g.charas.length > 0);
 
@@ -62,9 +62,9 @@ export default function StorySelfListClient() {
 
                 {!isLoading && !error && (
                     <div className="space-y-8">
-                        {unitGroups.map(({ unit, name, charas: unitCharas }) => (
+                        {unitGroups.map(({ unit, labelKey, charas: unitCharas }) => (
                             <div key={unit}>
-                                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 text-center">{name}</h2>
+                                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 text-center">{labelKey ? t(labelKey) : unit}</h2>
                                 <div className="flex flex-wrap justify-center gap-3">
                                     {unitCharas.map(c => {
                                         const charaName = `${c.firstName ?? ""}${c.givenName}`;

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
 import { fetchMasterData } from "@/lib/fetch";
-import { ICardInfo, UNIT_DATA, CHARACTER_NAMES, CHAR_COLORS, UNIT_ICON_FILES } from "@/types/types";
+import { ICardInfo, UNIT_DATA, CHARACTER_NAMES, CHAR_COLORS, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCardFullUrl, getCharacterIconUrl } from "@/lib/assets";
 import { useI18n } from "@/contexts/I18nContext";
 
@@ -972,11 +972,14 @@ function GuessWhoClientPlayingAndSetup({
                             <button onClick={() => setSettings({ ...settings, selectedUnitIds: [] })} className="text-xs text-miku hover:underline">{t("page.guessWho.single.resetFilter")}</button>
                         </div>
                         <div className="flex flex-wrap gap-3 mb-4 justify-center">
-                            {UNIT_DATA.map(unit => (
-                                <button key={unit.id} onClick={() => handleUnitToggle(unit.id)} className={`transition-all p-1 rounded-full ${settings.selectedUnitIds.includes(unit.id) ? "bg-slate-100 ring-2 ring-miku scale-110" : "opacity-60 hover:opacity-100 grayscale hover:grayscale-0 hover:bg-slate-50"}`}>
-                                    <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unit.name} width={40} height={40} className="w-10 h-10 object-contain" unoptimized />
-                                </button>
-                            ))}
+                            {UNIT_DATA.map(unit => {
+                                const unitLabel = t(UNIT_ID_LABEL_KEYS[unit.id] ?? `common.units.${unit.id}`);
+                                return (
+                                    <button key={unit.id} onClick={() => handleUnitToggle(unit.id)} className={`transition-all p-1 rounded-full ${settings.selectedUnitIds.includes(unit.id) ? "bg-slate-100 ring-2 ring-miku scale-110" : "opacity-60 hover:opacity-100 grayscale hover:grayscale-0 hover:bg-slate-50"}`}>
+                                        <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unitLabel} width={40} height={40} className="w-10 h-10 object-contain" unoptimized />
+                                    </button>
+                                );
+                            })}
                         </div>
                         <div className="text-xs text-slate-400 text-center">{settings.selectedUnitIds.length > 0 ? t("page.guessWho.single.selectedCharacters", { count: availableCharacters.length }) : t("page.guessWho.single.selectedAllCharacters")}</div>
                     </div>

@@ -3,7 +3,7 @@ import Image from "next/image";
 import BaseFilters, { FilterSection, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { EventType, EVENT_TYPE_COLORS } from "@/types/events";
-import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, CardAttribute, ATTR_NAMES, ATTR_ICON_PATHS, ATTR_COLORS } from "@/types/types";
+import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS, CardAttribute, ATTR_NAMES, ATTR_ICON_PATHS, ATTR_COLORS } from "@/types/types";
 import { useI18n } from "@/contexts/I18nContext";
 
 /** Filter IDs for event unit (group) filter */
@@ -12,7 +12,7 @@ export type EventUnitFilterId = "ln" | "mmj" | "vbs" | "ws" | "25ji" | "vs" | "m
 export const EVENT_UNIT_FILTERS: { id: EventUnitFilterId; labelKey: string; fallbackName: string; icon?: string }[] = [
     ...UNIT_DATA.map(u => ({
         id: u.id as EventUnitFilterId,
-        labelKey: `common.units.${u.id}`,
+        labelKey: UNIT_ID_LABEL_KEYS[u.id] ?? `common.units.${u.id}`,
         fallbackName: u.name,
         icon: UNIT_ICON_FILES[u.id],
     })),

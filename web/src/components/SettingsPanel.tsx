@@ -2,7 +2,7 @@
 import React, { useRef, useEffect } from "react";
 import { useTheme, CHAR_NAMES, CHAR_COLORS } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
-import { UNIT_DATA, CHARACTER_NAMES } from "@/types/types";
+import { UNIT_DATA, UNIT_ID_LABEL_KEYS, CHARACTER_NAMES } from "@/types/types";
 import { useMasterData } from "@/contexts/MasterDataContext";
 import { ADS_SETTINGS_VISIBLE } from "@/lib/ads";
 import {
@@ -20,7 +20,7 @@ interface SettingsPanelProps {
 }
 
 // Group characters by unit for better organization (derived from UNIT_DATA)
-const unitGroups = UNIT_DATA.map(u => ({ name: u.name, charIds: u.charIds, color: u.color }));
+const unitGroups = UNIT_DATA.map(u => ({ id: u.id, labelKey: UNIT_ID_LABEL_KEYS[u.id] ?? `common.units.${u.id}`, charIds: u.charIds, color: u.color }));
 
 const SETTINGS_TOGGLE_COMBO = parseShortcutCombos(
     getShortcutById("toggle-settings")?.combos ?? []
@@ -259,9 +259,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     >
                         <div className="max-h-60 overflow-y-auto p-2 space-y-3">
                             {unitGroups.map((unit) => (
-                                <div key={unit.name}>
+                                <div key={unit.id}>
                                     <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider sticky top-0 bg-white/95 backdrop-blur-sm z-10">
-                                        {unit.name}
+                                        {t(unit.labelKey)}
                                     </div>
                                     <div className="grid grid-cols-2 gap-1">
                                         {unit.charIds.map((charId) => {

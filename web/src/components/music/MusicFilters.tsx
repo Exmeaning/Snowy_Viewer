@@ -7,6 +7,8 @@ import {
     MusicCategoryType,
     MUSIC_TAG_IDS,
     MUSIC_CATEGORY_IDS,
+    MUSIC_TAG_LABEL_KEYS,
+    MUSIC_CATEGORY_LABEL_KEYS,
     MUSIC_CATEGORY_COLORS,
 } from "@/types/music";
 import { useI18n } from "@/contexts/I18nContext";
@@ -54,10 +56,10 @@ const TAG_ICONS: Partial<Record<MusicTagType, string>> = {
 };
 
 const SORT_OPTIONS_BASE = [
-    { id: "publishedAt", labelKey: "filter.sortByPublishedAt" },
-    { id: "id", labelKey: "filter.sortById" },
-    { id: "level", labelKey: "filter.sortByLevel" },
-    { id: "constant", labelKey: "filter.sortByConstant" },
+    { id: "publishedAt", labelKey: "common.filter.sortByPublishedAt" },
+    { id: "id", labelKey: "common.filter.sortById" },
+    { id: "level", labelKey: "common.filter.sortByLevel" },
+    { id: "constant", labelKey: "common.filter.sortByConstant" },
 ];
 
 const DIFFICULTY_OPTIONS = [
@@ -132,13 +134,14 @@ export default function MusicFilters({
                     {MUSIC_TAG_IDS.map((tag) => {
                         const isSelected = selectedTag === tag;
                         const hasIcon = TAG_ICONS[tag];
+                        const label = t(MUSIC_TAG_LABEL_KEYS[tag]);
 
                         return (
                             <button
                                 key={tag}
                                 onClick={() => onTagChange(tag)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${getFilterIconStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white border border-transparent dark:bg-miku/12 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50/50 border border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
-                                title={t(`common.musicTags.${tag}`)}
+                                title={label}
                             >
                                 {hasIcon && (
                                     <div className="w-5 h-5 relative">
@@ -152,7 +155,7 @@ export default function MusicFilters({
                                     </div>
                                 )}
                                 <span className={`text-xs font-medium ${isSelected ? "text-slate-800 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}`}>
-                                    {t(`common.musicTags.${tag}`)}
+                                    {label}
                                 </span>
                             </button>
                         );
@@ -165,6 +168,7 @@ export default function MusicFilters({
                 <div className="flex flex-wrap gap-2">
                     {MUSIC_CATEGORY_IDS.map((cat) => {
                         const isSelected = selectedCategories.includes(cat);
+                        const label = t(MUSIC_CATEGORY_LABEL_KEYS[cat]);
                         return (
                             <button
                                 key={cat}
@@ -180,7 +184,7 @@ export default function MusicFilters({
                                 }
                             >
                                 <span className="text-xs font-medium">
-                                    {t(`common.musicCategories.${cat}`)}
+                                    {label}
                                 </span>
                             </button>
                         );

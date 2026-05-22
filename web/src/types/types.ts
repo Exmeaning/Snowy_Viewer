@@ -1,8 +1,8 @@
 // Card Types for Moesekai
 // Based on sekai.best and Haruki master data structure
 
-// Unit internal field → Chinese official name mapping (source: unitProfiles.json)
-// Defined first so other constants can reference it
+// Unit internal field → official name mapping (source: unitProfiles.json).
+// Kept as source/masterdata-style names; UI should prefer UNIT_*_LABEL_KEYS + i18n.
 export const UNIT_NAME_MAP: Record<string, string> = {
     light_sound: "Leo/need",
     idol: "MORE MORE JUMP！",
@@ -10,6 +10,24 @@ export const UNIT_NAME_MAP: Record<string, string> = {
     theme_park: "Wonderlands×Showtime",
     school_refusal: "25点，Nightcord见。",
     piapro: "虚拟歌手",
+};
+
+export const UNIT_FIELD_LABEL_KEYS: Record<string, string> = {
+    light_sound: "common.units.ln",
+    idol: "common.units.mmj",
+    street: "common.units.vbs",
+    theme_park: "common.units.ws",
+    school_refusal: "common.units.25ji",
+    piapro: "common.units.vs",
+};
+
+export const UNIT_ID_LABEL_KEYS: Record<string, string> = {
+    ln: "common.units.ln",
+    mmj: "common.units.mmj",
+    vbs: "common.units.vbs",
+    ws: "common.units.ws",
+    "25ji": "common.units.25ji",
+    vs: "common.units.vs",
 };
 
 export type CardRarityType =
@@ -206,7 +224,12 @@ export const UNIT_DATA: UnitData[] = [
     { id: "vs", name: UNIT_NAME_MAP.piapro, color: "#33CCBB", charIds: [21, 22, 23, 24, 25, 26] },
 ];
 
-// Character name mapping (Chinese, from gameCharacters.json: firstName + givenName)
+export const UNIT_DATA_LABEL_KEYS: Record<string, string> = Object.fromEntries(
+    UNIT_DATA.map((unit) => [unit.id, UNIT_ID_LABEL_KEYS[unit.id] ?? `common.units.${unit.id}`]),
+);
+
+// Character name mapping (Chinese, from gameCharacters.json: firstName + givenName).
+// Kept as source/masterdata-style fallback; UI should prefer getCharacterName(t, id).
 export const CHARACTER_NAMES: Record<number, string> = {
     1: "星乃一歌",
     2: "天马咲希",
@@ -294,7 +317,8 @@ export const ATTR_ICON_PATHS: Record<CardAttribute, string> = {
     pure: "Pure.webp",
 };
 
-// Character short names (Chinese)
+// Character short names (Chinese).
+// Kept as source/masterdata-style fallback; UI should prefer getCharacterName(t, id, "short").
 export const CHAR_NAMES: Record<number, string> = {
     1: "一歌", 2: "咲希", 3: "穗波", 4: "志步",
     5: "实乃理", 6: "遥", 7: "爱莉", 8: "雫",

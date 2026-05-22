@@ -6,14 +6,14 @@ import { IMusicInfo } from "@/types/music";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { getMusicJacketUrl } from "@/lib/assets";
-import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useI18n } from "@/contexts/I18nContext";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 export default function LatestMusicTab() {
     const { assetSource, isShowSpoiler } = useTheme();
     const { t, formatDate: formatLocaleDate } = useI18n();
+    const { t: translateMasterText } = useTranslation();
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
-    const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -21,11 +21,7 @@ export default function LatestMusicTab() {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [musicsData, translationsData] = await Promise.all([
-                    fetchMasterData<IMusicInfo[]>("musics.json"),
-                    loadTranslations(),
-                ]);
-                setTranslations(translationsData);
+                const musicsData = await fetchMasterData<IMusicInfo[]>("musics.json");
 
                 // Filter and sort by publishedAt
                 const now = Date.now();
@@ -90,7 +86,7 @@ export default function LatestMusicTab() {
         <div>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                 {musics.map((music) => {
-                    const translatedTitle = translations?.music?.title?.[music.title] || music.title;
+                    const translatedTitle = translateMasterText("music", "title", music.title) ?? music.title;
                     const now = Date.now();
                     const isSpoiler = music.publishedAt > now;
 

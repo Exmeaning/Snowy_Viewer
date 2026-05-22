@@ -8,7 +8,6 @@ import MainLayout from "@/components/MainLayout";
 import {
     ICardInfo,
     ISkillInfo,
-    CHARACTER_NAMES,
     ATTR_COLORS,
     ATTR_NAMES,
     UNIT_DATA,
@@ -25,6 +24,7 @@ import { formatSkillDescription } from "@/lib/skill";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTranslation } from "@/contexts/TranslationContext";
+import { getCharacterName } from "@/lib/i18n";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
@@ -189,7 +189,7 @@ export default function CardDetailPage() {
     const trainable = card ? isTrainableCard(card) : false;
     const isBirthday = card?.cardRarityType === "rarity_birthday";
     const rarityNum = card ? getRarityNumber(card.cardRarityType) : 1;
-    const characterName = card ? CHARACTER_NAMES[card.characterId] || `Character ${card.characterId}` : "";
+    const characterName = card ? getCharacterName(t, card.characterId) : "";
 
     // Cards that only have trained images (no normal version)
     const TRAINED_ONLY_CARDS = [1167];
@@ -1233,7 +1233,7 @@ function CostumeInlineDetail({ costume, assetSource }: { costume: ICostumeInfo, 
                                 <div className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full overflow-hidden ring-1 ring-slate-200 bg-white shadow-sm z-10">
                                     <Image
                                         src={getCharacterIconUrl(item.characterId)}
-                                        alt={CHARACTER_NAMES[item.characterId] || ""}
+                                        alt={getCharacterName(t, item.characterId)}
                                         width={20}
                                         height={20}
                                         className="w-full h-full object-cover"

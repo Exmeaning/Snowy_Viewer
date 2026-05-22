@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } fr
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchMasterData } from "@/lib/fetch";
-import { ICardInfo, CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
+import { ICardInfo, CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCardFullUrl, getCharacterIconUrl, getStampUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -1843,27 +1843,30 @@ function MultiplayerContent() {
                                         )}
                                     </div>
                                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "center" }}>
-                                        {UNIT_DATA.map(unit => (
-                                            <button
-                                                key={unit.id}
-                                                onClick={() => updateGameSettings(prev => ({
-                                                    ...prev,
-                                                    selectedUnitIds: prev.selectedUnitIds.includes(unit.id)
-                                                        ? prev.selectedUnitIds.filter(id => id !== unit.id)
-                                                        : [...prev.selectedUnitIds, unit.id]
-                                                }))}
-                                                style={{
-                                                    padding: "4px", borderRadius: "50%", border: "none", cursor: "pointer",
-                                                    background: gameSettings.selectedUnitIds.includes(unit.id) ? "rgba(var(--color-miku-rgb),0.15)" : "transparent",
-                                                    outline: gameSettings.selectedUnitIds.includes(unit.id) ? `2px solid ${themeColor}` : "none",
-                                                    opacity: gameSettings.selectedUnitIds.includes(unit.id) ? 1 : 0.5,
-                                                    transition: "all 0.2s",
-                                                    filter: gameSettings.selectedUnitIds.length > 0 && !gameSettings.selectedUnitIds.includes(unit.id) ? "grayscale(1)" : "none",
-                                                }}
-                                            >
-                                                <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unit.name} width={36} height={36} unoptimized style={{ objectFit: "contain" }} />
-                                            </button>
-                                        ))}
+                                        {UNIT_DATA.map(unit => {
+                                            const unitLabel = t(UNIT_ID_LABEL_KEYS[unit.id] ?? `common.units.${unit.id}`);
+                                            return (
+                                                <button
+                                                    key={unit.id}
+                                                    onClick={() => updateGameSettings(prev => ({
+                                                        ...prev,
+                                                        selectedUnitIds: prev.selectedUnitIds.includes(unit.id)
+                                                            ? prev.selectedUnitIds.filter(id => id !== unit.id)
+                                                            : [...prev.selectedUnitIds, unit.id]
+                                                    }))}
+                                                    style={{
+                                                        padding: "4px", borderRadius: "50%", border: "none", cursor: "pointer",
+                                                        background: gameSettings.selectedUnitIds.includes(unit.id) ? "rgba(var(--color-miku-rgb),0.15)" : "transparent",
+                                                        outline: gameSettings.selectedUnitIds.includes(unit.id) ? `2px solid ${themeColor}` : "none",
+                                                        opacity: gameSettings.selectedUnitIds.includes(unit.id) ? 1 : 0.5,
+                                                        transition: "all 0.2s",
+                                                        filter: gameSettings.selectedUnitIds.length > 0 && !gameSettings.selectedUnitIds.includes(unit.id) ? "grayscale(1)" : "none",
+                                                    }}
+                                                >
+                                                    <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unitLabel} width={36} height={36} unoptimized style={{ objectFit: "contain" }} />
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                     <div style={{ textAlign: "center", marginTop: "0.25rem", fontSize: "0.75rem", color: "#94a3b8" }}>
                                         {gameSettings.selectedUnitIds.length > 0 ? t("page.guessWho.multiplayer.selectedCharacters", { count: availableCharacters.length }) : t("page.guessWho.multiplayer.selectedAllCharacters")}

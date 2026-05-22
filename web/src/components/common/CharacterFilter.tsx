@@ -2,9 +2,10 @@
 import React, { useMemo } from "react";
 import Image from "next/image";
 import { FilterSection, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
-import { CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES, UNIT_FIELD_TO_ID, UNIT_NAME_MAP, ICharaUnitInfo } from "@/types/types";
+import { UNIT_DATA, UNIT_ICON_FILES, UNIT_FIELD_TO_ID, UNIT_ID_LABEL_KEYS, ICharaUnitInfo } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 
 interface CharacterFilterProps {
     selectedCharacters: number[];
@@ -161,14 +162,12 @@ export default function CharacterFilter({
     const getCharName = (charId: number): string => {
         const display = charDisplayMap.get(charId);
         const baseName = display
-            ? (CHARACTER_NAMES[display.baseCharId] || `Character ${charId}`)
-            : (CHARACTER_NAMES[charId] || `Character ${charId}`);
-        // For VS sub-unit characters, append the group name
+            ? getCharacterName(t, display.baseCharId)
+            : getCharacterName(t, charId);
+        // For VS sub-unit characters, append the localized group name.
         if (display?.badgeUnitId) {
-            // Reverse lookup: unitId → unit field → unit name
-            const unitField = Object.entries(UNIT_FIELD_TO_ID).find(([, v]) => v === display.badgeUnitId)?.[0];
-            const groupName = unitField ? UNIT_NAME_MAP[unitField] : null;
-            if (groupName) return `${baseName}（${groupName}）`;
+            const groupNameKey = UNIT_ID_LABEL_KEYS[display.badgeUnitId];
+            if (groupNameKey) return `${baseName} (${t(groupNameKey)})`;
         }
         return baseName;
     };
@@ -190,17 +189,18 @@ export default function CharacterFilter({
                 <div className="flex flex-wrap gap-2">
                     {effectiveUnitData.map(unit => {
                         const iconName = UNIT_ICON_FILES[unit.id] || "";
+                        const unitLabel = t(UNIT_ID_LABEL_KEYS[unit.id] ?? `common.units.${unit.id}`);
                         return (
                             <button
                                 key={unit.id}
                                 onClick={() => handleUnitClick(unit.id)}
                                 className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(selectedUnitIds.includes(unit.id))}`}
-                                title={unit.name}
+                                title={unitLabel}
                             >
                                 <div className="w-8 h-8 relative">
                                     <Image
                                         src={`/data/icon/${iconName}`}
-                                        alt={unit.name}
+                                        alt={unitLabel}
                                         fill
                                         className="object-contain"
                                         unoptimized
