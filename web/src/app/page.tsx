@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import SetupGuide from "@/components/home/SetupGuide";
 import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";
 import HeroCarousel from "@/components/home/HeroCarousel";
@@ -12,6 +13,7 @@ import BilibiliDynamicTab from "@/components/home/BilibiliDynamicTab";
 import BirthdaySection from "@/components/home/BirthdaySection";
 import { MOE_LOGO_URL } from "@/lib/assets";
 import { useI18n } from "@/contexts/I18nContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 type TabType = "event" | "cards" | "music" | "live";
 
@@ -251,9 +253,69 @@ const SHORTCUTS = [
 export default function Home() {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabType>("event");
+  const [showSetup, setShowSetup] = useState(false);
+  const [showSettingsHint, setShowSettingsHint] = useState(false);
+
+  useEffect(() => {
+    const handle = requestAnimationFrame(() => {
+      const completed = localStorage.getItem("moesekai_setup_completed") === "true";
+      if (!completed) {
+        setShowSetup(true);
+      }
+    });
+    return () => cancelAnimationFrame(handle);
+  }, []);
+
+  useEffect(() => {
+    if (!showSettingsHint) return;
+    const timer = setTimeout(() => {
+      setShowSettingsHint(false);
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [showSettingsHint]);
 
   return (
     <MainLayout showLoader={true}>
+      {showSetup && (
+        <SetupGuide
+          onComplete={(showHint) => {
+            setShowSetup(false);
+            if (showHint) {
+              setShowSettingsHint(true);
+            }
+          }}
+        />
+      )}
+
+      <AnimatePresence>
+        {showSettingsHint && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 350, damping: 25 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-[999] w-[90%] max-w-md bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border border-white/20 dark:border-slate-800/40 p-4 rounded-2xl shadow-xl flex items-center gap-3 text-left"
+          >
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-miku/15 dark:bg-miku/20 flex items-center justify-center text-xl">
+              ⚙️
+            </div>
+            <div className="flex-1 pr-2">
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">
+                {t("page.setup.settingsHint")}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowSettingsHint(false)}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 cursor-pointer shrink-0"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="container mx-auto px-4 sm:px-6 pt-6 pb-16 flex flex-col items-center gap-8">
 
         {/* ─── Logo (compact inline) ─── */}
