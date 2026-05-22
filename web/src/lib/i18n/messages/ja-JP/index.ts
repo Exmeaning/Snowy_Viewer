@@ -759,7 +759,7 @@ export const jaJPMessages = {
       refreshing: '更新中...'
     },
     footer: {
-      version: 'Moesekai · 1.1-preview'
+      version: 'Moesekai · 1.2-preview-beta1'
     },
     sidebar: {
       notLoggedIn: '未ログイン',
@@ -804,6 +804,41 @@ export const jaJPMessages = {
     }
   },
   page: {
+    setup: {
+      hello: "こんにちは",
+      welcome: "Moesekai へようこそ",
+      welcomeDesc: "好みに合わせて設定を行い、音楽の世界へ旅立ちましょう。",
+      getStarted: "設定を始める",
+      languageTitle: "言語を選択",
+      languageDesc: "インターフェース言語を選択してください。設定からいつでも変更可能です。",
+      serverTitle: "データサーバーを選択",
+      serverDesc: "デフォルトで読み込むゲームデータソースを選択します。",
+      serverJp: "日本サーバー (JP)",
+      serverCn: "簡体字中国語サーバー (CN)",
+      assetTitle: "Assets 回線を選択",
+      assetDesc: "ゲーム素材（画像、音楽など）をロードする CDN 回線を選択します。",
+      assetMain: "メイン回線",
+      assetOverseas: "海外メイン回線",
+      themeTitle: "外観とテーマカラー",
+      themeDesc: "インターフェースの外観とキャラクターのイメージカラーを選択します。",
+      appearanceTitle: "外観モード",
+      themeColorTitle: "テーマカラー（キャラクター）",
+      contentTitle: "コンテンツ表示設定",
+      contentDesc: "カード画像やネタバレなどの表示オプションを設定します。",
+      finishTitle: "準備完了！",
+      finishDesc: "すべての設定が完了しました。Moesekai へようこそ！",
+      startExploring: "探索を開始する",
+      stepIndicator: "ステップ {current} / {total}",
+      next: "次へ",
+      back: "戻る",
+      appearanceMockLight: "ライト",
+      appearanceMockDark: "ダーク",
+      appearanceMockSystem: "システム",
+      testingPing: "測定中...",
+      timeout: "タイムアウト",
+      skip: "スキップ",
+      settingsHint: "ヒント：これらの設定は、画面右上の設定アイコン（⚙️）からいつでも変更できます。",
+    },
     home: {
       formerName: '(formerly Snowy SekaiViewer)',
       sections: {
