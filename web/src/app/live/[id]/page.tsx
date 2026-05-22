@@ -2,26 +2,36 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 import { getVirtualLiveBannerUrl } from "@/lib/assets";
 import { getVirtualLiveMeta } from "@/lib/metadata";
-import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
+import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
+import { formatDetailSeoDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
 import VirtualLiveDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
+    const locale = await getRequestSeoLocale();
     const live = getVirtualLiveMeta(Number(id));
-    if (!live) return { title: "Virtual Live Detail" };
+    if (!live) {
+        return buildDetailMetadata({
+            locale,
+            title: getDetailFallbackTitle("live", locale),
+            description: getDetailFallbackTitle("live", locale),
+            path: `/live/${id}`,
+        });
+    }
 
     const title = live.name;
-    const description = `Project Sekai Virtual Live "${live.name}"` + DETAIL_SEO_SUFFIX;
+    const description = formatDetailSeoDescription("live", { name: live.name }, locale);
     const ogImage = getVirtualLiveBannerUrl(live.asset, "main-jp");
 
-    return {
+    return buildDetailMetadata({
+        locale,
         title,
         description,
-        openGraph: { title, description, images: [ogImage] },
-        twitter: { card: "summary_large_image", title, description, images: [ogImage] },
-    };
+        path: `/live/${id}`,
+        images: [ogImage],
+    });
 }
 
 export default function VirtualLiveDetailPage() {

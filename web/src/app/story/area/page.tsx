@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
 import StoryAreaListClient from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "Area Conversations",
-    description: "Browse Project Sekai area conversations" + SEO_SUFFIX,
-    keywords: getPageKeywords("story_area"),
-};
+export const generateMetadata = pageMetadata("story_area");
 
 export default function StoryAreaListPage() {
     return <StoryAreaListClient />;

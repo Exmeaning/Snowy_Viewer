@@ -1,9 +1,7 @@
-import type { Metadata } from "next";
 import BreadcrumbStoryClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "Story",
-};
+export const generateMetadata = pageMetadata("breadcrumb_story");
 
 export default function Page() {
     return <BreadcrumbStoryClient />;

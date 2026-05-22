@@ -680,6 +680,7 @@ export default function MusicDetailPage() {
                                             assetSource={assetSource}
                                             outsideCharacters={outsideCharacters}
                                             downloadLabel={t("page.music.downloadAudio")}
+                                            getCharacterLabel={(characterId) => getCharacterName(t, characterId)}
                                         />
                                     ))}
                                 </div>
@@ -754,7 +755,21 @@ export default function MusicDetailPage() {
 }
 
 // Vocal Player Component
-function VocalPlayer({ vocal, fillerSec, assetSource, outsideCharacters, downloadLabel }: { vocal: IMusicVocalInfo; fillerSec: number; assetSource: AssetSourceType; outsideCharacters: Record<number, string>; downloadLabel: string }) {
+function VocalPlayer({
+    vocal,
+    fillerSec,
+    assetSource,
+    outsideCharacters,
+    downloadLabel,
+    getCharacterLabel,
+}: {
+    vocal: IMusicVocalInfo;
+    fillerSec: number;
+    assetSource: AssetSourceType;
+    outsideCharacters: Record<number, string>;
+    downloadLabel: string;
+    getCharacterLabel: (characterId: number) => string;
+}) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -869,7 +884,7 @@ function VocalPlayer({ vocal, fillerSec, assetSource, outsideCharacters, downloa
                         {vocal.characters?.map((chara) => {
                             const isGameChar = chara.characterType === "game_character";
                             const charName = isGameChar
-                                ? getCharacterName(t, chara.characterId)
+                                ? getCharacterLabel(chara.characterId)
                                 : outsideCharacters[chara.characterId] || `Guest ${chara.characterId}`;
                             const hasIcon = isGameChar && chara.characterId <= 26;
 

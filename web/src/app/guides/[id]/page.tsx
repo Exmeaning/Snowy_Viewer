@@ -1,9 +1,7 @@
-import { Metadata } from "next";
 import GuideDetailClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "Guide Details",
-};
+export const generateMetadata = pageMetadata("guides_detail");
 
 export default function GuideDetailPage() {
     return <GuideDetailClient />;

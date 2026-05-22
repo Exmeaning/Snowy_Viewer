@@ -1,10 +1,7 @@
-import { Metadata } from "next";
 import MultiplayerClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "Guess Who Multiplayer",
-    description: "Project Sekai character guessing multiplayer battle",
-};
+export const generateMetadata = pageMetadata("guess_who_multiplayer");
 
 export default function MultiplayerPage() {
     return <MultiplayerClient />;

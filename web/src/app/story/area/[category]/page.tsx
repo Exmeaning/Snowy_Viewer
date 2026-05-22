@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import StoryAreaDetailClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = { title: "Area Conversations" };
+export const generateMetadata = pageMetadata("story_area_category");
 
 export default function StoryAreaDetailPage() {
     return <StoryAreaDetailClient />;

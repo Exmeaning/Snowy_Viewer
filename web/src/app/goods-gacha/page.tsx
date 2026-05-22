@@ -1,14 +1,9 @@
-import { Metadata } from 'next';
 import fs from 'fs';
 import path from 'path';
 import GachaClient from './client';
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "Goods Gacha Simulator",
-    description: "Project Sekai goods gacha simulator" + SEO_SUFFIX,
-    keywords: getPageKeywords("goods_gacha"),
-};
+export const generateMetadata = pageMetadata("goods_gacha");
 
 // Define the type for our pools data
 export type GachaPools = Record<string, string[]>;

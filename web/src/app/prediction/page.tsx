@@ -1,14 +1,7 @@
-
-import { Metadata } from "next";
 import PredictionClient from "./client";
-import { enUSMessages } from "@/lib/i18n/messages/en-US";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: enUSMessages.layout.nav.items.prediction,
-    description: enUSMessages.layout.groupPages.prediction + SEO_SUFFIX,
-    keywords: getPageKeywords("prediction"),
-};
+export const generateMetadata = pageMetadata("prediction");
 
 export default function PredictionPage() {
     return <PredictionClient />;

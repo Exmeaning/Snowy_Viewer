@@ -12,7 +12,7 @@
 - 核心数据库页、动态详情页、首页、布局、个人页、工具页、剧情页等主要用户路径基本接入 `t()`。
 - 账号/服务器共享层、剧情 asset fallback、活动单位筛选、WL3 模拟分组与单位显示 label 等收尾项已完成最近几轮清理：共享常量改为稳定 key/id，显示文案统一由 `common.*` / `page.deckRecommend.*` 字典负责。
 - 当前残留的中文不再主要集中在普通页面 UI，而是集中在以下边界：
-  - SEO/站点品牌关键词。
+  - SEO/站点品牌关键词（已集中到 server-safe SEO i18n 配置）。
   - 法务/赞助类静态长文本。
   - 设计系统演示页。
   - Project SEKAI masterdata / 角色名 / 漫画标题 / 搜索关键词。
@@ -100,14 +100,14 @@ export function Example() {
 | 剧情页 | `/story/**` 主入口、列表、详情与阅读页固定 UI 基本完成 |
 | 个人页/工具页 | `/profile`、`/my-cards`、`/my-musics`、`/my-materials`、`/deck-recommend`、`/deck-comparator`、`/score-control`、`/sticker-maker`、`/goods-gacha`、`/guess-who`、`/guess-who/multiplayer`、`/guess-jacket`、`/guess-jacket/multiplayer`、`/chart-preview`、`/mysekai-preview`、`/mysekai-preview/ranking`、`/mysekai-preview/scene`、`/prediction`、`/oauth2/connect`、`/oauth2/callback/code`、`/realtime-ranking` |
 | 社区/静态辅助页 | `/about`、`/guides`、`/guides/[id]`、`/leave`、breadcrumb 汇总页、`/blank` |
-| 有意保留或待决策页 | `/patreon`、`/privacy`、`/terms` 正文仍是静态长文本/双语内容；metadata 已改为英文兜底或使用既有字典 |
+| 有意保留或待决策页 | `/patreon`、`/privacy`、`/terms` 正文仍是静态长文本/双语内容；metadata 已接入 server-side SEO i18n |
 
 ## 4. 当前中文残留分类
 
 2026-05-22 快速扫描摘要（排除 `node_modules`，并将 `lib/i18n/messages/*` 视为合法中文来源）：
 
 ```text
-files_with_han_excluding_messages = 12
+files_with_han_excluding_messages = 11
 ```
 
 这些残留不能简单等价为“未完成”。建议按下面规则处理。
@@ -117,7 +117,7 @@ files_with_han_excluding_messages = 12
 | 类型 | 文件/范围 | 处理策略 |
 |---|---|---|
 | 中文字典与 locale 原生名 | `src/lib/i18n/messages/zh-CN/index.ts`、`src/lib/i18n/messages/en-US/index.ts`、`src/lib/i18n/locales.ts` | 中文字典必须保留；英文包可能包含赞助者名/日文源标签/masterdata 翻译映射；locale 原生名用于语言切换器 |
-| SEO 中文关键词 | `src/lib/seo-keywords.ts`、`src/app/layout.tsx` | 当前作为中文 SEO/品牌定位保留；若未来做多语言 SEO，再单独设计 |
+| SEO 多语言文案与中文关键词 | `src/lib/seo-keywords.ts` | SEO 文案/关键词已集中为 `zh-CN` / `en-US` server-safe 配置；中文 SEO 作为中文 locale 与品牌定位保留，不再散落在 `layout.tsx` 或页面 metadata |
 | 游戏数据/官方名 | `src/types/types.ts`、`src/lib/oldComicTips.ts`、`src/lib/mysekai-i18n.ts`、`src/lib/songConstants.ts`、`src/lib/storyLoader.ts` | 属于 masterdata、角色名、漫画标题、剧情翻译 fallback、搜索修正或官方名边界，不应无差别迁移 |
 | 法务/赞助长文本 | `src/app/privacy/page.tsx`、`src/app/terms/page.tsx`、`src/app/patreon/page.tsx` | 当前可视为内容页面；是否拆入字典需要产品决策 |
 | 设计系统演示 | `src/app/design-system/page.tsx` | 开发/演示路由，不作为用户路径 P0 |
@@ -270,21 +270,28 @@ React hook 内可以调用 `useI18n()`，但如果 hook 是低层数据 hook，�
 
 ## 8. Metadata 与 SEO 策略
 
-当前多数页面 metadata 采用“英文兜底 + 既有 SEO keywords”的策略：
+当前已完成第一阶段 server-side SEO i18n：
 
-- server/static `page.tsx` 不能直接使用客户端 `useI18n()`。
-- 固定 metadata 优先引用 `enUSMessages`，避免继续出现页面级中文硬编码。
-- `src/lib/seo-keywords.ts` 仍包含中文关键词，这是 SEO 策略，不等同于 UI 硬编码。
-- 根布局 `app/layout.tsx` 当前仍使用中文品牌描述与 `openGraph.locale = "zh_CN"`，这是后续“多语言 SEO”专项，而不是 P0 UI 收尾。
+- server/static `page.tsx` 仍不能直接使用客户端 `useI18n()`；SEO 改为通过 server-safe helper 读取 cookie locale。
+- `src/lib/seo-keywords.ts` 集中保存 `zh-CN` / `en-US` SEO 文案、关键词、OpenGraph locale、JSON-LD 文案、详情页模板与后续 locale registry。
+- `src/lib/seo-metadata.ts` 负责在 server 侧解析 `moesekai_ui_locale` cookie，并生成统一的 `Metadata`：title、description、keywords、canonical、OpenGraph、Twitter。
+- 根布局 `app/layout.tsx` 已改为 `generateMetadata()`，root title/description/keywords/OpenGraph/JSON-LD 均按 locale 输出，不再在 layout 内硬编码中文品牌 SEO 文案。
+- 页面级静态 metadata 已从“英文兜底 + SEO suffix”改为 `pageMetadata("...")`；动态详情页继续使用 masterdata 名称，但固定描述模板和 suffix 按 locale 输出。
+- `/privacy`、`/terms`、`/patreon` 正文仍属于内容页边界，暂不拆正文；metadata 已接入 server-side SEO i18n。
 
-若未来需要真正多语言 metadata，建议单独设计：
+当前 locale 来源策略：
 
-1. 明确 locale 来源：URL 前缀、cookie、header，三选一或组合。
-2. 抽出 server-safe metadata message map，不依赖 React context。
-3. 处理 Next.js 缓存与静态生成策略。
-4. 同步 OpenGraph / Twitter / sitemap / canonical / alternate links。
+1. SEO locale 使用现有 `moesekai_ui_locale` cookie，与 UI 语言保持一致。
+2. 默认 locale 仍为 `zh-CN`。
+3. 未引入 `/zh-CN`、`/en-US` 或未来 `/ja-JP` URL 前缀，因此当前只设置 canonical 到当前路径，不输出伪 hreflang。
+4. OpenGraph 已按 locale 设置 `locale` 与 `alternateLocale`，但 sitemap alternate links 需要等待 locale-specific URL 策略确定后再启用。
 
-不要在普通页面迁移 PR 中顺手大改 SEO 架构。
+未来新增日语等语言时的推荐步骤：
+
+1. 在 `SUPPORTED_UI_LOCALES` / UI 字典中加入新 locale（例如 `ja-JP`）。
+2. 在 `SEO_LOCALE_CONFIG`、`SEO_PAGE_METADATA`、`DETAIL_SEO_TEMPLATES`、`DETAIL_FALLBACK_TITLES` 中补齐该 locale；TypeScript 会提示缺失项。
+3. 若产品决定采用 locale URL，再统一设计 `/ja-JP/...`、canonical、hreflang、sitemap alternate links 与缓存策略。
+4. 若只继续 cookie locale，则不要输出 hreflang，避免多个语言版本共用同一 URL 时误导搜索引擎。
 
 ## 9. 下一阶段执行路线
 
@@ -307,10 +314,10 @@ React hook 内可以调用 `useI18n()`，但如果 hook 是低层数据 hook，�
 可选方案：
 
 1. **保持现状**：把它们定义为中文/双语内容页，加入扫描 allowlist。
-2. **客户端内容 i18n**：拆出 client body，使用 `page.privacy` / `page.terms` / `page.patreon` 字典；metadata 仍英文兜底。
-3. **服务端内容 i18n**：设计 server-side locale 解析与 metadata 同步，成本更高，应与多语言 SEO 一起做。
+2. **客户端内容 i18n**：拆出 client body，使用 `page.privacy` / `page.terms` / `page.patreon` 字典；metadata 继续复用现有 server-side SEO i18n。
+3. **服务端内容 i18n**：把正文也拆成 server-rendered locale content，成本更高，应与 locale URL / hreflang 策略一起做。
 
-建议默认方案：短期保持现状并加入 allowlist；等多语言 SEO 方案确定后再统一处理。
+建议默认方案：短期保持现状并加入 allowlist；metadata 已完成多语言 SEO，正文内容等 locale URL 与内容本地化决策后再统一处理。
 
 ### P1：WL3 / 活动组合等业务常量收尾
 
@@ -351,7 +358,6 @@ src/lib/i18n/messages/zh-CN/index.ts
 src/lib/i18n/messages/en-US/index.ts
 src/lib/i18n/locales.ts
 src/lib/seo-keywords.ts
-src/app/layout.tsx
 src/app/privacy/page.tsx
 src/app/terms/page.tsx
 src/app/patreon/page.tsx
@@ -363,16 +369,18 @@ src/types/types.ts
 src/lib/storyLoader.ts
 ```
 
-allowlist 必须注明原因，不能只写路径；近期已移除注释类 allowlist 和 `src/lib/supabase.ts` 临时 allowlist，当前 `lint:i18n` 输出仍为 `Hardcoded UI Han scan OK (14 allowlisted file groups)`。
+allowlist 必须注明原因，不能只写路径；近期已移除注释类 allowlist、`src/lib/supabase.ts` 临时 allowlist 与 `src/app/layout.tsx` SEO allowlist，当前 `lint:i18n` 输出为 `Hardcoded UI Han scan OK (13 allowlisted file groups)`。
 
 ### P3：多语言 SEO / 服务端 i18n 专项
 
-当产品需要完整英文 SEO 时再启动：
+第一阶段已完成 cookie-locale 版 SEO i18n；完整 hreflang/sitemap 仍等待 locale URL 决策：
 
-- [ ] 设计 locale 路由或 server locale 解析策略。
-- [ ] 抽出 server-safe metadata 字典。
-- [ ] 改造 root metadata、OpenGraph locale、Twitter、sitemap alternate links。
-- [ ] 明确中文 SEO keywords 是否继续保留在所有 locale。
+- [x] 设计 server locale 解析策略：读取 `moesekai_ui_locale` cookie，默认 `zh-CN`。
+- [x] 抽出 server-safe SEO metadata 配置与 helper：`src/lib/seo-keywords.ts` + `src/lib/seo-metadata.ts`。
+- [x] 改造 root metadata、OpenGraph locale、Twitter、canonical 与 JSON-LD。
+- [x] 静态页面 metadata 与动态详情页模板接入 `zh-CN` / `en-US`；预留未来 `ja-JP` 等 locale 的类型化补齐路径。
+- [x] 明确中文 SEO keywords：保留在 `zh-CN` locale 与跨语言品牌关键词中，不再作为所有页面固定 suffix 散落。
+- [ ] 设计 locale-specific URL（例如 `/zh-CN` / `/en-US` / `/ja-JP`）后，再启用 sitemap alternate links / hreflang。
 
 ### P4：文案质量与高级格式化
 
@@ -439,7 +447,35 @@ npm run build:next --prefix web
 
 ## 11. 最近已知验证记录
 
-最近一轮（2026-05-22，单位显示 label key 收尾）已完成并记录为通过的范围：
+最近一轮（2026-05-22，多语言 SEO / server metadata 收尾）已完成并记录为通过的范围：
+
+```text
+web/src/lib/seo-keywords.ts
+web/src/lib/seo-metadata.ts
+web/src/app/layout.tsx
+web/src/app/**/page.tsx metadata
+web/src/app/music/[id]/client.tsx
+web/scripts/scan-hardcoded-ui-text.mjs
+web/docs/i18n-progress.md
+```
+
+结果：
+
+- 新增 `SEO_LOCALE_CONFIG` / `SEO_PAGE_METADATA` / `DETAIL_SEO_TEMPLATES` / `DETAIL_FALLBACK_TITLES`，root、页面与详情页 SEO 文案已按 `zh-CN` / `en-US` 分区，未来加入 `ja-JP` 等 locale 时由 TypeScript 约束补齐。
+- 新增 `src/lib/seo-metadata.ts`，server 侧读取 `moesekai_ui_locale` cookie 并统一生成 title、description、keywords、canonical、OpenGraph、Twitter metadata。
+- 根 `app/layout.tsx` 改为 `generateMetadata()`；JSON-LD 改为按初始 locale 输出；inline locale 初始化脚本改为基于 `SUPPORTED_UI_LOCALES`，不再写死中英二选一。
+- 静态页面 metadata 改为 `pageMetadata("...")`；动态详情页继续使用 masterdata 名称，但固定描述模板与 suffix 改为 locale-aware。
+- 当前不输出 hreflang / sitemap alternate links，因为尚未引入 locale-specific URL；OpenGraph 已设置当前 locale 与 alternateLocale。
+- 从 `scan-hardcoded-ui-text.mjs` allowlist 移除 `src/app/layout.tsx`，中文 SEO 只集中保留在 `src/lib/seo-keywords.ts`。
+- 构建时顺手修复 `src/app/music/[id]/client.tsx` 中 `VocalPlayer` 使用外层 `t` 的作用域问题，改为父组件传入 `getCharacterLabel`。
+- `check-i18n-keys.mjs` 当前校验通过：`i18n key structure OK (2966 keys)`。
+- `check-i18n-usage.mjs` 当前校验通过：`Literal i18n usage keys OK`。
+- `scan-hardcoded-ui-text.mjs` 当前校验通过：`Hardcoded UI Han scan OK (13 allowlisted file groups)`。
+- `web/src` 排除 `lib/i18n/messages/*` 后当前仍有中文文件数为 11，集中在 SEO 配置、内容页、masterdata/官方名、locale 原生名与 story fallback 映射等 allowlist 边界。
+- `npm run lint:i18n --prefix web && npm run lint:i18n-usage --prefix web && npm run lint --prefix web` 已通过。
+- `npm run build:next --prefix web` 已通过；仅出现已知 Turbopack root warning。
+
+上一轮（2026-05-22，单位显示 label key 收尾）已完成并记录为通过的范围：
 
 ```text
 web/src/types/types.ts
@@ -470,7 +506,7 @@ web/docs/i18n-progress.md
 - `check-i18n-keys.mjs` 当前校验通过：`i18n key structure OK (2914 keys)`。
 - `check-i18n-usage.mjs` 当前校验通过：`Literal i18n usage keys OK`。
 - `scan-hardcoded-ui-text.mjs` 当前校验通过：`Hardcoded UI Han scan OK (14 allowlisted file groups)`。
-- `web/src` 排除 `lib/i18n/messages/*` 后当前仍有中文文件数为 12，集中在 SEO、内容页、masterdata/官方名、locale 原生名与 story fallback 映射等 allowlist 边界。
+- `web/src` 排除 `lib/i18n/messages/*` 后当时仍有中文文件数为 12，集中在 SEO、内容页、masterdata/官方名、locale 原生名与 story fallback 映射等 allowlist 边界。
 - `npm run lint:i18n --prefix web && npm run lint:i18n-usage --prefix web && npm run lint --prefix web` 已通过。
 - `npm run build:next --prefix web` 已通过；仅出现已知 Turbopack root warning。
 
