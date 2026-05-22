@@ -81,11 +81,14 @@ export function getEntryThumbnailUrl(server: BaijingServer, entry?: Pick<Baijing
     return `${BAIJING_IMAGE_BASE}/${server}/mysekai-housing/${entry.thumbnailPath.replace(/^\/+/, "")}`;
 }
 
-export function formatDateTime(timestamp?: number) {
-    if (!timestamp) return "未提供";
+type BaijingTranslationValue = string | number | boolean | null | undefined;
+type BaijingTranslationFn = (key: string, values?: Record<string, BaijingTranslationValue>) => string;
+
+export function formatDateTime(timestamp?: number, locale = "en-US", fallback = "Not provided") {
+    if (!timestamp) return fallback;
     const date = new Date(timestamp);
-    if (Number.isNaN(date.getTime())) return "未提供";
-    return new Intl.DateTimeFormat("zh-CN", {
+    if (Number.isNaN(date.getTime())) return fallback;
+    return new Intl.DateTimeFormat(locale, {
         month: "2-digit",
         day: "2-digit",
         hour: "2-digit",
@@ -93,11 +96,11 @@ export function formatDateTime(timestamp?: number) {
     }).format(date);
 }
 
-export function formatFullDateTime(timestamp?: number) {
-    if (!timestamp) return "未提供";
+export function formatFullDateTime(timestamp?: number, locale = "en-US", fallback = "Not provided") {
+    if (!timestamp) return fallback;
     const date = new Date(timestamp);
-    if (Number.isNaN(date.getTime())) return "未提供";
-    return new Intl.DateTimeFormat("zh-CN", {
+    if (Number.isNaN(date.getTime())) return fallback;
+    return new Intl.DateTimeFormat(locale, {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -106,22 +109,17 @@ export function formatFullDateTime(timestamp?: number) {
     }).format(date);
 }
 
-export function formatNumber(value?: number) {
+export function formatNumber(value?: number, locale = "en-US") {
     if (!Number.isFinite(Number(value))) return "-";
-    return new Intl.NumberFormat("zh-CN").format(Number(value));
+    return new Intl.NumberFormat(locale).format(Number(value));
 }
 
-export function getTabTypeLabel(tabType?: string) {
-    switch (tabType) {
-        case "popular":
-            return "人气";
-        case "trend":
-            return "趋势";
-        case "recommend":
-            return "推荐";
-        default:
-            return tabType || "TOP";
-    }
+export function getTabTypeLabel(tabType?: string, t?: BaijingTranslationFn) {
+    const normalized = tabType || "top";
+    const key = `page.mysekaiPreview.tabTypes.${normalized}`;
+    const label = t?.(key);
+    if (label && label !== key) return label;
+    return tabType || "TOP";
 }
 
 export function getRankTone(rank: number) {

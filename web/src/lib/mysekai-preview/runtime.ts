@@ -34,6 +34,7 @@ import type {
     MysekaiMusicSoundTrackMaster,
     MysekaiMusicVocalMaster,
     MysekaiPreviewOptions,
+    MysekaiPreviewRuntimeMessages,
     MysekaiPreviewStatus,
     MysekaiRankReleaseMaster,
     MysekaiSceneSize,
@@ -112,6 +113,72 @@ interface MysekaiBackgroundMusicInfo {
     fillerSec: number;
     kind: "music" | "music_sound_track";
     setting: MysekaiMusicPlayFixtureSetting;
+}
+
+const DEFAULT_RUNTIME_MESSAGES: MysekaiPreviewRuntimeMessages = {
+    initializing: "Initializing...",
+    loadingMasterLabel: "Loading master data",
+    loadingMasterMessage: "Loading master data...",
+    loadFailedLabel: "Load failed",
+    loadFailedMessage: "Failed: {message}",
+    fetchFailed: "Failed to load: {label}{detail}",
+    noRoomData: "No usable room data was found in the layout response",
+    modelLoadFailed: "Failed to load model: {url}",
+    bgmRecordMissing: "BGM record not found: {id}",
+    bgmRecordExternalIdMissing: "BGM record is missing externalId: {id}",
+    soundtrackMissing: "Soundtrack BGM not found: {id}",
+    soundtrackAssetMissing: "Soundtrack BGM is missing asset names: {id}",
+    soundtrackFallbackTitle: "Soundtrack BGM {id}",
+    soundtrackSubtitle: "Soundtrack BGM",
+    musicMissing: "Song not found: {id}",
+    missingInstrumental: "Instrumental audio was not found",
+    missingVocal: "vocalId={id} audio was not found",
+    defaultVocal: "default",
+    musicFallbackTitle: "Song {id}",
+    bgmLoadFailed: "Failed to load BGM",
+    modelMissing: "Model missing: {asset}",
+    preloadingModelsLabel: "Preloading model assets",
+    preloadingModelsProgress: "Preloading models... {done}/{total}",
+    readingLayoutLabel: "Reading layout",
+    loadingLayoutMessage: "Loading layout...",
+    instantiatingFurnitureLabel: "Instantiating furniture",
+    instantiatingFurnitureProgress: "Instantiating furniture... {done}/{total}",
+    emptyInstance: "Empty instance",
+    finalizingSceneLabel: "Finalizing scene",
+    completeLabel: "Loaded",
+    defaultSiteLevel: "default",
+    completeMessage: "Complete: {loaded}/{renderableTotal} renderable instances\nIgnored: {ignored}　Failed: {failed}\nsiteId={siteId}, rank={rank}, siteLevelId={siteLevelId}, size={width}x{depth}",
+    fenceModelMissing: "Fence model missing: {asset}",
+    fencePartsFailed: "Failed to identify fence parts: {asset}",
+    modelNotPreloaded: "Model was not preloaded: {asset}",
+    fenceModelNotPreloaded: "Fence model was not preloaded: {asset}",
+    freeView: "Free View",
+    fixedView: "Fixed View",
+    pointerLock: "Lock Mouse",
+    releasePointerLock: "Release Mouse Lock",
+    fullscreen: "Fullscreen",
+    exitFullscreen: "Exit Fullscreen",
+    cycleLayout: "Switch Layout",
+    playBgm: "Play BGM",
+    pauseBgm: "Pause BGM: {title}",
+    loadingBgm: "Loading BGM: {title}",
+    playBgmTitle: "Play BGM: {title}",
+    bgmErrorTitle: "BGM error: {message}",
+    noBgmTitle: "No BGM is set for the current scene",
+    bgmVolume: "BGM Volume",
+    shortcutHint: "Shortcuts: WASD to move, Alt to lock mouse, F10 fullscreen, F8 switch scene.",
+    mobileUp: "Move Up",
+    mobileDown: "Move Down",
+    bgmInfo: "BGM: {text}",
+    noBgmInfo: "BGM: none for the current scene",
+};
+
+function interpolateRuntimeMessage(template: string, values?: Record<string, string | number | null | undefined>) {
+    if (!values) return template;
+    return template.replace(/\{([\w.-]+)\}/g, (match, token: string) => {
+        const value = values[token];
+        return value === null || value === undefined ? match : String(value);
+    });
 }
 
 interface ExtractEntriesResult {
@@ -556,12 +623,12 @@ export class MysekaiScenePreviewRuntime {
     private bgmUserWantsPlay = false;
     private bgmVolume = DEFAULT_BGM_VOLUME;
     private options: MysekaiPreviewOptions;
-    private currentStatus: MysekaiPreviewStatus = { phase: "idle", message: "初始化中...", loaded: 0, total: 0, skipped: 0 };
+    private currentStatus: MysekaiPreviewStatus = { phase: "idle", message: DEFAULT_RUNTIME_MESSAGES.initializing, loaded: 0, total: 0, skipped: 0 };
 
     constructor(container: HTMLElement, axesContainer: HTMLElement, options: MysekaiPreviewOptions, callbacks: RuntimeCallbacks = {}) {
         this.container = container;
         this.axesContainer = axesContainer;
-        this.options = { ...options };
+        this.options = { ...options, messages: { ...DEFAULT_RUNTIME_MESSAGES, ...options.messages } };
         this.callbacks = callbacks;
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, powerPreference: "high-performance" });
@@ -634,11 +701,12 @@ export class MysekaiScenePreviewRuntime {
         const oldLayoutData = this.options.layoutData;
         const oldLayoutKey = this.options.layoutKey;
         const oldAssetSource = this.options.assetSource;
-        this.options = { ...options };
+        this.options = { ...options, messages: { ...DEFAULT_RUNTIME_MESSAGES, ...options.messages } };
         this.applyDebugVisibility();
         this.applyShadowVisibility();
         this.markBackFacingOpacityDirty();
         this.applyBackFacingOpacity();
+        this.refreshOverlayTexts();
         this.refreshOverlayState();
         this.requestRender();
         if (
@@ -657,14 +725,14 @@ export class MysekaiScenePreviewRuntime {
         const generation = ++this.reloadGeneration;
         try {
             this.saveCameraState();
-            this.setStatusForReload(generation, { phase: "loading", stage: "master", stageLabel: "正在加载 master data", progress: 3, message: "加载 master data...", loaded: 0, total: 0, skipped: 0, ignored: 0, failed: 0 });
+            this.setStatusForReload(generation, { phase: "loading", stage: "master", stageLabel: this.options.messages.loadingMasterLabel, progress: 3, message: this.options.messages.loadingMasterMessage, loaded: 0, total: 0, skipped: 0, ignored: 0, failed: 0 });
             await this.ensureMasterDataLoaded();
             if (!this.isReloadActive(generation)) return;
             await this.buildScene(forceFreshLayout, generation);
         } catch (error) {
             if (!this.isReloadActive(generation)) return;
             console.error(error);
-            this.setStatusForReload(generation, { phase: "error", stage: "error", stageLabel: "加载失败", progress: 100, message: `失败: ${errorMessage(error)}`, loaded: 0, total: 0, skipped: 0, ignored: 0, failed: 1 });
+            this.setStatusForReload(generation, { phase: "error", stage: "error", stageLabel: this.options.messages.loadFailedLabel, progress: 100, message: interpolateRuntimeMessage(this.options.messages.loadFailedMessage, { message: errorMessage(error) }), loaded: 0, total: 0, skipped: 0, ignored: 0, failed: 1 });
         }
     }
 
@@ -760,7 +828,7 @@ export class MysekaiScenePreviewRuntime {
                 lastError = errorMessage(error);
             }
         }
-        throw new Error(`加载失败: ${label}${lastError ? ` (${lastError})` : ""}`);
+        throw new Error(interpolateRuntimeMessage(this.options.messages.fetchFailed, { label, detail: lastError ? ` (${lastError})` : "" }));
     }
 
     private normalizeLayoutPayload(payload: MysekaiLayoutPayload): MysekaiLayoutData | MysekaiLayoutData[] {
@@ -768,7 +836,7 @@ export class MysekaiScenePreviewRuntime {
         if (payload && typeof payload === "object" && "room" in payload) {
             const room = payload.room;
             if (Array.isArray(room) || (room && typeof room === "object")) return room as MysekaiLayoutData | MysekaiLayoutData[];
-            throw new Error("布局响应中没有可用的 room 数据");
+            throw new Error(this.options.messages.noRoomData);
         }
         return payload as MysekaiLayoutData;
     }
@@ -906,7 +974,7 @@ export class MysekaiScenePreviewRuntime {
             let text = this.objTextCache.get(url);
             if (!text) {
                 text = await this.fetchObjText(url) ?? undefined;
-                if (!text) throw new Error(`模型加载失败: ${url}`);
+                if (!text) throw new Error(interpolateRuntimeMessage(this.options.messages.modelLoadFailed, { url }));
             }
             const group = this.objLoader.parse(text);
             this.objGroupCache.set(url, group);
@@ -1087,19 +1155,19 @@ export class MysekaiScenePreviewRuntime {
         await this.ensureFullMusicDataLoaded();
         const recordId = Number(setting.mysekaiMusicRecordId || 0);
         const record = this.musicRecordById.get(recordId);
-        if (!record) throw new Error(`BGM 唱片记录不存在: ${recordId}`);
+        if (!record) throw new Error(interpolateRuntimeMessage(this.options.messages.bgmRecordMissing, { id: recordId }));
         const externalId = Number(record.externalId || 0);
-        if (!externalId) throw new Error(`BGM 唱片记录缺少 externalId: ${recordId}`);
+        if (!externalId) throw new Error(interpolateRuntimeMessage(this.options.messages.bgmRecordExternalIdMissing, { id: recordId }));
 
         if (record.mysekaiMusicTrackType === "music_sound_track") {
             const track = this.musicSoundTrackById.get(externalId);
-            if (!track) throw new Error(`原声 BGM 不存在: ${externalId}`);
+            if (!track) throw new Error(interpolateRuntimeMessage(this.options.messages.soundtrackMissing, { id: externalId }));
             const url = getMysekaiSoundTrackAudioUrl(track.assetbundleName, track.assetbundleFileName, this.options.assetSource);
-            if (!url) throw new Error(`原声 BGM 缺少资源名: ${externalId}`);
+            if (!url) throw new Error(interpolateRuntimeMessage(this.options.messages.soundtrackAssetMissing, { id: externalId }));
             return {
                 url,
-                title: track.title || `原声 BGM ${externalId}`,
-                subtitle: "原声 BGM",
+                title: track.title || interpolateRuntimeMessage(this.options.messages.soundtrackFallbackTitle, { id: externalId }),
+                subtitle: this.options.messages.soundtrackSubtitle,
                 fillerSec: 0,
                 kind: "music_sound_track",
                 setting,
@@ -1107,15 +1175,17 @@ export class MysekaiScenePreviewRuntime {
         }
 
         const music = this.musicInfoById.get(externalId);
-        if (!music) throw new Error(`歌曲不存在: ${externalId}`);
+        if (!music) throw new Error(interpolateRuntimeMessage(this.options.messages.musicMissing, { id: externalId }));
         const vocal = this.selectMusicVocalForBgm(externalId, setting);
         if (!vocal?.assetbundleName) {
-            const reason = setting.isInstrumental ? "未找到 instrumental 音源" : `未找到 vocalId=${setting.musicVocalId || "默认"} 音源`;
-            throw new Error(`${music.title || `歌曲 ${externalId}`} ${reason}`);
+            const reason = setting.isInstrumental
+                ? this.options.messages.missingInstrumental
+                : interpolateRuntimeMessage(this.options.messages.missingVocal, { id: setting.musicVocalId || this.options.messages.defaultVocal });
+            throw new Error(`${music.title || interpolateRuntimeMessage(this.options.messages.musicFallbackTitle, { id: externalId })} ${reason}`);
         }
         return {
             url: getMysekaiMusicVocalAudioUrl(vocal.assetbundleName, this.options.assetSource),
-            title: music.title || `歌曲 ${externalId}`,
+            title: music.title || interpolateRuntimeMessage(this.options.messages.musicFallbackTitle, { id: externalId }),
             subtitle: setting.isInstrumental ? "Inst.ver." : (vocal.caption || vocal.musicVocalType || "BGM"),
             fillerSec: Number(music.fillerSec || 0),
             kind: "music",
@@ -1227,7 +1297,7 @@ export class MysekaiScenePreviewRuntime {
             audio.onerror = () => {
                 this.bgmLoading = false;
                 this.bgmPlaying = false;
-                this.bgmError = "BGM 加载失败";
+                this.bgmError = this.options.messages.bgmLoadFailed;
                 this.refreshBgmOverlayState();
             };
             this.bgmAudio = audio;
@@ -1861,7 +1931,7 @@ export class MysekaiScenePreviewRuntime {
                 return { key: ref.key, asset: ref.asset, fenceParts };
             }
             const primaryObjUrl = await this.pickPrimaryObjUrl(objUrls);
-            if (!primaryObjUrl) throw new Error(`模型缺失: ${ref.asset}`);
+            if (!primaryObjUrl) throw new Error(interpolateRuntimeMessage(this.options.messages.modelMissing, { asset: ref.asset }));
             const source = await this.getObjSourceGroup(primaryObjUrl);
             return { key: ref.key, asset: ref.asset, source, primaryObjUrl };
         } catch (error) {
@@ -1876,9 +1946,9 @@ export class MysekaiScenePreviewRuntime {
         this.setStatusForReload(generation, {
             phase: "loading",
             stage: "assets",
-            stageLabel: "正在预加载模型资源",
+            stageLabel: this.options.messages.preloadingModelsLabel,
             progress: 12,
-            message: `预加载模型... 0/${refs.length}`,
+            message: interpolateRuntimeMessage(this.options.messages.preloadingModelsProgress, { done: 0, total: refs.length }),
             currentAsset: undefined,
             loaded: 0,
             total: entriesTotal,
@@ -1895,7 +1965,7 @@ export class MysekaiScenePreviewRuntime {
                 const progress = 12 + Math.round((processed / Math.max(1, refs.length)) * 38);
                 this.mergeStatusForReload(generation, {
                     progress,
-                    message: `预加载模型... ${processed}/${refs.length}`,
+                    message: interpolateRuntimeMessage(this.options.messages.preloadingModelsProgress, { done: processed, total: refs.length }),
                     currentAsset: ref.asset,
                 });
             }
@@ -1924,9 +1994,9 @@ export class MysekaiScenePreviewRuntime {
         this.setStatusForReload(generation, {
             phase: "loading",
             stage: "layout",
-            stageLabel: "正在读取布局",
+            stageLabel: this.options.messages.readingLayoutLabel,
             progress: 8,
-            message: "加载 layout...",
+            message: this.options.messages.loadingLayoutMessage,
             loaded: 0,
             total: 0,
             skipped: 0,
@@ -1957,9 +2027,9 @@ export class MysekaiScenePreviewRuntime {
 
         this.mergeStatusForReload(generation, {
             stage: "assets",
-            stageLabel: "正在实例化家具",
+            stageLabel: this.options.messages.instantiatingFurnitureLabel,
             progress: 50,
-            message: `实例化家具... 0/${renderEntries.length}`,
+            message: interpolateRuntimeMessage(this.options.messages.instantiatingFurnitureProgress, { done: 0, total: renderEntries.length }),
             loaded,
             total: entries.length,
             renderableTotal: renderEntries.length,
@@ -1984,7 +2054,7 @@ export class MysekaiScenePreviewRuntime {
             try {
                 if (!this.isReloadActive(generation)) return emptyBuildResult(index);
                 const entryGroup = await this.buildEntry(layoutType, item, siteSize, gateId, fencePointsByFixture, preparedModelAssets, localFloorPlacementRecords, localFloorShadowRecords, localWallPlacedEntries);
-                if (!entryGroup.children.length) throw new Error("空实例");
+                if (!entryGroup.children.length) throw new Error(this.options.messages.emptyInstance);
                 if (!this.isReloadActive(generation)) {
                     disposeObject(entryGroup);
                     return emptyBuildResult(index);
@@ -2001,7 +2071,7 @@ export class MysekaiScenePreviewRuntime {
                 if (processed % 10 === 0 || processed === renderEntries.length) {
                     const progress = 50 + Math.round((processed / Math.max(1, renderEntries.length)) * 38);
                     this.mergeStatusForReload(generation, {
-                        message: `实例化家具... ${processed}/${renderEntries.length}`,
+                        message: interpolateRuntimeMessage(this.options.messages.instantiatingFurnitureProgress, { done: processed, total: renderEntries.length }),
                         loaded,
                         total: entries.length,
                         renderableTotal: renderEntries.length,
@@ -2027,7 +2097,7 @@ export class MysekaiScenePreviewRuntime {
             this.wallPlacedEntries.push(...result.wallPlacedEntries);
         }
 
-        this.mergeStatusForReload(generation, { stage: "finalize", stageLabel: "正在整理场景", progress: 92, loaded, total: entries.length, renderableTotal: renderEntries.length, skipped: failed, ignored, failed });
+        this.mergeStatusForReload(generation, { stage: "finalize", stageLabel: this.options.messages.finalizingSceneLabel, progress: 92, loaded, total: entries.length, renderableTotal: renderEntries.length, skipped: failed, ignored, failed });
         this.applyFloorStacking(floorPlacementRecords, false);
         this.applyFloorStacking(floorPlacementRecords, true);
         for (const record of floorShadowRecords) {
@@ -2058,9 +2128,19 @@ export class MysekaiScenePreviewRuntime {
         this.setStatusForReload(generation, {
             phase: "ready",
             stage: "ready",
-            stageLabel: "加载完成",
+            stageLabel: this.options.messages.completeLabel,
             progress: 100,
-            message: `完成: ${loaded}/${renderEntries.length} 个可渲染实例\n正常忽略: ${ignored}　加载失败: ${failed}\nsiteId=${siteId}, rank=${playerRank}, siteLevelId=${siteLevelId ?? "默认"}, size=${siteSize.width}x${siteSize.depth}`,
+            message: interpolateRuntimeMessage(this.options.messages.completeMessage, {
+                loaded,
+                renderableTotal: renderEntries.length,
+                ignored,
+                failed,
+                siteId,
+                rank: playerRank,
+                siteLevelId: siteLevelId ?? this.options.messages.defaultSiteLevel,
+                width: siteSize.width,
+                depth: siteSize.depth,
+            }),
             loaded,
             total: entries.length,
             renderableTotal: renderEntries.length,
@@ -2179,7 +2259,7 @@ export class MysekaiScenePreviewRuntime {
                 const pick = await this.fetchTextFirst([url]);
                 return pick ? url : null;
             }))).filter((url): url is string => !!url);
-            if (!existing.length) throw new Error(`栅栏模型缺失: ${assetName}`);
+            if (!existing.length) throw new Error(interpolateRuntimeMessage(this.options.messages.fenceModelMissing, { asset: assetName }));
             const groups = await Promise.all(existing.map((url) => this.getObjSourceGroup(url)));
             const scored = groups.map((group) => ({
                 group,
@@ -2214,7 +2294,7 @@ export class MysekaiScenePreviewRuntime {
             if (!post && scored.length) post = scored[0].group;
             beamShort ||= beamLong;
             beamLong ||= beamShort;
-            if (!post || !beamShort || !beamLong) throw new Error(`栅栏部件识别失败: ${assetName}`);
+            if (!post || !beamShort || !beamLong) throw new Error(interpolateRuntimeMessage(this.options.messages.fencePartsFailed, { asset: assetName }));
             return { post, beamShort, beamLong, baseDir: "-x" as const };
         })();
         this.fenceAssetPartPromiseCache.set(assetName, promise);
@@ -2274,7 +2354,7 @@ export class MysekaiScenePreviewRuntime {
 
         for (const assetInfo of renderAssets) {
             const preparedAsset = preparedModelAssets.get(this.getSceneModelAssetKey(assetInfo));
-            if (!preparedAsset) throw new Error(`模型未预加载: ${assetInfo.asset}`);
+            if (!preparedAsset) throw new Error(interpolateRuntimeMessage(this.options.messages.modelNotPreloaded, { asset: assetInfo.asset }));
             if (preparedAsset.error) throw preparedAsset.error;
             const texture = await this.getFixtureTexture(assetInfo.asset, Number(item.textureId || 1), assetInfo.useCustomAttachRoot, assetInfo.handleType);
             const makeMaterial = () => new THREE.MeshLambertMaterial({
@@ -2291,7 +2371,7 @@ export class MysekaiScenePreviewRuntime {
             let object: THREE.Object3D;
             if (!isCustom && assetInfo.handleType === "fence") {
                 const fenceParts = preparedAsset.fenceParts;
-                if (!fenceParts) throw new Error(`栅栏模型未预加载: ${assetInfo.asset}`);
+                if (!fenceParts) throw new Error(interpolateRuntimeMessage(this.options.messages.fenceModelNotPreloaded, { asset: assetInfo.asset }));
                 object = this.cloneWithMaterial(fenceParts.post, makeMaterial);
                 for (const link of this.createFenceLinks(fixtureId, position, fencePointsByFixture)) {
                     const beamSource = link.step <= 1 ? fenceParts.beamShort : fenceParts.beamLong;
@@ -2312,7 +2392,7 @@ export class MysekaiScenePreviewRuntime {
                 }
             } else {
                 const srcObject = preparedAsset.source;
-                if (!srcObject) throw new Error(`模型未预加载: ${assetInfo.asset}`);
+                if (!srcObject) throw new Error(interpolateRuntimeMessage(this.options.messages.modelNotPreloaded, { asset: assetInfo.asset }));
                 if (!isCustom && fixtureId >= 439 && fixtureId <= 444) {
                     object = this.cloneCanvasWithCardMaterial(srcObject, makeMaterial, await this.getCanvasCardTexture(item, fixtureId), fixtureId);
                 } else if (isCustom) {
@@ -2381,7 +2461,7 @@ export class MysekaiScenePreviewRuntime {
                     topY: bbox.max.y,
                     cellKeys: getXZCellKeysFromBBox(bbox),
                     customPartType: String(stackObject.userData.customPartType || "") || null,
-                    putType: String(meta.mysekaiFixturePutType || "") || null,
+                    putType: String(meta?.mysekaiFixturePutType || "") || null,
                 });
             }
             if (placedForShadow && Math.abs(Number(item.position?.y || 0)) < 1e-6) {
@@ -2658,12 +2738,12 @@ export class MysekaiScenePreviewRuntime {
         panel.style.touchAction = "manipulation";
         overlay.appendChild(panel);
 
-        const freeButton = this.createOverlayButton("自由视角", () => this.applyViewMode("free"));
-        const fixedButton = this.createOverlayButton("固定视角", () => this.applyViewMode("fixed"));
-        this.pointerLockButton = this.createIconOverlayButton(this.pointerLockIconSvg(false), "鼠标固定", () => this.togglePointerLock());
-        this.fullscreenButton = this.createIconOverlayButton(this.fullscreenIconSvg(false), "全屏", () => void this.toggleFullscreen());
-        this.cycleSiteButton = this.createIconOverlayButton(this.cycleSiteIconSvg(), "切换布局", () => this.callbacks.onCycleSite?.());
-        this.bgmButton = this.createIconOverlayButton(this.bgmIconSvg(false), "播放 BGM", () => this.toggleBgm());
+        const freeButton = this.createOverlayButton(this.options.messages.freeView, () => this.applyViewMode("free"));
+        const fixedButton = this.createOverlayButton(this.options.messages.fixedView, () => this.applyViewMode("fixed"));
+        this.pointerLockButton = this.createIconOverlayButton(this.pointerLockIconSvg(false), this.options.messages.pointerLock, () => this.togglePointerLock());
+        this.fullscreenButton = this.createIconOverlayButton(this.fullscreenIconSvg(false), this.options.messages.fullscreen, () => void this.toggleFullscreen());
+        this.cycleSiteButton = this.createIconOverlayButton(this.cycleSiteIconSvg(), this.options.messages.cycleLayout, () => this.callbacks.onCycleSite?.());
+        this.bgmButton = this.createIconOverlayButton(this.bgmIconSvg(false), this.options.messages.playBgm, () => this.toggleBgm());
         freeButton.dataset.viewModeButton = "free";
         fixedButton.dataset.viewModeButton = "fixed";
         panel.append(freeButton, fixedButton, this.cycleSiteButton, this.bgmButton, this.pointerLockButton, this.fullscreenButton);
@@ -2680,8 +2760,8 @@ export class MysekaiScenePreviewRuntime {
         this.bgmVolumeInput.max = "100";
         this.bgmVolumeInput.value = String(Math.round(this.bgmVolume * 100));
         this.bgmVolumeInput.className = "w-20 accent-miku";
-        this.bgmVolumeInput.title = "BGM 音量";
-        this.bgmVolumeInput.setAttribute("aria-label", "BGM 音量");
+        this.bgmVolumeInput.title = this.options.messages.bgmVolume;
+        this.bgmVolumeInput.setAttribute("aria-label", this.options.messages.bgmVolume);
         this.bgmVolumeInput.addEventListener("pointerdown", (event) => event.stopPropagation());
         this.bgmVolumeInput.addEventListener("click", (event) => event.stopPropagation());
         this.bgmVolumeInput.addEventListener("input", this.handleBgmVolumeChange);
@@ -2690,7 +2770,7 @@ export class MysekaiScenePreviewRuntime {
 
         const hint = document.createElement("div");
         hint.className = "pointer-events-none absolute left-3 top-3 max-w-[min(360px,calc(100%-1.5rem))] rounded-2xl border border-white/30 bg-slate-950/45 px-3 py-2 text-[11px] font-bold leading-relaxed text-white shadow-lg backdrop-blur";
-        hint.textContent = "快捷键：WASD 移动，Alt 鼠标固定，F10 全屏，F8 切换场景。";
+        hint.textContent = this.options.messages.shortcutHint;
         this.hintElement = hint;
         overlay.appendChild(hint);
 
@@ -2708,8 +2788,8 @@ export class MysekaiScenePreviewRuntime {
                 <div data-mysekai-joystick-knob style="position:absolute;left:50%;top:50%;width:3rem;height:3rem;margin-left:-1.5rem;margin-top:-1.5rem;border-radius:9999px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.7);box-shadow:0 10px 18px rgba(15,23,42,.24);transform:translate(0px,0px);"></div>
             </div>
             <div style="position:absolute;right:1.5rem;bottom:2rem;display:flex;flex-direction:column;gap:.75rem;pointer-events:auto;touch-action:none;z-index:60;">
-                <button data-mysekai-mobile-up type="button" aria-label="上升" style="width:3.75rem;height:3.75rem;display:flex;align-items:center;justify-content:center;border-radius:9999px;border:1px solid rgba(255,255,255,.42);background:rgba(255,255,255,.72);color:#0f172a;box-shadow:0 10px 24px rgba(15,23,42,.24);backdrop-filter:blur(8px);touch-action:none;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></button>
-                <button data-mysekai-mobile-down type="button" aria-label="下降" style="width:3.75rem;height:3.75rem;display:flex;align-items:center;justify-content:center;border-radius:9999px;border:1px solid rgba(255,255,255,.42);background:rgba(255,255,255,.72);color:#0f172a;box-shadow:0 10px 24px rgba(15,23,42,.24);backdrop-filter:blur(8px);touch-action:none;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></button>
+                <button data-mysekai-mobile-up type="button" aria-label="${this.options.messages.mobileUp}" style="width:3.75rem;height:3.75rem;display:flex;align-items:center;justify-content:center;border-radius:9999px;border:1px solid rgba(255,255,255,.42);background:rgba(255,255,255,.72);color:#0f172a;box-shadow:0 10px 24px rgba(15,23,42,.24);backdrop-filter:blur(8px);touch-action:none;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></button>
+                <button data-mysekai-mobile-down type="button" aria-label="${this.options.messages.mobileDown}" style="width:3.75rem;height:3.75rem;display:flex;align-items:center;justify-content:center;border-radius:9999px;border:1px solid rgba(255,255,255,.42);background:rgba(255,255,255,.72);color:#0f172a;box-shadow:0 10px 24px rgba(15,23,42,.24);backdrop-filter:blur(8px);touch-action:none;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></button>
             </div>
             <div data-mysekai-look-zone class="pointer-events-auto absolute bottom-0 right-0 top-0 w-[58%]" style="z-index:10;"></div>
         `;
@@ -2799,13 +2879,33 @@ export class MysekaiScenePreviewRuntime {
         return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18"/><path d="M7 3v4"/><path d="M17 3v4"/><rect x="4" y="7" width="16" height="14" rx="2"/><path d="m9 14 2 2 4-4"/></svg>`;
     }
 
+    private refreshOverlayTexts() {
+        if (!this.controlsOverlay) return;
+        const freeButton = this.controlsOverlay.querySelector<HTMLButtonElement>('[data-view-mode-button="free"]');
+        const fixedButton = this.controlsOverlay.querySelector<HTMLButtonElement>('[data-view-mode-button="fixed"]');
+        if (freeButton) freeButton.textContent = this.options.messages.freeView;
+        if (fixedButton) fixedButton.textContent = this.options.messages.fixedView;
+        if (this.bgmVolumeInput) {
+            this.bgmVolumeInput.title = this.options.messages.bgmVolume;
+            this.bgmVolumeInput.setAttribute("aria-label", this.options.messages.bgmVolume);
+        }
+        if (this.hintElement) this.hintElement.textContent = this.options.messages.shortcutHint;
+        const mobileUpButton = this.mobileControlsElement?.querySelector<HTMLButtonElement>("[data-mysekai-mobile-up]");
+        const mobileDownButton = this.mobileControlsElement?.querySelector<HTMLButtonElement>("[data-mysekai-mobile-down]");
+        mobileUpButton?.setAttribute("aria-label", this.options.messages.mobileUp);
+        mobileDownButton?.setAttribute("aria-label", this.options.messages.mobileDown);
+    }
+
     private refreshBgmOverlayState() {
         const hasBgm = !!this.currentBgm;
         const title = this.bgmError
-            ? `BGM 错误: ${this.bgmError}`
+            ? interpolateRuntimeMessage(this.options.messages.bgmErrorTitle, { message: this.bgmError })
             : hasBgm
-                ? `${this.bgmPlaying ? "暂停" : this.bgmLoading ? "加载中" : "播放"} BGM：${this.currentBgm?.title || ""}`
-                : "当前场景未设置 BGM";
+                ? interpolateRuntimeMessage(
+                    this.bgmPlaying ? this.options.messages.pauseBgm : this.bgmLoading ? this.options.messages.loadingBgm : this.options.messages.playBgmTitle,
+                    { title: this.currentBgm?.title || "" },
+                )
+                : this.options.messages.noBgmTitle;
         if (this.bgmButton) {
             this.bgmButton.disabled = !hasBgm || this.bgmLoading;
             this.bgmButton.innerHTML = this.bgmIconSvg(this.bgmPlaying || this.bgmLoading);
@@ -2817,10 +2917,10 @@ export class MysekaiScenePreviewRuntime {
         }
         if (this.bgmInfoElement) {
             this.bgmInfoElement.textContent = this.bgmError
-                ? `BGM：${this.bgmError}`
+                ? interpolateRuntimeMessage(this.options.messages.bgmInfo, { text: this.bgmError })
                 : hasBgm
-                    ? `BGM：${this.currentBgm?.title}${this.currentBgm?.subtitle ? ` · ${this.currentBgm.subtitle}` : ""}`
-                    : "BGM：当前场景未设置";
+                    ? interpolateRuntimeMessage(this.options.messages.bgmInfo, { text: `${this.currentBgm?.title}${this.currentBgm?.subtitle ? ` · ${this.currentBgm.subtitle}` : ""}` })
+                    : this.options.messages.noBgmInfo;
             this.bgmInfoElement.title = this.bgmInfoElement.textContent;
         }
         if (this.bgmVolumeInput) {
@@ -2842,7 +2942,7 @@ export class MysekaiScenePreviewRuntime {
         if (this.pointerLockButton) {
             this.pointerLockButton.disabled = this.viewMode !== "free" || touchDevice;
             this.pointerLockButton.innerHTML = this.pointerLockIconSvg(this.pointerLocked);
-            this.pointerLockButton.title = this.pointerLocked ? "解除鼠标固定" : "鼠标固定";
+            this.pointerLockButton.title = this.pointerLocked ? this.options.messages.releasePointerLock : this.options.messages.pointerLock;
             this.pointerLockButton.setAttribute("aria-label", this.pointerLockButton.title);
             this.pointerLockButton.style.display = touchDevice ? "none" : "flex";
             this.pointerLockButton.className = this.pointerLocked
@@ -2851,13 +2951,13 @@ export class MysekaiScenePreviewRuntime {
         }
         if (this.fullscreenButton) {
             this.fullscreenButton.innerHTML = this.fullscreenIconSvg(this.isFullscreen);
-            this.fullscreenButton.title = this.isFullscreen ? "退出全屏" : "全屏";
+            this.fullscreenButton.title = this.isFullscreen ? this.options.messages.exitFullscreen : this.options.messages.fullscreen;
             this.fullscreenButton.setAttribute("aria-label", this.fullscreenButton.title);
         }
         if (this.cycleSiteButton) {
             this.cycleSiteButton.innerHTML = this.cycleSiteIconSvg();
-            this.cycleSiteButton.title = "切换布局";
-            this.cycleSiteButton.setAttribute("aria-label", "切换布局");
+            this.cycleSiteButton.title = this.options.messages.cycleLayout;
+            this.cycleSiteButton.setAttribute("aria-label", this.options.messages.cycleLayout);
         }
         this.refreshBgmOverlayState();
         if (this.crosshairElement) this.crosshairElement.classList.toggle("hidden", this.viewMode !== "free");

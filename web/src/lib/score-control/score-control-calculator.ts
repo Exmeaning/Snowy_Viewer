@@ -1,36 +1,36 @@
 /**
- * 控分计算器 — 核心逻辑
+ * Score control calculator — core logic.
  *
- * 组卡代码来源: sekai-calculator (https://github.com/pjsek-ai/sekai-calculator)
- * 部分算法优化修改于: https://github.com/NeuraXmy/sekai-deck-recommend-cpp  作者: luna茶
+ * Deck-building code source: sekai-calculator (https://github.com/pjsek-ai/sekai-calculator)
+ * Some algorithm optimizations are adapted from: https://github.com/NeuraXmy/sekai-deck-recommend-cpp.
  *
- * 公式:
- *   活动PT = int(scaled_score × event_rate / 100) × boost_multiplier
+ * Formula:
+ *   Event PT = int(scaled_score × event_rate / 100) × boost_multiplier
  *
- * 其中:
+ * Where:
  *   score_bonus   = floor(score / 20000)
  *   scaled_score  = truncate( (100 + score_bonus) × (100 + event_bonus) / 100 )
  *   val           = floor(scaled_score × event_rate / 100)
- *   活动PT        = val × BOOST_BONUS_DICT[boost]
+ *   Event PT      = val × BOOST_BONUS_DICT[boost]
  */
 
 import { getBoostRate, FIRE_OPTIONS } from "@/lib/deck-comparator/calculator";
 
-// ======================== 工具函数 ========================
+// ======================== Utility functions ========================
 
-/** 截断到两位小数（不四舍五入） */
+/** Truncate to two decimals without rounding. */
 function truncate(x: number): number {
     return Math.floor(x * 100) / 100;
 }
 
-// ======================== 正向计算 ========================
+// ======================== Forward calculation ========================
 
 /**
- * 正向计算活动PT
- * @param score       - 游戏内得分 (0 ~ 2840000)
- * @param eventBonus  - 卡组活动加成百分比 (0 ~ 435)
- * @param eventRate   - 歌曲PT系数 (从 music meta 获取)
- * @param boost       - 火罐数量 (0 ~ 10)
+ * Calculate event PT from score and bonus values.
+ * @param score       - In-game score (0 ~ 2840000)
+ * @param eventBonus  - Deck event bonus percentage (0 ~ 435)
+ * @param eventRate   - Song PT rate from music meta
+ * @param boost       - Boost energy count (0 ~ 10)
  */
 export function calc(
     score: number,
@@ -46,28 +46,29 @@ export function calc(
     return val * getBoostRate(boost);
 }
 
-// ======================== 反向搜索 ========================
+// ======================== Reverse search ========================
 
 export interface ScoreControlResult {
-    /** 卡组活动加成 (%) */
+    /** Deck event bonus (%) */
     eventBonus: number;
-    /** 火罐数量 */
+    /** Boost energy count */
     boost: number;
-    /** 火罐倍率 */
+    /** Boost energy multiplier */
     boostRate: number;
-    /** 得分下界 */
+    /** Lower score bound */
     scoreMin: number;
-    /** 得分上界 */
+    /** Upper score bound */
     scoreMax: number;
 }
 
 /**
- * 反向搜索：给定目标活动PT，找出所有满足条件的 (eventBonus, boost, scoreMin, scoreMax) 组合
+ * Reverse search: given a target event PT, find every matching
+ * (eventBonus, boost, scoreMin, scoreMax) combination.
  *
- * @param targetPoint   - 目标活动PT
- * @param eventRate     - 歌曲PT系数
- * @param maxEventBonus - 最大活动加成 (默认 415)
- * @param maxScore      - 最大允许得分 (默认 100000)
+ * @param targetPoint   - Target event PT
+ * @param eventRate     - Song PT rate
+ * @param maxEventBonus - Maximum event bonus (default 415)
+ * @param maxScore      - Maximum allowed score (default 3000000)
  */
 export function getValidScores(
     targetPoint: number,
@@ -82,24 +83,23 @@ export function getValidScores(
             const boost = opt.fires;
             const boostRate = opt.rate;
 
-            // 剪枝: 目标PT必须能被火罐倍率整除
+            // Prune: target PT must be divisible by the boost multiplier.
             if (targetPoint % boostRate !== 0) continue;
 
-            // 二分搜索: 找到 calc() == targetPoint 的分数范围
-            // 先检查是否存在任何有效分数
+            // Binary search for the score range where calc() equals targetPoint.
+            // First check whether any valid score exists.
             const _targetVal = targetPoint / boostRate; // val = targetPoint / boostRate
 
-            // 查找 score_max: 满足 calc() == targetPoint 的最大分数
+            // Find score_max: the maximum score satisfying calc() == targetPoint.
             let lo = 0;
             let hi = maxScore;
             let scoreMax = -1;
 
-            // 先检查边界是否有解
+            // Check boundary feasibility first.
             if (calc(0, eventBonus, eventRate, boost) > targetPoint) continue;
             if (calc(maxScore, eventBonus, eventRate, boost) < targetPoint) continue;
 
-            // 找上界: 最大的 score 使得 calc(score) == targetPoint
-            // 等价于找最大的 score 使得 calc(score) <= targetPoint
+            // Find the upper bound: largest score where calc(score) <= targetPoint.
             lo = 0;
             hi = maxScore;
             while (lo <= hi) {
@@ -111,14 +111,13 @@ export function getValidScores(
                     hi = mid - 1;
                 }
             }
-            // hi 现在是最大的 score 使得 calc(score) <= targetPoint
+            // hi is now the largest score where calc(score) <= targetPoint.
             scoreMax = hi;
 
-            // 验证确实等于目标
+            // Verify it exactly matches the target.
             if (scoreMax < 0 || calc(scoreMax, eventBonus, eventRate, boost) !== targetPoint) continue;
 
-            // 找下界: 最小的 score 使得 calc(score) == targetPoint
-            // 等价于找最小的 score 使得 calc(score) >= targetPoint
+            // Find the lower bound: smallest score where calc(score) >= targetPoint.
             lo = 0;
             hi = scoreMax;
             while (lo <= hi) {
@@ -130,10 +129,10 @@ export function getValidScores(
                     lo = mid + 1;
                 }
             }
-            // lo 现在是最小的 score 使得 calc(score) >= targetPoint
+            // lo is now the smallest score where calc(score) >= targetPoint.
             const scoreMin = lo;
 
-            // 验证
+            // Verify the lower bound.
             if (calc(scoreMin, eventBonus, eventRate, boost) !== targetPoint) continue;
 
             results.push({
@@ -149,44 +148,45 @@ export function getValidScores(
     return results;
 }
 
-// ======================== 智能路线规划 ========================
+// ======================== Smart route planning ========================
 
 export interface SmartRouteStep {
-    /** 该步骤重复次数 */
+    /** Number of repetitions for this step */
     count: number;
-    /** 是否是放置步骤 (scoreMin=0) */
+    /** Whether this is an AFK step (scoreMin=0) */
     isAFK: boolean;
-    /** 每次获得的PT */
+    /** PT gained each time */
     pt: number;
-    /** 卡组活动加成 (%) */
+    /** Deck event bonus (%) */
     eventBonus: number;
-    /** 火罐数量 */
+    /** Boost energy count */
     boost: number;
-    /** 火罐倍率 */
+    /** Boost energy multiplier */
     boostRate: number;
-    /** 得分下界 */
+    /** Lower score bound */
     scoreMin: number;
-    /** 得分上界 */
+    /** Upper score bound */
     scoreMax: number;
 }
 
 export interface SmartRoutePlan {
-    /** 总PT */
+    /** Total PT */
     totalPT: number;
-    /** 路线步骤 */
+    /** Route steps */
     steps: SmartRouteStep[];
-    /** 放置次数 */
+    /** Number of AFK plays */
     afkCount: number;
-    /** 控分次数 */
+    /** Number of score-control plays */
     controlledCount: number;
-    /** 总游戏次数 */
+    /** Total play count */
     totalPlays: number;
-    /** 是否纯放置 */
+    /** Whether the route is pure AFK */
     isPureAFK: boolean;
 }
 
 /**
- * 查找给定 (eventBonus, boost) 下，产生 targetPT 的最大得分
+ * Find the maximum score that produces targetPT under the given
+ * (eventBonus, boost) combination.
  */
 function findScoreMaxForPT(
     eventBonus: number,
@@ -210,19 +210,20 @@ function findScoreMaxForPT(
 }
 
 /**
- * 智能路线规划：将目标PT拆分为多次游戏，优先放置路线
+ * Smart route planning: split the target PT into multiple plays,
+ * prioritizing AFK routes.
  *
- * 策略:
- * 1. 纯放置: N × 放置PT = 目标
- * 2. 放置+控分: N × 放置PT + 1 × 控分PT = 目标
+ * Strategy:
+ * 1. Pure AFK: N × AFK PT = target
+ * 2. AFK + score control: N × AFK PT + 1 × controlled PT = target
  *
- * @param targetPoint   - 目标总活动PT
- * @param eventRate     - 歌曲PT系数
- * @param minEventBonus - 最小活动加成 (默认 0)
- * @param maxEventBonus - 最大活动加成 (默认 415)
- * @param maxScore      - 最大允许得分 (默认 100000)
- * @param maxPlays      - 单条路线最多游戏次数 (默认 10)
- * @param maxRoutes     - 最多返回路线数 (默认 20)
+ * @param targetPoint   - Target total event PT
+ * @param eventRate     - Song PT rate
+ * @param minEventBonus - Minimum event bonus (default 0)
+ * @param maxEventBonus - Maximum event bonus (default 415)
+ * @param maxScoreLimit - Maximum allowed score (default 3000000)
+ * @param maxPlays      - Maximum play count per route (default 10)
+ * @param maxRoutes     - Maximum number of routes to return (default 20)
  */
 export function planSmartRoutes(
     targetPoint: number,
@@ -237,7 +238,7 @@ export function planSmartRoutes(
     const plans: SmartRoutePlan[] = [];
     const planKeys = new Set<string>();
 
-    // Determine the set of bonuses to iterate over
+    // Determine the set of bonuses to iterate over.
     let bonusIterator: number[] = [];
     if (validBonuses && validBonuses.length > 0) {
         bonusIterator = validBonuses.filter(b => b >= minEventBonus && b <= maxEventBonus);
@@ -247,7 +248,8 @@ export function planSmartRoutes(
         }
     }
 
-    // Step 1: 收集所有可能的放置PT (score=0)，按 PT 值去重，保留最低 eventBonus
+    // Step 1: collect all possible AFK PT values (score=0), dedupe by PT,
+    // and keep the lowest eventBonus for each PT value.
     const afkByPT = new Map<number, { eventBonus: number; boost: number; boostRate: number }>();
 
     for (const eventBonus of bonusIterator) {
@@ -271,7 +273,7 @@ export function planSmartRoutes(
         ...opt,
     }));
 
-    // Step 2: 纯放置路线 — N × 放置PT = 目标
+    // Step 2: pure AFK route — N × AFK PT = target.
     for (const afk of afkOptions) {
         if (targetPoint % afk.pt === 0) {
             const n = targetPoint / afk.pt;
@@ -302,7 +304,7 @@ export function planSmartRoutes(
         }
     }
 
-    // Step 3: 放置+控分路线 — N × 放置PT + 1 × 控分PT = 目标
+    // Step 3: AFK + score-control route — N × AFK PT + 1 × controlled PT = target.
     const remainderCache = new Map<number, ScoreControlResult[]>();
     for (const afk of afkOptions) {
         const maxN = Math.min(Math.floor(targetPoint / afk.pt), maxPlays - 1);
@@ -316,11 +318,11 @@ export function planSmartRoutes(
                 remainderCache.set(remainder, controlledRaw);
             }
 
-            // Filter by minEventBonus AND validBonuses if present
+            // Filter by minEventBonus and validBonuses if present.
             const controlled = controlledRaw.filter(r => {
                 if (r.eventBonus < minEventBonus) return false;
                 if (validBonuses && validBonuses.length > 0) {
-                    // Compare with 1-decimal rounding to handle float precision
+                    // Compare with 1-decimal rounding to handle float precision.
                     const rounded = Math.round(r.eventBonus * 10) / 10;
                     return validBonuses.some(vb => Math.round(vb * 10) / 10 === rounded);
                 }
@@ -329,7 +331,7 @@ export function planSmartRoutes(
 
             if (controlled.length === 0) continue;
 
-            // 选最佳方案: 优先放置 (scoreMin=0)，然后低 eventBonus
+            // Pick the best option: prefer AFK (scoreMin=0), then lower eventBonus.
             let best = controlled[0];
             for (let i = 1; i < controlled.length; i++) {
                 const c = controlled[i];
@@ -378,11 +380,11 @@ export function planSmartRoutes(
                     isPureAFK: isLastStepAFK,
                 });
             }
-            break; // 对该 afk PT，只取最大 N 找到的第一个有效方案
+            break; // For this AFK PT, keep the first valid plan with the largest N.
         }
     }
 
-    // 排序: 纯放置优先 → 控分次数少 → 总场次少
+    // Sort: pure AFK first, fewer controlled plays next, then fewer total plays.
     plans.sort((a, b) => {
         if (a.isPureAFK && !b.isPureAFK) return -1;
         if (!a.isPureAFK && b.isPureAFK) return 1;

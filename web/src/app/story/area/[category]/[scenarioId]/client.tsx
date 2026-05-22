@@ -6,6 +6,7 @@ import MainLayout from "@/components/MainLayout";
 import { StoryReader } from "@/components/story/StoryReader";
 import { fetchMasterData } from "@/lib/fetch";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { fetchStoryAssetFromMirror, StoryAssetMissingError } from "@/lib/storyAsset";
 import { processScenarioForDisplay } from "@/lib/storyLoader";
 import { IProcessedScenarioData } from "@/types/story";
@@ -19,6 +20,7 @@ interface IArea { id: number; name: string; subName?: string; }
 export default function StoryAreaTalkClient() {
     const params = useParams();
     const { serverSource, assetSource } = useTheme();
+    const { t } = useI18n();
     const areaIdParam = decodeURIComponent(params.category as string);
     const scenarioId = decodeURIComponent(params.scenarioId as string);
     const lang: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
@@ -43,13 +45,13 @@ export default function StoryAreaTalkClient() {
                     fetchMasterData<IArea[]>("areas.json"),
                 ]);
                 const action = actionSetsData.find(a => a.scenarioId === scenarioId);
-                if (!action?.scenarioId) throw new Error("对话不存在");
+                if (!action?.scenarioId) throw new Error(t("page.story.area.dialogueNotFound"));
 
                 setActionSetId(action.id);
                 const area = areasData.find(a => a.id === action.areaId);
-                const name = area ? (area.subName ? `${area.name} - ${area.subName}` : area.name) : `区域 ${action.areaId}`;
+                const name = area ? (area.subName ? `${area.name} - ${area.subName}` : area.name) : t("page.story.area.areaFallback", { id: action.areaId });
                 setAreaName(name);
-                document.title = `${name} - 区域对话 - Moesekai`;
+                document.title = t("page.story.area.documentTitle", { name });
 
                 const group = Math.floor(action.id / 100);
                 const raw = await fetchStoryAssetFromMirror("talk", lang, {
@@ -59,14 +61,14 @@ export default function StoryAreaTalkClient() {
                 setScenarioData(await processScenarioForDisplay(raw, "talk", assetSource, serverSource));
             } catch (err) {
                 if (err instanceof StoryAssetMissingError) setMissingPaths(err.missingPaths);
-                else setError(err instanceof Error ? err.message : "加载失败");
+                else setError(err instanceof Error ? err.message : t("common.state.loadingFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
         load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [scenarioId, lang]);
+    }, [scenarioId, lang, t]);
 
     return (
         <MainLayout>
@@ -78,18 +80,18 @@ export default function StoryAreaTalkClient() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    返回对话列表
+                    {t("page.story.area.backToDialogueList")}
                 </Link>
 
                 <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="font-bold text-slate-900 dark:text-slate-100">{areaName || `对话 ${scenarioId}`}</h1>
+                        <h1 className="font-bold text-slate-900 dark:text-slate-100">{areaName || t("page.story.area.dialogueFallback", { id: scenarioId })}</h1>
                         <span className="text-xs text-slate-400">ID: {actionSetId}:{scenarioId}</span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
                             serverSource === "cn"
                                 ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50"
                                 : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50"
-                        }`}>{serverSource === "cn" ? "国服" : "日服"}</span>
+                        }`}>{t(`page.story.serverSource.${serverSource}`)}</span>
                     </div>
                 </div>
 
@@ -98,7 +100,7 @@ export default function StoryAreaTalkClient() {
                     isLoading={isLoading}
                     error={error}
                     missingPaths={missingPaths ?? undefined}
-                    endLabel="对话结束"
+                    endLabel={t("page.story.area.endLabel")}
                 />
             </div>
         </MainLayout>

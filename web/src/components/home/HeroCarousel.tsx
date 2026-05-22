@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { IEventInfo, getEventStatus, EVENT_STATUS_DISPLAY, EVENT_TYPE_NAMES } from "@/types/events";
+import { IEventInfo, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
 import { IGachaInfo, ICardInfo, CHAR_COLORS } from "@/types/types";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import {
     getEventBannerUrl,
@@ -13,15 +13,15 @@ import {
     getCardFullUrl,
     getCharacterIconUrl,
 } from "@/lib/assets";
-import { loadTranslations, TranslationData } from "@/lib/translations";
 import { getTodayBirthdays, isVirtualSinger, type UpcomingBirthday } from "@/lib/birthdays";
+import { useI18n } from "@/contexts/I18nContext";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 // ─── Slide type definitions ───
 
 interface EventSlide {
     type: "event";
     event: IEventInfo;
-    translatedName: string;
 }
 
 interface GachaSlide {
@@ -43,11 +43,12 @@ const AUTO_PLAY_INTERVAL = 5000;
 
 export default function HeroCarousel() {
     const { assetSource, themeColor, isShowSpoiler } = useTheme();
+    const { t, formatDate: formatLocaleDate } = useI18n();
+    const { t: translateMasterText } = useTranslation();
     const [slides, setSlides] = useState<Slide[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [isPaused, setIsPaused] = useState(false);
-    const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [now, setNow] = useState(() => Date.now());
 
     // Touch handling
@@ -65,14 +66,11 @@ export default function HeroCarousel() {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [eventsData, gachasData, cardsData, translationsData] = await Promise.all([
+                const [eventsData, gachasData, cardsData] = await Promise.all([
                     fetchMasterData<IEventInfo[]>("events.json"),
                     fetchMasterData<IGachaInfo[]>("gachas.json"),
                     fetchMasterData<ICardInfo[]>("cards.json"),
-                    loadTranslations(),
                 ]);
-                setTranslations(translationsData);
-
                 const now = Date.now();
                 const builtSlides: Slide[] = [];
 
@@ -85,8 +83,7 @@ export default function HeroCarousel() {
                 const currentEvent = ongoingEvent || upcomingEvent;
 
                 if (currentEvent) {
-                    const translatedName = translationsData?.events?.name?.[currentEvent.name] || "";
-                    builtSlides.push({ type: "event", event: currentEvent, translatedName });
+                    builtSlides.push({ type: "event", event: currentEvent });
                 }
 
                 // 2. Current gachas (filter out "normal" type, keep limited/featured)
@@ -189,28 +186,30 @@ export default function HeroCarousel() {
         const passReserve = Math.max(0, PASS_CAP - recoverable);
 
         if (normalReserve === 0 && passReserve === 0) {
-            return recoverable > PASS_CAP ? "多余体力塞烤森" : null;
+            return recoverable > PASS_CAP ? t("page.home.stamina.bakerLong") : null;
         }
-        if (normalReserve >= NORMAL_CAP) return "保持满体力";
-        if (normalReserve === 0) return `预留 ${passReserve} 体力(月卡)`;
-        return `预留 ${normalReserve} 体力`;
-    }, [now]);
+        if (normalReserve >= NORMAL_CAP) return t("page.home.stamina.keepFullLong");
+        if (normalReserve === 0) return t("page.home.stamina.reservePassLong", { count: passReserve });
+        return t("page.home.stamina.reserveLong", { count: normalReserve });
+    }, [now, t]);
 
     // Format date
-    const formatDate = (ts: number) => {
-        const d = new Date(ts);
-        return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, "0")}`;
-    };
+    const formatDate = (ts: number) => formatLocaleDate(ts, {
+        month: "numeric",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
 
     // Format remaining time
     const formatRemaining = (endTs: number) => {
         const diff = endTs - now;
-        if (diff <= 0) return "已结束";
+        if (diff <= 0) return t("page.home.hero.ended");
         const days = Math.floor(diff / 86400000);
         const hours = Math.floor((diff % 86400000) / 3600000);
-        if (days > 0) return `剩余 ${days}天${hours}小时`;
+        if (days > 0) return t("page.home.hero.remainingDaysHours", { days, hours });
         const minutes = Math.floor((diff % 3600000) / 60000);
-        return `剩余 ${hours}小时${minutes}分`;
+        return t("page.home.hero.remainingHoursMinutes", { hours, minutes });
     };
 
     if (isLoading) {
@@ -222,7 +221,7 @@ export default function HeroCarousel() {
     if (slides.length === 0) {
         return (
             <div className="w-full h-[180px] lg:h-[260px] rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
-                <p className="font-medium">暂无最新内容</p>
+                <p className="font-medium">{t("page.home.hero.noContent")}</p>
             </div>
         );
     }
@@ -257,6 +256,8 @@ export default function HeroCarousel() {
                             now={now}
                             formatDate={formatDate}
                             getStaminaLabel={getStaminaLabel}
+                            t={t}
+                            translateMasterText={translateMasterText}
                         />
                     )}
                     {slide.type === "gacha" && (
@@ -265,12 +266,16 @@ export default function HeroCarousel() {
                             assetSource={assetSource}
                             now={now}
                             formatRemaining={formatRemaining}
+                            formatDate={formatDate}
+                            t={t}
                         />
                     )}
                     {slide.type === "birthday" && (
                         <BirthdaySlideContent
                             slide={slide}
                             assetSource={assetSource}
+                            formatDate={formatDate}
+                            t={t}
                         />
                     )}
                 </div>
@@ -282,7 +287,7 @@ export default function HeroCarousel() {
                     <button
                         onClick={(e) => { e.preventDefault(); goPrev(); }}
                         className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/50"
-                        aria-label="上一张"
+                        aria-label={t("page.home.hero.previousSlide")}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -291,7 +296,7 @@ export default function HeroCarousel() {
                     <button
                         onClick={(e) => { e.preventDefault(); goNext(); }}
                         className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/50"
-                        aria-label="下一张"
+                        aria-label={t("page.home.hero.nextSlide")}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -312,7 +317,7 @@ export default function HeroCarousel() {
                                     ? "w-6 h-2 bg-white shadow-sm"
                                     : "w-2 h-2 bg-white/50 hover:bg-white/70"
                             }`}
-                            aria-label={`切换到第 ${index + 1} 张`}
+                            aria-label={t("page.home.hero.goToSlide", { index: index + 1 })}
                         />
                     ))}
                 </div>
@@ -330,18 +335,25 @@ function EventSlideContent({
     now,
     formatDate,
     getStaminaLabel,
+    t,
+    translateMasterText,
 }: {
     slide: EventSlide;
-    assetSource: string;
+    assetSource: AssetSourceType;
     themeColor: string;
     now: number;
     formatDate: (ts: number) => string;
     getStaminaLabel: (event: IEventInfo) => string | null;
+    t: ReturnType<typeof useI18n>["t"];
+    translateMasterText: ReturnType<typeof useTranslation>["t"];
 }) {
-    const { event, translatedName } = slide;
+    const { event } = slide;
+    const translatedName = translateMasterText("events", "name", event.name);
     const status = getEventStatus(event);
     const statusDisplay = EVENT_STATUS_DISPLAY[status];
-    const eventTypeName = EVENT_TYPE_NAMES[event.eventType] || event.eventType;
+    const statusLabel = t(`common.status.${status}`);
+    const eventTypeLabel = t(`common.eventTypes.${event.eventType}`);
+    const eventTypeName = eventTypeLabel === `common.eventTypes.${event.eventType}` ? event.eventType : eventTypeLabel;
 
     // Progress
     const totalDuration = event.aggregateAt - event.startAt;
@@ -356,7 +368,7 @@ function EventSlideContent({
         <Link href={`/events/${event.id}`} className="block w-full h-full relative">
             {/* Background */}
             <Image
-                src={getEventBannerUrl(event.assetbundleName, assetSource as any)}
+                src={getEventBannerUrl(event.assetbundleName, assetSource)}
                 alt={event.name}
                 fill
                 className="object-cover"
@@ -370,7 +382,7 @@ function EventSlideContent({
             <div className="absolute inset-0 flex items-center justify-center p-8 pb-16">
                 <div className="relative w-full h-full max-w-[400px] max-h-[120px] lg:max-h-[160px]">
                     <Image
-                        src={getEventLogoUrl(event.assetbundleName, assetSource as any)}
+                        src={getEventLogoUrl(event.assetbundleName, assetSource)}
                         alt=""
                         fill
                         className="object-contain drop-shadow-2xl"
@@ -389,7 +401,7 @@ function EventSlideContent({
                             className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded text-white shadow-sm"
                             style={{ backgroundColor: statusDisplay.color }}
                         >
-                            {statusDisplay.label}
+                            {statusLabel}
                         </span>
                         <span className="text-[10px] font-bold text-white/70">
                             {eventTypeName}
@@ -441,24 +453,28 @@ function GachaSlideContent({
     assetSource,
     now,
     formatRemaining,
+    formatDate,
+    t,
 }: {
     slide: GachaSlide;
-    assetSource: string;
+    assetSource: AssetSourceType;
     now: number;
     formatRemaining: (endTs: number) => string;
+    formatDate: (ts: number) => string;
+    t: ReturnType<typeof useI18n>["t"];
 }) {
     const { gacha, pickupCard } = slide;
     const isUpcoming = gacha.startAt > now;
 
     // Use the first pickup card's full art as background
-    // For rarity_3/rarity_4: use after_training (花后)
-    // For rarity_birthday: use normal (花前, birthday cards have no trained art)
+    // For rarity_3/rarity_4: use after_training artwork.
+    // For rarity_birthday: use normal artwork because birthday cards have no trained art.
     const pickupBgUrl = pickupCard
         ? getCardFullUrl(
             pickupCard.characterId,
             pickupCard.assetbundleName,
             pickupCard.cardRarityType === "rarity_3" || pickupCard.cardRarityType === "rarity_4",
-            assetSource as any
+            assetSource
         )
         : null;
 
@@ -483,7 +499,7 @@ function GachaSlideContent({
             <div className="absolute inset-0 flex items-center justify-center p-8 pb-16">
                 <div className="relative w-full h-full max-w-[360px] max-h-[100px] lg:max-h-[140px]">
                     <Image
-                        src={getGachaLogoUrl(gacha.assetbundleName, assetSource as any)}
+                        src={getGachaLogoUrl(gacha.assetbundleName, assetSource)}
                         alt=""
                         fill
                         className="object-contain drop-shadow-2xl"
@@ -499,7 +515,7 @@ function GachaSlideContent({
                     <div className="flex flex-col gap-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                             <span className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded text-white shadow-sm ${isUpcoming ? "bg-blue-500" : "bg-pink-500"}`}>
-                                {isUpcoming ? "即将开始" : "当前卡池"}
+                                {isUpcoming ? t("page.home.hero.upcomingGacha") : t("page.home.hero.currentGacha")}
                             </span>
                         </div>
                         <h3 className="font-bold text-white text-sm sm:text-base leading-tight line-clamp-1 drop-shadow-sm">
@@ -507,7 +523,7 @@ function GachaSlideContent({
                         </h3>
                     </div>
                     <div className="text-xs sm:text-sm font-bold text-white/70 ml-4 shrink-0">
-                        {isUpcoming ? `${new Date(gacha.startAt).getMonth() + 1}/${new Date(gacha.startAt).getDate()} 开始` : formatRemaining(gacha.endAt)}
+                        {isUpcoming ? t("page.home.hero.gachaStartsAt", { date: formatDate(gacha.startAt) }) : formatRemaining(gacha.endAt)}
                     </div>
                 </div>
             </div>
@@ -520,9 +536,13 @@ function GachaSlideContent({
 function BirthdaySlideContent({
     slide,
     assetSource,
+    formatDate,
+    t,
 }: {
     slide: BirthdaySlide;
-    assetSource: string;
+    assetSource: AssetSourceType;
+    formatDate: (ts: number) => string;
+    t: ReturnType<typeof useI18n>["t"];
 }) {
     const { birthday, card } = slide;
     const charColor = CHAR_COLORS[birthday.id.toString()] || "#ff66cc";
@@ -533,7 +553,7 @@ function BirthdaySlideContent({
             card.characterId,
             card.assetbundleName,
             isBirthdayRarity ? false : true,
-            assetSource as any
+            assetSource
         )
         : null;
 
@@ -581,12 +601,14 @@ function BirthdaySlideContent({
                     {/* Text */}
                     <div>
                         <div className="text-white/70 text-xs lg:text-sm font-medium mb-1">
-                            {birthday.month}月{birthday.day}日
+                            {formatDate(new Date(2000, birthday.month - 1, birthday.day).getTime())}
                         </div>
                         <h3
                             className="text-xl lg:text-3xl font-black text-white drop-shadow-lg"
                         >
-                            {isVirtualSinger(birthday.id) ? "纪念日快乐" : "生日快乐"}，{birthday.name}！
+                            {isVirtualSinger(birthday.id)
+                                ? t("page.home.hero.anniversaryGreeting", { name: birthday.name })
+                                : t("page.home.hero.birthdayGreeting", { name: birthday.name })}
                         </h3>
                         {card && card.cardRarityType === "rarity_birthday" && (
                             <p className="text-xs lg:text-sm text-white/60 mt-1 font-medium">

@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import MainLayout from "@/components/MainLayout";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
 import ExternalLink from "@/components/ExternalLink";
+import { useI18n } from "@/contexts/I18nContext";
 import {
     fetchGuidesIndex,
     fetchGuideContent,
@@ -105,6 +106,7 @@ const markdownComponents = {
 function GuideDetailContent() {
     const params = useParams();
     const router = useRouter();
+    const { t } = useI18n();
     const guideId = params.id as string;
 
     const [guide, setGuide] = useState<GuideEntry | null>(null);
@@ -122,7 +124,7 @@ function GuideDetailContent() {
                 const indexData: GuidesIndex = await fetchGuidesIndex();
                 const found = indexData.guides.find((g) => g.id === guideId);
                 if (!found) {
-                    setError("未找到该攻略");
+                    setError(t("page.guides.detailNotFound"));
                     return;
                 }
 
@@ -136,13 +138,13 @@ function GuideDetailContent() {
                 setError(null);
             } catch (err) {
                 console.error("Error loading guide:", err);
-                setError(err instanceof Error ? err.message : "加载失败");
+                setError(err instanceof Error ? err.message : t("page.guides.loadFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
         load();
-    }, [guideId]);
+    }, [guideId, t]);
 
     if (isLoading) {
         return (
@@ -156,15 +158,15 @@ function GuideDetailContent() {
         return (
             <div className="container mx-auto px-4 sm:px-6 py-12 text-center">
                 <div className="mb-6 p-6 bg-red-50 border border-red-200 rounded-xl text-red-600 inline-block">
-                    <p className="font-bold text-lg mb-1">加载失败</p>
-                    <p className="text-sm">{error ?? "未知错误"}</p>
+                    <p className="font-bold text-lg mb-1">{t("page.guides.loadFailed")}</p>
+                    <p className="text-sm">{error ?? t("page.guides.unknownError")}</p>
                 </div>
                 <div>
                     <button
                         onClick={() => router.push("/guides/")}
                         className="px-6 py-2 bg-miku text-white rounded-lg font-bold hover:opacity-90 transition-all"
                     >
-                        返回攻略列表
+                        {t("page.guides.backToList")}
                     </button>
                 </div>
             </div>
@@ -184,7 +186,7 @@ function GuideDetailContent() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                返回攻略列表
+                {t("page.guides.backToList")}
             </Link>
 
             {/* Article Header */}
@@ -207,7 +209,7 @@ function GuideDetailContent() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         {guide.author.group}
-                        {guide.author.supervisor && ` · 监修 ${guide.author.supervisor}`}
+                        {guide.author.supervisor && t("page.guides.supervisor", { name: guide.author.supervisor })}
                     </span>
 
                     {guide.source && (
@@ -218,7 +220,7 @@ function GuideDetailContent() {
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
-                            查看原文
+                            {t("page.guides.viewOriginal")}
                         </ExternalLink>
                     )}
                 </div>
@@ -261,9 +263,19 @@ function GuideDetailContent() {
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    返回攻略列表
+                    {t("page.guides.backToList")}
                 </Link>
             </div>
+        </div>
+    );
+}
+
+function GuideDetailLoadingFallback() {
+    const { t } = useI18n();
+
+    return (
+        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+            {t("page.guides.loadingFallback")}
         </div>
     );
 }
@@ -271,7 +283,7 @@ function GuideDetailContent() {
 export default function GuideDetailClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载攻略...</div>}>
+            <Suspense fallback={<GuideDetailLoadingFallback />}>
                 <GuideDetailContent />
             </Suspense>
         </MainLayout>

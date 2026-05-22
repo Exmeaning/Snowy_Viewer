@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
+import { useI18n } from "@/contexts/I18nContext";
 import MainLayout from "@/components/MainLayout";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
 import ExternalLink from "@/components/ExternalLink";
@@ -10,23 +11,13 @@ import { IMangaItem, IMangaData } from "@/types/manga";
 import { getMangaImageUrl } from "@/lib/assets";
 import { fetchMangaData } from "@/lib/fetch";
 
-// ==================== Constants ====================
-
-function formatDate(timestamp: number): string {
-    const d = new Date(timestamp * 1000);
-    return d.toLocaleDateString("zh-CN", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    });
-}
-
 // ==================== Component ====================
 
 export default function MangaDetailClient() {
     const params = useParams();
     const mangaId = Number(params.id);
     const { setDetailName } = useBreadcrumb();
+    const { t, formatDate } = useI18n();
 
     const [allMangas, setAllMangas] = useState<IMangaItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -44,13 +35,13 @@ export default function MangaDetailClient() {
                 setError(null);
             } catch (err) {
                 console.error("Error fetching mangas:", err);
-                setError(err instanceof Error ? err.message : "未知错误");
+                setError(err instanceof Error ? err.message : t("page.manga.unknownError"));
             } finally {
                 setIsLoading(false);
             }
         }
         fetchMangas();
-    }, []);
+    }, [t]);
 
     // Current manga
     const currentManga = useMemo(() => {
@@ -69,14 +60,14 @@ export default function MangaDetailClient() {
     // Update page title
     useEffect(() => {
         if (currentManga) {
-            document.title = `Moesekai - 第${currentManga.id}话 ${currentManga.title}`;
+            document.title = t("page.manga.detailDocumentTitle", { id: currentManga.id, title: currentManga.title });
         }
-    }, [currentManga]);
+    }, [currentManga, t]);
 
     // Set breadcrumb detail name
     useEffect(() => {
-        if (currentManga) setDetailName(`第${currentManga.id}话 ${currentManga.title}`);
-    }, [currentManga, setDetailName]);
+        if (currentManga) setDetailName(t("page.manga.episodeWithTitle", { id: currentManga.id, title: currentManga.title }));
+    }, [currentManga, setDetailName, t]);
 
     // Keyboard navigation: ← prev, → next
     useEffect(() => {
@@ -107,7 +98,7 @@ export default function MangaDetailClient() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">加载中...</p>
+                        <p className="mt-4 text-slate-500">{t("page.manga.loading")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -124,8 +115,8 @@ export default function MangaDetailClient() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">第 {mangaId} 话未找到</h2>
-                        <p className="text-slate-500 mb-6">该漫画可能尚未收录</p>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">{t("page.manga.notFoundTitle", { id: mangaId })}</h2>
+                        <p className="text-slate-500 mb-6">{t("page.manga.notFoundDesc")}</p>
                         <Link
                             href="/manga"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
@@ -133,7 +124,7 @@ export default function MangaDetailClient() {
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            返回漫画列表
+                            {t("page.manga.backToList")}
                         </Link>
                     </div>
                 </div>
@@ -155,16 +146,16 @@ export default function MangaDetailClient() {
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
-                            <span className="hidden sm:inline">第{prevManga.id}话</span>
-                            <span className="sm:hidden">上一话</span>
+                            <span className="hidden sm:inline">{t("page.manga.episodeLabel", { id: prevManga.id })}</span>
+                            <span className="sm:hidden">{t("page.manga.previousEpisode")}</span>
                         </Link>
                     ) : (
-                        <div className="text-sm text-slate-300">已是第一话</div>
+                        <div className="text-sm text-slate-300">{t("page.manga.firstEpisodeReached")}</div>
                     )}
 
                     {/* Jump to */}
                     <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400 hidden sm:inline">跳转</span>
+                        <span className="text-xs text-slate-400 hidden sm:inline">{t("page.manga.jumpLabel")}</span>
                         <input
                             type="number"
                             min={1}
@@ -188,14 +179,14 @@ export default function MangaDetailClient() {
                             href={`/manga/${nextManga.id}`}
                             className="flex items-center gap-2 text-sm text-slate-600 hover:text-miku transition-colors"
                         >
-                            <span className="hidden sm:inline">第{nextManga.id}话</span>
-                            <span className="sm:hidden">下一话</span>
+                            <span className="hidden sm:inline">{t("page.manga.episodeLabel", { id: nextManga.id })}</span>
+                            <span className="sm:hidden">{t("page.manga.nextEpisode")}</span>
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </Link>
                     ) : (
-                        <div className="text-sm text-slate-300">已是最新话</div>
+                        <div className="text-sm text-slate-300">{t("page.manga.latestEpisodeReached")}</div>
                     )}
                 </div>
 
@@ -203,10 +194,14 @@ export default function MangaDetailClient() {
                 <div className="mb-6">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-miku/10 rounded-full text-xs font-bold text-miku">
-                            第{currentManga.id}话
+                            {t("page.manga.episodeLabel", { id: currentManga.id })}
                         </span>
                         <span className="text-xs text-slate-400">
-                            {formatDate(currentManga.date)}
+                            {formatDate(currentManga.date * 1000, {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                            })}
                         </span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-slate-800">
@@ -218,7 +213,7 @@ export default function MangaDetailClient() {
                 <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden mb-6">
                     <img
                         src={getMangaImageUrl(currentManga.id)}
-                        alt={`第${currentManga.id}话 ${currentManga.title}`}
+                        alt={t("page.manga.imageAlt", { id: currentManga.id, title: currentManga.title })}
                         className="w-full h-auto"
                         loading="eager"
                     />
@@ -231,14 +226,14 @@ export default function MangaDetailClient() {
                             <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            漫画信息
+                            {t("page.manga.mangaInfo")}
                         </h2>
                     </div>
                     <div className="divide-y divide-slate-100">
                         {/* Contributors */}
                         {currentManga.contributors && Object.keys(currentManga.contributors).length > 0 && (
                             <div className="px-5 py-3">
-                                <p className="text-xs font-bold text-slate-400 mb-2">翻译贡献者</p>
+                                <p className="text-xs font-bold text-slate-400 mb-2">{t("page.manga.contributors")}</p>
                                 <div className="flex flex-wrap gap-2">
                                     {Object.entries(currentManga.contributors).map(([role, name]) => (
                                         <span
@@ -255,7 +250,7 @@ export default function MangaDetailClient() {
 
                         {/* Source link */}
                         <div className="px-5 py-3 flex items-center justify-between">
-                            <span className="text-sm text-slate-500">来源</span>
+                            <span className="text-sm text-slate-500">{t("page.manga.source")}</span>
                             <ExternalLink
                                 href={currentManga.url}
                                 className="inline-flex items-center gap-1.5 text-sm text-miku hover:text-miku-dark transition-colors"
@@ -263,7 +258,7 @@ export default function MangaDetailClient() {
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
-                                查看原帖
+                                {t("page.manga.viewOriginalPost")}
                             </ExternalLink>
                         </div>
                     </div>
@@ -284,10 +279,10 @@ export default function MangaDetailClient() {
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                 </svg>
-                                上一话
+                                {t("page.manga.previousEpisode")}
                             </span>
                             <span className="text-sm font-bold text-slate-700 group-hover:text-miku transition-colors truncate w-full">
-                                第{prevManga.id}话 {prevManga.title}
+                                {t("page.manga.episodeWithTitle", { id: prevManga.id, title: prevManga.title })}
                             </span>
                         </Link>
                     ) : (
@@ -300,13 +295,13 @@ export default function MangaDetailClient() {
                             className="flex flex-col items-end gap-1 p-4 bg-white rounded-xl shadow ring-1 ring-slate-200 hover:ring-miku hover:shadow-lg transition-all group text-right"
                         >
                             <span className="text-xs text-slate-400 group-hover:text-miku transition-colors flex items-center gap-1">
-                                下一话
+                                {t("page.manga.nextEpisode")}
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                             </span>
                             <span className="text-sm font-bold text-slate-700 group-hover:text-miku transition-colors truncate w-full">
-                                第{nextManga.id}话 {nextManga.title}
+                                {t("page.manga.episodeWithTitle", { id: nextManga.id, title: nextManga.title })}
                             </span>
                         </Link>
                     ) : (

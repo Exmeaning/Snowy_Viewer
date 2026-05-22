@@ -7,12 +7,13 @@ import MainLayout from "@/components/MainLayout";
 import CostumeFilters from "@/components/costumes/CostumeFilters";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "@/contexts/TranslationContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { getCostumeThumbnailUrl } from "@/lib/assets";
 import {
     ICostumeInfo,
     IMoeCostumeData,
-    PART_TYPE_NAMES,
-    SOURCE_NAMES,
+    PART_TYPE_LABEL_KEYS,
+    SOURCE_LABEL_KEYS,
 } from "@/types/costume";
 import { ICardInfo } from "@/types/types"; // Import ICardInfo
 import { fetchMasterData } from "@/lib/fetch";
@@ -29,6 +30,12 @@ function CostumesContent() {
     const searchParams = useSearchParams();
     const { assetSource, isShowSpoiler } = useTheme();
     const { t } = useTranslation();
+    const { t: tI18n } = useI18n();
+    const translateWithFallback = (key: string | undefined, fallback: string) => {
+        if (!key) return fallback;
+        const label = tI18n(key);
+        return label === key ? fallback : label;
+    };
 
     const [costumes, setCostumes] = useState<ICostumeInfo[]>([]);
     const [allCards, setAllCards] = useState<ICardInfo[]>([]); // Store all cards
@@ -307,7 +314,7 @@ function CostumesContent() {
         />
     );
 
-    useQuickFilter("服装筛选", quickFilterContent, [
+    useQuickFilter(tI18n("page.costumes.filterTitle"), quickFilterContent, [
         selectedCharacters,
         selectedUnitIds,
         selectedPartTypes,
@@ -327,20 +334,20 @@ function CostumesContent() {
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">服装图鉴</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{tI18n("page.costumes.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    服装 <span className="text-miku">图鉴</span>
+                    {tI18n("page.costumes.title")} <span className="text-miku">{tI18n("page.costumes.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览游戏中的所有 3D 服装、发饰和发型
+                    {tI18n("page.costumes.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{tI18n("page.costumes.loadFailed")}</p>
                     <p>{error}</p>
                 </div>
             )}
@@ -405,7 +412,7 @@ function CostumesContent() {
                                                 {isSpoiler && (
                                                     <div className="mb-1">
                                                         <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded leading-none">
-                                                            剧透
+                                                            {tI18n("page.costumes.spoilerBadge")}
                                                         </span>
                                                     </div>
                                                 )}
@@ -421,11 +428,11 @@ function CostumesContent() {
                                                 <div className="mt-auto flex flex-wrap gap-1">
                                                     {costume.partTypes.map(pt => (
                                                         <span key={pt} className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
-                                                            {PART_TYPE_NAMES[pt] || pt}
+                                                            {translateWithFallback(PART_TYPE_LABEL_KEYS[pt], pt)}
                                                         </span>
                                                     ))}
                                                     <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
-                                                        {SOURCE_NAMES[costume.source] || costume.source}
+                                                        {translateWithFallback(SOURCE_LABEL_KEYS[costume.source], costume.source)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -442,7 +449,7 @@ function CostumesContent() {
                                         data-shortcut-load-more="true"
                                         className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                                     >
-                                        加载更多
+                                        {tI18n("page.costumes.loadMore")}
                                         <span className="ml-2 text-sm opacity-80">
                                             ({displayedGroups.length} / {filteredCostumes.length})
                                         </span>
@@ -456,7 +463,7 @@ function CostumesContent() {
                                     <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <p>没有找到匹配的服装</p>
+                                    <p>{tI18n("page.costumes.noResult")}</p>
                                 </div>
                             )}
                         </>
@@ -469,9 +476,18 @@ function CostumesContent() {
 export default function CostumesClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载服装数据...</div>}>
+            <Suspense fallback={<CostumesLoadingFallback />}>
                 <CostumesContent />
             </Suspense>
         </MainLayout>
+    );
+}
+
+function CostumesLoadingFallback() {
+    const { t } = useI18n();
+    return (
+        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+            {t("page.costumes.loadingFallback")}
+        </div>
     );
 }

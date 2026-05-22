@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { UNIT_DATA, CHARACTER_NAMES, UNIT_ICON_FILES } from "@/types/types";
+import { UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
+import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 
 interface CharacterSelectorProps {
     selectedCharacterId: number | null;
@@ -16,6 +18,7 @@ export default function CharacterSelector({
     availableCharacterIds,
     hideUnitFilter = false,
 }: CharacterSelectorProps) {
+    const { t } = useI18n();
     const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 
     const availableCharacterIdSet = useMemo(
@@ -62,6 +65,7 @@ export default function CharacterSelector({
                 {visibleUnits.map(unit => {
                     const iconName = UNIT_ICON_FILES[unit.id] || "";
                     const isSelected = selectedUnitId === unit.id;
+                    const unitLabel = t(UNIT_ID_LABEL_KEYS[unit.id] ?? `common.units.${unit.id}`);
                     return (
                         <button
                             key={unit.id}
@@ -70,12 +74,12 @@ export default function CharacterSelector({
                                 ? "ring-2 ring-miku shadow-lg bg-white"
                                 : "hover:bg-slate-100 border border-transparent bg-slate-50"
                                 }`}
-                            title={unit.name}
+                            title={unitLabel}
                         >
                             <div className="w-8 h-8 relative">
                                 <Image
                                     src={`/data/icon/${iconName}`}
-                                    alt={unit.name}
+                                    alt={unitLabel}
                                     fill
                                     className="object-contain"
                                     unoptimized
@@ -88,28 +92,31 @@ export default function CharacterSelector({
 
             {/* Character Grid */}
             <div className="flex flex-wrap gap-2">
-                {displayedCharacters.map(charId => (
-                    <button
-                        key={charId}
-                        onClick={() => onSelect(charId)}
-                        className={`relative transition-all ${selectedCharacterId === charId
-                            ? "ring-2 ring-miku scale-110 z-10 rounded-full"
-                            : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-80 hover:opacity-100"
-                            }`}
-                        title={CHARACTER_NAMES[charId]}
-                    >
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
-                            <Image
-                                src={getCharacterIconUrl(charId)}
-                                alt={CHARACTER_NAMES[charId]}
-                                width={40}
-                                height={40}
-                                className="w-full h-full object-cover"
-                                unoptimized
-                            />
-                        </div>
-                    </button>
-                ))}
+                {displayedCharacters.map(charId => {
+                    const characterName = getCharacterName(t, charId);
+                    return (
+                        <button
+                            key={charId}
+                            onClick={() => onSelect(charId)}
+                            className={`relative transition-all ${selectedCharacterId === charId
+                                ? "ring-2 ring-miku scale-110 z-10 rounded-full"
+                                : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-80 hover:opacity-100"
+                                }`}
+                            title={characterName}
+                        >
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
+                                <Image
+                                    src={getCharacterIconUrl(charId)}
+                                    alt={characterName}
+                                    width={40}
+                                    height={40}
+                                    className="w-full h-full object-cover"
+                                    unoptimized
+                                />
+                            </div>
+                        </button>
+                    );
+                })}
             </div>
         </div>
     );

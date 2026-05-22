@@ -1,9 +1,7 @@
-import type { Metadata } from "next";
 import BreadcrumbPersonalClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "个人",
-};
+export const generateMetadata = pageMetadata("breadcrumb_personal");
 
 export default function Page() {
     return <BreadcrumbPersonalClient />;

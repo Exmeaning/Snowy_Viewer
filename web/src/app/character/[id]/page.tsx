@@ -2,7 +2,8 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 import MainLayout from "@/components/MainLayout";
 import { getCharacterMeta } from "@/lib/metadata";
-import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
+import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
+import { formatDetailSeoDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
 import { getCharacterIconUrl } from "@/lib/assets";
 import CharacterDetailClient from "./client";
 
@@ -10,25 +11,35 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
+    const locale = await getRequestSeoLocale();
     const character = getCharacterMeta(Number(id));
-    if (!character) return { title: "角色详情" };
+    if (!character) {
+        return buildDetailMetadata({
+            locale,
+            title: getDetailFallbackTitle("character", locale),
+            description: getDetailFallbackTitle("character", locale),
+            path: `/character/${id}`,
+        });
+    }
 
     const title = character.name;
-    const description = `Project Sekai 角色「${character.name}」详细信息` + DETAIL_SEO_SUFFIX;
+    const description = formatDetailSeoDescription("character", { name: character.name }, locale);
     const ogImage = getCharacterIconUrl(Number(id));
 
-    return {
+    return buildDetailMetadata({
+        locale,
         title,
         description,
-        openGraph: { title, description, images: [ogImage] },
-        twitter: { card: "summary", title, description, images: [ogImage] },
-    };
+        path: `/character/${id}`,
+        images: [ogImage],
+        twitterCard: "summary",
+    });
 }
 
 export default function CharacterDetailPage() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载角色详情...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">Loading character details...</div>}>
                 <CharacterDetailClient />
             </Suspense>
         </MainLayout>

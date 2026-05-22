@@ -16,11 +16,11 @@ export interface IActionSet {
 /**
  * Area category type
  * - number: event_id
- * - "grade1": 日常对话（第一学年）
- * - "grade2": 日常对话（第二学年）
- * - "theater": 剧场版
- * - "limited_{areaId}": 限定区域
- * - "aprilfool{year}": 愚人节活动
+ * - "grade1": daily conversations before school advancement
+ * - "grade2": daily conversations after school advancement
+ * - "theater": movie theater conversations
+ * - "limited_{areaId}": limited area conversations
+ * - "aprilfool{year}": April Fools' conversations
  */
 export type AreaCategory = number | "grade1" | "grade2" | "theater" | string;
 

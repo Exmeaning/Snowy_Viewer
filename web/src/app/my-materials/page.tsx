@@ -1,10 +1,7 @@
-import { Metadata } from "next";
 import MyMaterialsClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "资源查询",
-    description: "Project Sekai 玩家资源与材料查询",
-};
+export const generateMetadata = pageMetadata("my_materials");
 
 export default function MyMaterialsPage() {
     return <MyMaterialsClient />;

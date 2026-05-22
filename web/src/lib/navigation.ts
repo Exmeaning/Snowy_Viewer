@@ -1,107 +1,98 @@
-// ── Breadcrumb navigation data ──
+// Breadcrumb navigation data
 
 export interface NavItemData {
-    name: string;
     href: string;
 }
 
 export interface NavGroupData {
-    title: string;
     href: string;
     items: NavItemData[];
 }
 
 export const navigationGroups: NavGroupData[] = [
     {
-        title: "数据库",
         href: "/breadcrumb-database",
         items: [
-            { name: "卡牌", href: "/cards" },
-            { name: "音乐列表", href: "/music" },
-            { name: "歌曲Meta", href: "/music/meta" },
-            { name: "游戏原声带", href: "/soundtrack" },
-            { name: "角色", href: "/character" },
-            { name: "服装", href: "/costumes" },
-            { name: "称号", href: "/honors" },
-            { name: "贴纸", href: "/sticker" },
-            { name: "漫画", href: "/comic" },
-            { name: "官方四格", href: "/manga" },
-            { name: "家具", href: "/mysekai" },
-            { name: "持有物", href: "/materials" },
-            { name: "兑换所", href: "/exchanges" },
+            { href: "/cards" },
+            { href: "/music" },
+            { href: "/music/meta" },
+            { href: "/soundtrack" },
+            { href: "/character" },
+            { href: "/costumes" },
+            { href: "/honors" },
+            { href: "/sticker" },
+            { href: "/comic" },
+            { href: "/manga" },
+            { href: "/mysekai" },
+            { href: "/materials" },
+            { href: "/exchanges" },
         ],
     },
     {
-        title: "活动",
         href: "/breadcrumb-activity",
         items: [
-            { name: "活动列表", href: "/events" },
-            { name: "扭蛋", href: "/gacha" },
-            { name: "演唱会", href: "/live" },
-            { name: "活动预测", href: "/prediction" },
-            { name: "实时排行榜", href: "/realtime-ranking" },
-            { name: "烤森百景", href: "/mysekai-preview" },
+            { href: "/events" },
+            { href: "/gacha" },
+            { href: "/live" },
+            { href: "/prediction" },
+            { href: "/realtime-ranking" },
+            { href: "/mysekai-preview" },
         ],
     },
     {
-        title: "剧情",
         href: "/breadcrumb-story",
         items: [
-            { name: "主线剧情", href: "/story/unit" },
-            { name: "活动剧情", href: "/story/event" },
-            { name: "卡牌剧情", href: "/story/card" },
-            { name: "区域对话", href: "/story/area" },
-            { name: "自我介绍", href: "/story/self" },
-            { name: "特殊剧情", href: "/story/special" },
+            { href: "/story/unit" },
+            { href: "/story/event" },
+            { href: "/story/card" },
+            { href: "/story/area" },
+            { href: "/story/self" },
+            { href: "/story/special" },
         ],
     },
     {
-        title: "社区",
         href: "/breadcrumb-community",
         items: [
-            { name: "攻略", href: "/guides" },
+            { href: "/guides" },
         ],
     },
     {
-        title: "工具",
         href: "/breadcrumb-tools",
         items: [
-            { name: "组卡推荐", href: "/deck-recommend" },
-            { name: "组卡比较", href: "/deck-comparator" },
-            { name: "控分计算", href: "/score-control" },
-            { name: "表情包制作", href: "/sticker-maker" },
-            { name: "谷子盲抽", href: "/goods-gacha" },
-            { name: "猜角色", href: "/guess-who" },
-            { name: "猜曲绘", href: "/guess-jacket" },
-            { name: "谱面预览器", href: "/chart-preview" },
-            { name: "烤森预览器", href: "/mysekai-preview/scene" },
+            { href: "/deck-recommend" },
+            { href: "/deck-comparator" },
+            { href: "/score-control" },
+            { href: "/sticker-maker" },
+            { href: "/goods-gacha" },
+            { href: "/guess-who" },
+            { href: "/guess-jacket" },
+            { href: "/chart-preview" },
+            { href: "/mysekai-preview/scene" },
         ],
     },
     {
-        title: "个人",
         href: "/breadcrumb-personal",
         items: [
-            { name: "个人主页", href: "/profile" },
-            { name: "卡牌进度", href: "/my-cards" },
-            { name: "歌曲进度", href: "/my-musics" },
-            { name: "资源查询", href: "/my-materials" },
-            { name: "支持", href: "/patreon" },
-            { name: "关于", href: "/about" },
+            { href: "/profile" },
+            { href: "/my-cards" },
+            { href: "/my-musics" },
+            { href: "/my-materials" },
+            { href: "/patreon" },
+            { href: "/about" },
         ],
     },
 ];
 
 /**
- * 根据 pathname 查找匹配的导航项和所属分组。
- * 返回 { group, item } 或 null。
+ * Finds the best matching navigation item and its group for a pathname.
  */
 export function findNavMatch(pathname: string): { group: NavGroupData; item: NavItemData } | null {
     let bestMatch: { group: NavGroupData; item: NavItemData } | null = null;
     for (const group of navigationGroups) {
         for (const item of group.items) {
-            // 精确匹配或子路径匹配；保留最长前缀，避免 /mysekai-preview 抢走 /mysekai-preview/scene。
+            // Keep the longest prefix match so nested routes choose the most specific item.
             if (pathname === item.href || pathname.startsWith(item.href + "/")) {
-                // 特殊处理：防止 /music/meta 误匹配 /music
+                // Prevent /music/meta from matching /music first.
                 if (item.href === "/music" && pathname.startsWith("/music/meta")) {
                     continue;
                 }
@@ -115,10 +106,9 @@ export function findNavMatch(pathname: string): { group: NavGroupData; item: Nav
 }
 
 /**
- * 根据 pathname 查找匹配的分组（用于分组汇总页）。
+ * Finds a matching summary group page for a pathname.
  */
 export function findGroupMatch(pathname: string): NavGroupData | null {
-    // 去掉尾部斜杠以兼容 trailingSlash: true 配置
     const normalized = pathname.endsWith("/") && pathname !== "/"
         ? pathname.slice(0, -1)
         : pathname;
@@ -130,74 +120,56 @@ export function findGroupMatch(pathname: string): NavGroupData | null {
     return null;
 }
 
-// ── Command palette search data (original content) ──
+export type SearchableNavGroup = "navigation" | "database" | "activity" | "tools" | "personal";
 
 export interface SearchableNavItem {
-    name: string;
     href: string;
-    group: string;
+    group: SearchableNavGroup;
     keywords: string[];
 }
 
 export const searchableNavItems: SearchableNavItem[] = [
-    // 首页
-    { name: "首页", href: "/", group: "导航", keywords: ["home", "index"] },
+    { href: "/", group: "navigation", keywords: ["home", "index"] },
 
-    // 数据库
-    { name: "卡牌", href: "/cards", group: "数据库", keywords: ["cards", "card"] },
-    { name: "音乐列表", href: "/music", group: "数据库", keywords: ["music", "song", "songs"] },
-    { name: "歌曲Meta", href: "/music/meta", group: "数据库", keywords: ["music meta", "song meta", "difficulty"] },
-    { name: "游戏原声带", href: "/soundtrack", group: "数据库", keywords: ["soundtrack", "ost", "bgm", "music", "原声带", "背景音乐"] },
-    { name: "角色", href: "/character", group: "数据库", keywords: ["character", "characters"] },
-    { name: "服装", href: "/costumes", group: "数据库", keywords: ["costumes", "costume", "outfit"] },
-    { name: "称号", href: "/honors", group: "数据库", keywords: ["honors", "honor", "title"] },
-    { name: "贴纸", href: "/sticker", group: "数据库", keywords: ["sticker", "stickers", "stamp"] },
-    { name: "漫画", href: "/comic", group: "数据库", keywords: ["comic", "comics", "manga"] },
-    { name: "家具", href: "/mysekai", group: "数据库", keywords: ["furniture", "mysekai", "home"] },
-    { name: "持有物", href: "/materials", group: "数据库", keywords: ["materials", "items", "holding", "holdings", "material", "持有物", "材料", "道具"] },
-    { name: "兑换所", href: "/exchanges", group: "数据库", keywords: ["exchange", "exchanges", "material exchange", "shop", "兑换", "兑换所", "交换所"] },
+    { href: "/cards", group: "database", keywords: ["cards", "card"] },
+    { href: "/music", group: "database", keywords: ["music", "song", "songs"] },
+    { href: "/music/meta", group: "database", keywords: ["music meta", "song meta", "difficulty"] },
+    { href: "/soundtrack", group: "database", keywords: ["soundtrack", "ost", "bgm", "music"] },
+    { href: "/character", group: "database", keywords: ["character", "characters"] },
+    { href: "/costumes", group: "database", keywords: ["costumes", "costume", "outfit"] },
+    { href: "/honors", group: "database", keywords: ["honors", "honor", "title"] },
+    { href: "/sticker", group: "database", keywords: ["sticker", "stickers", "stamp"] },
+    { href: "/comic", group: "database", keywords: ["comic", "comics", "manga"] },
+    { href: "/manga", group: "database", keywords: ["four koma", "4koma", "official manga"] },
+    { href: "/mysekai", group: "database", keywords: ["furniture", "mysekai", "home"] },
+    { href: "/materials", group: "database", keywords: ["materials", "items", "holding", "holdings", "material"] },
+    { href: "/exchanges", group: "database", keywords: ["exchange", "exchanges", "material exchange", "shop"] },
 
-    // 活动
-    { name: "活动列表", href: "/events", group: "活动", keywords: ["events", "event"] },
-    { name: "扭蛋", href: "/gacha", group: "活动", keywords: ["gacha", "banner", "pull"] },
-    { name: "演唱会", href: "/live", group: "活动", keywords: ["live", "concert", "virtual live"] },
-    { name: "活动剧情", href: "/story/event", group: "活动", keywords: ["event story", "story", "scenario"] },
-    { name: "活动预测", href: "/prediction", group: "活动", keywords: ["prediction", "ranking", "forecast"] },
-    { name: "实时排行榜", href: "/realtime-ranking", group: "活动", keywords: ["realtime ranking", "live ranking", "排行", "排行榜", "实时榜单"] },
-    { name: "烤森百景", href: "/mysekai-preview", group: "活动", keywords: ["baijing", "housing competition", "mysekai", "烤森百景", "百景", "排行", "top"] },
+    { href: "/events", group: "activity", keywords: ["events", "event"] },
+    { href: "/gacha", group: "activity", keywords: ["gacha", "banner", "pull"] },
+    { href: "/live", group: "activity", keywords: ["live", "concert", "virtual live"] },
+    { href: "/story/event", group: "activity", keywords: ["event story", "story", "scenario"] },
+    { href: "/prediction", group: "activity", keywords: ["prediction", "ranking", "forecast"] },
+    { href: "/realtime-ranking", group: "activity", keywords: ["realtime ranking", "live ranking", "rank", "ranking"] },
+    { href: "/mysekai-preview", group: "activity", keywords: ["baijing", "housing competition", "mysekai", "top"] },
 
-    // 工具
-    { name: "组卡推荐", href: "/deck-recommend", group: "工具", keywords: ["deck recommend", "deck", "team"] },
-    { name: "组卡比较", href: "/deck-comparator", group: "工具", keywords: ["deck compare", "comparator"] },
-    { name: "控分计算", href: "/score-control", group: "工具", keywords: ["score control", "score", "calculator"] },
-    { name: "谱面预览器", href: "/chart-preview", group: "工具", keywords: ["chart preview", "chart", "mmw", "谱面", "preview", "sus"] },
-    { name: "烤森预览器", href: "/mysekai-preview/scene", group: "工具", keywords: ["mysekai preview", "scene preview", "mysekai", "3d", "obj", "烤森", "预览", "场景"] },
-    { name: "表情包制作", href: "/sticker-maker", group: "工具", keywords: ["sticker maker", "meme"] },
-    { name: "谷子盲抽", href: "/goods-gacha", group: "工具", keywords: ["goods gacha", "goods", "blind box"] },
-    { name: "猜角色", href: "/guess-who", group: "工具", keywords: ["guess who", "quiz", "game"] },
-    { name: "猜曲绘", href: "/guess-jacket", group: "工具", keywords: ["guess jacket", "guess music", "music quiz"] },
+    { href: "/deck-recommend", group: "tools", keywords: ["deck recommend", "deck", "team"] },
+    { href: "/deck-comparator", group: "tools", keywords: ["deck compare", "comparator"] },
+    { href: "/score-control", group: "tools", keywords: ["score control", "score", "calculator"] },
+    { href: "/chart-preview", group: "tools", keywords: ["chart preview", "chart", "mmw", "preview", "sus"] },
+    { href: "/mysekai-preview/scene", group: "tools", keywords: ["mysekai preview", "scene preview", "mysekai", "3d", "obj", "scene"] },
+    { href: "/sticker-maker", group: "tools", keywords: ["sticker maker", "meme"] },
+    { href: "/goods-gacha", group: "tools", keywords: ["goods gacha", "goods", "blind box"] },
+    { href: "/guess-who", group: "tools", keywords: ["guess who", "quiz", "game"] },
+    { href: "/guess-jacket", group: "tools", keywords: ["guess jacket", "guess music", "music quiz"] },
 
-    // 个人
-    { name: "个人主页", href: "/profile", group: "个人", keywords: ["profile", "user", "account"] },
-    { name: "卡牌进度", href: "/my-cards", group: "个人", keywords: ["my cards", "card progress"] },
-    { name: "歌曲进度", href: "/my-musics", group: "个人", keywords: ["my musics", "music progress", "song progress"] },
-    { name: "资源查询", href: "/my-materials", group: "个人", keywords: ["my materials", "materials", "resources", "mysekai materials", "资源", "材料"] },
-    { name: "关于", href: "/about", group: "个人", keywords: ["about", "info"] },
+    { href: "/profile", group: "personal", keywords: ["profile", "user", "account"] },
+    { href: "/my-cards", group: "personal", keywords: ["my cards", "card progress"] },
+    { href: "/my-musics", group: "personal", keywords: ["my musics", "music progress", "song progress"] },
+    { href: "/my-materials", group: "personal", keywords: ["my materials", "materials", "resources", "mysekai materials"] },
+    { href: "/about", group: "personal", keywords: ["about", "info"] },
 ];
 
-// Search index group labels (for CommandPalette dynamic search results)
-// Order matters: determines display priority
-export const SEARCH_GROUP_LABELS: Record<string, string> = {
-    events: "活动",
-    music: "歌曲",
-    cards: "卡牌",
-    gacha: "扭蛋",
-    mysekai: "家具",
-    costumes: "服装",
-    live: "演唱会",
-};
-
-// Search index group route prefixes
 export const SEARCH_GROUP_ROUTES: Record<string, string> = {
     events: "/events",
     music: "/music",
@@ -206,4 +178,119 @@ export const SEARCH_GROUP_ROUTES: Record<string, string> = {
     mysekai: "/mysekai",
     costumes: "/costumes",
     live: "/live",
+};
+
+export const SEARCH_GROUP_LABEL_KEYS: Record<string, string> = {
+    events: "search.commandPalette.dynamicGroups.events",
+    music: "search.commandPalette.dynamicGroups.music",
+    cards: "search.commandPalette.dynamicGroups.cards",
+    gacha: "search.commandPalette.dynamicGroups.gacha",
+    mysekai: "search.commandPalette.dynamicGroups.mysekai",
+    costumes: "search.commandPalette.dynamicGroups.costumes",
+    live: "search.commandPalette.dynamicGroups.live",
+};
+
+export const SEARCH_STATIC_GROUP_LABEL_KEYS: Record<SearchableNavGroup, string> = {
+    navigation: "layout.nav.groups.navigation",
+    database: "layout.nav.groups.database",
+    activity: "layout.nav.groups.activity",
+    tools: "layout.nav.groups.tools",
+    personal: "layout.nav.groups.personal",
+};
+
+export const NAV_GROUP_LABEL_KEYS: Record<string, string> = {
+    "/breadcrumb-database": "layout.nav.groups.database",
+    "/breadcrumb-activity": "layout.nav.groups.activity",
+    "/breadcrumb-story": "layout.nav.groups.story",
+    "/breadcrumb-community": "layout.nav.groups.community",
+    "/breadcrumb-tools": "layout.nav.groups.tools",
+    "/breadcrumb-personal": "layout.nav.groups.personal",
+};
+
+export const NAV_ITEM_LABEL_KEYS: Record<string, string> = {
+    "/": "layout.nav.home",
+    "/cards": "layout.nav.items.cards",
+    "/music": "layout.nav.items.musicList",
+    "/music/meta": "layout.nav.items.musicMeta",
+    "/soundtrack": "layout.nav.items.soundtrack",
+    "/character": "layout.nav.items.character",
+    "/costumes": "layout.nav.items.costumes",
+    "/honors": "layout.nav.items.honors",
+    "/sticker": "layout.nav.items.sticker",
+    "/comic": "layout.nav.items.comic",
+    "/manga": "layout.nav.items.manga",
+    "/mysekai": "layout.nav.items.mysekai",
+    "/materials": "layout.nav.items.materials",
+    "/exchanges": "layout.nav.items.exchanges",
+    "/events": "layout.nav.items.events",
+    "/gacha": "layout.nav.items.gacha",
+    "/live": "layout.nav.items.live",
+    "/prediction": "layout.nav.items.prediction",
+    "/realtime-ranking": "layout.nav.items.realtimeRanking",
+    "/mysekai-preview": "layout.nav.items.mysekaiPreview",
+    "/story/unit": "layout.nav.items.mainStory",
+    "/story/event": "layout.nav.items.eventStory",
+    "/story/card": "layout.nav.items.cardStory",
+    "/story/area": "layout.nav.items.areaTalk",
+    "/story/self": "layout.nav.items.selfIntro",
+    "/story/special": "layout.nav.items.specialStory",
+    "/guides": "layout.nav.items.guides",
+    "/deck-recommend": "layout.nav.items.deckRecommend",
+    "/deck-comparator": "layout.nav.items.deckComparator",
+    "/score-control": "layout.nav.items.scoreControl",
+    "/sticker-maker": "layout.nav.items.stickerMaker",
+    "/goods-gacha": "layout.nav.items.goodsGacha",
+    "/guess-who": "layout.nav.items.guessWho",
+    "/guess-jacket": "layout.nav.items.guessJacket",
+    "/chart-preview": "layout.nav.items.chartPreview",
+    "/mysekai-preview/scene": "layout.nav.items.mysekaiPreviewScene",
+    "/profile": "layout.nav.items.profile",
+    "/my-cards": "layout.nav.items.myCards",
+    "/my-musics": "layout.nav.items.myMusics",
+    "/my-materials": "layout.nav.items.myMaterials",
+    "/patreon": "layout.nav.items.support",
+    "/about": "layout.nav.items.about",
+};
+
+export const NAV_ITEM_DESCRIPTION_KEYS: Record<string, string> = {
+    "/cards": "layout.groupPages.cards",
+    "/music": "layout.groupPages.music",
+    "/music/meta": "layout.groupPages.musicMeta",
+    "/soundtrack": "layout.groupPages.soundtrack",
+    "/character": "layout.groupPages.character",
+    "/costumes": "layout.groupPages.costumes",
+    "/honors": "layout.groupPages.honors",
+    "/sticker": "layout.groupPages.sticker",
+    "/comic": "layout.groupPages.comic",
+    "/manga": "layout.groupPages.manga",
+    "/mysekai": "layout.groupPages.mysekai",
+    "/materials": "layout.groupPages.materials",
+    "/exchanges": "layout.groupPages.exchanges",
+    "/events": "layout.groupPages.events",
+    "/gacha": "layout.groupPages.gacha",
+    "/live": "layout.groupPages.live",
+    "/story/event": "layout.groupPages.storyEvent",
+    "/story/unit": "layout.groupPages.storyUnit",
+    "/story/card": "layout.groupPages.storyCard",
+    "/story/area": "layout.groupPages.storyArea",
+    "/story/self": "layout.groupPages.storySelf",
+    "/story/special": "layout.groupPages.storySpecial",
+    "/prediction": "layout.groupPages.prediction",
+    "/guides": "layout.groupPages.guides",
+    "/deck-recommend": "layout.groupPages.deckRecommend",
+    "/deck-comparator": "layout.groupPages.deckComparator",
+    "/score-control": "layout.groupPages.scoreControl",
+    "/sticker-maker": "layout.groupPages.stickerMaker",
+    "/goods-gacha": "layout.groupPages.goodsGacha",
+    "/guess-who": "layout.groupPages.guessWho",
+    "/guess-jacket": "layout.groupPages.guessJacket",
+    "/chart-preview": "layout.groupPages.chartPreview",
+    "/mysekai-preview": "layout.groupPages.mysekaiPreview",
+    "/mysekai-preview/scene": "layout.groupPages.mysekaiPreviewScene",
+    "/profile": "layout.groupPages.profile",
+    "/my-cards": "layout.groupPages.myCards",
+    "/my-musics": "layout.groupPages.myMusics",
+    "/my-materials": "layout.groupPages.myMaterials",
+    "/patreon": "layout.groupPages.patreon",
+    "/about": "layout.groupPages.about",
 };

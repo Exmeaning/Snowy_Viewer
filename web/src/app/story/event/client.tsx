@@ -7,8 +7,10 @@ import EventGrid from "@/components/events/EventGrid";
 import EventFilters from "@/components/events/EventFilters";
 import { useEventListData } from "@/hooks/useEventListData";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { useI18n } from "@/contexts/I18nContext";
 
 function StoryEventListContent() {
+    const { t } = useI18n();
     const data = useEventListData({ storageKey: "story_event", basePath: "/story/event" });
 
     const quickFilterContent = (
@@ -39,7 +41,7 @@ function StoryEventListContent() {
         />
     );
 
-    useQuickFilter("活动剧情筛选", quickFilterContent, [
+    useQuickFilter(t("page.story.event.filterTitle"), quickFilterContent, [
         data.selectedTypes,
         data.selectedEventUnits,
         data.selectedCharacters,
@@ -52,6 +54,7 @@ function StoryEventListContent() {
         data.sortOrder,
         data.events.length,
         data.filteredEvents.length,
+        t,
     ]);
 
     return (
@@ -60,9 +63,9 @@ function StoryEventListContent() {
 
             {data.error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{data.error}</p>
-                    <button onClick={() => window.location.reload()} className="mt-2 text-red-500 underline hover:no-underline">重试</button>
+                    <button onClick={() => window.location.reload()} className="mt-2 text-red-500 underline hover:no-underline">{t("common.action.retry")}</button>
                 </div>
             )}
 
@@ -89,7 +92,7 @@ function StoryEventListContent() {
                                 data-shortcut-load-more="true"
                                 className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                             >
-                                加载更多
+                                {t("page.story.event.loadMore")}
                                 <span className="ml-2 text-sm opacity-80">
                                     ({data.displayedEvents.length} / {data.filteredEvents.length})
                                 </span>
@@ -98,7 +101,7 @@ function StoryEventListContent() {
                     )}
                     {!data.isLoading && data.displayedEvents.length > 0 && data.displayedEvents.length >= data.filteredEvents.length && (
                         <div className="mt-8 text-center text-slate-400 text-sm">
-                            已显示全部 {data.filteredEvents.length} 个活动
+                            {t("page.story.event.allLoaded", { count: data.filteredEvents.length })}
                         </div>
                     )}
                 </div>
@@ -108,9 +111,11 @@ function StoryEventListContent() {
 }
 
 export default function StoryEventListClient() {
+    const { t } = useI18n();
+
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载活动剧情...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.story.event.loadingFallback")}</div>}>
                 <StoryEventListContent />
             </Suspense>
         </MainLayout>

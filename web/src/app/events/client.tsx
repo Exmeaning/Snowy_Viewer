@@ -5,8 +5,10 @@ import EventGrid from "@/components/events/EventGrid";
 import EventFilters from "@/components/events/EventFilters";
 import { useEventListData } from "@/hooks/useEventListData";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { useI18n } from "@/contexts/I18nContext";
 
 function EventsContent() {
+    const { t } = useI18n();
     const data = useEventListData({ storageKey: "events", basePath: "/events" });
 
     const quickFilterContent = (
@@ -37,7 +39,7 @@ function EventsContent() {
         />
     );
 
-    useQuickFilter("活动筛选", quickFilterContent, [
+    useQuickFilter(t("page.events.filterTitle"), quickFilterContent, [
         data.selectedTypes,
         data.selectedEventUnits,
         data.selectedCharacters,
@@ -57,26 +59,26 @@ function EventsContent() {
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">活动数据库</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.events.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    活动 <span className="text-miku">图鉴</span>
+                    {t("page.events.title")} <span className="text-miku">{t("page.events.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览并探索世界计划中的所有活动
+                    {t("page.events.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {data.error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{data.error}</p>
                     <button
                         onClick={() => window.location.reload()}
                         className="mt-2 text-red-500 underline hover:no-underline"
                     >
-                        重试
+                        {t("common.action.retry")}
                     </button>
                 </div>
             )}
@@ -102,7 +104,7 @@ function EventsContent() {
                                 data-shortcut-load-more="true"
                                 className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                             >
-                                加载更多
+                                {t("page.events.loadMore")}
                                 <span className="ml-2 text-sm opacity-80">
                                     ({data.displayedEvents.length} / {data.filteredEvents.length})
                                 </span>
@@ -113,7 +115,7 @@ function EventsContent() {
                     {/* All loaded indicator */}
                     {!data.isLoading && data.displayedEvents.length > 0 && data.displayedEvents.length >= data.filteredEvents.length && (
                         <div className="mt-8 text-center text-slate-400 text-sm">
-                            已显示全部 {data.filteredEvents.length} 个活动
+                            {t("page.events.allLoaded", { count: data.filteredEvents.length })}
                         </div>
                     )}
                 </div>
@@ -122,10 +124,15 @@ function EventsContent() {
     );
 }
 
+function EventsLoadingFallback() {
+    const { t } = useI18n();
+    return <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.events.loadingFallback")}</div>;
+}
+
 export default function EventsClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载活动...</div>}>
+            <Suspense fallback={<EventsLoadingFallback />}>
                 <EventsContent />
             </Suspense>
         </MainLayout>

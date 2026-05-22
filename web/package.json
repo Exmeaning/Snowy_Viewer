@@ -9,7 +9,9 @@
     "sitemap": "node scripts/generate-sitemaps.mjs",
     "generate:metadata": "node scripts/generate-metadata-map.mjs",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "lint:i18n": "node scripts/check-i18n-keys.mjs && node scripts/scan-hardcoded-ui-text.mjs",
+    "lint:i18n-usage": "node scripts/check-i18n-usage.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",

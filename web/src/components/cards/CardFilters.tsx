@@ -3,9 +3,10 @@ import React from "react";
 import Image from "next/image";
 import BaseFilters, { FilterSection, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
-import { CardRarityType, CardAttribute, ATTR_NAMES, SupportUnit, SUPPORT_UNIT_NAMES, UNIT_ICON_FILES, UNIT_FIELD_TO_ID } from "@/types/types";
+import { CardRarityType, CardAttribute, ATTR_NAMES, SupportUnit, SUPPORT_UNIT_LABEL_KEYS, UNIT_ICON_FILES, UNIT_FIELD_TO_ID } from "@/types/types";
 import { useCardSupplyTypeMapping } from "@/hooks/useCardSupplyType";
 import { useSkillMapping } from "@/hooks/useSkillMapping";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface CardFiltersProps {
     // Character filter
@@ -65,12 +66,6 @@ const RARITIES: { type: CardRarityType; num: number }[] = [
     { type: "rarity_birthday", num: 5 },
 ];
 
-const SORT_OPTIONS = [
-    { id: "id", label: "ID" },
-    { id: "releaseAt", label: "日期" },
-    { id: "rarity", label: "稀有度" },
-];
-
 const ATTR_ICONS: Record<CardAttribute, string> = {
     "cool": "Cool.webp",
     "cute": "cute.webp",
@@ -113,8 +108,16 @@ export default function CardFilters({
     filteredCards,
 }: CardFiltersProps) {
 
+    const { t } = useI18n();
     const supplyTypes = useCardSupplyTypeMapping();
     const skillTypes = useSkillMapping();
+    const getSupportUnitLabel = (unit: SupportUnit) => t(SUPPORT_UNIT_LABEL_KEYS[unit]);
+
+    const SORT_OPTIONS = [
+        { id: "id", label: t("common.filter.sortById") },
+        { id: "releaseAt", label: t("common.filter.sortByDate") },
+        { id: "rarity", label: t("common.filter.sortByRarity") },
+    ];
 
     const toggleAttr = (attr: CardAttribute) => {
         if (selectedAttrs.includes(attr)) {
@@ -236,10 +239,10 @@ export default function CardFilters({
         <BaseFilters
             filteredCount={filteredCards}
             totalCount={totalCards}
-            countUnit="张"
+            countUnit={t("page.cards.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
-            searchPlaceholder="搜索卡牌名称或ID..."
+            searchPlaceholder={t("page.cards.searchPlaceholder")}
             sortOptions={extraSortOptions ? [...SORT_OPTIONS, ...extraSortOptions] : SORT_OPTIONS}
             sortBy={sortBy}
             sortOrder={sortOrder}
@@ -261,13 +264,13 @@ export default function CardFilters({
                             ? "ring-2 ring-miku scale-110 z-10 rounded-full shadow-lg"
                             : "ring-2 ring-transparent hover:ring-slate-200 dark:hover:ring-slate-600 rounded-full opacity-80 hover:opacity-100"
                             }`}
-                        title={`虚拟歌手（${SUPPORT_UNIT_NAMES[supportUnit]}）`}
+                        title={t("common.virtualSingerWithUnit", { unit: getSupportUnitLabel(supportUnit) })}
                     >
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 p-1.5">
                             <div className="w-full h-full relative">
                                 <Image
                                     src={`/data/icon/${UNIT_ICON_FILES.vs}`}
-                                    alt={`虚拟歌手（${SUPPORT_UNIT_NAMES[supportUnit]}）`}
+                                    alt={t("common.virtualSingerWithUnit", { unit: getSupportUnitLabel(supportUnit) })}
                                     fill
                                     className="object-contain"
                                     unoptimized
@@ -293,7 +296,7 @@ export default function CardFilters({
 
             {/* Support Unit Filter - Only show when VS unit is selected */}
             {showSupportUnitFilter && (
-                <FilterSection label="团体归属">
+                <FilterSection label={t("common.filter.supportUnit")}>
                     <div className="flex flex-wrap gap-2">
                         {/* Ordered list: follows team order, then original (none) at end */}
                         {(["light_sound", "idol", "street", "theme_park", "school_refusal", "none"] as SupportUnit[]).map((unit) => {
@@ -312,12 +315,12 @@ export default function CardFilters({
                                     key={unit}
                                     onClick={() => toggleSupportUnit(unit)}
                                     className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(isSelected)}`}
-                                    title={SUPPORT_UNIT_NAMES[unit]}
+                                    title={getSupportUnitLabel(unit)}
                                 >
                                     <div className="w-8 h-8 relative">
                                         <Image
                                             src={`/data/icon/${iconName}`}
-                                            alt={SUPPORT_UNIT_NAMES[unit]}
+                                            alt={getSupportUnitLabel(unit)}
                                             fill
                                             className="object-contain"
                                             unoptimized
@@ -333,7 +336,7 @@ export default function CardFilters({
             {/* Attribute and Rarity Filters */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Attribute Filter */}
-                <FilterSection label="属性">
+                <FilterSection label={t("common.filter.attribute")}>
                     <div className="flex flex-wrap gap-2">
                         {ATTRIBUTES.map((attr) => (
                             <button
@@ -357,7 +360,7 @@ export default function CardFilters({
                 </FilterSection>
 
                 {/* Rarity Filter */}
-                <FilterSection label="稀有度">
+                <FilterSection label={t("common.filter.rarity")}>
                     <div className="flex flex-wrap gap-2">
                         {RARITIES.map(({ type, num }) => {
                             const isSelected = selectedRarities.includes(type);
@@ -399,7 +402,7 @@ export default function CardFilters({
             </div>
 
             {/* Supply Type Filter */}
-            <FilterSection label="卡牌类型">
+            <FilterSection label={t("common.filter.cardType")}>
                 <div className="flex flex-wrap gap-2">
                     {supplyTypes.map((st) => {
                         const isSelected = selectedSupplyTypes.includes(st.type);
@@ -409,7 +412,7 @@ export default function CardFilters({
                                 onClick={() => toggleSupplyType(st.type)}
                                 className={`px-3 py-1.5 rounded-xl text-sm transition-all border ${getFilterChipStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white text-slate-700 border-transparent dark:bg-miku/12 dark:text-slate-100 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
                             >
-                                {st.name}
+                                {t(`common.cardSupplyTypes.${st.type}`)}
                             </button>
                         );
                     })}
@@ -417,7 +420,7 @@ export default function CardFilters({
             </FilterSection>
 
             {/* Skill Type Filter */}
-            <FilterSection label="技能类型">
+            <FilterSection label={t("common.filter.skillType")}>
                 <div className="flex flex-wrap gap-2">
                     {skillTypes.map((sk) => {
                         const isSelected = selectedSkillTypes.includes(sk.descriptionSpriteName);
@@ -427,7 +430,7 @@ export default function CardFilters({
                                 onClick={() => toggleSkillType(sk.descriptionSpriteName)}
                                 className={`px-3 py-1.5 rounded-xl text-sm transition-all border ${getFilterChipStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white text-slate-700 border-transparent dark:bg-miku/12 dark:text-slate-100 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
                             >
-                                {sk.name}
+                                {t(`common.skillTypes.${sk.descriptionSpriteName}`)}
                             </button>
                         );
                     })}

@@ -17,21 +17,19 @@ import {
     getMusicJacketUrl,
     getChartSvgUrl,
     getMusicVocalAudioUrl,
-    MUSIC_CATEGORY_NAMES,
     MUSIC_CATEGORY_COLORS,
-    MUSIC_TAG_NAMES,
     DIFFICULTY_NAMES,
     DIFFICULTY_COLORS,
     MusicCategoryType,
-    MusicTagType,
 } from "@/types/music";
-import { CHARACTER_NAMES } from "@/types/types";
+import { getCharacterName } from "@/lib/i18n";
 import { useTheme, AssetSourceType } from "@/contexts/ThemeContext";
 import { getCharacterIconUrl, getEventBannerUrl, MOE_MUSIC_META_URL, MOE_RANKINGS_URL } from "@/lib/assets";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
+import { useI18n } from "@/contexts/I18nContext";
 
 // Difficulty order for tabs
 const DIFFICULTY_ORDER: MusicDifficultyType[] = ["easy", "normal", "hard", "expert", "master", "append"];
@@ -81,17 +79,14 @@ type RankingCategoryKey =
     | "multi_score" | "solo_score" | "auto_score";
 
 const RANKING_CATEGORIES: { key: RankingCategoryKey; label: string; shortLabel: string; group: string }[] = [
-    // 时速榜 (PT per hour)
-    { key: "pt_per_hour_multi", label: "协力时速榜", shortLabel: "协力时速", group: "时速" },
-    { key: "pt_per_hour_auto", label: "自动时速榜", shortLabel: "自动时速", group: "时速" },
-    // 单局PT榜
-    { key: "multi_pt_max", label: "协力单局PT榜", shortLabel: "协力PT", group: "单局PT" },
-    { key: "solo_pt_max", label: "单人单局PT榜", shortLabel: "单人PT", group: "单局PT" },
-    { key: "auto_pt_max", label: "自动单局PT榜", shortLabel: "自动PT", group: "单局PT" },
-    // 得分榜
-    { key: "multi_score", label: "协力得分榜", shortLabel: "协力得分", group: "得分" },
-    { key: "solo_score", label: "单人得分榜", shortLabel: "单人得分", group: "得分" },
-    { key: "auto_score", label: "自动得分榜", shortLabel: "自动得分", group: "得分" },
+    { key: "pt_per_hour_multi", label: "rankingCategories.ptPerHourMulti.label", shortLabel: "rankingCategories.ptPerHourMulti.shortLabel", group: "rankingCategories.groups.ptPerHour" },
+    { key: "pt_per_hour_auto", label: "rankingCategories.ptPerHourAuto.label", shortLabel: "rankingCategories.ptPerHourAuto.shortLabel", group: "rankingCategories.groups.ptPerHour" },
+    { key: "multi_pt_max", label: "rankingCategories.multiPtMax.label", shortLabel: "rankingCategories.multiPtMax.shortLabel", group: "rankingCategories.groups.ptMax" },
+    { key: "solo_pt_max", label: "rankingCategories.soloPtMax.label", shortLabel: "rankingCategories.soloPtMax.shortLabel", group: "rankingCategories.groups.ptMax" },
+    { key: "auto_pt_max", label: "rankingCategories.autoPtMax.label", shortLabel: "rankingCategories.autoPtMax.shortLabel", group: "rankingCategories.groups.ptMax" },
+    { key: "multi_score", label: "rankingCategories.multiScore.label", shortLabel: "rankingCategories.multiScore.shortLabel", group: "rankingCategories.groups.score" },
+    { key: "solo_score", label: "rankingCategories.soloScore.label", shortLabel: "rankingCategories.soloScore.shortLabel", group: "rankingCategories.groups.score" },
+    { key: "auto_score", label: "rankingCategories.autoScore.label", shortLabel: "rankingCategories.autoScore.shortLabel", group: "rankingCategories.groups.score" },
 ];
 
 // Ranking info per category
@@ -108,6 +103,7 @@ export default function MusicDetailPage() {
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
     const { setDetailName } = useBreadcrumb();
+    const { t, formatDate, formatNumber } = useI18n();
     const musicId = Number(params.id);
     const isScreenshotMode = searchParams.get('mode') === 'screenshot';
 
@@ -286,8 +282,12 @@ export default function MusicDetailPage() {
 
     // Get tag names for this music
     const tagNames = useMemo(() => {
-        return musicTags.map(t => MUSIC_TAG_NAMES[t.musicTag as MusicTagType] || t.musicTag);
-    }, [musicTags]);
+        return musicTags.map((tagInfo) => {
+            const key = `common.musicTags.${tagInfo.musicTag}`;
+            const label = t(key);
+            return label === key ? tagInfo.musicTag : label;
+        });
+    }, [musicTags, t]);
 
     // Create set of limited time music IDs
     const limitedMusicIds = useMemo(() => {
@@ -305,7 +305,7 @@ export default function MusicDetailPage() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">加载中...</p>
+                        <p className="mt-4 text-slate-500">{t("common.state.loading")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -322,8 +322,8 @@ export default function MusicDetailPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">乐曲 {musicId} 正在由SnowyViewer抓紧构建</h2>
-                        <p className="text-slate-500 mb-6">少安毋躁~预计12H内更新</p>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">{t("page.music.notFoundTitle", { id: musicId })}</h2>
+                        <p className="text-slate-500 mb-6">{t("page.music.notFoundDesc")}</p>
                         <Link
                             href="/music"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
@@ -331,7 +331,7 @@ export default function MusicDetailPage() {
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            返回音乐列表
+                            {t("page.music.backToList")}
                         </Link>
                     </div>
                 </div>
@@ -341,13 +341,23 @@ export default function MusicDetailPage() {
 
     const jacketUrl = getMusicJacketUrl(music.assetbundleName, assetSource);
     const chartUrl = getChartSvgUrl(musicId, selectedDifficulty);
+    const releaseConditionMap: Record<number, string> = {
+        1: t("page.music.releaseConditions.initial"),
+        5: t("page.music.releaseConditions.musicShop"),
+        6: t("page.music.releaseConditions.none"),
+        10: t("page.music.releaseConditions.gift"),
+    };
+    const releaseCondition = releaseConditionMap[music.releaseConditionId] ?? String(music.releaseConditionId);
+    const releaseConditionText = isLimitedMusic
+        ? t("page.music.releaseConditionLimited", { condition: releaseCondition })
+        : releaseCondition;
 
     return (
         <MainLayout>
             <ImagePreviewModal
                 isOpen={imageViewerOpen}
                 onClose={() => setImageViewerOpen(false)}
-                title={`${music.title} 封面大图`}
+                title={t("page.music.jacketPreviewTitle", { title: music.title })}
                 imageUrl={jacketUrl}
                 alt={music.title}
                 fileName={`music_${music.id}_jacket.png`}
@@ -362,15 +372,20 @@ export default function MusicDetailPage() {
                         </span>
                         {/* Category Tags */}
                         <div className="flex items-center gap-2 flex-wrap">
-                            {Array.from(new Set(music.categories)).map((cat) => (
-                                <span
-                                    key={cat}
-                                    className="px-2 py-0.5 text-xs font-bold rounded text-white"
-                                    style={{ backgroundColor: MUSIC_CATEGORY_COLORS[cat as MusicCategoryType] }}
-                                >
-                                    {MUSIC_CATEGORY_NAMES[cat as MusicCategoryType]}
-                                </span>
-                            ))}
+                            {Array.from(new Set(music.categories)).map((cat) => {
+                                const categoryKey = `common.musicCategories.${cat}`;
+                                const categoryLabel = t(categoryKey);
+
+                                return (
+                                    <span
+                                        key={cat}
+                                        className="px-2 py-0.5 text-xs font-bold rounded text-white"
+                                        style={{ backgroundColor: MUSIC_CATEGORY_COLORS[cat as MusicCategoryType] }}
+                                    >
+                                        {categoryLabel === categoryKey ? cat : categoryLabel}
+                                    </span>
+                                );
+                            })}
                         </div>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-slate-800 mb-2">
@@ -418,7 +433,7 @@ export default function MusicDetailPage() {
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                     </svg>
-                                    点击放大
+                                    {t("page.music.clickExpand")}
                                 </div>
                             </div>
                         </div>
@@ -433,13 +448,13 @@ export default function MusicDetailPage() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    乐曲信息
+                                    {t("page.music.basicInfo")}
                                 </h2>
                             </div>
                             <div className="divide-y divide-slate-100">
                                 <InfoRow label="ID" value={`#${music.id}`} />
                                 <InfoRow
-                                    label="标题"
+                                    label={t("page.music.fields.title")}
                                     value={
                                         <TranslatedText
                                             original={music.title}
@@ -450,20 +465,20 @@ export default function MusicDetailPage() {
                                         />
                                     }
                                 />
-                                <InfoRow label="作曲" value={music.composer} />
-                                <InfoRow label="编曲" value={music.arranger} />
-                                <InfoRow label="作词" value={music.lyricist} />
+                                <InfoRow label={t("page.music.fields.composer")} value={music.composer} />
+                                <InfoRow label={t("page.music.fields.arranger")} value={music.arranger} />
+                                <InfoRow label={t("page.music.fields.lyricist")} value={music.lyricist} />
                                 {/* Duration */}
                                 {musicDuration != null && (
                                     <InfoRow
-                                        label="歌曲时长"
+                                        label={t("page.music.fields.duration")}
                                         value={`${Math.floor(musicDuration / 60)}:${Math.floor(musicDuration % 60).toString().padStart(2, "0")}`}
                                     />
                                 )}
                                 <InfoRow
-                                    label="发布时间"
+                                    label={t("page.music.fields.publishedAt")}
                                     value={mounted && music.publishedAt
-                                        ? new Date(music.publishedAt).toLocaleDateString("zh-CN", {
+                                        ? formatDate(music.publishedAt, {
                                             year: "numeric",
                                             month: "long",
                                             day: "numeric",
@@ -471,23 +486,11 @@ export default function MusicDetailPage() {
                                         : "..."}
                                 />
                                 <InfoRow
-                                    label="解锁条件"
-                                    value={
-                                        (() => {
-                                            const conditionMap: Record<number, string> = {
-                                                1: "初始拥有",
-                                                5: "从音乐商店购买",
-                                                6: "无",
-                                                10: "从礼物中领取"
-                                            };
-                                            const id = music.releaseConditionId;
-                                            const baseText = conditionMap[id] !== undefined ? conditionMap[id] : id;
-                                            return isLimitedMusic ? `${baseText}（期间限定）` : baseText;
-                                        })()
-                                    }
+                                    label={t("page.music.fields.releaseCondition")}
+                                    value={releaseConditionText}
                                 />
                                 <InfoRow
-                                    label="内部资源名称"
+                                    label={t("page.music.fields.assetName")}
                                     value={<span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{music.assetbundleName}</span>}
                                 />
                             </div>
@@ -501,7 +504,7 @@ export default function MusicDetailPage() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                         </svg>
-                                        META排行
+                                        {t("page.music.metaRanking")}
                                     </h2>
                                 </div>
 
@@ -522,7 +525,7 @@ export default function MusicDetailPage() {
                                                     }`}
                                                 disabled={!catRanking}
                                             >
-                                                {cat.shortLabel}
+                                                {t(`page.music.${cat.shortLabel}`)}
                                             </button>
                                         );
                                     })}
@@ -563,7 +566,7 @@ export default function MusicDetailPage() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                     </svg>
-                                    难度信息
+                                    {t("page.music.difficultyInfo")}
                                 </h2>
                             </div>
 
@@ -611,14 +614,14 @@ export default function MusicDetailPage() {
                             {selectedDifficultyInfo && (
                                 <div className="px-5 pb-4">
                                     <div className="flex items-center justify-between py-2 border-t border-slate-100">
-                                        <span className="text-sm text-slate-500">NOTE数</span>
+                                        <span className="text-sm text-slate-500">{t("page.music.fields.noteCount")}</span>
                                         <span className="text-sm font-bold text-slate-700">
-                                            {selectedDifficultyInfo.totalNoteCount.toLocaleString()}
+                                            {formatNumber(selectedDifficultyInfo.totalNoteCount)}
                                         </span>
                                     </div>
                                     {songConstantsMap[musicId]?.[selectedDifficulty] !== undefined && (
                                         <div className="flex items-center justify-between py-2 border-t border-slate-100">
-                                            <span className="text-sm text-slate-500">定数</span>
+                                            <span className="text-sm text-slate-500">{t("page.music.fields.constant")}</span>
                                             <span className="text-sm font-black text-miku">
                                                 {songConstantsMap[musicId][selectedDifficulty].toFixed(1)}
                                             </span>
@@ -626,7 +629,7 @@ export default function MusicDetailPage() {
                                     )}
                                     {songConstantsMap[musicId] && Object.keys(songConstantsMap[musicId]).length > 0 && (
                                         <div className="pt-1 pb-0.5 text-[10px] text-slate-400 text-center">
-                                            社区定数 · 来源非官方 · 仅供参考
+                                            {t("page.music.communityConstantNote")}
                                         </div>
                                     )}
 
@@ -640,7 +643,7 @@ export default function MusicDetailPage() {
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
-                                        打开 {DIFFICULTY_NAMES[selectedDifficulty]} 谱面图片预览
+                                        {t("page.music.openChartImagePreview", { difficulty: DIFFICULTY_NAMES[selectedDifficulty] })}
                                     </a>
                                     <Link
                                         href={`/chart-preview?musicId=${musicId}&difficulty=${selectedDifficulty}&preview=true&from=/music/${musicId}`}
@@ -651,7 +654,7 @@ export default function MusicDetailPage() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        在线 3D 谱面预览
+                                        {t("page.music.open3dChartPreview")}
                                     </Link>
                                 </div>
                             )}
@@ -665,7 +668,7 @@ export default function MusicDetailPage() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                                         </svg>
-                                        演唱版本（已跳过9秒空白）
+                                        {t("page.music.vocalVersions", { seconds: music.fillerSec })}
                                     </h2>
                                 </div>
                                 <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
@@ -676,6 +679,8 @@ export default function MusicDetailPage() {
                                             fillerSec={music.fillerSec}
                                             assetSource={assetSource}
                                             outsideCharacters={outsideCharacters}
+                                            downloadLabel={t("page.music.downloadAudio")}
+                                            getCharacterLabel={(characterId) => getCharacterName(t, characterId)}
                                         />
                                     ))}
                                 </div>
@@ -690,7 +695,7 @@ export default function MusicDetailPage() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        相关活动
+                                        {t("page.music.relatedEvents")}
                                     </h2>
                                 </div>
                                 <div className="p-0">
@@ -741,7 +746,7 @@ export default function MusicDetailPage() {
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        返回音乐列表
+                        {t("page.music.backToList")}
                     </Link>
                 </div>
             </div>
@@ -750,7 +755,21 @@ export default function MusicDetailPage() {
 }
 
 // Vocal Player Component
-function VocalPlayer({ vocal, fillerSec, assetSource, outsideCharacters }: { vocal: IMusicVocalInfo; fillerSec: number; assetSource: AssetSourceType; outsideCharacters: Record<number, string> }) {
+function VocalPlayer({
+    vocal,
+    fillerSec,
+    assetSource,
+    outsideCharacters,
+    downloadLabel,
+    getCharacterLabel,
+}: {
+    vocal: IMusicVocalInfo;
+    fillerSec: number;
+    assetSource: AssetSourceType;
+    outsideCharacters: Record<number, string>;
+    downloadLabel: string;
+    getCharacterLabel: (characterId: number) => string;
+}) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -851,7 +870,7 @@ function VocalPlayer({ vocal, fillerSec, assetSource, outsideCharacters }: { voc
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-1.5 text-slate-400 hover:text-miku hover:bg-miku/5 rounded-lg transition-colors"
-                                title="下载音频"
+                                title={downloadLabel}
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -865,7 +884,7 @@ function VocalPlayer({ vocal, fillerSec, assetSource, outsideCharacters }: { voc
                         {vocal.characters?.map((chara) => {
                             const isGameChar = chara.characterType === "game_character";
                             const charName = isGameChar
-                                ? CHARACTER_NAMES[chara.characterId] || `Character ${chara.characterId}`
+                                ? getCharacterLabel(chara.characterId)
                                 : outsideCharacters[chara.characterId] || `Guest ${chara.characterId}`;
                             const hasIcon = isGameChar && chara.characterId <= 26;
 

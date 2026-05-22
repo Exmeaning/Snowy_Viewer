@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import StoryAreaListClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = { title: "区域对话", description: "浏览 Project Sekai 区域对话" };
+export const generateMetadata = pageMetadata("story_area");
 
 export default function StoryAreaListPage() {
     return <StoryAreaListClient />;

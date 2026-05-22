@@ -6,8 +6,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
 import { fetchMasterData } from "@/lib/fetch";
-import { ICardInfo, UNIT_DATA, CHARACTER_NAMES, CHAR_COLORS, UNIT_ICON_FILES } from "@/types/types";
+import { ICardInfo, UNIT_DATA, CHAR_COLORS, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCardFullUrl, getCharacterIconUrl } from "@/lib/assets";
+import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 
 // Game Constants
 const ROUNDS_PER_GAME = 10;
@@ -36,18 +38,27 @@ type DistortionType = "none" | "hue-rotate" | "flip-v" | "flip-h" | "grayscale" 
 
 interface ActiveDistortion {
     type: DistortionType;
-    label: string;
 }
 
-const DISTORTION_POOL: { type: DistortionType; label: string }[] = [
-    { type: "none", label: "不操作" },
-    { type: "hue-rotate", label: "色相反转" },
-    { type: "flip-v", label: "翻转" },
-    { type: "flip-h", label: "镜像" },
-    { type: "grayscale", label: "灰度" },
-    { type: "invert", label: "反色" },
-    { type: "rgb-shuffle", label: "RGB打乱" },
+const DISTORTION_POOL: { type: DistortionType }[] = [
+    { type: "none" },
+    { type: "hue-rotate" },
+    { type: "flip-v" },
+    { type: "flip-h" },
+    { type: "grayscale" },
+    { type: "invert" },
+    { type: "rgb-shuffle" },
 ];
+
+const DISTORTION_LABEL_KEYS: Record<DistortionType, string> = {
+    none: "none",
+    "hue-rotate": "hueRotate",
+    "flip-v": "flipV",
+    "flip-h": "flipH",
+    grayscale: "grayscale",
+    invert: "invert",
+    "rgb-shuffle": "rgbShuffle",
+};
 
 interface GameSettings {
     server: ServerScope;
@@ -142,6 +153,7 @@ function GuessWhoContent() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { t } = useI18n();
 
     // Game State
     const [gameState, setGameState] = useState<GameState>("setup");
@@ -208,7 +220,6 @@ function GuessWhoContent() {
             selectedUnitIds: unitsParam ? unitsParam.split(",") : [],
             selectedRarities: raritiesParam ? raritiesParam.split(",") : DEFAULT_RARITIES,
         }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
     // Load Data
@@ -221,11 +232,11 @@ function GuessWhoContent() {
             setCards(validCards);
         } catch (e) {
             console.error("Failed to load cards", e);
-            setLoadError("卡面数据加载失败，请检查网络后重试");
+            setLoadError(t("page.guessWho.common.errors.cardLoadFailed"));
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         loadCards();
@@ -251,7 +262,7 @@ function GuessWhoContent() {
     const copyShareLink = () => {
         const url = getShareUrl();
         navigator.clipboard.writeText(url).then(() => {
-            alert("链接已复制! 分享给好友来挑战吧");
+            alert(t("page.guessWho.single.shareCopied"));
         });
     };
 
@@ -276,7 +287,7 @@ function GuessWhoContent() {
 
     // Available Characters
     const availableCharacters = useMemo(() => {
-        if (settings.selectedUnitIds.length === 0) return Object.keys(CHARACTER_NAMES).map(Number);
+        if (settings.selectedUnitIds.length === 0) return UNIT_DATA.flatMap((unit) => unit.charIds);
         const chars: number[] = [];
         UNIT_DATA.forEach(unit => {
             if (settings.selectedUnitIds.includes(unit.id)) {
@@ -303,7 +314,7 @@ function GuessWhoContent() {
         });
 
         if (deck.length < ROUNDS_PER_GAME) {
-            alert(`卡池数量不足 (${deck.length})，请扩大筛选范围`);
+            alert(t("page.guessWho.common.errors.deckInsufficient", { count: deck.length }));
             return;
         }
 
@@ -479,7 +490,7 @@ function GuessWhoContent() {
                 setCombo(0); // Break combo
                 // Transient feedback
                 const feedbackEl = document.createElement("div");
-                feedbackEl.textContent = "回答错误! 时间 -50%";
+                feedbackEl.textContent = t("page.guessWho.single.wrongTimePenalty");
                 feedbackEl.className = "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white font-bold px-6 py-3 rounded-full animate-bounce z-[100] shadow-lg text-xl";
                 document.body.appendChild(feedbackEl);
                 setTimeout(() => feedbackEl.remove(), 1000);
@@ -562,7 +573,7 @@ function GuessWhoContent() {
     const formatTime = (seconds: number) => Math.max(0, seconds).toFixed(1) + "s";
 
     if (isLoading) {
-        return <MainLayout><div className="flex h-screen items-center justify-center">Loading...</div></MainLayout>;
+        return <MainLayout><div className="flex h-screen items-center justify-center">{t("page.guessWho.common.loading")}</div></MainLayout>;
     }
 
     const currentTotalScore = currentResults.reduce((acc, r) => acc + r.score, 0);
@@ -574,8 +585,8 @@ function GuessWhoContent() {
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(shareUrl)}`;
 
         // Helper for displaying server
-        const getServerLabel = (s: ServerScope) => s === "jp" ? "JP (日服)" : "CN (国服)";
-        const getDifficultyLabel = (d: Difficulty) => d === "easy" ? "简单" : d === "normal" ? "普通" : d === "hard" ? "困难" : "极限";
+        const getServerLabel = (s: ServerScope) => t(`page.guessWho.common.serverLabels.${s}`);
+        const getDifficultyLabel = (d: Difficulty) => t(`page.guessWho.common.difficultyLabels.${d}`);
 
         return (
             <MainLayout>
@@ -587,31 +598,31 @@ function GuessWhoContent() {
                                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
                                     <span className="text-miku text-xs font-bold tracking-widest uppercase">GAME OVER</span>
                                 </div>
-                                <h1 className="text-4xl font-black text-slate-800 mb-2">挑战完成!</h1>
-                                <p className="text-xl text-slate-500 mb-6">最终得分</p>
+                                <h1 className="text-4xl font-black text-slate-800 mb-2">{t("page.guessWho.single.challengeComplete")}</h1>
+                                <p className="text-xl text-slate-500 mb-6">{t("page.guessWho.single.finalScore")}</p>
                                 <div className="text-6xl font-black text-miku mb-8 animate-bounce">{currentTotalScore}</div>
 
                                 <div className="flex flex-col md:flex-row items-center justify-center gap-8 bg-slate-50/50 rounded-2xl p-6 mb-8">
                                     <div className="text-left space-y-2 text-sm text-slate-500">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">随机种子:</span>
+                                            <span className="font-bold text-slate-700 w-16">{t("page.guessWho.common.seed")}</span>
                                             <code className="bg-white px-2 py-1 rounded border">{settings.seed}</code>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">服务器:</span>
+                                            <span className="font-bold text-slate-700 w-16">{t("page.guessWho.common.server")}</span>
                                             <span className="font-bold text-slate-900">{getServerLabel(settings.server)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">难度:</span>
+                                            <span className="font-bold text-slate-700 w-16">{t("page.guessWho.common.difficulty")}</span>
                                             <span className="capitalize font-bold text-miku">{getDifficultyLabel(settings.difficulty)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">限时:</span>
-                                            <span>{settings.timeLimit}秒</span>
+                                            <span className="font-bold text-slate-700 w-16">{t("page.guessWho.common.timeLimit")}</span>
+                                            <span>{settings.timeLimit}{t("page.guessWho.common.secondsSuffix")}</span>
                                         </div>
                                         {settings.selectedUnitIds.length > 0 && (
                                             <div className="flex items-start gap-2">
-                                                <span className="font-bold text-slate-700 w-16 shrink-0">指定团体:</span>
+                                                <span className="font-bold text-slate-700 w-16 shrink-0">{t("page.guessWho.common.selectedUnits")}</span>
                                                 <div className="flex flex-wrap gap-1">
                                                     {settings.selectedUnitIds.map(uid => (
                                                         <Image key={uid} src={`/data/icon/${UNIT_ICON_FILES[uid]}`} width={20} height={20} alt={uid} className="w-5 h-5 object-contain" unoptimized />
@@ -622,7 +633,7 @@ function GuessWhoContent() {
 
                                         {settings.difficulty === "extreme" && (
                                             <div className="text-xs text-red-500 font-bold mt-2 pt-2 border-t border-slate-200">
-                                                (包含色相反转/镜像/RGB打乱等)
+                                                {t("page.guessWho.common.distortions.extremeSummary")}
                                             </div>
                                         )}
                                     </div>
@@ -630,17 +641,17 @@ function GuessWhoContent() {
                                         <div className="w-[120px] h-[120px] bg-white p-2 rounded-xl shadow-sm border border-slate-200">
                                             <img src={qrCodeUrl} alt="Share QR Code" className="w-full h-full object-contain" />
                                         </div>
-                                        <span className="text-xs text-slate-400 font-bold uppercase tracking-wide">扫码挑战</span>
+                                        <span className="text-xs text-slate-400 font-bold uppercase tracking-wide">{t("page.guessWho.single.scanToChallenge")}</span>
                                     </div>
                                 </div>
 
                                 <div className="flex justify-center gap-4">
                                     <button onClick={copyShareLink} className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center gap-2 shadow-sm">
                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-                                        复制链接
+                                        {t("page.guessWho.single.copyLink")}
                                     </button>
                                     <button onClick={() => { setSettings(prev => ({ ...prev, seed: Math.random().toString(36).substring(7) })); setGameState("setup"); }} className="px-6 py-3 bg-miku text-white rounded-xl font-bold hover:bg-miku-dark transition-colors shadow-lg shadow-miku/30">
-                                        再玩一次 (新种子)
+                                        {t("page.guessWho.single.playAgainNewSeed")}
                                     </button>
                                 </div>
                             </div>
@@ -663,11 +674,11 @@ function GuessWhoContent() {
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-xs text-slate-500 font-bold uppercase tracking-wide mb-0.5">Round {res.round + 1}</div>
                                                         <div className={`font-black text-lg leading-tight mb-1 ${res.isCorrect ? "text-green-700" : "text-red-700"}`}>
-                                                            {res.isCorrect ? "正确" : `错误`}
+                                                            {res.isCorrect ? t("page.guessWho.common.correct") : t("page.guessWho.common.wrong")}
                                                         </div>
-                                                        {!res.isCorrect && <div className="text-xs text-red-600 font-bold bg-white/50 inline-block px-1 rounded block w-fit mb-1">选了: {res.userGuess ? CHARACTER_NAMES[res.userGuess] : "超时"}</div>}
+                                                        {!res.isCorrect && <div className="text-xs text-red-600 font-bold bg-white/50 inline-block px-1 rounded block w-fit mb-1">{t("page.guessWho.common.selectedGuess", { name: res.userGuess ? getCharacterName(t, res.userGuess) : t("page.guessWho.common.timeout") })}</div>}
                                                         <div className="text-xs text-slate-600 truncate flex items-center gap-1">
-                                                            <span className="font-bold shrink-0">{CHARACTER_NAMES[res.card.characterId]}</span>
+                                                            <span className="font-bold shrink-0">{getCharacterName(t, res.card.characterId)}</span>
                                                             <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0"></span>
                                                             <span className="opacity-80 truncate">{res.card.prefix}</span>
                                                         </div>
@@ -685,7 +696,7 @@ function GuessWhoContent() {
                                                     <div className="flex flex-wrap justify-end gap-1 px-1">
                                                         {res.distortions.map((d, i) => (
                                                             <span key={i} className="text-[10px] px-1.5 py-0.5 bg-slate-800/80 text-white rounded font-bold shadow-sm whitespace-nowrap">
-                                                                {d.label}
+                                                                {t(`page.guessWho.common.distortions.${DISTORTION_LABEL_KEYS[d.type]}`)}
                                                             </span>
                                                         ))}
                                                     </div>
@@ -704,11 +715,12 @@ function GuessWhoContent() {
 
     // Split for brevity / manual re-insertion of large render blocks
     return GuessWhoClientPlayingAndSetup({
+        t,
         gameState, settings, setSettings,
         currentTotalScore, timeLeft, isRoundActive,
         currentRound, showFeedback, feedbackResult, currentCanvasImage,
         canvasRef, currentDistortions, handleGuess, handleNextRound,
-        availableCharacters, startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime,
+        availableCharacters, getCharacterLabel: (characterId) => getCharacterName(t, characterId), startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime,
         potentialScore: getCurrentPotentialScore(),
         combo, strikes,
         loadError, loadCards, isLoading
@@ -725,6 +737,7 @@ export default function GuessWhoClient() {
 
 // Helper to keep code clean since we are repeating the layout in "Playing" mode
 interface GuessWhoPlayingAndSetupProps {
+    t: ReturnType<typeof useI18n>["t"];
     gameState: GameState;
     settings: GameSettings;
     setSettings: React.Dispatch<React.SetStateAction<GameSettings>>;
@@ -740,6 +753,7 @@ interface GuessWhoPlayingAndSetupProps {
     handleGuess: (charId: number | null) => void;
     handleNextRound: () => void;
     availableCharacters: number[];
+    getCharacterLabel: (characterId: number) => string;
     startGame: () => void;
     handleRarityToggle: (rarityId: string) => void;
     handleUnitToggle: (unitId: string) => void;
@@ -754,11 +768,12 @@ interface GuessWhoPlayingAndSetupProps {
 }
 
 function GuessWhoClientPlayingAndSetup({
+    t,
     gameState, settings, setSettings,
     currentTotalScore, timeLeft, isRoundActive,
     currentRound, showFeedback, feedbackResult, currentCanvasImage,
     canvasRef, currentDistortions, handleGuess, handleNextRound,
-    availableCharacters, startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime, potentialScore,
+    availableCharacters, getCharacterLabel, startGame, handleRarityToggle, handleUnitToggle, copyShareLink, formatTime, potentialScore,
 
     combo, strikes,
     loadError, loadCards, isLoading
@@ -777,13 +792,13 @@ function GuessWhoClientPlayingAndSetup({
                                     <CanvasImage image={currentCanvasImage} objectFit="contain" />
                                 </div>
                                 <div className={`mt-8 px-8 py-4 rounded-full font-black text-3xl animate-bounce ${feedbackResult.isCorrect ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
-                                    {feedbackResult.isCorrect ? "回答正确!" : "回答错误!"}
+                                    {feedbackResult.isCorrect ? t("page.guessWho.single.feedbackCorrect") : t("page.guessWho.single.feedbackWrong")}
                                 </div>
                                 <div className="mt-4 text-center text-white">
-                                    <div className="text-2xl font-bold mb-1">{CHARACTER_NAMES[feedbackResult.card.characterId]}</div>
+                                    <div className="text-2xl font-bold mb-1">{getCharacterLabel(feedbackResult.card.characterId)}</div>
                                     <div className="text-slate-300">{feedbackResult.card.prefix}</div>
                                 </div>
-                                <div className="mt-8 text-slate-400 text-sm animate-pulse">点击屏幕继续 ({FEEDBACK_DURATION / 1000}s 后自动跳转)</div>
+                                <div className="mt-8 text-slate-400 text-sm animate-pulse">{t("page.guessWho.single.clickContinue", { seconds: FEEDBACK_DURATION / 1000 })}</div>
                             </div>,
                             document.body
                         )}
@@ -806,7 +821,7 @@ function GuessWhoClientPlayingAndSetup({
                                     {multiplier > 1 && (
                                         <div className="flex items-center gap-1 bg-yellow-400 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-sm animate-pulse">
                                             <span>COMBO x{multiplier.toFixed(1)}</span>
-                                            <span className="text-[10px] opacity-80">(Streak: {combo})</span>
+                                            <span className="text-[10px] opacity-80">{t("page.guessWho.single.streakLabel", { combo })}</span>
                                         </div>
                                     )}
                                 </div>
@@ -831,24 +846,24 @@ function GuessWhoClientPlayingAndSetup({
                                         <div className="absolute top-2 right-2 flex flex-col gap-1 items-end pointer-events-none">
                                             {currentDistortions.map((d: ActiveDistortion, i: number) => (
                                                 <span key={i} className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded shadow-sm opacity-90">
-                                                    {d.label}
+                                                    {t(`page.guessWho.common.distortions.${DISTORTION_LABEL_KEYS[d.type]}`)}
                                                 </span>
                                             ))}
                                         </div>
                                     )}
                                     {!isRoundActive && !showFeedback && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white font-bold backdrop-blur-sm">
-                                            Loading...
+                                            {t("page.guessWho.single.loadingImage")}
                                         </div>
                                     )}
                                 </div>
                             </div>
 
                             <div className="w-full max-w-5xl flex flex-wrap justify-center gap-2 sm:gap-3 p-4 bg-white/80 backdrop-blur-md rounded-3xl shadow-sm transition-opacity">
-                                {Object.entries(CHARACTER_NAMES).map(([idStr, name]) => {
-                                    const id = Number(idStr);
+                                {availableCharacters.map((id) => {
+                                    const name = getCharacterLabel(id);
+                                    const idStr = String(id);
                                     const color = CHAR_COLORS[idStr];
-                                    if (!availableCharacters.includes(id)) return null;
                                     return (
                                         <button key={id} onClick={() => isRoundActive && handleGuess(id)} disabled={!isRoundActive} className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl overflow-hidden relative group transition-transform active:scale-95 hover:scale-105 disabled:opacity-50 disabled:scale-100 ring-2 ring-transparent hover:ring-miku shadow-sm" title={name}>
                                             <Image src={getCharacterIconUrl(id)} alt={name} fill className="object-cover" unoptimized />
@@ -871,15 +886,15 @@ function GuessWhoClientPlayingAndSetup({
                 <div className="container mx-auto px-4 max-w-2xl">
                     <div className="text-center mb-10">
                         <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4 bg-white/80 backdrop-blur-sm shadow-sm">
-                            <span className="text-miku text-xs font-bold tracking-widest uppercase">Creativity Game</span>
+                            <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.guessWho.badge")}</span>
                         </div>
-                        <h1 className="text-4xl font-black text-slate-800 mb-2 drop-shadow-sm">我是谁 <span className="text-miku">?</span></h1>
-                        <p className="text-slate-500 font-medium">通过随机裁剪的卡面猜测角色</p>
+                        <h1 className="text-4xl font-black text-slate-800 mb-2 drop-shadow-sm">{t("page.guessWho.title")} <span className="text-miku">?</span></h1>
+                        <p className="text-slate-500 font-medium">{t("page.guessWho.description")}</p>
                         <a
                             href="/guess-who/multiplayer/"
                             className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-miku text-white rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 hover:bg-miku-dark"
                         >
-                            <span>联机对战模式beta</span>
+                            <span>{t("page.guessWho.single.multiplayerMode")}</span>
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                         </a>
                     </div>
@@ -887,10 +902,10 @@ function GuessWhoClientPlayingAndSetup({
                     <div className="bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-sm border border-slate-100 space-y-6 sm:space-y-8">
                         <div className="flex flex-col sm:flex-row gap-4">
                             <div className="flex-1">
-                                <label className="block text-sm font-bold text-slate-700 mb-2">随机种子</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">{t("page.guessWho.common.seed")}</label>
                                 <div className="flex gap-2">
                                     <input type="text" value={settings.seed} onChange={(e) => setSettings({ ...settings, seed: e.target.value })} className="flex-1 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-miku font-mono text-sm bg-slate-50" />
-                                    <button onClick={() => setSettings({ ...settings, seed: Math.random().toString(36).substring(7) })} className="px-3 py-2 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors" title="重新生成">
+                                    <button onClick={() => setSettings({ ...settings, seed: Math.random().toString(36).substring(7) })} className="px-3 py-2 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors" title={t("page.guessWho.single.regenerateSeed")}>
                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                                     </button>
                                 </div>
@@ -898,13 +913,13 @@ function GuessWhoClientPlayingAndSetup({
                             <div className="flex items-end w-full sm:w-auto">
                                 <button onClick={copyShareLink} className="w-full sm:w-auto justify-center px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center gap-2 h-[42px]">
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-                                    分享
+                                    {t("page.guessWho.single.share")}
                                 </button>
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-3">难度设置</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessWho.single.difficultySetting")}</label>
                             <div className="grid grid-cols-4 gap-2">
                                 {(["easy", "normal", "hard", "extreme"] as Difficulty[]).map(d => (
                                     <button
@@ -915,14 +930,14 @@ function GuessWhoClientPlayingAndSetup({
                                             : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                                             }`}
                                     >
-                                        {d === "easy" ? "简单" : d === "normal" ? "普通" : d === "hard" ? "困难" : "极限"}
+                                        {t(`page.guessWho.common.difficultyLabels.${d}`)}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-3">卡面星级</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessWho.single.raritySetting")}</label>
                             <div className="flex flex-wrap gap-2">
                                 {RARITY_OPTIONS.map(({ id, num }) => {
                                     const isSelected = settings.selectedRarities.includes(id);
@@ -937,17 +952,17 @@ function GuessWhoClientPlayingAndSetup({
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-3">服务器范围</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessWho.single.serverScope")}</label>
                                 <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
                                     {(["jp", "cn"] as ServerScope[]).map(s => (
                                         <button key={s} onClick={() => setSettings({ ...settings, server: s })} className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${settings.server === s ? "bg-white text-miku shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
-                                            {s === "jp" ? "日服" : "国服"}
+                                            {t(`page.guessWho.common.serverLabels.${s}`)}
                                         </button>
                                     ))}
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-3">猜测时间 (秒)</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessWho.single.guessTime")}</label>
                                 <input type="number" value={settings.timeLimit} onChange={(e) => setSettings({ ...settings, timeLimit: Math.max(3, Math.min(120, Number(e.target.value))) })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-miku font-mono text-center" />
                             </div>
                         </div>
@@ -955,34 +970,37 @@ function GuessWhoClientPlayingAndSetup({
 
                     <div className="border-t border-slate-100 pt-6">
                         <div className="flex justify-between items-center mb-4">
-                            <label className="text-sm font-bold text-slate-700">角色筛选</label>
-                            <button onClick={() => setSettings({ ...settings, selectedUnitIds: [] })} className="text-xs text-miku hover:underline">重置筛选</button>
+                            <label className="text-sm font-bold text-slate-700">{t("page.guessWho.single.characterFilter")}</label>
+                            <button onClick={() => setSettings({ ...settings, selectedUnitIds: [] })} className="text-xs text-miku hover:underline">{t("page.guessWho.single.resetFilter")}</button>
                         </div>
                         <div className="flex flex-wrap gap-3 mb-4 justify-center">
-                            {UNIT_DATA.map(unit => (
-                                <button key={unit.id} onClick={() => handleUnitToggle(unit.id)} className={`transition-all p-1 rounded-full ${settings.selectedUnitIds.includes(unit.id) ? "bg-slate-100 ring-2 ring-miku scale-110" : "opacity-60 hover:opacity-100 grayscale hover:grayscale-0 hover:bg-slate-50"}`}>
-                                    <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unit.name} width={40} height={40} className="w-10 h-10 object-contain" unoptimized />
-                                </button>
-                            ))}
+                            {UNIT_DATA.map(unit => {
+                                const unitLabel = t(UNIT_ID_LABEL_KEYS[unit.id] ?? `common.units.${unit.id}`);
+                                return (
+                                    <button key={unit.id} onClick={() => handleUnitToggle(unit.id)} className={`transition-all p-1 rounded-full ${settings.selectedUnitIds.includes(unit.id) ? "bg-slate-100 ring-2 ring-miku scale-110" : "opacity-60 hover:opacity-100 grayscale hover:grayscale-0 hover:bg-slate-50"}`}>
+                                        <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unitLabel} width={40} height={40} className="w-10 h-10 object-contain" unoptimized />
+                                    </button>
+                                );
+                            })}
                         </div>
-                        <div className="text-xs text-slate-400 text-center">已选: {settings.selectedUnitIds.length > 0 ? "~" + availableCharacters.length + " 名角色" : "全部26名角色"}</div>
+                        <div className="text-xs text-slate-400 text-center">{settings.selectedUnitIds.length > 0 ? t("page.guessWho.single.selectedCharacters", { count: availableCharacters.length }) : t("page.guessWho.single.selectedAllCharacters")}</div>
                     </div>
 
                     {loadError && (
                         <div className="text-center p-4 bg-red-50 border border-red-200 rounded-2xl">
                             <p className="text-red-600 text-sm font-medium mb-2">{loadError}</p>
                             <button onClick={loadCards} className="px-4 py-2 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors">
-                                重新加载
+                                {t("page.guessWho.common.reload")}
                             </button>
                         </div>
                     )}
 
                     <button onClick={startGame} disabled={isLoading || !!loadError} className={`w-full py-4 bg-gradient-to-r from-miku to-miku-dark text-white rounded-2xl font-black text-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all ${(isLoading || loadError) ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                        {isLoading ? "加载中..." : "开始挑战"}
+                        {isLoading ? t("page.guessWho.common.loading") : t("page.guessWho.single.startChallenge")}
                     </button>
 
                     <Link href="/guess-jacket" className="mt-3 block text-center text-sm text-slate-500 hover:text-miku transition-colors">
-                        想猜曲绘? 去「猜曲绘」
+                        {t("page.guessWho.single.goGuessJacket")}
                     </Link>
                 </div>
             </div>

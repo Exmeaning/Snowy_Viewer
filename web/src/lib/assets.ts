@@ -8,6 +8,7 @@ export const MOE_ASSETS_BASE_URL = `${MOE_STATIC_BASE_URL}/assets`;
 export const MOE_LOGO_URL = `${MOE_ASSETS_BASE_URL}/logo.svg`;
 export const MOE_MUSIC_META_URL = `${MOE_STATIC_BASE_URL}/data/music_meta/music_metas.json`;
 export const MOE_RANKINGS_URL = `${MOE_STATIC_BASE_URL}/data/music_meta/rankings_best.json`;
+export const MOE_BGM_DURATIONS_URL = `${MOE_STATIC_BASE_URL}/data/bgm_duration/bgm_durations.json`;
 
 export const ASSET_DOMAIN_MAIN = "https://storage.exmeaning.com";
 export const ASSET_DOMAIN_BACKUP = "https://storage2.exmeaning.com";

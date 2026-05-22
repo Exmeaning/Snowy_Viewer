@@ -1,10 +1,10 @@
 "use client";
 /**
- * useStoryAsset — 通用剧情 asset 加载 hook
+ * useStoryAsset — generic story asset loading hook
  *
- * - 根据 serverSource 决定 lang（jp/cn）
- * - JP 时可选加载翻译并 merge
- * - 统一处理 StoryAssetMissingError
+ * - Resolves lang (jp/cn) from serverSource.
+ * - Optionally merges JP translations when provided.
+ * - Handles StoryAssetMissingError consistently.
  */
 import { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -20,6 +20,8 @@ export interface UseStoryAssetOptions {
     translation?: IEventStoryTranslation | null;
     /** Episode number for translation lookup */
     episodeNo?: number;
+    /** Localized fallback used when a thrown value is not an Error instance. */
+    fallbackErrorMessage?: string;
 }
 
 export interface UseStoryAssetResult {
@@ -36,6 +38,7 @@ export function useStoryAsset({
     params,
     translation,
     episodeNo,
+    fallbackErrorMessage = "Failed to load",
 }: UseStoryAssetOptions): UseStoryAssetResult {
     const { serverSource, assetSource } = useTheme();
     const lang: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
@@ -83,7 +86,7 @@ export function useStoryAsset({
                 if (err instanceof StoryAssetMissingError) {
                     setMissingPaths(err.missingPaths);
                 } else {
-                    setError(err instanceof Error ? err.message : "加载失败");
+                    setError(err instanceof Error ? err.message : fallbackErrorMessage);
                 }
             } finally {
                 if (!cancelled) setIsLoading(false);
@@ -93,7 +96,7 @@ export function useStoryAsset({
         load();
         return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [paramsKey, translation, episodeNo]);
+    }, [paramsKey, translation, episodeNo, fallbackErrorMessage]);
 
     return { scenarioData, isLoading, error, missingPaths, lang, translationSource };
 }

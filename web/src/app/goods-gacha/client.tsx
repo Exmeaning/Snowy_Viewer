@@ -5,12 +5,14 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import MainLayout from '@/components/MainLayout';
 import ExternalLink from '@/components/ExternalLink';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface GachaClientProps {
     pools: Record<string, string[]>;
 }
 
 export default function GachaClient({ pools }: GachaClientProps) {
+    const { t } = useI18n();
     const poolNames = Object.keys(pools);
     const [selectedPool, setSelectedPool] = useState<string>(poolNames[0] || '');
     const [results, setResults] = useState<string[]>([]);
@@ -63,7 +65,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
     };
 
     const resetHistory = () => {
-        if (confirm("确定要重置当前卡池的抽奖记录吗？")) {
+        if (confirm(t("page.goodsGacha.resetConfirm"))) {
             setHistory(prev => ({
                 ...prev,
                 [selectedPool]: {}
@@ -77,7 +79,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
         return (
             <MainLayout>
                 <div className="pt-4 min-h-screen flex items-center justify-center text-slate-500">
-                    <p>暂无卡池数据</p>
+                    <p>{t("page.goodsGacha.noPools")}</p>
                 </div>
             </MainLayout>
         );
@@ -97,19 +99,19 @@ export default function GachaClient({ pools }: GachaClientProps) {
                     {/* Page Header */}
                     <div className="text-center mb-10">
                         <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                            <span className="text-miku text-xs font-bold tracking-widest uppercase">Entertainment Tool</span>
+                            <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.goodsGacha.badge")}</span>
                         </div>
                         <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                            谷子 <span className="text-miku">盲抽模拟</span>
+                            {t("page.goodsGacha.title")} <span className="text-miku">{t("page.goodsGacha.titleHighlight")}</span>
                         </h1>
                         <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                            选择卡池，消耗运气，试试你的手气吧！
+                            {t("page.goodsGacha.description")}
                         </p>
                     </div>
 
                     {/* Pool Selector */}
                     <div className="mb-12">
-                        <h2 className="text-lg font-bold text-slate-700 mb-4 px-2 border-l-4 border-miku">选择卡池</h2>
+                        <h2 className="text-lg font-bold text-slate-700 mb-4 px-2 border-l-4 border-miku">{t("page.goodsGacha.selectPool")}</h2>
                         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {poolNames.map((poolName) => (
                                 <button
@@ -175,7 +177,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                             >
                                                 <Image
                                                     src={src}
-                                                    alt={`Result ${index + 1}`}
+                                                    alt={t("page.goodsGacha.resultAlt", { index: index + 1 })}
                                                     fill
                                                     className="object-contain p-1.5 hover:scale-110 transition-transform duration-300"
                                                     sizes="(max-width: 768px) 50vw, 20vw"
@@ -191,7 +193,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
                         <div className={`z-10 flex flex-col items-center gap-6 w-full max-w-md mx-auto transition-all ${showResults ? 'mt-4' : ''}`}>
                             {!showResults && (
                                 <div className="text-xl font-bold text-slate-700">
-                                    当前卡池: <span className="text-miku">{selectedPool}</span>
+                                    {t("page.goodsGacha.currentPool")} <span className="text-miku">{selectedPool}</span>
                                 </div>
                             )}
 
@@ -201,23 +203,23 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                     disabled={isAnimating}
                                     className="flex-1 bg-white border-2 border-miku text-miku hover:bg-miku hover:text-white font-bold py-2 sm:py-4 rounded-2xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex flex-col items-center gap-1"
                                 >
-                                    <span className="text-sm sm:text-lg">单抽</span>
-                                    <span className="text-[10px] sm:text-xs opacity-80 font-normal">消耗: 运气</span>
+                                    <span className="text-sm sm:text-lg">{t("page.goodsGacha.singleDraw")}</span>
+                                    <span className="text-[10px] sm:text-xs opacity-80 font-normal">{t("page.goodsGacha.singleDrawCost")}</span>
                                 </button>
                                 <button
                                     onClick={() => draw(10)}
                                     disabled={isAnimating}
                                     className="flex-1 bg-gradient-to-r from-miku to-teal-400 text-white font-bold py-2 sm:py-4 rounded-2xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:brightness-110 flex flex-col items-center gap-1"
                                 >
-                                    <span className="text-sm sm:text-lg">十连抽</span>
-                                    <span className="text-[10px] sm:text-xs opacity-80 font-normal">消耗运气x10</span>
+                                    <span className="text-sm sm:text-lg">{t("page.goodsGacha.tenDraw")}</span>
+                                    <span className="text-[10px] sm:text-xs opacity-80 font-normal">{t("page.goodsGacha.tenDrawCost")}</span>
                                 </button>
                             </div>
 
                             {/* Statistics Summary */}
                             <div className="text-sm text-slate-500 font-medium flex gap-4">
-                                <span>总抽数: <b className="text-slate-800">{totalDraws}</b></span>
-                                <span>收集率: <b className="text-miku">{completionRate}%</b> ({uniqueObtained}/{currentPoolImages.length})</span>
+                                <span>{t("page.goodsGacha.totalDraws")} <b className="text-slate-800">{totalDraws}</b></span>
+                                <span>{t("page.goodsGacha.completionRate")} <b className="text-miku">{completionRate}%</b> ({uniqueObtained}/{currentPoolImages.length})</span>
                             </div>
                         </div>
 
@@ -248,7 +250,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                             transition={{ duration: 1.5, repeat: Infinity }}
                                             className="text-miku font-bold text-xl"
                                         >
-                                            祈愿中...
+                                            {t("page.goodsGacha.praying")}
                                         </motion.p>
                                     </div>
                                 </motion.div>
@@ -263,14 +265,14 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                 <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                 </svg>
-                                卡池详情 ({currentPoolImages.length})
+                                {t("page.goodsGacha.poolDetails", { count: currentPoolImages.length })}
                             </h2>
                             <button
                                 onClick={resetHistory}
                                 disabled={totalDraws === 0}
                                 className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-500 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold"
                             >
-                                重置记录
+                                {t("page.goodsGacha.resetHistory")}
                             </button>
                         </div>
                         <div className="p-6">
@@ -290,7 +292,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                         >
                                             <Image
                                                 src={src}
-                                                alt={`Pool Item ${idx}`}
+                                                alt={t("page.goodsGacha.poolItemAlt", { index: idx + 1 })}
                                                 fill
                                                 className="object-contain p-1"
                                                 sizes="128px"
@@ -313,16 +315,16 @@ export default function GachaClient({ pools }: GachaClientProps) {
                     {/* Disclaimer Footer */}
                     <div className="mt-12 pt-8 border-t border-slate-200 text-center text-slate-400 text-sm space-y-2">
                         <p>
-                            本工具仅供娱乐，与 SEGA / Colorful Palette / PJSK 官方无关。
+                            {t("page.goodsGacha.disclaimer.unofficial")}
                         </p>
                         <p>
-                            模拟结果仅供参考，不代表实际周边抽赏结果。
+                            {t("page.goodsGacha.disclaimer.reference")}
                         </p>
                         <p className="text-xs text-slate-300 mt-4">
-                            本页面不涉及任何真实金钱交易或实物奖励，请勿关联现实。
+                            {t("page.goodsGacha.disclaimer.noRealTrade")}
                         </p>
                         <p className="text-xs text-slate-300 mt-2">
-                            资源修改于 <ExternalLink href="https://github.com/Caffeine-co/Shinonome_Ena" target="_blank" rel="noopener noreferrer" className="hover:text-miku transition-colors underline decoration-dotted">Caffeine-co/Shinonome_Ena</ExternalLink>
+                            {t("page.goodsGacha.disclaimer.sourcePrefix")} <ExternalLink href="https://github.com/Caffeine-co/Shinonome_Ena" target="_blank" rel="noopener noreferrer" className="hover:text-miku transition-colors underline decoration-dotted">Caffeine-co/Shinonome_Ena</ExternalLink>
                         </p>
                     </div>
                 </div>

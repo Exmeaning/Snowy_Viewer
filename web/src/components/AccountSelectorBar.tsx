@@ -8,11 +8,11 @@ import {
     createAccount,
     getTopCharacterId,
     SERVER_OPTIONS,
-    SERVER_LABELS,
     type MoesekaiAccount,
     type ServerType,
 } from "@/lib/account";
 import { startOAuthConnect } from "@/lib/oauth";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface AccountSelectorBarProps {
     accounts: MoesekaiAccount[];
@@ -29,6 +29,7 @@ export default function AccountSelectorBar({
     onAccountAdded,
     returnTo = "/profile",
 }: AccountSelectorBarProps) {
+    const { t } = useI18n();
     const [showAddForm, setShowAddForm] = useState(false);
     const [gameId, setGameId] = useState("");
     const [server, setServer] = useState<ServerType>("jp");
@@ -46,10 +47,10 @@ export default function AccountSelectorBar({
         if (!result.success) {
             setError(
                 result.error === "API_NOT_PUBLIC"
-                    ? "公开API未开启"
+                    ? t("common.harukiErrors.apiNotPublicShort")
                     : result.error === "NOT_FOUND"
-                        ? "用户未找到"
-                        : "网络错误"
+                        ? t("common.harukiErrors.userNotFoundShort")
+                        : t("common.harukiErrors.networkErrorShort")
             );
             setIsVerifying(false);
             return;
@@ -65,28 +66,28 @@ export default function AccountSelectorBar({
         setError(null);
         setShowAddForm(false);
         onAccountAdded();
-    }, [gameId, server, onAccountAdded]);
+    }, [gameId, server, onAccountAdded, t]);
 
     const handleOAuthBind = useCallback(async () => {
         try {
             setOauthError(null);
             await startOAuthConnect(returnTo);
         } catch (err) {
-            setOauthError(err instanceof Error ? err.message : "OAuth2 授权初始化失败");
+            setOauthError(err instanceof Error ? err.message : t("common.harukiErrors.oauthInitFailed"));
         }
-    }, [returnTo]);
+    }, [returnTo, t]);
 
     return (
         <div className="mb-6">
             <div className="glass-card p-4 rounded-2xl">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-600">选择账号</span>
+                    <span className="text-xs font-bold text-slate-600">{t("common.account.selectAccount")}</span>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => void handleOAuthBind()}
                             className="text-xs font-medium text-miku hover:text-miku-dark transition-colors"
                         >
-                            OAuth2 绑定
+                            {t("common.account.oauthBind")}
                         </button>
                         <button
                             onClick={() => { setShowAddForm(!showAddForm); setError(null); setOauthError(null); }}
@@ -95,7 +96,7 @@ export default function AccountSelectorBar({
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
-                            添加账号
+                            {t("common.account.addAccount")}
                         </button>
                     </div>
                 </div>
@@ -118,31 +119,31 @@ export default function AccountSelectorBar({
                                 )}
                                 <span className="font-mono">{acc.gameId}</span>
                                 <span className={`px-1 py-0.5 rounded text-[10px] font-bold ${isActive ? "bg-miku/20 text-miku" : "bg-slate-100 text-slate-500"}`}>
-                                    {SERVER_LABELS[acc.server]}
+                                    {t(`common.server.${acc.server}`)}
                                 </span>
                             </button>
                         );
                     })}
                 </div>
 
-                {/* Inline Add Form */}
+                {/* Inline add form */}
                 {showAddForm && (
                     <div className="mt-3 pt-3 border-t border-slate-100">
                         <div className="flex flex-wrap items-end gap-2">
                             <div className="flex-1 min-w-[140px]">
-                                <label className="block text-[10px] font-medium text-slate-500 mb-1">UID</label>
+                                <label className="block text-[10px] font-medium text-slate-500 mb-1">{t("common.form.uid")}</label>
                                 <input
                                     type="text"
                                     value={gameId}
                                     onChange={(e) => setGameId(e.target.value)}
                                     onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                                    placeholder="输入游戏UID"
+                                    placeholder={t("common.account.inputGameUid")}
                                     className="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-xs"
                                     disabled={isVerifying}
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-medium text-slate-500 mb-1">服务器</label>
+                                <label className="block text-[10px] font-medium text-slate-500 mb-1">{t("common.form.server")}</label>
                                 <div className="flex gap-1">
                                     {SERVER_OPTIONS.map((s) => (
                                         <button
@@ -154,7 +155,7 @@ export default function AccountSelectorBar({
                                                 : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                                                 }`}
                                         >
-                                            {s.label}
+                                            {t(`common.server.${s.value}`)}
                                         </button>
                                     ))}
                                 </div>
@@ -171,14 +172,14 @@ export default function AccountSelectorBar({
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
                                 )}
-                                {isVerifying ? "验证中" : "添加"}
+                                {isVerifying ? t("common.account.verifying") : t("common.account.add")}
                             </button>
                             <button
                                 onClick={() => { setShowAddForm(false); setError(null); }}
                                 disabled={isVerifying}
                                 className="px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
                             >
-                                取消
+                                {t("common.action.cancel")}
                             </button>
                         </div>
                         {(error || oauthError) && (
@@ -188,7 +189,7 @@ export default function AccountSelectorBar({
                                 </svg>
                                 {error || oauthError}
                                 <ExternalLink href="https://haruki.seiunx.com" className="text-miku hover:underline ml-1">
-                                    前往 Haruki →
+                                    {t("common.account.goHaruki")}
                                 </ExternalLink>
                             </p>
                         )}

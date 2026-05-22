@@ -1,28 +1,26 @@
-/**
- * 六类剧情的元数据，供 story/ 总入口和各子页面 header 共用。
- * 修改这里即可同步更新所有页面。
- */
+import type { ReactNode } from "react";
 
+/**
+ * Metadata for the six story categories, shared by the story index and child page headers.
+ * Text is resolved through i18n keys in UI components.
+ */
 export type StoryTypeKey = "unit" | "event" | "card" | "area" | "self" | "special";
 
 export interface StoryTypeInfo {
     key: StoryTypeKey;
     href: string;
-    name: string;
-    /** 副标题，用于各列表页 header */
-    desc: string;
+    nameKey: string;
+    descKey: string;
     color: string;
-    icon: React.ReactNode;
+    icon: ReactNode;
 }
-
-import React from "react";
 
 export const STORY_TYPES: StoryTypeInfo[] = [
     {
         key: "unit",
         href: "/story/unit",
-        name: "主线剧情",
-        desc: "各组合的主要剧情故事",
+        nameKey: "page.story.types.unit.name",
+        descKey: "page.story.types.unit.desc",
         color: "from-violet-500 to-purple-600",
         icon: (
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -33,8 +31,8 @@ export const STORY_TYPES: StoryTypeInfo[] = [
     {
         key: "event",
         href: "/story/event",
-        name: "活动剧情",
-        desc: "每期活动的剧情故事",
+        nameKey: "page.story.types.event.name",
+        descKey: "page.story.types.event.desc",
         color: "from-miku to-cyan-500",
         icon: (
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -45,8 +43,8 @@ export const STORY_TYPES: StoryTypeInfo[] = [
     {
         key: "card",
         href: "/story/card",
-        name: "卡牌剧情",
-        desc: "每张卡牌附带的剧情故事",
+        nameKey: "page.story.types.card.name",
+        descKey: "page.story.types.card.desc",
         color: "from-pink-500 to-rose-500",
         icon: (
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -57,8 +55,8 @@ export const STORY_TYPES: StoryTypeInfo[] = [
     {
         key: "area",
         href: "/story/area",
-        name: "区域对话",
-        desc: "各区域场景中的角色日常对话",
+        nameKey: "page.story.types.area.name",
+        descKey: "page.story.types.area.desc",
         color: "from-emerald-500 to-teal-500",
         icon: (
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -69,8 +67,8 @@ export const STORY_TYPES: StoryTypeInfo[] = [
     {
         key: "self",
         href: "/story/self",
-        name: "自我介绍",
-        desc: "角色的自我介绍（升学前后）",
+        nameKey: "page.story.types.self.name",
+        descKey: "page.story.types.self.desc",
         color: "from-amber-500 to-orange-500",
         icon: (
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -81,8 +79,8 @@ export const STORY_TYPES: StoryTypeInfo[] = [
     {
         key: "special",
         href: "/story/special",
-        name: "特殊剧情",
-        desc: "周年纪念等特殊场合的剧情",
+        nameKey: "page.story.types.special.name",
+        descKey: "page.story.types.special.desc",
         color: "from-indigo-500 to-blue-500",
         icon: (
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">

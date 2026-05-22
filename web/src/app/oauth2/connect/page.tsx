@@ -1,10 +1,8 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
 import ConnectClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "OAuth2 授权绑定",
-};
+export const generateMetadata = pageMetadata("oauth2_connect");
 
 export default function OAuth2ConnectPage() {
     return (

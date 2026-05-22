@@ -6,6 +6,7 @@ import MainLayout from "@/components/MainLayout";
 import { StoryReader } from "@/components/story/StoryReader";
 import { fetchMasterData } from "@/lib/fetch";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { fetchStoryAssetFromMirror, StoryAssetMissingError } from "@/lib/storyAsset";
 import { processScenarioForDisplay } from "@/lib/storyLoader";
 import { IProcessedScenarioData } from "@/types/story";
@@ -24,6 +25,7 @@ type EpResult = { data: IProcessedScenarioData | null; missing: string[] | null;
 export default function StorySpecialReaderClient() {
     const params = useParams();
     const { serverSource, assetSource } = useTheme();
+    const { t } = useI18n();
     const spId = Number(params.spId);
     const lang: "jp" | "cn" = serverSource === "cn" ? "cn" : "jp";
 
@@ -41,7 +43,7 @@ export default function StorySpecialReaderClient() {
                 if (!s || s.id === 2) return;
                 setStory(s);
                 const title = s.title ?? s.episodes[0]?.title ?? `SP${spId}`;
-                document.title = `${title} - 特殊剧情 - Moesekai`;
+                document.title = t("page.story.special.documentTitle", { name: title });
 
                 const epResults: EpResult[] = await Promise.all(
                     s.episodes.map(async (ep): Promise<EpResult> => {
@@ -54,7 +56,7 @@ export default function StorySpecialReaderClient() {
                         } catch (err) {
                             if (err instanceof StoryAssetMissingError)
                                 return { data: null, missing: err.missingPaths, err: null };
-                            return { data: null, missing: null, err: err instanceof Error ? err.message : "加载失败" };
+                            return { data: null, missing: null, err: err instanceof Error ? err.message : t("common.state.loadingFailed") };
                         }
                     })
                 );
@@ -65,9 +67,9 @@ export default function StorySpecialReaderClient() {
         }
         load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [spId, lang]);
+    }, [spId, lang, t]);
 
-    const storyTitle = story?.title ?? story?.episodes[0]?.title ?? `特殊剧情 ${spId}`;
+    const storyTitle = story?.title ?? story?.episodes[0]?.title ?? t("page.story.special.fallbackTitle", { id: spId });
     const multiEp = (story?.episodes.length ?? 0) > 1;
 
     return (
@@ -77,7 +79,7 @@ export default function StorySpecialReaderClient() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    返回特殊剧情列表
+                    {t("page.story.special.backToList")}
                 </Link>
 
                 <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-700">
@@ -85,7 +87,7 @@ export default function StorySpecialReaderClient() {
                         <span className="text-xs text-miku font-medium">SP{spId}</span>
                         <h1 className="font-bold text-slate-900 dark:text-slate-100">{storyTitle}</h1>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded border ${serverSource === "cn" ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50" : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50"}`}>
-                            {serverSource === "cn" ? "国服" : "日服"}
+                            {t(`page.story.serverSource.${serverSource}`)}
                         </span>
                     </div>
                 </div>
@@ -93,7 +95,7 @@ export default function StorySpecialReaderClient() {
                 {isLoading && (
                     <div className="flex flex-col items-center justify-center py-16">
                         <div className="w-12 h-12 border-4 border-miku/30 border-t-miku rounded-full animate-spin mb-4" />
-                        <p className="text-slate-500">正在加载剧情...</p>
+                        <p className="text-slate-500">{t("page.story.special.loading")}</p>
                     </div>
                 )}
 
@@ -105,7 +107,7 @@ export default function StorySpecialReaderClient() {
                                 <div key={ep.id}>
                                     {multiEp && (
                                         <div className="flex items-center gap-3 mb-4">
-                                            <span className="px-3 py-1 bg-miku/10 text-miku text-sm font-bold rounded-full border border-miku/20">第 {ep.episodeNo} 话</span>
+                                            <span className="px-3 py-1 bg-miku/10 text-miku text-sm font-bold rounded-full border border-miku/20">{t("page.story.special.episodeLabel", { episode: ep.episodeNo })}</span>
                                             <h2 className="font-bold text-slate-800 dark:text-slate-200">{ep.title}</h2>
                                         </div>
                                     )}
@@ -114,7 +116,7 @@ export default function StorySpecialReaderClient() {
                                         isLoading={false}
                                         error={r?.err ?? null}
                                         missingPaths={r?.missing ?? undefined}
-                                        endLabel={multiEp ? `第 ${ep.episodeNo} 话` : storyTitle}
+                                        endLabel={multiEp ? t("page.story.special.episodeLabel", { episode: ep.episodeNo }) : storyTitle}
                                     />
                                 </div>
                             );

@@ -1,10 +1,7 @@
-import { Metadata } from "next";
 import MyMusicsClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "歌曲进度",
-    description: "Project Sekai 歌曲游玩进度追踪",
-};
+export const generateMetadata = pageMetadata("my_musics");
 
 export default function MyMusicsPage() {
     return <MyMusicsClient />;

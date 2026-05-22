@@ -293,5 +293,9 @@ export function getMysekaiSoundTrackAudioUrl(assetbundleName: string | undefined
         const dir = normalizedAssetPath.replace(/\/+$/, "");
         return `${getAssetBaseUrl(source)}/${dir}/${fileName}.mp3`;
     }
+    const dir = normalizedAssetPath.replace(/\/+$/, "");
+    if (dir.startsWith("sound/scenario/bgm/") && dir.split("/").pop() !== fileName) {
+        return `${getAssetBaseUrl(source)}/${dir}/${fileName}.mp3`;
+    }
     return getStoryBgmUrl(fileName, source);
 }

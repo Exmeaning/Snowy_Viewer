@@ -1,9 +1,7 @@
-import type { Metadata } from "next";
 import BreadcrumbToolsClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "工具",
-};
+export const generateMetadata = pageMetadata("breadcrumb_tools");
 
 export default function Page() {
     return <BreadcrumbToolsClient />;

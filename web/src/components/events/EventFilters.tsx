@@ -2,15 +2,21 @@
 import Image from "next/image";
 import BaseFilters, { FilterSection, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
-import { EventType, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS } from "@/types/events";
-import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, CardAttribute, ATTR_NAMES, ATTR_ICON_PATHS, ATTR_COLORS } from "@/types/types";
+import { EventType, EVENT_TYPE_COLORS } from "@/types/events";
+import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS, CardAttribute, ATTR_NAMES, ATTR_ICON_PATHS, ATTR_COLORS } from "@/types/types";
+import { useI18n } from "@/contexts/I18nContext";
 
 /** Filter IDs for event unit (group) filter */
 export type EventUnitFilterId = "ln" | "mmj" | "vbs" | "ws" | "25ji" | "vs" | "mixed";
 
-export const EVENT_UNIT_FILTERS: { id: EventUnitFilterId; name: string; icon?: string }[] = [
-    ...UNIT_DATA.map(u => ({ id: u.id as EventUnitFilterId, name: u.name, icon: UNIT_ICON_FILES[u.id] })),
-    { id: "mixed", name: "混合" },
+export const EVENT_UNIT_FILTERS: { id: EventUnitFilterId; labelKey: string; fallbackName: string; icon?: string }[] = [
+    ...UNIT_DATA.map(u => ({
+        id: u.id as EventUnitFilterId,
+        labelKey: UNIT_ID_LABEL_KEYS[u.id] ?? `common.units.${u.id}`,
+        fallbackName: u.name,
+        icon: UNIT_ICON_FILES[u.id],
+    })),
+    { id: "mixed", labelKey: "common.units.mixed", fallbackName: "Mixed" },
 ];
 
 /** Map raw event_type from actionSets to filter ID */
@@ -60,9 +66,9 @@ interface EventFiltersProps {
 
 const EVENT_TYPES: EventType[] = ["marathon", "cheerful_carnival", "world_bloom"];
 
-const SORT_OPTIONS = [
-    { id: "id", label: "ID" },
-    { id: "startAt", label: "开始时间" },
+const SORT_OPTIONS_BASE = [
+    { id: "id", labelKey: "common.filter.sortById" },
+    { id: "startAt", labelKey: "common.filter.sortByStartAt" },
 ];
 
 export default function EventFilters({
@@ -90,6 +96,16 @@ export default function EventFilters({
     totalEvents,
     filteredEvents,
 }: EventFiltersProps) {
+    const { t } = useI18n();
+    const SORT_OPTIONS = SORT_OPTIONS_BASE.map(opt => ({
+        id: opt.id,
+        label: t(opt.labelKey),
+    }));
+    const getEventUnitName = (unit: { labelKey: string; fallbackName: string }) => {
+        const label = t(unit.labelKey);
+        return label === unit.labelKey ? unit.fallbackName : label;
+    };
+
     const toggleType = (type: EventType) => {
         if (selectedTypes.includes(type)) {
             onTypeChange(selectedTypes.filter(t => t !== type));
@@ -113,10 +129,10 @@ export default function EventFilters({
         <BaseFilters
             filteredCount={filteredEvents}
             totalCount={totalEvents}
-            countUnit="个"
+            countUnit={t("page.events.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
-            searchPlaceholder="输入活动名称或ID..."
+            searchPlaceholder={t("page.events.searchPlaceholder")}
             sortOptions={SORT_OPTIONS}
             sortBy={sortBy}
             sortOrder={sortOrder}
@@ -126,20 +142,20 @@ export default function EventFilters({
         >
             {/* Event Unit (Group) Filter — only shown when props are provided */}
             {selectedEventUnits && onEventUnitChange && (
-                <FilterSection label="活动团体">
+                <FilterSection label={t("common.filter.eventUnit")}>
                     <div className="flex flex-wrap gap-2">
                         {EVENT_UNIT_FILTERS.map(unit => (
                             <button
                                 key={unit.id}
                                 onClick={() => toggleEventUnit(unit.id)}
                                 className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(selectedEventUnits.includes(unit.id))}`}
-                                title={unit.name}
+                                title={getEventUnitName(unit)}
                             >
                                 {unit.icon ? (
                                     <div className="w-8 h-8 relative">
                                         <Image
                                             src={`/data/icon/${unit.icon}`}
-                                            alt={unit.name}
+                                            alt={getEventUnitName(unit)}
                                             fill
                                             className="object-contain"
                                             unoptimized
@@ -147,7 +163,7 @@ export default function EventFilters({
                                     </div>
                                 ) : (
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedEventUnits.includes(unit.id) ? "bg-miku/12 dark:bg-miku/20" : "bg-slate-100 dark:bg-slate-800"}`}>
-                                        <span className={`text-xs font-bold ${selectedEventUnits.includes(unit.id) ? "text-miku dark:text-slate-100" : "text-slate-500 dark:text-slate-300"}`}>混</span>
+                                        <span className={`text-xs font-bold ${selectedEventUnits.includes(unit.id) ? "text-miku dark:text-slate-100" : "text-slate-500 dark:text-slate-300"}`}>{t("common.badge.mixed")}</span>
                                     </div>
                                 )}
                             </button>
@@ -163,13 +179,13 @@ export default function EventFilters({
                     onCharacterChange={onBannerCharsChange}
                     selectedUnitIds={selectedBannerUnitIds}
                     onUnitIdsChange={onBannerUnitIdsChange}
-                    unitLabel="封面角色"
-                    characterLabel="封面角色"
+                    unitLabel={t("common.filter.bannerCharacter")}
+                    characterLabel={t("common.filter.bannerCharacter")}
                 />
             )}
 
             {/* Event Type Filter */}
-            <FilterSection label="活动形式">
+            <FilterSection label={t("common.filter.eventType")}>
                 <div className="flex flex-wrap gap-2">
                     {EVENT_TYPES.map(type => (
                         <button
@@ -181,7 +197,7 @@ export default function EventFilters({
                                 }`}
                             style={selectedTypes.includes(type) ? { backgroundColor: EVENT_TYPE_COLORS[type] } : {}}
                         >
-                            {EVENT_TYPE_NAMES[type]}
+                            {t(`common.eventTypes.${type}`)}
                         </button>
                     ))}
                 </div>
@@ -193,14 +209,14 @@ export default function EventFilters({
                 onCharacterChange={onCharacterChange}
                 selectedUnitIds={selectedUnitIds}
                 onUnitIdsChange={onUnitIdsChange}
-                unitLabel="加成角色"
-                characterLabel="加成角色"
+                unitLabel={t("common.filter.bonusCharacter")}
+                characterLabel={t("common.filter.bonusCharacter")}
                 charaUnits={charaUnits}
             />
 
             {/* Bonus Attribute Filter */}
             {onBonusAttrChange && (
-                <FilterSection label="加成属性">
+                <FilterSection label={t("common.filter.bonusAttribute")}>
                     <div className="flex flex-wrap gap-2">
                         {(["cool", "cute", "happy", "mysterious", "pure"] as CardAttribute[]).map(attr => (
                             <button

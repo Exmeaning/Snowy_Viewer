@@ -6,21 +6,22 @@ import Link from "next/link";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
+import { useI18n } from "@/contexts/I18nContext";
 import {
     IEventInfo,
     IEventDeckBonus,
-    EVENT_TYPE_NAMES,
     EVENT_TYPE_COLORS,
     getEventStatus,
     EVENT_STATUS_DISPLAY,
     EventType
 } from "@/types/events";
-import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, getEventUnitDisplayName, buildEventBannerCharMap } from "@/lib/eventUnit";
+import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, getEventUnitFilterId, buildEventBannerCharMap } from "@/lib/eventUnit";
 import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getEventStoryBannerUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
-import { CHARACTER_NAMES, UNIT_NAME_MAP } from "@/types/types";
+import { UNIT_FIELD_LABEL_KEYS } from "@/types/types";
 import type { ICardInfo, ICharaUnitInfo, IGameChara } from "@/types/types";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
+import { getCharacterName } from "@/lib/i18n";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
@@ -86,6 +87,7 @@ const EVENT_VIRTUAL_LIVE_MAP_URL = (process.env.NEXT_PUBLIC_API_URL || "") + "/a
 
 
 export default function EventDetailPage() {
+    const { t, formatDate: formatLocaleDate } = useI18n();
     const params = useParams();
     const _router = useRouter();
     const searchParams = useSearchParams();
@@ -219,14 +221,14 @@ export default function EventDetailPage() {
 
                 const charId = charUnit.gameCharacterId;
                 const gameChar = gameCharacters.find(c => c.id === charId);
-                const baseName = CHARACTER_NAMES[charId] || `Character ${charId}`;
+                const baseName = getCharacterName(t, charId);
 
                 // If piapro character and belongs to a specific group (not piapro itself)
                 let displayName = baseName;
                 if (gameChar?.unit === "piapro" && charUnit.unit !== "piapro") {
-                    const groupName = UNIT_NAME_MAP[charUnit.unit];
-                    if (groupName) {
-                        displayName = `${baseName}（${groupName}）`;
+                    const groupNameKey = UNIT_FIELD_LABEL_KEYS[charUnit.unit];
+                    if (groupNameKey) {
+                        displayName = `${baseName} (${t(groupNameKey)})`;
                     }
                 }
 
@@ -234,7 +236,7 @@ export default function EventDetailPage() {
             })
             .filter((item): item is { charId: number; unitId: number; displayName: string } => item !== null)
             .sort((a, b) => a.charId - b.charId);
-    }, [deckBonuses, gameCharacterUnits, gameCharacters]);
+    }, [deckBonuses, gameCharacterUnits, gameCharacters, t]);
 
     // Get event cards with full card info
     const eventCardsWithInfo = useMemo(() => {
@@ -256,7 +258,7 @@ export default function EventDetailPage() {
     // Format date helper
     const formatDate = (timestamp: number) => {
         if (!mounted) return "...";
-        return new Date(timestamp).toLocaleString("zh-CN", {
+        return formatLocaleDate(timestamp, {
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -271,7 +273,7 @@ export default function EventDetailPage() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">加载中...</p>
+                        <p className="mt-4 text-slate-500">{t("common.state.loading")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -288,8 +290,12 @@ export default function EventDetailPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">活动 {eventId} 正在由SnowyViewer抓紧构建</h2>
-                        <p className="text-slate-500 mb-6">少安毋躁~预计12H内更新</p>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                            {t("page.events.notFoundTitle", { id: eventId })}
+                        </h2>
+                        <p className="text-slate-500 mb-6">
+                            {t("page.events.notFoundDesc")}
+                        </p>
                         <Link
                             href="/events"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
@@ -297,7 +303,7 @@ export default function EventDetailPage() {
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            返回活动列表
+                            {t("page.events.backToList")}
                         </Link>
                     </div>
                 </div>
@@ -312,7 +318,7 @@ export default function EventDetailPage() {
     const status = getEventStatus(event);
     const statusDisplay = EVENT_STATUS_DISPLAY[status];
 
-    // Events with no banner character hide the "角色" tab, except for whitelisted IDs
+    // Events with no banner character hide the character tab, except for whitelisted IDs
     const CHARACTER_TAB_WHITELIST = [180];
     const hasBannerChar = event.eventType !== "world_bloom" && bannerCharId !== null;
     const showCharacterTab = hasBannerChar || CHARACTER_TAB_WHITELIST.includes(event.id);
@@ -324,16 +330,17 @@ export default function EventDetailPage() {
     const effectiveTab = (activeImageTab === "event_story_banner" && !showEventStoryBannerTab) ? "logo" : activeImageTab;
 
     const activeImageUrl = effectiveTab === "event_story_banner" ? eventStoryBannerUrl : effectiveTab === "logo" ? logoUrl : effectiveTab === "banner" ? bannerUrl : characterUrl;
-    const activeImageLabel = effectiveTab === "event_story_banner" ? "Logo" : effectiveTab === "logo" ? "标题" : effectiveTab === "banner" ? "背景" : "角色";
+    const activeImageLabelKey = effectiveTab === "event_story_banner" ? "event_story_banner" : effectiveTab === "logo" ? "logo" : effectiveTab === "banner" ? "banner" : "character";
+    const activeImageLabel = t(`page.events.imageTabs.${activeImageLabelKey}`);
 
     return (
         <MainLayout>
             <ImagePreviewModal
                 isOpen={imageViewerOpen}
                 onClose={() => setImageViewerOpen(false)}
-                title={`${event.name} ${activeImageLabel} 大图`}
+                title={t("page.events.imageDetailTitle", { name: event.name, tab: activeImageLabel })}
                 imageUrl={activeImageUrl}
-                alt={`${event.name} ${activeImageLabel}`}
+                alt={t("page.events.imageDetailAlt", { name: event.name, tab: activeImageLabel })}
                 fileName={`event_${event.id}_${activeImageTab}.png`}
             />
 
@@ -348,13 +355,13 @@ export default function EventDetailPage() {
                             className="px-3 py-1 text-xs font-bold rounded-full text-white w-fit"
                             style={{ backgroundColor: EVENT_TYPE_COLORS[event.eventType as EventType] }}
                         >
-                            {EVENT_TYPE_NAMES[event.eventType as EventType]}
+                            {t("common.eventTypes." + event.eventType)}
                         </span>
                         <span
                             className="px-3 py-1 text-xs font-bold rounded-full text-white w-fit"
                             style={{ backgroundColor: statusDisplay.color }}
                         >
-                            {statusDisplay.label}
+                            {t("common.status." + status)}
                         </span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-slate-800">
@@ -379,12 +386,14 @@ export default function EventDetailPage() {
                                 {showEventStoryBannerTab && (
                                 <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
                                     <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-                                        <span className="text-sm font-bold text-slate-600">Logo</span>
+                                        <span className="text-sm font-bold text-slate-600">
+                                            {t("page.events.imageTabs.event_story_banner")}
+                                        </span>
                                     </div>
                                     <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100">
                                         <Image
                                             src={eventStoryBannerUrl}
-                                            alt={`${event.name} Logo`}
+                                            alt={t("page.events.imageDetailAlt", { name: event.name, tab: t("page.events.imageTabs.event_story_banner") })}
                                             fill
                                             className="object-contain"
                                             unoptimized
@@ -393,15 +402,17 @@ export default function EventDetailPage() {
                                     </div>
                                 </div>
                                 )}
-                                {/* 标题 (Title Logo) */}
+                                {/* Title Logo */}
                                 <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
                                     <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-                                        <span className="text-sm font-bold text-slate-600">标题</span>
+                                        <span className="text-sm font-bold text-slate-600">
+                                            {t("page.events.imageTabs.logo")}
+                                        </span>
                                     </div>
                                     <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100">
                                         <Image
                                             src={logoUrl}
-                                            alt={`${event.name} 标题`}
+                                            alt={t("page.events.imageDetailAlt", { name: event.name, tab: t("page.events.imageTabs.logo") })}
                                             fill
                                             className="object-contain p-6"
                                             unoptimized
@@ -411,12 +422,14 @@ export default function EventDetailPage() {
                                 {/* Banner */}
                                 <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
                                     <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-                                        <span className="text-sm font-bold text-slate-600">背景</span>
+                                        <span className="text-sm font-bold text-slate-600">
+                                            {t("page.events.imageTabs.banner")}
+                                        </span>
                                     </div>
                                     <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100">
                                         <Image
                                             src={bannerUrl}
-                                            alt={`${event.name} Banner`}
+                                            alt={t("page.events.imageDetailAlt", { name: event.name, tab: t("page.events.imageTabs.banner") })}
                                             fill
                                             className="object-cover"
                                             unoptimized
@@ -427,12 +440,14 @@ export default function EventDetailPage() {
                                 {showCharacterTab && (
                                 <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
                                     <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-                                        <span className="text-sm font-bold text-slate-600">角色</span>
+                                        <span className="text-sm font-bold text-slate-600">
+                                            {t("page.events.imageTabs.character")}
+                                        </span>
                                     </div>
                                     <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100">
                                         <Image
                                             src={characterUrl}
-                                            alt={`${event.name} Character`}
+                                            alt={t("page.events.imageDetailAlt", { name: event.name, tab: t("page.events.imageTabs.character") })}
                                             fill
                                             className="object-contain"
                                             unoptimized
@@ -447,10 +462,10 @@ export default function EventDetailPage() {
                                 {/* Tabs */}
                                 <div className="flex border-b border-slate-200">
                                     {[
-                                        ...(showEventStoryBannerTab ? [{ key: "event_story_banner", label: "Logo" }] : []),
-                                        { key: "logo", label: "标题" },
-                                        { key: "banner", label: "背景" },
-                                        ...(showCharacterTab ? [{ key: "character", label: "角色" }] : []),
+                                        ...(showEventStoryBannerTab ? [{ key: "event_story_banner", label: t("page.events.imageTabs.event_story_banner") }] : []),
+                                        { key: "logo", label: t("page.events.imageTabs.logo") },
+                                        { key: "banner", label: t("page.events.imageTabs.banner") },
+                                        ...(showCharacterTab ? [{ key: "character", label: t("page.events.imageTabs.character") }] : []),
                                     ].map((tab) => (
                                         <button
                                             key={tab.key}
@@ -472,7 +487,7 @@ export default function EventDetailPage() {
                                     {effectiveTab === "event_story_banner" && (
                                         <Image
                                             src={eventStoryBannerUrl}
-                                            alt={`${event.name} Logo`}
+                                            alt={t("page.events.imageDetailAlt", { name: event.name, tab: t("page.events.imageTabs.event_story_banner") })}
                                             fill
                                             className="object-contain"
                                             unoptimized
@@ -482,7 +497,7 @@ export default function EventDetailPage() {
                                     {effectiveTab === "logo" && (
                                         <Image
                                             src={logoUrl}
-                                            alt={`${event.name} 标题`}
+                                            alt={t("page.events.imageDetailAlt", { name: event.name, tab: t("page.events.imageTabs.logo") })}
                                             fill
                                             className="object-contain p-6"
                                             unoptimized
@@ -492,7 +507,7 @@ export default function EventDetailPage() {
                                     {effectiveTab === "banner" && (
                                         <Image
                                             src={bannerUrl}
-                                            alt={`${event.name} Banner`}
+                                            alt={t("page.events.imageDetailAlt", { name: event.name, tab: t("page.events.imageTabs.banner") })}
                                             fill
                                             className="object-cover"
                                             unoptimized
@@ -501,7 +516,7 @@ export default function EventDetailPage() {
                                     {effectiveTab === "character" && showCharacterTab && (
                                         <Image
                                             src={characterUrl}
-                                            alt={`${event.name} Character`}
+                                            alt={t("page.events.imageDetailAlt", { name: event.name, tab: t("page.events.imageTabs.character") })}
                                             fill
                                             className="object-contain"
                                             unoptimized
@@ -511,7 +526,7 @@ export default function EventDetailPage() {
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                         </svg>
-                                        点击放大
+                                        {t("page.events.clickExpand")}
                                     </div>
                                 </div>
                             </div>
@@ -527,13 +542,13 @@ export default function EventDetailPage() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    活动信息
+                                    {t("page.events.basicInfo")}
                                 </h2>
                             </div>
                             <div className="divide-y divide-slate-100">
                                 <InfoRow label="ID" value={`#${event.id}`} />
                                 <InfoRow
-                                    label="名称"
+                                    label={t("page.events.nameLabel")}
                                     value={
                                         <TranslatedText
                                             original={event.name}
@@ -544,13 +559,31 @@ export default function EventDetailPage() {
                                         />
                                     }
                                 />
-                                <InfoRow label="团体" value={getEventUnitDisplayName(event.id, eventUnitMap)} />
-                                <InfoRow label="封面角色" value={event.eventType === "world_bloom" ? "无" : (bannerCharId ? (CHARACTER_NAMES[bannerCharId] || `Character ${bannerCharId}`) : "无")} />
-                                <InfoRow label="形式" value={EVENT_TYPE_NAMES[event.eventType as EventType]} />
-                                <InfoRow label="开始时间" value={formatDate(event.startAt)} />
-                                <InfoRow label="结束时间" value={formatDate(event.aggregateAt)} />
                                 <InfoRow
-                                    label="内部资源名称"
+                                    label={t("page.events.unitLabel")}
+                                    value={(() => {
+                                        const filterId = getEventUnitFilterId(event.id, eventUnitMap);
+                                        return filterId ? t(`common.units.${filterId}`) : t("page.events.none");
+                                    })()}
+                                />
+                                <InfoRow
+                                    label={t("page.events.bannerCharLabel")}
+                                    value={
+                                        event.eventType === "world_bloom"
+                                            ? t("page.events.none")
+                                            : bannerCharId
+                                            ? getCharacterName(t, bannerCharId)
+                                            : t("page.events.none")
+                                    }
+                                />
+                                <InfoRow
+                                    label={t("page.events.eventTypeLabel")}
+                                    value={t(`common.eventTypes.${event.eventType}`)}
+                                />
+                                <InfoRow label={t("page.events.startTimeLabel")} value={formatDate(event.startAt)} />
+                                <InfoRow label={t("page.events.endTimeLabel")} value={formatDate(event.aggregateAt)} />
+                                <InfoRow
+                                    label={t("page.events.assetNameLabel")}
                                     value={<span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{event.assetbundleName}</span>}
                                 />
                             </div>
@@ -563,7 +596,7 @@ export default function EventDetailPage() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                     </svg>
-                                    活动BGM
+                                    {t("page.events.bgmTitle")}
                                 </h2>
                             </div>
                             <EventBgmPlayer event={event} assetSource={assetSource} />
@@ -576,13 +609,13 @@ export default function EventDetailPage() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                     </svg>
-                                    加成信息
+                                    {t("page.events.bonusTitle")}
                                 </h2>
                             </div>
                             <div className="p-5 space-y-4">
                                 {bonusAttr && (
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm text-slate-500 font-medium">加成属性</span>
+                                        <span className="text-sm text-slate-500 font-medium">{t("page.events.bonusAttrLabel")}</span>
                                         <div className="flex items-center gap-2">
                                             <Image
                                                 src={LOCAL_ATTR_ICONS[bonusAttr] || LOCAL_ATTR_ICONS.cool}
@@ -599,7 +632,7 @@ export default function EventDetailPage() {
                                 )}
                                 {bonusCharacters.length > 0 && (
                                     <div>
-                                        <span className="text-sm text-slate-500 font-medium block mb-2">加成角色</span>
+                                        <span className="text-sm text-slate-500 font-medium block mb-2">{t("page.events.bonusCharLabel")}</span>
                                         <div className="flex flex-wrap gap-2">
                                             {bonusCharacters.map(({ charId, unitId, displayName }) => (
                                                 <div
@@ -636,7 +669,7 @@ export default function EventDetailPage() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                         </svg>
-                                        活动相关歌曲 ({themeSongs.length})
+                                        {t("page.events.relatedSongsTitle", { count: themeSongs.length })}
                                     </h2>
                                 </div>
                                 <div className="p-0">
@@ -686,16 +719,16 @@ export default function EventDetailPage() {
                                         <svg className="w-5 h-5 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                         </svg>
-                                        活动剧情
+                                        {t("page.events.storyTitle")}
                                     </h2>
                                 </div>
                                 <div className="p-5 flex items-center justify-between group-hover:bg-pink-50/30 transition-colors">
                                     <div>
                                         <p className="font-bold text-slate-800 group-hover:text-pink-600 transition-colors">
-                                            阅读活动剧情
+                                            {t("page.events.storyReadBtn")}
                                         </p>
                                         <p className="text-xs text-slate-500 mt-1">
-                                            点击查看本期活动的全部剧情章节
+                                            {t("page.events.storyReadDesc")}
                                         </p>
                                     </div>
                                     <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center group-hover:bg-pink-200 transition-colors">
@@ -715,7 +748,7 @@ export default function EventDetailPage() {
                                         <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                         </svg>
-                                        虚拟演唱会
+                                        {t("page.events.virtualLiveTitle")}
                                     </h2>
                                 </div>
                                 <div className="p-0">
@@ -759,7 +792,7 @@ export default function EventDetailPage() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                         </svg>
-                                        活动卡牌 ({eventCardsWithInfo.length})
+                                        {t("page.events.cardsTitle", { count: eventCardsWithInfo.length })}
                                     </h2>
                                 </div>
                                 <div className="p-4">
@@ -800,7 +833,7 @@ export default function EventDetailPage() {
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        返回活动列表
+                        {t("page.events.backToList")}
                     </Link>
                 </div>
             </div>
@@ -810,6 +843,7 @@ export default function EventDetailPage() {
 
 
 function EventBgmPlayer({ event, assetSource }: { event: IEventInfo; assetSource: AssetSourceType }) {
+    const { t } = useI18n();
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -905,7 +939,7 @@ function EventBgmPlayer({ event, assetSource }: { event: IEventInfo; assetSource
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-2">
                         <div className="text-sm font-bold text-slate-700 truncate">
-                            <span className="mr-2">活动主题曲</span>
+                            <span className="mr-2">{t("page.events.themeSongLabel")}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             {/* Download Button */}
@@ -915,7 +949,7 @@ function EventBgmPlayer({ event, assetSource }: { event: IEventInfo; assetSource
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-1.5 text-slate-400 hover:text-miku hover:bg-miku/5 rounded-lg transition-colors"
-                                title="下载音频"
+                                title={t("page.events.downloadAudio")}
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

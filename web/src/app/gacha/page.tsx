@@ -1,13 +1,7 @@
-
-import { Metadata } from "next";
 import GachaContent from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "扭蛋图鉴",
-    description: "浏览 Project Sekai 全部卡池，查看 pickup 卡牌与概率" + SEO_SUFFIX,
-    keywords: getPageKeywords("gacha"),
-};
+export const generateMetadata = pageMetadata("gacha");
 
 export default function GachaPage() {
     return <GachaContent />;

@@ -10,14 +10,15 @@ import {
     type ServerType,
 } from "@/lib/account";
 import { startOAuthConnect } from "@/lib/oauth";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface QuickBindFormProps {
     onAccountAdded: () => void;
-    /** 自定义图标 */
+    /** Custom icon. */
     icon?: React.ReactNode;
-    /** 自定义描述文字 */
+    /** Custom description text. */
     description?: string;
-    /** OAuth 成功后的回跳页面 */
+    /** Return path after OAuth succeeds. */
     returnTo?: string;
 }
 
@@ -30,9 +31,11 @@ const DefaultIcon = () => (
 export default function QuickBindForm({
     onAccountAdded,
     icon,
-    description = "输入游戏UID即可开始使用",
+    description,
     returnTo = "/profile",
 }: QuickBindFormProps) {
+    const { t } = useI18n();
+    const resolvedDescription = description ?? t("common.account.quickBindDefaultDescription");
     const [gameId, setGameId] = useState("");
     const [oauthError, setOauthError] = useState<string | null>(null);
     const [server, setServer] = useState<ServerType>("jp");
@@ -49,10 +52,10 @@ export default function QuickBindForm({
         if (!result.success) {
             setError(
                 result.error === "API_NOT_PUBLIC"
-                    ? "该用户的公开API未开启，请先前往 Haruki 工具箱勾选「公开API访问」"
+                    ? t("common.harukiErrors.apiNotPublic")
                     : result.error === "NOT_FOUND"
-                        ? "用户数据未找到，请确认UID和服务器是否正确，并已在 Haruki 上传数据"
-                        : "网络错误，请稍后重试"
+                        ? t("common.harukiErrors.userNotFound")
+                        : t("common.harukiErrors.networkError")
             );
             setIsVerifying(false);
             return;
@@ -67,16 +70,16 @@ export default function QuickBindForm({
         setIsVerifying(false);
         setError(null);
         onAccountAdded();
-    }, [gameId, server, onAccountAdded]);
+    }, [gameId, server, onAccountAdded, t]);
 
     const handleOAuthBind = useCallback(async () => {
         try {
             setOauthError(null);
             await startOAuthConnect(returnTo);
         } catch (err) {
-            setOauthError(err instanceof Error ? err.message : "OAuth2 授权初始化失败");
+            setOauthError(err instanceof Error ? err.message : t("common.harukiErrors.oauthInitFailed"));
         }
-    }, [returnTo]);
+    }, [returnTo, t]);
 
     return (
         <div className="glass-card p-6 sm:p-8 rounded-2xl">
@@ -84,27 +87,27 @@ export default function QuickBindForm({
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-miku/10 flex items-center justify-center">
                     {icon || <DefaultIcon />}
                 </div>
-                <h2 className="text-lg font-bold text-primary-text mb-1">快速绑定账号</h2>
-                <p className="text-xs text-slate-400">{description}</p>
+                <h2 className="text-lg font-bold text-primary-text mb-1">{t("common.account.quickBindTitle")}</h2>
+                <p className="text-xs text-slate-400">{resolvedDescription}</p>
             </div>
 
             <div className="space-y-4 max-w-sm mx-auto">
                 <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                        游戏UID <span className="text-red-400">*</span>
+                        {t("common.form.gameUid")} <span className="text-red-400">*</span>
                     </label>
                     <input
                         type="text"
                         value={gameId}
                         onChange={(e) => setGameId(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                        placeholder="输入游戏UID"
+                        placeholder={t("common.account.inputGameUid")}
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                         disabled={isVerifying}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">服务器</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("common.form.server")}</label>
                     <div className="flex gap-2">
                         {SERVER_OPTIONS.map((s) => (
                             <button
@@ -116,7 +119,7 @@ export default function QuickBindForm({
                                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                     }`}
                             >
-                                {s.label}
+                                {t(`common.server.${s.value}`)}
                             </button>
                         ))}
                     </div>
@@ -131,7 +134,7 @@ export default function QuickBindForm({
                             <div>
                                 <p className="text-xs font-medium text-red-700">{error || oauthError}</p>
                                 <ExternalLink href="https://haruki.seiunx.com" className="text-xs text-miku hover:underline mt-1 inline-block">
-                                    前往 Haruki 工具箱 →
+                                    {t("common.account.goHaruki")}
                                 </ExternalLink>
                             </div>
                         </div>
@@ -147,10 +150,10 @@ export default function QuickBindForm({
                         {isVerifying ? (
                             <>
                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                验证中...
+                                {t("common.account.verifyingWithDots")}
                             </>
                         ) : (
-                            "验证并绑定"
+                            t("common.account.verifyAndBind")
                         )}
                     </button>
                     <button
@@ -158,16 +161,16 @@ export default function QuickBindForm({
                         disabled={isVerifying}
                         className="w-full px-6 py-3 border border-miku/30 text-miku rounded-xl font-bold text-sm hover:bg-miku/5 transition-all disabled:opacity-50"
                     >
-                        OAuth2 授权绑定
+                        {t("common.account.oauthAuthorizeBind")}
                     </button>
                 </div>
 
                 <p className="text-[10px] text-slate-400 text-center">
-                    手动 UID 绑定需要先在{" "}
+                    {t("common.account.manualBindHintStart")}{" "}
                     <ExternalLink href="https://haruki.seiunx.com" className="text-miku hover:underline">
-                        Haruki 工具箱
+                        {t("common.account.manualBindHintHaruki")}
                     </ExternalLink>
-                    {" "}上传数据并开启公开 API；OAuth2 授权绑定则不依赖公开 API 开启。
+                    {" "}{t("common.account.manualBindHintEnd")}
                 </p>
             </div>
         </div>

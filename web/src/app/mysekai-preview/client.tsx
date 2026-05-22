@@ -4,14 +4,13 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import MainLayout from "@/components/MainLayout";
+import { useI18n } from "@/contexts/I18nContext";
 import { useTheme, type ServerSourceType } from "@/contexts/ThemeContext";
 import {
     type BaijingActiveRankingsResponse,
     type BaijingRankingEntry,
     type BaijingRankingSnapshot,
     type BaijingServer,
-    formatFullDateTime,
-    formatNumber,
     getActiveRankingsUrl,
     getEntryThumbnailUrl,
     getRankTone,
@@ -36,6 +35,8 @@ function RankingSkeleton() {
 }
 
 function EmptyState({ server }: { server: BaijingServer }) {
+    const { t } = useI18n();
+
     return (
         <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white/55 p-8 text-center shadow-lg shadow-slate-900/5 backdrop-blur-xl">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-slate-400">
@@ -43,20 +44,22 @@ function EmptyState({ server }: { server: BaijingServer }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10.5 12 4l9 6.5M5 10v8.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V10M8 20v-6h8v6" />
                 </svg>
             </div>
-            <h3 className="mt-4 text-lg font-black text-slate-700">{server.toUpperCase()} 当前没有开放中的百景排行</h3>
+            <h3 className="mt-4 text-lg font-black text-slate-700">{t("page.mysekaiPreview.top.emptyTitle", { server: server.toUpperCase() })}</h3>
             <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
-                等有新的百景活动开放后，这里会自动显示 TOP 投稿和缩略图预览。
+                {t("page.mysekaiPreview.top.emptyDescription")}
             </p>
         </div>
     );
 }
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+    const { t } = useI18n();
+
     return (
         <div className="rounded-[2rem] border border-red-200/70 bg-red-50/80 p-6 shadow-lg shadow-red-900/5 backdrop-blur-xl">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h3 className="text-lg font-black text-red-700">百景数据加载失败</h3>
+                    <h3 className="text-lg font-black text-red-700">{t("page.mysekaiPreview.top.loadFailedTitle")}</h3>
                     <p className="mt-1 text-sm text-red-600/80">{message}</p>
                 </div>
                 <button
@@ -64,7 +67,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
                     onClick={onRetry}
                     className="rounded-2xl bg-red-500 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-red-500/20 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-95"
                 >
-                    重新加载
+                    {t("page.mysekaiPreview.top.reload")}
                 </button>
             </div>
         </div>
@@ -88,6 +91,7 @@ function RankingCard({
     competitionId: number;
     entry: BaijingRankingEntry;
 }) {
+    const { t, formatNumber } = useI18n();
     const [imageFailed, setImageFailed] = useState(false);
     const thumbnailUrl = getEntryThumbnailUrl(server, entry);
     const href = `/mysekai-preview/ranking?server=${server}&competitionId=${competitionId}&rank=${entry.rank}`;
@@ -122,27 +126,27 @@ function RankingCard({
                         #{entry.rank}
                     </span>
                     <span className="rounded-2xl border border-miku/15 bg-miku/8 px-3 py-1.5 text-[11px] font-black text-miku">
-                        {getTabTypeLabel(entry.tabType)}
+                        {getTabTypeLabel(entry.tabType, t)}
                     </span>
                     <span className="ml-auto inline-flex items-center gap-1.5 rounded-2xl bg-rose-50 px-3 py-1.5 text-[11px] font-black text-rose-500 ring-1 ring-rose-100">
                         <HeartIcon className="h-3.5 w-3.5" />
-                        <span className="text-slate-400">点赞量</span>
-                        <span>{formatNumber(entry.reviewCount)}</span>
+                        <span className="text-slate-400">{t("page.mysekaiPreview.common.likes")}</span>
+                        <span>{formatNumber(Number(entry.reviewCount || 0))}</span>
                     </span>
                 </div>
 
                 <h3 className="line-clamp-2 min-h-[2.5rem] text-base font-black leading-snug text-slate-800 transition group-hover:text-miku">
-                    {entry.title || "未命名布局"}
+                    {entry.title || t("page.mysekaiPreview.common.unnamedLayout")}
                 </h3>
                 <div className="mt-2 min-w-0">
-                    <div className="truncate text-sm font-black text-slate-700">{entry.ownerUserName || "未知玩家"}</div>
+                    <div className="truncate text-sm font-black text-slate-700">{entry.ownerUserName || t("page.mysekaiPreview.common.unknownPlayer")}</div>
                     <div className="mt-0.5 truncate text-[11px] font-medium text-slate-400">UID {entry.ownerUserId || "-"}</div>
                 </div>
                 <p className="mt-3 line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-slate-500">
-                    {entry.comment || "作者没有留下说明。"}
+                    {entry.comment || t("page.mysekaiPreview.common.noComment")}
                 </p>
                 <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-50/85 px-3 py-2 text-[11px] font-bold text-slate-400 transition group-hover:bg-miku/8 group-hover:text-miku">
-                    <span>进入 3D 预览</span>
+                    <span>{t("page.mysekaiPreview.top.enterPreview")}</span>
                     <svg className="h-4 w-4 transition group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
                     </svg>
@@ -153,6 +157,7 @@ function RankingCard({
 }
 
 export default function MysekaiPreviewClient() {
+    const { t, formatNumber, formatDate } = useI18n();
     const { serverSource, setServerSource } = useTheme();
     const [server, setServer] = useState<BaijingServer>(serverSource);
     const [rankings, setRankings] = useState<BaijingRankingSnapshot[]>([]);
@@ -193,18 +198,31 @@ export default function MysekaiPreviewClient() {
         setServerSource(nextServer as ServerSourceType);
     };
 
+    const formatBaijingDate = (timestamp?: number) => {
+        if (!timestamp) return t("page.mysekaiPreview.common.notProvided");
+        const date = new Date(timestamp);
+        if (Number.isNaN(date.getTime())) return t("page.mysekaiPreview.common.notProvided");
+        return formatDate(date, {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    };
+
     return (
         <MainLayout>
             <div className="container mx-auto max-w-[96rem] px-4 py-8 sm:px-6 sm:py-10">
                 <div className="mb-8 text-center">
                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-miku/30 bg-miku/5 px-4 py-2">
-                        <span className="text-xs font-bold uppercase tracking-widest text-miku">MySekai Housing Competition</span>
+                        <span className="text-xs font-bold uppercase tracking-widest text-miku">{t("page.mysekaiPreview.badges.top")}</span>
                     </div>
                     <h1 className="text-3xl font-black text-primary-text sm:text-4xl">
-                        烤森 <span className="text-miku">百景</span>
+                        {t("page.mysekaiPreview.top.title")} <span className="text-miku">{t("page.mysekaiPreview.top.titleHighlight")}</span>
                     </h1>
                     <p className="mx-auto mt-2 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
-                        查看当前开放的 MySekai 百景 TOP 投稿排行，点击作品即可进入对应 3D 布局预览。
+                        {t("page.mysekaiPreview.top.description")}
                     </p>
                 </div>
 
@@ -222,17 +240,17 @@ export default function MysekaiPreviewClient() {
                             WebkitMaskPosition: "center",
                         }}
                     />
-                    <span>排行由 Moesekai 实验室探索得出，可能具有延迟或数据不准确，请勿作为百景投票标准。</span>
+                    <span>{t("page.mysekaiPreview.top.disclaimer")}</span>
                 </div>
 
                 <section className="mb-6 rounded-[2rem] border border-white/60 bg-white/65 p-3 shadow-xl shadow-slate-900/5 backdrop-blur-2xl sm:p-4">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="rounded-2xl bg-miku px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-miku/20">
-                                TOP 排行
+                                {t("page.mysekaiPreview.common.topRanking")}
                             </span>
                             <span className="rounded-2xl border border-slate-200 bg-white/75 px-4 py-2.5 text-sm font-black text-slate-500">
-                                {loading ? "读取中…" : `${formatNumber(rankings.length)} 个活动`}
+                                {loading ? t("page.mysekaiPreview.common.loading") : t("page.mysekaiPreview.common.activityCount", { count: formatNumber(rankings.length) })}
                             </span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -255,7 +273,7 @@ export default function MysekaiPreviewClient() {
                                 onClick={() => void loadRankings(server)}
                                 className="rounded-2xl border border-slate-200 bg-white/75 px-4 py-2.5 text-sm font-black text-slate-500 transition hover:border-miku/30 hover:text-miku active:scale-95"
                             >
-                                刷新
+                                {t("page.mysekaiPreview.top.refresh")}
                             </button>
                         </div>
                     </div>
@@ -276,27 +294,27 @@ export default function MysekaiPreviewClient() {
                                     <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                                         <div>
                                             <div className="flex flex-wrap items-center gap-2">
-                                                <h2 className="text-2xl font-black text-slate-800">{snapshot.competition.name || `百景活动 #${snapshot.competition.id}`}</h2>
+                                                <h2 className="text-2xl font-black text-slate-800">{snapshot.competition.name || t("page.mysekaiPreview.common.activityWithId", { id: snapshot.competition.id })}</h2>
                                                 <span className="rounded-full bg-miku/10 px-3 py-1 text-xs font-black text-miku ring-1 ring-miku/20">
                                                     #{snapshot.competition.id}
                                                 </span>
                                             </div>
                                             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500">
-                                                {snapshot.competition.description || "暂无活动说明。"}
+                                                {snapshot.competition.description || t("page.mysekaiPreview.common.noCompetitionDescription")}
                                             </p>
                                             <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-slate-400">
-                                                <span className="rounded-full bg-slate-100/80 px-3 py-1">投稿 {formatFullDateTime(snapshot.competition.submitStartAt)} - {formatFullDateTime(snapshot.competition.submitEndAt)}</span>
-                                                <span className="rounded-full bg-slate-100/80 px-3 py-1">汇总 {formatFullDateTime(snapshot.competition.aggregateAt)}</span>
-                                                <span className="rounded-full bg-slate-100/80 px-3 py-1">快照 {formatFullDateTime(snapshot.snapshotGeneratedAt)}</span>
+                                                <span className="rounded-full bg-slate-100/80 px-3 py-1">{t("page.mysekaiPreview.common.submission")} {formatBaijingDate(snapshot.competition.submitStartAt)} - {formatBaijingDate(snapshot.competition.submitEndAt)}</span>
+                                                <span className="rounded-full bg-slate-100/80 px-3 py-1">{t("page.mysekaiPreview.common.aggregate")} {formatBaijingDate(snapshot.competition.aggregateAt)}</span>
+                                                <span className="rounded-full bg-slate-100/80 px-3 py-1">{t("page.mysekaiPreview.common.snapshot")} {formatBaijingDate(snapshot.snapshotGeneratedAt)}</span>
                                             </div>
                                         </div>
                                         <div className="flex gap-2 text-center">
                                             <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm">
-                                                <div className="text-[10px] font-bold text-slate-400">总投稿</div>
-                                                <div className="text-lg font-black text-slate-700">{formatNumber(snapshot.totalUniqueEntries)}</div>
+                                                <div className="text-[10px] font-bold text-slate-400">{t("page.mysekaiPreview.common.totalEntries")}</div>
+                                                <div className="text-lg font-black text-slate-700">{formatNumber(Number(snapshot.totalUniqueEntries || 0))}</div>
                                             </div>
                                             <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm">
-                                                <div className="text-[10px] font-bold text-slate-400">TOP</div>
+                                                <div className="text-[10px] font-bold text-slate-400">{t("page.mysekaiPreview.common.topCount")}</div>
                                                 <div className="text-lg font-black text-slate-700">{formatNumber(entries.length)}</div>
                                             </div>
                                         </div>

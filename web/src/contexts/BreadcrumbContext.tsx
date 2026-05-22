@@ -3,13 +3,13 @@ import React, { createContext, useContext, useState, useCallback, useEffect, Rea
 import { usePathname } from "next/navigation";
 
 interface BreadcrumbContextType {
-    /** 详情页设置的当前项名称（纯文本） */
+    /** Current detail item name set by detail pages (plain text) */
     detailName: string | null;
-    /** 详情页设置的当前项名称（React 节点，支持翻译组件等） */
+    /** Current detail item name set by detail pages (React node, supports translated components) */
     detailNode: ReactNode | null;
-    /** 设置详情页名称（纯文本） */
+    /** Set detail page name (plain text) */
     setDetailName: (name: string | null) => void;
-    /** 设置详情页名称（React 节点） */
+    /** Set detail page name (React node) */
     setDetailNode: (node: ReactNode | null) => void;
 }
 
@@ -25,7 +25,7 @@ export function BreadcrumbProvider({ children }: { children: ReactNode }) {
     const [detailName, setDetailName] = useState<string | null>(null);
     const [detailNode, setDetailNode] = useState<ReactNode | null>(null);
 
-    // 路由变化时清空详情名称
+    // Clear detail names when the route changes.
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setDetailName(null);

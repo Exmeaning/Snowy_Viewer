@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import QRCode from "qrcode";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import Modal from "@/components/common/Modal";
 import { getMusicJacketUrl } from "@/lib/assets";
 
@@ -16,6 +17,13 @@ interface Best30Entry {
     playResult: "AP" | "FC" | "C" | "";
     title: string;
     assetbundleName: string;
+}
+
+interface Best30ShareLabels {
+    referenceHint: string;
+    footerSource: string;
+    scanQr: string;
+    dataTime: (time: string) => string;
 }
 
 interface Best30ShareImageProps {
@@ -194,6 +202,7 @@ async function drawBest30Canvas(
     avatarUrl?: string,
     nickname?: string,
     uploadTime?: string | number,
+    labels?: Best30ShareLabels,
 ): Promise<void> {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -255,7 +264,7 @@ async function drawBest30Canvas(
     // Description
     ctx.fillStyle = THEME.textMuted;
     ctx.font = "14px 'Segoe UI', system-ui, sans-serif";
-    ctx.fillText("社区定数 · 仅供参考 | Community Constants · Reference Only", GRID_LEFT + 32, 220);
+    ctx.fillText(labels?.referenceHint ?? "Community constants · For reference only", GRID_LEFT + 32, 220);
 
     // User info (right side) - avatar + name + UID + server + upload time
     const infoRightX = CANVAS_WIDTH - GRID_LEFT - 28;
@@ -317,9 +326,9 @@ async function drawBest30Canvas(
         const date = parseUploadTimeToDate(uploadTime);
         if (date) {
             const timeStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-            ctx.fillText(`数据时间: ${timeStr}`, textRightX, nickname ? 114 : 96);
+            ctx.fillText(labels?.dataTime(timeStr) ?? `Data time: ${timeStr}`, textRightX, nickname ? 114 : 96);
         } else {
-            ctx.fillText(`数据时间: ${uploadTime}`, textRightX, nickname ? 114 : 96);
+            ctx.fillText(labels?.dataTime(String(uploadTime)) ?? `Data time: ${uploadTime}`, textRightX, nickname ? 114 : 96);
         }
     }
 
@@ -446,7 +455,7 @@ async function drawBest30Canvas(
     ctx.fillStyle = THEME.textSecondary;
     ctx.font = "14px 'Segoe UI', system-ui, sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("数据来源: Haruki 工具箱 · 定数来源: 社区定数", GRID_LEFT + 24, footerY + 32);
+    ctx.fillText(labels?.footerSource ?? "Data source: Haruki Toolbox · Constants source: Community constants", GRID_LEFT + 24, footerY + 32);
 
     ctx.fillStyle = THEME.textMuted;
     ctx.font = "13px 'Segoe UI', system-ui, sans-serif";
@@ -478,7 +487,7 @@ async function drawBest30Canvas(
         ctx.fillStyle = THEME.textMuted;
         ctx.font = "11px 'Segoe UI', system-ui, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("扫码查看", qrX + 48, qrY + 112);
+        ctx.fillText(labels?.scanQr ?? "Scan to view", qrX + 48, qrY + 112);
     } catch (e) {
         console.warn("QR Code generation failed:", e);
     }
@@ -497,13 +506,14 @@ export default function Best30ShareImage({
     uploadTime,
     onClose,
 }: Best30ShareImageProps) {
+    const { t } = useI18n();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isGenerating, setIsGenerating] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [progress, setProgress] = useState(0);
-    const [progressText, setProgressText] = useState("准备中...");
+    const [progressText, setProgressText] = useState(() => t("page.best30Share.preparing"));
     const [canvasReady, setCanvasReady] = useState(false);
     const copyResetTimerRef = useRef<number | null>(null);
     const saveResetTimerRef = useRef<number | null>(null);
@@ -532,20 +542,20 @@ export default function Best30ShareImage({
     useEffect(() => {
         if (!isGenerating) {
             setProgress(100);
-            setProgressText("完成!");
+            setProgressText(t("page.best30Share.done"));
             return;
         }
 
         setProgress(0);
-        setProgressText("加载资源...");
+        setProgressText(t("page.best30Share.loadingAssets"));
 
         const stages = [
-            { target: 15, text: "加载资源...", duration: 2000 },
-            { target: 35, text: "绘制卡片...", duration: 4000 },
-            { target: 55, text: "渲染封面...", duration: 4000 },
-            { target: 70, text: "生成二维码...", duration: 3000 },
-            { target: 85, text: "即将完成...", duration: 5000 },
-            { target: 95, text: "最终处理...", duration: 12000 },
+            { target: 15, text: t("page.best30Share.loadingAssets"), duration: 2000 },
+            { target: 35, text: t("page.best30Share.drawingCards"), duration: 4000 },
+            { target: 55, text: t("page.best30Share.renderingCovers"), duration: 4000 },
+            { target: 70, text: t("page.best30Share.generatingQr"), duration: 3000 },
+            { target: 85, text: t("page.best30Share.almostDone"), duration: 5000 },
+            { target: 95, text: t("page.best30Share.finalizing"), duration: 12000 },
         ];
 
         const startTime = Date.now();
@@ -582,7 +592,7 @@ export default function Best30ShareImage({
         }, 80);
 
         return () => clearInterval(timer);
-    }, [isGenerating]);
+    }, [isGenerating, t]);
 
     const generateImage = useCallback(async () => {
         const canvas = canvasRef.current;
@@ -590,14 +600,19 @@ export default function Best30ShareImage({
         setIsGenerating(true);
         setError(null);
         try {
-            await drawBest30Canvas(canvas, entries, average, gameId, serverLabel, getMusicThumbnailUrl, themeColor, avatarUrl, nickname, uploadTime);
+            await drawBest30Canvas(canvas, entries, average, gameId, serverLabel, getMusicThumbnailUrl, themeColor, avatarUrl, nickname, uploadTime, {
+                referenceHint: t("page.best30Share.referenceHint"),
+                footerSource: t("page.best30Share.footerSource"),
+                scanQr: t("page.best30Share.scanQr"),
+                dataTime: (time) => t("common.data.dataTime", { time }),
+            });
         } catch (err) {
             console.error("Image generation failed:", err);
-            setError("图片生成失败，请重试");
+            setError(t("page.best30Share.generateFailed"));
         } finally {
             setIsGenerating(false);
         }
-    }, [entries, average, gameId, serverLabel, getMusicThumbnailUrl, themeColor, avatarUrl, nickname, uploadTime]);
+    }, [entries, average, gameId, serverLabel, getMusicThumbnailUrl, themeColor, avatarUrl, nickname, uploadTime, t]);
 
     // Trigger image generation when canvas is ready (after Modal mounts it)
     useEffect(() => {
@@ -645,13 +660,13 @@ export default function Best30ShareImage({
                         setCopied(false);
                     }, 1800);
                 } catch {
-                    alert("复制失败，请尝试使用下载功能");
+                    alert(t("page.best30Share.copyFailed"));
                 }
             });
         } catch {
-            alert("复制失败，请尝试使用下载功能");
+            alert(t("page.best30Share.copyFailed"));
         }
-    }, []);
+    }, [t]);
 
     const headerActions = (
         <>
@@ -659,8 +674,8 @@ export default function Best30ShareImage({
                 onClick={handleCopy}
                 disabled={isGenerating}
                 className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                aria-label="复制图片"
-                title={copied ? "复制成功" : "复制图片"}
+                aria-label={t("page.best30Share.copyImage")}
+                title={copied ? t("page.best30Share.copied") : t("page.best30Share.copyImage")}
             >
                 <span className="relative block w-4 h-4">
                     <svg
@@ -685,8 +700,8 @@ export default function Best30ShareImage({
                 onClick={handleDownload}
                 disabled={isGenerating}
                 className="p-1.5 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                aria-label="保存图片"
-                title={saveSuccess ? "保存完成" : "保存图片"}
+                aria-label={t("page.best30Share.saveImage")}
+                title={saveSuccess ? t("page.best30Share.saved") : t("page.best30Share.saveImage")}
             >
                 <span className="relative block w-4 h-4">
                     <svg
@@ -714,8 +729,9 @@ export default function Best30ShareImage({
         <Modal
             isOpen
             onClose={onClose}
-            title="Best30 分享图片"
+            title={t("page.best30Share.title")}
             size="xl"
+            syncHistory={false}
             headerActions={headerActions}
         >
             <div className="space-y-4">
@@ -737,7 +753,7 @@ export default function Best30ShareImage({
                                             />
                                         </div>
                                     </div>
-                                    <span className="text-slate-400 text-[10px]">正在生成 Best30 分享图片</span>
+                                    <span className="text-slate-400 text-[10px]">{t("page.best30Share.generatingTitle")}</span>
                                 </div>
                             </div>
                         )}
@@ -749,7 +765,7 @@ export default function Best30ShareImage({
                                         onClick={generateImage}
                                         className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded-lg transition-colors"
                                     >
-                                        重新生成
+                                        {t("page.best30Share.regenerate")}
                                     </button>
                                 </div>
                             </div>

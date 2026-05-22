@@ -2,17 +2,19 @@
 import React, { useMemo } from "react";
 import Image from "next/image";
 import { FilterSection, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
-import { CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES, UNIT_FIELD_TO_ID, UNIT_NAME_MAP, ICharaUnitInfo } from "@/types/types";
+import { UNIT_DATA, UNIT_ICON_FILES, UNIT_FIELD_TO_ID, UNIT_ID_LABEL_KEYS, ICharaUnitInfo } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
+import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 
 interface CharacterFilterProps {
     selectedCharacters: number[];
     onCharacterChange: (chars: number[]) => void;
     selectedUnitIds: string[];
     onUnitIdsChange: (units: string[]) => void;
-    /** Label for the unit section, defaults to "团体" */
+    /** Label for the unit section, defaults to t("common.filter.unit") */
     unitLabel?: string;
-    /** Label for the character section, defaults to "角色" */
+    /** Label for the character section, defaults to t("common.filter.character") */
     characterLabel?: string;
     /** Extra buttons rendered inside the character row, before the ALL button */
     characterExtraButtons?: React.ReactNode;
@@ -42,8 +44,8 @@ export default function CharacterFilter({
     onCharacterChange,
     selectedUnitIds,
     onUnitIdsChange,
-    unitLabel = "团体",
-    characterLabel = "角色",
+    unitLabel,
+    characterLabel,
     characterExtraButtons,
     characterExtraCount = 0,
     selectedCharacterExtraCount = 0,
@@ -51,6 +53,9 @@ export default function CharacterFilter({
     extraContent,
     charaUnits,
 }: CharacterFilterProps) {
+    const { t } = useI18n();
+    const resolvedUnitLabel = unitLabel ?? t("common.filter.unit");
+    const resolvedCharacterLabel = characterLabel ?? t("common.filter.character");
     // Build event-mode unit data: remap VS sub-unit chars into their respective groups
     const { effectiveUnitData, charDisplayMap } = useMemo(() => {
         if (!charaUnits || charaUnits.length === 0) {
@@ -157,14 +162,12 @@ export default function CharacterFilter({
     const getCharName = (charId: number): string => {
         const display = charDisplayMap.get(charId);
         const baseName = display
-            ? (CHARACTER_NAMES[display.baseCharId] || `Character ${charId}`)
-            : (CHARACTER_NAMES[charId] || `Character ${charId}`);
-        // For VS sub-unit characters, append the group name
+            ? getCharacterName(t, display.baseCharId)
+            : getCharacterName(t, charId);
+        // For VS sub-unit characters, append the localized group name.
         if (display?.badgeUnitId) {
-            // Reverse lookup: unitId → unit field → unit name
-            const unitField = Object.entries(UNIT_FIELD_TO_ID).find(([, v]) => v === display.badgeUnitId)?.[0];
-            const groupName = unitField ? UNIT_NAME_MAP[unitField] : null;
-            if (groupName) return `${baseName}（${groupName}）`;
+            const groupNameKey = UNIT_ID_LABEL_KEYS[display.badgeUnitId];
+            if (groupNameKey) return `${baseName} (${t(groupNameKey)})`;
         }
         return baseName;
     };
@@ -182,21 +185,22 @@ export default function CharacterFilter({
     return (
         <>
             {/* Unit Selection */}
-            <FilterSection label={unitLabel}>
+            <FilterSection label={resolvedUnitLabel}>
                 <div className="flex flex-wrap gap-2">
                     {effectiveUnitData.map(unit => {
                         const iconName = UNIT_ICON_FILES[unit.id] || "";
+                        const unitLabel = t(UNIT_ID_LABEL_KEYS[unit.id] ?? `common.units.${unit.id}`);
                         return (
                             <button
                                 key={unit.id}
                                 onClick={() => handleUnitClick(unit.id)}
                                 className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(selectedUnitIds.includes(unit.id))}`}
-                                title={unit.name}
+                                title={unitLabel}
                             >
                                 <div className="w-8 h-8 relative">
                                     <Image
                                         src={`/data/icon/${iconName}`}
-                                        alt={unit.name}
+                                        alt={unitLabel}
                                         fill
                                         className="object-contain"
                                         unoptimized
@@ -210,7 +214,7 @@ export default function CharacterFilter({
 
             {/* Character Selection */}
             {(currentUnits.length > 0 || selectedCharacters.length > 0) && (
-                <FilterSection label={characterLabel}>
+                <FilterSection label={resolvedCharacterLabel}>
                     <div className="flex flex-wrap gap-2">
                         {displayedCharacters.map(charId => {
                             const badgeUnitId = getCharBadge(charId);
@@ -259,7 +263,7 @@ export default function CharacterFilter({
                             key="all"
                             onClick={handleAllClick}
                             className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold transition-all ${getFilterChipStateClasses(allSelected, "bg-miku text-white shadow-lg ring-2 ring-miku border border-transparent dark:bg-miku/20 dark:text-white dark:border-miku/40 dark:ring-miku/70", "bg-slate-50 hover:bg-slate-100 text-slate-500 dark:text-slate-300 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
-                            title="全部"
+                            title={t("common.filter.all")}
                             style={{ width: '40px', height: '40px' }}
                         >
                             ALL

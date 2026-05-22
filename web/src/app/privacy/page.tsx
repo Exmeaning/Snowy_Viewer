@@ -1,12 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
-import { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "隐私政策",
-    description: "Moesekai 隐私政策",
-};
+export const generateMetadata = pageMetadata("privacy");
 
 export default function PrivacyPolicyPage() {
     return (

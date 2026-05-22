@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
 import StoryIndexClient from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "剧情",
-    description: "浏览 Project Sekai 六类剧情" + SEO_SUFFIX,
-    keywords: getPageKeywords("story"),
-};
+export const generateMetadata = pageMetadata("story");
 
 export default function StoryIndexPage() {
     return <StoryIndexClient />;

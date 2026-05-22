@@ -1,13 +1,7 @@
-
-import { Metadata } from "next";
 import VirtualLiveContent from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "演唱会",
-    description: "浏览 Project Sekai 虚拟 Live 演唱会信息" + SEO_SUFFIX,
-    keywords: getPageKeywords("live"),
-};
+export const generateMetadata = pageMetadata("live");
 
 export default function LivePage() {
     return <VirtualLiveContent />;

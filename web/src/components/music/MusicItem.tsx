@@ -1,8 +1,10 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { IMusicInfo, getMusicJacketUrl, MUSIC_CATEGORY_NAMES, MUSIC_CATEGORY_COLORS, MusicCategoryType, MusicDifficultyType, DIFFICULTY_COLORS } from "@/types/music";
+import { IMusicInfo, getMusicJacketUrl, MUSIC_CATEGORY_COLORS, MusicCategoryType, MusicDifficultyType, DIFFICULTY_COLORS } from "@/types/music";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const ALL_DIFFICULTIES: MusicDifficultyType[] = ["easy", "normal", "hard", "expert", "master", "append"];
 
@@ -16,8 +18,11 @@ interface MusicItemProps {
 }
 
 export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty, cnTitle }: MusicItemProps) {
-    const { assetSource } = useTheme();
+    const { assetSource, useLLMTranslation } = useTheme();
+    const { t } = useI18n();
+    const { t: translateMasterText } = useTranslation();
     const jacketUrl = getMusicJacketUrl(music.assetbundleName, assetSource);
+    const translatedTitle = translateMasterText("music", "title", music.title) ?? (useLLMTranslation ? cnTitle : undefined);
 
     return (
         <Link href={`/music/${music.id}`} className="group block" data-shortcut-item="true">
@@ -41,7 +46,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                                 className="px-1.5 py-0.5 text-[10px] font-bold rounded text-white shadow-sm"
                                 style={{ backgroundColor: MUSIC_CATEGORY_COLORS[cat as MusicCategoryType] }}
                             >
-                                {MUSIC_CATEGORY_NAMES[cat as MusicCategoryType]}
+                                {t(`common.musicCategories.${cat}`)}
                             </span>
                         ))}
                     </div>
@@ -61,7 +66,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                     {/* Spoiler Badge - Top Left */}
                     {isSpoiler && (
                         <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-orange-500 rounded text-[10px] text-white font-bold shadow">
-                            剧透
+                            {t("common.badge.spoiler")}
                         </div>
                     )}
                 </div>
@@ -71,8 +76,8 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                     <h3 className="text-sm font-bold text-primary-text group-hover:text-miku transition-colors">
                         <span className="flex flex-col">
                             <span className="block">{music.title}</span>
-                            {cnTitle && (
-                                <span className="text-xs font-medium text-slate-400 block">{cnTitle}</span>
+                            {translatedTitle && (
+                                <span className="text-xs font-medium text-slate-400 block">{translatedTitle}</span>
                             )}
                         </span>
                     </h3>

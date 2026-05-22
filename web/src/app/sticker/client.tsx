@@ -4,7 +4,8 @@ import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import { useTheme } from "@/contexts/ThemeContext";
-import { CHARACTER_NAMES } from "@/types/types";
+import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 import { getStampUrl, getCharacterIconUrl } from "@/lib/assets";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
@@ -26,6 +27,7 @@ interface IStampInfo {
 
 function StickerContent() {
     const { isShowSpoiler, assetSource } = useTheme();
+    const { t } = useI18n();
 
     const [stamps, setStamps] = useState<IStampInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -48,7 +50,6 @@ function StickerContent() {
 
     // Fetch stamps data
     useEffect(() => {
-        // document.title = "Snowy SekaiViewer 贴纸"; // Moved to metadata
         async function fetchStamps() {
             try {
                 setIsLoading(true);
@@ -142,14 +143,14 @@ function StickerContent() {
         <BaseFilters
             filteredCount={filteredStamps.length}
             totalCount={stamps.length}
-            countUnit="个"
+            countUnit={t("page.sticker.countUnit")}
             showSearch={false}
             sortOptions={[{ id: "id", label: "ID" }]}
             sortBy="id"
             sortOrder={sortOrder}
             onSortChange={(_: string, order: "asc" | "desc") => setSortOrder(order)}
         >
-            <FilterSection label="角色 1">
+            <FilterSection label={t("page.sticker.sectionLabel.character1")}>
                 <div className="grid grid-cols-5 gap-2">
                     <button
                         key="all1"
@@ -158,12 +159,12 @@ function StickerContent() {
                             ? "bg-miku text-white shadow-lg ring-2 ring-miku"
                             : "bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200"
                             }`}
-                        title="不限"
+                        title={t("page.sticker.anyCharacter")}
                     >
                         ALL
                     </button>
                     {characters.map(id => {
-                        const hasName = !!CHARACTER_NAMES[id];
+                        const characterName = getCharacterName(t, id);
                         return (
                             <button
                                 key={`char1-${id}`}
@@ -171,27 +172,23 @@ function StickerContent() {
                                 className={`relative aspect-square rounded-full overflow-hidden transition-all flex items-center justify-center ${selectedChar1 === id
                                     ? "ring-2 ring-miku shadow-lg"
                                     : "ring-1 ring-slate-200 hover:ring-miku/50"
-                                    } ${!hasName ? "bg-slate-50" : ""}`}
-                                title={CHARACTER_NAMES[id] || `角色 ${id}`}
+                                    }`}
+                                title={characterName}
                             >
-                                {hasName ? (
-                                    <Image
-                                        src={getCharacterIconUrl(id)}
-                                        alt={CHARACTER_NAMES[id]}
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                ) : (
-                                    <span className="text-xs text-slate-500 font-bold">其他</span>
-                                )}
+                                <Image
+                                    src={getCharacterIconUrl(id)}
+                                    alt={characterName}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
                             </button>
                         );
                     })}
                 </div>
             </FilterSection>
 
-            <FilterSection label="角色 2">
+            <FilterSection label={t("page.sticker.sectionLabel.character2")}>
                 <div className="grid grid-cols-5 gap-2">
                     <button
                         key="all2"
@@ -200,12 +197,12 @@ function StickerContent() {
                             ? "bg-miku text-white shadow-lg ring-2 ring-miku"
                             : "bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200"
                             }`}
-                        title="不限"
+                        title={t("page.sticker.anyCharacter")}
                     >
                         ALL
                     </button>
                     {characters.map(id => {
-                        const hasName = !!CHARACTER_NAMES[id];
+                        const characterName = getCharacterName(t, id);
                         return (
                             <button
                                 key={`char2-${id}`}
@@ -213,27 +210,23 @@ function StickerContent() {
                                 className={`relative aspect-square rounded-full overflow-hidden transition-all flex items-center justify-center ${selectedChar2 === id
                                     ? "ring-2 ring-miku shadow-lg"
                                     : "ring-1 ring-slate-200 hover:ring-miku/50"
-                                    } ${!hasName ? "bg-slate-50" : ""}`}
-                                title={CHARACTER_NAMES[id] || `角色 ${id}`}
+                                    }`}
+                                title={characterName}
                             >
-                                {hasName ? (
-                                    <Image
-                                        src={getCharacterIconUrl(id)}
-                                        alt={CHARACTER_NAMES[id]}
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                ) : (
-                                    <span className="text-xs text-slate-500 font-bold">其他</span>
-                                )}
+                                <Image
+                                    src={getCharacterIconUrl(id)}
+                                    alt={characterName}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
                             </button>
                         );
                     })}
                 </div>
             </FilterSection>
 
-            <FilterSection label="贴纸类型">
+            <FilterSection label={t("page.sticker.sectionLabel.stampType")}>
                 <div className="flex flex-wrap gap-2">
                     <button
                         key="type-all"
@@ -243,7 +236,7 @@ function StickerContent() {
                             : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200"
                             }`}
                     >
-                        全部
+                        {t("page.sticker.allTypes")}
                     </button>
                     {stampTypes.map(type => (
                         <button
@@ -254,7 +247,7 @@ function StickerContent() {
                                 : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200"
                                 }`}
                         >
-                            {type === "text" ? "文字" : type === "illustration" ? "插图" : type}
+                            {type === "text" ? t("page.sticker.stampTypes.text") : type === "illustration" ? t("page.sticker.stampTypes.illustration") : type}
                         </button>
                     ))}
                 </div>
@@ -262,7 +255,7 @@ function StickerContent() {
         </BaseFilters>
     );
 
-    useQuickFilter("贴纸筛选", quickFilterContent, [
+    useQuickFilter(t("page.sticker.filterTitle"), quickFilterContent, [
         selectedChar1,
         selectedChar2,
         stampType,
@@ -271,6 +264,7 @@ function StickerContent() {
         stamps.length,
         characters,
         stampTypes,
+        t,
     ]);
 
     return (
@@ -278,29 +272,29 @@ function StickerContent() {
             <ImagePreviewModal
                 isOpen={!!selectedStamp}
                 onClose={() => setSelectedStamp(null)}
-                title={selectedStamp ? `${selectedStamp.name} 贴纸预览` : "贴纸预览"}
+                title={selectedStamp ? t("page.sticker.previewTitle", { name: selectedStamp.name }) : t("page.sticker.previewTitleFallback")}
                 imageUrl={selectedStamp ? getStampUrl(selectedStamp.assetbundleName, assetSource) : ""}
-                alt={selectedStamp?.name || "Sticker"}
+                alt={selectedStamp?.name || t("page.sticker.previewAltFallback")}
                 fileName={selectedStamp ? `sticker_${selectedStamp.id}.png` : "sticker.png"}
             />
 
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">贴纸图鉴</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.sticker.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    贴纸 <span className="text-miku">列表</span>
+                    {t("page.sticker.title")} <span className="text-miku">{t("page.sticker.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览世界计划中的所有贴纸
+                    {t("page.sticker.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("page.sticker.loadFailed")}</p>
                     <p>{error}</p>
                 </div>
             )}
@@ -363,7 +357,7 @@ function StickerContent() {
                                         data-shortcut-load-more="true"
                                         className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                                     >
-                                        加载更多
+                                        {t("page.sticker.loadMore")}
                                         <span className="ml-2 text-sm opacity-80">
                                             ({displayedStamps.length} / {filteredStamps.length})
                                         </span>
@@ -374,7 +368,7 @@ function StickerContent() {
                             {/* All loaded */}
                             {displayedStamps.length > 0 && displayedStamps.length >= filteredStamps.length && (
                                 <div className="mt-8 text-center text-slate-400 text-sm">
-                                    已显示全部 {filteredStamps.length} 个贴纸
+                                    {t("page.sticker.allLoaded", { count: filteredStamps.length })}
                                 </div>
                             )}
                         </>
@@ -386,9 +380,11 @@ function StickerContent() {
 }
 
 export default function StickerClient() {
+    const { t } = useI18n();
+
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载贴纸...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.sticker.loadingFallback")}</div>}>
                 <StickerContent />
             </Suspense>
         </MainLayout>

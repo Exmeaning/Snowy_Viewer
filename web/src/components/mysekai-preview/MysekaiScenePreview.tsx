@@ -2,11 +2,12 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useI18n } from "@/contexts/I18nContext";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import { MOE_LOGO_URL } from "@/lib/assets";
 import { LOCAL_TEST_LAYOUT_URL, MYSEKAI_PREVIEW_STORAGE_KEY } from "@/lib/mysekai-preview/assets";
 import { MysekaiScenePreviewRuntime } from "@/lib/mysekai-preview/runtime";
-import type { MysekaiLayoutPayload, MysekaiPreviewOptions, MysekaiPreviewStatus } from "@/lib/mysekai-preview/types";
+import type { MysekaiLayoutPayload, MysekaiPreviewOptions, MysekaiPreviewRuntimeMessages, MysekaiPreviewStatus } from "@/lib/mysekai-preview/types";
 
 interface MysekaiScenePreviewProps {
     className?: string;
@@ -23,13 +24,11 @@ interface MysekaiScenePreviewProps {
     layoutKey?: string;
 }
 
-const ASSET_RULE_NOTE = "资源路径由 assetbundleName / handleType 规则推导，不列桶、不轮询。";
-
 const SITE_OPTIONS = [
-    { id: 1, label: "户外" },
-    { id: 2, label: "1F" },
-    { id: 3, label: "2F" },
-    { id: 4, label: "3F" },
+    { id: 1, labelKey: "page.mysekaiPreview.preview.siteOutdoor", fallback: "Outdoor" },
+    { id: 2, labelKey: null, fallback: "1F" },
+    { id: 3, labelKey: null, fallback: "2F" },
+    { id: 4, labelKey: null, fallback: "3F" },
 ];
 
 function readSavedOptions(): Partial<MysekaiPreviewOptions> {
@@ -67,20 +66,23 @@ export default function MysekaiScenePreview({
     assetSourceOverride,
     persistOptionsEnabled = true,
     showLayoutUrlInput = true,
-    headerTitle = "烤森预览",
-    headerBadge = "本地测试",
+    headerTitle,
+    headerBadge,
     headerNote,
     layoutData = null,
     layoutKey,
 }: MysekaiScenePreviewProps) {
+    const { t } = useI18n();
     const { assetSource: themeAssetSource } = useTheme();
     const assetSource = assetSourceOverride ?? themeAssetSource;
+    const resolvedHeaderTitle = headerTitle ?? t("page.mysekaiPreview.preview.defaultTitle");
+    const resolvedHeaderBadge = headerBadge ?? t("page.mysekaiPreview.preview.defaultBadge");
     const hostRef = useRef<HTMLDivElement>(null);
     const axesRef = useRef<HTMLDivElement>(null);
     const runtimeRef = useRef<MysekaiScenePreviewRuntime | null>(null);
     const [status, setStatus] = useState<MysekaiPreviewStatus>({
         phase: "idle",
-        message: "初始化中...",
+        message: t("page.mysekaiPreview.preview.initialStatus"),
         loaded: 0,
         total: 0,
         skipped: 0,
@@ -92,6 +94,64 @@ export default function MysekaiScenePreview({
     const [shadowEnabled, setShadowEnabled] = useState(true);
     const [backWallOpacity, setBackWallOpacity] = useState(0.2);
     const [lookSensitivity, setLookSensitivity] = useState(1);
+
+    const runtimeMessages = useMemo<MysekaiPreviewRuntimeMessages>(() => ({
+        initializing: t("page.mysekaiPreview.runtime.initializing"),
+        loadingMasterLabel: t("page.mysekaiPreview.runtime.loadingMasterLabel"),
+        loadingMasterMessage: t("page.mysekaiPreview.runtime.loadingMasterMessage"),
+        loadFailedLabel: t("page.mysekaiPreview.runtime.loadFailedLabel"),
+        loadFailedMessage: t("page.mysekaiPreview.runtime.loadFailedMessage"),
+        fetchFailed: t("page.mysekaiPreview.runtime.fetchFailed"),
+        noRoomData: t("page.mysekaiPreview.runtime.noRoomData"),
+        modelLoadFailed: t("page.mysekaiPreview.runtime.modelLoadFailed"),
+        bgmRecordMissing: t("page.mysekaiPreview.runtime.bgmRecordMissing"),
+        bgmRecordExternalIdMissing: t("page.mysekaiPreview.runtime.bgmRecordExternalIdMissing"),
+        soundtrackMissing: t("page.mysekaiPreview.runtime.soundtrackMissing"),
+        soundtrackAssetMissing: t("page.mysekaiPreview.runtime.soundtrackAssetMissing"),
+        soundtrackFallbackTitle: t("page.mysekaiPreview.runtime.soundtrackFallbackTitle"),
+        soundtrackSubtitle: t("page.mysekaiPreview.runtime.soundtrackSubtitle"),
+        musicMissing: t("page.mysekaiPreview.runtime.musicMissing"),
+        missingInstrumental: t("page.mysekaiPreview.runtime.missingInstrumental"),
+        missingVocal: t("page.mysekaiPreview.runtime.missingVocal"),
+        defaultVocal: t("page.mysekaiPreview.runtime.defaultVocal"),
+        musicFallbackTitle: t("page.mysekaiPreview.runtime.musicFallbackTitle"),
+        bgmLoadFailed: t("page.mysekaiPreview.runtime.bgmLoadFailed"),
+        modelMissing: t("page.mysekaiPreview.runtime.modelMissing"),
+        preloadingModelsLabel: t("page.mysekaiPreview.runtime.preloadingModelsLabel"),
+        preloadingModelsProgress: t("page.mysekaiPreview.runtime.preloadingModelsProgress"),
+        readingLayoutLabel: t("page.mysekaiPreview.runtime.readingLayoutLabel"),
+        loadingLayoutMessage: t("page.mysekaiPreview.runtime.loadingLayoutMessage"),
+        instantiatingFurnitureLabel: t("page.mysekaiPreview.runtime.instantiatingFurnitureLabel"),
+        instantiatingFurnitureProgress: t("page.mysekaiPreview.runtime.instantiatingFurnitureProgress"),
+        emptyInstance: t("page.mysekaiPreview.runtime.emptyInstance"),
+        finalizingSceneLabel: t("page.mysekaiPreview.runtime.finalizingSceneLabel"),
+        completeLabel: t("page.mysekaiPreview.runtime.completeLabel"),
+        defaultSiteLevel: t("page.mysekaiPreview.runtime.defaultSiteLevel"),
+        completeMessage: t("page.mysekaiPreview.runtime.completeMessage"),
+        fenceModelMissing: t("page.mysekaiPreview.runtime.fenceModelMissing"),
+        fencePartsFailed: t("page.mysekaiPreview.runtime.fencePartsFailed"),
+        modelNotPreloaded: t("page.mysekaiPreview.runtime.modelNotPreloaded"),
+        fenceModelNotPreloaded: t("page.mysekaiPreview.runtime.fenceModelNotPreloaded"),
+        freeView: t("page.mysekaiPreview.runtime.freeView"),
+        fixedView: t("page.mysekaiPreview.runtime.fixedView"),
+        pointerLock: t("page.mysekaiPreview.runtime.pointerLock"),
+        releasePointerLock: t("page.mysekaiPreview.runtime.releasePointerLock"),
+        fullscreen: t("page.mysekaiPreview.runtime.fullscreen"),
+        exitFullscreen: t("page.mysekaiPreview.runtime.exitFullscreen"),
+        cycleLayout: t("page.mysekaiPreview.runtime.cycleLayout"),
+        playBgm: t("page.mysekaiPreview.runtime.playBgm"),
+        pauseBgm: t("page.mysekaiPreview.runtime.pauseBgm"),
+        loadingBgm: t("page.mysekaiPreview.runtime.loadingBgm"),
+        playBgmTitle: t("page.mysekaiPreview.runtime.playBgmTitle"),
+        bgmErrorTitle: t("page.mysekaiPreview.runtime.bgmErrorTitle"),
+        noBgmTitle: t("page.mysekaiPreview.runtime.noBgmTitle"),
+        bgmVolume: t("page.mysekaiPreview.runtime.bgmVolume"),
+        shortcutHint: t("page.mysekaiPreview.runtime.shortcutHint"),
+        mobileUp: t("page.mysekaiPreview.runtime.mobileUp"),
+        mobileDown: t("page.mysekaiPreview.runtime.mobileDown"),
+        bgmInfo: t("page.mysekaiPreview.runtime.bgmInfo"),
+        noBgmInfo: t("page.mysekaiPreview.runtime.noBgmInfo"),
+    }), [t]);
 
     useEffect(() => {
         if (!persistOptionsEnabled) return;
@@ -124,7 +184,8 @@ export default function MysekaiScenePreview({
         debugEnabled,
         backWallOpacity,
         lookSensitivity,
-    }), [assetSource, backWallOpacity, debugEnabled, gridEnabled, layoutData, layoutKey, layoutUrl, lookSensitivity, shadowEnabled, siteId]);
+        messages: runtimeMessages,
+    }), [assetSource, backWallOpacity, debugEnabled, gridEnabled, layoutData, layoutKey, layoutUrl, lookSensitivity, runtimeMessages, shadowEnabled, siteId]);
 
     useEffect(() => {
         if (persistOptionsEnabled) persistOptions(options);
@@ -168,7 +229,7 @@ export default function MysekaiScenePreview({
         : status.phase === "ready" ? "text-cyan-700" : "text-sky-700";
     const progressValue = Math.max(0, Math.min(100, Math.round(status.progress ?? (status.total ? (status.loaded / Math.max(1, status.total)) * 100 : 0))));
     const showLoadingOverlay = status.phase === "loading";
-    const loadingTitle = status.stageLabel || (status.stage === "master" ? "正在加载 master data" : status.stage === "layout" ? "正在读取布局" : "正在加载模型资源");
+    const loadingTitle = status.stageLabel || (status.stage === "master" ? t("page.mysekaiPreview.preview.loadingMaster") : status.stage === "layout" ? t("page.mysekaiPreview.preview.readingLayout") : t("page.mysekaiPreview.preview.loadingModels"));
     const panelPadding = compact ? "p-3" : "p-4";
 
     return (
@@ -177,11 +238,11 @@ export default function MysekaiScenePreview({
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <div className="text-sm font-black text-primary-text">{headerTitle}</div>
-                            {headerBadge && <span className="rounded-full bg-miku/10 px-2 py-1 text-[10px] font-bold text-miku ring-1 ring-miku/20">{headerBadge}</span>}
+                            <div className="text-sm font-black text-primary-text">{resolvedHeaderTitle}</div>
+                            {resolvedHeaderBadge && <span className="rounded-full bg-miku/10 px-2 py-1 text-[10px] font-bold text-miku ring-1 ring-miku/20">{resolvedHeaderBadge}</span>}
                             <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">{assetSource}</span>
                         </div>
-                        {!compact && <div className="mt-1 text-[11px] text-slate-500">{headerNote ?? ASSET_RULE_NOTE}</div>}
+                        {!compact && <div className="mt-1 text-[11px] text-slate-500">{headerNote ?? t("page.mysekaiPreview.preview.assetRuleNote")}</div>}
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <button
@@ -189,14 +250,14 @@ export default function MysekaiScenePreview({
                             onClick={handleReload}
                             className="rounded-xl bg-miku px-3 py-2 font-bold text-white shadow-lg shadow-miku/20 transition hover:opacity-90 active:scale-95"
                         >
-                            重新读取
+                            {t("page.mysekaiPreview.preview.reload")}
                         </button>
                         <button
                             type="button"
                             onClick={handleResetCamera}
                             className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold text-slate-700 transition hover:bg-slate-100 active:scale-95"
                         >
-                            重置相机
+                            {t("page.mysekaiPreview.preview.resetCamera")}
                         </button>
                     </div>
                 </div>
@@ -204,7 +265,7 @@ export default function MysekaiScenePreview({
                 <div className={`mt-3 grid gap-3 ${showLayoutUrlInput ? "lg:grid-cols-[minmax(0,1fr)_140px_140px_170px]" : "lg:grid-cols-[140px_140px_170px]"}`}>
                     {showLayoutUrlInput && (
                         <label className="block">
-                            <span className="mb-1 block font-bold text-slate-500">布局 JSON</span>
+                            <span className="mb-1 block font-bold text-slate-500">{t("page.mysekaiPreview.preview.layoutJson")}</span>
                             <input
                                 value={layoutUrl}
                                 onChange={(event) => setLayoutUrl(event.target.value)}
@@ -214,20 +275,20 @@ export default function MysekaiScenePreview({
                         </label>
                     )}
                     <label className="block">
-                        <span className="mb-1 block font-bold text-slate-500">场景</span>
+                        <span className="mb-1 block font-bold text-slate-500">{t("page.mysekaiPreview.preview.scene")}</span>
                         <select
                             value={siteId}
                             onChange={(event) => setSiteId(Number(event.target.value))}
                             className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none transition focus:border-miku focus:ring-2 focus:ring-miku/20"
                         >
                             {SITE_OPTIONS.map(option => (
-                                <option key={option.id} value={option.id}>{option.label}</option>
+                                <option key={option.id} value={option.id}>{option.labelKey ? t(option.labelKey) : option.fallback}</option>
                             ))}
                         </select>
                     </label>
                     <label className="block">
                         <span className="mb-1 flex items-center justify-between font-bold text-slate-500">
-                            <span>背墙</span>
+                            <span>{t("page.mysekaiPreview.preview.backWall")}</span>
                             <span>{Math.round(backWallOpacity * 100)}%</span>
                         </span>
                         <input
@@ -241,7 +302,7 @@ export default function MysekaiScenePreview({
                     </label>
                     <label className="block">
                         <span className="mb-1 flex items-center justify-between font-bold text-slate-500">
-                            <span>灵敏度</span>
+                            <span>{t("page.mysekaiPreview.preview.sensitivity")}</span>
                             <span>{Math.round(lookSensitivity * 100)}%</span>
                         </span>
                         <input
@@ -259,15 +320,15 @@ export default function MysekaiScenePreview({
                 <div className="mt-3 flex flex-wrap items-center gap-4 text-slate-600">
                     <label className="inline-flex items-center gap-1.5 font-medium">
                         <input type="checkbox" checked={debugEnabled} onChange={(event) => setDebugEnabled(event.target.checked)} />
-                        调试
+                        {t("page.mysekaiPreview.preview.debug")}
                     </label>
                     <label className="inline-flex items-center gap-1.5 font-medium">
                         <input type="checkbox" checked={gridEnabled} onChange={(event) => setGridEnabled(event.target.checked)} />
-                        网格
+                        {t("page.mysekaiPreview.preview.grid")}
                     </label>
                     <label className="inline-flex items-center gap-1.5 font-medium">
                         <input type="checkbox" checked={shadowEnabled} onChange={(event) => setShadowEnabled(event.target.checked)} />
-                        阴影
+                        {t("page.mysekaiPreview.preview.shadow")}
                     </label>
                 </div>
 
@@ -282,7 +343,7 @@ export default function MysekaiScenePreview({
                 </div>
                 {!compact && (
                     <div className="mt-2 text-[11px] leading-relaxed text-slate-500">
-                        自由视角：WASD 移动，鼠标拖动/Alt 锁定转向，F10 全屏，F8 切换场景；固定视角保留旋转 / 平移 / 缩放。
+                        {t("page.mysekaiPreview.preview.keyboardHint")}
                     </div>
                 )}
             </div>
@@ -308,7 +369,7 @@ export default function MysekaiScenePreview({
                                 role="img"
                                 aria-label="Moe Sekai"
                             />
-                            <div className="mt-5 text-base font-black tracking-wide">烤森预览加载中</div>
+                            <div className="mt-5 text-base font-black tracking-wide">{t("page.mysekaiPreview.preview.loadingOverlayTitle")}</div>
                             <div className="mt-1 text-xs text-slate-300">{loadingTitle}</div>
                             <div className="mt-5 h-3 overflow-hidden rounded-full border border-white/15 bg-white/10">
                                 <div
@@ -322,15 +383,15 @@ export default function MysekaiScenePreview({
                             </div>
                             <div className="mt-4 grid grid-cols-3 gap-2 text-[11px]">
                                 <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-2">
-                                    <div className="text-slate-400">已完成</div>
+                                    <div className="text-slate-400">{t("page.mysekaiPreview.preview.completed")}</div>
                                     <div className="mt-0.5 text-sm font-black text-cyan-100">{status.loaded}</div>
                                 </div>
                                 <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-2">
-                                    <div className="text-slate-400">正常忽略</div>
+                                    <div className="text-slate-400">{t("page.mysekaiPreview.preview.ignored")}</div>
                                     <div className="mt-0.5 text-sm font-black text-slate-100">{status.ignored ?? 0}</div>
                                 </div>
                                 <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-2">
-                                    <div className="text-slate-400">失败</div>
+                                    <div className="text-slate-400">{t("page.mysekaiPreview.preview.failed")}</div>
                                     <div className="mt-0.5 text-sm font-black text-red-200">{status.failed ?? 0}</div>
                                 </div>
                             </div>
@@ -341,7 +402,7 @@ export default function MysekaiScenePreview({
                 <div ref={axesRef} className="absolute bottom-3 left-3 z-10 h-28 w-28 overflow-hidden rounded-2xl border border-white/25 bg-slate-950/20 backdrop-blur-sm" />
 
                 <div className="absolute bottom-3 right-3 z-10 max-w-[calc(100%-9rem)] rounded-2xl border border-white/30 bg-white/72 px-4 py-2 text-right text-[11px] font-medium text-slate-600 shadow-lg backdrop-blur">
-                    原作 / ルナ茶　Powered by Moe Dev Team　转载请标明原作者
+                    {t("page.mysekaiPreview.preview.credit")}
                 </div>
             </div>
         </div>

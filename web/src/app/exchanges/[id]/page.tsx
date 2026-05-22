@@ -1,40 +1,51 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { getExchangeMeta } from "@/lib/metadata";
-import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
+import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
+import {
+    formatDetailSeoDescription,
+    formatExchangeShopSuffix,
+    getDetailFallbackTitle,
+} from "@/lib/seo-keywords";
 import ExchangeDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
+    const locale = await getRequestSeoLocale();
     const exchange = getExchangeMeta(Number(id));
+    const path = `/exchanges/${id}`;
 
     if (!exchange) {
-        return {
-            title: "兑换所详情",
-            description: "Project Sekai 兑换所条目详情" + DETAIL_SEO_SUFFIX,
-        };
+        return buildDetailMetadata({
+            locale,
+            title: getDetailFallbackTitle("exchange", locale),
+            description: formatDetailSeoDescription("exchangeFallback", {}, locale),
+            path,
+            twitterCard: "summary",
+        });
     }
 
     const title = exchange.summaryName && exchange.summaryName !== exchange.name
         ? `${exchange.name} - ${exchange.summaryName}`
         : exchange.name;
-    const description = `Project Sekai 兑换所条目「${exchange.name}」${exchange.summaryName ? `，所属兑换所：${exchange.summaryName}` : ""}` + DETAIL_SEO_SUFFIX;
+    const description = formatDetailSeoDescription(
+        "exchange",
+        {
+            name: exchange.name,
+            shopSuffix: formatExchangeShopSuffix(exchange.summaryName, locale),
+        },
+        locale,
+    );
 
-    return {
+    return buildDetailMetadata({
+        locale,
         title,
         description,
-        openGraph: {
-            title,
-            description,
-        },
-        twitter: {
-            card: "summary",
-            title,
-            description,
-        },
-    };
+        path,
+        twitterCard: "summary",
+    });
 }
 
 export default function ExchangeDetailPage() {

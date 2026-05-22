@@ -3,11 +3,19 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { getDisplayCombos, SHORTCUT_GROUP_ORDER, SHORTCUTS } from "@/lib/shortcuts";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface KeyboardShortcutsHelpProps {
     isOpen: boolean;
     onClose: () => void;
 }
+
+const SHORTCUT_GROUP_LABEL_KEYS: Record<string, string> = {
+    navigation: "shortcuts.groups.navigation",
+    interface: "shortcuts.groups.interface",
+    search: "shortcuts.groups.search",
+    other: "shortcuts.groups.other",
+};
 
 const shortcutGroups = SHORTCUT_GROUP_ORDER
     .map((groupTitle) => {
@@ -19,7 +27,7 @@ const shortcutGroups = SHORTCUT_GROUP_ORDER
             }));
 
         return {
-            title: groupTitle,
+            titleKey: SHORTCUT_GROUP_LABEL_KEYS[groupTitle] ?? groupTitle,
             shortcuts,
         };
     })
@@ -27,6 +35,7 @@ const shortcutGroups = SHORTCUT_GROUP_ORDER
 
 export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelpProps) {
     const [mounted, setMounted] = useState(false);
+    const { t } = useI18n();
 
     useEffect(() => {
         const raf = requestAnimationFrame(() => {
@@ -85,7 +94,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                                     <rect x="2" y="6" width="20" height="12" rx="2" />
                                     <path d="M6 14h0M10 14h4M18 14h0M8 10h0M12 10h0M16 10h0" strokeLinecap="round" />
                                 </svg>
-                                键盘快捷键
+                                {t("shortcuts.title")}
                             </h2>
                             <button
                                 onClick={onClose}
@@ -100,9 +109,9 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                         {/* Content */}
                         <div className="overflow-y-auto flex-1 px-5 py-3">
                             {shortcutGroups.map((group) => (
-                                <div key={group.title} className="mb-4 last:mb-0">
+                                <div key={group.titleKey} className="mb-4 last:mb-0">
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                        {group.title}
+                                        {t(group.titleKey)}
                                     </h3>
                                     <div className="space-y-1.5">
                                         {group.shortcuts.map((shortcut) => (
@@ -111,19 +120,19 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                                                 className="flex items-center justify-between py-1.5"
                                             >
                                                 <span className="text-sm text-slate-600">
-                                                    {shortcut.description}
+                                                    {t(`shortcuts.entries.${shortcut.id}`)}
                                                 </span>
                                                 <div className="flex items-center justify-end gap-1 flex-wrap">
                                                     {shortcut.displayCombos.map((combo, comboIndex) => (
                                                         <React.Fragment key={`${shortcut.id}-${combo.combo}`}>
                                                             {comboIndex > 0 && (
-                                                                <span className="text-[10px] text-slate-300 mx-0.5">or</span>
+                                                                <span className="text-[10px] text-slate-300 mx-0.5">{t("common.separator.or")}</span>
                                                             )}
 
                                                             {combo.steps.map((step, stepIndex) => (
                                                                 <React.Fragment key={`${shortcut.id}-${combo.combo}-step-${stepIndex}`}>
                                                                     {stepIndex > 0 && (
-                                                                        <span className="text-[10px] text-slate-300 mx-0.5">then</span>
+                                                                        <span className="text-[10px] text-slate-300 mx-0.5">{t("common.separator.then")}</span>
                                                                     )}
 
                                                                     {step.keys.map((key, keyIndex) => (
@@ -150,7 +159,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
 
                         {/* Footer */}
                         <div className="px-5 py-2.5 border-t border-slate-100 text-[11px] text-slate-400 text-center">
-                            移动端已禁用快捷键 · 输入框与中文输入法组合状态下自动停用 · ⌘ 即 Ctrl（Windows）/ Command（Mac）
+                            {t("shortcuts.footer")}
                         </div>
                     </motion.div>
                 </div>

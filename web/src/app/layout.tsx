@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { I18nProvider } from "@/contexts/I18nContext";
 import { MasterDataProvider } from "@/contexts/MasterDataContext";
 import { TranslationProvider } from "@/contexts/TranslationContext";
 import { QuickFilterProvider } from "@/contexts/QuickFilterContext";
@@ -19,37 +21,22 @@ import {
   DEFAULT_SHOW_ADS,
   SHOW_ADS_STORAGE_KEY,
 } from "@/lib/ads";
-import { getRootKeywords, generateJsonLd } from "@/lib/seo-keywords";
+import { generateJsonLd } from "@/lib/seo-keywords";
+import { generateRootMetadata, getSiteBaseUrl } from "@/lib/seo-metadata";
 import { buildGoogleTagBootstrapScript } from "@/lib/googleTag";
+import {
+  SUPPORTED_UI_LOCALES,
+  UI_LOCALE_HTML_LANG,
+  UI_LOCALE_STORAGE_KEY,
+  normalizeUiLocale,
+} from "@/lib/i18n";
 
-const SITE_BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe";
-
-const jsonLd = generateJsonLd(SITE_BASE_URL);
+const SITE_BASE_URL = getSiteBaseUrl();
 const googleTagScript = buildGoogleTagBootstrapScript();
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_BASE_URL),
-  title: {
-    default: "Moesekai - 新一代PJSK WIKI",
-    template: "%s | Moesekai",
-  },
-  description:
-    "Moesekai (原Snowy SekaiViewer) — 新一代PJSK WIKI，世界计划彩色舞台feat.初音未来游戏数据查看器，提供卡牌、音乐、活动、扭蛋等全面图鉴与工具。",
-  keywords: getRootKeywords(),
-  icons: { icon: "/data/icon/icon.jpg" },
-  openGraph: {
-    title: "Moesekai - 新一代PJSK WIKI",
-    type: "website",
-    siteName: "Moesekai",
-    locale: "zh_CN",
-    images: [{ url: "/data/icon/icon.jpg", width: 512, height: 512 }],
-  },
-  twitter: {
-    card: "summary",
-    images: ["/data/icon/icon.jpg"],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return generateRootMetadata();
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -60,11 +47,15 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const initialUiLocale = normalizeUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value);
+  const jsonLd = generateJsonLd(SITE_BASE_URL, initialUiLocale);
+  const supportedUiLocales = JSON.stringify(SUPPORTED_UI_LOCALES);
   // Inline script to apply theme color before React hydration
   const themeScript = `
     (function() {
@@ -146,12 +137,24 @@ export default function RootLayout({
           document.documentElement.style.setProperty('--color-miku-rgb', rr + ', ' + gg + ', ' + bb);
         }
       } catch(e) {}
+
+      try {
+        var supportedUiLocales = ${supportedUiLocales};
+        var savedUiLocale = localStorage.getItem('${UI_LOCALE_STORAGE_KEY}');
+        var normalizedUiLocale = savedUiLocale ? savedUiLocale.toLowerCase() : '';
+        var resolvedUiLocale = supportedUiLocales.find(function(locale) {
+          return normalizedUiLocale === locale.toLowerCase() || normalizedUiLocale.split('-')[0] === locale.toLowerCase().split('-')[0];
+        }) || '${initialUiLocale}';
+        document.documentElement.lang = resolvedUiLocale;
+        document.documentElement.dataset.uiLocale = resolvedUiLocale;
+      } catch (e) {}
     })();
   `;
 
   return (
     <html
-      lang="zh-CN"
+      lang={UI_LOCALE_HTML_LANG[initialUiLocale]}
+      data-ui-locale={initialUiLocale}
       suppressHydrationWarning
     >
       <head>
@@ -169,15 +172,17 @@ export default function RootLayout({
       </head>
       <body className="font-sans">
         <ThemeProvider>
-          <MasterDataProvider>
-            <TranslationProvider>
-              <QuickFilterProvider>
-                <BreadcrumbProvider>
-                  {children}
-                </BreadcrumbProvider>
-              </QuickFilterProvider>
-            </TranslationProvider>
-          </MasterDataProvider>
+          <I18nProvider initialLocale={initialUiLocale}>
+            <MasterDataProvider>
+              <TranslationProvider>
+                <QuickFilterProvider>
+                  <BreadcrumbProvider>
+                    {children}
+                  </BreadcrumbProvider>
+                </QuickFilterProvider>
+              </TranslationProvider>
+            </MasterDataProvider>
+          </I18nProvider>
         </ThemeProvider>
         <ServiceWorkerRegistrar />
       </body>

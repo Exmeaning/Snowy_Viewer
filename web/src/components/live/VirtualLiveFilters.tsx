@@ -1,6 +1,7 @@
 "use client";
 import BaseFilters, { FilterSection, getFilterChipStateClasses } from "@/components/common/BaseFilters";
-import { VirtualLiveType, VIRTUAL_LIVE_TYPE_NAMES, VIRTUAL_LIVE_TYPE_COLORS } from "@/types/virtualLive";
+import { VirtualLiveType, VIRTUAL_LIVE_TYPE_COLORS } from "@/types/virtualLive";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface VirtualLiveFiltersProps {
     selectedTypes: VirtualLiveType[];
@@ -17,9 +18,9 @@ interface VirtualLiveFiltersProps {
 
 const VIRTUAL_LIVE_TYPES: VirtualLiveType[] = ["normal", "beginner", "archive", "cheerful_carnival", "connect_live", "streaming"];
 
-const SORT_OPTIONS = [
-    { id: "id", label: "ID" },
-    { id: "startAt", label: "开始时间" },
+const SORT_OPTIONS_BASE = [
+    { id: "id", labelKey: "common.filter.sortById" },
+    { id: "startAt", labelKey: "common.filter.sortByStartAt" },
 ];
 
 export default function VirtualLiveFilters({
@@ -34,6 +35,12 @@ export default function VirtualLiveFilters({
     totalItems,
     filteredItems,
 }: VirtualLiveFiltersProps) {
+    const { t } = useI18n();
+    const SORT_OPTIONS = SORT_OPTIONS_BASE.map(opt => ({
+        id: opt.id,
+        label: t(opt.labelKey),
+    }));
+
     const toggleType = (type: VirtualLiveType) => {
         if (selectedTypes.includes(type)) {
             onTypeChange(selectedTypes.filter(t => t !== type));
@@ -48,10 +55,10 @@ export default function VirtualLiveFilters({
         <BaseFilters
             filteredCount={filteredItems}
             totalCount={totalItems}
-            countUnit="个"
+            countUnit={t("page.live.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
-            searchPlaceholder="输入演唱会名称或ID..."
+            searchPlaceholder={t("page.live.searchPlaceholder")}
             sortOptions={SORT_OPTIONS}
             sortBy={sortBy}
             sortOrder={sortOrder}
@@ -60,7 +67,7 @@ export default function VirtualLiveFilters({
             onReset={onReset}
         >
             {/* Virtual Live Type Filter */}
-            <FilterSection label="演唱会类型">
+            <FilterSection label={t("common.filter.virtualLiveType")}>
                 <div className="flex flex-wrap gap-2">
                     {VIRTUAL_LIVE_TYPES.map(type => (
                         <button
@@ -72,7 +79,7 @@ export default function VirtualLiveFilters({
                                 }`}
                             style={selectedTypes.includes(type) ? { backgroundColor: VIRTUAL_LIVE_TYPE_COLORS[type] } : {}}
                         >
-                            {VIRTUAL_LIVE_TYPE_NAMES[type]}
+                            {t(`common.virtualLiveTypes.${type}`)}
                         </button>
                     ))}
                 </div>

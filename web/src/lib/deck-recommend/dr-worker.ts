@@ -2,8 +2,8 @@
  * Web Worker for deck recommendation computation
  * Runs sekai-calculator in a background thread to avoid blocking the UI
  *
- * 组卡代码来源: sekai-calculator (https://github.com/pjsek-ai/sekai-calculator)
- * 部分算法优化修改于: https://github.com/NeuraXmy/sekai-deck-recommend-cpp  作者: luna茶
+ * Deck recommendation code source: sekai-calculator (https://github.com/pjsek-ai/sekai-calculator)
+ * Some algorithm optimizations are adapted from https://github.com/NeuraXmy/sekai-deck-recommend-cpp by luna-cha
  */
 import {
     BaseDeckRecommend,
@@ -72,13 +72,13 @@ export interface WorkerInput {
     supportCharacterId?: number;
     // Card config
     cardConfig: Record<string, CardConfig>;
-    // Custom mode: 自定义加成
-    customUnit?: string;             // 箱活模式：加成团体（如 "leo_need"）
-    customCharacterIds?: number[];   // 混活模式：最多5个加成角色ID
-    customCharacterUnits?: Record<number, string>;  // 虚拟歌手角色选择的团体 supportUnit（如 {21: "leo_need"}）
-    customAttr?: string;             // 加成属性
-    customCharacterBonus?: number;   // 每个角色的加成百分比，默认25
-    customAttrBonus?: number;        // 属性加成百分比，默认25
+    // Custom bonus mode
+    customUnit?: string;             // Unit-event bonus unit, e.g. "leo_need"
+    customCharacterIds?: number[];   // Mixed-event bonus character IDs, up to 5
+    customCharacterUnits?: Record<number, string>;  // Virtual Singer supportUnit selection, e.g. {21: "leo_need"}
+    customAttr?: string;             // Bonus attribute
+    customCharacterBonus?: number;   // Bonus percentage per character, default 25
+    customAttrBonus?: number;        // Attribute bonus percentage, default 25
     // Leader character (all modes)
     leaderCharacter?: number;
     // Strongest mode target
@@ -97,10 +97,11 @@ export interface WorkerOutput {
     stage?: string;
     percent?: number;
     stageLabel?: string;
+    progressKey?: string;
 }
 
-function sendProgress(stage: string, percent: number, stageLabel: string) {
-    postMessage({ type: "progress", stage, percent, stageLabel });
+function sendProgress(stage: string, percent: number, progressKey: string) {
+    postMessage({ type: "progress", stage, percent, progressKey });
 }
 
 /** Map liveType string to LiveType enum */
@@ -122,7 +123,7 @@ async function deckRecommendRunner(args: WorkerInput): Promise<WorkerOutput> {
         leaderCharacter,
     } = args;
 
-    sendProgress("fetching", 5, "正在获取用户数据...");
+    sendProgress("fetching", 5, "page.deckRecommend.progress.fetchingUserData");
 
     const dataProvider = new CachedDataProvider(
         new SnowyDataProvider(userId, server as HarukiServer, oauthAccessToken || null)
@@ -135,7 +136,7 @@ async function deckRecommendRunner(args: WorkerInput): Promise<WorkerOutput> {
         dataProvider.preloadMasterData(PRELOAD_MASTER_KEYS),
     ]);
 
-    sendProgress("processing", 25, "数据加载完成，预处理中...");
+    sendProgress("processing", 25, "page.deckRecommend.progress.processingData");
 
     const userCards = await dataProvider.getUserData<UserCardEntry[]>("userCards");
     const uploadTime = await dataProvider.getUserData<number | undefined>("upload_time").catch(() => undefined);
@@ -158,7 +159,7 @@ async function deckRecommendRunner(args: WorkerInput): Promise<WorkerOutput> {
     const liveCalculator = new LiveCalculator(dataProvider);
     const musicMeta = await liveCalculator.getMusicMeta(musicId, difficulty);
 
-    sendProgress("calculating", 40, "开始计算最优卡组...");
+    sendProgress("calculating", 40, "page.deckRecommend.progress.calculatingBestDeck");
 
     if (mode === "challenge") {
         if (!characterId) throw new Error("characterId is required for challenge mode");
@@ -171,7 +172,7 @@ async function deckRecommendRunner(args: WorkerInput): Promise<WorkerOutput> {
         );
 
         const challengeLiveRecommend = new ChallengeLiveDeckRecommend(dataProvider);
-        sendProgress("calculating", 50, "挑战Live组卡计算中...");
+        sendProgress("calculating", 50, "page.deckRecommend.progress.challengeLive");
         const currentDuration = calcDuration();
         const result = await challengeLiveRecommend.recommendChallengeLiveDeck(
             characterId,
@@ -187,7 +188,7 @@ async function deckRecommendRunner(args: WorkerInput): Promise<WorkerOutput> {
             }
         );
 
-        sendProgress("done", 100, "计算完成");
+        sendProgress("done", 100, "page.deckRecommend.progress.calculationComplete");
         return {
             type: "result",
             challengeHighScore: userChallengeLiveSoloResult,
@@ -212,7 +213,7 @@ async function deckRecommendRunner(args: WorkerInput): Promise<WorkerOutput> {
         computedLiveType = LiveType.CHEERFUL;
     }
 
-    sendProgress("calculating", 50, "活动组卡计算中...");
+    sendProgress("calculating", 50, "page.deckRecommend.progress.eventDeck");
     const eventDeckRecommend = new EventDeckRecommend(dataProvider);
     const currentDuration = calcDuration();
     const result = await eventDeckRecommend.recommendEventDeck(
@@ -230,7 +231,7 @@ async function deckRecommendRunner(args: WorkerInput): Promise<WorkerOutput> {
         supportCharacterId || 0
     );
 
-    sendProgress("done", 100, "计算完成");
+    sendProgress("done", 100, "page.deckRecommend.progress.calculationComplete");
     return {
         type: "result",
         result: result as unknown as DeckResultLite[],
@@ -251,7 +252,7 @@ async function runMysekaiMode(
     const { eventId, supportCharacterId, cardConfig, leaderCharacter } = args;
     if (!eventId) throw new Error("eventId is required for mysekai mode");
 
-    sendProgress("calculating", 40, "烤森组卡计算中...");
+    sendProgress("calculating", 40, "page.deckRecommend.progress.mysekaiDeck");
 
     // Get event config
     const events = await dataProvider.getMasterData<EventInfoLite>("events");
@@ -266,7 +267,7 @@ async function runMysekaiMode(
     const musicMetas = await dataProvider.getMusicMeta();
     const dummyMusicMeta = musicMetas[0]; // any music meta works since we'll override scoring
 
-    sendProgress("calculating", 55, "计算最优烤森卡组...");
+    sendProgress("calculating", 55, "page.deckRecommend.progress.bestMysekai");
 
     const rawResults = (await eventDeckRecommend.recommendEventDeck(
         eventId,
@@ -305,7 +306,7 @@ async function runMysekaiMode(
     // Sort by mysekai PT descending
     mysekaiResults.sort((a, b) => (b.score || 0) - (a.score || 0));
 
-    sendProgress("done", 100, "计算完成");
+    sendProgress("done", 100, "page.deckRecommend.progress.calculationComplete");
     return {
         type: "result",
         result: mysekaiResults,
@@ -318,9 +319,9 @@ async function runMysekaiMode(
 // ==================== CUSTOM MODE ====================
 
 /**
- * 从混活自定义参数构建 CustomBonusConfig
- * 每个选中的角色 characterId → 一条 { characterId, bonusRate } 规则
- * 选中的属性 → 一条 { unit: 'any', attr, bonusRate } 规则
+ * Build CustomBonusConfig from mixed-event custom parameters.
+ * Each selected characterId becomes one { characterId, bonusRate } rule.
+ * The selected attribute becomes one { unit: 'any', attr, bonusRate } rule.
  */
 function buildCustomBonusConfig(
     characterIds?: number[],
@@ -333,17 +334,17 @@ function buildCustomBonusConfig(
 ): CustomBonusConfig {
     const rules: CustomBonusRule[] = [];
 
-    // 箱活模式：按团体加成
+    // Unit-event mode: apply unit bonus
     if (unit) {
         if (unit === "piapro") {
             rules.push({ unit: "piapro", bonusRate: unitBonus });
         } else {
-            // 非 piapro 团体：该团体的原创角色 + 该团体的虚拟歌手应援卡 + 原版虚拟歌手
+            // Non-piapro units: original characters, unit-support Virtual Singer cards, and original Virtual Singer cards
             rules.push({ unit, bonusRate: unitBonus });
         }
     }
 
-    // 混活模式：按角色加成
+    // Mixed-event mode: apply character bonus
     if (characterIds) {
         for (const cid of characterIds) {
             const isVirtualSinger = cid >= 21 && cid <= 26;
@@ -351,15 +352,15 @@ function buildCustomBonusConfig(
 
             if (isVirtualSinger && selectedUnit) {
                 if (selectedUnit === "none") {
-                    // 选了原版 → 仅原版卡获得加成
+                    // Original selected: only original cards receive the bonus
                     rules.push({ unit: "any", characterId: cid, supportUnit: "none", bonusRate: characterBonus });
                 } else {
-                    // 选了具体团体（如 leo_need）→ 该团体卡 + 原版卡都获得加成
+                    // Specific unit selected, e.g. leo_need: both that unit's cards and original cards receive the bonus
                     rules.push({ unit: "any", characterId: cid, supportUnit: selectedUnit, bonusRate: characterBonus });
                     rules.push({ unit: "any", characterId: cid, supportUnit: "none", bonusRate: characterBonus });
                 }
             } else {
-                // 非虚拟歌手 或 未指定团体 → 匹配所有
+                // Non-Virtual Singer or no selected unit: match all cards for that character
                 rules.push({ unit: "any", characterId: cid, bonusRate: characterBonus });
             }
         }
@@ -387,24 +388,24 @@ async function runCustomMode(
         supportCharacterId,
     } = args;
 
-    sendProgress("calculating", 40, "自定义组卡计算中...");
+    sendProgress("calculating", 40, "page.deckRecommend.progress.customDeck");
 
     const liveCalculator = new LiveCalculator(dataProvider);
     const musicMeta = await liveCalculator.getMusicMeta(musicId, difficulty);
     const computedLiveType = parseLiveType(liveTypeStr);
 
-    sendProgress("calculating", 55, "使用自定义加成计算中...");
+    sendProgress("calculating", 55, "page.deckRecommend.progress.customBonusCalculating");
 
     const currentDuration = calcDuration();
 
-    // 构建 CustomBonusConfig，交由库的 CardCustomBonusCalculator 处理
+    // Build CustomBonusConfig and let the library's CardCustomBonusCalculator handle it
     const customBonuses = buildCustomBonusConfig(
         customCharacterIds, customAttr, customCharacterBonus, customAttrBonus,
         customCharacterUnits, customUnit
     );
 
-    // 自定义 scoreFunc：复用活动PT公式（EventCalculator.getEventPoint 逻辑）
-    // 安全处理 eventBonus 为 undefined 的情况（未匹配任何规则的卡牌）
+    // Custom scoreFunc: reuse the event PT formula from EventCalculator.getEventPoint.
+    // Safely handle undefined eventBonus for cards that do not match any rule.
     const customScoreFunc = (meta: MusicMeta, deckDetail: DeckResultLite) => {
         const selfScore = LiveCalculator.getLiveScoreByDeck(
             deckDetail as unknown as Parameters<typeof LiveCalculator.getLiveScoreByDeck>[0],
@@ -444,12 +445,12 @@ async function runCustomMode(
             },
         },
         computedLiveType,
-        // 通过 EventConfig.customBonuses 传递，库会在 CardCalculator.getCardDetail 中
-        // 调用 CardCustomBonusCalculator.applyCustomBonus 为每张卡计算自定义加成
+        // Pass through EventConfig.customBonuses so the library can call
+        // CardCustomBonusCalculator.applyCustomBonus for each card.
         customEventConfig
     )) as unknown as DeckResultLite[];
 
-    // 结果中 eventBonus 已由库计算（来自 CustomBonusConfig 规则匹配），直接使用
+    // eventBonus has already been calculated by the library from CustomBonusConfig rule matching.
     const enriched = result.map((deck) => {
         const totalCustomBonus = deck.eventBonus ?? 0;
         return {
@@ -459,7 +460,7 @@ async function runCustomMode(
         };
     });
 
-    sendProgress("done", 100, "计算完成");
+    sendProgress("done", 100, "page.deckRecommend.progress.calculationComplete");
     return {
         type: "result",
         result: enriched,
@@ -482,7 +483,7 @@ async function runStrongestMode(
         leaderCharacter, strongestTarget = "power",
     } = args;
 
-    sendProgress("calculating", 40, "最强组卡计算中...");
+    sendProgress("calculating", 40, "page.deckRecommend.progress.strongestDeck");
 
     const liveCalculator = new LiveCalculator(dataProvider);
     const musicMeta = await liveCalculator.getMusicMeta(musicId, difficulty);
@@ -492,7 +493,7 @@ async function runStrongestMode(
         ? RecommendTarget.Skill
         : RecommendTarget.Power;
 
-    sendProgress("calculating", 55, `${strongestTarget === "skill" ? "技能实效" : "综合力"}最优计算中...`);
+    sendProgress("calculating", 55, strongestTarget === "skill" ? "page.deckRecommend.progress.strongestSkill" : "page.deckRecommend.progress.strongestPower");
 
     const currentDuration = calcDuration();
     const baseRecommend = new BaseDeckRecommend(dataProvider);
@@ -517,7 +518,7 @@ async function runStrongestMode(
         {} // no event config
     )) as unknown as DeckResultLite[];
 
-    sendProgress("done", 100, "计算完成");
+    sendProgress("done", 100, "page.deckRecommend.progress.calculationComplete");
     return {
         type: "result",
         result,

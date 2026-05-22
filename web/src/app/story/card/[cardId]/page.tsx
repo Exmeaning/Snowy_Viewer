@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import StoryCardReaderClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = { title: "卡牌剧情阅读" };
+export const generateMetadata = pageMetadata("story_card_reader");
 
 export default function StoryCardReaderPage() {
     return <StoryCardReaderClient />;

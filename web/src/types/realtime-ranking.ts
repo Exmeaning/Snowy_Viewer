@@ -5,19 +5,10 @@ export type RealtimeRankingRegion = "cn" | "jp" | "tw" | "kr" | "en";
 export type RealtimeRankingBoardMode = "overall" | "worldlink";
 export type ChurnBoardType = "overall" | "worldlink";
 
-export const REALTIME_RANKING_REGION_OPTIONS: ReadonlyArray<{
-    value: RealtimeRankingRegion;
-    label: string;
-}> = [
-    { value: "cn", label: "国服" },
-    { value: "jp", label: "日服" },
-    { value: "tw", label: "台服" },
-    { value: "kr", label: "韩服" },
-    { value: "en", label: "国际服" },
-];
+export const REALTIME_RANKING_REGION_OPTIONS: readonly RealtimeRankingRegion[] = ["cn", "jp", "tw", "kr", "en"];
 
 export function isRealtimeRankingRegion(value: string | null | undefined): value is RealtimeRankingRegion {
-    return REALTIME_RANKING_REGION_OPTIONS.some((option) => option.value === value);
+    return REALTIME_RANKING_REGION_OPTIONS.some((option) => option === value);
 }
 
 export interface RealtimeRankingRawProfileHonor {
@@ -98,11 +89,11 @@ export interface RealtimeRankingEntryWithDiff extends RealtimeRankingEntry {
     rankDelta: number;
     scoreDelta: number;
     isNewEntry: boolean;
-    /** 上一次分数确实发生变化时的 scoreDelta（用于分数无变化时 fallback 显示） */
+    /** Last score delta recorded when the score actually changed; used as a fallback when the score is currently stable. */
     lastScoreDelta?: number;
-    /** 上一次排名确实发生变化时的 rankDelta */
+    /** Last rank delta recorded when the rank actually changed. */
     lastRankDelta?: number;
-    /** 上一次分数/排名发生变化的时间戳（ms） */
+    /** Timestamp in ms for the last score/rank change. */
     lastChangedAt?: number;
 }
 
@@ -161,11 +152,11 @@ export interface RealtimeRankingMasterData {
 }
 
 // ============================================================================
-// Churn (周回) Types
+// Churn tracking types
 // ============================================================================
 
 export interface ChurnHourlyEntry {
-    hour: string;   // ISO 时间字符串，如 "2026-03-23T13:00:00Z"
+    hour: string;   // ISO timestamp, e.g. "2026-03-23T13:00:00Z"
     count: number;
 }
 
@@ -182,11 +173,11 @@ export interface ChurnRecentActivity {
 }
 
 export interface ChurnParkingPeriod {
-    /** Unix 毫秒时间戳 */
+    /** Unix timestamp in milliseconds. */
     start_time: number;
-    /** Unix 毫秒时间戳；undefined 表示仍在停车中 */
+    /** Unix timestamp in milliseconds; undefined means the parking period is still active. */
     end_time?: number;
-    /** 停车时长（秒），仅已结束的停车区间有值 */
+    /** Parking duration in seconds, present only for finished periods. */
     duration_s?: number;
 }
 
@@ -199,16 +190,16 @@ export interface ChurnRankingEntry {
     rank: number;
     userId?: number | string;
     name: string;
-    /** 榜线条目（rank > 100，无真实玩家信息） */
+    /** Tier-line entry without real player info, used for rank > 100 rows. */
     isTierLine?: boolean;
     score: number;
     churn_48h: number;
     hourly_churn: ChurnHourlyEntry[];
     last_change: ChurnLastChange | null;
     recent_activity: ChurnRecentActivity;
-    /** 近1小时内每次分数变化记录（数量不固定） */
+    /** Score change records from the latest hour; record count can vary. */
     recent_score_changes: ChurnScoreChange[];
-    /** 近1小时总增长分数（服务端计算） */
+    /** Total score growth over the latest hour, computed by the server. */
     growth_1h: number;
     parking_periods: ChurnParkingPeriod[];
 }

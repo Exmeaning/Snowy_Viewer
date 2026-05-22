@@ -3,14 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
-import { Metadata } from "next";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "支持我们",
-    description: "支持 Moesekai 项目的持续开发" + SEO_SUFFIX,
-    keywords: getPageKeywords("patreon"),
-};
+export const generateMetadata = pageMetadata("patreon");
 
 export default function PatreonPage() {
     return (

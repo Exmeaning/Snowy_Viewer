@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import StoryUnitReaderClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = { title: "主线剧情阅读" };
+export const generateMetadata = pageMetadata("story_unit_reader");
 
 export default function StoryUnitReaderPage() {
     return <StoryUnitReaderClient />;

@@ -22,7 +22,7 @@ interface TranslatedTextProps {
  * Component that displays original text with optional translation below
  * When LLM translation is enabled and a translation exists, shows:
  *   Original Text
- *   翻译文本
+ *   Translated text
  */
 export function TranslatedText({
     original,
