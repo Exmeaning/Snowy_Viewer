@@ -119,19 +119,22 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
 
         return searchableNavItems.filter((item) => {
             if (searchRegex) {
-                return searchRegex.test(item.name) ||
+                const label = t(NAV_ITEM_LABEL_KEYS[item.href] ?? item.href);
+                const groupLabel = t(SEARCH_STATIC_GROUP_LABEL_KEYS[item.group] ?? item.group);
+                return searchRegex.test(label) ||
                     searchRegex.test(item.href) ||
-                    searchRegex.test(item.group) ||
+                    searchRegex.test(groupLabel) ||
                     item.keywords.some((kw) => searchRegex.test(kw));
             } else {
-                return item.name.toLowerCase().includes(q) ||
+                const label = t(NAV_ITEM_LABEL_KEYS[item.href] ?? item.href).toLowerCase();
+                const groupLabel = t(SEARCH_STATIC_GROUP_LABEL_KEYS[item.group] ?? item.group).toLowerCase();
+                return label.includes(q) ||
                     item.href.toLowerCase().includes(q) ||
-                    item.group.toLowerCase().includes(q) ||
+                    groupLabel.includes(q) ||
                     item.keywords.some((kw) => kw.toLowerCase().includes(q));
             }
         });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [query, searchableNavItems, searchRegex]);
+    }, [query, searchRegex, t]);
 
     // Filter dynamic search index items based on query
     const dynamicFiltered = useMemo(() => {
@@ -423,7 +426,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                                             : "text-slate-600 hover:bg-slate-50"
                                                             }`}
                                                     >
-                                                        <span className="font-medium">{t(NAV_ITEM_LABEL_KEYS[item.href] ?? item.name)}</span>
+                                                        <span className="font-medium">{t(NAV_ITEM_LABEL_KEYS[item.href] ?? item.href)}</span>
                                                         <span
                                                             className={`text-xs ${isActive ? "text-miku/60" : "text-slate-400"
                                                                 }`}
@@ -443,7 +446,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                                 {t(group.titleKey)}
                                                 {group.titleKey === SEARCH_GROUP_LABEL_KEYS.music && (
                                                     <span className="font-normal normal-case text-[10px] text-slate-400/70">
-                                                        (含别名 · <a href="https://github.com/Team-Haruki" target="_blank" rel="noopener noreferrer" className="hover:text-miku">haruki</a>)
+                                                        ({t("search.commandPalette.musicAliasHint")} · <a href="https://github.com/Team-Haruki" target="_blank" rel="noopener noreferrer" className="hover:text-miku">haruki</a>)
                                                     </span>
                                                 )}
                                             </div>

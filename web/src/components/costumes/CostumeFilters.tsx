@@ -4,9 +4,12 @@ import BaseFilters, { FilterSection, FilterButton, FilterToggle } from "@/compon
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { useI18n } from "@/contexts/I18nContext";
 import {
-    PART_TYPE_NAMES,
-    SOURCE_NAMES,
-    RARITY_NAMES
+    PART_TYPE_IDS,
+    SOURCE_IDS,
+    RARITY_IDS,
+    PART_TYPE_LABEL_KEYS,
+    SOURCE_LABEL_KEYS,
+    RARITY_LABEL_KEYS,
 } from "@/types/costume";
 
 interface CostumeFiltersProps {
@@ -168,13 +171,13 @@ export default function CostumeFilters({
             <div className="grid grid-cols-1 gap-4">
                 <FilterSection label={t("page.costumes.sectionLabel.partType")}>
                     <div className="flex flex-wrap gap-2">
-                        {Object.keys(PART_TYPE_NAMES).map((key) => (
+                        {PART_TYPE_IDS.map((key) => (
                             <FilterButton
                                 key={key}
                                 selected={selectedPartTypes.includes(key)}
                                 onClick={() => togglePartType(key)}
                             >
-                                {t(`common.costume.partTypes.${key}`)}
+                                {t(PART_TYPE_LABEL_KEYS[key])}
                             </FilterButton>
                         ))}
                     </div>
@@ -182,13 +185,13 @@ export default function CostumeFilters({
 
                 <FilterSection label={t("page.costumes.sectionLabel.source")}>
                     <div className="flex flex-wrap gap-2">
-                        {Object.keys(SOURCE_NAMES).map((key) => (
+                        {SOURCE_IDS.map((key) => (
                             <FilterButton
                                 key={key}
                                 selected={selectedSources.includes(key)}
                                 onClick={() => toggleSource(key)}
                             >
-                                {t(`common.costume.sources.${key}`)}
+                                {t(SOURCE_LABEL_KEYS[key])}
                             </FilterButton>
                         ))}
                     </div>
@@ -199,13 +202,13 @@ export default function CostumeFilters({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FilterSection label={t("page.costumes.sectionLabel.rarity")}>
                     <div className="flex flex-wrap gap-2">
-                        {Object.keys(RARITY_NAMES).map((key) => (
+                        {RARITY_IDS.map((key) => (
                             <FilterButton
                                 key={key}
                                 selected={selectedRarities.includes(key)}
                                 onClick={() => toggleRarity(key)}
                             >
-                                {t(`common.costume.rarities.${key}`)}
+                                {t(RARITY_LABEL_KEYS[key])}
                             </FilterButton>
                         ))}
                     </div>

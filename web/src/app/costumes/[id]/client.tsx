@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,9 +16,9 @@ import { TranslatedText } from "@/components/common/TranslatedText";
 import {
     ICostumeInfo,
     IMoeCostumeData,
-    PART_TYPE_NAMES,
-    SOURCE_NAMES,
-    RARITY_NAMES,
+    PART_TYPE_LABEL_KEYS,
+    SOURCE_LABEL_KEYS,
+    RARITY_LABEL_KEYS,
 } from "@/types/costume";
 import { fetchMasterData } from "@/lib/fetch";
 
@@ -53,6 +53,11 @@ export default function CostumeDetailClient() {
     const { t } = useTranslation();
     const { t: tI18n, formatDate } = useI18n();
     const { setDetailName } = useBreadcrumb();
+    const translateWithFallback = useCallback((key: string | undefined, fallback: string) => {
+        if (!key) return fallback;
+        const label = tI18n(key);
+        return label === key ? fallback : label;
+    }, [tI18n]);
 
     const [costumeGroup, setCostumeGroup] = useState<ICostumeInfo | null>(null);
     const [relatedCards, setRelatedCards] = useState<ICardInfo[]>([]);
@@ -184,9 +189,7 @@ export default function CostumeDetailClient() {
     const includedPartTypes = useMemo(() => {
         const types = new Set<string>();
         displayItems.forEach(item => {
-            const i18nKey = `common.costume.partTypes.${item.partType}`;
-            const i18nLabel = tI18n(i18nKey);
-            const label = i18nLabel === i18nKey ? (PART_TYPE_NAMES[item.partType] || item.partType) : i18nLabel;
+            const label = translateWithFallback(PART_TYPE_LABEL_KEYS[item.partType], item.partType);
             if (item.characterId) {
                 types.add(tI18n("page.costumes.extraPartTag", { label }));
             } else {
@@ -194,7 +197,7 @@ export default function CostumeDetailClient() {
             }
         });
         return Array.from(types).sort();
-    }, [displayItems, tI18n]);
+    }, [displayItems, tI18n, translateWithFallback]);
 
     // Available color variants (from shared parts only)
     const availableColors = useMemo(() => {
@@ -277,14 +280,10 @@ export default function CostumeDetailClient() {
                             ? "bg-amber-100 text-amber-700"
                             : "bg-slate-100 text-slate-500"
                             }`}>
-                            {tI18n(`common.costume.rarities.${representative.costume3dRarity}`) !== `common.costume.rarities.${representative.costume3dRarity}`
-                                ? tI18n(`common.costume.rarities.${representative.costume3dRarity}`)
-                                : (RARITY_NAMES[representative.costume3dRarity] || representative.costume3dRarity)}
+                            {translateWithFallback(RARITY_LABEL_KEYS[representative.costume3dRarity], representative.costume3dRarity)}
                         </span>
                         <span className="px-3 py-1 text-xs font-bold rounded-full bg-miku/10 text-miku">
-                            {tI18n(`common.costume.sources.${representative.source}`) !== `common.costume.sources.${representative.source}`
-                                ? tI18n(`common.costume.sources.${representative.source}`)
-                                : (SOURCE_NAMES[representative.source] || representative.source)}
+                            {translateWithFallback(SOURCE_LABEL_KEYS[representative.source], representative.source)}
                         </span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-slate-800">
@@ -340,7 +339,7 @@ export default function CostumeDetailClient() {
                                             {/* Labels overlay */}
                                             <div className="absolute inset-x-0 bottom-0 p-1 flex flex-col gap-0.5 pointer-events-none">
                                                 <span className="self-start px-1.5 py-0.5 bg-white/90 backdrop-blur text-[9px] font-bold text-slate-600 rounded shadow-sm">
-                                                    {PART_TYPE_NAMES[item.partType] || item.partType}
+                                                    {translateWithFallback(PART_TYPE_LABEL_KEYS[item.partType], item.partType)}
                                                 </span>
                                             </div>
 
@@ -434,9 +433,7 @@ export default function CostumeDetailClient() {
                                         representative.source === "shop" ? "bg-green-100 text-green-600" :
                                             "bg-amber-100 text-amber-600"
                                         }`}>
-                                        {tI18n(`common.costume.sources.${representative.source}`) !== `common.costume.sources.${representative.source}`
-                                            ? tI18n(`common.costume.sources.${representative.source}`)
-                                            : (SOURCE_NAMES[representative.source] || representative.source)}
+                                        {translateWithFallback(SOURCE_LABEL_KEYS[representative.source], representative.source)}
                                     </span>
                                 } />
                                 <InfoRow label={tI18n("page.costumes.fields.rarity")} value={
@@ -444,9 +441,7 @@ export default function CostumeDetailClient() {
                                         ? "bg-amber-100 text-amber-700"
                                         : "bg-slate-100 text-slate-500"
                                         }`}>
-                                        {tI18n(`common.costume.rarities.${representative.costume3dRarity}`) !== `common.costume.rarities.${representative.costume3dRarity}`
-                                            ? tI18n(`common.costume.rarities.${representative.costume3dRarity}`)
-                                            : (RARITY_NAMES[representative.costume3dRarity] || representative.costume3dRarity)}
+                                        {translateWithFallback(RARITY_LABEL_KEYS[representative.costume3dRarity], representative.costume3dRarity)}
                                     </span>
                                 } />
                                 <InfoRow label={tI18n("page.costumes.fields.gender")} value={displayGender} />

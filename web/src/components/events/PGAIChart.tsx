@@ -1,6 +1,7 @@
 "use client";
 import React, { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
+import { useI18n } from '@/contexts/I18nContext';
 import { KLinePoint } from '@/types/prediction';
 
 interface PGAIChartProps {
@@ -13,6 +14,7 @@ interface TooltipParam {
 }
 
 export default function PGAIChart({ globalKline, height: _height = 300 }: PGAIChartProps) {
+    const { t, formatNumber } = useI18n();
     const latestPoint = globalKline[globalKline.length - 1];
     const prevPoint = globalKline[globalKline.length - 2];
 
@@ -23,7 +25,7 @@ export default function PGAIChart({ globalKline, height: _height = 300 }: PGAICh
 
     const option = useMemo(() => {
         if (!globalKline || globalKline.length === 0) {
-            return { title: { text: '暂无K线数据', left: 'center', top: 'center' } };
+            return { title: { text: t("page.prediction.pgai.noKlineData"), left: 'center', top: 'center' } };
         }
 
         const times = globalKline.map(p => {
@@ -54,10 +56,10 @@ export default function PGAIChart({ globalKline, height: _height = 300 }: PGAICh
                     return `
              <div class="font-bold text-slate-700 mb-1">${times[idx]}</div>
              <div class="text-xs text-slate-500">
-               开: ${item.o} <br/>
-               收: ${item.c} <br/>
-               高: ${item.h} <br/>
-               低: ${item.l}
+               ${t("page.prediction.pgai.tooltipOpen")}: ${formatNumber(item.o)} <br/>
+               ${t("page.prediction.pgai.tooltipClose")}: ${formatNumber(item.c)} <br/>
+               ${t("page.prediction.pgai.tooltipHigh")}: ${formatNumber(item.h)} <br/>
+               ${t("page.prediction.pgai.tooltipLow")}: ${formatNumber(item.l)}
              </div>
            `;
                 }
@@ -145,21 +147,21 @@ export default function PGAIChart({ globalKline, height: _height = 300 }: PGAICh
                 }
             ]
         };
-    }, [globalKline]);
+    }, [formatNumber, globalKline, t]);
 
     return (
         <div className="bg-white rounded-xl border border-slate-100 p-6 h-full flex flex-col">
             <div className="flex justify-between items-start mb-6">
                 <div>
                     <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                        PJSK 全服实时积极指数 (PGAI)
+                        {t("page.prediction.pgai.title")}
                         <span className="bg-red-50 text-red-500 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">beta</span>
                     </h3>
-                    <p className="text-xs text-slate-400 mt-1">Based on hourly volatility</p>
+                    <p className="text-xs text-slate-400 mt-1">{t("page.prediction.pgai.subtitle")}</p>
                 </div>
                 <div className="text-right">
                     <div className={`text-4xl font-black ${changePct >= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                        {currentIndex.toLocaleString()}
+                        {formatNumber(currentIndex)}
                     </div>
                     <div className={`text-sm font-bold flex items-center justify-end gap-1 ${changePct >= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                         <span>{changePct >= 0 ? '▲' : '▼'}</span>

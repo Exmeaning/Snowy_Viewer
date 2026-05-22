@@ -4,11 +4,12 @@ import Link from "next/link";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
 import { Metadata } from "next";
+import { enUSMessages } from "@/lib/i18n/messages/en-US";
 import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
 
 export const metadata: Metadata = {
-    title: "支持我们",
-    description: "支持 Moesekai 项目的持续开发" + SEO_SUFFIX,
+    title: enUSMessages.layout.nav.items.support,
+    description: enUSMessages.layout.groupPages.patreon + SEO_SUFFIX,
     keywords: getPageKeywords("patreon"),
 };
 

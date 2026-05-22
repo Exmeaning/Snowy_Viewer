@@ -1,11 +1,12 @@
 
 import { Metadata } from "next";
 import MusicMetaClient from "./client";
+import { enUSMessages } from "@/lib/i18n/messages/en-US";
 import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
 
 export const metadata: Metadata = {
-    title: "歌曲Meta",
-    description: "Project Sekai 歌曲效率数据与排行" + SEO_SUFFIX,
+    title: enUSMessages.layout.nav.items.musicMeta,
+    description: enUSMessages.layout.groupPages.musicMeta + SEO_SUFFIX,
     keywords: getPageKeywords("music_meta"),
 };
 

@@ -1,9 +1,11 @@
 import { Metadata } from "next";
 import GuidesClient from "./client";
+import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
 
 export const metadata: Metadata = {
-    title: "攻略",
-    description: "PROJECT SEKAI 攻略合集",
+    title: "Guides",
+    description: "PROJECT SEKAI community guide collection" + SEO_SUFFIX,
+    keywords: getPageKeywords("guides"),
 };
 
 export default function GuidesPage() {

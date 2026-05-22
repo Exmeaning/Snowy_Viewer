@@ -14,12 +14,12 @@ import {
 import { useI18n } from "@/contexts/I18nContext";
 
 interface AccountSelectorProps {
-    /** 当选择账号后回调，传入 gameId 和 server */
+    /** Called after an account is selected, with gameId and server. */
     onSelect: (gameId: string, server: ServerType) => void;
-    /** 当前输入框中的 userId（用于高亮匹配） */
+    /** Current userId in the input, used for highlighting matches. */
     currentUserId?: string;
     currentServer?: ServerType;
-    /** 可选：只展示指定服务器的账号 */
+    /** Optionally only show accounts from specified servers. */
     allowedServers?: ServerType[];
 }
 

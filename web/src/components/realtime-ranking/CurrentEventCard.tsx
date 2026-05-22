@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { IEventInfo, getEventStatus, EVENT_TYPE_NAMES, EVENT_STATUS_DISPLAY } from "@/types/events";
+import { useI18n } from "@/contexts/I18nContext";
+import { IEventInfo, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
 import { getEventBannerUrl, getEventLogoUrl } from "@/lib/assets";
 import { AssetSourceType } from "@/contexts/ThemeContext";
 
@@ -19,6 +20,7 @@ function formatDate(ts: number) {
 }
 
 export default function CurrentEventCard({ event, assetSource, themeColor }: CurrentEventCardProps) {
+    const { t } = useI18n();
     const [now, setNow] = useState(() => Date.now());
 
     useEffect(() => {
@@ -34,7 +36,9 @@ export default function CurrentEventCard({ event, assetSource, themeColor }: Cur
 
     const status = getEventStatus(event);
     const statusDisplay = EVENT_STATUS_DISPLAY[status];
-    const eventTypeName = EVENT_TYPE_NAMES[event.eventType] || event.eventType;
+    const statusLabel = t(`page.realtimeRanking.eventStatus.${status}`);
+    const eventTypeKey = `page.realtimeRanking.eventTypes.${event.eventType}`;
+    const eventTypeName = t(eventTypeKey) === eventTypeKey ? event.eventType.replace(/_/g, " ") : t(eventTypeKey);
     const hasBanner = !!event.assetbundleName;
     const totalDuration = event.aggregateAt - event.startAt;
     const elapsed = Math.max(0, now - event.startAt);
@@ -103,7 +107,7 @@ export default function CurrentEventCard({ event, assetSource, themeColor }: Cur
                                 className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded text-white shadow-sm"
                                 style={{ backgroundColor: statusDisplay.color }}
                             >
-                                {statusDisplay.label}
+                                {statusLabel}
                             </span>
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
                                 {eventTypeName}

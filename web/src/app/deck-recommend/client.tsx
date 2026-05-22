@@ -551,7 +551,7 @@ export default function DeckRecommendClient() {
     }));
     const serverOptions = SERVER_OPTIONS.map((option) => ({
         value: option.value,
-        label: t(`common.server.${option.value}`),
+        label: t(option.labelKey),
     }));
     const scoreLabel = mode === "mysekai"
         ? t("page.deckRecommend.scoreLabels.mysekai")

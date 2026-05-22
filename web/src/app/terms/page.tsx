@@ -2,10 +2,11 @@ import React from "react";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { Metadata } from "next";
+import { enUSMessages } from "@/lib/i18n/messages/en-US";
 
 export const metadata: Metadata = {
-    title: "服务条款",
-    description: "Moesekai 服务条款",
+    title: enUSMessages.layout.footer.termsOfService,
+    description: enUSMessages.layout.footer.termsOfService,
 };
 
 export default function TermsPage() {

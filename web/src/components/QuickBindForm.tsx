@@ -14,11 +14,11 @@ import { useI18n } from "@/contexts/I18nContext";
 
 interface QuickBindFormProps {
     onAccountAdded: () => void;
-    /** 自定义图标 */
+    /** Custom icon. */
     icon?: React.ReactNode;
-    /** 自定义描述文字 */
+    /** Custom description text. */
     description?: string;
-    /** OAuth 成功后的回跳页面 */
+    /** Return path after OAuth succeeds. */
     returnTo?: string;
 }
 

@@ -11,10 +11,10 @@ interface KeyboardShortcutsHelpProps {
 }
 
 const SHORTCUT_GROUP_LABEL_KEYS: Record<string, string> = {
-    导航: "shortcuts.groups.navigation",
-    界面: "shortcuts.groups.interface",
-    搜索: "shortcuts.groups.search",
-    其它: "shortcuts.groups.other",
+    navigation: "shortcuts.groups.navigation",
+    interface: "shortcuts.groups.interface",
+    search: "shortcuts.groups.search",
+    other: "shortcuts.groups.other",
 };
 
 const shortcutGroups = SHORTCUT_GROUP_ORDER

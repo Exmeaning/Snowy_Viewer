@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import BreadcrumbActivityClient from "./client";
 
 export const metadata: Metadata = {
-    title: "活动",
+    title: "Activity",
 };
 
 export default function Page() {

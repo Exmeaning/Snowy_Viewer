@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import CallbackClient from "./client";
 
 export const metadata: Metadata = {
-    title: "OAuth2 回调",
+    title: "OAuth2 Callback",
 };
 
 export default function OAuth2CallbackCodePage() {

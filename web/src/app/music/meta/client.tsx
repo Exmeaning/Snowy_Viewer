@@ -16,6 +16,7 @@ import {
 } from "@/types/music";
 import { fetchMasterData } from "@/lib/fetch";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { MOE_MUSIC_META_URL } from "@/lib/assets";
 
 // Music Meta API URL
@@ -26,10 +27,10 @@ const PAGE_SIZE_OPTIONS = [20, 50, 100];
 
 // Mode options
 type LiveMode = "auto" | "solo" | "multi";
-const LIVE_MODE_OPTIONS: { value: LiveMode; label: string }[] = [
-    { value: "multi", label: "协力LIVE" },
-    { value: "solo", label: "单人LIVE" },
-    { value: "auto", label: "自动LIVE" },
+const LIVE_MODE_OPTIONS: { value: LiveMode; labelKey: string }[] = [
+    { value: "multi", labelKey: "page.musicMeta.liveModes.multi" },
+    { value: "solo", labelKey: "page.musicMeta.liveModes.solo" },
+    { value: "auto", labelKey: "page.musicMeta.liveModes.auto" },
 ];
 
 // View mode
@@ -38,8 +39,8 @@ type ViewMode = "overview" | "detailed";
 // Mode-specific ranking categories
 interface RankingCategory {
     id: string;
-    title: string;
-    subtitle: string;
+    titleKey: string;
+    subtitleKey: string;
     field: keyof IMusicMeta;
     format: (val: number) => string;
     dedupeBySong?: boolean;
@@ -51,22 +52,22 @@ const getRankingCategories = (mode: LiveMode): RankingCategory[] => {
 
     if (mode === "multi") {
         base.push(
-            { id: "hourly", title: "时速榜", subtitle: "PSPI", field: "pspi_pt_per_hour_multi", format: (v) => v.toFixed(1) },
-            { id: "score", title: "得分榜", subtitle: "PSPI", field: "pspi_multi_score", format: (v) => v.toFixed(1) },
-            { id: "pt", title: "单局PT榜", subtitle: "PSPI", field: "pspi_multi_pt_max", format: (v) => v.toFixed(1) },
-            { id: "cycles", title: "周回榜", subtitle: "次/小时", field: "cycles_multi", format: (v) => v.toFixed(1), dedupeBySong: true, hideDifficulty: true },
+            { id: "hourly", titleKey: "page.musicMeta.rankings.hourly", subtitleKey: "page.musicMeta.units.pspi", field: "pspi_pt_per_hour_multi", format: (v) => v.toFixed(1) },
+            { id: "score", titleKey: "page.musicMeta.rankings.score", subtitleKey: "page.musicMeta.units.pspi", field: "pspi_multi_score", format: (v) => v.toFixed(1) },
+            { id: "pt", titleKey: "page.musicMeta.rankings.pt", subtitleKey: "page.musicMeta.units.pspi", field: "pspi_multi_pt_max", format: (v) => v.toFixed(1) },
+            { id: "cycles", titleKey: "page.musicMeta.rankings.cycles", subtitleKey: "page.musicMeta.units.timesPerHour", field: "cycles_multi", format: (v) => v.toFixed(1), dedupeBySong: true, hideDifficulty: true },
         );
     } else if (mode === "solo") {
         base.push(
-            { id: "score", title: "得分榜", subtitle: "PSPI", field: "pspi_solo_score", format: (v) => v.toFixed(1) },
-            { id: "pt", title: "单局PT榜", subtitle: "PSPI", field: "pspi_solo_pt_max", format: (v) => v.toFixed(1) },
+            { id: "score", titleKey: "page.musicMeta.rankings.score", subtitleKey: "page.musicMeta.units.pspi", field: "pspi_solo_score", format: (v) => v.toFixed(1) },
+            { id: "pt", titleKey: "page.musicMeta.rankings.pt", subtitleKey: "page.musicMeta.units.pspi", field: "pspi_solo_pt_max", format: (v) => v.toFixed(1) },
         );
     } else {
         base.push(
-            { id: "hourly", title: "时速榜", subtitle: "PSPI", field: "pspi_pt_per_hour_auto", format: (v) => v.toFixed(1) },
-            { id: "score", title: "得分榜", subtitle: "PSPI", field: "pspi_auto_score", format: (v) => v.toFixed(1) },
-            { id: "pt", title: "单局PT榜", subtitle: "PSPI", field: "pspi_auto_pt_max", format: (v) => v.toFixed(1) },
-            { id: "cycles", title: "周回榜", subtitle: "次/小时", field: "cycles_auto", format: (v) => v.toFixed(1), dedupeBySong: true, hideDifficulty: true },
+            { id: "hourly", titleKey: "page.musicMeta.rankings.hourly", subtitleKey: "page.musicMeta.units.pspi", field: "pspi_pt_per_hour_auto", format: (v) => v.toFixed(1) },
+            { id: "score", titleKey: "page.musicMeta.rankings.score", subtitleKey: "page.musicMeta.units.pspi", field: "pspi_auto_score", format: (v) => v.toFixed(1) },
+            { id: "pt", titleKey: "page.musicMeta.rankings.pt", subtitleKey: "page.musicMeta.units.pspi", field: "pspi_auto_pt_max", format: (v) => v.toFixed(1) },
+            { id: "cycles", titleKey: "page.musicMeta.rankings.cycles", subtitleKey: "page.musicMeta.units.timesPerHour", field: "cycles_auto", format: (v) => v.toFixed(1), dedupeBySong: true, hideDifficulty: true },
         );
     }
 
@@ -136,6 +137,7 @@ function MusicMetaContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
+    const { t, formatNumber } = useI18n();
     const [musicMetas, setMusicMetas] = useState<IMusicMeta[]>([]);
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
     const [difficulties, setDifficulties] = useState<IMusicDifficultyInfo[]>([]);
@@ -264,7 +266,6 @@ function MusicMetaContent() {
 
     // Fetch data
     useEffect(() => {
-        // document.title = "Snowy SekaiViewer - 歌曲Meta"; // Moved to metadata
         async function fetchData() {
             try {
                 setIsLoading(true);
@@ -469,7 +470,7 @@ function MusicMetaContent() {
                         {/* PSPI Score */}
                         <div className="mt-1.5 flex items-baseline gap-1">
                             <span className="text-lg font-black text-miku">{category.format(value)}</span>
-                            <span className="text-[10px] text-slate-400">{category.subtitle}</span>
+                            <span className="text-[10px] text-slate-400">{t(category.subtitleKey)}</span>
                         </div>
                     </div>
 
@@ -494,8 +495,8 @@ function MusicMetaContent() {
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <span className="w-1 h-6 bg-miku rounded-full"></span>
-                        <h2 className="text-lg font-bold text-primary-text">{category.title}</h2>
-                        <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{category.subtitle}</span>
+                        <h2 className="text-lg font-bold text-primary-text">{t(category.titleKey)}</h2>
+                        <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{t(category.subtitleKey)}</span>
                     </div>
                     <button
                         type="button"
@@ -505,7 +506,7 @@ function MusicMetaContent() {
                         }}
                         className="text-xs text-slate-500 hover:text-miku transition-colors px-3 py-1 rounded-lg hover:bg-slate-100"
                     >
-                        {isExpanded ? "收起" : "展开更多"}
+                        {isExpanded ? t("page.musicMeta.collapse") : t("page.musicMeta.expandMore")}
                     </button>
                 </div>
 
@@ -563,22 +564,22 @@ function MusicMetaContent() {
     const Pagination = () => (
         <div className="flex flex-wrap items-center justify-between gap-4 mt-4 px-2">
             <div className="flex items-center gap-2 text-sm text-slate-600">
-                <span>每页</span>
+                <span>{t("page.musicMeta.pagination.perPagePrefix")}</span>
                 <select value={pageSize} onChange={(e) => {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                 }} className="px-2 py-1 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-miku/50">
                     {PAGE_SIZE_OPTIONS.map((size) => (<option key={size} value={size}>{size}</option>))}
                 </select>
-                <span>条</span>
-                <span className="text-slate-400 ml-2">共 {filteredMetas.length} 条</span>
+                <span>{t("page.musicMeta.pagination.perPageSuffix")}</span>
+                <span className="text-slate-400 ml-2">{t("page.musicMeta.pagination.total", { count: formatNumber(filteredMetas.length) })}</span>
             </div>
             <div className="flex items-center gap-1">
-                <button type="button" onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="px-2 py-1 rounded text-sm border border-slate-200 disabled:opacity-40 hover:bg-slate-50">首页</button>
-                <button type="button" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-2 py-1 rounded text-sm border border-slate-200 disabled:opacity-40 hover:bg-slate-50">上</button>
+                <button type="button" onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="px-2 py-1 rounded text-sm border border-slate-200 disabled:opacity-40 hover:bg-slate-50">{t("page.musicMeta.pagination.first")}</button>
+                <button type="button" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-2 py-1 rounded text-sm border border-slate-200 disabled:opacity-40 hover:bg-slate-50">{t("page.musicMeta.pagination.previous")}</button>
                 <span className="px-3 py-1 text-sm text-slate-600 font-mono">{currentPage}/{totalPages || 1}</span>
-                <button type="button" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="px-2 py-1 rounded text-sm border border-slate-200 disabled:opacity-40 hover:bg-slate-50">下</button>
-                <button type="button" onClick={() => setCurrentPage(totalPages)} disabled={currentPage >= totalPages} className="px-2 py-1 rounded text-sm border border-slate-200 disabled:opacity-40 hover:bg-slate-50">末页</button>
+                <button type="button" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="px-2 py-1 rounded text-sm border border-slate-200 disabled:opacity-40 hover:bg-slate-50">{t("page.musicMeta.pagination.next")}</button>
+                <button type="button" onClick={() => setCurrentPage(totalPages)} disabled={currentPage >= totalPages} className="px-2 py-1 rounded text-sm border border-slate-200 disabled:opacity-40 hover:bg-slate-50">{t("page.musicMeta.pagination.last")}</button>
             </div>
         </div>
     );
@@ -588,25 +589,25 @@ function MusicMetaContent() {
         <div className="mt-12 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
             <h2 className="text-lg font-bold text-primary-text mb-4 flex items-center gap-2">
                 <span className="w-1 h-6 bg-miku rounded-full"></span>
-                关于 PSPI基准得分
+                {t("page.musicMeta.pspi.title")}
             </h2>
             <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
                 <p>
-                    <strong>PSPI基准得分</strong> 通过采用一个基准队伍游玩easy难度的Tell Your World歌曲的活动得分/活动pt计为1000分。
+                    <strong>{t("page.musicMeta.pspi.term")}</strong>{t("page.musicMeta.pspi.descriptionAfterTerm")}
                 </p>
                 <div className="grid md:grid-cols-2 gap-4">
                     <div className="p-4 bg-white rounded-lg border border-slate-100">
-                        <h3 className="font-bold text-slate-700 mb-2">基准队伍定义</h3>
+                        <h3 className="font-bold text-slate-700 mb-2">{t("page.musicMeta.pspi.teamTitle")}</h3>
                         <ul className="space-y-1 text-sm">
-                            <li>Solo/Auto: 250000综合力，车头120倍率，技能100%</li>
-                            <li>协力: 250000综合力，车头200倍率，队友200倍率</li>
+                            <li>{t("page.musicMeta.pspi.soloAutoTeam")}</li>
+                            <li>{t("page.musicMeta.pspi.multiTeam")}</li>
                         </ul>
                     </div>
                     <div className="p-4 bg-white rounded-lg border border-slate-100">
-                        <h3 className="font-bold text-slate-700 mb-2">周回计算</h3>
+                        <h3 className="font-bold text-slate-700 mb-2">{t("page.musicMeta.pspi.cyclesTitle")}</h3>
                         <ul className="space-y-1 text-sm">
-                            <li>自动周回间隔: 35秒</li>
-                            <li>多人周回间隔: 45秒</li>
+                            <li>{t("page.musicMeta.pspi.autoCycle")}</li>
+                            <li>{t("page.musicMeta.pspi.multiCycle")}</li>
                         </ul>
                     </div>
                 </div>
@@ -617,9 +618,9 @@ function MusicMetaContent() {
     // Credits Section
     const CreditsSection = () => (
         <div className="mt-8 py-6 border-t border-slate-100 text-center">
-            <div className="text-sm text-slate-400 mb-2">数据来源与鸣谢</div>
+            <div className="text-sm text-slate-400 mb-2">{t("page.musicMeta.creditsTitle")}</div>
             <div className="text-center text-sm text-slate-500 py-8">
-                Meta Data Provided by <ExternalLink href="https://github.com/Sekai-World/sekai-viewer" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">Sekai-World/sekai-viewer</ExternalLink> & <ExternalLink href="https://3-3.dev/" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">xfl03</ExternalLink> & <ExternalLink href="https://github.com/NeuraXmy" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">Luna茶</ExternalLink>
+                Meta Data Provided by <ExternalLink href="https://github.com/Sekai-World/sekai-viewer" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">Sekai-World/sekai-viewer</ExternalLink> & <ExternalLink href="https://3-3.dev/" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">xfl03</ExternalLink> & <ExternalLink href="https://github.com/NeuraXmy" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-miku transition-colors">Luna</ExternalLink>
             </div>
         </div>
     );
@@ -629,13 +630,13 @@ function MusicMetaContent() {
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">歌曲元数据</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.musicMeta.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text mb-3">
-                    歌曲 <span className="text-miku">Meta</span>
+                    {t("page.musicMeta.title")} <span className="text-miku">{t("page.musicMeta.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 max-w-2xl mx-auto text-sm">
-                    包含PSPI基准得分、周回效率等活动相关数据
+                    {t("page.musicMeta.description")}
                 </p>
             </div>
 
@@ -653,7 +654,7 @@ function MusicMetaContent() {
                                 : "text-slate-500 hover:text-slate-900"
                                 }`}
                         >
-                            {option.label}
+                            {t(option.labelKey)}
                         </button>
                     ))}
                 </div>
@@ -666,7 +667,7 @@ function MusicMetaContent() {
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "overview" ? "bg-white text-miku shadow-sm" : "text-slate-500 hover:text-slate-900"
                             }`}
                     >
-                        简明
+                        {t("page.musicMeta.viewModes.overview")}
                     </button>
                     <button
                         type="button"
@@ -674,7 +675,7 @@ function MusicMetaContent() {
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "detailed" ? "bg-white text-miku shadow-sm" : "text-slate-500 hover:text-slate-900"
                             }`}
                     >
-                        详细
+                        {t("page.musicMeta.viewModes.detailed")}
                     </button>
                 </div>
             </div>
@@ -682,7 +683,7 @@ function MusicMetaContent() {
             {/* Error State */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">数据加载失败</p>
+                    <p className="font-bold">{t("page.musicMeta.loadFailed")}</p>
                     <p>{error}</p>
                 </div>
             )}
@@ -691,7 +692,7 @@ function MusicMetaContent() {
             {isLoading ? (
                 <div className="flex h-[30vh] w-full items-center justify-center text-slate-500 flex-col gap-3">
                     <div className="w-8 h-8 border-4 border-miku/30 border-t-miku rounded-full animate-spin" />
-                    <p>正在加载数据...</p>
+                    <p>{t("page.musicMeta.loading")}</p>
                 </div>
             ) : viewMode === "overview" ? (
                 /* Overview Mode - Rankings */
@@ -710,7 +711,7 @@ function MusicMetaContent() {
                             </svg>
                             <input
                                 type="text"
-                                placeholder="搜索歌曲ID或名称..."
+                                placeholder={t("page.musicMeta.searchPlaceholder")}
                                 value={searchQuery}
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
@@ -726,16 +727,16 @@ function MusicMetaContent() {
                             <thead className="bg-slate-50">
                                 <tr>
                                     <TableHeader field="music_id" main="ID" center className={`${enableStickyColumns ? 'sticky left-0 z-20' : ''} border-r border-slate-200/60 w-[45px] min-w-[45px] sm:w-[60px]`} />
-                                    <TableHeader field="difficulty" main="难度" center className={`${enableStickyColumns ? 'sticky left-[45px] sm:left-[60px] z-20 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.1)]' : ''} border-r border-slate-200/60 w-[95px] min-w-[95px] sm:w-[140px]`} />
-                                    <th className={`px-3 py-3 text-left text-sm font-bold text-slate-700 min-w-[180px] ${enableStickyColumns ? 'sticky left-[140px] sm:left-[200px] z-20 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]' : ''} bg-slate-50 border-r border-slate-200/60`}>歌曲名称</th>
-                                    <TableHeader field="music_time" main="时长" sub="秒" center className="w-[80px]" />
-                                    <TableHeader field="event_rate" main="活动PT倍率" center className="w-[100px]" />
-                                    <TableHeader field="base_score" main="基础分" center className="min-w-[100px]" />
+                                    <TableHeader field="difficulty" main={t("page.musicMeta.table.difficulty")} center className={`${enableStickyColumns ? 'sticky left-[45px] sm:left-[60px] z-20 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.1)]' : ''} border-r border-slate-200/60 w-[95px] min-w-[95px] sm:w-[140px]`} />
+                                    <th className={`px-3 py-3 text-left text-sm font-bold text-slate-700 min-w-[180px] ${enableStickyColumns ? 'sticky left-[140px] sm:left-[200px] z-20 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]' : ''} bg-slate-50 border-r border-slate-200/60`}>{t("page.musicMeta.table.songName")}</th>
+                                    <TableHeader field="music_time" main={t("page.musicMeta.table.duration")} sub={t("page.musicMeta.units.seconds")} center className="w-[80px]" />
+                                    <TableHeader field="event_rate" main={t("page.musicMeta.table.eventRate")} center className="w-[100px]" />
+                                    <TableHeader field="base_score" main={t("page.musicMeta.table.baseScore")} center className="min-w-[100px]" />
                                     <TableHeader field="fever_score" main="Fever" center className="min-w-[100px]" />
-                                    {modeFields.cycles && <TableHeader field={modeFields.cycles} main="周回" sub="基准周回" center className="min-w-[90px]" />}
-                                    <TableHeader field={modeFields.score} main="得分" sub="PSPI" center className="min-w-[100px]" />
-                                    <TableHeader field={modeFields.pt} main="活动PT" sub="PSPI" center className="min-w-[100px]" />
-                                    {modeFields.hourly && <TableHeader field={modeFields.hourly} main="时速" sub="PSPI" center className="min-w-[100px]" />}
+                                    {modeFields.cycles && <TableHeader field={modeFields.cycles} main={t("page.musicMeta.table.cycles")} sub={t("page.musicMeta.table.baseCycles")} center className="min-w-[90px]" />}
+                                    <TableHeader field={modeFields.score} main={t("page.musicMeta.table.score")} sub={t("page.musicMeta.units.pspi")} center className="min-w-[100px]" />
+                                    <TableHeader field={modeFields.pt} main={t("page.musicMeta.table.eventPt")} sub={t("page.musicMeta.units.pspi")} center className="min-w-[100px]" />
+                                    {modeFields.hourly && <TableHeader field={modeFields.hourly} main={t("page.musicMeta.table.hourly")} sub={t("page.musicMeta.units.pspi")} center className="min-w-[100px]" />}
                                 </tr>
                             </thead>
                             <tbody>
@@ -776,13 +777,19 @@ function MusicMetaContent() {
     );
 }
 
+function MusicMetaFallback() {
+    const { t } = useI18n();
+
+    return <>{t("page.musicMeta.loadingFallback")}</>;
+}
+
 export default function MusicMetaClient() {
     return (
         <MainLayout>
             <Suspense
                 fallback={
                     <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
-                        正在加载歌曲Meta...
+                        <MusicMetaFallback />
                     </div>
                 }
             >

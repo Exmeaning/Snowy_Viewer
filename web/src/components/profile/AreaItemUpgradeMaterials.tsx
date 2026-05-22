@@ -6,6 +6,7 @@ import { UNIT_DATA, CHARACTER_NAMES, UNIT_ICON_FILES, UNIT_FIELD_TO_ID, type Car
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getAreaItemThumbnailUrl, getCharacterIconUrl, getMaterialThumbnailUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import type { ServerType, UserArea, UserGamedata, UserMaterial } from "@/lib/account";
 
 type AttrFilter = CardAttribute | "all";
@@ -89,10 +90,6 @@ const ATTR_ICON_FILES: Record<CardAttribute, string> = {
     pure: "Pure.webp",
 };
 
-function formatNumber(value: number): string {
-    return value.toLocaleString();
-}
-
 function mergeCost(target: Map<number, number>, add: Map<number, number>) {
     add.forEach((v, k) => target.set(k, (target.get(k) || 0) + v));
 }
@@ -108,6 +105,7 @@ export default function AreaItemUpgradeMaterials({
     userGamedata,
 }: Props) {
     const { themeColor, assetSource } = useTheme();
+    const { t, formatNumber } = useI18n();
 
     const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
     const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
@@ -197,7 +195,7 @@ export default function AreaItemUpgradeMaterials({
                 setItemLevelCosts(costsMap);
             } catch {
                 if (!cancelled) {
-                    setError("区域道具主数据加载失败，请稍后重试");
+                    setError(t("page.profile.stats.areaItemLoadFailed"));
                 }
             } finally {
                 if (!cancelled) setLoading(false);
@@ -208,7 +206,7 @@ export default function AreaItemUpgradeMaterials({
         return () => {
             cancelled = true;
         };
-    }, [server]);
+    }, [server, t]);
 
     const userMaterialMap = useMemo(() => {
         const map = new Map<number, number>();
@@ -289,10 +287,10 @@ export default function AreaItemUpgradeMaterials({
             <div className="mb-4">
                 <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                     <span className="w-1.5 h-6 bg-amber-400 rounded-full"></span>
-                    区域道具升级材料
+                    {t("page.profile.stats.areaItemUpgradeMaterials")}
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                    选择团体/角色或属性后，展示从当前等级升级到满级所需材料
+                    {t("page.profile.stats.areaItemUpgradeDescription")}
                 </p>
             </div>
 
@@ -308,12 +306,12 @@ export default function AreaItemUpgradeMaterials({
                                     ? "ring-2 ring-miku shadow-lg bg-white"
                                     : "hover:bg-slate-100 border border-transparent bg-slate-50"
                                     }`}
-                                title={unit.name}
+                                title={t(`common.units.${unit.id}`)}
                             >
                                 <div className="w-8 h-8 relative">
                                     <Image
                                         src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`}
-                                        alt={unit.name}
+                                        alt={t(`common.units.${unit.id}`)}
                                         fill
                                         className="object-contain"
                                         unoptimized
@@ -391,7 +389,7 @@ export default function AreaItemUpgradeMaterials({
 
             {loading && (
                 <div className="py-8 text-center text-sm text-slate-500">
-                    正在加载区域道具数据...
+                    {t("page.profile.stats.loadingAreaItems")}
                 </div>
             )}
 
@@ -403,13 +401,13 @@ export default function AreaItemUpgradeMaterials({
 
             {!loading && !error && emptyHint && (
                 <div className="py-8 text-center text-sm text-slate-500">
-                    请选择团体、角色或属性开始查询
+                    {t("page.profile.stats.areaItemEmptyHint")}
                 </div>
             )}
 
             {!loading && !error && !emptyHint && sortedItems.length === 0 && (
                 <div className="py-8 text-center text-sm text-slate-500">
-                    当前筛选条件下没有可显示的区域道具
+                    {t("page.profile.stats.noAreaItemResult")}
                 </div>
             )}
 
@@ -460,29 +458,29 @@ export default function AreaItemUpgradeMaterials({
                                     </div>
                                     <div className="min-w-0">
                                         <div className="text-sm font-bold text-primary-text truncate">{meta.item.name}</div>
-                                        <div className="text-xs text-slate-500">当前 Lv.{currentLv} / 上限 Lv.{meta.maxLevel}</div>
-                                        <div className="text-xs text-slate-500 mt-0.5">加成 {currentBonus.toFixed(1)}% → {maxBonus.toFixed(1)}%</div>
+                                        <div className="text-xs text-slate-500">{t("page.profile.stats.currentMaxLevel", { current: currentLv, max: meta.maxLevel })}</div>
+                                        <div className="text-xs text-slate-500 mt-0.5">{t("page.profile.stats.bonusRange", { current: currentBonus.toFixed(1), max: maxBonus.toFixed(1) })}</div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
                                     {lvRows.length === 0 && (
-                                        <div className="text-xs text-emerald-600 font-semibold">已满级，无需材料</div>
+                                        <div className="text-xs text-emerald-600 font-semibold">{t("page.profile.stats.maxLevelNoMaterials")}</div>
                                     )}
 
                                     {lvRows.length > 0 && (
                                         <>
                                             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <div className="text-xs font-bold text-slate-600">总计所需材料</div>
-                                                    <div className="text-xs font-semibold text-slate-500">还需 {levelsRemaining} 级</div>
+                                                    <div className="text-xs font-bold text-slate-600">{t("page.profile.stats.totalRequiredMaterials")}</div>
+                                                    <div className="text-xs font-semibold text-slate-500">{t("page.profile.stats.remainingLevels", { count: levelsRemaining })}</div>
                                                 </div>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                     {totalMaterials.map(([materialId, quantity]) => {
                                                         const have = userMaterialMap.get(materialId) || 0;
                                                         const enoughClass = getAvailableColor(have, quantity);
                                                         const isCoin = materialId === COIN_ID;
-                                                        const materialName = isCoin ? "金币" : (materialNameMap.get(materialId) || `材料 ${materialId}`);
+                                                        const materialName = isCoin ? t("page.profile.stats.coin") : (materialNameMap.get(materialId) || t("page.profile.stats.materialFallback", { id: materialId }));
                                                         return (
                                                             <div key={materialId} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5">
                                                                 {isCoin ? (
@@ -501,7 +499,7 @@ export default function AreaItemUpgradeMaterials({
                                                                 <div className="min-w-0">
                                                                     <div className="text-[11px] text-slate-500 truncate">{materialName}</div>
                                                                     <div className={`text-xs font-bold ${enoughClass}`}>
-                                                                        持有/总需 {formatNumber(have)}/{formatNumber(quantity)}
+                                                                        {t("page.profile.stats.ownedTotalRequired", { have: formatNumber(have), total: formatNumber(quantity) })}
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -515,7 +513,7 @@ export default function AreaItemUpgradeMaterials({
                                                     onClick={() => setExpandedItemId((prev) => prev === meta.item.id ? null : meta.item.id)}
                                                     className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:border-miku/40 hover:text-miku transition-colors"
                                                 >
-                                                    {expanded ? "收起等级明细" : "查看等级明细"}
+                                                    {expanded ? t("page.profile.stats.collapseLevelDetails") : t("page.profile.stats.viewLevelDetails")}
                                                 </button>
                                             </div>
 
@@ -543,7 +541,7 @@ export default function AreaItemUpgradeMaterials({
                                                                     const sumNeed = row.sumCost.get(materialId) || 0;
                                                                     const enoughClass = getAvailableColor(have, sumNeed);
                                                                     const isCoin = materialId === COIN_ID;
-                                                                    const materialName = isCoin ? "金币" : (materialNameMap.get(materialId) || `材料 ${materialId}`);
+                                                                    const materialName = isCoin ? t("page.profile.stats.coin") : (materialNameMap.get(materialId) || t("page.profile.stats.materialFallback", { id: materialId }));
                                                                     return (
                                                                         <div key={materialId} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5">
                                                                             {isCoin ? (
@@ -562,10 +560,10 @@ export default function AreaItemUpgradeMaterials({
                                                                             <div className="min-w-0">
                                                                                 <div className="text-[11px] text-slate-500 truncate">{materialName}</div>
                                                                                 <div className="text-xs font-bold text-slate-700">
-                                                                                    本级所需 {formatNumber(quantity)}
+                                                                                    {t("page.profile.stats.requiredThisLevel", { count: formatNumber(quantity) })}
                                                                                 </div>
                                                                                 <div className={`text-xs font-bold ${enoughClass}`}>
-                                                                                    持有/累计 {formatNumber(have)}/{formatNumber(sumNeed)}
+                                                                                    {t("page.profile.stats.ownedCumulative", { have: formatNumber(have), total: formatNumber(sumNeed) })}
                                                                                 </div>
                                                                             </div>
                                                                         </div>

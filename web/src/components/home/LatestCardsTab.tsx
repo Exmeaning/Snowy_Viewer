@@ -5,9 +5,11 @@ import { ICardInfo } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import CardItem from "@/components/cards/CardItem";
+import { useI18n } from "@/contexts/I18nContext";
 
 export default function LatestCardsTab() {
     const { isShowSpoiler } = useTheme();
+    const { t } = useI18n();
     const [cards, setCards] = useState<ICardInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -30,13 +32,13 @@ export default function LatestCardsTab() {
                 setError(null);
             } catch (err) {
                 console.error("Error fetching cards data:", err);
-                setError(err instanceof Error ? err.message : "加载失败");
+                setError(err instanceof Error ? err.message : t("common.state.loadingFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
         fetchData();
-    }, [isShowSpoiler]);
+    }, [isShowSpoiler, t]);
 
     if (isLoading) {
         return (
@@ -54,7 +56,7 @@ export default function LatestCardsTab() {
     if (error) {
         return (
             <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm text-center">
-                <p className="font-bold">加载卡牌失败</p>
+                <p className="font-bold">{t("page.home.latestCards.loadFailedTitle")}</p>
                 <p>{error}</p>
             </div>
         );
@@ -63,7 +65,7 @@ export default function LatestCardsTab() {
     if (cards.length === 0) {
         return (
             <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
-                <p className="font-medium">暂无卡牌数据</p>
+                <p className="font-medium">{t("page.home.latestCards.noData")}</p>
             </div>
         );
     }
@@ -80,7 +82,7 @@ export default function LatestCardsTab() {
             {/* View All Link */}
             <div className="mt-4 text-center">
                 <Link href="/cards" className="inline-flex items-center gap-1 text-sm text-miku hover:text-miku-dark font-medium transition-colors">
-                    查看全部卡牌
+                    {t("page.home.latestCards.viewAll")}
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>

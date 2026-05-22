@@ -7,9 +7,11 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { getMusicJacketUrl } from "@/lib/assets";
 import { loadTranslations, TranslationData } from "@/lib/translations";
+import { useI18n } from "@/contexts/I18nContext";
 
 export default function LatestMusicTab() {
     const { assetSource, isShowSpoiler } = useTheme();
+    const { t, formatDate: formatLocaleDate } = useI18n();
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
     const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -36,13 +38,13 @@ export default function LatestMusicTab() {
                 setError(null);
             } catch (err) {
                 console.error("Error fetching music data:", err);
-                setError(err instanceof Error ? err.message : "加载失败");
+                setError(err instanceof Error ? err.message : t("common.state.loadingFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
         fetchData();
-    }, [isShowSpoiler]);
+    }, [isShowSpoiler, t]);
 
     if (isLoading) {
         return (
@@ -60,7 +62,7 @@ export default function LatestMusicTab() {
     if (error) {
         return (
             <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm text-center">
-                <p className="font-bold">加载歌曲失败</p>
+                <p className="font-bold">{t("page.home.latestMusic.loadFailedTitle")}</p>
                 <p>{error}</p>
             </div>
         );
@@ -72,16 +74,17 @@ export default function LatestMusicTab() {
                 <svg className="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                 </svg>
-                <p className="font-medium">暂无歌曲数据</p>
+                <p className="font-medium">{t("page.home.latestMusic.noData")}</p>
             </div>
         );
     }
 
     // Format date helper
-    const formatDate = (timestamp: number) => {
-        const date = new Date(timestamp);
-        return `${date.getFullYear()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}`;
-    };
+    const formatDate = (timestamp: number) => formatLocaleDate(timestamp, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    });
 
     return (
         <div>
@@ -106,7 +109,7 @@ export default function LatestMusicTab() {
                                     {/* Spoiler Badge */}
                                     {isSpoiler && (
                                         <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                                            新
+                                            {t("page.home.latestMusic.newBadge")}
                                         </div>
                                     )}
                                 </div>
@@ -127,7 +130,7 @@ export default function LatestMusicTab() {
             {/* View All Link */}
             <div className="mt-4 text-center">
                 <Link href="/music" className="inline-flex items-center gap-1 text-sm text-miku hover:text-miku-dark font-medium transition-colors">
-                    查看全部歌曲
+                    {t("page.home.latestMusic.viewAll")}
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>

@@ -10,10 +10,10 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
     const music = getMusicMeta(Number(id));
-    if (!music) return { title: "音乐详情" };
+    if (!music) return { title: "Music Details" };
 
     const title = music.title;
-    const description = `Project Sekai 歌曲「${music.title}」- 作词: ${music.lyricist} / 作曲: ${music.composer}` + DETAIL_SEO_SUFFIX;
+    const description = `Project Sekai song "${music.title}" - Lyricist: ${music.lyricist} / Composer: ${music.composer}` + DETAIL_SEO_SUFFIX;
     const ogImage = getMusicJacketUrl(music.asset, "main-jp");
 
     return {

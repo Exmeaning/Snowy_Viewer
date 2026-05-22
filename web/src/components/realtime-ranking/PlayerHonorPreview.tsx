@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import DegreeImage from "@/components/honor/DegreeImage";
 import BondsDegreeImage from "@/components/honor/BondsDegreeImage";
+import { useI18n } from "@/contexts/I18nContext";
 import { AssetSourceType } from "@/contexts/ThemeContext";
 import { RealtimeRankingMasterData, NormalizedPlayerHonor } from "@/types/realtime-ranking";
 
@@ -68,13 +69,15 @@ function renderHonorItem(
 }
 
 export default function PlayerHonorPreview({ honors, masterData, assetSource, compact = false }: PlayerHonorPreviewProps) {
+    const { t } = useI18n();
+
     if (honors.length === 0) {
-        return <div className={compact ? "text-[10px] text-slate-400" : "text-xs text-slate-400"}>暂无可展示称号</div>;
+        return <div className={compact ? "text-[10px] text-slate-400" : "text-xs text-slate-400"}>{t("page.realtimeRanking.list.noHonors")}</div>;
     }
 
     const sizeClass = compact ? "w-[60px] shrink-0 sm:w-[68px]" : "w-[148px] max-w-full sm:w-[156px]";
 
-    // compact 模式：水平滚动容器 + 右侧渐变遮罩，手机端可左右滑动
+    // Compact mode uses a horizontal scroll container with a right-side fade hint for mobile swiping.
     if (compact) {
         return (
             <div className="relative max-w-full">
@@ -88,7 +91,7 @@ export default function PlayerHonorPreview({ honors, masterData, assetSource, co
                 >
                     {honors.slice(0, 3).map((item, index) => renderHonorItem(item, index, sizeClass, masterData, assetSource))}
                 </div>
-                {/* 右侧渐变遮罩提示可滑动 */}
+                {/* Right-side fade hint for scrolling */}
                 <div
                     className="pointer-events-none absolute right-0 top-0 h-full w-4"
                     style={{

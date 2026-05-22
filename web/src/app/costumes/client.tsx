@@ -12,8 +12,8 @@ import { getCostumeThumbnailUrl } from "@/lib/assets";
 import {
     ICostumeInfo,
     IMoeCostumeData,
-    PART_TYPE_NAMES,
-    SOURCE_NAMES,
+    PART_TYPE_LABEL_KEYS,
+    SOURCE_LABEL_KEYS,
 } from "@/types/costume";
 import { ICardInfo } from "@/types/types"; // Import ICardInfo
 import { fetchMasterData } from "@/lib/fetch";
@@ -31,6 +31,11 @@ function CostumesContent() {
     const { assetSource, isShowSpoiler } = useTheme();
     const { t } = useTranslation();
     const { t: tI18n } = useI18n();
+    const translateWithFallback = (key: string | undefined, fallback: string) => {
+        if (!key) return fallback;
+        const label = tI18n(key);
+        return label === key ? fallback : label;
+    };
 
     const [costumes, setCostumes] = useState<ICostumeInfo[]>([]);
     const [allCards, setAllCards] = useState<ICardInfo[]>([]); // Store all cards
@@ -423,15 +428,11 @@ function CostumesContent() {
                                                 <div className="mt-auto flex flex-wrap gap-1">
                                                     {costume.partTypes.map(pt => (
                                                         <span key={pt} className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
-                                                            {tI18n(`common.costume.partTypes.${pt}`) !== `common.costume.partTypes.${pt}`
-                                                                ? tI18n(`common.costume.partTypes.${pt}`)
-                                                                : (PART_TYPE_NAMES[pt] || pt)}
+                                                            {translateWithFallback(PART_TYPE_LABEL_KEYS[pt], pt)}
                                                         </span>
                                                     ))}
                                                     <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
-                                                        {tI18n(`common.costume.sources.${costume.source}`) !== `common.costume.sources.${costume.source}`
-                                                            ? tI18n(`common.costume.sources.${costume.source}`)
-                                                            : (SOURCE_NAMES[costume.source] || costume.source)}
+                                                        {translateWithFallback(SOURCE_LABEL_KEYS[costume.source], costume.source)}
                                                     </span>
                                                 </div>
                                             </div>

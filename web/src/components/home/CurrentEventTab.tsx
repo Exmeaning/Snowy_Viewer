@@ -2,14 +2,16 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { IEventInfo, getEventStatus, EVENT_TYPE_NAMES, EVENT_STATUS_DISPLAY } from "@/types/events";
+import { IEventInfo, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { getEventBannerUrl, getEventLogoUrl } from "@/lib/assets";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 
 export default function CurrentEventTab() {
     const { assetSource, themeColor, isShowSpoiler } = useTheme();
+    const { t, formatDate: formatLocaleDate } = useI18n();
     const [currentEvent, setCurrentEvent] = useState<IEventInfo | null>(null);
     const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -62,13 +64,13 @@ export default function CurrentEventTab() {
                 setError(null);
             } catch (err) {
                 console.error("Error fetching event data:", err);
-                setError(err instanceof Error ? err.message : "加载失败");
+                setError(err instanceof Error ? err.message : t("common.state.loadingFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
         fetchData();
-    }, [isShowSpoiler]);
+    }, [isShowSpoiler, t]);
 
     if (isLoading) {
         return (
@@ -79,7 +81,7 @@ export default function CurrentEventTab() {
     if (error) {
         return (
             <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm text-center">
-                <p className="font-bold">加载活动失败</p>
+                <p className="font-bold">{t("page.home.currentEvent.loadFailedTitle")}</p>
                 <p>{error}</p>
             </div>
         );
@@ -88,14 +90,16 @@ export default function CurrentEventTab() {
     if (!currentEvent) {
         return (
             <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
-                <p className="font-medium">暂无进行中的活动</p>
+                <p className="font-medium">{t("page.home.currentEvent.noActiveEvent")}</p>
             </div>
         );
     }
 
     const status = getEventStatus(currentEvent);
     const statusDisplay = EVENT_STATUS_DISPLAY[status];
-    const eventTypeName = EVENT_TYPE_NAMES[currentEvent.eventType] || currentEvent.eventType;
+    const statusLabel = t(`common.status.${status}`);
+    const eventTypeLabel = t(`common.eventTypes.${currentEvent.eventType}`);
+    const eventTypeName = eventTypeLabel === `common.eventTypes.${currentEvent.eventType}` ? currentEvent.eventType : eventTypeLabel;
     const translatedName = translations?.events?.name?.[currentEvent.name] || "";
 
     // Calculate progress
@@ -106,10 +110,12 @@ export default function CurrentEventTab() {
         : 0;
 
     // Format dates
-    const formatDate = (ts: number) => {
-        const d = new Date(ts);
-        return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
-    };
+    const formatDate = (ts: number) => formatLocaleDate(ts, {
+        month: "numeric",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
 
     return (
         <div>
@@ -170,28 +176,28 @@ export default function CurrentEventTab() {
                                     className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded text-white shadow-sm"
                                     style={{ backgroundColor: statusDisplay.color }}
                                 >
-                                    {statusDisplay.label}
+                                    {statusLabel}
                                 </span>
                                 <span className="text-[10px] font-bold text-slate-400">
                                     {eventTypeName}
                                 </span>
                                 {staminaReserve && (() => {
                                     const label = staminaReserve.normalReserve === 0 && staminaReserve.passReserve === 0
-                                        ? (staminaReserve.recoverable > PASS_CAP ? "塞烤森" : null)
+                                        ? (staminaReserve.recoverable > PASS_CAP ? t("page.home.stamina.bakerShort") : null)
                                         : staminaReserve.normalReserve >= NORMAL_CAP
-                                        ? "保持满体"
+                                        ? t("page.home.stamina.keepFullShort")
                                         : staminaReserve.normalReserve === 0
-                                        ? `预留${staminaReserve.passReserve}体力`
-                                        : `预留${staminaReserve.normalReserve}体力`;
+                                        ? t("page.home.stamina.reserveShort", { count: staminaReserve.passReserve })
+                                        : t("page.home.stamina.reserveShort", { count: staminaReserve.normalReserve });
                                     if (!label) return null;
                                     return (
                                         <span
                                             className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-miku/10 text-miku cursor-help"
                                             title={
                                                 staminaReserve.normalReserve > 0 && staminaReserve.passReserve > 0
-                                                    ? `普通: 预留${staminaReserve.normalReserve}体力 | 月卡: 预留${staminaReserve.passReserve}体力 — 开活恰好回满`
+                                                    ? t("page.home.stamina.detailBoth", { normal: staminaReserve.normalReserve, pass: staminaReserve.passReserve })
                                                     : staminaReserve.passReserve > 0
-                                                    ? `月卡: 预留${staminaReserve.passReserve}体力 — 开活恰好回满`
+                                                    ? t("page.home.stamina.detailPass", { pass: staminaReserve.passReserve })
                                                     : undefined
                                             }
                                         >
