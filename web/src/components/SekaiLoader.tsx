@@ -14,8 +14,9 @@ export default function SekaiLoader() {
     // Simulate actual loading completion after 1.5s
     const loadTimer = setTimeout(() => {
       setPhase('complete');
-      // Hide overlay after completion animation
-      setTimeout(() => setLoading(false), 300);
+      // Hide overlay after completion animation (400ms matches CSS transition)
+      const hideTimer = setTimeout(() => setLoading(false), 400);
+      return () => clearTimeout(hideTimer);
     }, 1500);
 
     return () => {
@@ -40,10 +41,24 @@ export default function SekaiLoader() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          background-color: var(--surface-base, rgba(255, 255, 255, 0.95));
-          backdrop-filter: blur(10px);
+          
+          /* Liquid Glass Background Mask */
+          background-color: rgba(255, 255, 255, 0.72);
+          backdrop-filter: blur(28px) saturate(190%);
+          -webkit-backdrop-filter: blur(28px) saturate(190%);
+          border: 1px solid rgba(255, 255, 255, 0.45);
+          
           transition: opacity 0.4s ease, visibility 0.4s ease;
         }
+
+        :root[data-theme="dark"] .loading-overlay {
+          /* Dark theme Liquid Glass Background Mask */
+          background-color: rgba(15, 23, 42, 0.68);
+          backdrop-filter: blur(28px) saturate(220%);
+          -webkit-backdrop-filter: blur(28px) saturate(220%);
+          border: 1px solid rgba(148, 163, 184, 0.22);
+        }
+
         .loading-overlay.hidden {
           opacity: 0;
           visibility: hidden;
@@ -132,7 +147,7 @@ export default function SekaiLoader() {
         }
       `}</style>
 
-      <div className={`loading-overlay ${phase === 'complete' && !loading ? "hidden" : ""}`}>
+      <div className={`loading-overlay ${phase === 'complete' ? "hidden" : ""}`}>
         <div className="loader-container">
           <div className="miku-layer base"></div>
           <div className={`progress-wrapper ${phase}`}>

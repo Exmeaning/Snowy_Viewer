@@ -717,9 +717,9 @@ export const enUSMessages = {
             performance: "Performance",
             powerSave: "Power saving",
             off: "Off",
-            performanceDescription: "Keeps richer background motion, suitable for desktops or faster devices.",
-            powerSaveDescription: "Recommended default: lowers background FPS and particle count to reduce GPU and battery usage.",
-            offDescription: "Disables the animated background completely, ideal for low-end devices or screen recording.",
+            performanceDescription: "Full background effects: keeps floating shards, Canvas particles, and pointer response for desktops or faster devices.",
+            powerSaveDescription: "Low-cost mode: disables continuous Canvas repainting and uses static layers with scroll parallax to reduce GPU and battery usage.",
+            offDescription: "Animation off: keeps only a static themed gradient mask with no animation or scroll parallax."
         },
         contentDisplay: {
             sectionTitle: "Content display",
@@ -769,7 +769,7 @@ export const enUSMessages = {
             refreshing: "Refreshing...",
         },
         footer: {
-            version: "Moesekai · 1.2-preview-beta1",
+            version: "Moesekai · 1.2-preview-beta2",
         },
         sidebar: {
             notLoggedIn: "Not signed in",

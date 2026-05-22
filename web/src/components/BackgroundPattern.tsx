@@ -314,6 +314,8 @@ function renderParallaxShapes(layer: ParallaxShape["layer"]) {
 
 export default function BackgroundPattern() {
     const { themeColor, resolvedColorScheme, backgroundAnimationBudget } = useTheme();
+    const isPerformanceBudget = backgroundAnimationBudget === "performance";
+    const isPowerSaveBudget = backgroundAnimationBudget === "power-save";
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -420,7 +422,7 @@ export default function BackgroundPattern() {
     useEffect(() => {
         const canvas = canvasRef.current;
         const container = containerRef.current;
-        if (!canvas || !container || backgroundAnimationBudget !== "performance") return;
+        if (!canvas || !container || !isPerformanceBudget) return;
 
         const resizeCanvas = () => {
             const profile = getBackgroundPerformanceProfile(backgroundAnimationBudget);
@@ -477,9 +479,9 @@ export default function BackgroundPattern() {
             resizeObserver?.disconnect();
             if (resizeFrameId) cancelAnimationFrame(resizeFrameId);
         };
-    }, [backgroundAnimationBudget]);
+    }, [backgroundAnimationBudget, isPerformanceBudget]);
 
-    // Track scroll globally. The CSS parallax is driven by CSS variables, like the official site's transform layers.
+    // Track scroll globally. Performance keeps the existing smooth tick; power-save only updates on scroll.
     useEffect(() => {
         const container = containerRef.current;
         if (!container || backgroundAnimationBudget === "off") return;
@@ -487,52 +489,59 @@ export default function BackgroundPattern() {
         const profile = getBackgroundPerformanceProfile(backgroundAnimationBudget);
         performanceProfileRef.current = profile;
         let frameId = 0;
+        let scroll2 = window.scrollY;
+        let timer: ReturnType<typeof setInterval> | null = null;
 
-        let scroll2 = 0;
-        let timer: NodeJS.Timeout | null = null;
+        const writeOffsets = (scrollValue: number, mode: "performance" | "power-save") => {
+            const layer1Factor = mode === "performance" ? 0.4 : 0.30;
+            const layer2Factor = mode === "performance" ? 0.22 : 0.16;
+            const layer3Factor = mode === "performance" ? 0.09 : 0.07;
+            const baseFactor = mode === "performance" ? 0.04 : 0.035;
 
-        const applyScroll = () => {
+            container.style.setProperty("--bg-layer-1-y", `${-scrollValue * layer1Factor}px`);
+            container.style.setProperty("--bg-layer-2-y", `${-scrollValue * layer2Factor}px`);
+            container.style.setProperty("--bg-layer-3-y", `${-scrollValue * layer3Factor}px`);
+            container.style.setProperty("--bg-base-y", `${-scrollValue * baseFactor}px`);
+        };
+
+        const readScroll = () => {
             frameId = 0;
-            const scrollY = window.scrollY;
-            scrollRef.current.targetY = scrollY;
+            scrollRef.current.targetY = window.scrollY;
+
+            if (isPowerSaveBudget) {
+                // Official-site style: mutate only a few compositor transforms when scrolling; idle cost is zero.
+                writeOffsets(scrollRef.current.targetY, "power-save");
+            }
         };
 
         const updateTick = () => {
             const scroll = scrollRef.current.targetY;
-            // 8-frame smooth lag damping! Just like official PJSK: 
+            // 8-frame smooth lag damping! Just like official PJSK:
             // scroll2 += Math.floor(((scroll - scroll2)/8)*10000)/10000;
             scroll2 += (scroll - scroll2) / 8;
-
-            // Update DOM Parallax translation offsets (using correct foreground-fast, background-slow model)
-            // Layer 1 is forefront (fastest): -0.4x factor
-            // Layer 2 is middle: -0.22x factor
-            // Layer 3 is background: -0.09x factor
-            // Base background and tiny specs: -0.04x factor
-            if (container) {
-                container.style.setProperty("--bg-layer-1-y", `${-scroll2 * 0.4}px`);
-                container.style.setProperty("--bg-layer-2-y", `${-scroll2 * 0.22}px`);
-                container.style.setProperty("--bg-layer-3-y", `${-scroll2 * 0.09}px`);
-                container.style.setProperty("--bg-base-y", `${-scroll2 * 0.04}px`);
-            }
+            writeOffsets(scroll2, "performance");
         };
 
         const scheduleScroll = () => {
             if (frameId) return;
-            frameId = requestAnimationFrame(applyScroll);
+            frameId = requestAnimationFrame(readScroll);
         };
 
-        applyScroll();
+        readScroll();
+        writeOffsets(scrollRef.current.targetY, isPowerSaveBudget ? "power-save" : "performance");
         window.addEventListener("scroll", scheduleScroll, { passive: true });
 
-        // High frequency low overhead animation timer for smooth parallax lag translation
-        timer = setInterval(updateTick, 24);
+        if (isPerformanceBudget) {
+            // Keep the current smooth parallax behavior for performance mode.
+            timer = setInterval(updateTick, 24);
+        }
 
         return () => {
             window.removeEventListener("scroll", scheduleScroll);
             if (frameId) cancelAnimationFrame(frameId);
             if (timer) clearInterval(timer);
         };
-    }, [backgroundAnimationBudget]);
+    }, [backgroundAnimationBudget, isPerformanceBudget, isPowerSaveBudget]);
 
     // Track mouse globally for magnetic repulsion when the device is likely powerful enough.
     useEffect(() => {
@@ -563,7 +572,7 @@ export default function BackgroundPattern() {
     // Core Animation Frame Loop
     useEffect(() => {
         const canvas = canvasRef.current;
-        if (!canvas || backgroundAnimationBudget !== "performance") return;
+        if (!canvas || !isPerformanceBudget) return;
 
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
@@ -897,7 +906,7 @@ export default function BackgroundPattern() {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
             renderOnceRef.current = null;
         };
-    }, [themeColor, resolvedColorScheme, backgroundAnimationBudget]);
+    }, [themeColor, resolvedColorScheme, backgroundAnimationBudget, isPerformanceBudget]);
 
     return (
         <div
@@ -906,17 +915,19 @@ export default function BackgroundPattern() {
             data-budget={backgroundAnimationBudget}
             aria-hidden="true"
         >
-            <div className={`${styles.parallaxLayer} ${styles.parallaxLayer1}`}>
-                {renderParallaxShapes(1)}
-            </div>
-            <div className={`${styles.parallaxLayer} ${styles.parallaxLayer2}`}>
-                {renderParallaxShapes(2)}
-            </div>
-            <div className={`${styles.parallaxLayer} ${styles.parallaxLayer3}`}>
-                {renderParallaxShapes(3)}
-            </div>
-            {backgroundAnimationBudget === "performance" && (
-                <canvas ref={canvasRef} className={styles.bgPatternCanvas} />
+            {(isPerformanceBudget || isPowerSaveBudget) && (
+                <>
+                    <div className={`${styles.parallaxLayer} ${styles.parallaxLayer1}`}>
+                        {renderParallaxShapes(1)}
+                    </div>
+                    <div className={`${styles.parallaxLayer} ${styles.parallaxLayer2}`}>
+                        {renderParallaxShapes(2)}
+                    </div>
+                    <div className={`${styles.parallaxLayer} ${styles.parallaxLayer3}`}>
+                        {renderParallaxShapes(3)}
+                    </div>
+                    {isPerformanceBudget && <canvas ref={canvasRef} className={styles.bgPatternCanvas} />}
+                </>
             )}
         </div>
     );

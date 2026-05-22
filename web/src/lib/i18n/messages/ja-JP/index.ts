@@ -716,9 +716,9 @@ export const jaJPMessages = {
       performance: 'パフォーマンス',
       powerSave: '省電力',
       off: 'オフ',
-      performanceDescription: 'より豊かな背景アニメーションを維持します。デスクトップや高性能端末向けです。',
-      powerSaveDescription: '推奨設定：背景のFPSと粒子数を抑え、GPUとバッテリー消費を減らします。',
-      offDescription: '背景アニメーションを完全に無効化します。低スペック端末や画面録画に適しています。'
+      performanceDescription: '完全な背景演出：浮遊する破片、Canvas パーティクル、ポインター反応を維持します。デスクトップや高性能端末向けです。',
+      powerSaveDescription: '低コストモード：Canvas の連続再描画を止め、静的レイヤーとスクロール視差のみで GPU とバッテリー消費を抑えます。',
+      offDescription: 'アニメーションオフ：静的なテーマグラデーションマスクのみを残し、アニメーションやスクロール視差は行いません。'
     },
     contentDisplay: {
       sectionTitle: 'コンテンツ表示'
@@ -768,7 +768,7 @@ export const jaJPMessages = {
       refreshing: '更新中...'
     },
     footer: {
-      version: 'Moesekai · 1.2-preview-beta1'
+      version: 'Moesekai · 1.2-preview-beta2'
     },
     sidebar: {
       notLoggedIn: '未ログイン',

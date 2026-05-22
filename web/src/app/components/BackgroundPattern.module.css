@@ -20,7 +20,15 @@
         radial-gradient(circle at 24% 15%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.25), transparent 22%),
         radial-gradient(circle at 82% 20%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.18), transparent 25%),
         radial-gradient(circle at 62% 80%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.2), transparent 28%);
-    contain: strict;
+    contain: paint size layout style;
+}
+
+.bgPatternContainer::before,
+.bgPatternContainer::after,
+.parallaxLayer,
+.bgPatternCanvas,
+.lowCostLayer {
+    pointer-events: none;
 }
 
 /* Polka cosmic stardust grid backplate - like official PJSK subtle points */
@@ -154,8 +162,45 @@
     opacity: 0.58;
 }
 
+.bgPatternContainer[data-budget="power-save"] .parallaxLayer {
+    transition: transform 1.15s cubic-bezier(.075, .82, .165, 1);
+}
+
+.bgPatternContainer[data-budget="power-save"]::before {
+    opacity: 0.52;
+    transform: translate3d(0, var(--bg-base-y), 0);
+    transition: transform 1.15s cubic-bezier(.075, .82, .165, 1);
+    will-change: transform;
+}
+
+.bgPatternContainer[data-budget="power-save"]::after {
+    opacity: 0.32;
+    transform: translate3d(0, var(--bg-layer-3-y), 0);
+    transition: transform 1.15s cubic-bezier(.075, .82, .165, 1);
+    will-change: transform;
+}
+
 .bgPatternContainer[data-budget="off"] {
-    display: none;
+    background:
+        linear-gradient(115deg,
+            var(--theme-bg-light-start, rgba(182, 255, 252, 0.50)) 0%,
+            var(--theme-bg-light-middle, rgba(220, 238, 255, 0.46)) 48%,
+            var(--theme-bg-light-end, rgba(254, 226, 245, 0.50)) 100%),
+        radial-gradient(circle at 20% 12%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.14), transparent 26%),
+        radial-gradient(circle at 86% 20%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.10), transparent 28%),
+        radial-gradient(circle at 58% 86%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.12), transparent 30%);
+}
+
+.bgPatternContainer[data-budget="off"]::before {
+    opacity: 0.26;
+    transform: none;
+    will-change: auto;
+}
+
+.bgPatternContainer[data-budget="off"]::after {
+    opacity: 0;
+    transform: none;
+    will-change: auto;
 }
 
 /* Beautiful dark mode adaptions */
@@ -178,4 +223,47 @@
 
 :global([data-theme="dark"]) .bgPatternContainer::after {
     opacity: 0.28;
+}
+
+:global([data-theme="dark"]) .bgPatternContainer[data-budget="power-save"]::before {
+    opacity: 0.24;
+}
+
+:global([data-theme="dark"]) .bgPatternContainer[data-budget="power-save"]::after {
+    opacity: 0.20;
+}
+
+
+
+:global([data-theme="dark"]) .bgPatternContainer[data-budget="off"] {
+    background:
+        linear-gradient(115deg,
+            var(--theme-bg-dark-start, rgba(28, 48, 54, 0.66)) 0%,
+            var(--theme-bg-dark-middle, rgba(32, 34, 52, 0.62)) 48%,
+            var(--theme-bg-dark-end, rgba(56, 32, 60, 0.66)) 100%),
+        radial-gradient(circle at 20% 12%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.12), transparent 26%),
+        radial-gradient(circle at 86% 20%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.08), transparent 28%),
+        radial-gradient(circle at 58% 86%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.06), transparent 30%);
+}
+
+:global([data-theme="dark"]) .bgPatternContainer[data-budget="off"]::before {
+    opacity: 0.16;
+}
+
+:global([data-theme="dark"]) .bgPatternContainer[data-budget="off"]::after {
+    opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shapeFloat1,
+    .shapeFloat2,
+    .shapeFloat3 {
+        animation: none;
+    }
+
+    .parallaxLayer,
+    .bgPatternContainer::before,
+    .bgPatternContainer::after {
+        transition: none;
+    }
 }
