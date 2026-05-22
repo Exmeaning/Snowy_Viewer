@@ -18,6 +18,7 @@ ARG REQUIRE_FRESH_BUILD_DATA=0
 ENV MASTER_DATA_URLS=$MASTER_DATA_URLS
 ENV MANGA_DATA_URLS=$MANGA_DATA_URLS
 ENV REQUIRE_FRESH_BUILD_DATA=$REQUIRE_FRESH_BUILD_DATA
+RUN find /app -name "package-lock.json" -exec sed -i 's/registry.npmmirror.com/registry.npmjs.org/g' {} +
 RUN bun install --frozen-lockfile
 RUN ls -la /app/refer/re_sekai-calculator/src/index.ts
 RUN bun run build
