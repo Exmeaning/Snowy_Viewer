@@ -175,6 +175,10 @@
     transition: transform 1.15s cubic-bezier(.075, .82, .165, 1);
 }
 
+.bgPatternContainer[data-budget="power-save"] .shape {
+    animation: none !important;
+}
+
 .bgPatternContainer[data-budget="power-save"]::before {
     opacity: 0.52;
     transform: translate3d(0, var(--bg-base-y), 0);
