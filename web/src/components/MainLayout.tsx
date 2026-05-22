@@ -59,9 +59,18 @@ export default function MainLayout({
     // Track whether we pushed a history entry for an overlay, so the mobile
     // back button closes the overlay instead of navigating away.
     const overlayHistoryRef = useRef(false);
+    const overlayHistoryArmedRef = useRef(false);
+    const overlayHistoryArmRafRef = useRef<number | null>(null);
     const skipNextOverlayHistoryCleanupRef = useRef(false);
 
     const anyOverlayOpen = isSearchOpen || isSettingsOpen || isShortcutsHelpOpen;
+
+    const cancelOverlayHistoryArm = useCallback(() => {
+        if (overlayHistoryArmRafRef.current !== null) {
+            cancelAnimationFrame(overlayHistoryArmRafRef.current);
+            overlayHistoryArmRafRef.current = null;
+        }
+    }, []);
 
     useEffect(() => {
         if (anyOverlayOpen) {
@@ -72,11 +81,23 @@ export default function MainLayout({
                     "",
                 );
                 overlayHistoryRef.current = true;
+                overlayHistoryArmedRef.current = false;
+                cancelOverlayHistoryArm();
+                // Mobile browsers can emit a popstate around URL normalization
+                // right after pushState. Arm the listener one frame later to
+                // avoid immediately closing the just-opened topbar overlay.
+                overlayHistoryArmRafRef.current = requestAnimationFrame(() => {
+                    overlayHistoryArmedRef.current = true;
+                    overlayHistoryArmRafRef.current = null;
+                });
             }
             return;
         }
 
         if (!overlayHistoryRef.current) return;
+
+        cancelOverlayHistoryArm();
+        overlayHistoryArmedRef.current = false;
 
         const shouldSkipCleanup = skipNextOverlayHistoryCleanupRef.current;
         skipNextOverlayHistoryCleanupRef.current = false;
@@ -87,13 +108,15 @@ export default function MainLayout({
         if (!shouldSkipCleanup && hasOverlayHistoryState()) {
             window.history.back();
         }
-    }, [anyOverlayOpen]);
+    }, [anyOverlayOpen, cancelOverlayHistoryArm]);
 
     useEffect(() => {
         const handlePopState = () => {
             // If an overlay is open and the user pressed back, close it.
-            if (overlayHistoryRef.current) {
+            if (overlayHistoryRef.current && overlayHistoryArmedRef.current) {
                 overlayHistoryRef.current = false;
+                overlayHistoryArmedRef.current = false;
+                cancelOverlayHistoryArm();
                 skipNextOverlayHistoryCleanupRef.current = false;
                 setIsSearchOpen(false);
                 setIsSettingsOpen(false);
@@ -102,8 +125,11 @@ export default function MainLayout({
         };
 
         window.addEventListener("popstate", handlePopState);
-        return () => window.removeEventListener("popstate", handlePopState);
-    }, []);
+        return () => {
+            cancelOverlayHistoryArm();
+            window.removeEventListener("popstate", handlePopState);
+        };
+    }, [cancelOverlayHistoryArm]);
 
     useEffect(() => {
         if (!immersiveMode) return;

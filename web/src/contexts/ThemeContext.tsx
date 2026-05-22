@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useRef, ReactNode } from "react";
 import { CHAR_COLORS } from "@/types/types";
 import {
     COLOR_SCHEME_STORAGE_KEY,
@@ -27,6 +27,10 @@ export type BackgroundAnimationBudget = "performance" | "power-save" | "off";
 const DEFAULT_BACKGROUND_ANIMATION_BUDGET: BackgroundAnimationBudget = "power-save";
 const BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY = "background-animation-budget";
 const VALID_BACKGROUND_ANIMATION_BUDGETS: BackgroundAnimationBudget[] = ["performance", "power-save", "off"];
+const THEME_SWITCHING_CLASS = "theme-switching";
+const THEME_SWITCHING_DURATION_MS = 180;
+
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 function isValidBackgroundAnimationBudget(value: string | null): value is BackgroundAnimationBudget {
     return VALID_BACKGROUND_ANIMATION_BUDGETS.includes(value as BackgroundAnimationBudget);
@@ -144,7 +148,19 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const [showAdsState, setShowAdsState] = useState(DEFAULT_SHOW_ADS);
     const [backgroundAnimationBudgetState, setBackgroundAnimationBudgetState] = useState<BackgroundAnimationBudget>(DEFAULT_BACKGROUND_ANIMATION_BUDGET);
     const [serverSourceState, setServerSourceState] = useState<ServerSourceType>(DEFAULT_SERVER_SOURCE);
+    const themeSwitchingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const effectiveShowAds = ADS_FEATURE_ENABLED && showAdsState;
+
+    useEffect(() => {
+        return () => {
+            if (themeSwitchingTimeoutRef.current !== null) {
+                clearTimeout(themeSwitchingTimeoutRef.current);
+            }
+            if (typeof document !== "undefined") {
+                document.documentElement.classList.remove(THEME_SWITCHING_CLASS);
+            }
+        };
+    }, []);
 
     // Load saved settings from localStorage on mount
     useEffect(() => {
@@ -208,7 +224,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         };
     }, []);
 
-    useEffect(() => {
+    useIsomorphicLayoutEffect(() => {
         if (typeof window === "undefined" || !hasHydratedThemeSettings) {
             return;
         }
@@ -221,14 +237,28 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
                 mediaQuery.matches
             );
 
-            setResolvedColorScheme((current) =>
-                current === nextResolvedColorScheme ? current : nextResolvedColorScheme
-            );
+            const previousTheme = document.documentElement.dataset.theme;
+            const isThemeChanging = previousTheme !== undefined && previousTheme !== nextResolvedColorScheme;
+
+            if (isThemeChanging) {
+                document.documentElement.classList.add(THEME_SWITCHING_CLASS);
+                if (themeSwitchingTimeoutRef.current !== null) {
+                    clearTimeout(themeSwitchingTimeoutRef.current);
+                }
+                themeSwitchingTimeoutRef.current = setTimeout(() => {
+                    document.documentElement.classList.remove(THEME_SWITCHING_CLASS);
+                    themeSwitchingTimeoutRef.current = null;
+                }, THEME_SWITCHING_DURATION_MS);
+            }
 
             document.documentElement.dataset.theme = nextResolvedColorScheme;
             document.documentElement.dataset.themePreference = colorSchemePreference;
             document.documentElement.style.colorScheme = nextResolvedColorScheme;
             document.documentElement.classList.toggle("dark", nextResolvedColorScheme === "dark");
+
+            setResolvedColorScheme((current) =>
+                current === nextResolvedColorScheme ? current : nextResolvedColorScheme
+            );
         };
 
         applyColorScheme();

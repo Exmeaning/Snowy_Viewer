@@ -118,12 +118,13 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         return () => cancelAnimationFrame(raf);
     }, []);
 
-    // Prevent body scroll
+    // Prevent body scroll while preserving any existing overflow override.
     useEffect(() => {
         if (!isOpen) return;
+        const previousBodyOverflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
         return () => {
-            document.body.style.overflow = "unset";
+            document.body.style.overflow = previousBodyOverflow;
         };
     }, [isOpen]);
 
@@ -162,10 +163,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[200] isolate flex items-center justify-center p-3 sm:p-4">
                     {/* Backdrop */}
                     <motion.div
-                        className="absolute inset-0 bg-black/35 backdrop-blur-[8px]"
+                        className="absolute inset-0 transform-gpu bg-black/35 backdrop-blur-[8px]"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -177,7 +178,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     <motion.div
                         id="settings-panel-content"
                         ref={panelRef}
-                        className="relative w-full max-w-md liquid-glass-modal rounded-2xl overflow-hidden flex flex-col max-h-[80vh] shadow-2xl"
+                        className="relative w-full max-w-md transform-gpu will-change-transform liquid-glass-modal rounded-2xl overflow-hidden flex flex-col max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] sm:max-h-[80vh] shadow-2xl"
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
