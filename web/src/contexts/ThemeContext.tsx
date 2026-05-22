@@ -17,7 +17,7 @@ import {
     DEFAULT_SHOW_ADS,
     SHOW_ADS_STORAGE_KEY,
 } from "@/lib/ads";
-import { UI_LOCALE_STORAGE_KEY, normalizeUiLocale } from "@/lib/i18n";
+import { UI_LOCALE_STORAGE_KEY, detectBrowserUiLocale, normalizeUiLocale } from "@/lib/i18n";
 
 // Default theme color (Miku)
 const DEFAULT_THEME_CHAR = "21";
@@ -59,7 +59,8 @@ function getDefaultLLMTranslationSetting(): boolean {
     if (savedLLMTranslation === "false") return false;
 
     const savedUiLocale = localStorage.getItem(UI_LOCALE_STORAGE_KEY);
-    return normalizeUiLocale(savedUiLocale) === "zh-CN";
+    const uiLocale = savedUiLocale ? normalizeUiLocale(savedUiLocale) : detectBrowserUiLocale();
+    return uiLocale === "zh-CN";
 }
 
 export function getAssetSourceRegion(source: AssetSourceType): ServerSourceType {

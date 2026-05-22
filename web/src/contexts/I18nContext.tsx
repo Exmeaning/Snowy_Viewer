@@ -5,6 +5,7 @@ import {
     DEFAULT_UI_LOCALE,
     UI_LOCALE_STORAGE_KEY,
     applyUiLocaleToDocument,
+    detectBrowserUiLocale,
     normalizeUiLocale,
     type UiLocale,
 } from "@/lib/i18n";
@@ -14,7 +15,7 @@ import type { MessageTree } from "@/lib/i18n/messages/types";
 
 interface I18nContextType {
     locale: UiLocale;
-    setLocale: (locale: UiLocale) => void;
+    setLocale: React.Dispatch<React.SetStateAction<UiLocale>>;
     t: (key: string, values?: MessageInterpolationValues) => string;
     formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
     formatDate: (value: Date | number | string, options?: Intl.DateTimeFormatOptions) => string;
@@ -35,10 +36,10 @@ function readStoredLocale(initialLocale: UiLocale): UiLocale {
         const stored = localStorage.getItem(UI_LOCALE_STORAGE_KEY);
         if (stored) return normalizeUiLocale(stored);
     } catch {
-        // Ignore storage errors and fall back to the initial locale.
+        // Ignore storage errors and fall back to browser / initial locale.
     }
 
-    return initialLocale;
+    return detectBrowserUiLocale(initialLocale);
 }
 
 function persistLocale(locale: UiLocale) {
@@ -89,7 +90,7 @@ export function I18nProvider({ children, initialLocale = DEFAULT_UI_LOCALE }: I1
         return () => window.removeEventListener("storage", handleStorage);
     }, [hydrated, initialLocale]);
 
-    const setLocale = useCallback((nextLocale: UiLocale) => {
+    const setLocale = useCallback<React.Dispatch<React.SetStateAction<UiLocale>>>((nextLocale) => {
         setLocaleState(nextLocale);
     }, []);
 
