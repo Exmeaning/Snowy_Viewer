@@ -14,7 +14,6 @@ import {
     CardAttribute,
     SupportUnit,
     getRarityNumber,
-    CHARACTER_NAMES,
     isTrainableCard,
 } from "@/types/types";
 import { fetchMasterDataForServer } from "@/lib/fetch";
@@ -36,6 +35,7 @@ import QuickBindForm from "@/components/QuickBindForm";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 
 // ==================== Types ====================
 
@@ -801,7 +801,7 @@ function MyCardItem({ card, userCard }: MyCardItemProps) {
                     </div>
                     <div className="flex items-center justify-between gap-1">
                         <p className="text-slate-400 text-[9px] truncate leading-tight flex-1">
-                            {CHARACTER_NAMES[card.characterId] || `Character ${card.characterId}`}
+                            {getCharacterName(t, card.characterId)}
                         </p>
                         {isOwned && userCard && (
                             <span className="flex-shrink-0 text-[8px] text-miku bg-miku/10 px-1 py-0.5 rounded leading-none font-mono">

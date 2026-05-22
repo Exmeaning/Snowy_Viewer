@@ -18,9 +18,10 @@ import {
 import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, getEventUnitFilterId, buildEventBannerCharMap } from "@/lib/eventUnit";
 import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getEventStoryBannerUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
-import { CHARACTER_NAMES, UNIT_FIELD_LABEL_KEYS } from "@/types/types";
+import { UNIT_FIELD_LABEL_KEYS } from "@/types/types";
 import type { ICardInfo, ICharaUnitInfo, IGameChara } from "@/types/types";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
+import { getCharacterName } from "@/lib/i18n";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
@@ -220,7 +221,7 @@ export default function EventDetailPage() {
 
                 const charId = charUnit.gameCharacterId;
                 const gameChar = gameCharacters.find(c => c.id === charId);
-                const baseName = CHARACTER_NAMES[charId] || `Character ${charId}`;
+                const baseName = getCharacterName(t, charId);
 
                 // If piapro character and belongs to a specific group (not piapro itself)
                 let displayName = baseName;
@@ -571,7 +572,7 @@ export default function EventDetailPage() {
                                         event.eventType === "world_bloom"
                                             ? t("page.events.none")
                                             : bannerCharId
-                                            ? CHARACTER_NAMES[bannerCharId] || `Character ${bannerCharId}`
+                                            ? getCharacterName(t, bannerCharId)
                                             : t("page.events.none")
                                     }
                                 />

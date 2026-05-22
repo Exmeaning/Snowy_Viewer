@@ -15,10 +15,10 @@ import { fetchMasterData } from "@/lib/fetch";
 import {
     IHonorInfo, IHonorGroup, IBondsHonor, IBondsHonorWord, IBond, IGameCharaUnit,
 } from "@/types/honor";
-import { CHARACTER_NAMES } from "@/types/types";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { getCharacterIconUrl } from "@/lib/assets";
+import { getCharacterName } from "@/lib/i18n";
 
 type HonorTab = "normal" | "bonds";
 type TranslationFn = ReturnType<typeof useI18n>["t"];
@@ -429,7 +429,7 @@ function HonorsContent() {
                         ALL
                     </button>
                     {bondsCharacters.map(id => {
-                        const hasName = !!CHARACTER_NAMES[id];
+                        const characterName = getCharacterName(t, id);
                         return (
                             <button
                                 key={`bc1-${id}`}
@@ -437,20 +437,16 @@ function HonorsContent() {
                                 className={`relative aspect-square rounded-full overflow-hidden transition-all flex items-center justify-center ${bondsChar1 === id
                                     ? "ring-2 ring-miku shadow-lg"
                                     : "ring-1 ring-slate-200 hover:ring-miku/50"
-                                    } ${!hasName ? "bg-slate-50" : ""}`}
-                                title={CHARACTER_NAMES[id] || `#${id}`}
+                                    }`}
+                                title={characterName}
                             >
-                                {hasName ? (
-                                    <Image
-                                        src={getCharacterIconUrl(id)}
-                                        alt={CHARACTER_NAMES[id]}
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                ) : (
-                                    <span className="text-xs text-slate-500 font-bold">{id}</span>
-                                )}
+                                <Image
+                                    src={getCharacterIconUrl(id)}
+                                    alt={characterName}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
                             </button>
                         );
                     })}
@@ -470,7 +466,7 @@ function HonorsContent() {
                         ALL
                     </button>
                     {bondsCharacters.map(id => {
-                        const hasName = !!CHARACTER_NAMES[id];
+                        const characterName = getCharacterName(t, id);
                         return (
                             <button
                                 key={`bc2-${id}`}
@@ -478,20 +474,16 @@ function HonorsContent() {
                                 className={`relative aspect-square rounded-full overflow-hidden transition-all flex items-center justify-center ${bondsChar2 === id
                                     ? "ring-2 ring-miku shadow-lg"
                                     : "ring-1 ring-slate-200 hover:ring-miku/50"
-                                    } ${!hasName ? "bg-slate-50" : ""}`}
-                                title={CHARACTER_NAMES[id] || `#${id}`}
+                                    }`}
+                                title={characterName}
                             >
-                                {hasName ? (
-                                    <Image
-                                        src={getCharacterIconUrl(id)}
-                                        alt={CHARACTER_NAMES[id]}
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                ) : (
-                                    <span className="text-xs text-slate-500 font-bold">{id}</span>
-                                )}
+                                <Image
+                                    src={getCharacterIconUrl(id)}
+                                    alt={characterName}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
                             </button>
                         );
                     })}

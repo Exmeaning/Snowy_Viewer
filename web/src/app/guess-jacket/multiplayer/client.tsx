@@ -3,8 +3,9 @@ import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } fr
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchMasterDataForServer } from "@/lib/fetch";
-import { CHARACTER_NAMES } from "@/types/types";
+import { UNIT_DATA } from "@/types/types";
 import { getMusicJacketUrl, getCharacterIconUrl, getStampUrl } from "@/lib/assets";
+import { getCharacterName } from "@/lib/i18n";
 import type { AssetSourceType } from "@/contexts/ThemeContext";
 import { loadTranslations, type TranslationData } from "@/lib/translations";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -29,6 +30,7 @@ const ATTEMPT_PENALTY = 20;
 const TIMEOUT_PENALTY = 100;
 const FEEDBACK_DURATION = 4000;
 const OPTIONS_CHOICES = [4, 6, 8, 10] as const;
+const PLAYABLE_CHARACTER_IDS = UNIT_DATA.flatMap((unit) => unit.charIds);
 
 // Get sticker URL from generic stamp assets (01-44 range)
 function getStickerImageUrl(stickerNum: number): string {
@@ -526,7 +528,7 @@ function MultiplayerContent() {
             }
 
             if (killInfo) {
-                const killerName = CHARACTER_NAMES[killInfo.killerCharId] || "???";
+                const killerName = getCharacterName(t, killInfo.killerCharId);
                 setKillNotify(t("page.guessJacket.multiplayer.killNotify", { name: killerName }));
                 setTimeout(() => setKillNotify(""), 3000);
             }
@@ -1524,8 +1526,8 @@ function MultiplayerContent() {
                     <div className="mp-card">
                         <div className="mp-card-title">{t("page.guessJacket.multiplayer.chooseCharacter")}</div>
                         <div className="mp-char-grid">
-                            {Object.entries(CHARACTER_NAMES).map(([idStr, name]) => {
-                                const id = Number(idStr);
+                            {PLAYABLE_CHARACTER_IDS.map((id) => {
+                                const name = getCharacterName(t, id);
                                 return (
                                     <button
                                         key={id}
@@ -1539,7 +1541,7 @@ function MultiplayerContent() {
                             })}
                         </div>
                         <div style={{ textAlign: "center", marginTop: "0.5rem", fontSize: "0.875rem", color: "#94a3b8" }}>
-                            {t("page.guessJacket.multiplayer.currentCharacter")} <strong style={{ color: themeColor }}>{CHARACTER_NAMES[myCharId]}</strong>
+                            {t("page.guessJacket.multiplayer.currentCharacter")} <strong style={{ color: themeColor }}>{getCharacterName(t, myCharId)}</strong>
                         </div>
                     </div>
 
@@ -1942,7 +1944,7 @@ function MultiplayerContent() {
                                                     <Image src={getCharacterIconUrl(p.characterId)} alt="" fill sizes="40px" unoptimized />
                                                 </div>
                                                 <div>
-                                                    <div className="mp-player-name">{CHARACTER_NAMES[p.characterId]}</div>
+                                                    <div className="mp-player-name">{getCharacterName(t, p.characterId)}</div>
                                                     <div className="mp-player-label">
                                                         P{slot} {p.isHost ? t("page.guessJacket.multiplayer.hostBadge") : ""} {p.id === mySessionId ? t("page.guessJacket.multiplayer.youBadge") : ""}
                                                     </div>
@@ -2024,7 +2026,7 @@ function MultiplayerContent() {
                                                 <Image src={getCharacterIconUrl(p.characterId)} alt="" fill sizes="32px" unoptimized />
                                             </div>
                                             <div className="mp-loading-player-name">
-                                                {CHARACTER_NAMES[p.characterId]}
+                                                {getCharacterName(t, p.characterId)}
                                                 {p.id === mySessionId && <span className="mp-loading-you">{t("page.guessJacket.multiplayer.you")}</span>}
                                             </div>
                                             {isComplete && (
@@ -2312,7 +2314,7 @@ function MultiplayerContent() {
                                     </div>
                                     <div className="mp-rank-info">
                                         <div className="mp-rank-name">
-                                            {CHARACTER_NAMES[p.characterId]}
+                                            {getCharacterName(t, p.characterId)}
                                             {p.id === mySessionId && <span style={{ color: themeColor, marginLeft: "0.5rem", fontSize: "0.75rem" }}>({t("page.guessJacket.multiplayer.you")})</span>}
                                         </div>
                                         <div className="mp-rank-hp">

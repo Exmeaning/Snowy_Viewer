@@ -10,7 +10,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "@/contexts/TranslationContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { getCostumeThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
-import { CHARACTER_NAMES, ICardInfo, isTrainableCard } from "@/types/types";
+import { ICardInfo, isTrainableCard } from "@/types/types";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import {
@@ -21,6 +21,7 @@ import {
     RARITY_LABEL_KEYS,
 } from "@/types/costume";
 import { fetchMasterData } from "@/lib/fetch";
+import { getCharacterName } from "@/lib/i18n";
 
 // Helper to extract base name (remove _XX color suffix)
 function getVariantBaseName(assetName: string): string {
@@ -306,6 +307,7 @@ export default function CostumeDetailClient() {
                             <div className="grid grid-cols-4 gap-0.5 bg-slate-100">
                                 {displayItems.map((item) => {
                                     let assetName = item.id;
+                                    const characterName = item.characterId ? getCharacterName(tI18n, item.characterId) : "";
 
                                     if (item.strictAsset) {
                                         assetName = item.strictAsset;
@@ -345,10 +347,10 @@ export default function CostumeDetailClient() {
 
                                             {/* Character icon for extraParts items */}
                                             {item.characterId && (
-                                                <div className="absolute top-1 right-1 w-6 h-6 rounded-full overflow-hidden ring-1 ring-slate-200 bg-white shadow-sm z-10" title={CHARACTER_NAMES[item.characterId] || ""}>
+                                                <div className="absolute top-1 right-1 w-6 h-6 rounded-full overflow-hidden ring-1 ring-slate-200 bg-white shadow-sm z-10" title={characterName}>
                                                     <Image
                                                         src={getCharacterIconUrl(item.characterId)}
-                                                        alt={CHARACTER_NAMES[item.characterId] || ""}
+                                                        alt={characterName}
                                                         width={24}
                                                         height={24}
                                                         className="w-full h-full object-cover"
@@ -493,27 +495,30 @@ export default function CostumeDetailClient() {
                                     <div className="flex flex-wrap gap-2">
                                         {representative.characterIds
                                             .filter(charId => charId <= 26)
-                                            .map(charId => (
-                                                <div
-                                                    key={charId}
-                                                    className="flex items-center gap-2 px-2 py-1.5 bg-slate-50 rounded-full"
-                                                    title={CHARACTER_NAMES[charId] || `Character ${charId}`}
-                                                >
-                                                    <div className="w-8 h-8 rounded-full overflow-hidden bg-white ring-1 ring-slate-200">
-                                                        <Image
-                                                            src={getCharacterIconUrl(charId)}
-                                                            alt={CHARACTER_NAMES[charId] || `Character ${charId}`}
-                                                            width={32}
-                                                            height={32}
-                                                            className="w-full h-full object-cover"
-                                                            unoptimized
-                                                        />
+                                            .map(charId => {
+                                                const characterName = getCharacterName(tI18n, charId);
+                                                return (
+                                                    <div
+                                                        key={charId}
+                                                        className="flex items-center gap-2 px-2 py-1.5 bg-slate-50 rounded-full"
+                                                        title={characterName}
+                                                    >
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-white ring-1 ring-slate-200">
+                                                            <Image
+                                                                src={getCharacterIconUrl(charId)}
+                                                                alt={characterName}
+                                                                width={32}
+                                                                height={32}
+                                                                className="w-full h-full object-cover"
+                                                                unoptimized
+                                                            />
+                                                        </div>
+                                                        <span className="text-xs font-medium text-slate-700 pr-1">
+                                                            {characterName}
+                                                        </span>
                                                     </div>
-                                                    <span className="text-xs font-medium text-slate-700 pr-1">
-                                                        {CHARACTER_NAMES[charId] || `#${charId}`}
-                                                    </span>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                     </div>
                                 </div>
                             </div>

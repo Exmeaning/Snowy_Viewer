@@ -7,9 +7,9 @@ import RankChangeBadge from "@/components/realtime-ranking/RankChangeBadge";
 import PlayerHonorPreview from "@/components/realtime-ranking/PlayerHonorPreview";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { getCharacterIconUrl } from "@/lib/assets";
-import { CHARACTER_NAMES } from "@/types/types";
 import { RealtimeRankingEntryWithDiff, RealtimeRankingMasterData, ChurnRankingEntry } from "@/types/realtime-ranking";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 import { AssetSourceType } from "@/contexts/ThemeContext";
 
 interface RankingRowProps {
@@ -256,7 +256,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                         </div>
                     ) : derivedLeaderCharacterId ? (
                         <div className={`relative h-16 w-16 overflow-hidden border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 sm:h-[72px] sm:w-[72px] ${isTopThree ? topThreeCardDeco[entry.rank] : ""}`}>
-                            <Image src={getCharacterIconUrl(derivedLeaderCharacterId)} alt={CHARACTER_NAMES[derivedLeaderCharacterId] || t("page.realtimeRanking.list.characterAvatarAlt")} fill className="object-cover" unoptimized />
+                            <Image src={getCharacterIconUrl(derivedLeaderCharacterId)} alt={getCharacterName(t, derivedLeaderCharacterId)} fill className="object-cover" unoptimized />
                         </div>
                     ) : (
                         <div className="flex h-16 w-16 items-center justify-center bg-slate-100 dark:bg-slate-800/80 sm:h-[72px] sm:w-[72px]">

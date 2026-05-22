@@ -3,8 +3,9 @@ import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } fr
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchMasterData } from "@/lib/fetch";
-import { ICardInfo, CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
+import { ICardInfo, UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCardFullUrl, getCharacterIconUrl, getStampUrl } from "@/lib/assets";
+import { getCharacterName } from "@/lib/i18n";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
     generateRoomCode, createRoom, findRoom, findRoomAcrossServers,
@@ -35,6 +36,7 @@ const RARITY_OPTIONS = [
     { id: "rarity_birthday", num: 5 },
 ];
 const DEFAULT_RARITIES = ["rarity_3", "rarity_4"];
+const PLAYABLE_CHARACTER_IDS = UNIT_DATA.flatMap((unit) => unit.charIds);
 
 type Difficulty = "easy" | "normal" | "hard" | "extreme";
 
@@ -336,7 +338,7 @@ function MultiplayerContent() {
 
     // Available characters based on unit filter
     const availableCharacters = useMemo(() => {
-        if (gameSettings.selectedUnitIds.length === 0) return Object.keys(CHARACTER_NAMES).map(Number);
+        if (gameSettings.selectedUnitIds.length === 0) return PLAYABLE_CHARACTER_IDS;
         const chars: number[] = [];
         UNIT_DATA.forEach(unit => {
             if (gameSettings.selectedUnitIds.includes(unit.id)) {
@@ -548,7 +550,7 @@ function MultiplayerContent() {
 
             // Show kill notification
             if (killInfo) {
-                const killerName = CHARACTER_NAMES[killInfo.killerCharId] || "???";
+                const killerName = getCharacterName(t, killInfo.killerCharId);
                 setKillNotify(t("page.guessWho.multiplayer.killNotify", { name: killerName }));
                 setTimeout(() => setKillNotify(""), 3000);
             }
@@ -1603,8 +1605,8 @@ function MultiplayerContent() {
                     <div className="mp-card">
                         <div className="mp-card-title">{t("page.guessWho.multiplayer.chooseCharacter")}</div>
                         <div className="mp-char-grid">
-                            {Object.entries(CHARACTER_NAMES).map(([idStr, name]) => {
-                                const id = Number(idStr);
+                            {PLAYABLE_CHARACTER_IDS.map((id) => {
+                                const name = getCharacterName(t, id);
                                 return (
                                     <button
                                         key={id}
@@ -1618,7 +1620,7 @@ function MultiplayerContent() {
                             })}
                         </div>
                         <div style={{ textAlign: "center", marginTop: "0.5rem", fontSize: "0.875rem", color: "#94a3b8" }}>
-                            {t("page.guessWho.multiplayer.currentCharacter")} <strong style={{ color: themeColor }}>{CHARACTER_NAMES[myCharId]}</strong>
+                            {t("page.guessWho.multiplayer.currentCharacter")} <strong style={{ color: themeColor }}>{getCharacterName(t, myCharId)}</strong>
                         </div>
                     </div>
 
@@ -2070,7 +2072,7 @@ function MultiplayerContent() {
                                                     <Image src={getCharacterIconUrl(p.characterId)} alt="" fill sizes="40px" unoptimized />
                                                 </div>
                                                 <div>
-                                                    <div className="mp-player-name">{CHARACTER_NAMES[p.characterId]}</div>
+                                                    <div className="mp-player-name">{getCharacterName(t, p.characterId)}</div>
                                                     <div className="mp-player-label">
                                                         P{slot} {p.isHost ? t("page.guessWho.multiplayer.hostBadge") : ""} {p.id === mySessionId ? t("page.guessWho.multiplayer.youBadge") : ""}
                                                     </div>
@@ -2157,7 +2159,7 @@ function MultiplayerContent() {
                                                 <Image src={getCharacterIconUrl(p.characterId)} alt="" fill sizes="32px" unoptimized />
                                             </div>
                                             <div className="mp-loading-player-name">
-                                                {CHARACTER_NAMES[p.characterId]}
+                                                {getCharacterName(t, p.characterId)}
                                                 {p.id === mySessionId && <span className="mp-loading-you">{t("page.guessWho.multiplayer.you")}</span>}
                                             </div>
                                             {isComplete && (
@@ -2215,7 +2217,7 @@ function MultiplayerContent() {
                             }}>
                                 <Image
                                     src={getCardFullUrl(feedbackCard.characterId, feedbackCard.assetbundleName, feedbackIsTrained)}
-                                    alt={CHARACTER_NAMES[feedbackCard.characterId] || ""}
+                                    alt={getCharacterName(t, feedbackCard.characterId)}
                                     fill
                                     sizes="280px"
                                     style={{ objectFit: "contain" }}
@@ -2223,7 +2225,7 @@ function MultiplayerContent() {
                                 />
                             </div>
                             <div style={{ color: "#334155", fontSize: "1.25rem", fontWeight: 700, marginTop: "0.5rem" }}>
-                                {CHARACTER_NAMES[feedbackCard.characterId]}
+                                {getCharacterName(t, feedbackCard.characterId)}
                             </div>
                             <div style={{ color: "#94a3b8", fontSize: "0.875rem", marginTop: "0.25rem" }}>
                                 {feedbackCard.prefix}
@@ -2371,18 +2373,17 @@ function MultiplayerContent() {
 
                         {/* Guess grid */}
                         <div className={`mp-guess-grid ${wrongGuessShake ? "mp-shake" : ""}`}>
-                            {Object.entries(CHARACTER_NAMES)
-                                .filter(([idStr]) => {
+                            {PLAYABLE_CHARACTER_IDS
+                                .filter((id) => {
                                     // Filter by selected units if any are selected
                                     if (activeSettings.selectedUnitIds.length === 0) return true;
-                                    const id = Number(idStr);
                                     // Check if char is in any selected unit
                                     return UNIT_DATA.some(u =>
                                         activeSettings.selectedUnitIds.includes(u.id) && u.charIds.includes(id)
                                     );
                                 })
-                                .map(([idStr, name]) => {
-                                    const id = Number(idStr);
+                                .map((id) => {
+                                    const name = getCharacterName(t, id);
                                     return (
                                         <button
                                             key={id}
@@ -2454,7 +2455,7 @@ function MultiplayerContent() {
                                     </div>
                                     <div className="mp-rank-info">
                                         <div className="mp-rank-name">
-                                            {CHARACTER_NAMES[p.characterId]}
+                                            {getCharacterName(t, p.characterId)}
                                             {p.id === mySessionId && <span style={{ color: themeColor, marginLeft: "0.5rem", fontSize: "0.75rem" }}>({t("page.guessWho.multiplayer.you")})</span>}
                                         </div>
                                         <div className="mp-rank-hp">
