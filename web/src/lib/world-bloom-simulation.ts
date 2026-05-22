@@ -1,11 +1,11 @@
 export const FINAL_CHAPTER_EVENT_ID = 180;
 
 export const WL3_SIMULATION_GROUPS = [
-    { groupId: 1, eventId: 3200001, title: "第1组", members: [21, 1, 6, 14, 17] },
-    { groupId: 2, eventId: 3200002, title: "第2组", members: [22, 23, 4, 5, 10, 13] },
-    { groupId: 3, eventId: 3200003, title: "第3组", members: [24, 3, 8, 9, 18] },
-    { groupId: 4, eventId: 3200004, title: "第4组", members: [26, 2, 12, 16, 20] },
-    { groupId: 5, eventId: 3200005, title: "第5组", members: [25, 7, 11, 15, 19] },
+    { groupId: 1, eventId: 3200001, members: [21, 1, 6, 14, 17] },
+    { groupId: 2, eventId: 3200002, members: [22, 23, 4, 5, 10, 13] },
+    { groupId: 3, eventId: 3200003, members: [24, 3, 8, 9, 18] },
+    { groupId: 4, eventId: 3200004, members: [26, 2, 12, 16, 20] },
+    { groupId: 5, eventId: 3200005, members: [25, 7, 11, 15, 19] },
 ] as const;
 
 export type Wl3SimulationGroup = typeof WL3_SIMULATION_GROUPS[number];
@@ -90,7 +90,7 @@ function buildFakeWl3Events(events: EventEntry[]): EventEntry[] {
     const fakeEvents = WL3_SIMULATION_GROUPS.map(group => ({
         id: group.eventId,
         eventType: "world_bloom",
-        name: `WL3模拟 ${group.title}`,
+        name: `WL3 Simulation Group ${group.groupId}`,
         assetbundleName: "",
         bgmAssetbundleName: "",
         eventOnlyComponentDisplayStartAt: 0,

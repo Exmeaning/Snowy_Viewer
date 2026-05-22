@@ -127,7 +127,6 @@ function GachaContent() {
 
     // Fetch gachas from master data
     useEffect(() => {
-        // document.title = "Snowy SekaiViewer 扭蛋"; // Moved to metadata
         async function fetchGachas() {
             try {
                 setIsLoading(true);

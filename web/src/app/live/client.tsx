@@ -104,7 +104,6 @@ function VirtualLiveContent() {
 
     // Fetch virtual lives data
     useEffect(() => {
-        // document.title = "Snowy SekaiViewer 演唱会"; // Moved to metadata
         async function fetchVirtualLives() {
             try {
                 setIsLoading(true);

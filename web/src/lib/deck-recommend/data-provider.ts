@@ -2,8 +2,8 @@
  * Shared Data Provider for sekai-calculator workers
  * Used by both deck-recommend worker and score-control deck-builder worker
  *
- * 组卡代码来源: sekai-calculator (https://github.com/pjsek-ai/sekai-calculator)
- * 部分算法优化修改于: https://github.com/NeuraXmy/sekai-deck-recommend-cpp  作者: luna茶
+ * Deck-building code source: sekai-calculator (https://github.com/pjsek-ai/sekai-calculator)
+ * Some algorithm optimizations are adapted from https://github.com/NeuraXmy/sekai-deck-recommend-cpp by luna-cha
  */
 import {
     CachedDataProvider,

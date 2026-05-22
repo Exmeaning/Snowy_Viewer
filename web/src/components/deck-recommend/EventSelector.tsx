@@ -297,6 +297,9 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
     }, [selectedEvent, eventStoryIds, assetSource]);
 
     const selectedEventHasStoryBanner = selectedEvent ? eventStoryIds.has(selectedEvent.id) : false;
+    const selectedWl3GroupTitle = selectedWl3Simulation
+        ? t("page.deckRecommend.wl3GroupTitle", { group: selectedWl3Simulation.groupId })
+        : "";
 
     return (
         <div className="w-full">
@@ -353,7 +356,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                                 </span>
                             </div>
                             <div className="text-sm font-bold text-slate-700 truncate group-hover:text-miku transition-colors">
-                                {t("page.deckRecommend.selector.wl3SimulationTitle", { title: selectedWl3Simulation.title })}
+                                {t("page.deckRecommend.selector.wl3SimulationTitle", { title: selectedWl3GroupTitle })}
                             </div>
                             <div className="mt-2">
                                 <Wl3SimulationMemberAvatars members={selectedWl3Simulation.members} size={24} />

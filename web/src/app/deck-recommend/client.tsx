@@ -869,7 +869,7 @@ export default function DeckRecommendClient() {
                                                 }`}
                                             >
                                                 <div className="flex items-center justify-between gap-2 mb-2">
-                                                    <div className="text-sm font-bold text-slate-700">{group.title}</div>
+                                                    <div className="text-sm font-bold text-slate-700">{t("page.deckRecommend.wl3GroupTitle", { group: group.groupId })}</div>
                                                     <span className="text-[11px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">WL3</span>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1">

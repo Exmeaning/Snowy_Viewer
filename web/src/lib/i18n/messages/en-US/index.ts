@@ -70,6 +70,25 @@ export const enUSMessages = {
             jp: "JP Server",
             tw: "TW Server",
         },
+        relayServers: {
+            tokyo1: {
+                name: "Tokyo 1",
+            },
+            tokyo2: {
+                name: "Tokyo 2",
+            },
+            seoul1: {
+                name: "Seoul 1",
+            },
+            singapore1: {
+                name: "Singapore 1",
+            },
+            regions: {
+                japan: "🇯🇵 Japan",
+                korea: "🇰🇷 Korea",
+                singapore: "🇸🇬 Singapore",
+            },
+        },
         account: {
             selectAccount: "Select Account",
             savedAccounts: "Saved Accounts",
@@ -259,6 +278,13 @@ export const enUSMessages = {
         },
         supportUnits: {
             none: "Original",
+        },
+        gachaTypes: {
+            ceil: "Ceiling Gacha",
+            normal: "Normal Gacha",
+            limited: "Limited Gacha",
+            birthday: "Birthday Gacha",
+            colorful_festival: "Colorful Festival",
         },
         units: {
             ln: "Leo/need",
@@ -1928,6 +1954,7 @@ export const enUSMessages = {
             fixedCharacter: "Fixed Character",
             fixedCharacterDescription: "Require one specific character in the deck",
             wl3Group: "Simulation Group",
+            wl3GroupTitle: "Group {group}",
             liveType: "Live Type",
             supportCharacter: "Support Character",
             mysekaiNoMusicHint: "MySekai mode does not need a song. It calculates the best MySekai PT from deck power and event bonuses.",

@@ -74,6 +74,7 @@ export default function StoryEventReaderClient() {
         } : null,
         translation: useLLMTranslation ? translation : null,
         episodeNo,
+        fallbackErrorMessage: t("common.state.loadingFailed"),
     });
 
     const displayTitle = useLLMTranslation && translatedTitle ? translatedTitle : episode?.title;

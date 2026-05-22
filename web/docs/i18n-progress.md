@@ -1,31 +1,35 @@
-# Moesekai i18n 迁移进度与协作技术文档
+# Moesekai i18n 收尾阶段技术 Plan
 
-> 更新时间：2026-05-22（完成账号/服务器共享层 i18n 收尾并已验证：`lib/account.ts` 已移除中文服务器 label/options，改为稳定 `SERVER_LABEL_KEYS` + `common.server.*` 字典；`AccountAvatar`、`AccountSelector`、`AccountSelectorBar`、`QuickBindForm`、`deck-recommend`、`score-control` 相关引用已同步；目标中文残留扫描为 0，定向 ESLint 与 Next 构建通过）  
-> 适用范围：`web/` 前端 Next.js 应用  
-> 当前目标：逐步将硬编码中文 UI 文案迁移到内置 i18n 字典，支持 `zh-CN` / `en-US`，并为后续更多语言预留结构。
+> 更新时间：2026-05-22  
+> 适用范围：`web/` Next.js 前端应用  
+> 当前判断：硬编码 UI 中文的主体迁移已初步完成；后续工作应从“继续铺页面”转为“收尾清点、边界决策、自动化守护与质量复核”。
 
-## 1. 背景与现状
+## 1. 结论摘要
 
-Moesekai 前端页面数量多，且包含大量列表页、详情页、筛选面板、弹窗、卡片、SEO metadata 与 masterdata 枚举标签。i18n 迁移不是单纯替换页面标题，而是需要覆盖：
+本轮回顾后，i18n 项目已经从大规模迁移阶段进入收尾阶段：
 
-- 表层路由页面：例如 `/cards`、`/events`、`/materials`、`/exchanges`、`/honors`。
-- 动态详情页：例如 `/cards/[id]`、`/exchanges/[id]`、`/live/[id]`。
-- 复用组件：导航、筛选器、账号选择器、弹窗、快捷键帮助、Footer 等。
-- 类型/工具层枚举：卡牌属性、活动类型、兑换所状态、称号稀有度等。
-- 个人工具页：`/profile`、`/my-cards`、`/my-musics`、`/my-materials`。
-- metadata / OpenGraph / Twitter 描述等非正文 UI。
+- `zh-CN` / `en-US` 双语字典与 `I18nContext` 基础设施已落地。
+- 核心数据库页、动态详情页、首页、布局、个人页、工具页、剧情页等主要用户路径基本接入 `t()`。
+- 账号/服务器共享层、剧情 asset fallback、活动单位筛选与 WL3 模拟分组等收尾项已完成最近两轮清理：共享常量改为稳定 key/id，显示文案统一由 `common.*` / `page.deckRecommend.*` 字典负责。
+- 当前残留的中文不再主要集中在普通页面 UI，而是集中在以下边界：
+  - SEO/站点品牌关键词。
+  - 法务/赞助类静态长文本。
+  - 设计系统演示页。
+  - Project SEKAI masterdata / 角色名 / 漫画标题 / 搜索关键词。
+  - 注释、开发辅助 fallback。
+  - 少量待产品边界确认的枚举/display 常量。
 
-当前已经建立了基础 i18n 系统，并完成多个核心数据库页与个人页的迁移。剩余工作仍然很大，尤其是动态详情页和复杂工具页。
+下一阶段目标不是继续把所有中文无差别移动进字典，而是先定义“允许残留”和“必须迁移”的边界，再用脚本守护这个边界。
 
-## 2. 当前 i18n 架构
+## 2. 当前架构快照
 
-### 2.1 核心目录
+### 2.1 核心文件
 
 ```text
 web/src/lib/i18n/
-├── format.ts                  # 字典路径读取与 {token} 插值
+├── format.ts                  # key path 读取与 {token} 插值
 ├── index.ts                   # i18n 入口导出
-├── locales.ts                 # locale 定义、默认语言、localStorage key、document lang
+├── locales.ts                 # locale 定义、持久化 key、document lang
 └── messages/
     ├── index.ts               # messagesByLocale / fallbackMessages
     ├── types.ts               # MessageTree 类型
@@ -35,114 +39,159 @@ web/src/lib/i18n/
 web/src/contexts/I18nContext.tsx
 ```
 
-### 2.2 使用方式
+### 2.2 已支持能力
 
-客户端组件中使用：
+- 支持 locale：`zh-CN`、`en-US`。
+- 默认 locale：`zh-CN`。
+- 客户端持久化：`localStorage` + cookie（key：`moesekai_ui_locale`）。
+- 文档语言同步：`document.documentElement.lang` 与 `data-ui-locale`。
+- `t(key, values?)`：先查当前语言，再查 fallback 字典，最后返回 key 本身。
+- `formatDate()` / `formatNumber()`：基于当前 locale 调用 `Intl`。
+- 插值格式：`{name}`，例如 `t("page.cards.allLoaded", { count })`。
+
+当前没有 ICU message / plural 规则。英文复数暂时通过规避型文案处理，例如 `Showing all {count} cards`。
+
+### 2.3 推荐使用方式
 
 ```tsx
+"use client";
+
 import { useI18n } from "@/contexts/I18nContext";
 
-function Example() {
-    const { t, formatDate, formatNumber, locale, setLocale } = useI18n();
+export function Example() {
+    const { t, formatDate, formatNumber } = useI18n();
 
     return (
-        <>
+        <section>
             <h1>{t("page.cards.title")}</h1>
             <p>{t("page.cards.allLoaded", { count: 100 })}</p>
             <time>{formatDate(Date.now())}</time>
             <span>{formatNumber(12345)}</span>
-        </>
+        </section>
     );
 }
 ```
 
-### 2.3 字典 fallback 行为
+## 3. 已完成范围（压缩版）
 
-`t(key)` 会按以下顺序查找：
+> 这里记录当前阶段判断，不再保留逐轮流水账。若要确认某个文件的最新状态，以代码与扫描结果为准。
 
-1. 当前 locale 字典。
-2. fallback 字典。
-3. 如果仍找不到，直接返回 key 字符串。
+### 3.1 基础设施与共享层
 
-因此可以用以下方式判断是否缺失：
+| 范围 | 状态 | 备注 |
+|---|---:|---|
+| `I18nContext` / `lib/i18n/*` | 已完成 | 提供翻译、格式化、locale 切换、fallback 与持久化 |
+| 中英字典 | 已大体完成 | `zh-CN` 与 `en-US` 持续同步维护；`lint:i18n` 已覆盖 key 结构一致性 |
+| Settings locale 切换 | 已完成 | UI 可切换语言 |
+| 导航 / Sidebar / Breadcrumb / Footer | 已完成 | 导航源已尽量改为稳定 id/href，显示文案来自 `layout.*` |
+| 首页与 Home 组件 | 已完成 | 入口、Hero、活动、卡牌、歌曲、Live、动态等固定 UI 已迁移 |
+| CommandPalette / 搜索入口 | 已完成 | 静态导航搜索使用当前语言 label，音乐别名等按既有边界处理 |
+| BaseFilters / Modal / QuickFilter / 图片动作 | 已完成 | 共享筛选、弹窗、预览、复制、保存、下载固定文案已迁移 |
+| 快捷键帮助 | 已完成 | 分组使用稳定 id 与 `shortcuts.*` 字典 |
+| 账号与服务器共享层 | 已完成 | `SERVER_OPTIONS` 使用 `labelKey`，调用方复用 `common.server.*`；联机中继服务器使用 `nameKey` / `regionKey` + `common.relayServers.*` |
+| 全局错误页 | 已完成 | 接入 `common.errorBoundary` / `common.action.retry` |
 
-```ts
-const key = `common.exchange.rewardTypes.${resourceType}`;
-const label = t(key);
-return label === key ? resourceType.replace(/_/g, " ") : label;
+### 3.2 主要路由
+
+| 类别 | 已完成路由 |
+|---|---|
+| 数据库与详情页 | `/cards`、`/cards/[id]`、`/events`、`/events/[id]`、`/gacha`、`/gacha/[id]`、`/music`、`/music/[id]`、`/music/meta`、`/live`、`/live/[id]`、`/materials`、`/exchanges`、`/exchanges/[id]`、`/honors`、`/mysekai`、`/mysekai/[id]`、`/character`、`/character/[id]`、`/costumes`、`/costumes/[id]`、`/sticker`、`/comic`、`/manga`、`/manga/[id]` |
+| 剧情页 | `/story/**` 主入口、列表、详情与阅读页固定 UI 基本完成 |
+| 个人页/工具页 | `/profile`、`/my-cards`、`/my-musics`、`/my-materials`、`/deck-recommend`、`/deck-comparator`、`/score-control`、`/sticker-maker`、`/goods-gacha`、`/guess-who`、`/guess-who/multiplayer`、`/guess-jacket`、`/guess-jacket/multiplayer`、`/chart-preview`、`/mysekai-preview`、`/mysekai-preview/ranking`、`/mysekai-preview/scene`、`/prediction`、`/oauth2/connect`、`/oauth2/callback/code`、`/realtime-ranking` |
+| 社区/静态辅助页 | `/about`、`/guides`、`/guides/[id]`、`/leave`、breadcrumb 汇总页、`/blank` |
+| 有意保留或待决策页 | `/patreon`、`/privacy`、`/terms` 正文仍是静态长文本/双语内容；metadata 已改为英文兜底或使用既有字典 |
+
+## 4. 当前中文残留分类
+
+2026-05-22 快速扫描摘要（排除 `node_modules`，并将 `lib/i18n/messages/*` 视为合法中文来源）：
+
+```text
+files_with_han_excluding_messages = 12
 ```
 
-### 2.4 插值格式
+这些残留不能简单等价为“未完成”。建议按下面规则处理。
 
-当前插值由 `interpolateMessage` 处理，格式为 `{name}`：
+### 4.1 明确允许残留
 
-```ts
-// zh-CN
-allLoaded: "已显示全部 {count} 张卡牌"
+| 类型 | 文件/范围 | 处理策略 |
+|---|---|---|
+| 中文字典与 locale 原生名 | `src/lib/i18n/messages/zh-CN/index.ts`、`src/lib/i18n/messages/en-US/index.ts`、`src/lib/i18n/locales.ts` | 中文字典必须保留；英文包可能包含赞助者名/日文源标签/masterdata 翻译映射；locale 原生名用于语言切换器 |
+| SEO 中文关键词 | `src/lib/seo-keywords.ts`、`src/app/layout.tsx` | 当前作为中文 SEO/品牌定位保留；若未来做多语言 SEO，再单独设计 |
+| 游戏数据/官方名 | `src/types/types.ts`、`src/lib/oldComicTips.ts`、`src/lib/mysekai-i18n.ts`、`src/lib/songConstants.ts`、`src/lib/storyLoader.ts` | 属于 masterdata、角色名、漫画标题、剧情翻译 fallback、搜索修正或官方名边界，不应无差别迁移 |
+| 法务/赞助长文本 | `src/app/privacy/page.tsx`、`src/app/terms/page.tsx`、`src/app/patreon/page.tsx` | 当前可视为内容页面；是否拆入字典需要产品决策 |
+| 设计系统演示 | `src/app/design-system/page.tsx` | 开发/演示路由，不作为用户路径 P0 |
+| 注释/开发辅助 | 已清理一批纯注释中文残留 | `BreadcrumbContext`、`useCardThumbnail`、`prediction` 类型、基础筛选示例、卡牌缩略图注释、旧 document.title 注释等已改为英文或移除，扫描噪声降低 |
 
-// use
- t("page.cards.allLoaded", { count: cards.length })
-```
+### 4.2 建议优先清理的 UI fallback
 
-目前只支持简单 token 替换，不支持 ICU plural。英文复数需要通过文案规避，例如 `Showing all {count} cards`。
+这些不是大范围迁移，但适合作为收尾 PR：
 
-## 3. 字典组织规范
+| 优先级 | 文件 | 问题 | 建议 |
+|---|---|---|---|
+| P0 | `src/hooks/useStoryAsset.ts` | catch fallback 曾有 `"加载失败"` | 已完成：hook 接收 `fallbackErrorMessage`，剧情阅读页传入 `common.state.loadingFailed`；目标扫描为 0 |
+| P0 | `src/components/events/EventFilters.tsx` | `EVENT_UNIT_FILTERS` 的 `mixed` 曾有中文 `name` | 已完成：常量改为 `{ id, labelKey, fallbackName, icon? }`，显示处使用 `t(labelKey)`；目标扫描为 0 |
+| P0 | `src/lib/eventUnit.ts` | `getEventUnitDisplayName()` 曾返回 `"无"` / `"其他"` | 已完成：改为 `getEventUnitFilterId()` 返回 stable id，UI 层使用 `common.units.*` 翻译；目标扫描为 0 |
+| P1 | `src/lib/world-bloom-simulation.ts` | WL3 分组 title 曾为 `"第1组"` 等 | 已完成：`WL3_SIMULATION_GROUPS` 仅保留 `groupId`，UI 使用 `page.deckRecommend.wl3GroupTitle` 模板；目标扫描为 0 |
+| P1 | `src/hooks/usePageListShortcuts.ts` | fallback 匹配包含 `搜索`、`加载更多` | 已完成：删除基于 placeholder/textContent 的中文/英文 DOM 兜底匹配，搜索框与加载更多按钮统一依赖 `data-shortcut-search` / `data-shortcut-load-more` 显式标记；目标扫描为 0 |
+| P2 | `src/types/types.ts` / `src/lib/supabase.ts` 中少量枚举 display | 角色/组合/扭蛋/联机中继服务器等常量混合了官方名与 UI label | 已推进一批：`SUPPORT_UNIT_NAMES` / `GACHA_TYPE_LABELS` / `GACHA_CATEGORY_LABELS` 改为 `*_LABEL_KEYS`；`SERVERS` 中继节点改为 `nameKey` / `regionKey`，联机页通过 `common.relayServers.*` 显示；`UNIT_NAME_MAP`、`CHARACTER_NAMES` 等官方名继续按 masterdata 边界保留 |
 
-### 3.1 顶层分区
+## 5. 字典组织规范
 
-当前字典主要分为：
+### 5.1 顶层分区
 
 ```ts
 export const zhCNMessages = {
-    common: { ... },   // 通用动作、状态、筛选、枚举、字段名
-    layout: { ... },   // 导航、面包屑、Footer、分组页
-    search: { ... },   // 命令面板等搜索功能
-    page: { ... },     // 具体页面文案
+    common: { ... },   // 通用动作、状态、字段、枚举、共享错误
+    layout: { ... },   // 导航、页脚、面包屑、分组页
+    search: { ... },   // 命令面板/搜索体验
+    shortcuts: { ... },// 快捷键帮助
+    page: { ... },     // 具体路由/业务模块
 } as const satisfies MessageTree;
 ```
 
-### 3.2 common 适用范围
+### 5.2 放入 `common` 的条件
 
-放入 `common` 的内容应满足至少一项：
+满足任一条件即可放入 `common`：
 
 - 多个页面复用。
-- 枚举标签会被列表页和详情页同时使用。
-- 字段名通用，例如 `name`、`type`、`rarity`、`description`。
-- 状态通用，例如 `loading`、`noData`、`loadingFailed`。
+- 枚举 label 会被列表页、详情页或工具页共同使用。
+- 字段名通用：`name`、`type`、`rarity`、`description`。
+- 状态通用：`loading`、`noData`、`loadingFailed`。
+- 共享错误码或 API 错误映射。
 
 常见路径：
 
-```ts
+```text
 common.action.close
 common.state.loading
 common.filter.all
 common.field.name
-common.exchange.statuses.active
-common.honor.rarities.low
-common.materialTypes.common
+common.server.jp
+common.units.mixed
+common.exchange.rewardTypes.mysekai_material
 common.oauthErrors.accessDenied
 ```
 
-### 3.3 page 适用范围
+### 5.3 放入 `page` 的条件
 
-只属于某个页面或路由的文案放在 `page.<module>`：
+只属于某个路由或业务模块的文案放在 `page.<module>`：
 
-```ts
-page.materials.badge
-page.materials.filterPanelTitle.materials
-page.exchanges.noDataDescription
-page.honors.tabs.bonds
-page.profile.dangerZone
+```text
+page.deckRecommend.validation.noCards
+page.scoreControl.result.noSolution
+page.story.reader.loading
+page.profile.stats.characterRank
+page.mysekaiPreview.scene.loadFailed
 ```
 
-### 3.4 命名建议
+### 5.4 命名原则
 
-- 使用稳定语义，不使用 UI 位置命名。
+- 使用稳定语义，不使用视觉位置命名。
   - 推荐：`page.exchanges.loadFailed`
   - 不推荐：`page.exchanges.redBoxText`
-- 枚举按数据字段名组织。
+- 枚举 key 使用数据字段或稳定 id。
   - 推荐：`common.exchange.rewardTypes.mysekai_material`
-- 动态 tab 使用对象：
+- 动态 tab / 状态使用对象：
 
 ```ts
 filterTitle: {
@@ -153,496 +202,286 @@ filterTitle: {
 
 调用：
 
-```ts
+```tsx
 t(`page.honors.filterTitle.${activeTab}`)
 ```
 
-## 4. 迁移原则
+## 6. 迁移边界
 
-### 4.1 什么应该迁移
+### 6.1 必须迁移
 
-必须迁移：
-
-- 页面标题、描述、副标题、按钮、空态、错误提示。
+- 页面标题、说明、副标题、按钮、空态、错误提示。
 - 筛选器 section label、placeholder、sort option label。
-- badge / chip / status 文案。
+- badge / chip / status / tab label。
 - 弹窗标题、字段名、说明标题。
-- `page.tsx` metadata 的固定中文标题和描述。
-- 共享枚举标签，例如活动类型、称号类型、兑换所状态。
+- 共享枚举标签和工具函数输出给 UI 的 label。
+- 用户可见的 toast、alert、confirm、校验错误。
+- image/canvas/SVG 分享图中绘制的固定 UI 文案。
 
-建议迁移：
+### 6.2 可保留或需谨慎处理
 
-- title / aria-label / alt 中的人类可读固定文案。
-- tooltip 中的固定文案。
-- 工具函数输出的资源 fallback 名称。
-
-不迁移或谨慎迁移：
-
-- masterdata 自带的名称、描述、剧情正文、活动名、歌曲名、卡牌名。
+- Project SEKAI masterdata：卡牌名、活动名、剧情正文、歌曲名、漫画标题、物品描述等。
+- 角色名、组合名：如果视为游戏官方名，可以保留；如果作为 UI 语言体验的一部分，需要先制定统一名称表。
 - 用户输入内容。
-- API 返回的服务端错误原文，除非已有 error code 可映射。
-- 搜索索引内部字段，除非这些字段直接显示给用户。
+- API 原始错误文本：除非已有 error code 可映射。
+- SEO keywords：当前中文 SEO 是站点定位的一部分，不应被普通 UI 扫描误判。
+- 法务/赞助长文本：属于内容本地化，不应和 UI 文案迁移混在同一个 PR。
 
-### 4.2 masterdata 文案边界
+## 7. 工具层与枚举 label 规范
 
-Project SEKAI masterdata 中的 `name`、`description`、`flavorText` 等属于游戏数据，不应无条件翻译。当前 i18n 只处理 UI 框架文案。若未来要支持 masterdata 多语言，应单独设计数据源与 fallback 规则。
+普通工具函数不要直接调用 React hook。优先使用以下模式。
 
-### 4.3 工具层枚举处理
-
-如果工具函数会被多个页面调用，推荐让它支持可选 `t` 参数：
+### 7.1 工具函数接受可选 `t`
 
 ```ts
-export function getRewardTypeLabel(resourceType: string, t?: ExchangeTranslationFn): string {
-    return translateLabel(REWARD_TYPE_LABEL_KEYS[resourceType], resourceType.replace(/_/g, " "), t);
+type TranslationFn = (key: string, values?: Record<string, string | number | boolean | null | undefined>) => string;
+
+function translateLabel(key: string | undefined, fallback: string, t?: TranslationFn) {
+    if (!key || !t) return fallback;
+    const label = t(key);
+    return label === key ? fallback : label;
 }
 ```
 
-页面侧调用：
+### 7.2 枚举常量保留 stable id / labelKey
+
+```ts
+export const SERVER_OPTIONS = [
+    { value: "cn", labelKey: "common.server.cn" },
+    { value: "jp", labelKey: "common.server.jp" },
+    { value: "tw", labelKey: "common.server.tw" },
+] as const;
+```
+
+组件侧：
 
 ```tsx
 const { t } = useI18n();
-<Badge label={getRewardTypeLabel(reward.resourceType, t)} />
+
+{SERVER_OPTIONS.map(option => (
+    <button key={option.value}>{t(option.labelKey)}</button>
+))}
 ```
 
-这样可以避免工具层直接依赖 React context，也避免在工具层保留中文硬编码。
+### 7.3 Hook 可以用 i18n，但要注意职责
 
-## 5. 已完成进度
+React hook 内可以调用 `useI18n()`，但如果 hook 是低层数据 hook，建议优先返回 error code / error type，由页面组件翻译。这样可以减少隐式 provider 依赖。
 
-> 注：这里记录的是已做过 i18n 迁移或已纳入字典的主要模块。仍建议每次提交前按第 8 节命令重新扫描目标文件。
+## 8. Metadata 与 SEO 策略
 
-### 5.1 基础设施
+当前多数页面 metadata 采用“英文兜底 + 既有 SEO keywords”的策略：
 
-| 模块 | 状态 | 说明 |
-|---|---:|---|
-| `I18nContext` | 已完成 | 提供 `t`、`formatDate`、`formatNumber`、locale 切换与持久化 |
-| `lib/i18n/format.ts` | 已完成 | 支持 key path 读取与 `{token}` 插值 |
-| `lib/i18n/messages/zh-CN` | 进行中 | 已覆盖大量通用与页面文案 |
-| `lib/i18n/messages/en-US` | 进行中 | 与中文结构同步维护 |
-| `SettingsPanel` locale 切换 | 已完成 | UI 可切换语言 |
+- server/static `page.tsx` 不能直接使用客户端 `useI18n()`。
+- 固定 metadata 优先引用 `enUSMessages`，避免继续出现页面级中文硬编码。
+- `src/lib/seo-keywords.ts` 仍包含中文关键词，这是 SEO 策略，不等同于 UI 硬编码。
+- 根布局 `app/layout.tsx` 当前仍使用中文品牌描述与 `openGraph.locale = "zh_CN"`，这是后续“多语言 SEO”专项，而不是 P0 UI 收尾。
 
-### 5.2 布局与共享组件
+若未来需要真正多语言 metadata，建议单独设计：
 
-| 模块 | 状态 | 说明 |
-|---|---:|---|
-| `MainNavbar` / `Sidebar` | 已完成 | 导航项、分组名接入 i18n；`Sidebar` 导航数据已改为稳定 `id` / `href`，显示文案完全依赖 `layout.nav` 字典，目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `Breadcrumb` / `BreadcrumbGroupPage` | 已完成 | 面包屑与分组页文案接入 i18n；`lib/navigation.ts` 导航源已移除中文 name/title fallback，仅保留稳定 `href`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `MainFooter` | 已完成 | Footer 固定文案接入 i18n |
-| 首页 `/` 与 `components/home/*` | 已完成 | 首页分区标题、快捷入口、Hero 轮播、当前活动、最新卡牌/歌曲、演唱会、生日/纪念日与 Bilibili 动态固定 UI 文案已接入 `page.home` / `common.status` / `common.eventTypes` / `common.virtualLiveTypes`；目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `CommandPalette` | 已完成 | 命令面板基础文案接入 i18n；静态导航搜索改为使用当前语言的 `layout.nav` label 匹配，音乐别名提示复用 `search.commandPalette.musicAliasHint`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `BaseFilters` | 已完成 | 搜索、排序、重置、折叠等基础文案接入 i18n |
-| 图片预览/复制下载共享组件 | 已完成 | `useSvgPreviewActions`、`useImageUrlActions`、`ImagePreviewModal` 固定中文文案已接入 `common.imageActions`，中文残留扫描与定向 ESLint 通过 |
-| 共享弹窗/快捷筛选/分组页 | 已完成 | `Modal` 关闭按钮、`QuickFilterButton` aria-label 已接入 i18n；`BreadcrumbGroupPage` 已移除中文描述 fallback，改为完全依赖 `layout.groupPages` 字典，中文残留扫描与定向 ESLint 通过 |
-| 全局错误页 | 已完成 | `app/error.tsx` 标题、描述、刷新/重试按钮已接入 `common.errorBoundary` / `common.action.retry`，中文残留扫描与定向 ESLint 通过 |
-| 快捷筛选 Context / 卡牌筛选枚举 hooks | 已完成 | `QuickFilterContext` 默认标题改为 `common.filter.title`；`useCardSupplyTypeMapping` / `useSkillMapping` 改为仅返回稳定枚举 id，显示文案由现有 `common.cardSupplyTypes` / `common.skillTypes` 字典负责，中文残留扫描与定向 ESLint 通过 |
-| 快捷键帮助 / `lib/shortcuts.ts` | 已完成 | 快捷键分组已改为稳定英文 id 并由 `shortcuts.groups` 字典显示；未被 UI 使用的中文 `description` 字段已移除，`KeyboardShortcutsHelp` 无中文硬编码残留，目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| 账号相关组件 / 服务器选项共享层 | 已完成 | `AccountSelector`、`AccountSelectorBar`、`QuickBindForm` 等已接入 i18n；本轮 `lib/account.ts` 移除中文 `SERVER_LABELS` / `SERVER_OPTIONS.label`，改为稳定 `SERVER_LABEL_KEYS` 并由调用方复用 `common.server.*` 字典；目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
+1. 明确 locale 来源：URL 前缀、cookie、header，三选一或组合。
+2. 抽出 server-safe metadata message map，不依赖 React context。
+3. 处理 Next.js 缓存与静态生成策略。
+4. 同步 OpenGraph / Twitter / sitemap / canonical / alternate links。
 
-### 5.3 数据库/活动类页面
+不要在普通页面迁移 PR 中顺手大改 SEO 架构。
 
-| 路由 | 状态 | 说明 |
-|---|---:|---|
-| `/cards` | 已完成 | 列表、筛选、卡片基础文案、详情页（`/cards/[id]`）均已完全迁移至新 i18n 字典，支持卡池/活动关联与服装展示；列表页 metadata 已改为英文兜底 |
-| `/events` 与 `/events/[id]` | 已完成 | 列表、筛选、活动状态已迁移；详情页（含 EventBgmPlayer）已完全迁移；列表页 metadata 已改为英文兜底 |
-| `/gacha` 与 `/gacha/[id]` | 已完成 | 列表、筛选、扭蛋状态等已迁移；详情页完全迁移（包含基本信息、概率、模拟器、自选 Wish 机制与 404 反馈）；列表页 metadata 已改为英文兜底 |
-| `/music`、`/music/[id]` 与 `/music/meta` | 已完成 | 列表基础文案、详情页 404、详情页基础信息/封面预览/META 排行/难度区/演唱版本/相关活动/返回按钮均已迁移；META 页 metadata 已改为指向 `enUSMessages` 现有英文文案，正文 live 模式、排行卡片、分页、PSPI 说明、表格头、加载/错误态与 Suspense fallback 已接入 `page.musicMeta`；目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/live` 与 `/live/[id]` | 已完成 | 列表与详情页（包含演出时间表、节目单、相关活动和 metadata）已全部迁移；列表页与详情页 metadata 已改为英文兜底 |
-| `/materials` | 已完成 | 列表、筛选、详情弹窗、metadata 已迁移 |
-| `/exchanges` | 已完成 | 列表、筛选、metadata 已迁移 |
-| `/exchanges/[id]` | 已完成 | 详情页、字段、奖励/成本区、metadata 已迁移 |
-| `/honors` | 已完成 | 普通称号/羁绊称号列表、筛选、详情弹窗、metadata 已迁移 |
-| `/mysekai` 与 `/mysekai/[id]` | 已完成 | 列表页、筛选器、详情页字段/状态、genre/tag 显示名、metadata 与 404 反馈已迁移 |
-| `/story/**` | 已完成/待构建 | 剧情总入口、主线剧情、活动剧情、卡牌剧情、区域对话、自我介绍与特殊剧情列表/详情/阅读页 metadata 与固定 UI 文案已接入 `page.story`；共享 `StoryPageHeader`、`StoryReader`、`StorySnippet` 已迁移；story 目标范围中文残留扫描与定向 ESLint 通过，待后续统一 Next 构建确认 |
-| `/character` 与 `/character/[id]` | 已完成 | 列表页、详情页、metadata 与详情页广告标题已迁移 |
-| `/costumes` 与 `/costumes/[id]` | 已完成 | 列表页、筛选器（CostumeFilters）、详情页、metadata 与共享枚举（partTypes/sources/rarities/genders）已迁移 |
-| `/sticker` | 已完成 | 列表页、筛选、预览弹窗、metadata 已迁移 |
-| `/comic` | 已完成 | 列表页、筛选、预览弹窗、metadata 已迁移 |
-| `/manga` 与 `/manga/[id]` | 已完成 | 列表页、详情页、上下话跳转、贡献者/来源信息、metadata 已迁移 |
+## 9. 下一阶段执行路线
 
-### 5.4 个人页/工具页
+### P0：UI fallback 收尾
 
-| 路由 | 状态 | 说明 |
-|---|---:|---|
-| `/profile` | 已完成 | 账号管理、危险操作、快捷入口等已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("profile")`；`client.tsx` 调试日志/注释中文残留已清理；本轮追加迁移个人主页统计/材料组件（`CharacterRankRadar`、`BondsRankTable`、`ChallengeStageChart`、`PowerBonusDetail`、`AreaItemUpgradeMaterials`）至 `page.profile.stats` / `common.units` / `common.musicTags`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/deck-recommend` | 已完成 | 主页面、metadata、Event/Music 选择器、结果区、校验错误与 worker 进度文案已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/deck-comparator` | 已完成 | 主页面、metadata、结果区、历史记录、校验错误与 calculator 工具错误/注释已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/score-control` | 已完成 | 主页面、metadata、控分组卡、无限查找、结果区、错误提示、calculator 与 deck-builder worker 注释已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/sticker-maker` | 已完成 | metadata 已改为英文兜底；主 UI、控件、空态、上传/复制下载提示、license 声明已接入 `page.stickerMaker` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/goods-gacha` | 已完成 | metadata 已改为英文兜底；主 UI、卡池选择、抽选按钮、统计、重置确认、空态、图片 alt 与免责声明已接入 `page.goodsGacha` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/guess-who` 与 `/guess-who/multiplayer` | 已完成 | metadata 已改为英文兜底；单人页设置/对战/结算、联机大厅/房间/加载/对战反馈/结算/错误提示已接入 `page.guessWho` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/guess-jacket` 与 `/guess-jacket/multiplayer` | 已完成 | metadata 已改为英文兜底；单人页设置/对战/结算、联机大厅/房间/加载/对战反馈/结算/错误提示已接入 `page.guessJacket` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/chart-preview` | 已完成 | metadata 已改为英文兜底；页面头部、模式切换、歌曲/URL 表单、预览页按钮、播放器加载状态、音频提示、控制栏、iOS 提示与 credits 文案已接入 `page.chartPreview` 字典；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/mysekai-preview`、`/mysekai-preview/ranking`、`/mysekai-preview/scene` | 已完成 | 已新增 `page.mysekaiPreview` 中英字典；列表/排行详情/UID+JSON 入口页、metadata、共享 `MysekaiScenePreview` 控制面板与 `lib/mysekai-preview/runtime.ts` 浮层/状态/错误文案已迁移；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/prediction` | 已完成 | 页面 metadata 已改为指向 `enUSMessages.layout.nav.items.prediction` / `enUSMessages.layout.groupPages.prediction`，并保持 `getPageKeywords("prediction")` 不变；页面主体、服务器切换、活动选择状态、错误/加载/空态、榜线表格、WL 提示弹窗、PGAI/预测图表与 ActivityStats 固定文案已接入 `page.prediction`；目标中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/oauth2/connect` 与 `/oauth2/callback/code` | 已完成 | OAuth2 授权跳转、回调状态机、多绑定选择、错误提示与 metadata 已接入 `page.oauth2` / `common.oauthErrors`；`lib/oauth.ts` 改为错误码映射 + 可选 `t` 参数，目标文件中文残留扫描通过 |
-| `/realtime-ranking` | 已完成 | 实时排行榜页面、Header/List/Row/当前活动卡/停车弹窗/称号预览/排名徽章、区服与 WL 单榜切换、周回/时速/榜线速度、API 错误映射、metadata 均已接入 `page.realtimeRanking`；中文残留扫描、定向 ESLint 与 Next 构建通过 |
-| `/guides` 与 `/guides/[id]` | 已完成 | 社区攻略列表页与详情页 UI 固定文案、筛选器、加载/错误/空态、返回/原文按钮、监修标签、metadata 与 `guides` SEO keywords 已接入 `page.guides`；中文残留扫描、定向 ESLint 与 Next 构建通过 |
-| `/my-cards` | 已完成/进行中 | 主流程和空态已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("my_cards")`；仍建议后续扫详情/分享功能 |
-| `/my-musics` | 已完成/进行中 | 主流程和部分分享功能已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("my_musics")`；`client.tsx` 数据源/排序注释中文残留已清理；仍建议后续扫图像生成文案 |
-| `/my-materials` | 已完成/进行中 | 资源查询主体已迁移；metadata 已改为英文兜底并接入 `getPageKeywords("my_materials")` |
+目标：让普通用户路径中可见的固定中文 UI fallback 基本清零。
 
-### 5.5 静态说明页 / 汇总页 metadata
+- [x] 清理 `useStoryAsset.ts` 的 `"加载失败"` fallback：新增 `fallbackErrorMessage` 参数，剧情阅读页传入 `common.state.loadingFailed`。
+- [x] 将 `EVENT_UNIT_FILTERS` 的 `mixed` 从中文 `name` 改为 `labelKey` / `fallbackName`。
+- [x] 改造 `getEventUnitDisplayName()` 为 `getEventUnitFilterId()`，避免 `lib/eventUnit.ts` 输出中文。
+- [x] 针对上述文件执行中文残留扫描与定向 lint。
+- [x] 清理 `usePageListShortcuts.ts` 的中文 DOM fallback：去掉 `搜索` / `加载更多` 文本匹配，搜索与加载更多快捷键只识别显式 `data-shortcut-*` 标记，并补齐 `story/area`、`story/card`、`music/meta`、`soundtrack` 的标记。
 
-| 路由/模块 | 状态 | 说明 |
-|---|---:|---|
-| `/about` | 已完成 | 静态页已拆出 `client.tsx` 并接入 `page.about` 中英字典；metadata 已改为英文兜底并保留 `getPageKeywords("about")`；中文残留扫描与定向 ESLint 通过 |
-| `/soundtrack` | 已完成 | 页面 metadata 已改为指向 `enUSMessages.layout.nav.items.soundtrack` / `enUSMessages.layout.groupPages.soundtrack`，并保持 `getPageKeywords("soundtrack")` 不变；正文播放器、header badge、播放控制、下载/错误状态、分类筛选、搜索排序、播放列表 footer 与 Suspense fallback 固定文案已接入 `page.soundtrack`；中文残留扫描、定向 ESLint 与 Next 构建均通过 |
-| `/patreon` | 已完成/进行中 | 页面 metadata 已改为指向 `enUSMessages.layout.nav.items.support` / `enUSMessages.layout.groupPages.patreon`，并保持 `getPageKeywords("patreon")` 不变；正文仍保留中英双语内容，后续如需可拆入字典 |
-| `/privacy` 与 `/terms` | 已完成/进行中 | 页面 metadata title/description 已改为分别指向 `enUSMessages.layout.footer.privacyPolicy` / `enUSMessages.layout.footer.termsOfService`；正文静态政策文本后续可单独迁移 |
-| `/leave` | 已完成 | 外链跳转提示页已接入 `page.leave` 中英字典，包含缺少 target 的错误页、警告文案、继续/关闭/返回按钮与 Suspense loading；目标文件中文残留扫描通过 |
-| 分组汇总页与空白页 metadata | 已完成 | `breadcrumb-activity/community/database/personal/tools/story` 与 `/blank` 的 metadata title 已从中文改为英文兜底；中文残留扫描与定向 ESLint 通过 |
+本轮已按“小型共享枚举/剧情 hook 收尾”粒度完成，并额外纳入 WL3 模拟分组显示清理与页面列表快捷键 fallback 清理。
 
-## 6. 高风险/待推进区域
+### P1：静态内容页决策
 
-### 6.1 动态详情页
+目标：决定 `/privacy`、`/terms`、`/patreon` 是否进入 i18n 范围。
 
-动态详情页通常比列表页复杂，原因：
+可选方案：
 
-- 字段多，且字段 label 容易散落在 JSX 内。
-- 同时显示 masterdata 原文与 UI 文案，边界容易混淆。
-- 详情页常有 metadata、OpenGraph、Twitter 文案。
-- 有些详情页有图片下载、SVG 预览、分享、相关条目等额外功能。
+1. **保持现状**：把它们定义为中文/双语内容页，加入扫描 allowlist。
+2. **客户端内容 i18n**：拆出 client body，使用 `page.privacy` / `page.terms` / `page.patreon` 字典；metadata 仍英文兜底。
+3. **服务端内容 i18n**：设计 server-side locale 解析与 metadata 同步，成本更高，应与多语言 SEO 一起做。
 
-建议优先级：
+建议默认方案：短期保持现状并加入 allowlist；等多语言 SEO 方案确定后再统一处理。
 
-1. story 相关动态路由（已完成本轮目标范围：`/story` 入口、`/story/unit/**`、`/story/event/**`、`/story/card/**`、`/story/area/**`、`/story/self/**`、`/story/special/**`；后续建议统一跑 Next 构建）
-2. 个人页详情/分享生成相关动态逻辑
-3. 其他新增长尾详情页
+### P1：WL3 / 活动组合等业务常量收尾
 
-已完成的核心动态详情页包括 `/cards/[id]`、`/events/[id]`、`/gacha/[id]`、`/music/[id]`、`/live/[id]`、`/costumes/[id]`、`/manga/[id]`、`/mysekai/[id]`。
+- [x] `WL3_SIMULATION_GROUPS` 保留 `groupId`，去掉中文 `title`。
+- [x] 复查 `deck-recommend` 中 WL3 分组显示：主页面与 `EventSelector` 均通过 `t("page.deckRecommend.wl3GroupTitle", { group })`。
+- [x] 将 `SUPPORT_UNIT_NAMES` 改为 `SUPPORT_UNIT_LABEL_KEYS`，卡牌筛选与卡牌详情使用字典显示 VS 团体归属。
+- [x] 将 `GACHA_TYPE_LABELS` / `GACHA_CATEGORY_LABELS` 改为 `GACHA_TYPE_LABEL_KEYS` / `GACHA_CATEGORY_LABEL_KEYS`，扭蛋详情页与筛选继续通过字典显示。
+- [x] 将联机中继 `SERVERS` 的 `name` / `region` 改为 `nameKey` / `regionKey`，猜角色/猜曲绘联机页通过 `common.relayServers.*` 字典显示服务器名、区域与分享文案。
+- [x] 清理一批注释/开发辅助中文残留，缩小 `scan-hardcoded-ui-text.mjs` allowlist。
+- [ ] 继续确认 `UNIT_NAME_MAP`、`CHARACTER_NAMES` 的产品边界：官方名保留，UI 枚举迁移。
 
-### 6.2 复杂工具页
+### P2：自动化守护
 
-复杂工具页有大量表单、状态机、错误提示和结果展示，迁移前建议先读一遍业务逻辑：
+目标：避免后续新增页面重新引入硬编码中文。
 
-- `/mysekai-preview/scene`（已完成：页面、metadata、共享 3D 预览组件与 runtime 均已迁移）
+已新增脚本：
 
-### 6.3 图片/分享生成逻辑
+| 脚本 | 目标 |
+|---|---|
+| `scripts/check-i18n-keys.mjs` | 比较 `zh-CN` 与 `en-US` 字典 key 结构是否一致 |
+| `scripts/scan-hardcoded-ui-text.mjs` | 扫描目标目录中文残留，支持 allowlist |
+| `scripts/check-i18n-usage.mjs` | 静态检查 `t("...")` key 是否存在（先覆盖字符串字面量） |
 
-例如 Best30 分享图片、进度图、截图模式等，文案可能在 canvas/SVG 绘制逻辑中，不会被普通 JSX 搜索完全覆盖。需要特别检查：
+当前 npm scripts：
 
-- 文本绘制函数。
-- 分享图 footer/source 文案。
-- 下载/复制按钮状态。
-- 生成进度状态文案。
-
-## 7. 推荐迁移流程
-
-每次迁移一个页面或一个小模块，按以下步骤执行。
-
-### Step 1：定位硬编码中文
-
-```bash
-# 单文件
-npm run lint --prefix web -- src/app/materials/client.tsx
-
-# 中文残留扫描：推荐使用 ripgrep / Grep 工具
-rg -n "[\p{Han}]" web/src/app/<route> web/src/components/<related>
+```json
+{
+  "lint:i18n": "node scripts/check-i18n-keys.mjs && node scripts/scan-hardcoded-ui-text.mjs",
+  "lint:i18n-usage": "node scripts/check-i18n-usage.mjs"
+}
 ```
 
-在 NarraFork/Claude 环境中优先用 `Grep` 工具，不要用 shell `grep`。
-
-### Step 2：判断文案归属
-
-- 多处复用：放入 `common`。
-- 仅页面使用：放入 `page.<route>`。
-- 导航/布局：放入 `layout`。
-- 搜索命令面板：放入 `search`。
-
-### Step 3：同步中英字典
-
-必须同时修改：
+当前扫描 allowlist（每项在脚本中带 reason）：
 
 ```text
-web/src/lib/i18n/messages/zh-CN/index.ts
-web/src/lib/i18n/messages/en-US/index.ts
+src/lib/i18n/messages/zh-CN/index.ts
+src/lib/i18n/messages/en-US/index.ts
+src/lib/i18n/locales.ts
+src/lib/seo-keywords.ts
+src/app/layout.tsx
+src/app/privacy/page.tsx
+src/app/terms/page.tsx
+src/app/patreon/page.tsx
+src/app/design-system/page.tsx
+src/lib/oldComicTips.ts
+src/lib/mysekai-i18n.ts
+src/lib/songConstants.ts
+src/types/types.ts
+src/lib/storyLoader.ts
 ```
 
-如果 key 缺失，`t()` 会返回 key 字符串，页面会出现 `page.xxx.yyy`。
+allowlist 必须注明原因，不能只写路径；本轮已移除注释类 allowlist 和 `src/lib/supabase.ts` 临时 allowlist，当前 `lint:i18n` 输出为 `Hardcoded UI Han scan OK (14 allowlisted file groups)`。
 
-### Step 4：替换组件文案
+### P3：多语言 SEO / 服务端 i18n 专项
 
-客户端组件：
+当产品需要完整英文 SEO 时再启动：
 
-```tsx
-const { t } = useI18n();
-```
+- [ ] 设计 locale 路由或 server locale 解析策略。
+- [ ] 抽出 server-safe metadata 字典。
+- [ ] 改造 root metadata、OpenGraph locale、Twitter、sitemap alternate links。
+- [ ] 明确中文 SEO keywords 是否继续保留在所有 locale。
 
-日期/数字：
+### P4：文案质量与高级格式化
 
-```tsx
-const { formatDate, formatNumber } = useI18n();
-```
+- [ ] 英文文案统一校对语气、大小写、术语。
+- [ ] 评估 ICU message / plural 支持。
+- [ ] 评估日期、时间、服务器名、单位名是否需要更细的 locale 格式策略。
+- [ ] 为复杂工具页的错误码建立统一映射表。
 
-枚举：
+## 10. 校验流程
 
-```tsx
-getExchangeStatusLabel(status, t)
-getRewardTypeLabel(type, t)
-```
+### 10.1 中文残留扫描
 
-### Step 5：保留 masterdata 原文
-
-例如：
-
-```tsx
-// 保留游戏数据原文
-<h1>{card.prefix}</h1>
-<p>{event.name}</p>
-<p>{material.flavorText}</p>
-
-// 只翻译 UI 标签
-<InfoRow label={t("common.field.name")} value={card.prefix} />
-```
-
-### Step 6：扫残留、lint、build
-
-见第 8 节。
-
-### Step 7：同步更新进度文档
-
-每完成一个路由、组件组或一轮验证后，立即更新本文档中的“已完成进度”“最近一批已验证结果”和“后续 TODO 建议”。记录应包含迁移范围、字典路径、已执行的扫描/ lint / build 结果，以及仍未执行或需下轮继续确认的检查。
-
-## 8. 校验命令
-
-### 8.1 中文残留扫描
+在 NarraFork/Claude 环境中优先使用 `Grep` 工具；本地开发可使用 `rg`。
 
 示例：
 
 ```bash
-rg -n "[\p{Han}]" web/src/app/materials web/src/app/exchanges web/src/app/honors web/src/components/honor web/src/lib/exchanges.ts web/src/types/honor.ts
+rg -n "[\p{Han}]" web/src/hooks/useStoryAsset.ts web/src/components/events/EventFilters.tsx web/src/lib/eventUnit.ts web/src/lib/world-bloom-simulation.ts web/src/app/story/event/[eventId]/[episodeNo]/client.tsx web/src/app/story/unit/[unitId]/[episodeId]/client.tsx web/src/app/events/[id]/client.tsx web/src/app/deck-recommend/client.tsx web/src/components/deck-recommend/EventSelector.tsx
 ```
 
-注意：扫描到中文不一定都是错误，例如：
+扫描结果需要人工分类：
 
-- 中文 locale 字典本身。
-- 中文 README / 文档。
-- masterdata fixture 或测试数据。
-- 合法中文搜索 alias。
+- 字典中文：合法。
+- masterdata / 官方名：通常合法。
+- SEO keywords：当前合法。
+- 注释：低优先级，可逐步清理。
+- 用户可见固定 UI：必须迁移。
 
-目标是目标页面/组件中不再有固定 UI 中文硬编码。
+### 10.2 定向 lint
 
-### 8.2 定向 lint
-
-当前 ESLint 使用 flat config，不支持旧的 `--file` 参数。应使用路径参数：
+ESLint 使用 flat config，不使用旧 `--file` 参数。示例：
 
 ```bash
 npm run lint --prefix web -- \
-  src/app/materials/client.tsx \
-  src/app/exchanges/client.tsx \
-  src/app/exchanges/[id]/client.tsx \
-  src/app/honors/client.tsx
+  src/hooks/useStoryAsset.ts \
+  src/app/story/event/[eventId]/[episodeNo]/client.tsx \
+  src/app/story/unit/[unitId]/[episodeId]/client.tsx \
+  src/components/events/EventFilters.tsx \
+  src/lib/eventUnit.ts \
+  src/lib/world-bloom-simulation.ts \
+  src/app/events/[id]/client.tsx \
+  src/app/deck-recommend/client.tsx \
+  src/components/deck-recommend/EventSelector.tsx
 ```
 
-### 8.3 Next 构建
+### 10.3 Next 构建
 
 ```bash
 npm run build:next --prefix web
 ```
 
-已知构建输出中可能出现：
+已知构建输出可能出现 Turbopack root 相关 warning；只要 exit code 成功即可视为构建通过。
+
+### 10.4 完成定义（Definition of Done）
+
+每个 i18n 收尾 PR 至少满足：
+
+- [ ] 新增/修改的用户可见文案均来自 `t()` 或明确 allowlist。
+- [ ] `zh-CN` 与 `en-US` 字典同步增加 key。
+- [ ] 工具层不直接输出中文 UI label，除非属于 masterdata/官方名边界。
+- [ ] 目标文件中文残留扫描完成，并说明残留原因。
+- [ ] 定向 lint 通过。
+- [ ] 影响路由较多时执行 `npm run build:next --prefix web`。
+
+## 11. 最近已知验证记录
+
+最近一轮（2026-05-22）已完成并记录为通过的范围：
 
 ```text
-⚠ turbopack.root should be absolute
-```
-
-本次迁移中该警告不影响构建通过。
-
-## 9. 最近一批已验证结果
-
-上一轮已完成个人主页统计/材料组件补充 i18n 清理；本轮继续推进账号/服务器共享层收尾，聚焦账号工具层中仍带中文显示名的服务器选项，以及账号选择/快速绑定/工具页调用方对服务器显示文案的统一字典化。
-
-最近一批推进的范围：
-
-```text
-web/src/lib/account.ts
-web/src/components/AccountAvatar.tsx
-web/src/components/AccountSelector.tsx
-web/src/components/AccountSelectorBar.tsx
-web/src/components/QuickBindForm.tsx
-web/src/app/deck-recommend/client.tsx
-web/src/app/score-control/client.tsx
+web/package.json
+web/scripts/i18n-utils.mjs
+web/scripts/check-i18n-keys.mjs
+web/scripts/check-i18n-usage.mjs
+web/scripts/scan-hardcoded-ui-text.mjs
+web/src/lib/supabase.ts
+web/src/app/guess-who/multiplayer/client.tsx
+web/src/app/guess-jacket/multiplayer/client.tsx
+web/src/hooks/useCardThumbnail.ts
+web/src/contexts/BreadcrumbContext.tsx
+web/src/types/prediction.ts
+web/src/components/common/BaseFilters.tsx
+web/src/components/common/TranslatedText.tsx
+web/src/components/cards/SekaiCardThumbnail.tsx
+web/src/components/MainLayout.tsx
+web/src/lib/deck-recommend/data-provider.ts
+web/src/app/cards/client.tsx
+web/src/app/gacha/client.tsx
+web/src/app/live/client.tsx
+web/src/app/music/client.tsx
+web/src/lib/i18n/messages/zh-CN/index.ts
+web/src/lib/i18n/messages/en-US/index.ts
 web/docs/i18n-progress.md
 ```
 
-阶段进度：
+结果：
 
-- 已扫描账号/服务器相关共享层中文残留，筛出本轮可推进目标为 `lib/account.ts` 中的中文服务器 label/options、账号工具层中文注释，以及 `AccountSelectorBar`、`QuickBindForm`、`deck-recommend`、`score-control` 中对服务器选项显示文案的调用。
-- `lib/account.ts` 已移除中文 `SERVER_LABELS` 与 `SERVER_OPTIONS.label`，新增稳定 `SERVER_IDS` / `SERVER_LABEL_KEYS`，`SERVER_OPTIONS` 仅保留 `value` 与 `labelKey`，由 UI 层通过既有 `common.server.*` 中英字典显示。
-- `deck-recommend` 的服务器选项映射已改为 `t(option.labelKey)`；`score-control` 服务器按钮已改为 `t(s.labelKey)`；`AccountSelectorBar` 与 `QuickBindForm` 继续通过 `t(\`common.server.${s.value}\`)` 显示服务器名称。
-- `AccountAvatar`、`AccountSelector`、`QuickBindForm` 与 `lib/account.ts` 本轮触及范围内的中文注释已改为英文，避免目标中文残留扫描误报；未改动 masterdata 或用户数据展示边界。
-- 中文残留扫描：当前通过（目标范围 `lib/account.ts`、账号相关组件、`deck-recommend`、`score-control` 无中文硬编码匹配）。
-- 定向 ESLint：待本轮执行（计划：`npm run lint --prefix web -- src/lib/account.ts src/components/AccountAvatar.tsx src/components/AccountSelector.tsx src/components/AccountSelectorBar.tsx src/components/QuickBindForm.tsx src/app/deck-recommend/client.tsx src/app/score-control/client.tsx`）。
-- Next 构建：待本轮执行（计划：`npm run build:next --prefix web`）。
+- 新增 `lint:i18n` / `lint:i18n-usage` npm scripts，并落地 `check-i18n-keys.mjs`、`scan-hardcoded-ui-text.mjs`、`check-i18n-usage.mjs`；`i18n-utils.mjs` 使用 `fileURLToPath()` 解析 web 根目录以兼容 Windows 路径。
+- `check-i18n-keys.mjs` 当前校验通过：`i18n key structure OK (2914 keys)`。
+- `check-i18n-usage.mjs` 当前校验通过：`Literal i18n usage keys OK`。
+- `scan-hardcoded-ui-text.mjs` 当前校验通过：`Hardcoded UI Han scan OK (14 allowlisted file groups)`。
+- 联机中继 `SERVERS` 已移除中文 `name` / `region`，改为 `nameKey` / `regionKey`；猜角色/猜曲绘联机页统一通过 `common.relayServers.*` 显示服务器名、区域与分享文案。
+- 清理一批注释/开发辅助中文残留：`BreadcrumbContext`、`useCardThumbnail`、`prediction` 类型、`BaseFilters` 示例、`TranslatedText` 示例、`SekaiCardThumbnail` 注释、`MainLayout` 移动端注释、`data-provider` attribution、旧列表页 document.title 注释等。
+- `web/src` 排除 `lib/i18n/messages/*` 后当前仍有中文文件数为 12，集中在 SEO、内容页、masterdata/官方名、locale 原生名与 story fallback 映射等 allowlist 边界。
+- `npm run lint:i18n --prefix web && npm run lint:i18n-usage --prefix web` 已通过。
+- `npm run lint --prefix web` 已通过。
+- `npm run build:next --prefix web` 已通过；仅出现已知 Turbopack root warning。
 
-## 10. 协作注意事项
+## 12. 后续维护原则
 
-### 10.1 避免大 PR 混杂
-
-i18n 迁移很容易产生大量 diff。建议按模块拆 PR：
-
-- 一个数据库页 + 相关详情页。
-- 一个工具页。
-- 一组共享组件。
-- 一组枚举工具函数。
-
-### 10.2 不要一次性改所有字典结构
-
-字典已经较大。重构字典结构会造成大量冲突。建议：
-
-- 先补 key，后续再整理。
-- 保持 `zh-CN` 与 `en-US` 结构一致。
-- 不要删除旧 key，除非已全局确认无引用。
-
-### 10.3 小心工具函数中的 React Hook
-
-不要在普通工具函数里调用 `useI18n()`。工具函数应接受可选 `t`：
-
-```ts
-export function getSomethingLabel(value: string, t?: TranslationFn): string
-```
-
-React 组件内再传入：
-
-```tsx
-const { t } = useI18n();
-getSomethingLabel(value, t);
-```
-
-### 10.4 小心 `useMemo` / `useEffect` 依赖
-
-如果在 `useMemo` 或 `useEffect` 中使用了 `t`、`formatDate`，依赖数组必须包含它们：
-
-```tsx
-const options = useMemo(() => buildOptions(t), [t]);
-
-useEffect(() => {
-    setError(t("page.xxx.loadFailed"));
-}, [t]);
-```
-
-### 10.5 metadata 的限制
-
-`page.tsx` metadata 是 server side/static 代码，当前不能直接用 `useI18n()`。现阶段策略：
-
-- 固定 metadata 先使用英文兜底，避免中文硬编码残留。
-- 如果未来需要 SEO 多语言，应单独设计 metadata locale 解析方案。
-
-## 11. 后续 TODO 建议
-
-### P0：继续完成核心动态详情页
-
-- [x] `/cards/[id]`
-- [x] `/events/[id]`
-- [x] `/gacha/[id]`
-- [x] `/music/[id]`（404 与 metadata 已标准化为英文兜底）
-- [x] `/live/[id]`（metadata 已标准化为英文兜底）
-
-### P1：完成数据库补充页
-
-- [x] `/character` 与 `/character/[id]`
-- [x] `/costumes` 与 `/costumes/[id]`
-- [x] `/sticker`
-- [x] `/comic`
-- [x] `/manga` 与 `/manga/[id]`
-- [x] `/mysekai` 与 `/mysekai/[id]`
-
-### P2：复杂工具页
-
-- [x] `/music/meta`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文 live 模式、排行卡片、分页、PSPI 说明、表格头、加载/错误态与 Suspense fallback 已接入 `page.musicMeta`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过）
-- [x] `/prediction`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文 UI、榜线图表与 ActivityStats 已接入 `page.prediction`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过）
-- [x] `/soundtrack`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文播放器、header badge、播放控制、下载/错误状态、分类筛选、搜索排序、播放列表 footer 与 Suspense fallback 已接入 `page.soundtrack`，目标中文残留扫描、定向 ESLint 与 Next 构建均通过）
-- [x] `/patreon`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文双语内容后续可单独整理）
-- [x] `/privacy`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文政策文本后续可单独迁移）
-- [x] `/terms`（metadata 已改为指向 `enUSMessages` 现有英文文案；正文政策文本后续可单独迁移）
-- [x] `/deck-recommend`
-- [x] `/deck-comparator`
-- [x] `/score-control`
-- [x] `/sticker-maker`
-- [x] `/goods-gacha`
-- [x] `/guess-who`
-- [x] `/guess-jacket`
-- [x] `/chart-preview`
-- [x] `/mysekai-preview`（含 `/ranking` 与 `/scene`）
-- [x] `/oauth2/connect` 与 `/oauth2/callback/code`
-- [x] `/realtime-ranking`
-- [x] `/guides` 与 `/guides/[id]`
-
-### P2.5：布局与首页补充
-
-- [x] 首页 `/` 与 `components/home/*`（首页分区标题、快捷入口、Hero 轮播、当前活动、最新卡牌/歌曲、演唱会、生日/纪念日、Bilibili 动态、友链与鸣谢固定文案已接入 `page.home` / `common.status` / `common.eventTypes` / `common.virtualLiveTypes`；目标中文残留扫描、定向 ESLint 与 Next 构建均通过）
-- [x] 导航/快捷键共享层（`lib/navigation.ts`、`Sidebar`、`Breadcrumb`、`BreadcrumbGroupPage`、`CommandPalette`、`KeyboardShortcutsHelp`、`lib/shortcuts.ts` 已清理中文 fallback/搜索索引/未使用描述字段，统一复用 `layout.nav` / `search.commandPalette` / `shortcuts` 字典；目标中文残留扫描、定向 ESLint 与 Next 构建均通过）
-
-### P3：自动化保障
-
-- [ ] 增加脚本检查 `zh-CN` 与 `en-US` key 结构是否一致。
-- [ ] 增加目标目录中文硬编码扫描脚本。
-- [ ] 增加 `t("...")` key 是否存在的静态检查。
-- [ ] 评估是否需要 ICU message / plural 支持。
-- [ ] 评估是否需要服务端 metadata i18n。
-
-## 12. 快速参考
-
-### 新增页面 key 模板
-
-```ts
-page: {
-    example: {
-        badge: "Example Database",
-        title: "Example",
-        titleHighlight: "Database",
-        description: "Browse examples",
-        filterTitle: "Example Filters",
-        searchPlaceholder: "Search example name or ID...",
-        countUnit: "items",
-        loadFailed: "Failed to load example data",
-        noResult: "No examples match the current filters",
-        loadMore: "Load More",
-        allLoaded: "Showing all {count} examples",
-        loadingFallback: "Loading examples...",
-    },
-}
-```
-
-### 页面 header 模板
-
-```tsx
-function PageHeader() {
-    const { t } = useI18n();
-
-    return (
-        <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                <span className="text-miku text-xs font-bold tracking-widest uppercase">
-                    {t("page.example.badge")}
-                </span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                {t("page.example.title")} <span className="text-miku">{t("page.example.titleHighlight")}</span>
-            </h1>
-            <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm">
-                {t("page.example.description")}
-            </p>
-        </div>
-    );
-}
-```
-
-### 枚举 label helper 模板
-
-```ts
-type TranslationFn = ReturnType<typeof useI18n>["t"];
-
-function formatFallbackLabel(value: string): string {
-    return value.replace(/_/g, " ");
-}
-
-function getExampleTypeLabel(type: string, t: TranslationFn): string {
-    const key = `common.example.types.${type}`;
-    const label = t(key);
-    return label === key ? formatFallbackLabel(type) : label;
-}
-```
-
----
-
-这份文档应随着每一批 i18n 迁移持续更新。尤其是“已完成进度”和“待推进区域”，需要在每次完成一个路由后同步维护。
+- 不再把本文维护成逐行流水账；完成事项只保留模块级状态和最近验证记录。
+- 每次新增路由或工具页时，同步补充 `zh-CN` 与 `en-US`，不要只写中文。
+- 新增共享枚举时优先设计 `id` / `labelKey`，不要在常量里直接塞中文 label。
+- 不要把 masterdata 多语言、SEO 多语言、UI i18n 混在同一个 PR。
+- 任何中文残留都应属于“字典 / allowlist / masterdata / SEO / 内容页 / 注释 / 待迁移 UI”之一；无法归类的残留默认视为 bug。

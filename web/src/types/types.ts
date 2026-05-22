@@ -34,14 +34,14 @@ export type SupportUnit =
     | "theme_park"
     | "street";
 
-// Support Unit display names (for virtual singers)
-export const SUPPORT_UNIT_NAMES: Record<SupportUnit, string> = {
-    "none": "原版",
-    "light_sound": UNIT_NAME_MAP.light_sound,
-    "idol": UNIT_NAME_MAP.idol,
-    "school_refusal": UNIT_NAME_MAP.school_refusal,
-    "theme_park": UNIT_NAME_MAP.theme_park,
-    "street": UNIT_NAME_MAP.street,
+// Support Unit label keys (for virtual singers)
+export const SUPPORT_UNIT_LABEL_KEYS: Record<SupportUnit, string> = {
+    "none": "common.supportUnits.none",
+    "light_sound": "common.units.ln",
+    "idol": "common.units.mmj",
+    "school_refusal": "common.units.25ji",
+    "theme_park": "common.units.ws",
+    "street": "common.units.vbs",
 };
 
 // Support Unit to Unit ID mapping (for icons)
@@ -371,22 +371,22 @@ export interface IGachaDetail {
     gachaDetailWishType?: "fixed" | "normal" | "limited";
 }
 
-// Gacha type labels
-export const GACHA_TYPE_LABELS: Record<string, string> = {
-    ceil: "天井扭蛋",
-    normal: "普通扭蛋",
-    limited: "限定扭蛋",
-    birthday: "生日扭蛋",
-    colorful_festival: "Colorful Festival",
+// Gacha type label keys
+export const GACHA_TYPE_LABEL_KEYS: Record<string, string> = {
+    ceil: "common.gachaTypes.ceil",
+    normal: "common.gachaTypes.normal",
+    limited: "common.gachaTypes.limited",
+    birthday: "common.gachaTypes.birthday",
+    colorful_festival: "common.gachaTypes.colorful_festival",
 };
 
 // Gacha category filter types
 export type GachaCategoryType = "all" | "wish_pick" | "normal_pickup";
 
-export const GACHA_CATEGORY_LABELS: Record<GachaCategoryType, string> = {
-    all: "全部",
-    wish_pick: "自选池",
-    normal_pickup: "普通池",
+export const GACHA_CATEGORY_LABEL_KEYS: Record<GachaCategoryType, string> = {
+    all: "common.gachaCategories.all",
+    wish_pick: "common.gachaCategories.wish_pick",
+    normal_pickup: "common.gachaCategories.normal_pickup",
 };
 
 // Helper function to check if a gacha is a wish/pick pool
