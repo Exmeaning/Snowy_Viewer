@@ -233,6 +233,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                             key={option.id}
                                             onClick={() => {
                                                 setLocale(option.id);
+                                                if (option.id !== "zh-CN") {
+                                                    setUseLLMTranslation(false);
+                                                }
                                                 setExpandedDropdown(null);
                                             }}
                                             className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${isSelected

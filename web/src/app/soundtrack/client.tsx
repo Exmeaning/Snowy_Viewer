@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { fetchMasterData } from "@/lib/fetch";
+import { fetchBgmDurationsData, fetchMasterData } from "@/lib/fetch";
 import { getMysekaiRawAssetUrl } from "@/lib/assets";
 import { getMysekaiSoundTrackAudioUrl } from "@/lib/mysekai-preview/assets";
 
@@ -26,9 +26,27 @@ interface MysekaiMusicSoundTrackMaster {
     musicSoundTrackCategoryId: number;
     assetbundleName: string;
     assetbundleFileName: string;
+    isSpoiler?: boolean;
+    durationSeconds?: number;
+    durationMilliseconds?: number;
+    durationSourceKey?: string;
+}
+
+interface BgmDurationTrack {
+    key: string;
+    route: string;
+    file_name: string;
+    duration_seconds: number;
+    duration_milliseconds?: number;
+}
+
+interface BgmDurationsResponse {
+    generated_at?: string;
+    tracks: BgmDurationTrack[];
 }
 
 type PlaybackMode = "sequential" | "loop-one" | "shuffle";
+type SoundtrackCategoryFilter = number | "spoiler" | null;
 
 const PLAYBACK_MODES = ["sequential", "loop-one", "shuffle"] as const satisfies readonly PlaybackMode[];
 
@@ -42,6 +60,13 @@ function clampVolume(value: number) {
 }
 
 const SOUNDTRACK_AUDIO_CACHE_NAME = "soundtrack-audio-v1";
+const SPOILER_TRACK_ID_BASE = -1_000_000;
+const SPOILER_TRACK_SEQ_BASE = 10_000;
+const SPOILER_DURATION_THRESHOLD_SECONDS = 40;
+const MYSEKAI_SOUNDTRACK_CATEGORY_ID = 12;
+const SCENARIO_SOUNDTRACK_CATEGORY_ID = 13;
+const SPOILER_CATEGORY_FILTER = "spoiler" as const;
+const SPOILER_CATEGORY_THEME = { from: "#F97316", to: "#C2410C", shadow: "shadow-orange-500/20", bgGlow: "from-orange-950/20 to-rose-950/20", text: "text-orange-400" };
 
 function sanitizeDownloadFileName(value: string) {
     return value
@@ -53,6 +78,101 @@ function sanitizeDownloadFileName(value: string) {
 function getTrackDownloadFileName(track: MysekaiMusicSoundTrackMaster) {
     const seq = track.seq.toString().padStart(3, "0");
     return `${seq}_${sanitizeDownloadFileName(track.title || track.assetbundleFileName)}.mp3`;
+}
+
+function normalizeAssetPath(value: string) {
+    return value.replace(/^\/+/, "").replace(/\/+$/, "");
+}
+
+function normalizeAudioKey(value: string) {
+    return normalizeAssetPath(value).replace(/\?.*$/, "");
+}
+
+function getTrackAudioKey(track: MysekaiMusicSoundTrackMaster) {
+    const assetbundleName = normalizeAssetPath(track.assetbundleName);
+    const fileName = String(track.assetbundleFileName || assetbundleName.split("/").pop() || "").trim();
+    return fileName ? `${assetbundleName}/${fileName}.mp3` : "";
+}
+
+function getSpoilerTrackId(key: string) {
+    let hash = 0;
+    for (let i = 0; i < key.length; i += 1) {
+        hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+    }
+    return SPOILER_TRACK_ID_BASE - (hash % 900_000);
+}
+
+function stripAudioExtension(fileName: string) {
+    return fileName.replace(/\.(mp3|wav|ogg)$/i, "");
+}
+
+function humanizeSpoilerTrackName(fileName: string) {
+    return stripAudioExtension(fileName)
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function buildSpoilerTrackFromDuration(entry: BgmDurationTrack, index: number): MysekaiMusicSoundTrackMaster | null {
+    const key = normalizeAudioKey(entry.key);
+    if (!key || !key.toLowerCase().endsWith(".mp3")) return null;
+
+    const extensionlessKey = key.replace(/\.mp3$/i, "");
+    const slashIndex = extensionlessKey.lastIndexOf("/");
+    if (slashIndex <= 0) return null;
+
+    const assetbundleName = extensionlessKey.slice(0, slashIndex);
+    const assetbundleFileName = extensionlessKey.slice(slashIndex + 1);
+    const displayName = humanizeSpoilerTrackName(entry.file_name || assetbundleFileName) || assetbundleFileName;
+    const categoryId = assetbundleName.startsWith("mysekai/sound/bgm/")
+        ? MYSEKAI_SOUNDTRACK_CATEGORY_ID
+        : SCENARIO_SOUNDTRACK_CATEGORY_ID;
+
+    return {
+        id: getSpoilerTrackId(key),
+        seq: SPOILER_TRACK_SEQ_BASE + index,
+        title: displayName,
+        pronunciation: assetbundleFileName,
+        musicSoundTrackCategoryId: categoryId,
+        assetbundleName,
+        assetbundleFileName,
+        isSpoiler: true,
+        durationSeconds: entry.duration_seconds,
+        durationMilliseconds: entry.duration_milliseconds,
+        durationSourceKey: key,
+    };
+}
+
+function buildSpoilerTracksFromDurations(
+    durationData: BgmDurationsResponse | null,
+    masterTracks: MysekaiMusicSoundTrackMaster[]
+) {
+    if (!durationData?.tracks?.length) return [];
+
+    const masterAudioKeys = new Set(masterTracks.map(getTrackAudioKey).filter(Boolean));
+    return durationData.tracks
+        .filter((entry) => {
+            const key = normalizeAudioKey(entry.key);
+            return entry.duration_seconds > SPOILER_DURATION_THRESHOLD_SECONDS && !masterAudioKeys.has(key);
+        })
+        .map((entry, index) => buildSpoilerTrackFromDuration(entry, index))
+        .filter((track): track is MysekaiMusicSoundTrackMaster => track !== null);
+}
+
+function getDisplayTrackTitle(track: MysekaiMusicSoundTrackMaster | null, t: (key: string, values?: Record<string, string | number | boolean | null | undefined>) => string) {
+    if (!track) return t("page.soundtrack.emptyTrack");
+    if (!track.isSpoiler) return track.title;
+    return t("page.soundtrack.spoiler.unlistedTitle", { name: track.title });
+}
+
+function getTrackSearchText(track: MysekaiMusicSoundTrackMaster) {
+    return [
+        track.title,
+        track.pronunciation,
+        track.assetbundleName,
+        track.assetbundleFileName,
+        track.durationSourceKey,
+    ].filter(Boolean).join(" ").toLowerCase();
 }
 
 function triggerDirectDownload(url: string, fileName: string) {
@@ -123,7 +243,7 @@ const DEFAULT_THEME = { from: "#00CCBB", to: "#1E293B", shadow: "shadow-slate-50
 
 function SoundtrackContent() {
     const { t, formatNumber } = useI18n();
-    const { assetSource, resolvedColorScheme } = useTheme();
+    const { assetSource, resolvedColorScheme, isShowSpoiler } = useTheme();
     const isDark = resolvedColorScheme === "dark";
     const searchParams = useSearchParams();
 
@@ -148,9 +268,11 @@ function SoundtrackContent() {
     const [audioError, setAudioError] = useState<string | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadHint, setDownloadHint] = useState<string | null>(null);
+    const [shareHint, setShareHint] = useState<string | null>(null);
+    const [durationWarning, setDurationWarning] = useState<string | null>(null);
 
     // Filter & Search states
-    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<SoundtrackCategoryFilter>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState<"seq" | "title">("seq");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -195,50 +317,73 @@ function SoundtrackContent() {
         async function loadData() {
             try {
                 setIsLoading(true);
-                const [tracksData, categoriesData] = await Promise.all([
+                setDurationWarning(null);
+                const [tracksData, categoriesData, durationData] = await Promise.all([
                     fetchMasterData<MysekaiMusicSoundTrackMaster[]>("musicSoundTracks.json"),
                     fetchMasterData<MysekaiMusicSoundTrackCategory[]>("musicSoundTrackCategories.json"),
+                    fetchBgmDurationsData<BgmDurationsResponse>().catch((err) => {
+                        console.warn("Failed to load BGM duration data:", err);
+                        return null;
+                    }),
                 ]);
 
                 if (cancelled) return;
+
+                if (!durationData) {
+                    setDurationWarning(t("page.soundtrack.spoiler.durationLoadFailed"));
+                }
 
                 // Sort categories and tracks initially
                 const sortedCategories = [...categoriesData].sort((a, b) => a.id - b.id);
                 setCategories(sortedCategories);
 
-                const sortedTracks = [...tracksData].sort((a, b) => a.seq - b.seq);
+                const spoilerTracks = buildSpoilerTracksFromDurations(durationData, tracksData);
+                const sortedTracks = [...tracksData, ...spoilerTracks].sort((a, b) => a.seq - b.seq);
                 setTracks(sortedTracks);
 
-                // Set default track on first load, or restore from sessionStorage
-                const savedTrackIdStr = sessionStorage.getItem("soundtrack-current-track-id");
-                if (savedTrackIdStr) {
-                    const savedTrackId = parseInt(savedTrackIdStr, 10);
-                    const matchedTrack = sortedTracks.find(t => t.id === savedTrackId);
-                    if (matchedTrack) {
-                        setCurrentTrack(matchedTrack);
-                    } else if (sortedTracks.length > 0) {
-                        setCurrentTrack(sortedTracks[0]);
-                    }
-                } else if (sortedTracks.length > 0) {
-                    setCurrentTrack(sortedTracks[0]);
-                }
+                const nextSearchQuery = searchParams.get("search") ?? "";
+                const nextSortBy = searchParams.get("sort") === "title" ? "title" : "seq";
+                const nextSortOrder = searchParams.get("order") === "desc" ? "desc" : "asc";
+                const visibleTracks = isShowSpoiler ? sortedTracks : sortedTracks.filter(track => !track.isSpoiler);
 
+                // Set default track on first load, restoring from URL first and sessionStorage second.
                 // Restore filters from searchParams
                 const urlCat = searchParams.get("category");
-                if (urlCat) {
+                const nextCategoryId = (() => {
+                    if (!urlCat) return null;
+                    if (urlCat === SPOILER_CATEGORY_FILTER) return isShowSpoiler ? SPOILER_CATEGORY_FILTER : null;
                     const parsedCat = parseInt(urlCat, 10);
-                    if (!Number.isNaN(parsedCat) && sortedCategories.some(c => c.id === parsedCat)) {
-                        setSelectedCategoryId(parsedCat);
-                    } else {
-                        setSelectedCategoryId(null);
-                    }
-                } else {
-                    setSelectedCategoryId(null);
-                }
+                    return !Number.isNaN(parsedCat) && sortedCategories.some(c => c.id === parsedCat)
+                        ? parsedCat
+                        : null;
+                })();
+                setSelectedCategoryId(nextCategoryId);
 
-                setSearchQuery(searchParams.get("search") ?? "");
-                setSortBy(searchParams.get("sort") === "title" ? "title" : "seq");
-                setSortOrder(searchParams.get("order") === "desc" ? "desc" : "asc");
+                const restoreCandidates = visibleTracks.filter((track) => {
+                    if (nextCategoryId === SPOILER_CATEGORY_FILTER && !track.isSpoiler) return false;
+                    if (typeof nextCategoryId === "number" && track.musicSoundTrackCategoryId !== nextCategoryId) return false;
+                    if (nextSearchQuery.trim() && !getTrackSearchText(track).includes(nextSearchQuery.toLowerCase().trim())) return false;
+                    return true;
+                }).sort((a, b) => {
+                    let comparison = 0;
+                    if (nextSortBy === "seq") comparison = a.seq - b.seq;
+                    else comparison = a.title.localeCompare(b.title, "ja-JP");
+                    return nextSortOrder === "asc" ? comparison : -comparison;
+                });
+
+                // Set default track on first load, restoring from URL first and sessionStorage second.
+                const urlTrackIdStr = searchParams.get("track");
+                const savedTrackIdStr = sessionStorage.getItem("soundtrack-current-track-id");
+                const restoreTrackIdStr = urlTrackIdStr ?? savedTrackIdStr;
+                const restoredTrackId = restoreTrackIdStr ? parseInt(restoreTrackIdStr, 10) : NaN;
+                const matchedTrack = Number.isNaN(restoredTrackId)
+                    ? null
+                    : visibleTracks.find(t => t.id === restoredTrackId) ?? null;
+                setCurrentTrack(matchedTrack ?? restoreCandidates[0] ?? visibleTracks[0] ?? null);
+
+                setSearchQuery(nextSearchQuery);
+                setSortBy(nextSortBy);
+                setSortOrder(nextSortOrder);
 
                 setError(null);
             } catch (err) {
@@ -256,7 +401,7 @@ function SoundtrackContent() {
         return () => {
             cancelled = true;
         };
-    }, [searchParams, t]);
+    }, [searchParams, t, isShowSpoiler]);
 
     // Generate stable animation heights and durations for the visualizer to prevent twitching & excessive renders
     const visualizerHeights = useMemo(() => {
@@ -294,6 +439,7 @@ function SoundtrackContent() {
 
     useEffect(() => {
         setDownloadHint(null);
+        setShareHint(null);
     }, [audioUrl]);
 
     // Explicitly swap the single audio element source so old tracks are stopped before a new one loads.
@@ -375,25 +521,36 @@ function SoundtrackContent() {
         return new Map(categories.map(c => [c.id, c]));
     }, [categories]);
 
+    const spoilerTrackCount = useMemo(() => tracks.filter(track => track.isSpoiler).length, [tracks]);
+    const selectedCategoryLabel = selectedCategoryId === SPOILER_CATEGORY_FILTER
+        ? t("page.soundtrack.spoiler.categoryName")
+        : selectedCategoryId !== null
+            ? categoryMap.get(selectedCategoryId)?.name || t("page.soundtrack.categoryFallback")
+            : t("page.soundtrack.allCategory");
+
     // Filtered and Sorted Tracks
     const filteredTracks = useMemo(() => {
         let result = [...tracks];
 
-        // 1. Filter by category
-        if (selectedCategoryId !== null) {
+        // 1. Hide spoiler-only supplemental tracks unless the global spoiler setting is enabled.
+        if (!isShowSpoiler) {
+            result = result.filter(t => !t.isSpoiler);
+        }
+
+        // 2. Filter by category
+        if (selectedCategoryId === SPOILER_CATEGORY_FILTER) {
+            result = result.filter(t => t.isSpoiler);
+        } else if (selectedCategoryId !== null) {
             result = result.filter(t => t.musicSoundTrackCategoryId === selectedCategoryId);
         }
 
-        // 2. Filter by search query (fuzzy search title or pronunciation)
+        // 3. Filter by search query (fuzzy search title, pronunciation, asset key, or file name)
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase().trim();
-            result = result.filter(t => 
-                t.title.toLowerCase().includes(query) || 
-                t.pronunciation.toLowerCase().includes(query)
-            );
+            result = result.filter(t => getTrackSearchText(t).includes(query));
         }
 
-        // 3. Sort
+        // 4. Sort
         result.sort((a, b) => {
             let comparison = 0;
             if (sortBy === "seq") {
@@ -405,10 +562,35 @@ function SoundtrackContent() {
         });
 
         return result;
-    }, [tracks, selectedCategoryId, searchQuery, sortBy, sortOrder]);
+    }, [tracks, selectedCategoryId, searchQuery, sortBy, sortOrder, isShowSpoiler]);
+
+    const updateTrackUrlParam = useCallback((track: MysekaiMusicSoundTrackMaster | null) => {
+        if (typeof window === "undefined") return;
+        const url = new URL(window.location.href);
+        if (track) url.searchParams.set("track", track.id.toString());
+        else url.searchParams.delete("track");
+        window.history.replaceState({}, "", url.toString());
+    }, []);
+
+    useEffect(() => {
+        if (isShowSpoiler || selectedCategoryId !== SPOILER_CATEGORY_FILTER) return;
+
+        setSelectedCategoryId(null);
+        handleFilterChange(null, searchQuery, sortBy, sortOrder);
+    }, [isShowSpoiler, selectedCategoryId, searchQuery, sortBy, sortOrder]);
+
+    useEffect(() => {
+        if (!currentTrack) return;
+        if (isShowSpoiler || !currentTrack.isSpoiler) return;
+
+        const fallbackTrack = filteredTracks[0] ?? tracks.find(track => !track.isSpoiler) ?? null;
+        setCurrentTrack(fallbackTrack);
+        updateTrackUrlParam(fallbackTrack);
+        setIsPlaying(false);
+    }, [currentTrack, filteredTracks, tracks, isShowSpoiler, updateTrackUrlParam]);
 
     // Sync states to URL query parameters
-    const handleFilterChange = (catId: number | null, search: string, sort: "seq" | "title", order: "asc" | "desc") => {
+    const handleFilterChange = (catId: SoundtrackCategoryFilter, search: string, sort: "seq" | "title", order: "asc" | "desc") => {
         const url = new URL(window.location.href);
         
         if (catId !== null) url.searchParams.set("category", catId.toString());
@@ -423,11 +605,14 @@ function SoundtrackContent() {
         if (order !== "asc") url.searchParams.set("order", order);
         else url.searchParams.delete("order");
 
+        if (currentTrack) url.searchParams.set("track", currentTrack.id.toString());
+        else url.searchParams.delete("track");
+
         window.history.replaceState({}, "", url.toString());
     };
 
     // Update active category
-    const selectCategory = (catId: number | null) => {
+    const selectCategory = (catId: SoundtrackCategoryFilter) => {
         setSelectedCategoryId(catId);
         handleFilterChange(catId, searchQuery, sortBy, sortOrder);
     };
@@ -511,7 +696,7 @@ function SoundtrackContent() {
         localStorage.setItem("soundtrack-playback-mode", nextMode);
     };
 
-    const getPlaybackList = () => filteredTracks.length > 0 ? filteredTracks : tracks;
+    const getPlaybackList = () => filteredTracks.length > 0 ? filteredTracks : tracks.filter(track => isShowSpoiler || !track.isSpoiler);
 
     const pickRandomTrack = (activeList: MysekaiMusicSoundTrackMaster[]) => {
         if (activeList.length <= 1 || !currentTrack) return activeList[0];
@@ -542,6 +727,7 @@ function SoundtrackContent() {
         }
 
         setCurrentTrack(nextTrack);
+        updateTrackUrlParam(nextTrack);
         setIsPlaying(true);
     };
 
@@ -566,6 +752,7 @@ function SoundtrackContent() {
         }
 
         setCurrentTrack(prevTrack);
+        updateTrackUrlParam(prevTrack);
         setIsPlaying(true);
     };
 
@@ -590,6 +777,7 @@ function SoundtrackContent() {
 
     const handleTrackSelect = (track: MysekaiMusicSoundTrackMaster) => {
         setCurrentTrack(track);
+        updateTrackUrlParam(track);
         setIsPlaying(true);
     };
 
@@ -599,6 +787,7 @@ function SoundtrackContent() {
         const fileName = getTrackDownloadFileName(currentTrack);
         setIsDownloading(true);
         setDownloadHint(null);
+        setShareHint(null);
 
         try {
             const cachedBlob = await readAudioBlobFromCache(audioUrl);
@@ -630,6 +819,51 @@ function SoundtrackContent() {
         }
     };
 
+    const buildCurrentTrackShareUrl = useCallback(() => {
+        if (!currentTrack || typeof window === "undefined") return "";
+        const url = new URL(window.location.href);
+        url.searchParams.set("track", currentTrack.id.toString());
+        if (selectedCategoryId !== null) url.searchParams.set("category", selectedCategoryId.toString());
+        else url.searchParams.delete("category");
+        if (searchQuery) url.searchParams.set("search", searchQuery);
+        else url.searchParams.delete("search");
+        if (sortBy !== "seq") url.searchParams.set("sort", sortBy);
+        else url.searchParams.delete("sort");
+        if (sortOrder !== "asc") url.searchParams.set("order", sortOrder);
+        else url.searchParams.delete("order");
+        return url.toString();
+    }, [currentTrack, selectedCategoryId, searchQuery, sortBy, sortOrder]);
+
+    const handleShareCurrentTrack = useCallback(async () => {
+        if (!currentTrack) return;
+
+        const url = buildCurrentTrackShareUrl();
+        if (!url) return;
+
+        setDownloadHint(null);
+        setShareHint(null);
+
+        const title = getDisplayTrackTitle(currentTrack, t);
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title,
+                    text: t("page.soundtrack.share.nativeText", { title }),
+                    url,
+                });
+                setShareHint(t("page.soundtrack.share.sharedHint"));
+                return;
+            }
+
+            await navigator.clipboard.writeText(url);
+            setShareHint(t("page.soundtrack.share.copiedHint"));
+        } catch (err) {
+            if (err instanceof DOMException && err.name === "AbortError") return;
+            console.warn("Failed to share soundtrack URL:", err);
+            setShareHint(t("page.soundtrack.share.failedHint"));
+        }
+    }, [buildCurrentTrackShareUrl, currentTrack, t]);
+
     // Format seconds into MM:SS
     const formatTime = (time: number) => {
         if (!Number.isFinite(time)) return "00:00";
@@ -637,6 +871,8 @@ function SoundtrackContent() {
         const secs = Math.floor(time % 60);
         return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     };
+
+    const displayDuration = currentTrack?.durationSeconds ?? duration;
 
     // Calculate dynamic ambient background colors based on current track category
     const ambientBgGlow = useMemo(() => {
@@ -864,7 +1100,7 @@ function SoundtrackContent() {
                                         transition={{ duration: 0.2 }}
                                     >
                                         <h3 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white truncate max-w-full">
-                                            {currentTrack?.title || t("page.soundtrack.emptyTrack")}
+                                            {getDisplayTrackTitle(currentTrack, t)}
                                         </h3>
                                         <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 truncate">
                                             {currentTrack?.pronunciation || t("page.soundtrack.pronunciationLoading")}
@@ -873,6 +1109,16 @@ function SoundtrackContent() {
                                             <div className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[10px] font-bold text-slate-600 dark:text-slate-300">
                                                 {currentTrack ? (categoryMap.get(currentTrack.musicSoundTrackCategoryId)?.name || "BGM") : "..."}
                                             </div>
+                                            {currentTrack?.isSpoiler && (
+                                                <span className="px-3 py-1 bg-orange-500/10 border border-orange-400/30 rounded-full text-[10px] font-bold text-orange-600 dark:text-orange-300">
+                                                    {t("common.badge.spoiler")}
+                                                </span>
+                                            )}
+                                            {currentTrack && Number.isFinite(displayDuration) && displayDuration > 0 && (
+                                                <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[10px] font-mono font-bold text-slate-500 dark:text-slate-300" title={t("page.soundtrack.durationLabel")}>
+                                                    {formatTime(displayDuration)}
+                                                </span>
+                                            )}
                                             <button
                                                 onClick={handleDownloadCurrentTrack}
                                                 disabled={!currentTrack || !audioUrl || isDownloading}
@@ -893,6 +1139,21 @@ function SoundtrackContent() {
                                                 )}
                                                 <span>{isDownloading ? t("page.soundtrack.download.preparing") : t("page.soundtrack.download.button")}</span>
                                             </button>
+                                            <button
+                                                onClick={handleShareCurrentTrack}
+                                                disabled={!currentTrack}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-all hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                                                title={t("page.soundtrack.share.currentTitle")}
+                                            >
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                                    <circle cx="18" cy="5" r="3" />
+                                                    <circle cx="6" cy="12" r="3" />
+                                                    <circle cx="18" cy="19" r="3" />
+                                                    <path d="M8.59 13.51l6.83 3.98" />
+                                                    <path d="M15.41 6.51L8.59 10.49" />
+                                                </svg>
+                                                <span>{t("page.soundtrack.share.button")}</span>
+                                            </button>
                                         </div>
                                     </motion.div>
                                 </AnimatePresence>
@@ -903,9 +1164,9 @@ function SoundtrackContent() {
                                     {audioError}
                                 </div>
                             )}
-                            {downloadHint && !audioError && (
+                            {(downloadHint || shareHint || durationWarning) && !audioError && (
                                 <div className="mb-4 rounded-xl border border-miku/30 bg-miku/10 px-3 py-2 text-center text-xs font-medium text-teal-700 dark:text-miku">
-                                    {downloadHint}
+                                    {downloadHint || shareHint || durationWarning}
                                 </div>
                             )}
 
@@ -1190,6 +1451,30 @@ function SoundtrackContent() {
                                     <span className={`text-xs font-bold ${selectedCategoryId === null ? "text-miku" : "text-slate-800 dark:text-white"}`}>{t("page.soundtrack.allCategory")}</span>
                                 </button>
 
+                                {/* Spoiler-only supplemental BGM category */}
+                                {isShowSpoiler && (
+                                    <button
+                                        onClick={() => selectCategory(SPOILER_CATEGORY_FILTER)}
+                                        className={`relative flex-shrink-0 w-32 h-16 rounded-xl overflow-hidden border transition-all text-left flex flex-col justify-between p-2.5 group ${
+                                            selectedCategoryId === SPOILER_CATEGORY_FILTER
+                                                ? "bg-white/90 dark:bg-slate-900/80 shadow-lg"
+                                                : "border-slate-200 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 hover:border-slate-300 dark:hover:border-white/20 hover:scale-[1.02]"
+                                        }`}
+                                        style={{
+                                            borderColor: selectedCategoryId === SPOILER_CATEGORY_FILTER ? SPOILER_CATEGORY_THEME.from : undefined,
+                                            boxShadow: selectedCategoryId === SPOILER_CATEGORY_FILTER ? `0 4px 14px ${SPOILER_CATEGORY_THEME.from}25` : undefined,
+                                        }}
+                                    >
+                                        <div className="absolute inset-0 opacity-15 dark:opacity-20 bg-gradient-to-br from-orange-300 via-rose-400 to-amber-500 group-hover:scale-105 transition-transform duration-500" />
+                                        <span className="text-[8px] font-bold text-orange-500 dark:text-orange-300 tracking-wider relative z-10">
+                                            {t("common.badge.spoiler")} · {formatNumber(spoilerTrackCount)}
+                                        </span>
+                                        <span className={`text-xs font-bold ${selectedCategoryId === SPOILER_CATEGORY_FILTER ? "text-slate-900 dark:text-white" : "text-slate-800 dark:text-white"} relative z-10 block truncate max-w-full`}>
+                                            {t("page.soundtrack.spoiler.categoryName")}
+                                        </span>
+                                    </button>
+                                )}
+
                                 {/* List of Categories */}
                                 {categories.map(cat => {
                                     const active = selectedCategoryId === cat.id;
@@ -1336,8 +1621,12 @@ function SoundtrackContent() {
                                     </div>
                                 ) : filteredTracks.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center h-80 text-center p-6 border-2 border-dashed border-slate-200 dark:border-white/5 rounded-2xl m-3">
-                                        <svg className="w-10 h-10 text-slate-400 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 0v1.5a2.25 2.25 0 001.713 2.185l.09.025a.75.75 0 01.05 1.488l-.05.012a2.25 2.25 0 01-1.723 2.2 4.5 4.5 0 00-2.822 2.624L15 13.5M9 9v1.5M9 9H7.5A2.25 2.25 0 005.25 11.25v6.75a2.25 2.25 0 002.25 2.25H9A2.25 2.25 0 0011.25 18v-6.75A2.25 2.25 0 009 9zM15 13.5v1.5m0-1.5H13.5a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25H15a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25z" />
+                                        <svg className="w-10 h-10 text-slate-400 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                            <circle cx="10" cy="18" r="3" />
+                                            <path d="M13 18V5l7-1.5v10" />
+                                            <circle cx="20" cy="14" r="2" />
+                                            <path d="M3 5h5" />
+                                            <path d="M3 9h3" />
                                         </svg>
                                         <p className="text-slate-700 dark:text-slate-400 font-bold text-sm">{t("page.soundtrack.states.noResultsTitle")}</p>
                                         <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{t("page.soundtrack.states.noResultsDescription")}</p>
@@ -1398,7 +1687,7 @@ function SoundtrackContent() {
                                                         {/* Titles */}
                                                         <div className="min-w-0 flex-1">
                                                             <h5 className={`text-sm font-bold truncate transition-colors ${isActive ? trackTheme.text : "text-slate-800 dark:text-white group-hover:text-miku"}`}>
-                                                                {track.title}
+                                                                {getDisplayTrackTitle(track, t)}
                                                             </h5>
                                                             <p className="text-slate-500 text-[10px] truncate mt-0.5 font-sans font-medium">
                                                                 {track.pronunciation}
@@ -1406,11 +1695,21 @@ function SoundtrackContent() {
                                                         </div>
                                                     </div>
 
-                                                    {/* Right info: category tag & duration placeholder */}
-                                                    <div className="flex items-center gap-3 ml-2 flex-shrink-0">
+                                                    {/* Right info: category tag, spoiler badge, duration, and action hint */}
+                                                    <div className="flex items-center gap-2 ml-2 flex-shrink-0">
                                                         <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/5 max-w-[80px] truncate">
                                                             {categoryMap.get(track.musicSoundTrackCategoryId)?.name || "BGM"}
                                                         </span>
+                                                        {track.isSpoiler && (
+                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-orange-500 text-white shadow-sm">
+                                                                {t("common.badge.spoiler")}
+                                                            </span>
+                                                        )}
+                                                        {track.durationSeconds !== undefined && (
+                                                            <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/5">
+                                                                {formatTime(track.durationSeconds)}
+                                                            </span>
+                                                        )}
                                                         
                                                         {/* Simple chevron indicating interactive row */}
                                                         <svg className={`w-4 h-4 transition-transform ${isActive ? "text-slate-800 dark:text-white" : "text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-300 group-hover:translate-x-0.5"}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -1429,9 +1728,7 @@ function SoundtrackContent() {
                                 {t("page.soundtrack.footer", {
                                     shown: formatNumber(filteredTracks.length),
                                     total: formatNumber(tracks.length),
-                                    category: selectedCategoryId !== null
-                                        ? categoryMap.get(selectedCategoryId)?.name || t("page.soundtrack.categoryFallback")
-                                        : t("page.soundtrack.allCategory"),
+                                    category: selectedCategoryLabel,
                                 })}
                             </div>
                         </div>
