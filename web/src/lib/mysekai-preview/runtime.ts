@@ -2461,7 +2461,7 @@ export class MysekaiScenePreviewRuntime {
                     topY: bbox.max.y,
                     cellKeys: getXZCellKeysFromBBox(bbox),
                     customPartType: String(stackObject.userData.customPartType || "") || null,
-                    putType: String(meta.mysekaiFixturePutType || "") || null,
+                    putType: String(meta?.mysekaiFixturePutType || "") || null,
                 });
             }
             if (placedForShadow && Math.abs(Number(item.position?.y || 0)) < 1e-6) {
