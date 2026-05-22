@@ -13,16 +13,15 @@ import {
     getCardFullUrl,
     getCharacterIconUrl,
 } from "@/lib/assets";
-import { loadTranslations } from "@/lib/translations";
 import { getTodayBirthdays, isVirtualSinger, type UpcomingBirthday } from "@/lib/birthdays";
 import { useI18n } from "@/contexts/I18nContext";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 // ─── Slide type definitions ───
 
 interface EventSlide {
     type: "event";
     event: IEventInfo;
-    translatedName: string;
 }
 
 interface GachaSlide {
@@ -45,6 +44,7 @@ const AUTO_PLAY_INTERVAL = 5000;
 export default function HeroCarousel() {
     const { assetSource, themeColor, isShowSpoiler } = useTheme();
     const { t, formatDate: formatLocaleDate } = useI18n();
+    const { t: translateMasterText } = useTranslation();
     const [slides, setSlides] = useState<Slide[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
@@ -66,11 +66,10 @@ export default function HeroCarousel() {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [eventsData, gachasData, cardsData, translationsData] = await Promise.all([
+                const [eventsData, gachasData, cardsData] = await Promise.all([
                     fetchMasterData<IEventInfo[]>("events.json"),
                     fetchMasterData<IGachaInfo[]>("gachas.json"),
                     fetchMasterData<ICardInfo[]>("cards.json"),
-                    loadTranslations(),
                 ]);
                 const now = Date.now();
                 const builtSlides: Slide[] = [];
@@ -84,8 +83,7 @@ export default function HeroCarousel() {
                 const currentEvent = ongoingEvent || upcomingEvent;
 
                 if (currentEvent) {
-                    const translatedName = translationsData?.events?.name?.[currentEvent.name] || "";
-                    builtSlides.push({ type: "event", event: currentEvent, translatedName });
+                    builtSlides.push({ type: "event", event: currentEvent });
                 }
 
                 // 2. Current gachas (filter out "normal" type, keep limited/featured)
@@ -259,6 +257,7 @@ export default function HeroCarousel() {
                             formatDate={formatDate}
                             getStaminaLabel={getStaminaLabel}
                             t={t}
+                            translateMasterText={translateMasterText}
                         />
                     )}
                     {slide.type === "gacha" && (
@@ -337,6 +336,7 @@ function EventSlideContent({
     formatDate,
     getStaminaLabel,
     t,
+    translateMasterText,
 }: {
     slide: EventSlide;
     assetSource: AssetSourceType;
@@ -345,8 +345,10 @@ function EventSlideContent({
     formatDate: (ts: number) => string;
     getStaminaLabel: (event: IEventInfo) => string | null;
     t: ReturnType<typeof useI18n>["t"];
+    translateMasterText: ReturnType<typeof useTranslation>["t"];
 }) {
-    const { event, translatedName } = slide;
+    const { event } = slide;
+    const translatedName = translateMasterText("events", "name", event.name);
     const status = getEventStatus(event);
     const statusDisplay = EVENT_STATUS_DISPLAY[status];
     const statusLabel = t(`common.status.${status}`);

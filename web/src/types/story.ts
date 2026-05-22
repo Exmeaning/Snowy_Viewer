@@ -233,7 +233,7 @@ export interface IProcessedAction {
     chara?: {
         id: number;
         name: string;
-        unitName?: string; // For virtual singers with sub-unit (localized unit name)
+        unitName?: string; // Legacy unit name for virtual singers with sub-unit
         unitField?: string; // For virtual singers with sub-unit (unit field like 'light_sound', 'school_refusal')
     };
     body?: string;

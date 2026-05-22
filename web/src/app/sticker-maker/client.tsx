@@ -4,7 +4,7 @@ import NextImage from "next/image";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
-import { UNIT_DATA, CHARACTER_NAMES, UNIT_ICON_FILES } from "@/types/types";
+import { UNIT_DATA, CHARACTER_NAMES, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 
 // Types
@@ -502,6 +502,7 @@ export default function StickerMakerContent() {
                                 <div className="flex flex-wrap gap-2">
                                     {UNIT_DATA.map(unit => {
                                         const iconName = UNIT_ICON_FILES[unit.id] || "";
+                                        const unitLabel = t(UNIT_ID_LABEL_KEYS[unit.id] ?? `common.units.${unit.id}`);
                                         return (
                                             <button
                                                 key={unit.id}
@@ -510,12 +511,12 @@ export default function StickerMakerContent() {
                                                     ? "ring-2 ring-miku shadow-lg bg-white"
                                                     : "hover:bg-slate-100/50 border border-transparent"
                                                     }`}
-                                                title={unit.name}
+                                                title={unitLabel}
                                             >
                                                 <div className="w-8 h-8 relative">
                                                     <NextImage
                                                         src={`/data/icon/${iconName}`}
-                                                        alt={unit.name}
+                                                        alt={unitLabel}
                                                         fill
                                                         className="object-contain"
                                                         unoptimized

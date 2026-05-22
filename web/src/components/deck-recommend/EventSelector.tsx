@@ -2,11 +2,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { IEventInfo, IEventDeckBonus, EventType, EVENT_TYPE_COLORS, getEventStatus } from "@/types/events";
-import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, CardAttribute, ATTR_ICON_PATHS, ATTR_NAMES, CHARACTER_NAMES } from "@/types/types";
+import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS, CardAttribute, ATTR_ICON_PATHS, ATTR_NAMES } from "@/types/types";
 import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import { getCharacterIconUrl, getEventLogoUrl, getEventStoryBannerUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import SelectorModal from "./SelectorModal";
@@ -15,8 +16,8 @@ import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, build
 import { type Wl3SimulationGroup, getWl3SimulationGroupByEventId } from "@/lib/world-bloom-simulation";
 
 // Build unit icon mapping from UNIT_DATA (same as EventItem)
-const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = Object.fromEntries(
-    UNIT_DATA.filter(u => UNIT_ICON_FILES[u.id]).map(u => [u.id, { icon: UNIT_ICON_FILES[u.id], name: u.name }])
+const EVENT_UNIT_ICON: Record<string, { icon: string; labelKey: string }> = Object.fromEntries(
+    UNIT_DATA.filter(u => UNIT_ICON_FILES[u.id]).map(u => [u.id, { icon: UNIT_ICON_FILES[u.id], labelKey: UNIT_ID_LABEL_KEYS[u.id] ?? `common.units.${u.id}` }])
 );
 
 function getWl3SimulationInfo(eventId: string): Wl3SimulationGroup | null {
@@ -30,25 +31,30 @@ function Wl3SimulationMemberAvatars({
     members: readonly number[];
     size?: number;
 }) {
+    const { t } = useI18n();
+
     return (
         <div className="flex flex-wrap gap-1.5">
-            {members.map((characterId) => (
-                <div
-                    key={characterId}
-                    className="rounded-full ring-2 ring-white shadow-sm overflow-hidden bg-slate-100"
-                    title={CHARACTER_NAMES[characterId]}
-                    style={{ width: size, height: size }}
-                >
-                    <Image
-                        src={getCharacterIconUrl(characterId)}
-                        alt={CHARACTER_NAMES[characterId]}
-                        width={size}
-                        height={size}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                    />
-                </div>
-            ))}
+            {members.map((characterId) => {
+                const characterName = getCharacterName(t, characterId);
+                return (
+                    <div
+                        key={characterId}
+                        className="rounded-full ring-2 ring-white shadow-sm overflow-hidden bg-slate-100"
+                        title={characterName}
+                        style={{ width: size, height: size }}
+                    >
+                        <Image
+                            src={getCharacterIconUrl(characterId)}
+                            alt={characterName}
+                            width={size}
+                            height={size}
+                            className="w-full h-full object-cover"
+                            unoptimized
+                        />
+                    </div>
+                );
+            })}
         </div>
     );
 }
@@ -517,10 +523,10 @@ function EventSelectionItem({
                         </span>
                         {unitType && (
                             EVENT_UNIT_ICON[unitType] ? (
-                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center" title={EVENT_UNIT_ICON[unitType].name}>
+                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center" title={t(EVENT_UNIT_ICON[unitType].labelKey)}>
                                     <Image
                                         src={`/data/icon/${EVENT_UNIT_ICON[unitType].icon}`}
-                                        alt={EVENT_UNIT_ICON[unitType].name}
+                                        alt={t(EVENT_UNIT_ICON[unitType].labelKey)}
                                         width={16}
                                         height={16}
                                         className="object-contain"

@@ -10,7 +10,7 @@
 
 - `zh-CN` / `en-US` 双语字典与 `I18nContext` 基础设施已落地。
 - 核心数据库页、动态详情页、首页、布局、个人页、工具页、剧情页等主要用户路径基本接入 `t()`。
-- 账号/服务器共享层、剧情 asset fallback、活动单位筛选与 WL3 模拟分组等收尾项已完成最近两轮清理：共享常量改为稳定 key/id，显示文案统一由 `common.*` / `page.deckRecommend.*` 字典负责。
+- 账号/服务器共享层、剧情 asset fallback、活动单位筛选、WL3 模拟分组与单位显示 label 等收尾项已完成最近几轮清理：共享常量改为稳定 key/id，显示文案统一由 `common.*` / `page.deckRecommend.*` 字典负责。
 - 当前残留的中文不再主要集中在普通页面 UI，而是集中在以下边界：
   - SEO/站点品牌关键词。
   - 法务/赞助类静态长文本。
@@ -89,6 +89,7 @@ export function Example() {
 | BaseFilters / Modal / QuickFilter / 图片动作 | 已完成 | 共享筛选、弹窗、预览、复制、保存、下载固定文案已迁移 |
 | 快捷键帮助 | 已完成 | 分组使用稳定 id 与 `shortcuts.*` 字典 |
 | 账号与服务器共享层 | 已完成 | `SERVER_OPTIONS` 使用 `labelKey`，调用方复用 `common.server.*`；联机中继服务器使用 `nameKey` / `regionKey` + `common.relayServers.*` |
+| 单位显示共享常量 | 已完成 | `UNIT_FIELD_LABEL_KEYS` / `UNIT_ID_LABEL_KEYS` 作为 UI label key 来源，页面/组件侧通过 `common.units.*` 显示；`UNIT_NAME_MAP` 仅保留 masterdata/官方名边界 |
 | 全局错误页 | 已完成 | 接入 `common.errorBoundary` / `common.action.retry` |
 
 ### 3.2 主要路由
@@ -133,7 +134,7 @@ files_with_han_excluding_messages = 12
 | P0 | `src/lib/eventUnit.ts` | `getEventUnitDisplayName()` 曾返回 `"无"` / `"其他"` | 已完成：改为 `getEventUnitFilterId()` 返回 stable id，UI 层使用 `common.units.*` 翻译；目标扫描为 0 |
 | P1 | `src/lib/world-bloom-simulation.ts` | WL3 分组 title 曾为 `"第1组"` 等 | 已完成：`WL3_SIMULATION_GROUPS` 仅保留 `groupId`，UI 使用 `page.deckRecommend.wl3GroupTitle` 模板；目标扫描为 0 |
 | P1 | `src/hooks/usePageListShortcuts.ts` | fallback 匹配包含 `搜索`、`加载更多` | 已完成：删除基于 placeholder/textContent 的中文/英文 DOM 兜底匹配，搜索框与加载更多按钮统一依赖 `data-shortcut-search` / `data-shortcut-load-more` 显式标记；目标扫描为 0 |
-| P2 | `src/types/types.ts` / `src/lib/supabase.ts` 中少量枚举 display | 角色/组合/扭蛋/联机中继服务器等常量混合了官方名与 UI label | 已推进一批：`SUPPORT_UNIT_NAMES` / `GACHA_TYPE_LABELS` / `GACHA_CATEGORY_LABELS` 改为 `*_LABEL_KEYS`；`SERVERS` 中继节点改为 `nameKey` / `regionKey`，联机页通过 `common.relayServers.*` 显示；`UNIT_NAME_MAP`、`CHARACTER_NAMES` 等官方名继续按 masterdata 边界保留 |
+| P2 | `src/types/types.ts` / `src/lib/supabase.ts` 中少量枚举 display | 角色/组合/扭蛋/联机中继服务器等常量混合了官方名与 UI label | 已推进一批：`SUPPORT_UNIT_NAMES` / `GACHA_TYPE_LABELS` / `GACHA_CATEGORY_LABELS` 改为 `*_LABEL_KEYS`；`SERVERS` 中继节点改为 `nameKey` / `regionKey`；单位显示新增 `UNIT_FIELD_LABEL_KEYS` / `UNIT_ID_LABEL_KEYS`，常见 UI 调用方通过 `common.units.*` 显示；`UNIT_NAME_MAP`、`CHARACTER_NAMES` 等官方名继续按 masterdata 边界保留 |
 
 ## 5. 字典组织规范
 
@@ -319,7 +320,8 @@ React hook 内可以调用 `useI18n()`，但如果 hook 是低层数据 hook，�
 - [x] 将 `GACHA_TYPE_LABELS` / `GACHA_CATEGORY_LABELS` 改为 `GACHA_TYPE_LABEL_KEYS` / `GACHA_CATEGORY_LABEL_KEYS`，扭蛋详情页与筛选继续通过字典显示。
 - [x] 将联机中继 `SERVERS` 的 `name` / `region` 改为 `nameKey` / `regionKey`，猜角色/猜曲绘联机页通过 `common.relayServers.*` 字典显示服务器名、区域与分享文案。
 - [x] 清理一批注释/开发辅助中文残留，缩小 `scan-hardcoded-ui-text.mjs` allowlist。
-- [ ] 继续确认 `UNIT_NAME_MAP`、`CHARACTER_NAMES` 的产品边界：官方名保留，UI 枚举迁移。
+- [x] 新增 `UNIT_FIELD_LABEL_KEYS` / `UNIT_ID_LABEL_KEYS`，并把角色筛选、活动卡片/选择器、设置面板、队伍推荐自定义加成、猜角色、贴纸制作、个人剧情单位分组、活动详情 VS 子团体显示等常见 UI 路径改为通过 `common.units.*` 翻译。
+- [ ] 继续确认 `CHARACTER_NAMES` / `CHAR_NAMES` 的产品边界：官方名保留，若要完整英文 UI 需先制定统一角色名策略。
 
 ### P2：自动化守护
 
@@ -361,7 +363,7 @@ src/types/types.ts
 src/lib/storyLoader.ts
 ```
 
-allowlist 必须注明原因，不能只写路径；本轮已移除注释类 allowlist 和 `src/lib/supabase.ts` 临时 allowlist，当前 `lint:i18n` 输出为 `Hardcoded UI Han scan OK (14 allowlisted file groups)`。
+allowlist 必须注明原因，不能只写路径；近期已移除注释类 allowlist 和 `src/lib/supabase.ts` 临时 allowlist，当前 `lint:i18n` 输出仍为 `Hardcoded UI Han scan OK (14 allowlisted file groups)`。
 
 ### P3：多语言 SEO / 服务端 i18n 专项
 
@@ -437,45 +439,39 @@ npm run build:next --prefix web
 
 ## 11. 最近已知验证记录
 
-最近一轮（2026-05-22）已完成并记录为通过的范围：
+最近一轮（2026-05-22，单位显示 label key 收尾）已完成并记录为通过的范围：
 
 ```text
-web/package.json
-web/scripts/i18n-utils.mjs
-web/scripts/check-i18n-keys.mjs
-web/scripts/check-i18n-usage.mjs
-web/scripts/scan-hardcoded-ui-text.mjs
-web/src/lib/supabase.ts
+web/src/types/types.ts
+web/src/types/story.ts
+web/src/lib/storyLoader.ts
+web/src/components/common/CharacterFilter.tsx
+web/src/components/events/EventFilters.tsx
+web/src/components/events/EventItem.tsx
+web/src/components/deck-recommend/CharacterSelector.tsx
+web/src/components/deck-recommend/EventSelector.tsx
+web/src/components/SettingsPanel.tsx
+web/src/components/story/StorySnippet.tsx
+web/src/app/deck-recommend/client.tsx
+web/src/app/events/[id]/client.tsx
+web/src/app/story/self/client.tsx
+web/src/app/guess-who/client.tsx
 web/src/app/guess-who/multiplayer/client.tsx
-web/src/app/guess-jacket/multiplayer/client.tsx
-web/src/hooks/useCardThumbnail.ts
-web/src/contexts/BreadcrumbContext.tsx
-web/src/types/prediction.ts
-web/src/components/common/BaseFilters.tsx
-web/src/components/common/TranslatedText.tsx
-web/src/components/cards/SekaiCardThumbnail.tsx
-web/src/components/MainLayout.tsx
-web/src/lib/deck-recommend/data-provider.ts
-web/src/app/cards/client.tsx
-web/src/app/gacha/client.tsx
-web/src/app/live/client.tsx
-web/src/app/music/client.tsx
-web/src/lib/i18n/messages/zh-CN/index.ts
-web/src/lib/i18n/messages/en-US/index.ts
+web/src/app/sticker-maker/client.tsx
 web/docs/i18n-progress.md
 ```
 
 结果：
 
-- 新增 `lint:i18n` / `lint:i18n-usage` npm scripts，并落地 `check-i18n-keys.mjs`、`scan-hardcoded-ui-text.mjs`、`check-i18n-usage.mjs`；`i18n-utils.mjs` 使用 `fileURLToPath()` 解析 web 根目录以兼容 Windows 路径。
+- 新增 `UNIT_FIELD_LABEL_KEYS` / `UNIT_ID_LABEL_KEYS` 作为单位字段与单位 id 的 UI label key 来源；`UNIT_NAME_MAP` 继续保留为 masterdata/官方名边界，不再作为常见 UI 显示的首选来源。
+- 角色筛选、活动筛选/卡片/选择器、设置面板、队伍推荐自定义加成、活动详情 VS 子团体显示、个人剧情单位分组、猜角色单人/联机与贴纸制作中的单位 title/alt/label 已改为通过 `common.units.*` 翻译。
+- 剧情 loader 不再为 VS 子团体返回中文 `unitName`，仅保留稳定 `unitField` 供 UI badge 使用；相关类型注释改为 legacy 说明。
+- 目标文件定向 ESLint 已通过。
 - `check-i18n-keys.mjs` 当前校验通过：`i18n key structure OK (2914 keys)`。
 - `check-i18n-usage.mjs` 当前校验通过：`Literal i18n usage keys OK`。
 - `scan-hardcoded-ui-text.mjs` 当前校验通过：`Hardcoded UI Han scan OK (14 allowlisted file groups)`。
-- 联机中继 `SERVERS` 已移除中文 `name` / `region`，改为 `nameKey` / `regionKey`；猜角色/猜曲绘联机页统一通过 `common.relayServers.*` 显示服务器名、区域与分享文案。
-- 清理一批注释/开发辅助中文残留：`BreadcrumbContext`、`useCardThumbnail`、`prediction` 类型、`BaseFilters` 示例、`TranslatedText` 示例、`SekaiCardThumbnail` 注释、`MainLayout` 移动端注释、`data-provider` attribution、旧列表页 document.title 注释等。
 - `web/src` 排除 `lib/i18n/messages/*` 后当前仍有中文文件数为 12，集中在 SEO、内容页、masterdata/官方名、locale 原生名与 story fallback 映射等 allowlist 边界。
-- `npm run lint:i18n --prefix web && npm run lint:i18n-usage --prefix web` 已通过。
-- `npm run lint --prefix web` 已通过。
+- `npm run lint:i18n --prefix web && npm run lint:i18n-usage --prefix web && npm run lint --prefix web` 已通过。
 - `npm run build:next --prefix web` 已通过；仅出现已知 Turbopack root warning。
 
 ## 12. 后续维护原则

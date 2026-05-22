@@ -18,7 +18,7 @@ import {
 import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, getEventUnitFilterId, buildEventBannerCharMap } from "@/lib/eventUnit";
 import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getEventStoryBannerUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
-import { CHARACTER_NAMES, UNIT_NAME_MAP } from "@/types/types";
+import { CHARACTER_NAMES, UNIT_FIELD_LABEL_KEYS } from "@/types/types";
 import type { ICardInfo, ICharaUnitInfo, IGameChara } from "@/types/types";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -225,9 +225,9 @@ export default function EventDetailPage() {
                 // If piapro character and belongs to a specific group (not piapro itself)
                 let displayName = baseName;
                 if (gameChar?.unit === "piapro" && charUnit.unit !== "piapro") {
-                    const groupName = UNIT_NAME_MAP[charUnit.unit];
-                    if (groupName) {
-                        displayName = `${baseName}（${groupName}）`;
+                    const groupNameKey = UNIT_FIELD_LABEL_KEYS[charUnit.unit];
+                    if (groupNameKey) {
+                        displayName = `${baseName} (${t(groupNameKey)})`;
                     }
                 }
 
@@ -235,7 +235,7 @@ export default function EventDetailPage() {
             })
             .filter((item): item is { charId: number; unitId: number; displayName: string } => item !== null)
             .sort((a, b) => a.charId - b.charId);
-    }, [deckBonuses, gameCharacterUnits, gameCharacters]);
+    }, [deckBonuses, gameCharacterUnits, gameCharacters, t]);
 
     // Get event cards with full card info
     const eventCardsWithInfo = useMemo(() => {

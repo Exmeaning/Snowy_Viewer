@@ -7,13 +7,13 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { getEventBannerUrl, getEventLogoUrl } from "@/lib/assets";
-import { loadTranslations, TranslationData } from "@/lib/translations";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 export default function CurrentEventTab() {
     const { assetSource, themeColor, isShowSpoiler } = useTheme();
     const { t, formatDate: formatLocaleDate } = useI18n();
+    const { t: translateMasterText } = useTranslation();
     const [currentEvent, setCurrentEvent] = useState<IEventInfo | null>(null);
-    const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [now, setNow] = useState(() => Date.now());
@@ -44,11 +44,7 @@ export default function CurrentEventTab() {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [eventsData, translationsData] = await Promise.all([
-                    fetchMasterData<IEventInfo[]>("events.json"),
-                    loadTranslations(),
-                ]);
-                setTranslations(translationsData);
+                const eventsData = await fetchMasterData<IEventInfo[]>("events.json");
 
                 // Find ongoing or upcoming event
                 const now = Date.now();
@@ -100,7 +96,7 @@ export default function CurrentEventTab() {
     const statusLabel = t(`common.status.${status}`);
     const eventTypeLabel = t(`common.eventTypes.${currentEvent.eventType}`);
     const eventTypeName = eventTypeLabel === `common.eventTypes.${currentEvent.eventType}` ? currentEvent.eventType : eventTypeLabel;
-    const translatedName = translations?.events?.name?.[currentEvent.name] || "";
+    const translatedName = translateMasterText("events", "name", currentEvent.name);
 
     // Calculate progress
     const totalDuration = currentEvent.aggregateAt - currentEvent.startAt;

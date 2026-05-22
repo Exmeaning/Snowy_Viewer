@@ -1,11 +1,12 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { ICardInfo, CHARACTER_NAMES, isTrainableCard } from "@/types/types";
+import { ICardInfo, isTrainableCard } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 
 interface CardItemProps {
     card: ICardInfo;
@@ -16,7 +17,7 @@ interface CardItemProps {
 export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: CardItemProps) {
     const { useTrainedThumbnail } = useTheme();
     const { t } = useI18n();
-    const characterName = CHARACTER_NAMES[card.characterId] || `Character ${card.characterId}`;
+    const characterName = getCharacterName(t, card.characterId);
 
     // Cards that only have trained images (no normal version)
     const TRAINED_ONLY_CARDS = [1167];

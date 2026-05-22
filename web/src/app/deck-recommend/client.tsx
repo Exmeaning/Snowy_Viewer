@@ -7,13 +7,14 @@ import ExternalLink from "@/components/ExternalLink";
 import { useI18n } from "@/contexts/I18nContext";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
-import { CHAR_NAMES, UNIT_DATA, CHARACTER_NAMES, UNIT_NAME_MAP, type ICardInfo } from "@/types/types";
+import { UNIT_DATA, type ICardInfo } from "@/types/types";
 import CharacterSelector from "@/components/deck-recommend/CharacterSelector";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, SERVER_OPTIONS } from "@/lib/account";
 import { getWl3SimulationGroupByEventId, WL3_SIMULATION_GROUPS } from "@/lib/world-bloom-simulation";
+import { getCharacterName } from "@/lib/i18n";
 import AccountSelector from "@/components/AccountSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
@@ -195,12 +196,12 @@ const ATTR_OPTIONS = [
 ];
 
 const UNIT_OPTIONS = [
-    { value: "leo_need", label: UNIT_NAME_MAP.light_sound, icon: "ln.webp" },
-    { value: "more_more_jump", label: UNIT_NAME_MAP.idol, icon: "mmj.webp" },
-    { value: "vivid_bad_squad", label: UNIT_NAME_MAP.street, icon: "vbs.webp" },
-    { value: "wonderlands_showtime", label: UNIT_NAME_MAP.theme_park, icon: "wxs.webp" },
-    { value: "nightcord_at_25", label: UNIT_NAME_MAP.school_refusal, icon: "n25.webp" },
-    { value: "piapro", label: UNIT_NAME_MAP.piapro, icon: "vs.webp" },
+    { value: "leo_need", labelKey: "common.units.ln", icon: "ln.webp" },
+    { value: "more_more_jump", labelKey: "common.units.mmj", icon: "mmj.webp" },
+    { value: "vivid_bad_squad", labelKey: "common.units.vbs", icon: "vbs.webp" },
+    { value: "wonderlands_showtime", labelKey: "common.units.ws", icon: "wxs.webp" },
+    { value: "nightcord_at_25", labelKey: "common.units.25ji", icon: "n25.webp" },
+    { value: "piapro", labelKey: "common.units.vs", icon: "vs.webp" },
 ];
 
 type CustomSubMode = "unit" | "character";
@@ -873,11 +874,14 @@ export default function DeckRecommendClient() {
                                                     <span className="text-[11px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">WL3</span>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1">
-                                                    {group.members.map(charId => (
-                                                        <div key={charId} className="w-7 h-7 rounded-full overflow-hidden bg-slate-100 ring-1 ring-white shadow-sm" title={CHARACTER_NAMES[charId]}>
-                                                            <Image src={getCharacterIconUrl(charId)} alt={CHARACTER_NAMES[charId]} width={28} height={28} className="w-full h-full object-cover" unoptimized />
-                                                        </div>
-                                                    ))}
+                                                    {group.members.map(charId => {
+                                                        const characterName = getCharacterName(t, charId);
+                                                        return (
+                                                            <div key={charId} className="w-7 h-7 rounded-full overflow-hidden bg-slate-100 ring-1 ring-white shadow-sm" title={characterName}>
+                                                                <Image src={getCharacterIconUrl(charId)} alt={characterName} width={28} height={28} className="w-full h-full object-cover" unoptimized />
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </button>
                                         );
@@ -981,15 +985,18 @@ export default function DeckRecommendClient() {
                                     <div className="mb-4">
                                         <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">{t("page.deckRecommend.bonusUnit")}</label>
                                         <div className="flex flex-wrap gap-2">
-                                            {UNIT_OPTIONS.map((u) => (
-                                                <button key={u.value} onClick={() => setCustomUnit(customUnit === u.value ? "" : u.value)}
-                                                    className={`p-1.5 rounded-xl transition-all ${customUnit === u.value ? "ring-2 ring-miku shadow-lg bg-white" : "hover:bg-slate-100 border border-transparent bg-slate-50"}`}
-                                                    title={u.label}>
-                                                    <div className="w-8 h-8 relative">
-                                                        <Image src={`/data/icon/${u.icon}`} alt={u.label} fill className="object-contain" unoptimized />
-                                                    </div>
-                                                </button>
-                                            ))}
+                                            {UNIT_OPTIONS.map((u) => {
+                                                const unitLabel = t(u.labelKey);
+                                                return (
+                                                    <button key={u.value} onClick={() => setCustomUnit(customUnit === u.value ? "" : u.value)}
+                                                        className={`p-1.5 rounded-xl transition-all ${customUnit === u.value ? "ring-2 ring-miku shadow-lg bg-white" : "hover:bg-slate-100 border border-transparent bg-slate-50"}`}
+                                                        title={unitLabel}>
+                                                        <div className="w-8 h-8 relative">
+                                                            <Image src={`/data/icon/${u.icon}`} alt={unitLabel} fill className="object-contain" unoptimized />
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
 
                                     </div>
@@ -1006,6 +1013,8 @@ export default function DeckRecommendClient() {
                                                 const isSelected = customCharacterIds.includes(cid);
                                                 const isFull = customCharacterIds.length >= MAX_CUSTOM_CHARACTERS && !isSelected;
                                                 const isVS = cid >= 21 && cid <= 26;
+                                                    const characterName = getCharacterName(t, cid);
+
                                                 return (
                                                     <button key={cid}
                                                         onClick={() => {
@@ -1032,9 +1041,9 @@ export default function DeckRecommendClient() {
                                                                 ? "opacity-30 cursor-not-allowed rounded-full"
                                                                 : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-80 hover:opacity-100"
                                                         }`}
-                                                        title={CHARACTER_NAMES[cid]}>
+                                                        title={characterName}>
                                                         <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-100">
-                                                            <Image src={getCharacterIconUrl(cid)} alt={CHARACTER_NAMES[cid]} width={36} height={36} className="w-full h-full object-cover" unoptimized />
+                                                            <Image src={getCharacterIconUrl(cid)} alt={characterName} width={36} height={36} className="w-full h-full object-cover" unoptimized />
                                                         </div>
                                                         {isSelected && (
                                                             <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-miku rounded-full flex items-center justify-center">
@@ -1050,12 +1059,15 @@ export default function DeckRecommendClient() {
                                         {customCharacterIds.some(cid => cid >= 21 && cid <= 26) && (
                                             <div className="mt-3 p-3 bg-teal-50/50 border border-teal-200 rounded-lg">
                                                 <label className="block text-xs font-bold text-slate-600 mb-2">{t("page.deckRecommend.virtualSingerUnit")}</label>
-                                                {customCharacterIds.filter(cid => cid >= 21 && cid <= 26).map(cid => (
-                                                    <div key={cid} className="flex items-center gap-2 mb-2 last:mb-0">
+                                                {customCharacterIds.filter(cid => cid >= 21 && cid <= 26).map(cid => {
+                                                const characterName = getCharacterName(t, cid);
+
+                                                    return (
+                                                        <div key={cid} className="flex items-center gap-2 mb-2 last:mb-0">
                                                         <div className="w-7 h-7 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">
-                                                            <Image src={getCharacterIconUrl(cid)} alt={CHARACTER_NAMES[cid]} width={28} height={28} className="w-full h-full object-cover" unoptimized />
+                                                            <Image src={getCharacterIconUrl(cid)} alt={characterName} width={28} height={28} className="w-full h-full object-cover" unoptimized />
                                                         </div>
-                                                        <span className="text-xs text-slate-600 w-16 flex-shrink-0">{CHARACTER_NAMES[cid]}</span>
+                                                        <span className="text-xs text-slate-600 w-16 flex-shrink-0">{characterName}</span>
                                                         <div className="flex flex-wrap gap-1">
                                                             {VS_SUPPORT_UNIT_OPTIONS.map(opt => (
                                                                 <button key={opt.value}
@@ -1079,8 +1091,9 @@ export default function DeckRecommendClient() {
                                                                 </button>
                                                             ))}
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         )}
 
@@ -1394,7 +1407,7 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                                         : eventBonusValue > 0
                                             ? `${formatBonusValue(eventBonusValue)}%`
                                             : "-";
-                                    const cardName = masterCard?.prefix || (masterCard ? CHAR_NAMES[masterCard.characterId] : `ID:${card.characterId}`);
+                                    const cardName = masterCard?.prefix || (masterCard ? getCharacterName(t, masterCard.characterId, "short") : `ID:${card.characterId}`);
                                     return (
                                         <tr key={i} className="border-t border-slate-50">
                                             <td className="py-1.5 px-1 font-bold text-slate-500">{i === 0 ? t("page.deckRecommend.result.leader") : `#${i + 1}`}</td>

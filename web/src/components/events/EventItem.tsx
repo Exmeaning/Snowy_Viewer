@@ -5,12 +5,12 @@ import { IEventInfo, EVENT_TYPE_COLORS, getEventStatus, EVENT_STATUS_DISPLAY, Ev
 import { getEventStoryBannerUrl, getEventLogoUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
-import { UNIT_DATA, UNIT_ICON_FILES, ATTR_ICON_PATHS, ATTR_NAMES } from "@/types/types";
+import { UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS, ATTR_ICON_PATHS, ATTR_NAMES } from "@/types/types";
 import { useI18n } from "@/contexts/I18nContext";
 
 // Build unit icon mapping from UNIT_DATA
-const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = Object.fromEntries(
-    UNIT_DATA.filter(u => UNIT_ICON_FILES[u.id]).map(u => [u.id, { icon: UNIT_ICON_FILES[u.id], name: u.name }])
+const EVENT_UNIT_ICON: Record<string, { icon: string; labelKey: string }> = Object.fromEntries(
+    UNIT_DATA.filter(u => UNIT_ICON_FILES[u.id]).map(u => [u.id, { icon: UNIT_ICON_FILES[u.id], labelKey: UNIT_ID_LABEL_KEYS[u.id] ?? `common.units.${u.id}` }])
 );
 
 interface EventItemProps {
@@ -85,10 +85,10 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                         </span>
                         {unitType && (
                             EVENT_UNIT_ICON[unitType] ? (
-                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center" title={EVENT_UNIT_ICON[unitType].name}>
+                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center" title={t(EVENT_UNIT_ICON[unitType].labelKey)}>
                                     <Image
                                         src={`/data/icon/${EVENT_UNIT_ICON[unitType].icon}`}
-                                        alt={EVENT_UNIT_ICON[unitType].name}
+                                        alt={t(EVENT_UNIT_ICON[unitType].labelKey)}
                                         width={16}
                                         height={16}
                                         className="object-contain"
