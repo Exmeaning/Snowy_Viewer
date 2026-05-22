@@ -6,7 +6,7 @@ import { useI18n } from "@/contexts/I18nContext";
 export default function MainFooter() {
     const { t } = useI18n();
     return (
-        <footer className="w-full py-8 mt-auto bg-white border-t border-slate-100 relative z-[5]">
+        <footer className="w-full py-8 mt-auto bg-white/45 dark:bg-slate-900/40 backdrop-blur-2xl border-t border-slate-200/50 dark:border-slate-800/30 shadow-[0_-8px_32px_0_rgba(31,38,135,0.04)] dark:shadow-[0_-8px_32px_0_rgba(0,0,0,0.25)] relative z-[5]">
             <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
                 <div className="space-y-1">
                     <p className="text-xs text-slate-400 font-bold tracking-wider uppercase">

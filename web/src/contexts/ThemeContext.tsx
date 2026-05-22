@@ -23,6 +23,14 @@ import { UI_LOCALE_STORAGE_KEY, detectBrowserUiLocale, normalizeUiLocale } from 
 const DEFAULT_THEME_CHAR = "21";
 const DEFAULT_COLOR = "#33ccbb";
 const DEFAULT_COLOR_SCHEME_PREFERENCE: ColorSchemePreference = "system";
+export type BackgroundAnimationBudget = "performance" | "power-save" | "off";
+const DEFAULT_BACKGROUND_ANIMATION_BUDGET: BackgroundAnimationBudget = "power-save";
+const BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY = "background-animation-budget";
+const VALID_BACKGROUND_ANIMATION_BUDGETS: BackgroundAnimationBudget[] = ["performance", "power-save", "off"];
+
+function isValidBackgroundAnimationBudget(value: string | null): value is BackgroundAnimationBudget {
+    return VALID_BACKGROUND_ANIMATION_BUDGETS.includes(value as BackgroundAnimationBudget);
+}
 
 // Asset source type (4 lines × 2 regions)
 export type AssetSourceType =
@@ -111,6 +119,8 @@ interface ThemeContextType {
     setUseLLMTranslation: (enabled: boolean) => void;
     showAds: boolean;
     setShowAds: (enabled: boolean) => void;
+    backgroundAnimationBudget: BackgroundAnimationBudget;
+    setBackgroundAnimationBudget: (budget: BackgroundAnimationBudget) => void;
     serverSource: ServerSourceType;
     setServerSource: (source: ServerSourceType) => void;
 }
@@ -132,6 +142,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const [assetSourceState, setAssetSourceState] = useState<AssetSourceType>(DEFAULT_ASSET_SOURCE);
     const [useLLMTranslationState, setUseLLMTranslationState] = useState(true); // Default ON
     const [showAdsState, setShowAdsState] = useState(DEFAULT_SHOW_ADS);
+    const [backgroundAnimationBudgetState, setBackgroundAnimationBudgetState] = useState<BackgroundAnimationBudget>(DEFAULT_BACKGROUND_ANIMATION_BUDGET);
     const [serverSourceState, setServerSourceState] = useState<ServerSourceType>(DEFAULT_SERVER_SOURCE);
     const effectiveShowAds = ADS_FEATURE_ENABLED && showAdsState;
 
@@ -173,6 +184,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             } else {
                 setShowAdsState(false);
                 localStorage.setItem(SHOW_ADS_STORAGE_KEY, "false");
+            }
+            // Load background animation budget setting
+            const savedBackgroundAnimationBudget = localStorage.getItem(BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY);
+            if (isValidBackgroundAnimationBudget(savedBackgroundAnimationBudget)) {
+                setBackgroundAnimationBudgetState(savedBackgroundAnimationBudget);
             }
             // Load server source setting
             const savedServerSource = localStorage.getItem("server-source");
@@ -253,7 +269,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         document.head.appendChild(script);
     }, [effectiveShowAds, hasHydratedThemeSettings]);
 
-    // Apply theme color to CSS variables
+    // Apply theme color and generate beautiful dynamic HSL-based gradient stops to CSS variables
     useEffect(() => {
         if (!hasHydratedThemeSettings) {
             return;
@@ -272,6 +288,64 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         const rgb = hexToRgb(themeColor);
         if (rgb) {
             document.documentElement.style.setProperty("--color-miku-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+
+            // Calculate HSL for advanced aesthetic gradient stop mapping
+            const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+            // 1. Harmonious split-complementary color (shift hue by 150 degrees)
+            const compHsl = {
+                h: (hsl.h + 150) % 360,
+                s: Math.max(30, Math.min(hsl.s, 85)), // keep in pleasant saturation limits
+                l: hsl.l
+            };
+            const compRgb = hslToRgb(compHsl.h, compHsl.s, compHsl.l);
+            document.documentElement.style.setProperty("--color-comp-rgb", `${compRgb.r}, ${compRgb.g}, ${compRgb.b}`);
+
+            // 2. Intermediary analog transition color (shift hue by 60 degrees)
+            const midHsl = {
+                h: (hsl.h + 60) % 360,
+                s: Math.max(30, Math.min(hsl.s, 80)),
+                l: hsl.l
+            };
+            const midRgb = hslToRgb(midHsl.h, midHsl.s, midHsl.l);
+            document.documentElement.style.setProperty("--color-mid-rgb", `${midRgb.r}, ${midRgb.g}, ${midRgb.b}`);
+
+            // === LIGHT BACKGROUND GRADIENT STOP GENERATION (Highly tinted soft washes) ===
+            const lightStartHsl = { h: hsl.h, s: Math.min(hsl.s * 0.45, 30), l: 94 };
+            const lightStartRgb = hslToRgb(lightStartHsl.h, lightStartHsl.s, lightStartHsl.l);
+            document.documentElement.style.setProperty("--theme-bg-light-start", `rgba(${lightStartRgb.r}, ${lightStartRgb.g}, ${lightStartRgb.b}, 0.65)`);
+
+            const lightMidHsl = { h: midHsl.h, s: Math.min(midHsl.s * 0.35, 25), l: 96 };
+            const lightMidRgb = hslToRgb(lightMidHsl.h, lightMidHsl.s, lightMidHsl.l);
+            document.documentElement.style.setProperty("--theme-bg-light-middle", `rgba(${lightMidRgb.r}, ${lightMidRgb.g}, ${lightMidRgb.b}, 0.6)`);
+
+            const lightEndHsl = { h: compHsl.h, s: Math.min(compHsl.s * 0.45, 30), l: 93 };
+            const lightEndRgb = hslToRgb(lightEndHsl.h, lightEndHsl.s, lightEndHsl.l);
+            document.documentElement.style.setProperty("--theme-bg-light-end", `rgba(${lightEndRgb.r}, ${lightEndRgb.g}, ${lightEndRgb.b}, 0.65)`);
+
+            // === DARK BACKGROUND GRADIENT STOP GENERATION (Extremely dark premium tones) ===
+            const darkStartHsl = { h: hsl.h, s: Math.min(hsl.s * 0.35, 22), l: 9 };
+            const darkStartRgb = hslToRgb(darkStartHsl.h, darkStartHsl.s, darkStartHsl.l);
+            document.documentElement.style.setProperty("--theme-bg-dark-start", `rgba(${darkStartRgb.r}, ${darkStartRgb.g}, ${darkStartRgb.b}, 0.8)`);
+
+            const darkMidHsl = { h: midHsl.h, s: Math.min(midHsl.s * 0.28, 16), l: 8 };
+            const darkMidRgb = hslToRgb(darkMidHsl.h, darkMidHsl.s, darkMidHsl.l);
+            document.documentElement.style.setProperty("--theme-bg-dark-middle", `rgba(${darkMidRgb.r}, ${darkMidRgb.g}, ${darkMidRgb.b}, 0.75)`);
+
+            const darkEndHsl = { h: compHsl.h, s: Math.min(compHsl.s * 0.35, 22), l: 10 };
+            const darkEndRgb = hslToRgb(darkEndHsl.h, darkEndHsl.s, darkEndHsl.l);
+            document.documentElement.style.setProperty("--theme-bg-dark-end", `rgba(${darkEndRgb.r}, ${darkEndRgb.g}, ${darkEndRgb.b}, 0.78)`);
+
+            // === DARK BODY BACKGROUND OVERRIDES ===
+            const darkBodyStartHsl = { h: hsl.h, s: Math.min(hsl.s * 0.22, 14), l: 5 };
+            const darkBodyStartRgb = hslToRgb(darkBodyStartHsl.h, darkBodyStartHsl.s, darkBodyStartHsl.l);
+            const darkBodyStartHex = rgbToHex(darkBodyStartRgb.r, darkBodyStartRgb.g, darkBodyStartRgb.b);
+            document.documentElement.style.setProperty("--theme-body-bg-start", darkBodyStartHex);
+
+            const darkBodyEndHsl = { h: compHsl.h, s: Math.min(compHsl.s * 0.22, 14), l: 8 };
+            const darkBodyEndRgb = hslToRgb(darkBodyEndHsl.h, darkBodyEndHsl.s, darkBodyEndHsl.l);
+            const darkBodyEndHex = rgbToHex(darkBodyEndRgb.r, darkBodyEndRgb.g, darkBodyEndRgb.b);
+            document.documentElement.style.setProperty("--theme-body-bg-end", darkBodyEndHex);
         }
     }, [themeColor, hasHydratedThemeSettings]);
 
@@ -354,6 +428,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         }
     };
 
+    const setBackgroundAnimationBudget = (budget: BackgroundAnimationBudget) => {
+        if (!VALID_BACKGROUND_ANIMATION_BUDGETS.includes(budget)) return;
+
+        setBackgroundAnimationBudgetState(budget);
+        try {
+            localStorage.setItem(BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY, budget);
+        } catch (e) {
+            console.error("Failed to save background animation budget setting to localStorage:", e);
+        }
+    };
+
     const setServerSource = (source: ServerSourceType) => {
         setServerSourceState(source);
         try {
@@ -369,7 +454,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     };
 
     return (
-        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, colorSchemePreference, resolvedColorScheme, setColorSchemePreference, isShowSpoiler, setShowSpoiler, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource, useLLMTranslation: useLLMTranslationState, setUseLLMTranslation, showAds: effectiveShowAds, setShowAds, serverSource: serverSourceState, setServerSource }}>
+        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, colorSchemePreference, resolvedColorScheme, setColorSchemePreference, isShowSpoiler, setShowSpoiler, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource, useLLMTranslation: useLLMTranslationState, setUseLLMTranslation, showAds: effectiveShowAds, setShowAds, backgroundAnimationBudget: backgroundAnimationBudgetState, setBackgroundAnimationBudget, serverSource: serverSourceState, setServerSource }}>
             {children}
         </ThemeContext.Provider>
     );
@@ -419,6 +504,53 @@ function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16)
     } : null;
+}
+
+// Helper: RGB to HSL object conversion
+function rgbToHsl(r: number, g: number, b: number) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+
+    if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+// Helper: HSL to RGB object conversion
+function hslToRgb(h: number, s: number, l: number) {
+    h /= 360; s /= 100; l /= 100;
+    let r = l, g = l, b = l;
+    if (s !== 0) {
+        const hue2rgb = (p: number, q: number, t: number) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+    }
+    return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+}
+
+// Helper: RGB to Hex string conversion
+function rgbToHex(r: number, g: number, b: number): string {
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 
 // Export character color data for use in settings

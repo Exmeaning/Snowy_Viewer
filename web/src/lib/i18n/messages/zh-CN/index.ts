@@ -711,6 +711,15 @@ export const zhCNMessages = {
         themeColor: {
             sectionTitle: "主题色",
         },
+        backgroundAnimationBudget: {
+            sectionTitle: "背景动画预算",
+            performance: "性能",
+            powerSave: "省电",
+            off: "关闭",
+            performanceDescription: "保留更丰富的背景动效，适合桌面端或性能较好的设备。",
+            powerSaveDescription: "默认推荐：降低背景动画帧率与粒子数量，减少 GPU 与电量消耗。",
+            offDescription: "完全关闭背景动画，仅保留页面内容，适合低配设备或录屏场景。",
+        },
         contentDisplay: {
             sectionTitle: "内容显示",
         },
@@ -832,6 +841,7 @@ export const zhCNMessages = {
             themeTitle: "外观与主题色",
             themeDesc: "选择适合您的界面风格与角色代表色。",
             appearanceTitle: "外观倾向",
+            backgroundAnimationTitle: "背景动画预算",
             themeColorTitle: "主题色 (角色代表色)",
             contentTitle: "内容显示偏好",
             contentDesc: "设定卡牌缩略图与剧情内容的展示方式。",

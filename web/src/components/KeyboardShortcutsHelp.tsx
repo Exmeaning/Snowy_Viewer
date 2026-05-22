@@ -71,7 +71,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                 <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[min(20vh,8rem)] px-4">
                     {/* Backdrop */}
                     <motion.div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/35 backdrop-blur-[8px]"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -81,7 +81,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
 
                     {/* Dialog */}
                     <motion.div
-                        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200 overflow-hidden flex flex-col max-h-[70vh]"
+                        className="relative w-full max-w-md liquid-glass-modal rounded-2xl overflow-hidden flex flex-col max-h-[70vh]"
                         initial={{ opacity: 0, scale: 0.95, y: -10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -10 }}

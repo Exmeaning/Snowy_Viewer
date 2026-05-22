@@ -711,6 +711,15 @@ export const jaJPMessages = {
     themeColor: {
       sectionTitle: 'テーマカラー'
     },
+    backgroundAnimationBudget: {
+      sectionTitle: '背景アニメーション設定',
+      performance: 'パフォーマンス',
+      powerSave: '省電力',
+      off: 'オフ',
+      performanceDescription: 'より豊かな背景アニメーションを維持します。デスクトップや高性能端末向けです。',
+      powerSaveDescription: '推奨設定：背景のFPSと粒子数を抑え、GPUとバッテリー消費を減らします。',
+      offDescription: '背景アニメーションを完全に無効化します。低スペック端末や画面録画に適しています。'
+    },
     contentDisplay: {
       sectionTitle: 'コンテンツ表示'
     },
@@ -832,6 +841,7 @@ export const jaJPMessages = {
       themeTitle: "外観とテーマカラー",
       themeDesc: "インターフェースの外観とキャラクターのイメージカラーを選択します。",
       appearanceTitle: "外観モード",
+      backgroundAnimationTitle: "背景アニメーション設定",
       themeColorTitle: "テーマカラー（キャラクター）",
       contentTitle: "コンテンツ表示設定",
       contentDesc: "カード画像やネタバレなどの表示オプションを設定します。",

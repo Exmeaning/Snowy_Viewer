@@ -111,7 +111,7 @@ export default function Modal({
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
                     {/* Backdrop */}
                     <motion.div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/35 backdrop-blur-[8px]"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -121,7 +121,7 @@ export default function Modal({
 
                     {/* Dialog */}
                     <motion.div
-                        className={`relative w-full ${sizeClasses[size]} bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200 overflow-hidden flex flex-col max-h-[85vh]`}
+                        className={`relative w-full ${sizeClasses[size]} liquid-glass-modal rounded-2xl overflow-hidden flex flex-col max-h-[85vh]`}
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
