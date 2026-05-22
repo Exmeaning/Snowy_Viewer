@@ -38,6 +38,8 @@ const DIFFICULTY_ORDER: MusicDifficultyType[] = ["easy", "normal", "hard", "expe
 const MUSIC_META_API = MOE_MUSIC_META_URL;
 const RANKINGS_API = MOE_RANKINGS_URL;
 
+type RawMusicCategory = MusicCategoryType | { musicCategoryName: MusicCategoryType };
+
 // Music meta data structure
 interface MusicMetaData {
     music_id: number;
@@ -159,8 +161,18 @@ export default function MusicDetailPage() {
                     throw new Error(`Music ${musicId} not found`);
                 }
 
-                setMusic(foundMusic);
-                document.title = `Moesekai - ${foundMusic.title}`;
+                // Normalize categories (CN server returns categories as objects)
+                const normalizedMusic = {
+                    ...foundMusic,
+                    categories: (foundMusic.categories as unknown as RawMusicCategory[]).map((cat) =>
+                        typeof cat === "object" && cat !== null && "musicCategoryName" in cat
+                            ? cat.musicCategoryName
+                            : cat
+                    ),
+                };
+
+                setMusic(normalizedMusic);
+                document.title = `Moesekai - ${normalizedMusic.title}`;
                 setMusicTags(tagsData.filter(t => t.musicId === musicId));
                 setDifficulties(diffisData.filter(d => d.musicId === musicId).sort((a, b) => {
                     return DIFFICULTY_ORDER.indexOf(a.musicDifficulty) - DIFFICULTY_ORDER.indexOf(b.musicDifficulty);
