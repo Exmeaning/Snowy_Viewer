@@ -5,6 +5,7 @@ import { IMusicInfo, MusicTagType, MusicCategoryType, IMusicTagInfo, IMusicMeta 
 import { fetchMasterData } from "@/lib/fetch";
 import { getMusicJacketUrl, MOE_MUSIC_META_URL } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import SelectorModal from "./SelectorModal";
 import MusicFilters from "@/components/music/MusicFilters";
@@ -12,15 +13,12 @@ import MusicFilters from "@/components/music/MusicFilters";
 const MUSIC_META_API = MOE_MUSIC_META_URL;
 
 /** Sort options for MusicSelector (no level/constant since there's no difficulty context) */
-const SELECTOR_SORT_OPTIONS = [
-    { id: "publishedAt", label: "发布日期" },
-    { id: "id", label: "ID" },
-];
+const SELECTOR_SORT_OPTION_IDS = ["publishedAt", "id"] as const;
 
 interface MusicSelectorProps {
     selectedMusicId: string;
     onSelect: (musicId: string) => void;
-    /** Show "猜你想选" recommendations section (default: true) */
+    /** Show recommended picks section (default: true) */
     showRecommendations?: boolean;
     recommendMode?: "event" | "challenge";
     liveType?: string;
@@ -30,6 +28,7 @@ type RecommendType = "efficiency" | "pt" | "score";
 
 export default function MusicSelector({ selectedMusicId, onSelect, showRecommendations = true, recommendMode: _recommendMode = "event", liveType = "multi" }: MusicSelectorProps) {
     const { assetSource, isShowSpoiler } = useTheme();
+    const { t } = useI18n();
     const [now] = useState(() => Date.now());
     const [musics, setMusics] = useState<IMusicInfo[]>([]);
     const [musicTags, setMusicTags] = useState<IMusicTagInfo[]>([]);
@@ -48,6 +47,10 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState<"id" | "publishedAt">("publishedAt");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+    const selectorSortOptions = SELECTOR_SORT_OPTION_IDS.map((id) => ({
+        id,
+        label: t(id === "publishedAt" ? "page.deckRecommend.selector.sortByPublishedAt" : "page.deckRecommend.selector.sortById"),
+    }));
 
     // Normalize liveType for meta lookup
     const metaMode = useMemo(() => {
@@ -236,7 +239,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
     return (
         <div className="w-full">
             <label className="block text-sm font-medium text-slate-700 mb-1">
-                歌曲 <span className="text-red-400">*</span>
+                {t("page.deckRecommend.selector.music")} <span className="text-red-400">*</span>
             </label>
 
             <button
@@ -275,7 +278,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                             </svg>
                         </div>
-                        <span className="text-slate-400 text-sm">点击选择歌曲...</span>
+                        <span className="text-slate-400 text-sm">{t("page.deckRecommend.selector.selectMusicPlaceholder")}</span>
                     </>
                 )}
                 <div className="text-slate-300">
@@ -288,7 +291,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
             <SelectorModal
                 isOpen={modalOpen}
                 onClose={() => setModalOpen(false)}
-                title="选择歌曲"
+                title={t("page.deckRecommend.selector.selectMusicTitle")}
             >
                 <div>
                     {/* Recommendations Section */}
@@ -297,9 +300,9 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
                                     <span className="w-1 h-3 bg-miku rounded-full"></span>
-                                    猜你想选
+                                    {t("page.deckRecommend.selector.recommendations")}
                                     <span className="text-xs font-normal text-slate-400 ml-1">
-                                        基于 {liveType === "cheerful" ? "Multi" : liveType.charAt(0).toUpperCase() + liveType.slice(1)} 模式
+                                        {t("page.deckRecommend.selector.basedOnMode", { mode: liveType === "cheerful" ? "Multi" : liveType.charAt(0).toUpperCase() + liveType.slice(1) })}
                                     </span>
                                 </h3>
 
@@ -313,7 +316,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                                                 : "text-slate-500 hover:text-slate-700"
                                                 }`}
                                         >
-                                            效率
+                                            {t("page.deckRecommend.selector.efficiency")}
                                         </button>
                                     )}
                                     <button
@@ -332,7 +335,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                                             : "text-slate-500 hover:text-slate-700"
                                             }`}
                                     >
-                                        分数
+                                        {t("page.deckRecommend.selector.score")}
                                     </button>
                                 </div>
                             </div>
@@ -414,7 +417,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                                 setSortBy(nextSortBy);
                                 setSortOrder(nextSortOrder);
                             }}
-                            customSortOptions={SELECTOR_SORT_OPTIONS}
+                            customSortOptions={selectorSortOptions}
                             onReset={() => {
                                 setSelectedTag("all");
                                 setSelectedCategories([]);
@@ -428,7 +431,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                         />
 
                         {loading ? (
-                            <div className="py-20 text-center text-slate-400">加载中...</div>
+                            <div className="py-20 text-center text-slate-400">{t("common.state.loading")}</div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {filteredMusics.slice(0, 50).map(music => (
@@ -442,7 +445,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                                 ))}
                                 {filteredMusics.length > 50 && (
                                     <div className="col-span-full py-4 text-center text-slate-400 text-sm">
-                                        仅显示前 50 个结果，请使用搜索精确查找
+                                        {t("page.deckRecommend.selector.first50Only")}
                                     </div>
                                 )}
                             </div>

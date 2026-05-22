@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/contexts/I18nContext";
 import { REALTIME_RANKING_REGION_OPTIONS, RealtimeRankingRegion } from "@/types/realtime-ranking";
 
 interface RankingHeaderProps {
@@ -27,18 +28,20 @@ export default function RankingHeader({
     onShowChurnChange,
     showChurnToggle = true,
 }: RankingHeaderProps) {
+    const { t, formatDate, formatNumber } = useI18n();
+
     return (
         <>
             {/* Page Header - matching prediction page style */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">实时排行榜</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.realtimeRanking.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    实时 <span className="text-miku">榜单</span>
+                    {t("page.realtimeRanking.title")} <span className="text-miku">{t("page.realtimeRanking.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    每 10 秒自动刷新一次，支持查看排名变化与分数变动提示。
+                    {t("page.realtimeRanking.description")}
                 </p>
             </div>
 
@@ -46,7 +49,7 @@ export default function RankingHeader({
             <div className="flex flex-wrap gap-3 mb-8 items-center">
                 {/* Region Toggle */}
                 <div className="shrink-0 flex max-w-full overflow-x-auto bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
-                    {REALTIME_RANKING_REGION_OPTIONS.map(({ value, label }) => (
+                    {REALTIME_RANKING_REGION_OPTIONS.map((value) => (
                         <button
                             key={value}
                             onClick={() => onRegionChange(value)}
@@ -55,7 +58,7 @@ export default function RankingHeader({
                                 : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                                 }`}
                         >
-                            {label}
+                            {t(`page.realtimeRanking.regions.${value}`)}
                         </button>
                     ))}
                 </div>
@@ -69,7 +72,7 @@ export default function RankingHeader({
                             }`}
                     >
                         <span className={showChurn ? "text-slate-800 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}>
-                            显示周回与时速
+                            {t("page.realtimeRanking.showChurn")}
                         </span>
                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${showChurn ? "bg-miku border-miku" : "border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-700"}`}>
                             {showChurn && (
@@ -84,23 +87,27 @@ export default function RankingHeader({
                 {/* Status Tags */}
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     {typeof eventId === "number" && (
-                        <span className="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-3 py-1.5 font-medium whitespace-nowrap">活动 #{eventId}</span>
+                        <span className="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-3 py-1.5 font-medium whitespace-nowrap">
+                            {t("page.realtimeRanking.eventId", { id: eventId })}
+                        </span>
                     )}
                     {scopeLabel && (
                         <span className="rounded-full bg-miku/10 text-miku px-3 py-1.5 font-medium whitespace-nowrap dark:bg-miku/15">
                             {scopeLabel}
                         </span>
                     )}
-                    <span className="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-3 py-1.5 font-medium whitespace-nowrap">共 {totalEntries} 条榜线</span>
+                    <span className="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-3 py-1.5 font-medium whitespace-nowrap">
+                        {t("page.realtimeRanking.totalEntries", { count: formatNumber(totalEntries) })}
+                    </span>
                     <span className={`rounded-full px-3 py-1.5 font-medium whitespace-nowrap ${isRefreshing
                         ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
                         : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
                         }`}>
-                        {isRefreshing ? "刷新中..." : "已同步"}
+                        {isRefreshing ? t("page.realtimeRanking.refreshing") : t("page.realtimeRanking.synced")}
                     </span>
                     {updatedAt ? (
                         <span className="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-3 py-1.5 font-medium whitespace-nowrap">
-                            更新于 {new Date(updatedAt).toLocaleString()}
+                            {t("page.realtimeRanking.updatedAt", { time: formatDate(updatedAt) })}
                         </span>
                     ) : null}
                 </div>

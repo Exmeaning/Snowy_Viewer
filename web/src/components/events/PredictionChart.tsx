@@ -1,6 +1,7 @@
 "use client";
 import React, { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
+import { useI18n } from '@/contexts/I18nContext';
 import { RankChart } from '@/types/prediction';
 
 interface PredictionChartProps {
@@ -10,7 +11,10 @@ interface PredictionChartProps {
 }
 
 export default function PredictionChart({ data, height, className }: PredictionChartProps) {
+    const { t, formatNumber } = useI18n();
     const showPrediction = data.Rank <= 10000;
+    const actualScoreLabel = t("page.prediction.chart.actualScore");
+    const predictedScoreLabel = t("page.prediction.chart.predictedScore");
 
     const option = useMemo(() => {
         const historyTimes = data.HistoryPoints.map(p => {
@@ -31,17 +35,17 @@ export default function PredictionChart({ data, height, className }: PredictionC
                 formatter: (params: { seriesName: string; value: number; axisValue: string }[]) => {
                     let result = `<div style="font-weight: 600; margin-bottom: 4px;">${params[0]?.axisValue}</div>`;
                     params.forEach(p => {
-                        const color = p.seriesName === '实际分数' ? '#33CCBB' : '#f59e0b';
+                        const color = p.seriesName === actualScoreLabel ? '#33CCBB' : '#f59e0b';
                         result += `<div style="display: flex; align-items: center; gap: 6px;">
               <span style="width: 8px; height: 8px; border-radius: 50%; background: ${color};"></span>
-              <span>${p.seriesName}: ${p.value?.toLocaleString() || '-'}</span>
+              <span>${p.seriesName}: ${typeof p.value === "number" ? formatNumber(p.value) : '-'}</span>
             </div>`;
                     });
                     return result;
                 }
             },
             legend: {
-                data: showPrediction ? ['实际分数', '预测分数'] : ['实际分数'],
+                data: showPrediction ? [actualScoreLabel, predictedScoreLabel] : [actualScoreLabel],
                 top: 0,
                 textStyle: { color: '#64748b' }
             },
@@ -73,7 +77,7 @@ export default function PredictionChart({ data, height, className }: PredictionC
                     formatter: (value: number) => {
                         if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
                         if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
-                        return value;
+                        return formatNumber(value);
                     }
                 }
             },
@@ -97,7 +101,7 @@ export default function PredictionChart({ data, height, className }: PredictionC
             ],
             series: [
                 {
-                    name: '实际分数',
+                    name: actualScoreLabel,
                     type: 'line',
                     data: historyScores,
                     smooth: true,
@@ -115,8 +119,8 @@ export default function PredictionChart({ data, height, className }: PredictionC
                     }
                 },
                 ...(showPrediction ? [{
-                    name: '预测分数',
-                    type: 'line',
+                    name: predictedScoreLabel,
+                    type: 'line' as const,
                     data: predictScores,
                     smooth: true,
                     symbol: 'none',
@@ -134,7 +138,7 @@ export default function PredictionChart({ data, height, className }: PredictionC
                 }] : [])
             ]
         };
-    }, [data, showPrediction]);
+    }, [actualScoreLabel, data, formatNumber, predictedScoreLabel, showPrediction]);
 
     return (
         <div
@@ -145,14 +149,14 @@ export default function PredictionChart({ data, height, className }: PredictionC
                 <div className="flex items-center gap-3">
                     <span className="text-2xl font-bold text-miku">T{data.Rank}</span>
                     <div className="text-sm">
-                        <div className="text-slate-500">当前分数</div>
-                        <div className="font-bold text-slate-700">{data.CurrentScore.toLocaleString()}</div>
+                        <div className="text-slate-500">{t("page.prediction.table.currentScore")}</div>
+                        <div className="font-bold text-slate-700">{formatNumber(data.CurrentScore)}</div>
                     </div>
                 </div>
                 {showPrediction && (
                     <div className="text-right">
-                        <div className="text-sm text-slate-500">预测分数</div>
-                        <div className="text-lg font-bold text-amber-500">{data.PredictedScore.toLocaleString()}</div>
+                        <div className="text-sm text-slate-500">{t("page.prediction.table.predictedScore")}</div>
+                        <div className="text-lg font-bold text-amber-500">{formatNumber(data.PredictedScore)}</div>
                     </div>
                 )}
             </div>

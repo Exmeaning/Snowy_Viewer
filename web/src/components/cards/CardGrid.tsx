@@ -2,6 +2,7 @@
 import React from "react";
 import { ICardInfo } from "@/types/types";
 import CardItem from "./CardItem";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface CardGridProps {
     cards: ICardInfo[];
@@ -24,6 +25,7 @@ function CardSkeleton() {
 
 export default function CardGrid({ cards, isLoading = false, hrefPrefix }: CardGridProps) {
     const [now] = React.useState(() => Date.now());
+    const { t } = useI18n();
 
     if (isLoading) {
         return (
@@ -41,8 +43,8 @@ export default function CardGrid({ cards, isLoading = false, hrefPrefix }: CardG
                 <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
-                <p className="text-slate-400 font-medium">没有找到符合条件的卡牌</p>
-                <p className="text-slate-300 text-sm mt-1">尝试调整筛选条件</p>
+                <p className="text-slate-400 font-medium">{t("page.cards.noResult")}</p>
+                <p className="text-slate-300 text-sm mt-1">{t("page.cards.noResultHint")}</p>
             </div>
         );
     }

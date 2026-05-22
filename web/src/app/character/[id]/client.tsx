@@ -21,6 +21,7 @@ import {
 } from "@/lib/assets";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ColorPreview from "@/components/helpers/ColorPreview";
@@ -35,6 +36,7 @@ const UNIT_FIELD_ICONS: Record<string, string> = Object.fromEntries(
 export default function CharacterDetailClient() {
     const params = useParams();
     const { assetSource, useTrainedThumbnail } = useTheme();
+    const { t } = useI18n();
     const { setDetailName } = useBreadcrumb();
     const id = parseInt(params.id as string, 10);
 
@@ -115,7 +117,7 @@ export default function CharacterDetailClient() {
             <div className="flex h-[50vh] w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-miku border-t-transparent rounded-full animate-spin" />
-                    <span className="text-slate-500">正在加载角色信息...</span>
+                    <span className="text-slate-500">{t("page.character.loadingInfo")}</span>
                 </div>
             </div>
         );
@@ -124,9 +126,9 @@ export default function CharacterDetailClient() {
     if (!character) {
         return (
             <div className="container mx-auto px-4 py-8 text-center">
-                <h1 className="text-2xl font-bold text-slate-800">未找到角色</h1>
+                <h1 className="text-2xl font-bold text-slate-800">{t("page.character.notFoundTitle")}</h1>
                 <Link href="/character" className="text-miku hover:underline mt-4 inline-block">
-                    返回角色列表
+                    {t("page.character.backToList")}
                 </Link>
             </div>
         );
@@ -140,16 +142,16 @@ export default function CharacterDetailClient() {
     const charaLabelHImg = getCharacterLabelHUrl(id, assetSource);
     const charaLabelVImg = getCharacterLabelVUrl(id, assetSource);
     const activeImageUrl = activeTab === "trim" ? charaTrimImg : activeTab === "label_h" ? charaLabelHImg : charaLabelVImg;
-    const activeImageLabel = activeTab === "trim" ? "立绘" : activeTab === "label_h" ? "横向名牌" : "竖向名牌";
+    const activeImageLabel = t(`page.character.imageTabs.${activeTab}`);
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
             <ImagePreviewModal
                 isOpen={imageViewerOpen}
                 onClose={() => setImageViewerOpen(false)}
-                title={`${characterDisplayName} ${activeImageLabel}`}
+                title={t("page.character.imageDetailTitle", { name: characterDisplayName ?? "", tab: activeImageLabel })}
                 imageUrl={activeImageUrl}
-                alt={`${characterDisplayName} ${activeImageLabel}`}
+                alt={t("page.character.imageDetailAlt", { name: characterDisplayName ?? "", tab: activeImageLabel })}
                 fileName={`character_${id}_${activeTab}.png`}
             />
 
@@ -163,19 +165,19 @@ export default function CharacterDetailClient() {
                                 onClick={() => setActiveTab("trim")}
                                 className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === "trim" ? "text-miku border-b-2 border-miku bg-miku/5" : "text-slate-500 hover:bg-slate-50"}`}
                             >
-                                立绘
+                                {t("page.character.imageTabs.trim")}
                             </button>
                             <button
                                 onClick={() => setActiveTab("label_h")}
                                 className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === "label_h" ? "text-miku border-b-2 border-miku bg-miku/5" : "text-slate-500 hover:bg-slate-50"}`}
                             >
-                                横向名牌
+                                {t("page.character.imageTabs.label_h")}
                             </button>
                             <button
                                 onClick={() => setActiveTab("label_v")}
                                 className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === "label_v" ? "text-miku border-b-2 border-miku bg-miku/5" : "text-slate-500 hover:bg-slate-50"}`}
                             >
-                                竖向名牌
+                                {t("page.character.imageTabs.label_v")}
                             </button>
                         </div>
 
@@ -217,7 +219,7 @@ export default function CharacterDetailClient() {
                             )}
                         </div>
                         <div className="p-3 bg-white text-center text-xs text-slate-400 border-t border-slate-100">
-                            点击图片查看大图
+                            {t("page.character.clickExpand")}
                         </div>
                     </div>
                 </div>
@@ -229,14 +231,14 @@ export default function CharacterDetailClient() {
                         <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
                             <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                                 <span className="w-1 h-6 bg-miku rounded-full"></span>
-                                基本信息
+                                {t("page.character.basicInfo")}
                             </h2>
                         </div>
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
                                 <InfoRow label="ID" value={character.id} />
                                 <InfoRow
-                                    label="姓名"
+                                    label={t("page.character.nameLabel")}
                                     value={
                                         <div className="flex flex-col items-end">
                                             <span className="text-lg font-bold">{`${character.firstName}${character.givenName}`}</span>
@@ -244,9 +246,12 @@ export default function CharacterDetailClient() {
                                         </div>
                                     }
                                 />
-                                <InfoRow label="性别" value={character.gender === "female" ? "女性" : character.gender === "male" ? "男性" : character.gender} />
                                 <InfoRow
-                                    label="所属团体"
+                                    label={t("page.character.genderLabel")}
+                                    value={character.gender === "female" ? t("page.character.genders.female") : character.gender === "male" ? t("page.character.genders.male") : character.gender}
+                                />
+                                <InfoRow
+                                    label={t("page.character.unitLabel")}
                                     value={
                                         <div className="flex items-center gap-2">
                                             <div className="w-6 h-6 relative">
@@ -269,7 +274,7 @@ export default function CharacterDetailClient() {
                                 {unitInfo && (
                                     <>
                                         <InfoRow
-                                            label="应援色"
+                                            label={t("page.character.colorLabel")}
                                             value={
                                                 <div className="flex items-center gap-2">
                                                     <span className="uppercase font-mono text-sm">{unitInfo.colorCode}</span>
@@ -289,17 +294,17 @@ export default function CharacterDetailClient() {
                             <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
                                 <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                                     <span className="w-1 h-6 bg-miku rounded-full"></span>
-                                    个人档案
+                                    {t("page.character.profileTitle")}
                                 </h2>
                             </div>
                             <div className="p-6 space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-                                    <InfoRow label="身高" value={profile.height} />
-                                    <InfoRow label="生日" value={profile.birthday} />
-                                    <InfoRow label="学校" value={profile.school} />
-                                    <InfoRow label="年级" value={profile.schoolYear} />
+                                    <InfoRow label={t("page.character.heightLabel")} value={profile.height} />
+                                    <InfoRow label={t("page.character.birthdayLabel")} value={profile.birthday} />
+                                    <InfoRow label={t("page.character.schoolLabel")} value={profile.school} />
+                                    <InfoRow label={t("page.character.schoolYearLabel")} value={profile.schoolYear} />
                                     <InfoRow
-                                        label="兴趣"
+                                        label={t("page.character.hobbyLabel")}
                                         value={
                                             <TranslatedText
                                                 original={profile.hobby || "-"}
@@ -309,7 +314,7 @@ export default function CharacterDetailClient() {
                                         }
                                     />
                                     <InfoRow
-                                        label="特技"
+                                        label={t("page.character.specialSkillLabel")}
                                         value={
                                             <TranslatedText
                                                 original={profile.specialSkill || "-"}
@@ -319,7 +324,7 @@ export default function CharacterDetailClient() {
                                         }
                                     />
                                     <InfoRow
-                                        label="喜欢的食物"
+                                        label={t("page.character.favoriteFoodLabel")}
                                         value={
                                             <TranslatedText
                                                 original={profile.favoriteFood || "-"}
@@ -329,7 +334,7 @@ export default function CharacterDetailClient() {
                                         }
                                     />
                                     <InfoRow
-                                        label="讨厌的食物"
+                                        label={t("page.character.hatedFoodLabel")}
                                         value={
                                             <TranslatedText
                                                 original={profile.hatedFood || "-"}
@@ -339,7 +344,7 @@ export default function CharacterDetailClient() {
                                         }
                                     />
                                     <InfoRow
-                                        label="不擅长"
+                                        label={t("page.character.weakLabel")}
                                         value={
                                             <TranslatedText
                                                 original={profile.weak || "-"}
@@ -350,7 +355,7 @@ export default function CharacterDetailClient() {
                                     />
                                 </div>
                                 <div className="pt-4 border-t border-slate-100">
-                                    <p className="text-sm font-bold text-slate-500 mb-2">自我介绍</p>
+                                    <p className="text-sm font-bold text-slate-500 mb-2">{t("page.character.introductionTitle")}</p>
                                     <div className="whitespace-pre-line text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl">
                                         <TranslatedText
                                             original={profile.introduction}
@@ -368,10 +373,10 @@ export default function CharacterDetailClient() {
                         <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center justify-between">
                             <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                                 <span className="w-1 h-6 bg-miku rounded-full"></span>
-                                相关卡牌
+                                {t("page.character.relatedCardsTitle")}
                             </h2>
                             <span className="text-sm text-slate-500 text-sm bg-white px-2 py-0.5 rounded-full border border-slate-200">
-                                共 {cards.length} 张
+                                {t("page.character.relatedCardsCount", { count: cards.length })}
                             </span>
                         </div>
                         <div className="p-6">

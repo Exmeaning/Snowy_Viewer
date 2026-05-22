@@ -223,6 +223,64 @@ export interface MysekaiMusicSoundTrackMaster {
 
 export type MysekaiLayoutPayload = MysekaiLayoutData | MysekaiLayoutData[] | MysekaiRoomApiResponse;
 
+export interface MysekaiPreviewRuntimeMessages {
+    initializing: string;
+    loadingMasterLabel: string;
+    loadingMasterMessage: string;
+    loadFailedLabel: string;
+    loadFailedMessage: string;
+    fetchFailed: string;
+    noRoomData: string;
+    modelLoadFailed: string;
+    bgmRecordMissing: string;
+    bgmRecordExternalIdMissing: string;
+    soundtrackMissing: string;
+    soundtrackAssetMissing: string;
+    soundtrackFallbackTitle: string;
+    soundtrackSubtitle: string;
+    musicMissing: string;
+    missingInstrumental: string;
+    missingVocal: string;
+    defaultVocal: string;
+    musicFallbackTitle: string;
+    bgmLoadFailed: string;
+    modelMissing: string;
+    preloadingModelsLabel: string;
+    preloadingModelsProgress: string;
+    readingLayoutLabel: string;
+    loadingLayoutMessage: string;
+    instantiatingFurnitureLabel: string;
+    instantiatingFurnitureProgress: string;
+    emptyInstance: string;
+    finalizingSceneLabel: string;
+    completeLabel: string;
+    defaultSiteLevel: string;
+    completeMessage: string;
+    fenceModelMissing: string;
+    fencePartsFailed: string;
+    modelNotPreloaded: string;
+    fenceModelNotPreloaded: string;
+    freeView: string;
+    fixedView: string;
+    pointerLock: string;
+    releasePointerLock: string;
+    fullscreen: string;
+    exitFullscreen: string;
+    cycleLayout: string;
+    playBgm: string;
+    pauseBgm: string;
+    loadingBgm: string;
+    playBgmTitle: string;
+    bgmErrorTitle: string;
+    noBgmTitle: string;
+    bgmVolume: string;
+    shortcutHint: string;
+    mobileUp: string;
+    mobileDown: string;
+    bgmInfo: string;
+    noBgmInfo: string;
+}
+
 export interface MysekaiPreviewOptions {
     layoutUrl: string;
     layoutData?: MysekaiLayoutPayload | null;
@@ -234,6 +292,7 @@ export interface MysekaiPreviewOptions {
     debugEnabled: boolean;
     backWallOpacity: number;
     lookSensitivity: number;
+    messages: MysekaiPreviewRuntimeMessages;
 }
 
 export interface MysekaiPreviewStatus {

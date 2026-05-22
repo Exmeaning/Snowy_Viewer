@@ -1,10 +1,7 @@
-import { Metadata } from "next";
 import GuidesClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "攻略",
-    description: "PROJECT SEKAI 攻略合集",
-};
+export const generateMetadata = pageMetadata("guides");
 
 export default function GuidesPage() {
     return <GuidesClient />;

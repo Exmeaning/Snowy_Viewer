@@ -1,10 +1,7 @@
-import type { Metadata } from "next";
 import StoryEventListClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "活动剧情",
-    description: "浏览 Project Sekai 活动剧情故事",
-};
+export const generateMetadata = pageMetadata("story_event");
 
 export default function StoryEventListPage() {
     return <StoryEventListClient />;

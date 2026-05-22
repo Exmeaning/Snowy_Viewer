@@ -13,6 +13,10 @@ import {
 } from "@/lib/account";
 import { useCardThumbnail } from "@/hooks/useCardThumbnail";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
+import {
+    NAV_ITEM_LABEL_KEYS,
+} from "@/lib/navigation";
 import {
     getShortcutById,
     isEditableEventTarget,
@@ -22,13 +26,13 @@ import {
 } from "@/lib/shortcuts";
 
 interface NavItem {
-    name: string;
+    id: string;
     href: string;
     icon: React.ReactNode;
 }
 
 interface NavGroup {
-    title: string;
+    id: string;
     items: NavItem[];
 }
 
@@ -54,10 +58,10 @@ const SIDEBAR_CLEAR_FOCUS_COMBO = parseShortcutCombos(
 
 const navigationGroups: NavGroup[] = [
     {
-        title: "数据库",
+        id: "database",
         items: [
             {
-                name: "卡牌",
+                id: "cards",
                 href: "/cards",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,7 +70,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "音乐列表",
+                id: "musicList",
                 href: "/music",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,7 +79,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "歌曲Meta",
+                id: "musicMeta",
                 href: "/music/meta",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,7 +88,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "游戏原声带",
+                id: "soundtrack",
                 href: "/soundtrack",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,7 +99,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "角色",
+                id: "character",
                 href: "/character",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,7 +108,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "服装",
+                id: "costumes",
                 href: "/costumes",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -113,7 +117,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "称号",
+                id: "honors",
                 href: "/honors",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -122,7 +126,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "贴纸",
+                id: "sticker",
                 href: "/sticker",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -131,7 +135,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "漫画",
+                id: "comic",
                 href: "/comic",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,7 +144,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "官方四格",
+                id: "manga",
                 href: "/manga",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,7 +153,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "家具",
+                id: "mysekai",
                 href: "/mysekai",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -158,7 +162,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "持有物",
+                id: "materials",
                 href: "/materials",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -167,7 +171,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "兑换所",
+                id: "exchanges",
                 href: "/exchanges",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -178,10 +182,10 @@ const navigationGroups: NavGroup[] = [
         ],
     },
     {
-        title: "活动",
+        id: "activity",
         items: [
             {
-                name: "活动列表",
+                id: "events",
                 href: "/events",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -190,7 +194,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "扭蛋",
+                id: "gacha",
                 href: "/gacha",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -199,7 +203,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "演唱会",
+                id: "live",
                 href: "/live",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -208,7 +212,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "活动预测",
+                id: "prediction",
                 href: "/prediction",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -217,7 +221,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "实时排行榜",
+                id: "realtimeRanking",
                 href: "/realtime-ranking",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -226,7 +230,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "烤森百景",
+                id: "mysekaiPreview",
                 href: "/mysekai-preview",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -238,10 +242,10 @@ const navigationGroups: NavGroup[] = [
         ],
     },
     {
-        title: "剧情",
+        id: "story",
         items: [
             {
-                name: "主线剧情",
+                id: "mainStory",
                 href: "/story/unit",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -250,7 +254,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "活动剧情",
+                id: "eventStory",
                 href: "/story/event",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -259,7 +263,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "卡牌剧情",
+                id: "cardStory",
                 href: "/story/card",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -268,7 +272,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "区域对话",
+                id: "areaTalk",
                 href: "/story/area",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -277,7 +281,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "自我介绍",
+                id: "selfIntro",
                 href: "/story/self",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -286,7 +290,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "特殊剧情",
+                id: "specialStory",
                 href: "/story/special",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -297,10 +301,10 @@ const navigationGroups: NavGroup[] = [
         ],
     },
     {
-        title: "社区",
+        id: "community",
         items: [
             {
-                name: "攻略",
+                id: "guides",
                 href: "/guides",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -311,10 +315,10 @@ const navigationGroups: NavGroup[] = [
         ],
     },
     {
-        title: "工具",
+        id: "tools",
         items: [
             {
-                name: "组卡推荐",
+                id: "deckRecommend",
                 href: "/deck-recommend",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -323,7 +327,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "组卡比较",
+                id: "deckComparator",
                 href: "/deck-comparator",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -332,7 +336,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "控分计算",
+                id: "scoreControl",
                 href: "/score-control",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -341,7 +345,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "表情包制作",
+                id: "stickerMaker",
                 href: "/sticker-maker",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -350,7 +354,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "谷子盲抽",
+                id: "goodsGacha",
                 href: "/goods-gacha",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -359,7 +363,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "猜角色",
+                id: "guessWho",
                 href: "/guess-who",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -368,7 +372,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "猜曲绘",
+                id: "guessJacket",
                 href: "/guess-jacket",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -377,7 +381,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "谱面预览器",
+                id: "chartPreview",
                 href: "/chart-preview",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -387,7 +391,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "烤森预览器",
+                id: "mysekaiPreviewScene",
                 href: "/mysekai-preview/scene",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -399,10 +403,10 @@ const navigationGroups: NavGroup[] = [
         ],
     },
     {
-        title: "个人",
+        id: "personal",
         items: [
             {
-                name: "个人主页",
+                id: "profile",
                 href: "/profile",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -411,7 +415,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "卡牌进度",
+                id: "myCards",
                 href: "/my-cards",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -420,7 +424,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "歌曲进度",
+                id: "myMusics",
                 href: "/my-musics",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -429,7 +433,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "资源查询",
+                id: "myMaterials",
                 href: "/my-materials",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -439,7 +443,7 @@ const navigationGroups: NavGroup[] = [
             },
 
             {
-                name: "支持",
+                id: "support",
                 href: "/patreon",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -448,7 +452,7 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
-                name: "关于",
+                id: "about",
                 href: "/about",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -460,6 +464,15 @@ const navigationGroups: NavGroup[] = [
     },
 ];
 
+const SIDEBAR_GROUP_LABEL_KEYS: Record<string, string> = {
+    database: "layout.nav.groups.database",
+    activity: "layout.nav.groups.activity",
+    story: "layout.nav.groups.story",
+    community: "layout.nav.groups.community",
+    tools: "layout.nav.groups.tools",
+    personal: "layout.nav.groups.personal",
+};
+
 export default function Sidebar({
     isOpen,
     onClose,
@@ -469,31 +482,32 @@ export default function Sidebar({
     const pathname = usePathname();
     const router = useRouter();
     const { assetSource } = useTheme();
-    // 默认展开所有分组
+    const { t } = useI18n();
+    // Expand all groups by default.
     const [expandedGroups, setExpandedGroups] = useState<string[]>(
-        navigationGroups.map(group => group.title)
+        navigationGroups.map(group => group.id)
     );
     const [activeAccount, setActiveAccountState] = useState<MoesekaiAccount | null>(null);
     const activeAccountCardThumbnail = useCardThumbnail(activeAccount?.avatarCardId ?? null, assetSource);
     const navRef = useRef<HTMLElement>(null);
 
-    // 键盘导航状态：-1 表示无焦点
+    // Keyboard navigation state: -1 means no focused item.
     const [focusedIndex, setFocusedIndex] = useState(-1);
 
-    // 构建当前可见的所有导航项列表（考虑折叠分组）
+    // Build the current visible navigation item list, respecting collapsed groups.
     const visibleItems = useMemo(() => {
-        const items: { name: string; href: string }[] = [{ name: "首页", href: "/" }];
+        const items: { id: string; href: string }[] = [{ id: "home", href: "/" }];
         for (const group of navigationGroups) {
-            if (expandedGroups.includes(group.title)) {
+            if (expandedGroups.includes(group.id)) {
                 for (const item of group.items) {
-                    items.push({ name: item.name, href: item.href });
+                    items.push({ id: item.id, href: item.href });
                 }
             }
         }
         return items;
     }, [expandedGroups]);
 
-    // 加载并同步当前激活账号
+    // Load and sync the active account.
     useEffect(() => {
         const syncActiveAccount = () => {
             const account = getActiveAccount();
@@ -509,7 +523,7 @@ export default function Sidebar({
         };
     }, []);
 
-    // 恢复导航栏滚动位置
+    // Restore the sidebar scroll position.
     useEffect(() => {
         const saved = sessionStorage.getItem('sidebar_scroll');
         if (saved && navRef.current) {
@@ -517,7 +531,7 @@ export default function Sidebar({
         }
     }, []);
 
-    // 保存导航栏滚动位置
+    // Save the sidebar scroll position.
     useEffect(() => {
         const nav = navRef.current;
         if (!nav) return;
@@ -528,17 +542,17 @@ export default function Sidebar({
         return () => nav.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // 键盘导航：↑↓ 移动焦点，Enter 导航，Escape 取消
+    // Keyboard navigation: move with arrow keys, open with Enter, cancel with Escape.
     useEffect(() => {
         if (!isOpen || disableKeyboardNavigation || window.innerWidth < 768) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.defaultPrevented || isKeyboardEventComposing(e)) return;
 
-            // 输入框中不触发
+            // Ignore editable targets.
             if (isEditableEventTarget(e.target)) return;
 
-            // 有修饰键时不触发
+            // Ignore system modifier shortcuts here.
             if (e.metaKey || e.ctrlKey || e.altKey) return;
 
             if (SIDEBAR_FOCUS_NEXT_COMBOS.some((combo) => matchesShortcutCombo(e, combo))) {
@@ -572,7 +586,7 @@ export default function Sidebar({
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [isOpen, disableKeyboardNavigation, focusedIndex, visibleItems, router]);
 
-    // 聚焦项滚动到可见区域
+    // Scroll focused item into view.
     useEffect(() => {
         if (focusedIndex < 0 || !navRef.current) return;
         const el = navRef.current.querySelector(`[data-nav-index="${focusedIndex}"]`);
@@ -581,14 +595,14 @@ export default function Sidebar({
         }
     }, [focusedIndex]);
 
-    // 侧边栏关闭时重置焦点
+    // Reset focus when the sidebar closes.
     useEffect(() => {
         if (!isOpen) setFocusedIndex(-1);
     }, [isOpen]);
 
-    const toggleGroup = (title: string) => {
+    const toggleGroup = (id: string) => {
         setExpandedGroups((prev) =>
-            prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]
+            prev.includes(id) ? prev.filter((groupId) => groupId !== id) : [...prev, id]
         );
     };
 
@@ -613,8 +627,10 @@ export default function Sidebar({
     }, [pathname]);
 
     const isActive = (href: string) => href === activeHref;
+    const getGroupLabel = (id: string) => t(SIDEBAR_GROUP_LABEL_KEYS[id] ?? id);
+    const getItemLabel = (href: string, fallback: string) => t(NAV_ITEM_LABEL_KEYS[href] ?? fallback);
 
-    // 仅在移动端点击导航时关闭侧边栏
+    // Close the sidebar after navigation only on mobile.
     const handleNavClick = () => {
         setFocusedIndex(-1);
         if (window.innerWidth < 768 || screen.width < 768) {
@@ -622,7 +638,7 @@ export default function Sidebar({
         }
     };
 
-    // 当前可见项的平坦索引计数器
+    // Flat index counter for visible items.
     let flatIdx = 0;
     const isHomePage = pathname === "/";
 
@@ -645,7 +661,7 @@ export default function Sidebar({
 
                 {/* Navigation groups - scrollable area */}
                 <nav ref={navRef} className="p-4 space-y-4 flex-grow overflow-y-auto">
-                    {/* 首页 - 固定顶部 */}
+                    {/* Home shortcut */}
                     <Link
                         href="/"
                         onClick={handleNavClick}
@@ -660,21 +676,21 @@ export default function Sidebar({
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
-                        <span>首页</span>
+                        <span>{t("layout.nav.home")}</span>
                     </Link>
 
                     <div className="border-t border-slate-100" />
 
-                    {/* 分组导航 */}
+                    {/* Navigation groups */}
                     {navigationGroups.map((group) => {
-                        const isExpanded = expandedGroups.includes(group.title);
+                        const isExpanded = expandedGroups.includes(group.id);
                         return (
-                            <div key={group.title}>
+                            <div key={group.id}>
                                 <button
-                                    onClick={() => toggleGroup(group.title)}
+                                    onClick={() => toggleGroup(group.id)}
                                     className="w-full flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 hover:text-miku transition-colors"
                                 >
-                                    {group.title}
+                                    {getGroupLabel(group.id)}
                                     <svg
                                         className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""
                                             }`}
@@ -709,7 +725,7 @@ export default function Sidebar({
                                                         className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium flex-1 min-w-0"
                                                     >
                                                         {item.icon}
-                                                        <span>{item.name}</span>
+                                                        <span>{getItemLabel(item.href, item.id)}</span>
                                                     </Link>
                                                 </div>
                                             </div>
@@ -721,7 +737,7 @@ export default function Sidebar({
                     })}
                 </nav>
 
-                {/* Bottom Section - 用户信息 */}
+                {/* Bottom section - user info */}
                 <div className="border-t border-slate-200 flex-shrink-0">
                     {/* User Info Card */}
                     <Link
@@ -757,10 +773,10 @@ export default function Sidebar({
                         {/* User Info */}
                         <div className="flex-grow min-w-0">
                             <div className="text-sm font-medium text-slate-700 truncate group-hover:text-miku transition-colors">
-                                {activeAccount?.userGamedata?.name || activeAccount?.nickname || "未登录"}
+                                {activeAccount?.userGamedata?.name || activeAccount?.nickname || t("settings.sidebar.notLoggedIn")}
                             </div>
                             <div className="text-xs text-slate-400">
-                                {activeAccount ? "点击管理账号" : "点击绑定账号"}
+                                {activeAccount ? t("settings.sidebar.manageAccount") : t("settings.sidebar.bindAccount")}
                             </div>
                         </div>
 

@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import ExternalLink from "@/components/ExternalLink";
+import { useI18n } from "@/contexts/I18nContext";
 import type { HitEvent, HudRuntimeState, PreviewRuntimeConfig, TransportState } from "@/lib/chart-preview/types";
 import { AudioTransport } from "@/lib/chart-preview/audioTransport";
 import { GlPreviewRenderer } from "@/lib/chart-preview/glRenderer";
@@ -239,6 +240,7 @@ export default function ChartPreviewPlayer({
     description2: propDescription2,
     extra: propExtra,
 }: ChartPreviewPlayerProps) {
+    const { t } = useI18n();
     const wrapperRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -315,8 +317,8 @@ export default function ChartPreviewPlayer({
     const chartLeadInSecRef = useRef(0);
 
     const [previewState, setPreviewState] = useState<PreviewState>("init");
-    const [statusTitle, setStatusTitle] = useState("正在初始化预览");
-    const [statusText, setStatusText] = useState("加载 MMW 资源和 WASM 核心中…");
+    const [statusTitle, setStatusTitle] = useState(() => t("page.chartPreview.player.initializingTitle"));
+    const [statusText, setStatusText] = useState(() => t("page.chartPreview.player.initializingText"));
     const [requiresGesture, setRequiresGesture] = useState(false);
     const [bgmLoading, setBgmLoading] = useState(false);
     const [warningMessage, setWarningMessage] = useState("");
@@ -345,6 +347,13 @@ export default function ChartPreviewPlayer({
     const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [viewport, setViewport] = useState({ width: 0, height: 0 });
     const [isIOS, setIsIOS] = useState(false);
+
+    useEffect(() => {
+        if (previewState === "init") {
+            setStatusTitle(t("page.chartPreview.player.initializingTitle"));
+            setStatusText(t("page.chartPreview.player.initializingText"));
+        }
+    }, [previewState, t]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -1088,7 +1097,7 @@ export default function ChartPreviewPlayer({
                 updateUi();
             } catch (error) {
                 const message = error instanceof Error ? error.message : "Unknown render error";
-                setStatusTitle("预览加载失败");
+                setStatusTitle(t("page.chartPreview.player.loadFailedTitle"));
                 setStatusText(message);
                 setPreviewState("error");
                 transport.setError();
@@ -1111,8 +1120,8 @@ export default function ChartPreviewPlayer({
         async function bootstrap() {
             try {
                 setPreviewState("loading");
-                setStatusTitle("正在加载 MMW 资源");
-                setStatusText("贴图、着色器和 WASM 模块正在初始化。");
+                setStatusTitle(t("page.chartPreview.player.loadingResourcesTitle"));
+                setStatusText(t("page.chartPreview.player.loadingResourcesText"));
 
                 await Promise.all([
                     wasm.init(),
@@ -1120,14 +1129,14 @@ export default function ChartPreviewPlayer({
                     effects.load(),
                     preloadHudImages(),
                     judgementSoundsInstance.load(transport.getAudioContext()).catch(() => {
-                        setWarningMessage("判定音效加载失败，已静默继续。");
+                        setWarningMessage(t("page.chartPreview.player.judgementSoundLoadFailed"));
                     }),
                 ]);
                 rendererReadyRef.current = true;
                 resizeObserver.observe(panel);
 
-                setStatusTitle("正在加载谱面");
-                setStatusText("正在拉取 SUS 文件。");
+                setStatusTitle(t("page.chartPreview.player.loadingChartTitle"));
+                setStatusText(t("page.chartPreview.player.loadingChartText"));
 
                 const bgmExpected = !!bgmUrl;
                 bgmExpectedRef.current = bgmExpected;
@@ -1202,7 +1211,11 @@ export default function ChartPreviewPlayer({
                 const introArranger = propArranger?.trim() || "-";
                 const introVocal = propVocal?.trim() || "-";
                 const introDifficulty = propDifficulty?.trim() || inferDifficultyFromSusUrl(susUrl);
-                const introDesc1 = propDescription1?.trim() || `作詞：${introLyricist}　作曲：${introComposer}　編曲：${introArranger}`;
+                const introDesc1 = propDescription1?.trim() || t("page.chartPreview.player.introCredits", {
+                    lyricist: introLyricist,
+                    composer: introComposer,
+                    arranger: introArranger,
+                });
                 const introDesc2 = propDescription2?.trim() || `Vo. ${introVocal}`;
                 const introExtra = propExtra?.trim() || "";
 
@@ -1268,7 +1281,7 @@ export default function ChartPreviewPlayer({
                 // Load BGM in background
                 if (bgmUrl) {
                     setBgmLoading(true);
-                    setWarningMessage("正在加载 BGM…");
+                    setWarningMessage(t("page.chartPreview.player.loadingBgm"));
                     try {
                         const controller = new AbortController();
                         const timer = window.setTimeout(() => controller.abort(), 30000);
@@ -1294,15 +1307,15 @@ export default function ChartPreviewPlayer({
                         setBgmLoading(false);
                         setWarningMessage(
                             error instanceof Error
-                                ? `${error.message}，已切换为静音预览。`
-                                : "BGM 加载失败，已切换为静音预览。"
+                                ? t("page.chartPreview.player.bgmLoadFailedWithMessage", { message: error.message })
+                                : t("page.chartPreview.player.bgmLoadFailed")
                         );
                     }
                     updateUi();
                 }
             } catch (error) {
                 const message = error instanceof Error ? error.message : "Unknown error";
-                setStatusTitle("预览加载失败");
+                setStatusTitle(t("page.chartPreview.player.loadFailedTitle"));
                 setStatusText(message);
                 setPreviewState("error");
                 transport.setError();
@@ -1326,7 +1339,7 @@ export default function ChartPreviewPlayer({
                 backgroundObjectUrlRef.current = null;
             }
         };
-    }, [susUrl, bgmUrl, rawOffsetMs, fillerSec, skipBgmSilence, updateUi, coverUrl, propTitle, propLyricist, propComposer, propArranger, propVocal, propDifficulty, propDescription1, propDescription2, propExtra]);
+    }, [susUrl, bgmUrl, rawOffsetMs, fillerSec, skipBgmSilence, updateUi, coverUrl, propTitle, propLyricist, propComposer, propArranger, propVocal, propDifficulty, propDescription1, propDescription2, propExtra, t]);
 
     const handlePlayToggle = useCallback(async () => {
         const transport = transportRef.current;
@@ -1344,7 +1357,7 @@ export default function ChartPreviewPlayer({
         }
 
         if (bgmExpectedRef.current && !bgmLoadedRef.current) {
-            setWarningMessage("歌曲仍在加载中，请稍候。");
+            setWarningMessage(t("page.chartPreview.player.songStillLoading"));
             return;
         }
 
@@ -1359,7 +1372,7 @@ export default function ChartPreviewPlayer({
             setRequiresGesture(true);
         }
         updateUi();
-    }, [updateUi]);
+    }, [t, updateUi]);
 
     const handleStop = useCallback(() => {
         const transport = transportRef.current;
@@ -1662,14 +1675,14 @@ export default function ChartPreviewPlayer({
                         {requiresGesture && (
                             <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
                                 <div className={`text-center ${isCompactControls ? "p-4" : "p-6"}`}>
-                                    <div className={`font-medium text-white ${isCompactControls ? "mb-1 text-sm" : "mb-2 text-lg"}`}>浏览器需要一次点击来启动音频</div>
-                                    {!isCompactControls && <div className="mb-4 text-sm text-slate-400">点击后会继续当前播放请求。</div>}
+                                    <div className={`font-medium text-white ${isCompactControls ? "mb-1 text-sm" : "mb-2 text-lg"}`}>{t("page.chartPreview.player.audioGestureTitle")}</div>
+                                    {!isCompactControls && <div className="mb-4 text-sm text-slate-400">{t("page.chartPreview.player.audioGestureDescription")}</div>}
                                     <button
                                         type="button"
                                         onClick={handleUnlock}
                                         className={`rounded-lg bg-miku text-white transition-colors hover:bg-miku/90 ${isCompactControls ? "mt-2 px-4 py-1.5 text-sm" : "px-6 py-2"}`}
                                     >
-                                        启动音频
+                                        {t("page.chartPreview.player.startAudio")}
                                     </button>
                                 </div>
                             </div>
@@ -1678,8 +1691,8 @@ export default function ChartPreviewPlayer({
                         {bgmLoading && (
                             <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
                                 <div className={`text-center ${isCompactControls ? "p-4" : "p-6"}`}>
-                                    <div className={`font-medium text-white ${isCompactControls ? "mb-1 text-sm" : "mb-2 text-lg"}`}>正在加载歌曲</div>
-                                    <div className={isCompactControls ? "text-xs text-slate-400" : "text-sm text-slate-400"}>BGM 还没准备好，加载完成后就可以播放。</div>
+                                    <div className={`font-medium text-white ${isCompactControls ? "mb-1 text-sm" : "mb-2 text-lg"}`}>{t("page.chartPreview.player.loadingSongTitle")}</div>
+                                    <div className={isCompactControls ? "text-xs text-slate-400" : "text-sm text-slate-400"}>{t("page.chartPreview.player.loadingSongDescription")}</div>
                                 </div>
                             </div>
                         )}
@@ -1695,7 +1708,7 @@ export default function ChartPreviewPlayer({
                             ? "bg-miku/80 text-white shadow-lg"
                             : "bg-slate-900/50 text-slate-300 hover:bg-slate-900/70"
                             }`}
-                        title={controlsLocked ? "解锁控制栏" : "锁定控制栏"}
+                        title={controlsLocked ? t("page.chartPreview.player.unlockControls") : t("page.chartPreview.player.lockControls")}
                     >
                         {controlsLocked ? (
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -1726,7 +1739,7 @@ export default function ChartPreviewPlayer({
                             type="button"
                             onClick={handlePlayToggle}
                             disabled={bgmLoading || previewState !== "ready"}
-                            title={isPlaying ? "暂停" : "播放"}
+                            title={isPlaying ? t("page.chartPreview.player.pause") : t("page.chartPreview.player.play")}
                             className={`${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-miku text-white hover:bg-miku/90" : `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-lg bg-miku font-medium text-white hover:bg-miku/90`} transition-colors disabled:cursor-not-allowed disabled:opacity-50`}
                         >
                             {isPlaying ? (
@@ -1738,39 +1751,39 @@ export default function ChartPreviewPlayer({
                                     <path d="M8 5v14l11-7z" />
                                 </svg>
                             )}
-                            {!isFullscreen && (isPlaying ? "暂停" : "播放")}
+                            {!isFullscreen && (isPlaying ? t("page.chartPreview.player.pause") : t("page.chartPreview.player.play"))}
                         </button>
                         <button
                             type="button"
                             onClick={handleStop}
-                            title="停止"
+                            title={t("page.chartPreview.player.stop")}
                             className={`${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-200 hover:bg-slate-600" : `${secondaryButtonClassName}`} shrink-0 transition-colors`}
                         >
                             {isFullscreen ? (
                                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                     <path d="M6 6h12v12H6z" />
                                 </svg>
-                            ) : "停止"}
+                            ) : t("page.chartPreview.player.stop")}
                         </button>
                         {/* Mark button */}
                         <button
                             type="button"
                             onClick={handleMark}
-                            title="标记当前时间"
+                            title={t("page.chartPreview.player.markCurrentTime")}
                             className={`${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-200 hover:bg-slate-600" : `${secondaryButtonClassName}`} shrink-0 transition-colors`}
                         >
                             {isFullscreen ? (
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                                 </svg>
-                            ) : "标记"}
+                            ) : t("page.chartPreview.player.mark")}
                         </button>
                         {/* Jump button */}
                         <button
                             type="button"
                             onClick={handleJump}
                             disabled={markedTime === null}
-                            title={markedTime !== null ? `跳转到 ${formatTime(markedTime)}` : "尚未标记时间"}
+                            title={markedTime !== null ? t("page.chartPreview.player.jumpToTime", { time: formatTime(markedTime) }) : t("page.chartPreview.player.noMarkedTime")}
                             className={`${isFullscreen
                                 ? `flex h-9 w-9 items-center justify-center rounded-full transition-colors ${markedTime !== null ? `${markFlash ? "bg-slate-700 text-slate-400" : "bg-miku text-white hover:bg-miku/90"}` : "bg-slate-700 text-slate-500 cursor-not-allowed"}`
                                 : `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-lg font-medium transition-colors ${markedTime !== null ? `${markFlash ? "bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500" : "bg-miku text-white hover:bg-miku/90"}` : "bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed"}`
@@ -1780,7 +1793,7 @@ export default function ChartPreviewPlayer({
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
                                 </svg>
-                            ) : "跳转"}
+                            ) : t("page.chartPreview.player.jump")}
                         </button>
                         </div>
                         {/* Non-fullscreen time (original position) */}
@@ -1797,7 +1810,7 @@ export default function ChartPreviewPlayer({
                             <button
                                 type="button"
                                 onClick={handleFullscreenToggle}
-                                title="退出全屏"
+                                title={t("page.chartPreview.player.exitFullscreen")}
                                 className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-200 transition-colors hover:bg-slate-600"
                             >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -1820,7 +1833,7 @@ export default function ChartPreviewPlayer({
                     {!isFullscreen && (
                         <div className={`flex flex-wrap items-center ${isCompactControls ? "gap-1.5" : "gap-2"}`}>
                             <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
-                                <span className={fieldTextClassName}>速度</span>
+                                <span className={fieldTextClassName}>{t("page.chartPreview.player.speed")}</span>
                                 <input
                                     ref={speedInputRef}
                                     type="number"
@@ -1846,7 +1859,7 @@ export default function ChartPreviewPlayer({
                             </label>
 
                             <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
-                                <span className={fieldTextClassName}>打击音量</span>
+                                <span className={fieldTextClassName}>{t("page.chartPreview.player.seVolume")}</span>
                                 <input
                                     type="range"
                                     min={0}
@@ -1860,7 +1873,7 @@ export default function ChartPreviewPlayer({
                             </label>
 
                             <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
-                                <span className={fieldTextClassName}>音乐音量</span>
+                                <span className={fieldTextClassName}>{t("page.chartPreview.player.bgmVolume")}</span>
                                 <input
                                     type="range"
                                     min={0}
@@ -1880,7 +1893,7 @@ export default function ChartPreviewPlayer({
                                     ? "border-transparent bg-white text-slate-800 ring-2 ring-miku shadow-lg"
                                     : `${chipClassName} text-slate-600`}`}
                             >
-                                <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold`}>低特效</span>
+                                <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold`}>{t("page.chartPreview.player.lowEffects")}</span>
                                 <div className={`flex h-4 w-4 items-center justify-center rounded-full border transition-colors ${lowEffects ? "border-miku bg-miku" : "border-slate-300 bg-white"}`}>
                                     {lowEffects && (
                                         <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -1891,7 +1904,7 @@ export default function ChartPreviewPlayer({
                             </button>
 
                             <div className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
-                                <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold text-slate-600`}>画质</span>
+                                <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold text-slate-600`}>{t("page.chartPreview.player.quality")}</span>
                                 <div className="flex gap-1">
                                     {RENDER_SCALE_OPTIONS.map((opt) => (
                                         <button
@@ -1913,10 +1926,10 @@ export default function ChartPreviewPlayer({
                                 <button
                                     type="button"
                                     onClick={handleWebFullscreenToggle}
-                                    title="网页全屏（iOS 推荐）"
+                                    title={t("page.chartPreview.player.webFullscreenTitle")}
                                     className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
                                 >
-                                    <span className="text-xs font-bold text-slate-600">网页全屏</span>
+                                    <span className="text-xs font-bold text-slate-600">{t("page.chartPreview.player.webFullscreen")}</span>
                                     <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 2h10M7 22h10M2 7v10M22 7v10" />
                                     </svg>
@@ -1924,10 +1937,10 @@ export default function ChartPreviewPlayer({
                                 <button
                                     type="button"
                                     onClick={handleFullscreenToggle}
-                                    title="进入全屏"
+                                    title={t("page.chartPreview.player.enterFullscreen")}
                                     className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
                                 >
-                                    <span className="text-xs font-bold text-slate-600">全屏</span>
+                                    <span className="text-xs font-bold text-slate-600">{t("page.chartPreview.player.fullscreen")}</span>
                                     <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75V8.25M3.75 3.75H8.25M3.75 3.75L9 9M3.75 20.25V15.75M3.75 20.25H8.25M3.75 20.25L9 15M20.25 3.75L15.75 3.75M20.25 3.75V8.25M20.25 3.75L15 9M20.25 20.25H15.75M20.25 20.25V15.75M20.25 20.25L15 15" />
                                     </svg>
@@ -1940,8 +1953,8 @@ export default function ChartPreviewPlayer({
 
                     {!isFullscreen && isIOS && (
                         <div className="text-[11px] text-slate-400 italic text-right space-y-0.5">
-                            <div>*iOS 设备推荐使用「网页全屏」以更好地屏蔽 Safari 的快捷触摸操作</div>
-                            <div>*iOS 的渲染机制可能导致全屏卡顿，建议将画质调至 50% 或 75% 以提升帧率</div>
+                            <div>{t("page.chartPreview.player.iosWebFullscreenTip")}</div>
+                            <div>{t("page.chartPreview.player.iosQualityTip")}</div>
                         </div>
                     )}
 
@@ -1951,14 +1964,14 @@ export default function ChartPreviewPlayer({
                             <ExternalLink href="https://github.com/crash5band/MikuMikuWorld" className="text-miku hover:underline">
                                 MikuMikuWorld
                             </ExternalLink>{" "}
-                            by Crash5b, licensed under MIT. 部分代码来源于{" "}
+                            {t("page.chartPreview.player.creditMikuMikuWorldSuffix")} {t("page.chartPreview.player.creditSourcePrefix")}{" "}
                             <ExternalLink href="https://github.com/watagashi-uni/" className="text-miku hover:underline">
                                 watagashi-uni
-                            </ExternalLink>的{" "}
+                            </ExternalLink>{t("page.chartPreview.player.creditSourceMiddle")}{" "}
                             <ExternalLink href="https://github.com/watagashi-uni/sekai-mmw-preview-web" className="text-miku hover:underline">
                                 sekai-mmw-preview-web
                             </ExternalLink>
-                            项目。
+                            {t("page.chartPreview.player.creditSourceSuffix")}
                         </div>
                     )}
                 </div>

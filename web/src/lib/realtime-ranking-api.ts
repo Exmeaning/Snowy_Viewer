@@ -17,12 +17,67 @@ import {
 import { ICardInfo } from "@/types/types";
 import { IBondsHonor, IBondsHonorWord, IGameCharaUnit, IHonorGroup, IHonorInfo } from "@/types/honor";
 
-// /realtime-ranking 使用 rks.exmeaning.com 的公开实时榜接口；
-// 默认不要走站内 /api/public，因为当前仓库并没有对应代理路由。
+// /realtime-ranking uses the public rks.exmeaning.com live ranking API.
+// Do not route through the local /api/public by default because this repository has no proxy route for it.
 const BASE_URL = (
     process.env.NEXT_PUBLIC_REALTIME_RANKING_API_BASE || "https://rks.exmeaning.com/api/public"
 ).replace(/\/+$/, "");
 const CHURN_TIMEOUT_MS = 15_000;
+
+type RealtimeRankingErrorValues = Record<string, string | number>;
+
+export type RealtimeRankingTranslationFn = (key: string, values?: RealtimeRankingErrorValues) => string;
+
+export type RealtimeRankingErrorCode =
+    | "rankingFetchFailed"
+    | "rankingTimeout"
+    | "worldLinkFetchFailed"
+    | "missingWorldLinkCharacter"
+    | "churnFetchFailed"
+    | "churnTimeout"
+    | "unknown";
+
+export class RealtimeRankingApiError extends Error {
+    code: RealtimeRankingErrorCode;
+    values?: RealtimeRankingErrorValues;
+
+    constructor(code: RealtimeRankingErrorCode, values?: RealtimeRankingErrorValues) {
+        super(code);
+        this.name = "RealtimeRankingApiError";
+        this.code = code;
+        this.values = values;
+    }
+}
+
+const FALLBACK_ERROR_MESSAGES: Record<RealtimeRankingErrorCode, string> = {
+    rankingFetchFailed: "Failed to fetch live ranking: {status}",
+    rankingTimeout: "The live ranking request timed out. Please try again later.",
+    worldLinkFetchFailed: "Failed to fetch WL solo board: {status}",
+    missingWorldLinkCharacter: "Missing WL board character ID",
+    churnFetchFailed: "Failed to fetch churn data (HTTP {status})",
+    churnTimeout: "The churn data request timed out. Please try again later.",
+    unknown: "Failed to load live ranking",
+};
+
+function interpolateFallback(message: string, values?: RealtimeRankingErrorValues): string {
+    if (!values) return message;
+    return message.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ""));
+}
+
+export function getRealtimeRankingErrorMessage(error: unknown, t?: RealtimeRankingTranslationFn): string {
+    if (error instanceof RealtimeRankingApiError) {
+        const key = `page.realtimeRanking.errors.${error.code}`;
+        const translated = t?.(key, error.values);
+        if (translated && translated !== key) return translated;
+        return interpolateFallback(FALLBACK_ERROR_MESSAGES[error.code], error.values);
+    }
+
+    if (error instanceof Error && error.message) return error.message;
+
+    const key = "page.realtimeRanking.errors.unknown";
+    const translated = t?.(key);
+    return translated && translated !== key ? translated : FALLBACK_ERROR_MESSAGES.unknown;
+}
 
 function buildRealtimeRankingApiUrl(
     path: string,
@@ -150,7 +205,7 @@ function normalizeEntry(raw: RealtimeRankingRawEntry): RealtimeRankingEntry {
     return {
         rank: raw.rank,
         score: raw.score,
-        displayName: raw.name?.trim() || `玩家 ${raw.userId}`,
+        displayName: raw.name?.trim() || `Player ${raw.userId}`,
         userId: String(raw.userId),
         signature: pickSignature(raw),
         leaderCardId: pickLeaderCardId(raw),
@@ -208,7 +263,7 @@ export async function fetchRealtimeRanking(region: RealtimeRankingRegion): Promi
             signal: controller.signal,
         });
         if (!response.ok) {
-            throw new Error(`获取实时排行榜失败：${response.status}`);
+            throw new RealtimeRankingApiError("rankingFetchFailed", { status: response.status });
         }
 
         const data: RealtimeRankingApiResponse = await response.json();
@@ -223,7 +278,7 @@ export async function fetchRealtimeRanking(region: RealtimeRankingRegion): Promi
         );
     } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
-            throw new Error("实时排行榜请求超时，请稍后重试");
+            throw new RealtimeRankingApiError("rankingTimeout");
         }
         throw error;
     } finally {
@@ -233,8 +288,8 @@ export async function fetchRealtimeRanking(region: RealtimeRankingRegion): Promi
 
 export async function fetchWorldLinkRanking(region: RealtimeRankingRegion): Promise<WorldLinkSnapshot | null> {
     const controller = new AbortController();
-    // WL 响应体 (~200KB+) 远大于总榜 (~70KB)，慢网环境下 10s 容易超时
-    // 导致即使服务器 200 也因 body 下载未完而被 abort，前端误显"暂未同步"
+    // WL responses (~200KB+) are much larger than overall-board responses (~70KB), so 10s can time out on slow networks.
+    // A 200 response can still be aborted before the body finishes downloading, which would falsely show the pending-sync notice.
     const timeout = window.setTimeout(() => controller.abort(), 30000);
 
     try {
@@ -250,7 +305,7 @@ export async function fetchWorldLinkRanking(region: RealtimeRankingRegion): Prom
             if (errorText.includes("no worldlink data available")) {
                 return null;
             }
-            throw new Error(`获取 WL 单人榜失败：${response.status}`);
+            throw new RealtimeRankingApiError("worldLinkFetchFailed", { status: response.status });
         }
 
         const data: WorldLinkApiResponse = await response.json();
@@ -318,7 +373,7 @@ async function fetchScopedChurnData(
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), CHURN_TIMEOUT_MS);
     if (boardType === "worldlink" && !gameCharacterId) {
-        throw new Error("缺少 WL 单榜角色 ID");
+        throw new RealtimeRankingApiError("missingWorldLinkCharacter");
     }
 
     const url = buildRealtimeRankingApiUrl(
@@ -332,12 +387,12 @@ async function fetchScopedChurnData(
             signal: controller.signal,
         });
         if (!response.ok) {
-            throw new Error(`获取周回数据失败（HTTP ${response.status}）`);
+            throw new RealtimeRankingApiError("churnFetchFailed", { status: response.status });
         }
         return response.json();
     } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
-            throw new Error("周回数据请求超时，请稍后重试");
+            throw new RealtimeRankingApiError("churnTimeout");
         }
         throw error;
     } finally {

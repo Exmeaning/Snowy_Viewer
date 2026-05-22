@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import StoryCardListClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = { title: "卡牌剧情", description: "浏览 Project Sekai 卡牌剧情" };
+export const generateMetadata = pageMetadata("story_card");
 
 export default function StoryCardListPage() {
     return <StoryCardListClient />;

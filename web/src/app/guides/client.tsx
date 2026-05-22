@@ -7,6 +7,7 @@ import BaseFilters, { FilterSection, FilterButton } from "@/components/common/Ba
 import ExternalLink from "@/components/ExternalLink";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { fetchGuidesIndex, type GuideEntry, type GuidesIndex } from "@/lib/guides";
 
 // Category badge color mapping
@@ -20,6 +21,7 @@ const categoryColors: Record<string, string> = {
 
 function GuidesContent() {
     const searchParams = useSearchParams();
+    const { t } = useI18n();
 
     const [indexData, setIndexData] = useState<GuidesIndex | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -67,13 +69,13 @@ function GuidesContent() {
                 setError(null);
             } catch (err) {
                 console.error("Error fetching guides index:", err);
-                setError(err instanceof Error ? err.message : "加载失败");
+                setError(err instanceof Error ? err.message : t("page.guides.loadFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
         load();
-    }, []);
+    }, [t]);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const guides = indexData?.guides ?? [];
@@ -126,27 +128,27 @@ function GuidesContent() {
 
     const quickFilterContent = (
         <BaseFilters
-            title="攻略筛选"
+            title={t("page.guides.filterTitle")}
             filteredCount={filteredGuides.length}
             totalCount={guides.length}
-            countUnit="篇"
+            countUnit={t("page.guides.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            searchPlaceholder="搜索攻略标题或标签..."
-            sortOptions={[{ id: "date", label: "日期" }]}
+            searchPlaceholder={t("page.guides.searchPlaceholder")}
+            sortOptions={[{ id: "date", label: t("common.filter.sortByDate") }]}
             sortBy="date"
             sortOrder={sortOrder}
             onSortChange={(_: string, order: "asc" | "desc") => setSortOrder(order)}
             hasActiveFilters={hasActiveFilters}
             onReset={resetFilters}
         >
-            <FilterSection label="分类">
+            <FilterSection label={t("common.filter.category")}>
                 <div className="flex flex-wrap gap-2">
                     <FilterButton
                         selected={selectedCategory === "all"}
                         onClick={() => setSelectedCategory("all")}
                     >
-                        全部
+                        {t("common.filter.all")}
                     </FilterButton>
                     {Object.entries(categories).map(([key, label]) => (
                         <FilterButton
@@ -162,12 +164,13 @@ function GuidesContent() {
         </BaseFilters>
     );
 
-    useQuickFilter("攻略筛选", quickFilterContent, [
+    useQuickFilter(t("page.guides.filterTitle"), quickFilterContent, [
         searchQuery,
         selectedCategory,
         sortOrder,
         filteredGuides.length,
         guides.length,
+        t,
     ]);
 
     return (
@@ -175,13 +178,13 @@ function GuidesContent() {
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">社区</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.guides.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    游戏 <span className="text-miku">攻略</span>
+                    {t("page.guides.title")} <span className="text-miku">{t("page.guides.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    由 Moe攻略组 编写的 PROJECT SEKAI 攻略合集
+                    {t("page.guides.description")}
                 </p>
             </div>
 
@@ -200,10 +203,10 @@ function GuidesContent() {
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="text-sm font-bold text-primary-text group-hover:text-miku transition-colors">
-                                Sekai Tools 工具站
+                                {t("page.guides.toolSiteTitle")}
                             </div>
                             <div className="text-xs text-slate-400">
-                                sekaitools.exmeaning.com — 实用计算工具合集
+                                {t("page.guides.toolSiteDescription")}
                             </div>
                         </div>
                         <svg className="w-5 h-5 text-slate-300 group-hover:text-miku transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -216,7 +219,7 @@ function GuidesContent() {
             {/* Error State */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("page.guides.loadFailed")}</p>
                     <p>{error}</p>
                 </div>
             )}
@@ -254,7 +257,7 @@ function GuidesContent() {
                                     <svg className="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                     </svg>
-                                    <p className="text-sm">没有找到匹配的攻略</p>
+                                    <p className="text-sm">{t("page.guides.noResult")}</p>
                                 </div>
                             )}
 
@@ -266,7 +269,7 @@ function GuidesContent() {
                                         data-shortcut-load-more="true"
                                         className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                                     >
-                                        加载更多
+                                        {t("page.guides.loadMore")}
                                         <span className="ml-2 text-sm opacity-80">
                                             ({displayedGuides.length} / {filteredGuides.length})
                                         </span>
@@ -277,7 +280,7 @@ function GuidesContent() {
                             {/* All loaded */}
                             {displayedGuides.length > 0 && displayedGuides.length >= filteredGuides.length && (
                                 <div className="mt-8 text-center text-slate-400 text-sm">
-                                    已显示全部 {filteredGuides.length} 篇攻略
+                                    {t("page.guides.allLoaded", { count: filteredGuides.length })}
                                 </div>
                             )}
                         </>
@@ -339,10 +342,20 @@ function GuideCard({ guide, categoryLabel }: { guide: GuideEntry; categoryLabel:
     );
 }
 
+function GuidesLoadingFallback() {
+    const { t } = useI18n();
+
+    return (
+        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+            {t("page.guides.loadingFallback")}
+        </div>
+    );
+}
+
 export default function GuidesClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载攻略...</div>}>
+            <Suspense fallback={<GuidesLoadingFallback />}>
                 <GuidesContent />
             </Suspense>
         </MainLayout>

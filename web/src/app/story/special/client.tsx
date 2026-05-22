@@ -4,6 +4,7 @@ import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { fetchMasterData } from "@/lib/fetch";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
 import { StoryPageHeader } from "@/components/story/StoryPageHeader";
 
@@ -24,6 +25,7 @@ interface ISpecialStory {
 
 export default function StorySpecialListClient() {
     const { serverSource } = useTheme();
+    const { t } = useI18n();
     const [stories, setStories] = useState<ISpecialStory[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -36,16 +38,16 @@ export default function StorySpecialListClient() {
                 // Skip id == 2 (special case per crawler)
                 setStories(data.filter(s => s.id !== 2 && s.episodes.length > 0));
             } catch (err) {
-                setError(err instanceof Error ? err.message : "加载失败");
+                setError(err instanceof Error ? err.message : t("common.state.loadingFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
         load();
-    }, [serverSource]);
+    }, [serverSource, t]);
 
     function getTitle(s: ISpecialStory): string {
-        return s.title ?? s.episodes[0]?.title ?? `特殊剧情 ${s.id}`;
+        return s.title ?? s.episodes[0]?.title ?? t("page.story.special.fallbackTitle", { id: s.id });
     }
 
     return (
@@ -73,7 +75,7 @@ export default function StorySpecialListClient() {
                                     <p className="font-medium text-slate-800 dark:text-slate-200 group-hover:text-miku transition-colors mt-0.5">
                                         {getTitle(s)}
                                     </p>
-                                    <p className="text-xs text-slate-400 mt-0.5">{s.episodes.length} 话</p>
+                                    <p className="text-xs text-slate-400 mt-0.5">{t("page.story.special.episodeCount", { count: s.episodes.length })}</p>
                                 </div>
                                 <svg className="w-5 h-5 text-slate-300 group-hover:text-miku transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

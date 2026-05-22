@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import StorySelfListClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = { title: "自我介绍", description: "浏览 Project Sekai 角色自我介绍" };
+export const generateMetadata = pageMetadata("story_self");
 
 export default function StorySelfListPage() {
     return <StorySelfListClient />;

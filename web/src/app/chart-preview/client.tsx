@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -8,6 +8,7 @@ import MainLayout from "@/components/MainLayout";
 import { fetchMasterData } from "@/lib/fetch";
 import { getMusicScoreUrl, getMusicVocalAudioUrl, getMusicJacketUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
 import type { IMusicInfo, IMusicVocalInfo, IMusicDifficultyInfo, MusicDifficultyType } from "@/types/music";
 
@@ -16,19 +17,26 @@ const ChartPreviewPlayer = dynamic(
     { ssr: false }
 );
 
-const DIFFICULTIES: { value: MusicDifficultyType; label: string; color: string }[] = [
-    { value: "easy", label: "Easy", color: "#34d399" },
-    { value: "normal", label: "Normal", color: "#38bdf8" },
-    { value: "hard", label: "Hard", color: "#fbbf24" },
-    { value: "expert", label: "Expert", color: "#f87171" },
-    { value: "master", label: "Master", color: "#a855f7" },
-    { value: "append", label: "Append", color: "#f472b6" },
+const DIFFICULTIES: { value: MusicDifficultyType; color: string }[] = [
+    { value: "easy", color: "#34d399" },
+    { value: "normal", color: "#38bdf8" },
+    { value: "hard", color: "#fbbf24" },
+    { value: "expert", color: "#f87171" },
+    { value: "master", color: "#a855f7" },
+    { value: "append", color: "#f472b6" },
 ];
 
 function ChartPreviewInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
+    const { t } = useI18n();
+    const getDifficultyLabel = useCallback((difficulty: MusicDifficultyType) => {
+        return t(`page.chartPreview.difficulties.${difficulty}`);
+    }, [t]);
+    const formatNoteCount = useCallback((count: number) => {
+        return t("page.chartPreview.noteCount", { count: count.toLocaleString() });
+    }, [t]);
     const [isPlayerFullscreen, setIsPlayerFullscreen] = useState(false);
 
     // URL params (custom URL mode - legacy)
@@ -240,19 +248,28 @@ function ChartPreviewInner() {
         setPreviewActive(false);
     };
 
+    const renderHeader = (showDescription = false) => (
+        <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
+                <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.chartPreview.badge")}</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                {t("page.chartPreview.title")} <span className="text-miku">{t("page.chartPreview.titleHighlight")}</span>
+            </h1>
+            {showDescription && (
+                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                    {t("page.chartPreview.description")}
+                </p>
+            )}
+        </div>
+    );
+
     // URL mode: auto-start (legacy sus param)
     if (urlSus && previewActive) {
         return (
             <MainLayout immersiveMode={isPlayerFullscreen}>
                 <div className="container mx-auto px-4 sm:px-6 py-8">
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                            <span className="text-miku text-xs font-bold tracking-widest uppercase">谱面预览</span>
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                            谱面 <span className="text-miku">预览器</span>
-                        </h1>
-                    </div>
+                    {renderHeader()}
                     <ChartPreviewPlayer
                         susUrl={activeSusUrl!}
                         bgmUrl={activeBgmUrl}
@@ -288,7 +305,7 @@ function ChartPreviewInner() {
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                     </svg>
-                                    上一级
+                                    {t("page.chartPreview.backPrevious")}
                                 </button>
                                 <button
                                     onClick={handleBack}
@@ -297,7 +314,7 @@ function ChartPreviewInner() {
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4" />
                                     </svg>
-                                    预览首页
+                                    {t("page.chartPreview.previewHome")}
                                 </button>
                             </>
                         ) : (
@@ -308,7 +325,7 @@ function ChartPreviewInner() {
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                 </svg>
-                                返回
+                                {t("page.chartPreview.back")}
                             </button>
                         )}
                         {selectedMusic ? (
@@ -332,12 +349,12 @@ function ChartPreviewInner() {
                                                 className="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-bold text-white"
                                                 style={{ backgroundColor: diffInfo.color }}
                                             >
-                                                {diffInfo.label}
+                                                {getDifficultyLabel(diffInfo.value)}
                                             </span>
                                         )}
                                         {selectedDiffInfo && (
                                             <span className="text-xs text-slate-500 truncate">
-                                                Lv.{selectedDiffInfo.playLevel} · {selectedDiffInfo.totalNoteCount.toLocaleString()} notes
+                                                {t("page.chartPreview.levelLabel", { level: selectedDiffInfo.playLevel })} · {formatNoteCount(selectedDiffInfo.totalNoteCount)}
                                             </span>
                                         )}
                                     </div>
@@ -345,14 +362,14 @@ function ChartPreviewInner() {
                             </>
                         ) : (
                             <h1 className="text-xl sm:text-2xl font-black text-primary-text truncate min-w-0 flex-1">
-                                {selectedMusicId ? `谱面预览 #${selectedMusicId}` : "谱面预览器"}
+                                {selectedMusicId ? t("page.chartPreview.previewTitleWithId", { id: selectedMusicId }) : t("page.chartPreview.metadataTitle")}
                             </h1>
                         )}
                     </div>
                     {/* Vocal switcher in preview mode */}
                     {availableVocals.length > 1 && (
                         <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
-                            <span className="shrink-0 text-[10px] font-bold text-slate-400 uppercase tracking-wider">演唱版本</span>
+                            <span className="shrink-0 text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t("page.chartPreview.vocalVersion")}</span>
                             {availableVocals.map((v) => {
                                 const isActive = selectedVocal?.id === v.id;
                                 return (
@@ -395,17 +412,7 @@ function ChartPreviewInner() {
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
                 {/* Page Header */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                        <span className="text-miku text-xs font-bold tracking-widest uppercase">谱面预览</span>
-                    </div>
-                    <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                        谱面 <span className="text-miku">预览器</span>
-                    </h1>
-                    <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                        PJSK  3D 谱面预览 · 选择歌曲或输入自定义 URL
-                    </p>
-                </div>
+                {renderHeader(true)}
 
                 {/* Mode Tabs */}
                 <div className="flex gap-2 mb-6 justify-center">
@@ -419,7 +426,7 @@ function ChartPreviewInner() {
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                         </svg>
-                        选择歌曲
+                        {t("page.chartPreview.selectSong")}
                     </button>
                     <button
                         onClick={() => setMode("url")}
@@ -431,7 +438,7 @@ function ChartPreviewInner() {
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>
-                        自定义 URL
+                        {t("page.chartPreview.customUrl")}
                     </button>
                 </div>
 
@@ -447,7 +454,7 @@ function ChartPreviewInner() {
                         {/* Difficulty Selector */}
                         <div>
                             <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 text-center">
-                                难度
+                                {t("page.chartPreview.difficulty")}
                             </label>
                             {availableDifficulties.length > 0 ? (
                                 <div className="flex gap-2 flex-wrap justify-center">
@@ -472,7 +479,7 @@ function ChartPreviewInner() {
                                                     className="text-[10px] font-bold uppercase"
                                                     style={{ color: meta.color }}
                                                 >
-                                                    {meta.label}
+                                                    {getDifficultyLabel(meta.value)}
                                                 </span>
                                                 <span
                                                     className="text-lg font-black"
@@ -504,7 +511,7 @@ function ChartPreviewInner() {
                                                 className="text-xs font-bold uppercase"
                                                 style={{ color: d.color }}
                                             >
-                                                {d.label}
+                                                {getDifficultyLabel(d.value)}
                                             </span>
                                         </button>
                                     ))}
@@ -516,7 +523,7 @@ function ChartPreviewInner() {
                         {availableVocals.length > 1 && (
                             <div>
                                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 text-center">
-                                    演唱版本
+                                    {t("page.chartPreview.vocalVersion")}
                                 </label>
                                 <div className="flex gap-2 flex-wrap justify-center">
                                     {availableVocals.map((v) => {
@@ -544,10 +551,10 @@ function ChartPreviewInner() {
                             disabled={!selectedMusicId}
                             className="w-full py-3 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg"
                         >
-                            开始预览
+                            {t("page.chartPreview.startPreview")}
                             {selectedMusicId && (
                                 <span className="ml-2 text-sm opacity-80">
-                                    — #{selectedMusicId} [{DIFFICULTIES.find((d) => d.value === selectedDifficulty)?.label}]
+                                    {t("page.chartPreview.startPreviewSuffix", { id: selectedMusicId, difficulty: getDifficultyLabel(selectedDifficulty) })}
                                 </span>
                             )}
                         </button>
@@ -560,7 +567,7 @@ function ChartPreviewInner() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                     </svg>
-                                    自定义谱面 URL
+                                    {t("page.chartPreview.customChartUrl")}
                                 </h2>
                             </div>
                             <div className="p-5 space-y-4">
@@ -575,7 +582,7 @@ function ChartPreviewInner() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">BGM URL（可选）</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.chartPreview.bgmUrlOptional")}</label>
                                     <input
                                         type="text"
                                         placeholder="https://..."
@@ -585,7 +592,7 @@ function ChartPreviewInner() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Offset (ms)（可选）</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.chartPreview.offsetOptional")}</label>
                                     <input
                                         type="number"
                                         placeholder="0"
@@ -599,7 +606,7 @@ function ChartPreviewInner() {
                                     disabled={!customSus}
                                     className="w-full py-3 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg"
                                 >
-                                    开始预览
+                                    {t("page.chartPreview.startPreview")}
                                 </button>
                             </div>
                         </div>
@@ -610,23 +617,29 @@ function ChartPreviewInner() {
     );
 }
 
+function ChartPreviewFallback() {
+    const { t } = useI18n();
+
+    return (
+        <MainLayout>
+            <div className="container mx-auto px-4 sm:px-6 py-8">
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
+                        <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.chartPreview.badge")}</span>
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                        {t("page.chartPreview.title")} <span className="text-miku">{t("page.chartPreview.titleHighlight")}</span>
+                    </h1>
+                </div>
+                <div className="text-sm text-slate-400 py-8 text-center">{t("page.chartPreview.loading")}</div>
+            </div>
+        </MainLayout>
+    );
+}
+
 export default function ChartPreviewContent() {
     return (
-        <Suspense fallback={
-            <MainLayout>
-                <div className="container mx-auto px-4 sm:px-6 py-8">
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                            <span className="text-miku text-xs font-bold tracking-widest uppercase">谱面预览</span>
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                            谱面 <span className="text-miku">预览器</span>
-                        </h1>
-                    </div>
-                    <div className="text-sm text-slate-400 py-8 text-center">加载中…</div>
-                </div>
-            </MainLayout>
-        }>
+        <Suspense fallback={<ChartPreviewFallback />}>
             <ChartPreviewInner />
         </Suspense>
     );

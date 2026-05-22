@@ -1,13 +1,7 @@
-
-import { Metadata } from "next";
 import MangaClient from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "官方四格",
-    description: "浏览 Project Sekai 官方四格漫画" + SEO_SUFFIX,
-    keywords: getPageKeywords("manga"),
-};
+export const generateMetadata = pageMetadata("manga");
 
 export default function MangaPage() {
     return <MangaClient />;

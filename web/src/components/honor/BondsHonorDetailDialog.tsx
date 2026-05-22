@@ -1,11 +1,12 @@
 "use client";
 import React, { useRef } from "react";
 import Modal from "@/components/common/Modal";
-import { IBondsHonor, IBondsHonorWord, IGameCharaUnit, HONOR_RARITY_NAMES } from "@/types/honor";
+import { IBondsHonor, IBondsHonorWord, IGameCharaUnit } from "@/types/honor";
 import BondsDegreeImage from "./BondsDegreeImage";
 import { AssetSourceType } from "@/contexts/ThemeContext";
-import { CHARACTER_NAMES } from "@/types/types";
 import { useSvgPreviewActions } from "@/hooks/useSvgPreviewActions";
+import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 
 interface BondsHonorDetailDialogProps {
     open: boolean;
@@ -24,6 +25,7 @@ export default function BondsHonorDetailDialog({
     gameCharaUnits,
     source = "main-jp",
 }: BondsHonorDetailDialogProps) {
+    const { t } = useI18n();
     const previewRef = useRef<HTMLDivElement>(null);
     const { headerActions, errorMessage } = useSvgPreviewActions({
         isOpen: open,
@@ -44,7 +46,7 @@ export default function BondsHonorDetailDialog({
         <Modal
             isOpen={open}
             onClose={onClose}
-            title={bondsHonor?.name ?? "羁绊称号详情"}
+            title={bondsHonor?.name ?? t("page.honors.bondsDetailTitle")}
             size="md"
             headerActions={headerActions}
         >
@@ -65,19 +67,19 @@ export default function BondsHonorDetailDialog({
 
                     <div className="space-y-0">
                         <InfoRow label="ID" value={String(bondsHonor.id)} />
-                        <InfoRow label="名称" value={bondsHonor.name} />
-                        <InfoRow label="稀有度" value={HONOR_RARITY_NAMES[bondsHonor.honorRarity] || bondsHonor.honorRarity} />
+                        <InfoRow label={t("common.field.name")} value={bondsHonor.name} />
+                        <InfoRow label={t("common.field.rarity")} value={t(`common.honor.rarities.${bondsHonor.honorRarity}`) === `common.honor.rarities.${bondsHonor.honorRarity}` ? bondsHonor.honorRarity : t(`common.honor.rarities.${bondsHonor.honorRarity}`)} />
                         {gcu1 && (
-                            <InfoRow label="角色 1" value={CHARACTER_NAMES[gcu1.gameCharacterId] || `角色 ${gcu1.gameCharacterId}`} />
+                            <InfoRow label={t("common.filter.character1")} value={getCharacterName(t, gcu1.gameCharacterId)} />
                         )}
                         {gcu2 && (
-                            <InfoRow label="角色 2" value={CHARACTER_NAMES[gcu2.gameCharacterId] || `角色 ${gcu2.gameCharacterId}`} />
+                            <InfoRow label={t("common.filter.character2")} value={getCharacterName(t, gcu2.gameCharacterId)} />
                         )}
                     </div>
 
                     {bondsHonor.levels.length > 0 && (
                         <div>
-                            <h3 className="mb-3 text-sm font-bold text-slate-700">等级详情</h3>
+                            <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.field.levelDetails")}</h3>
                             <div className="space-y-3">
                                 {bondsHonor.levels.map(level => (
                                     <div key={level.level} className="rounded-xl bg-slate-50 p-4 space-y-2">
@@ -95,7 +97,7 @@ export default function BondsHonorDetailDialog({
 
                     {bondsHonorWords.filter(w => w.bondsGroupId === bondsHonor.bondsGroupId).length > 0 && (
                         <div>
-                            <h3 className="mb-3 text-sm font-bold text-slate-700">可用称号词</h3>
+                            <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.field.availableWords")}</h3>
                             <div className="space-y-2">
                                 {bondsHonorWords
                                     .filter(w => w.bondsGroupId === bondsHonor.bondsGroupId)

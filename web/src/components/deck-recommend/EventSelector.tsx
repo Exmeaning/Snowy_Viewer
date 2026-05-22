@@ -1,11 +1,13 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { IEventInfo, IEventDeckBonus, EventType, EVENT_TYPE_NAMES, EVENT_TYPE_COLORS, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
-import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, CardAttribute, ATTR_ICON_PATHS, ATTR_NAMES, CHARACTER_NAMES } from "@/types/types";
+import { IEventInfo, IEventDeckBonus, EventType, EVENT_TYPE_COLORS, getEventStatus } from "@/types/events";
+import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS, CardAttribute, ATTR_ICON_PATHS, ATTR_NAMES } from "@/types/types";
 import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import { getCharacterIconUrl, getEventLogoUrl, getEventStoryBannerUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import SelectorModal from "./SelectorModal";
@@ -14,8 +16,8 @@ import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, build
 import { type Wl3SimulationGroup, getWl3SimulationGroupByEventId } from "@/lib/world-bloom-simulation";
 
 // Build unit icon mapping from UNIT_DATA (same as EventItem)
-const EVENT_UNIT_ICON: Record<string, { icon: string; name: string }> = Object.fromEntries(
-    UNIT_DATA.filter(u => UNIT_ICON_FILES[u.id]).map(u => [u.id, { icon: UNIT_ICON_FILES[u.id], name: u.name }])
+const EVENT_UNIT_ICON: Record<string, { icon: string; labelKey: string }> = Object.fromEntries(
+    UNIT_DATA.filter(u => UNIT_ICON_FILES[u.id]).map(u => [u.id, { icon: UNIT_ICON_FILES[u.id], labelKey: UNIT_ID_LABEL_KEYS[u.id] ?? `common.units.${u.id}` }])
 );
 
 function getWl3SimulationInfo(eventId: string): Wl3SimulationGroup | null {
@@ -29,25 +31,30 @@ function Wl3SimulationMemberAvatars({
     members: readonly number[];
     size?: number;
 }) {
+    const { t } = useI18n();
+
     return (
         <div className="flex flex-wrap gap-1.5">
-            {members.map((characterId) => (
-                <div
-                    key={characterId}
-                    className="rounded-full ring-2 ring-white shadow-sm overflow-hidden bg-slate-100"
-                    title={CHARACTER_NAMES[characterId]}
-                    style={{ width: size, height: size }}
-                >
-                    <Image
-                        src={getCharacterIconUrl(characterId)}
-                        alt={CHARACTER_NAMES[characterId]}
-                        width={size}
-                        height={size}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                    />
-                </div>
-            ))}
+            {members.map((characterId) => {
+                const characterName = getCharacterName(t, characterId);
+                return (
+                    <div
+                        key={characterId}
+                        className="rounded-full ring-2 ring-white shadow-sm overflow-hidden bg-slate-100"
+                        title={characterName}
+                        style={{ width: size, height: size }}
+                    >
+                        <Image
+                            src={getCharacterIconUrl(characterId)}
+                            alt={characterName}
+                            width={size}
+                            height={size}
+                            className="w-full h-full object-cover"
+                            unoptimized
+                        />
+                    </div>
+                );
+            })}
         </div>
     );
 }
@@ -61,6 +68,7 @@ interface EventSelectorProps {
 
 export default function EventSelector({ selectedEventId, onSelect, onEventTypeChange, onBonusCharactersChange }: EventSelectorProps) {
     const { assetSource, isShowSpoiler } = useTheme();
+    const { t, formatDate } = useI18n();
     const [now] = useState(() => Date.now());
     const [events, setEvents] = useState<IEventInfo[]>([]);
     const [deckBonuses, setDeckBonuses] = useState<IEventDeckBonus[]>([]);
@@ -295,11 +303,14 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
     }, [selectedEvent, eventStoryIds, assetSource]);
 
     const selectedEventHasStoryBanner = selectedEvent ? eventStoryIds.has(selectedEvent.id) : false;
+    const selectedWl3GroupTitle = selectedWl3Simulation
+        ? t("page.deckRecommend.wl3GroupTitle", { group: selectedWl3Simulation.groupId })
+        : "";
 
     return (
         <div className="w-full">
             <label className="block text-sm font-medium text-slate-700 mb-1">
-                活动ID <span className="text-red-400">*</span>
+                {t("page.deckRecommend.selector.eventId")} <span className="text-red-400">*</span>
             </label>
 
             <button
@@ -323,7 +334,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                                     #{selectedEvent.id}
                                 </span>
                                 <span className="text-xs text-slate-400">
-                                    {new Date(selectedEvent.startAt).toLocaleDateString()}
+                                    {formatDate(selectedEvent.startAt)}
                                 </span>
                             </div>
                             <div className="text-sm font-bold text-slate-700 truncate group-hover:text-miku transition-colors">
@@ -347,11 +358,11 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                                     #{selectedWl3Simulation.eventId}
                                 </span>
                                 <span className="text-xs text-emerald-600 bg-emerald-50 px-1.5 rounded-md">
-                                    模拟
+                                    {t("page.deckRecommend.selector.simulation")}
                                 </span>
                             </div>
                             <div className="text-sm font-bold text-slate-700 truncate group-hover:text-miku transition-colors">
-                                WL3 模拟 · {selectedWl3Simulation.title}
+                                {t("page.deckRecommend.selector.wl3SimulationTitle", { title: selectedWl3GroupTitle })}
                             </div>
                             <div className="mt-2">
                                 <Wl3SimulationMemberAvatars members={selectedWl3Simulation.members} size={24} />
@@ -365,7 +376,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                         </div>
-                        <span className="text-slate-400 text-sm">点击选择活动...</span>
+                        <span className="text-slate-400 text-sm">{t("page.deckRecommend.selector.selectEventPlaceholder")}</span>
                     </>
                 )}
                 <div className="text-slate-300">
@@ -378,7 +389,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
             <SelectorModal
                 isOpen={modalOpen}
                 onClose={() => setModalOpen(false)}
-                title="选择活动"
+                title={t("page.deckRecommend.selector.selectEventTitle")}
             >
                 <div className="space-y-6">
                     <EventFilters
@@ -411,7 +422,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                     />
 
                     {loading ? (
-                        <div className="py-20 text-center text-slate-400">加载中...</div>
+                        <div className="py-20 text-center text-slate-400">{t("common.state.loading")}</div>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                             {filteredEvents.slice(0, 50).map(event => (
@@ -427,7 +438,7 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                             ))}
                             {filteredEvents.length > 50 && (
                                 <div className="col-span-full py-4 text-center text-slate-400 text-sm">
-                                    仅显示前 50 个结果，请使用搜索精确查找
+                                    {t("page.deckRecommend.selector.first50Only")}
                                 </div>
                             )}
                         </div>
@@ -455,20 +466,13 @@ function EventSelectionItem({
     onClick: () => void;
 }) {
     const { assetSource } = useTheme();
+    const { t, formatDate } = useI18n();
     const hasEventStoryBanner = eventStoryIds ? eventStoryIds.has(event.id) : true;
     const thumbnailUrl = hasEventStoryBanner
         ? getEventStoryBannerUrl(event.assetbundleName, assetSource)
         : getEventLogoUrl(event.assetbundleName, assetSource);
     const status = getEventStatus(event);
-    const statusDisplay = EVENT_STATUS_DISPLAY[status];
-
-    const formatDate = (timestamp: number) => {
-        return new Date(timestamp).toLocaleDateString("zh-CN", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-        });
-    };
+    const statusColor = status === "upcoming" ? "#42A5F5" : status === "ongoing" ? "#66BB6A" : "#9E9E9E";
 
     return (
         <div
@@ -489,9 +493,9 @@ function EventSelectionItem({
                     {/* Status Badge */}
                     <div
                         className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
-                        style={{ backgroundColor: statusDisplay.color }}
+                        style={{ backgroundColor: statusColor }}
                     >
-                        {statusDisplay.label}
+                        {t(`common.status.${status}`)}
                     </div>
 
                     {/* Event Type Badge */}
@@ -499,13 +503,13 @@ function EventSelectionItem({
                         className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
                         style={{ backgroundColor: EVENT_TYPE_COLORS[event.eventType as EventType] }}
                     >
-                        {EVENT_TYPE_NAMES[event.eventType as EventType]}
+                        {t(`common.eventTypes.${event.eventType}`)}
                     </div>
 
                     {/* Spoiler Badge */}
                     {isSpoiler && (
                         <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-orange-500 rounded-full text-[10px] sm:text-xs font-bold text-white shadow">
-                            剧透
+                            {t("common.badge.spoiler")}
                         </div>
                     )}
                 </div>
@@ -519,10 +523,10 @@ function EventSelectionItem({
                         </span>
                         {unitType && (
                             EVENT_UNIT_ICON[unitType] ? (
-                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center" title={EVENT_UNIT_ICON[unitType].name}>
+                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center" title={t(EVENT_UNIT_ICON[unitType].labelKey)}>
                                     <Image
                                         src={`/data/icon/${EVENT_UNIT_ICON[unitType].icon}`}
-                                        alt={EVENT_UNIT_ICON[unitType].name}
+                                        alt={t(EVENT_UNIT_ICON[unitType].labelKey)}
                                         width={16}
                                         height={16}
                                         className="object-contain"
@@ -530,7 +534,7 @@ function EventSelectionItem({
                                     />
                                 </div>
                             ) : (
-                                <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full" title="混合">混</span>
+                                <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full" title={t("common.badge.mixed")}>{t("common.badge.mixed")}</span>
                             )
                         )}
                         {bonusAttr && ATTR_ICON_PATHS[bonusAttr as keyof typeof ATTR_ICON_PATHS] && (
@@ -564,9 +568,9 @@ function EventSelectionItem({
                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span>{formatDate(event.startAt)}</span>
+                            <span>{formatDate(event.startAt, { year: "numeric", month: "short", day: "numeric" })}</span>
                             <span>~</span>
-                            <span>{formatDate(event.aggregateAt)}</span>
+                            <span>{formatDate(event.aggregateAt, { year: "numeric", month: "short", day: "numeric" })}</span>
                         </div>
                     </div>
                 </div>

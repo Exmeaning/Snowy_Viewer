@@ -4,15 +4,17 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import ExternalLink from "@/components/ExternalLink";
+import { useI18n } from "@/contexts/I18nContext";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
-import { CHAR_NAMES, UNIT_DATA, CHARACTER_NAMES, UNIT_NAME_MAP, type ICardInfo } from "@/types/types";
+import { UNIT_DATA, type ICardInfo } from "@/types/types";
 import CharacterSelector from "@/components/deck-recommend/CharacterSelector";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, SERVER_OPTIONS } from "@/lib/account";
 import { getWl3SimulationGroupByEventId, WL3_SIMULATION_GROUPS } from "@/lib/world-bloom-simulation";
+import { getCharacterName } from "@/lib/i18n";
 import AccountSelector from "@/components/AccountSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
@@ -85,7 +87,8 @@ interface WorkerProgressMessage {
     type: "progress";
     stage: string;
     percent: number;
-    stageLabel: string;
+    progressKey?: string;
+    stageLabel?: string;
 }
 
 interface WorkerResultMessage {
@@ -111,7 +114,7 @@ interface DeckRecommendWorkerArgs {
     liveType: string;
     supportCharacterId?: number;
     cardConfig: Record<string, WorkerCardConfig>;
-    // Custom mode: 混活自定义
+    // Custom mode: mixed-event custom bonus
     customUnit?: string;
     customCharacterIds?: number[];
     customCharacterUnits?: Record<number, string>;
@@ -128,9 +131,9 @@ type StrongestTarget = "power" | "skill";
 
 const MAX_CUSTOM_CHARACTERS = 5;
 
-// 虚拟歌手 supportUnit 选项（用于自定义加成中选择团体）
-const VS_SUPPORT_UNIT_OPTIONS: { value: string; label: string; icon: string }[] = [
-    { value: "none", label: "原版", icon: "vs.webp" },
+// Virtual Singer supportUnit options used by custom bonus unit selection
+const VS_SUPPORT_UNIT_OPTIONS: { value: string; labelKey?: string; label: string; icon: string }[] = [
+    { value: "none", labelKey: "common.supportUnits.none", label: "Original", icon: "vs.webp" },
     { value: "leo_need", label: "LN", icon: "ln.webp" },
     { value: "more_more_jump", label: "MMJ", icon: "mmj.webp" },
     { value: "vivid_bad_squad", label: "VBS", icon: "vbs.webp" },
@@ -138,14 +141,13 @@ const VS_SUPPORT_UNIT_OPTIONS: { value: string; label: string; icon: string }[] 
     { value: "nightcord_at_25", label: "25ji", icon: "n25.webp" },
 ];
 
-
-const MODE_OPTIONS: { value: DeckMode; label: string; desc: string }[] = [
-    { value: "event", label: "活动", desc: "活动PT最高" },
-    { value: "wl3", label: "WL3模拟", desc: "World Bloom 3 模拟组卡" },
-    { value: "challenge", label: "挑战Live", desc: "分数最高" },
-    { value: "mysekai", label: "烤森", desc: "烤森PT最高" },
-    { value: "strongest", label: "最强组卡", desc: "综合力/技能实效最高" },
-    { value: "custom", label: "自定义", desc: "自定义团体/属性加成" },
+const MODE_OPTIONS: { value: DeckMode }[] = [
+    { value: "event" },
+    { value: "wl3" },
+    { value: "challenge" },
+    { value: "mysekai" },
+    { value: "strongest" },
+    { value: "custom" },
 ];
 
 const DIFFICULTY_OPTIONS = [
@@ -158,10 +160,10 @@ const DIFFICULTY_OPTIONS = [
 ];
 
 const LIVE_TYPE_OPTIONS = [
-    { value: "multi", label: "多人 (Multi)" },
-    { value: "solo", label: "单人 (Solo)" },
-    { value: "auto", label: "自动 (Auto)" },
-    { value: "cheerful", label: "嘉年华 (Cheerful)" },
+    { value: "multi" },
+    { value: "solo" },
+    { value: "auto" },
+    { value: "cheerful" },
 ];
 
 const SERVER_VALUE_SET = new Set<ServerType>(SERVER_OPTIONS.map((option) => option.value));
@@ -194,27 +196,29 @@ const ATTR_OPTIONS = [
 ];
 
 const UNIT_OPTIONS = [
-    { value: "leo_need", label: UNIT_NAME_MAP.light_sound, icon: "ln.webp" },
-    { value: "more_more_jump", label: UNIT_NAME_MAP.idol, icon: "mmj.webp" },
-    { value: "vivid_bad_squad", label: UNIT_NAME_MAP.street, icon: "vbs.webp" },
-    { value: "wonderlands_showtime", label: UNIT_NAME_MAP.theme_park, icon: "wxs.webp" },
-    { value: "nightcord_at_25", label: UNIT_NAME_MAP.school_refusal, icon: "n25.webp" },
-    { value: "piapro", label: UNIT_NAME_MAP.piapro, icon: "vs.webp" },
+    { value: "leo_need", labelKey: "common.units.ln", icon: "ln.webp" },
+    { value: "more_more_jump", labelKey: "common.units.mmj", icon: "mmj.webp" },
+    { value: "vivid_bad_squad", labelKey: "common.units.vbs", icon: "vbs.webp" },
+    { value: "wonderlands_showtime", labelKey: "common.units.ws", icon: "wxs.webp" },
+    { value: "nightcord_at_25", labelKey: "common.units.25ji", icon: "n25.webp" },
+    { value: "piapro", labelKey: "common.units.vs", icon: "vs.webp" },
 ];
 
 type CustomSubMode = "unit" | "character";
 
-function getErrorMessage(error: string): string {
+type TranslationFn = ReturnType<typeof useI18n>["t"];
+
+function getErrorMessage(error: string, t: TranslationFn): string {
     switch (error) {
         case "USER_NOT_FOUND":
-            return "用户数据未找到，请确认用户ID/所选服务器是否正确，并已在 Haruki 上传数据。";
+            return t("page.deckRecommend.errors.userNotFound");
         case "API_NOT_PUBLIC":
-            return "该用户的公开API未开启，请先在 Haruki 上开启公开API。";
+            return t("page.deckRecommend.errors.apiNotPublic");
         case "INVALID_USER_DATA_PAYLOAD":
-            return "读取到的用户数据格式异常，请重新同步 Haruki/OAuth 数据后重试。";
+            return t("page.deckRecommend.errors.invalidUserDataPayload");
         default:
-            if (error.includes("404")) return "用户数据未找到 (404)";
-            if (error.includes("403")) return "公开API未开启 (403)";
+            if (error.includes("404")) return t("page.deckRecommend.errors.userNotFound404");
+            if (error.includes("403")) return t("page.deckRecommend.errors.apiNotPublic403");
             return error;
     }
 }
@@ -311,6 +315,7 @@ function ProgressBar({ stage, percent, stageLabel }: { stage: string; percent: n
 // ==================== Main Component ====================
 export default function DeckRecommendClient() {
     const searchParams = useSearchParams();
+    const { t, formatDate, formatNumber } = useI18n();
     const isScreenshotMode = searchParams.get("mode") === "screenshot";
     const [userId, setUserId] = useState("");
     const [server, setServer] = useState<ServerType>("jp");
@@ -536,7 +541,26 @@ export default function DeckRecommendClient() {
     const needsMusic = mode !== "mysekai";
     const needsEvent = mode === "event" || mode === "mysekai";
     const isWl3Mode = mode === "wl3";
-    const scoreLabel = mode === "mysekai" ? "烤森PT" : mode === "challenge" ? "分数" : mode === "strongest" ? (strongestTarget === "skill" ? "实效值" : "综合力") : "PT";
+    const modeOptions = MODE_OPTIONS.map((option) => ({
+        value: option.value,
+        label: t(`page.deckRecommend.modes.${option.value}.label`),
+        desc: t(`page.deckRecommend.modes.${option.value}.desc`),
+    }));
+    const liveTypeOptions = LIVE_TYPE_OPTIONS.map((option) => ({
+        value: option.value,
+        label: t(`page.deckRecommend.liveTypes.${option.value}`),
+    }));
+    const serverOptions = SERVER_OPTIONS.map((option) => ({
+        value: option.value,
+        label: t(option.labelKey),
+    }));
+    const scoreLabel = mode === "mysekai"
+        ? t("page.deckRecommend.scoreLabels.mysekai")
+        : mode === "challenge"
+            ? t("page.deckRecommend.scoreLabels.challenge")
+            : mode === "strongest"
+                ? (strongestTarget === "skill" ? t("page.deckRecommend.scoreLabels.effectiveSkill") : t("page.deckRecommend.scoreLabels.power"))
+                : t("page.deckRecommend.scoreLabels.pt");
     const canAutoCalculateInScreenshot =
         isScreenshotMode &&
         !!userId.trim() &&
@@ -547,16 +571,16 @@ export default function DeckRecommendClient() {
         (mode !== "challenge" || characterId !== null);
 
     const handleCalculate = useCallback(() => {
-        if (!userId.trim()) { setError("请输入用户ID"); return; }
-        if (needsMusic && !musicId) { setError("请选择歌曲"); return; }
-        if (mode === "challenge" && !characterId) { setError("请选择角色"); return; }
-        if (isWl3Mode && !wl3GroupId) { setError("请选择WL3模拟分组"); return; }
-        if (isWl3Mode && (supportCharacterId === null || supportCharacterId <= 0)) { setError("请选择支援角色"); return; }
-        if (needsEvent && !effectiveEventId.trim()) { setError("请输入活动ID"); return; }
-        if (selectedEventType === "world_bloom" && (supportCharacterId === null || supportCharacterId <= 0)) { setError("请选择支援角色"); return; }
+        if (!userId.trim()) { setError(t("page.deckRecommend.errors.userRequired")); return; }
+        if (needsMusic && !musicId) { setError(t("page.deckRecommend.errors.musicRequired")); return; }
+        if (mode === "challenge" && !characterId) { setError(t("page.deckRecommend.errors.characterRequired")); return; }
+        if (isWl3Mode && !wl3GroupId) { setError(t("page.deckRecommend.errors.wl3GroupRequired")); return; }
+        if (isWl3Mode && (supportCharacterId === null || supportCharacterId <= 0)) { setError(t("page.deckRecommend.errors.supportCharacterRequired")); return; }
+        if (needsEvent && !effectiveEventId.trim()) { setError(t("page.deckRecommend.errors.eventRequired")); return; }
+        if (selectedEventType === "world_bloom" && (supportCharacterId === null || supportCharacterId <= 0)) { setError(t("page.deckRecommend.errors.supportCharacterRequired")); return; }
 
         setError(null); setResults(null); setChallengeHighScore(null); setDuration(null); setDataTime(null);
-        setIsCalculating(true); setProgressStage("fetching"); setProgressPercent(5); setProgressLabel("正在获取用户数据...");
+        setIsCalculating(true); setProgressStage("fetching"); setProgressPercent(5); setProgressLabel(t("page.deckRecommend.progress.fetchingUserData"));
 
         const configForCalc: Record<string, WorkerCardConfig> = {};
         for (const [key, val] of Object.entries(cardConfig)) {
@@ -574,10 +598,10 @@ export default function DeckRecommendClient() {
         };
         if (mode === "custom") {
             if (customSubMode === "unit") {
-                // 箱活模式：按团体加成
+                // Unit-event mode: apply unit bonus
                 workerArgs.customUnit = customUnit || undefined;
             } else {
-                // 混活模式：按角色加成
+                // Mixed-event mode: apply character bonus
                 if (customCharacterIds.length > 0) {
                     workerArgs.customCharacterIds = customCharacterIds;
                     const vsUnits: Record<number, string> = {};
@@ -604,10 +628,13 @@ export default function DeckRecommendClient() {
         worker.onmessage = (event: MessageEvent<DeckRecommendWorkerMessage>) => {
             const data = event.data;
             if (data.type === "progress") {
-                setProgressStage(data.stage); setProgressPercent(data.percent); setProgressLabel(data.stageLabel);
+                const progressLabelKey = data.progressKey;
+                setProgressStage(data.stage);
+                setProgressPercent(data.percent);
+                setProgressLabel(progressLabelKey ? t(progressLabelKey) : data.stageLabel ?? "");
                 return;
             }
-            if (data.error) { setError(getErrorMessage(data.error)); }
+            if (data.error) { setError(getErrorMessage(data.error, t)); }
             else {
                 setResults(data.result || []); setChallengeHighScore(data.challengeHighScore || null);
                 if (data.userCards) setUserCards(data.userCards);
@@ -617,7 +644,7 @@ export default function DeckRecommendClient() {
             worker.terminate(); workerRef.current = null;
         };
         worker.onerror = (err) => {
-            setError(`Worker 错误: ${err.message}`);
+            setError(t("page.deckRecommend.errors.workerError", { message: err.message }));
             setIsCalculating(false); setProgressStage("idle"); setProgressPercent(0);
             worker.terminate(); workerRef.current = null;
         };
@@ -628,7 +655,7 @@ export default function DeckRecommendClient() {
                 oauthAccessToken,
             },
         });
-    }, [userId, server, mode, characterId, eventId, effectiveEventId, liveType, supportCharacterId, selectedEventType, musicId, difficulty, cardConfig, needsMusic, needsEvent, isWl3Mode, wl3GroupId, customSubMode, customUnit, customCharacterIds, customCharacterUnits, customAttr, leaderCharacterId, showLeaderSelect, strongestTarget]);
+    }, [userId, server, mode, characterId, eventId, effectiveEventId, liveType, supportCharacterId, selectedEventType, musicId, difficulty, cardConfig, needsMusic, needsEvent, isWl3Mode, wl3GroupId, customSubMode, customUnit, customCharacterIds, customCharacterUnits, customAttr, leaderCharacterId, showLeaderSelect, strongestTarget, t]);
 
     const handleCancel = useCallback(() => {
         if (workerRef.current) { workerRef.current.terminate(); workerRef.current = null; }
@@ -701,35 +728,35 @@ export default function DeckRecommendClient() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                        <span className="text-miku text-xs font-bold tracking-widest uppercase">Deck Recommender</span>
+                        <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.deckRecommend.badge")}</span>
                     </div>
-                    <h1 className="text-3xl sm:text-4xl font-black text-primary-text">组卡<span className="text-miku">推荐器</span></h1>
-                    <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm sm:text-base">基于 sekai-calculator 的卡组推荐工具，自动计算最优卡组</p>
+                    <h1 className="text-3xl sm:text-4xl font-black text-primary-text">{t("page.deckRecommend.title")}<span className="text-miku">{t("page.deckRecommend.titleHighlight")}</span></h1>
+                    <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm sm:text-base">{t("page.deckRecommend.description")}</p>
                 </div>
 
                 <div className="dr-mobile-warning glass-card p-3 rounded-xl mb-6 flex items-center gap-2 text-sm text-amber-700 bg-amber-50/80 border border-amber-200/50">
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
-                    <span>Moesekai不保存任何数据，完全基于本地计算，建议在电脑或 iPad 上使用以获得更好的性能体验。</span>
+                    <span>{t("page.deckRecommend.mobileWarning")}</span>
                 </div>
 
                 {/* Input Form */}
                 <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6">
                     <h2 className="text-lg font-bold text-primary-text mb-4 flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-miku rounded-full"></span>基本设置
+                        <span className="w-1.5 h-6 bg-miku rounded-full"></span>{t("page.deckRecommend.basicSettings")}
                     </h2>
 
                     {/* Mode Tabs */}
                     <div className="mb-5">
-                        <label className="block text-sm font-medium text-slate-700 mb-2">推荐模式</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.recommendationMode")}</label>
                         <div className="flex gap-2 flex-wrap">
-                            {MODE_OPTIONS.map((m) => (
+                            {modeOptions.map((m) => (
                                 <button key={m.value} onClick={() => setMode(m.value)} title={m.desc}
                                     className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${mode === m.value ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20" : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"}`}>
                                     {m.label}
                                 </button>
                             ))}
                         </div>
-                        <p className="text-xs text-slate-400 mt-1.5">{MODE_OPTIONS.find(m => m.value === mode)?.desc}</p>
+                        <p className="text-xs text-slate-400 mt-1.5">{modeOptions.find(m => m.value === mode)?.desc}</p>
                     </div>
 
                     {/* Account Selector + User ID + Server */}
@@ -748,22 +775,22 @@ export default function DeckRecommendClient() {
                     />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">用户ID <span className="text-red-400">*</span></label>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckRecommend.userId")} <span className="text-red-400">*</span></label>
                             <input type="text" value={userId} onChange={(e) => { setUserId(e.target.value); if (allowSaveUserId) localStorage.setItem("deck_recommend_userid", e.target.value); }}
-                                placeholder="输入游戏ID" className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm" />
+                                placeholder={t("page.deckRecommend.userIdPlaceholder")} className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm" />
                             <div className="flex items-center justify-between mt-2 px-1">
-                                <span className="text-sm text-slate-500">保存在浏览器本地</span>
+                                <span className="text-sm text-slate-500">{t("page.deckRecommend.saveLocally")}</span>
                                 <button onClick={() => { const ns = !allowSaveUserId; setAllowSaveUserId(ns); if (ns) { localStorage.setItem("deck_recommend_userid", userId); localStorage.setItem("deck_recommend_server", server); saveToolState("deckRecommend", userId, server); } else { localStorage.removeItem("deck_recommend_userid"); localStorage.removeItem("deck_recommend_server"); } }}
                                     className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${allowSaveUserId ? 'bg-miku' : 'bg-slate-200'}`}>
                                     <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${allowSaveUserId ? 'translate-x-5' : 'translate-x-0'}`} />
                                 </button>
                             </div>
-                            <p className="mt-1 text-xs text-slate-400">需先在 <ExternalLink href="https://haruki.seiunx.com" target="_blank" rel="noopener noreferrer" className="text-miku hover:underline">Haruki工具箱</ExternalLink> 上传数据并开启公开API</p>
+                            <p className="mt-1 text-xs text-slate-400">{t("page.deckRecommend.harukiHintStart")} <ExternalLink href="https://haruki.seiunx.com" target="_blank" rel="noopener noreferrer" className="text-miku hover:underline">{t("page.deckRecommend.harukiToolbox")}</ExternalLink> {t("page.deckRecommend.harukiHintEnd")}</p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">服务器</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckRecommend.server")}</label>
                             <div className="flex flex-wrap gap-2">
-                                {SERVER_OPTIONS.map((s) => (
+                                {serverOptions.map((s) => (
                                     <button key={s.value} onClick={() => { setServer(s.value); if (allowSaveUserId) localStorage.setItem("deck_recommend_server", s.value); }}
                                         className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${server === s.value ? "bg-miku text-white shadow-md shadow-miku/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
                                         {s.label}
@@ -776,7 +803,7 @@ export default function DeckRecommendClient() {
                     {/* Challenge Mode */}
                     {mode === "challenge" && (
                         <div className="mb-5">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">挑战角色 <span className="text-red-400">*</span></label>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.challengeCharacter")} <span className="text-red-400">*</span></label>
                             <CharacterSelector selectedCharacterId={characterId} onSelect={setCharacterId} />
                         </div>
                     )}
@@ -784,19 +811,19 @@ export default function DeckRecommendClient() {
                     {/* Strongest Mode */}
                     {mode === "strongest" && (
                         <div className="mb-5">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">优化目标</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.optimizationTarget")}</label>
                             <div className="flex gap-2 flex-wrap">
                                 <button onClick={() => setStrongestTarget("power")}
                                     className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${strongestTarget === "power" ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20" : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"}`}>
-                                    综合力最高
+                                    {t("page.deckRecommend.strongestTargets.power")}
                                 </button>
                                 <button onClick={() => setStrongestTarget("skill")}
                                     className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${strongestTarget === "skill" ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20" : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"}`}>
-                                    技能实效最高
+                                    {t("page.deckRecommend.strongestTargets.skill")}
                                 </button>
                             </div>
                             <p className="text-xs text-slate-400 mt-1.5">
-                                {strongestTarget === "power" ? "以卡组总综合力为目标，不考虑活动加成" : "以多人Live技能实效为主、综合力为辅的复合评分"}
+                                {t(`page.deckRecommend.strongestTargetDescriptions.${strongestTarget}`)}
                             </p>
                         </div>
                     )}
@@ -807,8 +834,8 @@ export default function DeckRecommendClient() {
                             <div className="border border-slate-200 rounded-lg p-3 bg-slate-50/50">
                                 <div className="flex items-center justify-between">
                                     <div className="flex flex-col">
-                                        <span className="text-sm text-slate-700 font-medium">固定角色</span>
-                                        <span className="text-slate-400 text-xs text-left">指定必须添加一个角色到编组</span>
+                                        <span className="text-sm text-slate-700 font-medium">{t("page.deckRecommend.fixedCharacter")}</span>
+                                        <span className="text-slate-400 text-xs text-left">{t("page.deckRecommend.fixedCharacterDescription")}</span>
                                     </div>
                                     <button onClick={() => { setShowLeaderSelect(!showLeaderSelect); if (showLeaderSelect) setLeaderCharacterId(null); }}
                                         className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${showLeaderSelect ? 'bg-miku' : 'bg-slate-200'}`}>
@@ -829,7 +856,7 @@ export default function DeckRecommendClient() {
                         <div className="mb-5 space-y-4">
                             {/* WL3 Group Selector */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">模拟分组 <span className="text-red-400">*</span></label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.wl3Group")} <span className="text-red-400">*</span></label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                     {WL3_SIMULATION_GROUPS.map(group => {
                                         const isSelected = wl3GroupId === group.groupId;
@@ -843,15 +870,18 @@ export default function DeckRecommendClient() {
                                                 }`}
                                             >
                                                 <div className="flex items-center justify-between gap-2 mb-2">
-                                                    <div className="text-sm font-bold text-slate-700">{group.title}</div>
+                                                    <div className="text-sm font-bold text-slate-700">{t("page.deckRecommend.wl3GroupTitle", { group: group.groupId })}</div>
                                                     <span className="text-[11px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">WL3</span>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1">
-                                                    {group.members.map(charId => (
-                                                        <div key={charId} className="w-7 h-7 rounded-full overflow-hidden bg-slate-100 ring-1 ring-white shadow-sm" title={CHARACTER_NAMES[charId]}>
-                                                            <Image src={getCharacterIconUrl(charId)} alt={CHARACTER_NAMES[charId]} width={28} height={28} className="w-full h-full object-cover" unoptimized />
-                                                        </div>
-                                                    ))}
+                                                    {group.members.map(charId => {
+                                                        const characterName = getCharacterName(t, charId);
+                                                        return (
+                                                            <div key={charId} className="w-7 h-7 rounded-full overflow-hidden bg-slate-100 ring-1 ring-white shadow-sm" title={characterName}>
+                                                                <Image src={getCharacterIconUrl(charId)} alt={characterName} width={28} height={28} className="w-full h-full object-cover" unoptimized />
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </button>
                                         );
@@ -861,9 +891,9 @@ export default function DeckRecommendClient() {
 
                             {/* Live Type */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Live类型</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckRecommend.liveType")}</label>
                                 <div className="flex flex-wrap gap-2">
-                                    {LIVE_TYPE_OPTIONS.map((lt) => (
+                                    {liveTypeOptions.map((lt) => (
                                         <button key={lt.value} onClick={() => setLiveType(lt.value)}
                                             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${liveType === lt.value ? "bg-miku text-white shadow-md shadow-miku/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
                                             {lt.label}
@@ -875,7 +905,7 @@ export default function DeckRecommendClient() {
                             {/* Support Character — always visible, no toggle */}
                             {selectedWl3Simulation && (
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">支援角色 <span className="text-red-400">*</span></label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.supportCharacter")} <span className="text-red-400">*</span></label>
                                     <CharacterSelector
                                         selectedCharacterId={supportCharacterId}
                                         onSelect={setSupportCharacterId}
@@ -893,9 +923,9 @@ export default function DeckRecommendClient() {
                             <div><EventSelector selectedEventId={eventId} onSelect={(id) => setEventId(id)} onEventTypeChange={setSelectedEventType} onBonusCharactersChange={setEventBonusCharacterIds} /></div>
                             {mode === "event" && (
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Live类型</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckRecommend.liveType")}</label>
                                     <div className="flex flex-wrap gap-2">
-                                        {LIVE_TYPE_OPTIONS.map((lt) => (
+                                        {liveTypeOptions.map((lt) => (
                                             <button key={lt.value} onClick={() => setLiveType(lt.value)}
                                                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${liveType === lt.value ? "bg-miku text-white shadow-md shadow-miku/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
                                                 {lt.label}
@@ -909,7 +939,7 @@ export default function DeckRecommendClient() {
                                     <div className="border border-amber-200 rounded-lg p-3 bg-amber-50/50 w-full">
                                         <div className="flex items-center gap-2 text-sm text-amber-700">
                                             <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                            <span>烤森模式不需要选歌，根据综合力和活动加成计算最优烤森PT</span>
+                                            <span>{t("page.deckRecommend.mysekaiNoMusicHint")}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -917,7 +947,7 @@ export default function DeckRecommendClient() {
                             {selectedEventType === "world_bloom" && (
                                 <div className="sm:col-span-2">
                                     <div className="border border-slate-200 rounded-lg p-3 bg-slate-50/50">
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">支援角色 <span className="text-red-400">*</span></label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.supportCharacter")} <span className="text-red-400">*</span></label>
                                         <CharacterSelector
                                             selectedCharacterId={supportCharacterId}
                                             onSelect={setSupportCharacterId}
@@ -930,56 +960,61 @@ export default function DeckRecommendClient() {
                         </div>
                     )}
 
-                    {/* Custom Mode: 自定义加成 */}
+                    {/* Custom Mode */}
                     {mode === "custom" && (
                         <div className="mb-5">
                             <div className="border border-indigo-200 rounded-lg p-4 bg-indigo-50/30">
                                 <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                                    <span className="w-1 h-4 bg-indigo-400 rounded-full"></span>自定义加成
+                                    <span className="w-1 h-4 bg-indigo-400 rounded-full"></span>{t("page.deckRecommend.customBonus")}
                                 </h3>
 
-                                {/* 箱活/混活切换 */}
+                                {/* Custom bonus mode switch */}
                                 <div className="flex gap-1 p-0.5 bg-slate-100 rounded-lg w-fit mb-4">
                                     <button onClick={() => setCustomSubMode("unit")}
                                         className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${customSubMode === "unit" ? "bg-white text-slate-700 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
-                                        箱活（团体）
+                                        {t("page.deckRecommend.customModes.unit")}
                                     </button>
                                     <button onClick={() => setCustomSubMode("character")}
                                         className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${customSubMode === "character" ? "bg-white text-slate-700 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
-                                        混活（角色）
+                                        {t("page.deckRecommend.customModes.character")}
                                     </button>
                                 </div>
 
-                                {/* 箱活模式：团体选择 */}
+                                {/* Unit bonus mode */}
                                 {customSubMode === "unit" && (
                                     <div className="mb-4">
-                                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">加成团体</label>
+                                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">{t("page.deckRecommend.bonusUnit")}</label>
                                         <div className="flex flex-wrap gap-2">
-                                            {UNIT_OPTIONS.map((u) => (
-                                                <button key={u.value} onClick={() => setCustomUnit(customUnit === u.value ? "" : u.value)}
-                                                    className={`p-1.5 rounded-xl transition-all ${customUnit === u.value ? "ring-2 ring-miku shadow-lg bg-white" : "hover:bg-slate-100 border border-transparent bg-slate-50"}`}
-                                                    title={u.label}>
-                                                    <div className="w-8 h-8 relative">
-                                                        <Image src={`/data/icon/${u.icon}`} alt={u.label} fill className="object-contain" unoptimized />
-                                                    </div>
-                                                </button>
-                                            ))}
+                                            {UNIT_OPTIONS.map((u) => {
+                                                const unitLabel = t(u.labelKey);
+                                                return (
+                                                    <button key={u.value} onClick={() => setCustomUnit(customUnit === u.value ? "" : u.value)}
+                                                        className={`p-1.5 rounded-xl transition-all ${customUnit === u.value ? "ring-2 ring-miku shadow-lg bg-white" : "hover:bg-slate-100 border border-transparent bg-slate-50"}`}
+                                                        title={unitLabel}>
+                                                        <div className="w-8 h-8 relative">
+                                                            <Image src={`/data/icon/${u.icon}`} alt={unitLabel} fill className="object-contain" unoptimized />
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
 
                                     </div>
                                 )}
 
-                                {/* 混活模式：角色选择 */}
+                                {/* Character bonus mode */}
                                 {customSubMode === "character" && (
                                     <div className="mb-4">
                                         <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-                                            加成角色 ({customCharacterIds.length}/{MAX_CUSTOM_CHARACTERS})
+                                            {t("page.deckRecommend.bonusCharacters", { count: customCharacterIds.length, max: MAX_CUSTOM_CHARACTERS })}
                                         </label>
                                         <div className="flex flex-wrap gap-1.5">
                                             {UNIT_DATA.flatMap(u => u.charIds).map(cid => {
                                                 const isSelected = customCharacterIds.includes(cid);
                                                 const isFull = customCharacterIds.length >= MAX_CUSTOM_CHARACTERS && !isSelected;
                                                 const isVS = cid >= 21 && cid <= 26;
+                                                    const characterName = getCharacterName(t, cid);
+
                                                 return (
                                                     <button key={cid}
                                                         onClick={() => {
@@ -1006,9 +1041,9 @@ export default function DeckRecommendClient() {
                                                                 ? "opacity-30 cursor-not-allowed rounded-full"
                                                                 : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-80 hover:opacity-100"
                                                         }`}
-                                                        title={CHARACTER_NAMES[cid]}>
+                                                        title={characterName}>
                                                         <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-100">
-                                                            <Image src={getCharacterIconUrl(cid)} alt={CHARACTER_NAMES[cid]} width={36} height={36} className="w-full h-full object-cover" unoptimized />
+                                                            <Image src={getCharacterIconUrl(cid)} alt={characterName} width={36} height={36} className="w-full h-full object-cover" unoptimized />
                                                         </div>
                                                         {isSelected && (
                                                             <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-miku rounded-full flex items-center justify-center">
@@ -1020,16 +1055,19 @@ export default function DeckRecommendClient() {
                                             })}
                                         </div>
 
-                                        {/* 虚拟歌手团体选择 */}
+                                        {/* Virtual singer unit selector */}
                                         {customCharacterIds.some(cid => cid >= 21 && cid <= 26) && (
                                             <div className="mt-3 p-3 bg-teal-50/50 border border-teal-200 rounded-lg">
-                                                <label className="block text-xs font-bold text-slate-600 mb-2">虚拟歌手所属团体</label>
-                                                {customCharacterIds.filter(cid => cid >= 21 && cid <= 26).map(cid => (
-                                                    <div key={cid} className="flex items-center gap-2 mb-2 last:mb-0">
+                                                <label className="block text-xs font-bold text-slate-600 mb-2">{t("page.deckRecommend.virtualSingerUnit")}</label>
+                                                {customCharacterIds.filter(cid => cid >= 21 && cid <= 26).map(cid => {
+                                                const characterName = getCharacterName(t, cid);
+
+                                                    return (
+                                                        <div key={cid} className="flex items-center gap-2 mb-2 last:mb-0">
                                                         <div className="w-7 h-7 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">
-                                                            <Image src={getCharacterIconUrl(cid)} alt={CHARACTER_NAMES[cid]} width={28} height={28} className="w-full h-full object-cover" unoptimized />
+                                                            <Image src={getCharacterIconUrl(cid)} alt={characterName} width={28} height={28} className="w-full h-full object-cover" unoptimized />
                                                         </div>
-                                                        <span className="text-xs text-slate-600 w-16 flex-shrink-0">{CHARACTER_NAMES[cid]}</span>
+                                                        <span className="text-xs text-slate-600 w-16 flex-shrink-0">{characterName}</span>
                                                         <div className="flex flex-wrap gap-1">
                                                             {VS_SUPPORT_UNIT_OPTIONS.map(opt => (
                                                                 <button key={opt.value}
@@ -1046,29 +1084,30 @@ export default function DeckRecommendClient() {
                                                                             ? "ring-2 ring-miku shadow-sm bg-white"
                                                                             : "hover:bg-slate-100 bg-white border border-slate-200"
                                                                     }`}
-                                                                    title={opt.label}>
+                                                                    title={opt.labelKey ? t(opt.labelKey) : opt.label}>
                                                                     <div className="w-5 h-5 relative">
-                                                                        <Image src={`/data/icon/${opt.icon}`} alt={opt.label} fill className="object-contain" unoptimized />
+                                                                        <Image src={`/data/icon/${opt.icon}`} alt={opt.labelKey ? t(opt.labelKey) : opt.label} fill className="object-contain" unoptimized />
                                                                     </div>
                                                                 </button>
                                                             ))}
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         )}
 
                                         {customCharacterIds.length > 0 && (
                                             <div className="mt-2">
-                                                <button onClick={() => { setCustomCharacterIds([]); setCustomCharacterUnits({}); }} className="text-[10px] text-slate-400 hover:text-red-400 transition-colors">清空</button>
+                                                <button onClick={() => { setCustomCharacterIds([]); setCustomCharacterUnits({}); }} className="text-[10px] text-slate-400 hover:text-red-400 transition-colors">{t("page.deckRecommend.clearSelection")}</button>
                                             </div>
                                         )}
                                     </div>
                                 )}
 
-                                {/* 加成属性选择（两种模式共用） */}
+                                {/* Bonus attribute selector */}
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">加成属性</label>
+                                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">{t("page.deckRecommend.bonusAttribute")}</label>
                                     <div className="flex flex-wrap gap-2">
                                         {ATTR_OPTIONS.map((a) => (
                                             <button key={a.value} onClick={() => setCustomAttr(customAttr === a.value ? "" : a.value)}
@@ -1083,7 +1122,7 @@ export default function DeckRecommendClient() {
                                 </div>
 
                                 {((customSubMode === "unit" && !customUnit) || (customSubMode === "character" && customCharacterIds.length === 0)) && !customAttr && (
-                                    <p className="text-xs text-slate-400 mt-3">请至少选择一个加成{customSubMode === "unit" ? "团体" : "角色"}或属性</p>
+                                    <p className="text-xs text-slate-400 mt-3">{t("page.deckRecommend.customBonusEmptyHint", { target: t(`page.deckRecommend.customBonusTargets.${customSubMode}`) })}</p>
                                 )}
                             </div>
                         </div>
@@ -1094,7 +1133,7 @@ export default function DeckRecommendClient() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                             <div><MusicSelector selectedMusicId={musicId} onSelect={(id) => setMusicId(id)} recommendMode={mode === "challenge" ? "challenge" : "event"} liveType={liveType} /></div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">难度</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckRecommend.difficulty")}</label>
                                 <div className="flex flex-wrap gap-2">
                                     {DIFFICULTY_OPTIONS.map((d) => {
                                         const colors: Record<string, string> = { easy: "bg-blue-500 text-white shadow-blue-500/20", normal: "bg-emerald-500 text-white shadow-emerald-500/20", hard: "bg-orange-500 text-white shadow-orange-500/20", expert: "bg-red-500 text-white shadow-red-500/20", master: "bg-purple-500 text-white shadow-purple-500/20", append: "bg-fuchsia-500 text-white shadow-fuchsia-500/20" };
@@ -1116,18 +1155,18 @@ export default function DeckRecommendClient() {
                             <svg className={`w-4 h-4 transition-transform ${showCardConfig ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
-                            卡牌养成配置
+                            {t("page.deckRecommend.cardTrainingConfig")}
                         </button>
                         {showCardConfig && (
                             <div className="mt-3 overflow-x-auto">
                                 <table className="dr-config-table w-full text-sm">
                                     <thead><tr>
-                                        <th className="text-left py-2 px-2 text-slate-500 font-medium">稀有度</th>
-                                        <th className="py-2 px-2 text-slate-500 font-medium">禁用</th>
-                                        <th className="py-2 px-2 text-slate-500 font-medium">满级</th>
-                                        <th className="py-2 px-2 text-slate-500 font-medium">前后篇</th>
-                                        <th className="py-2 px-2 text-slate-500 font-medium">满突破</th>
-                                        <th className="py-2 px-2 text-slate-500 font-medium">满技能</th>
+                                        <th className="text-left py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.rarity")}</th>
+                                        <th className="py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.disable")}</th>
+                                        <th className="py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.maxLevel")}</th>
+                                        <th className="py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.episodes")}</th>
+                                        <th className="py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.maxMaster")}</th>
+                                        <th className="py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.maxSkill")}</th>
                                     </tr></thead>
                                     <tbody>
                                         {RARITY_CONFIG_KEYS.map(({ key }) => (
@@ -1160,13 +1199,13 @@ export default function DeckRecommendClient() {
                     <div className="flex gap-3">
                         <button onClick={handleCalculate} disabled={isCalculating}
                             className="flex-1 px-6 py-3 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold shadow-lg shadow-miku/20 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                            {isCalculating ? (<><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>计算中...</>) : (<>
+                            {isCalculating ? (<><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>{t("page.deckRecommend.calculating")}</>) : (<>
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                                开始计算
+                                {t("page.deckRecommend.startCalculate")}
                             </>)}
                         </button>
                         {isCalculating && (
-                            <button onClick={handleCancel} className="px-6 py-3 border-2 border-red-400 text-red-500 rounded-xl font-bold hover:bg-red-50 active:scale-[0.98] transition-all">取消</button>
+                            <button onClick={handleCancel} className="px-6 py-3 border-2 border-red-400 text-red-500 rounded-xl font-bold hover:bg-red-50 active:scale-[0.98] transition-all">{t("page.deckRecommend.cancel")}</button>
                         )}
                     </div>
 
@@ -1194,23 +1233,23 @@ export default function DeckRecommendClient() {
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                                 <span className="w-1.5 h-6 bg-miku rounded-full"></span>
-                                推荐卡组 Top {results.length}
+                                {t("page.deckRecommend.resultsTitle", { count: results.length })}
                             </h2>
                             {duration !== null && (
                                 <div className="flex flex-col items-end">
-                                    <span className="text-xs text-slate-400 font-mono">耗时 {(duration / 1000).toFixed(2)}s</span>
-                                    {dataTime && <span className="text-xs text-slate-400 font-mono">数据更新于 {new Date(dataTime * 1000).toLocaleString()}</span>}
+                                    <span className="text-xs text-slate-400 font-mono">{t("page.deckRecommend.elapsed", { seconds: (duration / 1000).toFixed(2) })}</span>
+                                    {dataTime && <span className="text-xs text-slate-400 font-mono">{t("page.deckRecommend.dataUpdatedAt", { time: formatDate(dataTime * 1000, { dateStyle: "medium", timeStyle: "short" }) })}</span>}
                                 </div>
                             )}
                         </div>
                         {challengeHighScore && (
                             <div className="mb-4 px-3 py-2 bg-amber-50 rounded-lg text-sm text-amber-700">
-                                当前挑战Live最高分: <span className="font-bold">{challengeHighScore.highScore?.toLocaleString() || "无记录"}</span>
+                                {t("page.deckRecommend.challengeHighScore", { score: challengeHighScore.highScore ? formatNumber(challengeHighScore.highScore) : t("page.deckRecommend.noRecord") })}
                             </div>
                         )}
                         <div className="space-y-4">
                             {results.map((deck, index: number) => (
-                                <DeckResultRow key={index} deck={deck} rank={index + 1} getCardMaster={getCardMaster} mode={mode} userCards={userCards} scoreLabel={scoreLabel} forceExpand={isScreenshotMode} strongestTarget={strongestTarget} />
+                                <DeckResultRow key={index} deck={deck} rank={index + 1} getCardMaster={getCardMaster} mode={mode} userCards={userCards} scoreLabel={scoreLabel} formatNumber={formatNumber} forceExpand={isScreenshotMode} strongestTarget={strongestTarget} />
                             ))}
                         </div>
                     </div>
@@ -1218,14 +1257,14 @@ export default function DeckRecommendClient() {
 
                 {results && results.length === 0 && (
                     <div className="glass-card p-8 rounded-2xl mb-6 text-center">
-                        <p className="text-slate-500">未找到可推荐的卡组，请检查您的卡牌数据和配置。</p>
+                        <p className="text-slate-500">{t("page.deckRecommend.noDecks")}</p>
                     </div>
                 )}
 
                 <div className="mt-12 text-center text-xs text-slate-400">
-                    <p className="mb-1">组卡推荐器源代码采用xfl03(33)的 <ExternalLink href="https://github.com/xfl03/sekai-calculator" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-calculator</ExternalLink></p>
-                    <p className="mb-1">部分算法优化修改于 <ExternalLink href="https://github.com/NeuraXmy/sekai-deck-recommend-cpp" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-deck-recommend-cpp</ExternalLink>（作者: luna茶）</p>
-                    <p>sekai-calculator采用 LGPL-2.1 开源协议 计算结果仅供参考</p>
+                    <p className="mb-1">{t("page.deckRecommend.sourceCreditPrefix")} <ExternalLink href="https://github.com/xfl03/sekai-calculator" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-calculator</ExternalLink></p>
+                    <p className="mb-1">{t("page.deckRecommend.algorithmCreditPrefix")} <ExternalLink href="https://github.com/NeuraXmy/sekai-deck-recommend-cpp" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-deck-recommend-cpp</ExternalLink> {t("page.deckRecommend.algorithmCreditAuthor")}</p>
+                    <p>{t("page.deckRecommend.licenseNotice")}</p>
                 </div>
             </div>
         </MainLayout>
@@ -1240,11 +1279,13 @@ interface DeckResultRowProps {
     mode: DeckMode;
     userCards: UserCardInfo[];
     scoreLabel: string;
+    formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
     forceExpand?: boolean;
     strongestTarget?: StrongestTarget;
 }
 
-function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel, forceExpand = false, strongestTarget }: DeckResultRowProps) {
+function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel, formatNumber, forceExpand = false, strongestTarget }: DeckResultRowProps) {
+    const { t } = useI18n();
     const [showDetails, setShowDetails] = useState(forceExpand);
     const detailsExpanded = forceExpand || showDetails;
     const baseEventBonus = deck.eventBonus !== undefined
@@ -1258,7 +1299,7 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
     const totalEventBonusText = `${formatBonusValue(totalEventBonus)}%`;
     const baseEventBonusText = `${formatBonusValue(baseEventBonus)}%`;
     const supportDeckBonusText = `${formatBonusValue(supportDeckBonus)}%`;
-    const totalBonusLabel = mode === "custom" ? "自定义加成" : (showSupportBonusBreakdown ? "总加成" : "加成");
+    const totalBonusLabel = mode === "custom" ? t("page.deckRecommend.result.totalBonusLabelCustom") : (showSupportBonusBreakdown ? t("page.deckRecommend.result.totalBonusLabelTotal") : t("page.deckRecommend.result.totalBonusLabelBonus"));
 
     const effectiveSkill = deck.cards && deck.cards.length === 5 ? (deck.cards[0].skill?.scoreUp || 0) + deck.cards.slice(1).reduce((sum: number, card: DeckCardResult) => sum + (card.skill?.scoreUp || 0), 0) / 5 : 0;
     const totalPower = deck.power?.total ?? 0;
@@ -1278,19 +1319,19 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                             <div className="font-bold text-primary-text text-sm">
                                 {mode === "strongest" && strongestTarget === "skill" && deck.multiLiveScoreUp != null
                                     ? `${deck.multiLiveScoreUp.toFixed(1)}%`
-                                    : Math.floor(deck.score).toLocaleString()}
+                                    : formatNumber(Math.floor(deck.score))}
                             </div>
                         </div>
                         {effectiveSkill > 0 && mode !== "challenge" && mode !== "mysekai" && mode !== "strongest" && (
                             <div className="flex-shrink-0 min-w-[60px]">
-                                <div className="text-xs text-slate-400">实效值</div>
+                                <div className="text-xs text-slate-400">{t("page.deckRecommend.result.effectiveSkill")}</div>
                                 <div className="font-bold text-emerald-600 text-sm">{effectiveSkill.toFixed(1)}%</div>
                             </div>
                         )}
                         {totalPower > 0 && (
                             <div className="flex-shrink-0 min-w-[60px] sm:hidden">
-                                <div className="text-xs text-slate-400">综合力</div>
-                                <div className="font-bold text-miku text-sm">{totalPower.toLocaleString()}</div>
+                                <div className="text-xs text-slate-400">{t("page.deckRecommend.result.power")}</div>
+                                <div className="font-bold text-miku text-sm">{formatNumber(totalPower)}</div>
                             </div>
                         )}
                         {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && totalEventBonus > 0 && (
@@ -1298,7 +1339,7 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                                 <div className="text-xs text-slate-400">{totalBonusLabel}</div>
                                 <div className="font-bold text-miku text-sm">{totalEventBonusText}</div>
                                 {showSupportBonusBreakdown && (
-                                    <div className="text-[10px] text-slate-500 leading-tight">主队{baseEventBonusText} + 支援{supportDeckBonusText}</div>
+                                    <div className="text-[10px] text-slate-500 leading-tight">{t("page.deckRecommend.result.mainDeckPlusSupport", { base: baseEventBonusText, support: supportDeckBonusText })}</div>
                                 )}
                             </div>
                         )}
@@ -1335,8 +1376,8 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                 </div>
                 {totalPower > 0 && (
                     <div className="flex-shrink-0 text-right hidden sm:block">
-                        <div className="text-xs text-slate-400">综合力</div>
-                        <div className="font-bold text-sm text-miku">{totalPower.toLocaleString()}</div>
+                        <div className="text-xs text-slate-400">{t("page.deckRecommend.result.power")}</div>
+                        <div className="font-bold text-sm text-miku">{formatNumber(totalPower)}</div>
                     </div>
                 )}
                 <svg className={`w-4 h-4 text-slate-400 transition-transform flex-shrink-0 hidden sm:block ${detailsExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1348,12 +1389,12 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                     <div className="mt-3 overflow-x-auto">
                         <table className="w-full text-xs">
                             <thead><tr className="text-slate-400">
-                                <th className="text-left py-1 px-1">队长</th>
-                                <th className="text-left py-1 px-1">卡牌ID</th>
-                                <th className="text-left py-1 px-1">卡面名称</th>
-                                <th className="text-right py-1 px-1">综合力</th>
-                                <th className="text-right py-1 px-1">技能</th>
-                                {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && <th className="text-right py-1 px-1">{mode === "custom" ? "自定义加成" : "活动加成"}</th>}
+                                <th className="text-left py-1 px-1">{t("page.deckRecommend.result.leader")}</th>
+                                <th className="text-left py-1 px-1">{t("page.deckRecommend.result.cardId")}</th>
+                                <th className="text-left py-1 px-1">{t("page.deckRecommend.result.cardName")}</th>
+                                <th className="text-right py-1 px-1">{t("page.deckRecommend.result.power")}</th>
+                                <th className="text-right py-1 px-1">{t("page.deckRecommend.result.skill")}</th>
+                                {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && <th className="text-right py-1 px-1">{mode === "custom" ? t("page.deckRecommend.result.customBonus") : t("page.deckRecommend.result.eventBonus")}</th>}
                             </tr></thead>
                             <tbody>
                                 {deck.cards?.map((card: DeckCardResult, i: number) => {
@@ -1366,16 +1407,16 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                                         : eventBonusValue > 0
                                             ? `${formatBonusValue(eventBonusValue)}%`
                                             : "-";
-                                    const cardName = masterCard?.prefix || (masterCard ? CHAR_NAMES[masterCard.characterId] : `ID:${card.characterId}`);
+                                    const cardName = masterCard?.prefix || (masterCard ? getCharacterName(t, masterCard.characterId, "short") : `ID:${card.characterId}`);
                                     return (
                                         <tr key={i} className="border-t border-slate-50">
-                                            <td className="py-1.5 px-1 font-bold text-slate-500">{i === 0 ? "队长" : `#${i + 1}`}</td>
+                                            <td className="py-1.5 px-1 font-bold text-slate-500">{i === 0 ? t("page.deckRecommend.result.leader") : `#${i + 1}`}</td>
                                             <td className="py-1.5 px-1 font-mono text-slate-600">{card.cardId}</td>
                                             <td className="py-1.5 px-1 text-slate-600">{cardName}</td>
-                                            <td className="py-1.5 px-1 text-right font-mono text-slate-600">{basePower.toLocaleString()}</td>
+                                            <td className="py-1.5 px-1 text-right font-mono text-slate-600">{formatNumber(basePower)}</td>
                                             <td className="py-1.5 px-1 text-right text-miku font-bold">
                                                 <span>{card.skill?.scoreUp || 0}%</span>
-                                                {card.skill?.isPreTrainingSkill && <span className="ml-1 text-[9px] font-medium text-amber-500 bg-amber-50 px-1 py-[1px] rounded" title="该卡使用觉醒前（花前）技能效果">花前</span>}
+                                                {card.skill?.isPreTrainingSkill && <span className="ml-1 text-[9px] font-medium text-amber-500 bg-amber-50 px-1 py-[1px] rounded" title={t("page.deckRecommend.result.preTrainingTitle")}>{t("page.deckRecommend.result.preTrainingBadge")}</span>}
                                             </td>
                                             {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && (
                                                 <td className="py-1.5 px-1 text-right font-bold text-amber-600">
@@ -1392,7 +1433,7 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                         {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && totalEventBonus > 0 && (
                             <span className="text-slate-500">
                                 {totalBonusLabel}: <span className="font-bold text-miku">{totalEventBonusText}</span>
-                                {showSupportBonusBreakdown && <span className="text-slate-400">（主队{baseEventBonusText} + 支援{supportDeckBonusText}）</span>}
+                                {showSupportBonusBreakdown && <span className="text-slate-400"> ({t("page.deckRecommend.result.mainDeckPlusSupport", { base: baseEventBonusText, support: supportDeckBonusText })})</span>}
                             </span>
                         )}
                     </div>

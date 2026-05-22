@@ -1,10 +1,7 @@
-import { Metadata } from "next";
 import MultiplayerClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "联机模式 我是谁",
-    description: "Project Sekai 猜角色联机对战",
-};
+export const generateMetadata = pageMetadata("guess_who_multiplayer");
 
 export default function MultiplayerPage() {
     return <MultiplayerClient />;

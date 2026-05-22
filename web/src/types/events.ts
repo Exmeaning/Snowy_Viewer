@@ -65,11 +65,11 @@ export interface IEventMusic {
     releaseConditionId: number;
 }
 
-// Event type display names
-export const EVENT_TYPE_NAMES: Record<EventType, string> = {
-    marathon: "马拉松",
-    cheerful_carnival: "欢乐嘉年华",
-    world_bloom: "世界绽放",
+export const EVENT_TYPE_IDS = ["marathon", "cheerful_carnival", "world_bloom"] as const;
+export const EVENT_TYPE_LABEL_KEYS: Record<EventType, string> = {
+    marathon: "common.eventTypes.marathon",
+    cheerful_carnival: "common.eventTypes.cheerful_carnival",
+    world_bloom: "common.eventTypes.world_bloom",
 };
 
 // Event type colors
@@ -94,10 +94,10 @@ export function getEventStatus(event: IEventInfo): EventStatus {
 /**
  * Get event status display info
  */
-export const EVENT_STATUS_DISPLAY: Record<EventStatus, { label: string; color: string }> = {
-    upcoming: { label: "即将开始", color: "#42A5F5" },
-    ongoing: { label: "进行中", color: "#66BB6A" },
-    ended: { label: "已结束", color: "#9E9E9E" },
+export const EVENT_STATUS_DISPLAY: Record<EventStatus, { labelKey: string; color: string }> = {
+    upcoming: { labelKey: "common.status.upcoming", color: "#42A5F5" },
+    ongoing: { labelKey: "common.status.ongoing", color: "#66BB6A" },
+    ended: { labelKey: "common.status.ended", color: "#9E9E9E" },
 };
 
 export interface IBilibiliEvent {

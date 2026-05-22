@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import styles from "../app/components/BackgroundPattern.module.css";
 
@@ -115,8 +115,6 @@ export default function BackgroundPattern() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const [hasMounted, setHasMounted] = useState(false);
-
     // Stable references to keep logical updates highly optimized and avoid re-renders
     const shardsRef = useRef<Shard[]>([]);
     const hugeTrianglesRef = useRef<HugeTriangle[]>([]);
@@ -130,14 +128,8 @@ export default function BackgroundPattern() {
         lastSmoothY: 0
     });
 
-    useEffect(() => {
-        setHasMounted(true);
-    }, []);
-
     // Core Particle Generation on Mount
     useEffect(() => {
-        if (!hasMounted) return;
-
         // 1. Generate Massive Background Structural Triangles (Behind all, slow parallax)
         const hugeTriangles: HugeTriangle[] = [];
         const numHuge = 2;
@@ -200,12 +192,10 @@ export default function BackgroundPattern() {
             });
         }
         shardsRef.current = shards;
-    }, [hasMounted]);
+    }, []);
 
     // Handle Resize & DPI context scale
     useEffect(() => {
-        if (!hasMounted) return;
-
         const canvas = canvasRef.current;
         const container = containerRef.current;
         if (!canvas || !container) return;
@@ -243,12 +233,10 @@ export default function BackgroundPattern() {
             window.removeEventListener("orientationchange", resizeCanvas);
             resizeObserver?.disconnect();
         };
-    }, [hasMounted]);
+    }, []);
 
     // Track scroll globally
     useEffect(() => {
-        if (!hasMounted) return;
-
         const handleScroll = () => {
             scrollRef.current.targetY = window.scrollY;
         };
@@ -256,12 +244,10 @@ export default function BackgroundPattern() {
         handleScroll();
         window.addEventListener("scroll", handleScroll, { passive: true });
         return () => window.removeEventListener("scroll", handleScroll);
-    }, [hasMounted]);
+    }, []);
 
     // Track mouse globally for magnetic repulsion
     useEffect(() => {
-        if (!hasMounted) return;
-
         const handleMouseMove = (e: MouseEvent) => {
             mouseRef.current.x = e.clientX;
             mouseRef.current.y = e.clientY;
@@ -280,12 +266,10 @@ export default function BackgroundPattern() {
             window.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseleave", handleMouseLeave);
         };
-    }, [hasMounted]);
+    }, []);
 
     // Core Animation Frame Loop
     useEffect(() => {
-        if (!hasMounted) return;
-
         const canvas = canvasRef.current;
         if (!canvas) return;
 
@@ -564,7 +548,7 @@ export default function BackgroundPattern() {
         return () => {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
         };
-    }, [hasMounted, themeColor, resolvedColorScheme]);
+    }, [themeColor, resolvedColorScheme]);
 
     return (
         <div ref={containerRef} className={styles.bgPatternContainer} aria-hidden="true">

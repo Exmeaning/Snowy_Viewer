@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useI18n } from "@/contexts/I18nContext";
 
 // Types for Bilibili Dynamic API
 interface DynamicItem {
@@ -86,14 +87,15 @@ interface DynamicResponse {
 }
 
 const ACCOUNTS = [
-    { id: "13148307", name: "日服资讯 (Project_SEKAI资讯站)", avatar: "https://i2.hdslb.com/bfs/face/485ea7b2434db0349c25dfcfb62e499709287877.jpg" },
-    { id: "3546749308242173", name: "国服资讯 (初音未来缤纷舞台)", avatar: "https://i1.hdslb.com/bfs/face/178225586617a264024317769963865664a754b2.jpg" },
+    { id: "13148307", nameKey: "page.home.bilibili.accounts.jp", avatar: "https://i2.hdslb.com/bfs/face/485ea7b2434db0349c25dfcfb62e499709287877.jpg" },
+    { id: "3546749308242173", nameKey: "page.home.bilibili.accounts.cn", avatar: "https://i1.hdslb.com/bfs/face/178225586617a264024317769963865664a754b2.jpg" },
 ];
 
 const feedCache: Record<string, { items: DynamicItem[], timestamp: number }> = {};
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes frontend cache
 
 export default function BilibiliDynamicTab() {
+    const { t, formatNumber: formatLocaleNumber } = useI18n();
     const [activeAccount, setActiveAccount] = useState(ACCOUNTS[0]);
     const [dynamics, setDynamics] = useState<DynamicItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -121,7 +123,7 @@ export default function BilibiliDynamicTab() {
                 }
                 let items = data.data.items || [];
                 // Filter pinned items
-                items = items.filter(item => item.modules.module_tag?.text !== "置顶");
+                items = items.filter(item => item.modules.module_tag?.text !== "\u7f6e\u9876");
                 // Limit to 3 items
                 setDynamics(items.slice(0, 3));
 
@@ -132,20 +134,20 @@ export default function BilibiliDynamicTab() {
                 };
             } catch (err) {
                 console.error("Failed to fetch dynamics:", err);
-                setError(err instanceof Error ? err.message : "加载失败");
+                setError(err instanceof Error ? err.message : t("common.state.loadingFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
 
         fetchDynamics();
-    }, [activeAccount]);
+    }, [activeAccount, t]);
 
     const formatNumber = (num: number) => {
         if (num >= 10000) {
-            return (num / 10000).toFixed(1) + "万";
+            return formatLocaleNumber(num, { notation: "compact", maximumFractionDigits: 1 });
         }
-        return num.toString();
+        return formatLocaleNumber(num);
     };
 
     const getProxyUrl = (url: string, type: 'avatar' | 'cover' | 'grid' | 'preview' = 'preview') => {
@@ -210,7 +212,7 @@ export default function BilibiliDynamicTab() {
                     >
                         {/* Account Name (Click to Switch) */}
                         <div className="px-4 py-2">
-                            {account.name}
+                            {t(account.nameKey)}
                         </div>
 
                         {/* Divider */}
@@ -226,7 +228,7 @@ export default function BilibiliDynamicTab() {
                                 : "hover:bg-slate-100 text-slate-400 hover:text-miku"
                                 }`}
                             onClick={(e) => e.stopPropagation()}
-                            title="访问主页"
+                            title={t("page.home.bilibili.visitHome")}
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -254,18 +256,18 @@ export default function BilibiliDynamicTab() {
                 </div>
             ) : error ? (
                 <div className="p-8 text-center bg-red-50 text-red-600 rounded-2xl border border-red-100">
-                    <p className="font-bold mb-2">获取动态失败</p>
+                    <p className="font-bold mb-2">{t("page.home.bilibili.loadFailedTitle")}</p>
                     <p className="text-sm opacity-80">{error}</p>
                     <button
                         onClick={() => setActiveAccount({ ...activeAccount })}
                         className="mt-4 px-4 py-2 bg-white text-red-600 rounded-lg text-sm font-medium border border-red-200 hover:bg-red-50 transition-colors"
                     >
-                        重试
+                        {t("common.action.retry")}
                     </button>
                 </div>
             ) : dynamics.length === 0 ? (
                 <div className="p-12 text-center text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
-                    暂无动态
+                    {t("page.home.bilibili.noData")}
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -424,7 +426,7 @@ export default function BilibiliDynamicTab() {
 
                     <div className="text-center pt-2">
                         <div className="text-xs text-slate-400 bg-slate-50 inline-block px-3 py-1 rounded-full border border-slate-100">
-                            内容来源于 Bilibili，仅供展示，不代表SnowyViewer立场
+                            {t("page.home.bilibili.disclaimer")}
                         </div>
                     </div>
                 </div>
@@ -434,6 +436,7 @@ export default function BilibiliDynamicTab() {
 }
 
 function ExpandableText({ text }: { text: string | undefined }) {
+    const { t } = useI18n();
     const [expanded, setExpanded] = useState(false);
 
     if (!text) return null;
@@ -455,7 +458,7 @@ function ExpandableText({ text }: { text: string | undefined }) {
                     }}
                     className="text-miku text-xs font-bold mt-1 hover:underline"
                 >
-                    {expanded ? "收起全文" : "查看全文"}
+                    {expanded ? t("page.home.bilibili.collapse") : t("page.home.bilibili.expand")}
                 </button>
             )}
         </div>

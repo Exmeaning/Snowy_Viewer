@@ -24,6 +24,7 @@ import AccountSelectorBar from "@/components/AccountSelectorBar";
 import QuickBindForm from "@/components/QuickBindForm";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { useI18n } from "@/contexts/I18nContext";
 
 // ==================== Types ====================
 
@@ -75,39 +76,30 @@ function parseUploadTimeToDate(uploadTime: string | number): Date | null {
     return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function formatUploadTime(uploadTime: string | number): string {
-    const date = parseUploadTimeToDate(uploadTime);
-    if (!date) return String(uploadTime);
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hour = String(date.getHours()).padStart(2, "0");
-    const minute = String(date.getMinutes()).padStart(2, "0");
-    return `${month}-${day} ${hour}:${minute}`;
-}
-
 function getAssetSourceForServer(server: ServerType, assetSource: AssetSourceType): AssetSourceType {
     return replaceAssetSourceRegion(assetSource, server === "cn" || server === "tw" ? "cn" : "jp");
 }
 
-function getUserErrorMessage(code: AccountDataErrorCode): string {
+function getUserErrorMessageKey(code: AccountDataErrorCode): string {
     switch (code) {
         case "API_NOT_PUBLIC":
-            return "当前账号的公开 API 未开启，且 OAuth2 数据读取也不可用。请前往 Haruki 开启公开 API，或重新进行 OAuth2 授权。";
+            return "common.accountDataErrors.apiNotPublic";
         case "NOT_FOUND":
-            return "用户数据未找到，请确认 UID、服务器是否正确，并已在 Haruki 上传数据。";
+            return "common.accountDataErrors.notFound";
         case "OAUTH_REAUTH_REQUIRED":
-            return "当前 OAuth2 授权已过期，请重新授权；如果该账号已开启公开 API，可刷新页面后重试。";
+            return "common.accountDataErrors.oauthReauthRequired";
         case "OAUTH_ACCESS_FAILED":
-            return "OAuth2 数据读取失败，且无法回退到公开 API。请重新授权或稍后再试。";
+            return "common.accountDataErrors.oauthAccessFailed";
         case "NETWORK_ERROR":
         default:
-            return "网络异常，请稍后重试。";
+            return "common.accountDataErrors.networkError";
     }
 }
 
 // ==================== Main Component ====================
 
 function MyMaterialsContent() {
+    const { t, formatDate, formatNumber } = useI18n();
     const { assetSource } = useTheme();
 
     // Account state
@@ -180,7 +172,7 @@ function MyMaterialsContent() {
                 setMysekaiMaterialsMaster(msMatMap);
             } catch (err) {
                 if (!cancelled) {
-                    setError(err instanceof Error ? err.message : "加载材料数据失败");
+                    setError(err instanceof Error ? err.message : t("page.myMaterials.loadDataFailed"));
                 }
             } finally {
                 if (!cancelled) setIsLoading(false);
@@ -189,7 +181,7 @@ function MyMaterialsContent() {
 
         loadMasterData();
         return () => { cancelled = true; };
-    }, [activeAccount]);
+    }, [activeAccount, t]);
 
     // Fetch user materials from suite API
     useEffect(() => {
@@ -239,7 +231,7 @@ function MyMaterialsContent() {
             const master = materialsMaster.get(um.materialId);
             return {
                 id: um.materialId,
-                name: master?.name || `材料 ${um.materialId}`,
+                name: master?.name || t("page.myMaterials.fallbackMaterialName", { id: um.materialId }),
                 quantity: um.quantity,
                 seq: master?.seq ?? 999999,
                 thumbnailUrl: getMaterialThumbnailUrl(um.materialId, finalSource),
@@ -248,7 +240,7 @@ function MyMaterialsContent() {
 
         return filterAndSort(items);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userMaterials, materialsMaster, searchQuery, sortBy, sortOrder, hideZero, assetSource, activeAccount]);
+    }, [userMaterials, materialsMaster, searchQuery, sortBy, sortOrder, hideZero, assetSource, activeAccount, t]);
 
     // Build display items for mysekai materials
     const displayMysekaiMaterials = useMemo((): DisplayMaterial[] => {
@@ -260,7 +252,7 @@ function MyMaterialsContent() {
             const master = mysekaiMaterialsMaster.get(um.mysekaiMaterialId);
             return {
                 id: um.mysekaiMaterialId,
-                name: master?.name || `MySekai材料 ${um.mysekaiMaterialId}`,
+                name: master?.name || t("page.myMaterials.fallbackMysekaiMaterialName", { id: um.mysekaiMaterialId }),
                 quantity: um.quantity,
                 seq: master?.seq ?? 999999,
                 thumbnailUrl: master
@@ -271,7 +263,7 @@ function MyMaterialsContent() {
 
         return filterAndSort(items);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userMysekaiMaterials, mysekaiMaterialsMaster, searchQuery, sortBy, sortOrder, hideZero, assetSource, activeAccount]);
+    }, [userMysekaiMaterials, mysekaiMaterialsMaster, searchQuery, sortBy, sortOrder, hideZero, assetSource, activeAccount, t]);
 
     // Shared filter/sort logic
     function filterAndSort(items: DisplayMaterial[]): DisplayMaterial[] {
@@ -333,20 +325,20 @@ function MyMaterialsContent() {
     const totalQuantity = currentItems.reduce((sum, m) => sum + m.quantity, 0);
 
     const sortOptions = useMemo(() => [
-        { id: "seq", label: "默认" },
-        { id: "quantity", label: "数量" },
-    ], []);
+        { id: "seq", label: t("common.filter.sortByDefault") },
+        { id: "quantity", label: t("common.filter.sortByQuantity") },
+    ], [t]);
 
     // Quick filter content (BaseFilters panel)
     const quickFilterContent = (
         <BaseFilters
-            title="筛选"
+            title={t("page.myMaterials.filterTitle")}
             filteredCount={currentItems.length}
             totalCount={allItemsForTab}
-            countUnit="种"
+            countUnit={t("page.myMaterials.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={(q) => { setSearchQuery(q); resetDisplayCount(); }}
-            searchPlaceholder="搜索材料名称或ID..."
+            searchPlaceholder={t("page.myMaterials.searchPlaceholder")}
             sortOptions={sortOptions}
             sortBy={sortBy}
             sortOrder={sortOrder}
@@ -354,17 +346,17 @@ function MyMaterialsContent() {
             hasActiveFilters={hasActiveFilters}
             onReset={resetFilters}
         >
-            <FilterSection label="显示">
+            <FilterSection label={t("common.filter.display")}>
                 <FilterToggle
                     selected={hideZero}
                     onClick={() => { setHideZero(!hideZero); resetDisplayCount(); }}
-                    label="隐藏数量为0的材料"
+                    label={t("common.filter.hideZeroMaterials")}
                 />
             </FilterSection>
         </BaseFilters>
     );
 
-    useQuickFilter("资源筛选", quickFilterContent, [
+    useQuickFilter(t("page.myMaterials.filterTitle"), quickFilterContent, [
         searchQuery,
         sortBy,
         sortOrder,
@@ -384,7 +376,7 @@ function MyMaterialsContent() {
                         const active = getActiveAccount();
                         setActiveAcc(active);
                     }}
-                    description="绑定账号后即可查看你的材料库存"
+                    description={t("page.myMaterials.quickBindDescription")}
                     returnTo="/my-materials"
                 />
 
@@ -415,7 +407,7 @@ function MyMaterialsContent() {
                     <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
-                    <span>繁中服使用国服 masterdata，数据可能不准确</span>
+                    <span>{t("common.data.twMasterdataWarning")}</span>
                 </div>
             )}
 
@@ -428,13 +420,13 @@ function MyMaterialsContent() {
                         </svg>
                         <div>
                             <p className="text-xs font-medium text-red-700">
-                                {getUserErrorMessage(userError)}
+                                {t(getUserErrorMessageKey(userError))}
                             </p>
                             <ExternalLink
                                 href="https://haruki.seiunx.com"
                                 className="text-xs text-miku hover:underline mt-1 inline-block"
                             >
-                                前往 Haruki 工具箱 →
+                                {t("common.account.goHaruki")}
                             </ExternalLink>
                         </div>
                     </div>
@@ -444,8 +436,8 @@ function MyMaterialsContent() {
             {/* Tab Bar */}
             <div className="mb-4 flex items-center gap-2">
                 {([
-                    { key: "materials" as TabType, label: "普通材料" },
-                    { key: "mysekaiMaterials" as TabType, label: "MySekai 材料" },
+                    { key: "materials" as TabType, label: t("page.myMaterials.tabs.materials") },
+                    { key: "mysekaiMaterials" as TabType, label: t("page.myMaterials.tabs.mysekaiMaterials") },
                 ]).map((tab) => (
                     <button
                         key={tab.key}
@@ -460,8 +452,8 @@ function MyMaterialsContent() {
                 ))}
                 {/* Upload time badge */}
                 {uploadTime && !isLoading && !isFetchingUser && (
-                    <span className="ml-auto text-[11px] text-slate-400" title="数据上传时间">
-                        数据时间: {formatUploadTime(uploadTime)}
+                    <span className="ml-auto text-[11px] text-slate-400" title={t("common.data.uploadTimeTitle")}>
+                        {t("common.data.dataTime", { time: formatDate(parseUploadTimeToDate(uploadTime) ?? uploadTime, { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) })}
                     </span>
                 )}
             </div>
@@ -469,15 +461,14 @@ function MyMaterialsContent() {
             {/* Stats summary */}
             {!isLoading && !isFetchingUser && currentItems.length > 0 && (
                 <div className="mb-4 text-xs text-slate-500">
-                    共 <span className="font-bold text-miku">{currentItems.length}</span> 种材料，
-                    合计 <span className="font-bold text-miku">{totalQuantity.toLocaleString()}</span> 个
+                    {t("common.progress.totalMaterialsSummary", { count: currentItems.length, total: formatNumber(totalQuantity) })}
                 </div>
             )}
 
             {/* Error */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{error}</p>
                 </div>
             )}
@@ -511,11 +502,11 @@ function MyMaterialsContent() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                             </svg>
                             <p className="text-slate-400 font-medium">
-                                {searchQuery ? "没有找到符合条件的材料" : "暂无材料数据"}
+                                {searchQuery ? t("page.myMaterials.noResult") : t("page.myMaterials.noData")}
                             </p>
                             {!searchQuery && (
                                 <p className="text-slate-400 text-xs mt-1">
-                                    请确认已在 Haruki 上传 Suite 数据
+                                    {t("common.data.suiteUploadHint")}
                                 </p>
                             )}
                         </div>
@@ -535,7 +526,7 @@ function MyMaterialsContent() {
                                 data-shortcut-load-more="true"
                                 className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                             >
-                                加载更多
+                                {t("page.myMaterials.loadMore")}
                                 <span className="ml-2 text-sm opacity-80">
                                     ({displayedItems.length} / {currentItems.length})
                                 </span>
@@ -546,7 +537,7 @@ function MyMaterialsContent() {
                     {/* All loaded */}
                     {!isLoading && !isFetchingUser && displayedItems.length > 0 && displayedItems.length >= currentItems.length && (
                         <div className="mt-8 text-center text-slate-400 text-sm">
-                            已显示全部 {currentItems.length} 种材料
+                            {t("page.myMaterials.allLoaded", { count: currentItems.length })}
                         </div>
                     )}
                 </div>
@@ -558,16 +549,17 @@ function MyMaterialsContent() {
 // ==================== Sub Components ====================
 
 function PageHeader() {
+    const { t } = useI18n();
     return (
         <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                <span className="text-miku text-xs font-bold tracking-widest uppercase">Materials</span>
+                <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.myMaterials.badge")}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                资源<span className="text-miku">查询</span>
+                {t("page.myMaterials.title")}<span className="text-miku">{t("page.myMaterials.titleHighlight")}</span>
             </h1>
             <p className="text-slate-500 mt-2 text-sm">
-                查看你拥有的材料与资源
+                {t("page.myMaterials.description")}
             </p>
         </div>
     );
@@ -610,10 +602,15 @@ function MaterialCard({ item }: { item: DisplayMaterial }) {
 
 // ==================== Export ====================
 
+function MyMaterialsLoadingFallback() {
+    const { t } = useI18n();
+    return <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("common.state.loading")}</div>;
+}
+
 export default function MyMaterialsClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载...</div>}>
+            <Suspense fallback={<MyMaterialsLoadingFallback />}>
                 <MyMaterialsContent />
             </Suspense>
         </MainLayout>

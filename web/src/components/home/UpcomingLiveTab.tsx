@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import {
     IVirtualLiveInfo,
-    VIRTUAL_LIVE_TYPE_NAMES,
     VIRTUAL_LIVE_TYPE_COLORS,
     getVirtualLiveStatus,
     VIRTUAL_LIVE_STATUS_DISPLAY,
@@ -14,9 +13,11 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { getVirtualLiveBannerUrl } from "@/lib/assets";
 import { TranslatedText } from "@/components/common/TranslatedText";
+import { useI18n } from "@/contexts/I18nContext";
 
 export default function UpcomingLiveTab() {
     const { assetSource, isShowSpoiler } = useTheme();
+    const { t, formatDate: formatLocaleDate } = useI18n();
     const [virtualLives, setVirtualLives] = useState<IVirtualLiveInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -30,13 +31,13 @@ export default function UpcomingLiveTab() {
                 setError(null);
             } catch (err) {
                 console.error("Error fetching virtual lives:", err);
-                setError(err instanceof Error ? err.message : "加载失败");
+                setError(err instanceof Error ? err.message : t("common.state.loadingFailed"));
             } finally {
                 setIsLoading(false);
             }
         }
         fetchData();
-    }, []);
+    }, [t]);
 
     // Find upcoming or ongoing virtual lives
     const displayLives = useMemo(() => {
@@ -73,10 +74,12 @@ export default function UpcomingLiveTab() {
         return next || null;
     };
 
-    const formatDate = (ts: number) => {
-        const d = new Date(ts);
-        return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, "0")}`;
-    };
+    const formatDate = (ts: number) => formatLocaleDate(ts, {
+        month: "numeric",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
 
     if (isLoading) {
         return (
@@ -91,7 +94,7 @@ export default function UpcomingLiveTab() {
     if (error) {
         return (
             <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm text-center">
-                <p className="font-bold">加载演唱会失败</p>
+                <p className="font-bold">{t("page.home.upcomingLive.loadFailedTitle")}</p>
                 <p>{error}</p>
             </div>
         );
@@ -100,7 +103,7 @@ export default function UpcomingLiveTab() {
     if (displayLives.length === 0) {
         return (
             <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
-                <p className="font-medium">暂无即将开始的演唱会</p>
+                <p className="font-medium">{t("page.home.upcomingLive.noData")}</p>
             </div>
         );
     }
@@ -111,7 +114,8 @@ export default function UpcomingLiveTab() {
                 {displayLives.map(vl => {
                     const status = getVirtualLiveStatus(vl);
                     const statusDisplay = VIRTUAL_LIVE_STATUS_DISPLAY[status];
-                    const typeName = VIRTUAL_LIVE_TYPE_NAMES[vl.virtualLiveType as VirtualLiveType] || vl.virtualLiveType;
+                    const typeLabel = t(`common.virtualLiveTypes.${vl.virtualLiveType}`);
+                    const typeName = typeLabel === `common.virtualLiveTypes.${vl.virtualLiveType}` ? vl.virtualLiveType : typeLabel;
                     const typeColor = VIRTUAL_LIVE_TYPE_COLORS[vl.virtualLiveType as VirtualLiveType] || "#9E9E9E";
                     const nextSchedule = getNextSchedule(vl);
 
@@ -138,7 +142,7 @@ export default function UpcomingLiveTab() {
                                             className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded text-white"
                                             style={{ backgroundColor: statusDisplay.color }}
                                         >
-                                            {statusDisplay.label}
+                                            {t(`common.status.${status}`)}
                                         </span>
                                         <span
                                             className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded text-white"
@@ -163,7 +167,7 @@ export default function UpcomingLiveTab() {
                                     <div className="text-[10px] sm:text-xs text-slate-400 font-mono">
                                         {nextSchedule ? (
                                             <span>
-                                                下一场: {formatDate(nextSchedule.startAt)}
+                                                {t("page.home.upcomingLive.nextSchedule", { date: formatDate(nextSchedule.startAt) })}
                                             </span>
                                         ) : (
                                             <span>
@@ -180,7 +184,7 @@ export default function UpcomingLiveTab() {
             {/* View All Link */}
             <div className="mt-4 text-center">
                 <Link href="/live" className="inline-flex items-center gap-1 text-sm text-miku hover:text-miku-dark font-medium transition-colors">
-                    查看全部演唱会
+                    {t("page.home.upcomingLive.viewAll")}
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>

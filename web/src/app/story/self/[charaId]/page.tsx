@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import StorySelfReaderClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = { title: "自我介绍阅读" };
+export const generateMetadata = pageMetadata("story_self_reader");
 
 export default function StorySelfReaderPage() {
     return <StorySelfReaderClient />;

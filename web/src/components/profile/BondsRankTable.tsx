@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
+import { UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 import Modal from "@/components/common/Modal";
 import type { UserBond, UserCharacter } from "@/lib/account";
 
@@ -41,6 +43,7 @@ function pairKey(a: number, b: number): string {
 
 export default function BondsRankTable({ userBonds, userCharacters }: BondsRankTableProps) {
     const { themeColor } = useTheme();
+    const { t } = useI18n();
     const [showDetailModal, setShowDetailModal] = useState(false);
     // Filters are inside the modal only
     const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
@@ -127,6 +130,8 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
     const renderRow = (row: BondRow) => {
         const c1Rank = characterRankMap.get(row.c1) || 0;
         const c2Rank = characterRankMap.get(row.c2) || 0;
+        const c1Name = getCharacterName(t, row.c1);
+        const c2Name = getCharacterName(t, row.c2);
         const progress = row.rank ? Math.max(0, Math.min((row.rank / MAX_BOND_LEVEL) * 100, 100)) : 0;
         const expText = row.rank === null ? "-" : row.rank >= MAX_BOND_LEVEL ? "MAX" : String(row.exp || 0);
 
@@ -135,22 +140,22 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
                 <div className="flex items-center justify-between gap-2">
                     <div className="flex -space-x-2">
                         <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-slate-100">
-                            <Image src={getCharacterIconUrl(row.c1)} alt={CHARACTER_NAMES[row.c1]} fill className="object-cover" unoptimized />
+                            <Image src={getCharacterIconUrl(row.c1)} alt={c1Name} fill className="object-cover" unoptimized />
                         </div>
                         <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-slate-100">
-                            <Image src={getCharacterIconUrl(row.c2)} alt={CHARACTER_NAMES[row.c2]} fill className="object-cover" unoptimized />
+                            <Image src={getCharacterIconUrl(row.c2)} alt={c2Name} fill className="object-cover" unoptimized />
                         </div>
                     </div>
                     <div className="text-xs font-bold text-slate-700">Lv {c1Rank} &amp; {c2Rank}</div>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-600">羁绊等级</span>
+                    <span className="font-semibold text-slate-600">{t("page.profile.stats.bondRank")}</span>
                     <span className="font-bold text-slate-700">{row.rank ?? "-"}</span>
                 </div>
                 <div className="space-y-1">
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
-                        <span>进度</span>
-                        <span className="font-bold text-slate-700">经验 {expText}</span>
+                        <span>{t("page.profile.stats.progress")}</span>
+                        <span className="font-bold text-slate-700">{t("page.profile.stats.expValue", { value: expText })}</span>
                     </div>
                     <div className="h-3 rounded-full bg-slate-500/75 overflow-hidden relative">
                         <div className="h-full rounded-full" style={{ width: `${progress}%`, backgroundColor: themeColor }} />
@@ -163,6 +168,8 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
     const renderDesktopRow = (row: BondRow) => {
         const c1Rank = characterRankMap.get(row.c1) || 0;
         const c2Rank = characterRankMap.get(row.c2) || 0;
+        const c1Name = getCharacterName(t, row.c1);
+        const c2Name = getCharacterName(t, row.c2);
         const progress = row.rank ? Math.max(0, Math.min((row.rank / MAX_BOND_LEVEL) * 100, 100)) : 0;
         const expText = row.rank === null ? "-" : row.rank >= MAX_BOND_LEVEL ? "MAX" : String(row.exp || 0);
 
@@ -171,10 +178,10 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
                 <div className="w-[92px] shrink-0 flex items-center gap-3 min-w-0">
                     <div className="flex -space-x-2">
                         <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white bg-slate-100">
-                            <Image src={getCharacterIconUrl(row.c1)} alt={CHARACTER_NAMES[row.c1]} fill className="object-cover" unoptimized />
+                            <Image src={getCharacterIconUrl(row.c1)} alt={c1Name} fill className="object-cover" unoptimized />
                         </div>
                         <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white bg-slate-100">
-                            <Image src={getCharacterIconUrl(row.c2)} alt={CHARACTER_NAMES[row.c2]} fill className="object-cover" unoptimized />
+                            <Image src={getCharacterIconUrl(row.c2)} alt={c2Name} fill className="object-cover" unoptimized />
                         </div>
                     </div>
                 </div>
@@ -195,14 +202,14 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                     <span className="w-1.5 h-6 rounded-full" style={{ backgroundColor: themeColor }}></span>
-                    羁绊等级
+                    {t("page.profile.stats.bondRank")}
                 </h2>
                 {bondsMap.size > DEFAULT_TOPK && (
                     <button
                         onClick={handleOpenModal}
                         className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:border-miku/40 hover:text-miku transition-colors"
                     >
-                        查看详情
+                        {t("page.profile.stats.viewDetails")}
                     </button>
                 )}
             </div>
@@ -210,25 +217,25 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
             {/* Inline top-k rows */}
             <div className="sm:hidden space-y-2">
                 {topRows.map(renderRow)}
-                {topRows.length === 0 && <div className="text-center py-8 text-sm text-slate-400">暂无羁绊数据</div>}
+                {topRows.length === 0 && <div className="text-center py-8 text-sm text-slate-400">{t("page.profile.stats.noBondData")}</div>}
             </div>
 
             <div className="hidden sm:block space-y-2">
                 <div className="flex items-center gap-2 px-2 py-2 text-sm font-bold text-slate-600">
-                    <div className="w-[92px] shrink-0 text-left">角色</div>
-                    <div className="w-20 shrink-0 text-center">角色等级</div>
-                    <div className="w-[72px] shrink-0 text-center">羁绊等级</div>
-                    <div className="flex-1 min-w-0 text-center">进度</div>
-                    <div className="w-[72px] shrink-0 text-center">升级经验</div>
+                    <div className="w-[92px] shrink-0 text-left">{t("page.profile.stats.character")}</div>
+                    <div className="w-20 shrink-0 text-center">{t("page.profile.stats.characterRank")}</div>
+                    <div className="w-[72px] shrink-0 text-center">{t("page.profile.stats.bondRank")}</div>
+                    <div className="flex-1 min-w-0 text-center">{t("page.profile.stats.progress")}</div>
+                    <div className="w-[72px] shrink-0 text-center">{t("page.profile.stats.nextExp")}</div>
                 </div>
                 {topRows.map(renderDesktopRow)}
-                {topRows.length === 0 && <div className="text-center py-8 text-sm text-slate-400">暂无羁绊数据</div>}
+                {topRows.length === 0 && <div className="text-center py-8 text-sm text-slate-400">{t("page.profile.stats.noBondData")}</div>}
             </div>
 
             <Modal
                 isOpen={showDetailModal}
                 onClose={() => setShowDetailModal(false)}
-                title="羁绊等级详情"
+                title={t("page.profile.stats.bondRankDetails")}
                 size="xl"
             >
                 <div className="space-y-4">
@@ -244,10 +251,10 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
                                             ? "ring-2 ring-miku shadow-lg bg-white"
                                             : "hover:bg-white border border-transparent bg-slate-100"
                                             }`}
-                                        title={unit.name}
+                                        title={t(`common.units.${unit.id}`)}
                                     >
                                         <div className="w-8 h-8 relative">
-                                            <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unit.name} fill className="object-contain" unoptimized />
+                                            <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={t(`common.units.${unit.id}`)} fill className="object-contain" unoptimized />
                                         </div>
                                     </button>
                                 );
@@ -257,6 +264,7 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
                             <div className="flex flex-wrap items-center gap-2">
                                 {displayedCharacters.map((characterId) => {
                                     const selected = selectedCharacterId === characterId;
+                                    const characterName = getCharacterName(t, characterId);
                                     return (
                                         <button
                                             key={characterId}
@@ -265,10 +273,10 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
                                                 ? "ring-2 ring-miku scale-110 z-10 rounded-full"
                                                 : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-85 hover:opacity-100"
                                                 }`}
-                                            title={CHARACTER_NAMES[characterId]}
+                                            title={characterName}
                                         >
                                             <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
-                                                <Image src={getCharacterIconUrl(characterId)} alt={CHARACTER_NAMES[characterId]} width={40} height={40} className="w-full h-full object-cover" unoptimized />
+                                                <Image src={getCharacterIconUrl(characterId)} alt={characterName} width={40} height={40} className="w-full h-full object-cover" unoptimized />
                                             </div>
                                         </button>
                                     );
@@ -279,20 +287,20 @@ export default function BondsRankTable({ userBonds, userCharacters }: BondsRankT
 
                     <div className="sm:hidden space-y-2">
                         {modalRows.map(renderRow)}
-                        {modalRows.length === 0 && <div className="text-center py-8 text-sm text-slate-400">暂无羁绊数据</div>}
+                        {modalRows.length === 0 && <div className="text-center py-8 text-sm text-slate-400">{t("page.profile.stats.noBondData")}</div>}
                     </div>
 
                     <div className="hidden sm:block overflow-x-auto">
                         <div className="min-w-[760px] space-y-2">
                             <div className="flex items-center gap-2 px-2 py-2 text-sm font-bold text-slate-600">
-                                <div className="w-[92px] shrink-0 text-left">角色</div>
-                                <div className="w-20 shrink-0 text-center">角色等级</div>
-                                <div className="w-[72px] shrink-0 text-center">羁绊等级</div>
-                                <div className="flex-1 min-w-0 text-center">进度</div>
-                                <div className="w-[72px] shrink-0 text-center">升级经验</div>
+                                <div className="w-[92px] shrink-0 text-left">{t("page.profile.stats.character")}</div>
+                                <div className="w-20 shrink-0 text-center">{t("page.profile.stats.characterRank")}</div>
+                                <div className="w-[72px] shrink-0 text-center">{t("page.profile.stats.bondRank")}</div>
+                                <div className="flex-1 min-w-0 text-center">{t("page.profile.stats.progress")}</div>
+                                <div className="w-[72px] shrink-0 text-center">{t("page.profile.stats.nextExp")}</div>
                             </div>
                             {modalRows.map(renderDesktopRow)}
-                            {modalRows.length === 0 && <div className="text-center py-8 text-sm text-slate-400">暂无羁绊数据</div>}
+                            {modalRows.length === 0 && <div className="text-center py-8 text-sm text-slate-400">{t("page.profile.stats.noBondData")}</div>}
                         </div>
                     </div>
                 </div>

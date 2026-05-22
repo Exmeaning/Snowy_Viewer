@@ -1,25 +1,28 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { getMangaMeta } from "@/lib/metadata";
-import { DETAIL_SEO_SUFFIX } from "@/lib/seo-keywords";
+import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
+import { formatDetailSeoDescription } from "@/lib/seo-keywords";
 import MangaDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
+    const locale = await getRequestSeoLocale();
     const manga = getMangaMeta(Number(id));
 
-    const title = manga?.title || `第${id}话`;
-    const description = `Project Sekai 官方四格漫画 - ${title}` + DETAIL_SEO_SUFFIX;
+    const title = manga?.title || `Episode ${id}`;
+    const description = formatDetailSeoDescription("manga", { title }, locale);
     const ogImage = `https://moe.exmeaning.com/mangas/${id}.png`;
 
-    return {
+    return buildDetailMetadata({
+        locale,
         title,
         description,
-        openGraph: { title, description, images: [ogImage] },
-        twitter: { card: "summary_large_image", title, description, images: [ogImage] },
-    };
+        path: `/manga/${id}`,
+        images: [ogImage],
+    });
 }
 
 export default function MangaDetailPage() {

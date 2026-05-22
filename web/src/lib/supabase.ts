@@ -4,8 +4,8 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 export interface ServerConfig {
     id: string;
-    name: string;
-    region: string;
+    nameKey: string;
+    regionKey: string;
     url: string;
     anonKey: string;
 }
@@ -13,30 +13,30 @@ export interface ServerConfig {
 export const SERVERS: ServerConfig[] = [
     {
         id: 'tokyo-1',
-        name: '东京1区',
-        region: '🇯🇵 日本',
+        nameKey: 'common.relayServers.tokyo1.name',
+        regionKey: 'common.relayServers.regions.japan',
         url: 'https://kcjsalozlbxxuupboslq.supabase.co',
         anonKey: 'sb_publishable_zHj3Vsj7mJbmwvPKzl-FJA_gmBipKUR',
     },
     {
         id: 'tokyo-2',
-        name: '东京2区',
-        region: '🇯🇵 日本',
+        nameKey: 'common.relayServers.tokyo2.name',
+        regionKey: 'common.relayServers.regions.japan',
         url: 'https://oxnpfchskxvgwnwzhlwf.supabase.co',
         anonKey: 'sb_publishable_SNA37JWC_3gjnTsLHUKy7Q_mmKY37Ov',
     },
 
     {
         id: 'seoul-1',
-        name: '首尔1区',
-        region: '🇰🇷 韩国',
+        nameKey: 'common.relayServers.seoul1.name',
+        regionKey: 'common.relayServers.regions.korea',
         url: 'https://xembzvtfhohpzzipbmmv.supabase.co',
         anonKey: 'sb_publishable_r_bqjcOiQ-K3EWfcMCsJkA_2M74AQRS',
     },
     {
         id: 'singapore-1',
-        name: '新加坡1区',
-        region: '🇸🇬 新加坡',
+        nameKey: 'common.relayServers.singapore1.name',
+        regionKey: 'common.relayServers.regions.singapore',
         url: 'https://ivrqjbzftiatuotaclwg.supabase.co',
         anonKey: 'sb_publishable_2VtZNp9dwNEVDUeuG1GhvA_XUwAMvIU',
     },

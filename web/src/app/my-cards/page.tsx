@@ -1,10 +1,7 @@
-import { Metadata } from "next";
 import MyCardsClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "卡牌进度",
-    description: "Project Sekai 卡牌收集进度追踪",
-};
+export const generateMetadata = pageMetadata("my_cards");
 
 export default function MyCardsPage() {
     return <MyCardsClient />;

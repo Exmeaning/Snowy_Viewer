@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,7 +8,6 @@ import MainLayout from "@/components/MainLayout";
 import {
     ICardInfo,
     ISkillInfo,
-    CHARACTER_NAMES,
     ATTR_COLORS,
     ATTR_NAMES,
     UNIT_DATA,
@@ -17,18 +16,20 @@ import {
     isTrainableCard,
     getRarityNumber,
     CardAttribute,
-    SUPPORT_UNIT_NAMES,
+    SUPPORT_UNIT_LABEL_KEYS,
 } from "@/types/types";
 import { getCardFullUrl, getCardThumbnailUrl, getEventBannerUrl, getGachaLogoUrl, getCardGachaVoiceUrl, getCostumeThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
 import { useRef } from "react";
 import { formatSkillDescription } from "@/lib/skill";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { useTranslation } from "@/contexts/TranslationContext";
+import { getCharacterName } from "@/lib/i18n";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
-import { ICostumeInfo, IMoeCostumeData, PART_TYPE_NAMES } from "@/types/costume";
+import { ICostumeInfo, IMoeCostumeData, PART_TYPE_LABEL_KEYS } from "@/types/costume";
 
 // Max levels by rarity
 const MAX_LEVELS: Record<string, { normal: number; trained?: number }> = {
@@ -37,16 +38,6 @@ const MAX_LEVELS: Record<string, { normal: number; trained?: number }> = {
     rarity_3: { normal: 50, trained: 60 },
     rarity_4: { normal: 50, trained: 60 },
     rarity_birthday: { normal: 50, trained: 60 },
-};
-
-const SUPPLY_TYPE_NAMES: Record<string, string> = {
-    "normal": "常驻",
-    "birthday": "生日",
-    "term_limited": "期间限定",
-    "colorful_festival_limited": "CFES限定",
-    "bloom_festival_limited": "BFES限定",
-    "unit_event_limited": "WorldLink限定",
-    "collaboration_limited": "联动限定",
 };
 
 interface CardSupplyInfo {
@@ -67,6 +58,7 @@ interface RelatedGachaInfo {
 }
 
 export default function CardDetailPage() {
+    const { t, formatDate: formatLocaleDate } = useI18n();
     const params = useParams();
     const searchParams = useSearchParams();
     const cardId = Number(params.id);
@@ -129,9 +121,10 @@ export default function CardDetailPage() {
                 // Handle Supply Type
                 const supply = suppliesData.find((s) => s.id === foundCard.cardSupplyId);
                 if (supply && supply.cardSupplyType) {
-                    setSupplyName(SUPPLY_TYPE_NAMES[supply.cardSupplyType] || supply.cardSupplyType);
+                    const localizedSupply = t("common.cardSupplyTypes." + supply.cardSupplyType);
+                    setSupplyName(localizedSupply !== "common.cardSupplyTypes." + supply.cardSupplyType ? localizedSupply : supply.cardSupplyType);
                 } else {
-                    setSupplyName("常驻"); // Default
+                    setSupplyName(t("common.cardSupplyTypes.normal")); // Default
                 }
 
                 // ... (rest of logic)
@@ -190,13 +183,13 @@ export default function CardDetailPage() {
         if (cardId) {
             fetchCard();
         }
-    }, [cardId]);
+    }, [cardId, t]);
 
     // Computed values
     const trainable = card ? isTrainableCard(card) : false;
     const isBirthday = card?.cardRarityType === "rarity_birthday";
     const rarityNum = card ? getRarityNumber(card.cardRarityType) : 1;
-    const characterName = card ? CHARACTER_NAMES[card.characterId] || `Character ${card.characterId}` : "";
+    const characterName = card ? getCharacterName(t, card.characterId) : "";
 
     // Cards that only have trained images (no normal version)
     const TRAINED_ONLY_CARDS = [1167];
@@ -331,7 +324,7 @@ export default function CardDetailPage() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">加载中...</p>
+                        <p className="mt-4 text-slate-500">{t("common.state.loading")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -348,8 +341,8 @@ export default function CardDetailPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">卡牌 {cardId} 正在由SnowyViewer抓紧构建</h2>
-                        <p className="text-slate-500 mb-6">少安毋躁~预计12H内更新</p>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">{t("page.cards.notFoundTitle")}</h2>
+                        <p className="text-slate-500 mb-6">{t("page.cards.notFoundDesc")}</p>
                         <Link
                             href="/cards"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
@@ -357,7 +350,7 @@ export default function CardDetailPage() {
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            返回卡牌列表
+                            {t("page.cards.backToList")}
                         </Link>
                     </div>
                 </div>
@@ -370,7 +363,7 @@ export default function CardDetailPage() {
             <ImagePreviewModal
                 isOpen={imageViewerOpen}
                 onClose={() => setImageViewerOpen(false)}
-                title={`${card.prefix} 卡面大图`}
+                title={t("page.cards.detailTitle", { name: card.prefix })}
                 imageUrl={mainImageUrl}
                 alt={card.prefix}
                 fileName={`card_${card.id}_${effectiveShowTrained ? "trained" : "normal"}.png`}
@@ -456,12 +449,12 @@ export default function CardDetailPage() {
                                 {!isTrainedOnlyCard && (
                                     <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
                                         <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-                                            <span className="text-sm font-bold text-slate-600">通常</span>
+                                            <span className="text-sm font-bold text-slate-600">{t("page.cards.viewNormal")}</span>
                                         </div>
                                         <div className="relative aspect-[2/1] bg-gradient-to-br from-slate-50 to-slate-100">
                                             <Image
                                                 src={getCardFullUrl(card.characterId, card.assetbundleName, false, assetSource)}
-                                                alt={`${card.prefix} - 通常`}
+                                                alt={`${card.prefix} - ${t("page.cards.viewNormal")}`}
                                                 fill
                                                 className="object-contain"
                                                 unoptimized
@@ -474,12 +467,12 @@ export default function CardDetailPage() {
                                 {(trainable && !isBirthday) && (
                                     <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
                                         <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-                                            <span className="text-sm font-bold text-slate-600">特训后</span>
+                                            <span className="text-sm font-bold text-slate-600">{t("page.cards.viewTrained")}</span>
                                         </div>
                                         <div className="relative aspect-[2/1] bg-gradient-to-br from-slate-50 to-slate-100">
                                             <Image
                                                 src={getCardFullUrl(card.characterId, card.assetbundleName, true, assetSource)}
-                                                alt={`${card.prefix} - 特训后`}
+                                                alt={`${card.prefix} - ${t("page.cards.viewTrained")}`}
                                                 fill
                                                 className="object-contain"
                                                 unoptimized
@@ -501,7 +494,7 @@ export default function CardDetailPage() {
                                                 }`}
                                             onClick={() => setShowTrained(false)}
                                         >
-                                            通常
+                                            {t("page.cards.viewNormal")}
                                         </button>
                                         <button
                                             className={`flex-1 py-3 text-sm font-bold transition-colors ${showTrained
@@ -510,7 +503,7 @@ export default function CardDetailPage() {
                                                 }`}
                                             onClick={() => setShowTrained(true)}
                                         >
-                                            特训后
+                                            {t("page.cards.viewTrained")}
                                         </button>
                                     </div>
                                 )}
@@ -538,7 +531,7 @@ export default function CardDetailPage() {
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                         </svg>
-                                        点击放大
+                                        {t("page.cards.clickExpand")}
                                     </div>
                                 </div>
 
@@ -590,13 +583,13 @@ export default function CardDetailPage() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    基本资料
+                                    {t("page.cards.basicInfo")}
                                 </h2>
                             </div>
                             <div className="divide-y divide-slate-100">
-                                <InfoRow label="卡牌ID" value={`#${card.id}`} />
+                                <InfoRow label={t("page.cards.cardIdLabel")} value={`#${card.id}`} />
                                 <InfoRow
-                                    label="称号"
+                                    label={t("common.field.name")}
                                     value={
                                         <TranslatedText
                                             original={card.prefix}
@@ -607,17 +600,17 @@ export default function CardDetailPage() {
                                         />
                                     }
                                 />
-                                <InfoRow label="角色" value={characterName} />
-                                <InfoRow label="卡牌类型" value={
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${supplyName === "常驻" ? "bg-slate-100 text-slate-500" :
-                                        supplyName === "生日" ? "bg-pink-100 text-pink-500" :
+                                <InfoRow label={t("common.filter.character")} value={characterName} />
+                                <InfoRow label={t("common.filter.cardType")} value={
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${supplyName === t("common.cardSupplyTypes.normal") ? "bg-slate-100 text-slate-500" :
+                                        supplyName === t("common.cardSupplyTypes.birthday") ? "bg-pink-100 text-pink-500" :
                                             "bg-amber-100 text-amber-600"
                                         }`}>
                                         {supplyName}
                                     </span>
                                 } />
                                 <InfoRow
-                                    label="属性"
+                                    label={t("common.filter.attribute")}
                                     value={
                                         <div className="flex items-center gap-2">
                                             <Image
@@ -634,7 +627,7 @@ export default function CardDetailPage() {
                                     }
                                 />
                                 <InfoRow
-                                    label="稀有度"
+                                    label={t("common.filter.rarity")}
                                     value={
                                         <div className="flex items-center gap-1">
                                             {isBirthday ? (
@@ -667,30 +660,30 @@ export default function CardDetailPage() {
                                     }
                                 />
                                 <InfoRow
-                                    label="发布时间"
+                                    label={t("page.cards.releasedAtLabel")}
                                     value={mounted && card.releaseAt
-                                        ? new Date(card.releaseAt).toLocaleDateString("zh-CN", {
+                                        ? formatLocaleDate(card.releaseAt, {
                                             year: "numeric",
                                             month: "long",
                                             day: "numeric",
                                         })
-                                        : card.releaseAt ? "..." : "未知"}
+                                        : card.releaseAt ? "..." : t("page.cards.unknown")}
                                 />
                                 <InfoRow
-                                    label="内部资源名称"
+                                    label={t("page.events.assetNameLabel")}
                                     value={<span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{card.assetbundleName}</span>}
                                 />
                                 {/* Support Unit - Only for Virtual Singers (characterId >= 21) */}
                                 {card.characterId >= 21 && (
                                     <InfoRow
-                                        label="团体归属"
+                                        label={t("common.filter.supportUnit")}
                                         value={
                                             <div className="flex items-center gap-2">
                                                 {card.supportUnit !== "none" && (
                                                     <div className="w-5 h-5 relative">
                                                         <Image
                                                             src={`/data/icon/${UNIT_ICON_FILES[UNIT_FIELD_TO_ID[card.supportUnit]]}`}
-                                                            alt={SUPPORT_UNIT_NAMES[card.supportUnit]}
+                                                            alt={t(SUPPORT_UNIT_LABEL_KEYS[card.supportUnit])}
                                                             fill
                                                             className="object-contain"
                                                             unoptimized
@@ -698,7 +691,7 @@ export default function CardDetailPage() {
                                                     </div>
                                                 )}
                                                 <span className={card.supportUnit === "none" ? "text-slate-400" : ""}>
-                                                    {SUPPORT_UNIT_NAMES[card.supportUnit]}
+                                                    {t(SUPPORT_UNIT_LABEL_KEYS[card.supportUnit])}
                                                 </span>
                                             </div>
                                         }
@@ -721,7 +714,7 @@ export default function CardDetailPage() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                     </svg>
-                                    数值
+                                    {t("page.cards.powerLabel")}
                                 </h2>
                             </div>
 
@@ -746,7 +739,7 @@ export default function CardDetailPage() {
                             {/* Stats Display - Simplified (No Bars) */}
                             <div className="px-5 py-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="font-bold text-slate-700">综合力</span>
+                                    <span className="font-bold text-slate-700">{t("page.cards.totalPower")}</span>
                                     <span className="text-2xl font-black text-miku">{stats.total.toLocaleString()}</span>
                                 </div>
                             </div>
@@ -760,7 +753,7 @@ export default function CardDetailPage() {
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
-                                    技能
+                                    {t("page.cards.skillTitle")}
                                 </h2>
                             </div>
                             <div className="p-5">
@@ -768,7 +761,7 @@ export default function CardDetailPage() {
                                 {skillData && (
                                     <div className="mb-4 flex items-center gap-3 pb-3 border-b border-slate-200/60">
                                         <span className="text-xs font-bold text-slate-500 whitespace-nowrap">
-                                            技能 Lv.{skillLevel}
+                                            {t("page.cards.skillTitle")} Lv.{skillLevel}
                                         </span>
                                         <input
                                             type="range"
@@ -787,10 +780,10 @@ export default function CardDetailPage() {
                                 {/* Normal Skill (Before Blooming) */}
                                 <div className={`mb-4 ${trainedSkillData ? 'pb-4 border-b border-slate-200/60' : ''}`}>
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-xs text-slate-400 uppercase tracking-wider">技能名称</span>
+                                        <span className="text-xs text-slate-400 uppercase tracking-wider">{t("page.cards.skillNameLabel")}</span>
                                         {trainedSkillData && (
                                             <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full">
-                                                开花前
+                                                {t("page.cards.beforeTrained")}
                                             </span>
                                         )}
                                     </div>
@@ -805,7 +798,7 @@ export default function CardDetailPage() {
                                     </p>
                                     <div className="p-4 bg-slate-50 rounded-xl">
                                         <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-                                            {skillDescription || "加载技能详情中..."}
+                                            {skillDescription || t("page.cards.loadingSkill")}
                                         </p>
                                     </div>
                                 </div>
@@ -815,9 +808,9 @@ export default function CardDetailPage() {
                                 {trainedSkillData && card.specialTrainingSkillName && (
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-xs text-slate-400 uppercase tracking-wider">技能名称</span>
+                                            <span className="text-xs text-slate-400 uppercase tracking-wider">{t("page.cards.skillNameLabel")}</span>
                                             <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-600 rounded-full">
-                                                开花后
+                                                {t("page.cards.afterTrained")}
                                             </span>
                                         </div>
                                         <p className="text-lg font-bold text-slate-800 mb-2">
@@ -831,7 +824,7 @@ export default function CardDetailPage() {
                                         </p>
                                         <div className="p-4 bg-gradient-to-br from-amber-50 to-slate-50 rounded-xl ring-1 ring-amber-200/50">
                                             <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-                                                {trainedSkillDescription || "加载技能详情中..."}
+                                                {trainedSkillDescription || t("page.cards.loadingSkill")}
                                             </p>
                                         </div>
                                     </div>
@@ -847,7 +840,7 @@ export default function CardDetailPage() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                         </svg>
-                                        卡片服装
+                                        {t("page.cards.costumeTitle")}
                                     </h2>
                                 </div>
                                 <div className="p-5">
@@ -865,16 +858,16 @@ export default function CardDetailPage() {
                                             <svg className="w-5 h-5 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                             </svg>
-                                            卡牌剧情
+                                            {t("page.cards.storyTitle")}
                                         </h2>
                                     </div>
                                     <div className="p-5 flex items-center justify-between group-hover:bg-pink-50/30 transition-colors">
                                         <div>
                                             <p className="font-bold text-slate-800 group-hover:text-pink-600 transition-colors">
-                                                阅读卡牌剧情
+                                                {t("page.cards.storyReadBtn")}
                                             </p>
                                             <p className="text-xs text-slate-500 mt-1">
-                                                点击查看本卡牌的前后篇故事
+                                                {t("page.cards.storyReadDesc")}
                                             </p>
                                         </div>
                                         <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center group-hover:bg-pink-200 transition-colors">
@@ -895,7 +888,7 @@ export default function CardDetailPage() {
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        相关活动
+                                        {t("page.cards.relatedEventTitle")}
                                     </h2>
                                 </div>
                                 <div className="p-0">
@@ -939,7 +932,7 @@ export default function CardDetailPage() {
                                         <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        关联卡池
+                                        {t("page.cards.relatedGachaTitle")}
                                     </h2>
                                 </div>
                                 <div className="p-4 grid grid-cols-1 gap-3">
@@ -995,7 +988,7 @@ export default function CardDetailPage() {
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        返回卡牌列表
+                        {t("page.cards.backToList")}
                     </Link>
                 </div>
             </div >
@@ -1015,6 +1008,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 // Gacha Phrase Row Component
 function GachaPhraseRow({ phrase, assetbundleName }: { phrase: string; assetbundleName: string }) {
+    const { t } = useI18n();
     const [isPlaying, setIsPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -1033,7 +1027,7 @@ function GachaPhraseRow({ phrase, assetbundleName }: { phrase: string; assetbund
 
     return (
         <div className="px-5 py-3 flex flex-col gap-2">
-            <span className="text-sm text-slate-500">抽卡台词</span>
+            <span className="text-sm text-slate-500">{t("page.cards.gachaPhraseLabel")}</span>
             <div className="flex items-start gap-3">
                 <button
                     onClick={togglePlay}
@@ -1099,7 +1093,13 @@ function CostumeGrid({ costumes, assetSource }: { costumes: ICostumeInfo[], asse
 
 function CostumeInlineDetail({ costume, assetSource }: { costume: ICostumeInfo, assetSource: AssetSourceType }) {
     const [selectedColorId, setSelectedColorId] = useState(1);
-    const { t } = useTranslation();
+    const { t } = useI18n();
+    const { t: translateGameData } = useTranslation();
+    const translateWithFallback = useCallback((key: string | undefined, fallback: string) => {
+        if (!key) return fallback;
+        const label = t(key);
+        return label === key ? fallback : label;
+    }, [t]);
 
     // Build display items (same logic as /costumes/:ID)
     const displayItems = useMemo(() => {
@@ -1188,7 +1188,7 @@ function CostumeInlineDetail({ costume, assetSource }: { costume: ICostumeInfo, 
                     href={`/costumes/${costume.costumeNumber}`}
                     className="flex-shrink-0 text-xs text-miku hover:text-miku-dark font-medium transition-colors"
                 >
-                    详情 →
+                    {t("page.cards.costumeDetailLink")}
                 </Link>
             </div>
 
@@ -1226,14 +1226,14 @@ function CostumeInlineDetail({ costume, assetSource }: { costume: ICostumeInfo, 
                             </div>
                             <div className="absolute inset-x-0 bottom-0 p-0.5 pointer-events-none">
                                 <span className="inline-block px-1 py-0.5 bg-white/90 backdrop-blur text-[9px] font-bold text-slate-600 rounded shadow-sm">
-                                    {PART_TYPE_NAMES[item.partType] || item.partType}
+                                    {translateWithFallback(PART_TYPE_LABEL_KEYS[item.partType], item.partType)}
                                 </span>
                             </div>
                             {item.characterId && (
                                 <div className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full overflow-hidden ring-1 ring-slate-200 bg-white shadow-sm z-10">
                                     <Image
                                         src={getCharacterIconUrl(item.characterId)}
-                                        alt={CHARACTER_NAMES[item.characterId] || ""}
+                                        alt={getCharacterName(t, item.characterId)}
                                         width={20}
                                         height={20}
                                         className="w-full h-full object-cover"
@@ -1246,7 +1246,7 @@ function CostumeInlineDetail({ costume, assetSource }: { costume: ICostumeInfo, 
                 })}
                 {displayItems.length === 0 && (
                     <div className="col-span-4 py-4 flex items-center justify-center text-slate-400 text-xs">
-                        暂无部件数据
+                        {t("page.cards.costumeNoParts")}
                     </div>
                 )}
             </div>
@@ -1254,7 +1254,7 @@ function CostumeInlineDetail({ costume, assetSource }: { costume: ICostumeInfo, 
             {/* Color Selector */}
             {availableColors.length > 1 && (
                 <div className="px-3 py-2.5 border-t border-slate-100">
-                    <p className="text-[10px] font-bold text-slate-500 mb-1.5">配色方案</p>
+                    <p className="text-[10px] font-bold text-slate-500 mb-1.5">{t("page.cards.costumeColorSchemes")}</p>
                     <div className="flex gap-1.5 overflow-x-auto md:flex-wrap md:overflow-x-visible scrollbar-hide pb-1 md:pb-0">
                         {availableColors.map(variant => {
                             const isSelected = selectedColorId === variant.colorId;
@@ -1276,7 +1276,7 @@ function CostumeInlineDetail({ costume, assetSource }: { costume: ICostumeInfo, 
                                             unoptimized
                                         />
                                     </div>
-                                    {t("costumes", "colorName", variant.colorName) || variant.colorName}
+                                    {translateGameData("costumes", "colorName", variant.colorName) || variant.colorName}
                                 </button>
                             );
                         })}

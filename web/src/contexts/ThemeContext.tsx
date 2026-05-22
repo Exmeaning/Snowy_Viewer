@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { CHAR_COLORS, CHAR_NAMES } from "@/types/types";
+import { CHAR_COLORS } from "@/types/types";
 import {
     COLOR_SCHEME_STORAGE_KEY,
     DARK_MEDIA_QUERY,
@@ -17,6 +17,7 @@ import {
     DEFAULT_SHOW_ADS,
     SHOW_ADS_STORAGE_KEY,
 } from "@/lib/ads";
+import { UI_LOCALE_STORAGE_KEY, normalizeUiLocale } from "@/lib/i18n";
 
 // Default theme color (Miku)
 const DEFAULT_THEME_CHAR = "21";
@@ -48,6 +49,18 @@ const VALID_ASSET_SOURCES: AssetSourceType[] = [
 // Server source type
 export type ServerSourceType = "jp" | "cn";
 const DEFAULT_SERVER_SOURCE: ServerSourceType = "jp";
+const LLM_TRANSLATION_STORAGE_KEY = "use-llm-translation";
+
+function getDefaultLLMTranslationSetting(): boolean {
+    if (typeof window === "undefined") return true;
+
+    const savedLLMTranslation = localStorage.getItem(LLM_TRANSLATION_STORAGE_KEY);
+    if (savedLLMTranslation === "true") return true;
+    if (savedLLMTranslation === "false") return false;
+
+    const savedUiLocale = localStorage.getItem(UI_LOCALE_STORAGE_KEY);
+    return normalizeUiLocale(savedUiLocale) === "zh-CN";
+}
 
 export function getAssetSourceRegion(source: AssetSourceType): ServerSourceType {
     return source.endsWith("-cn") ? "cn" : "jp";
@@ -146,11 +159,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             // Load asset source setting (with legacy migration)
             const savedAssetSource = localStorage.getItem("asset-source");
             let loadedAssetSource: AssetSourceType = migrateLegacyAssetSource(savedAssetSource);
-            // Load LLM translation setting (default ON, so only turn off if explicitly "false")
-            const savedLLMTranslation = localStorage.getItem("use-llm-translation");
-            if (savedLLMTranslation === "false") {
-                setUseLLMTranslationState(false);
-            }
+            // Load LLM translation setting. Defaults to ON for Chinese UI and OFF for non-Chinese UI.
+            setUseLLMTranslationState(getDefaultLLMTranslationSetting());
             // Load ads display setting
             const savedShowAds = localStorage.getItem(SHOW_ADS_STORAGE_KEY);
             if (ADS_FEATURE_ENABLED) {
@@ -318,7 +328,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const setUseLLMTranslation = (enabled: boolean) => {
         setUseLLMTranslationState(enabled);
         try {
-            localStorage.setItem("use-llm-translation", enabled ? "true" : "false");
+            localStorage.setItem(LLM_TRANSLATION_STORAGE_KEY, enabled ? "true" : "false");
         } catch (e) {
             console.error("Failed to save LLM translation setting to localStorage:", e);
         }
@@ -410,5 +420,5 @@ function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
     } : null;
 }
 
-// Export character data for use in settings
-export { CHAR_NAMES, CHAR_COLORS };
+// Export character color data for use in settings
+export { CHAR_COLORS };

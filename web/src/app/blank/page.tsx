@@ -1,10 +1,8 @@
 import React from "react";
-import type { Metadata } from "next";
 import BackgroundPattern from "@/components/BackgroundPattern";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "空白素材页",
-};
+export const generateMetadata = pageMetadata("blank");
 
 export default function BlankPage() {
     return (

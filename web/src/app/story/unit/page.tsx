@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import StoryUnitListClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = { title: "主线剧情", description: "浏览 Project Sekai 主线剧情" };
+export const generateMetadata = pageMetadata("story_unit");
 
 export default function StoryUnitListPage() {
     return <StoryUnitListClient />;

@@ -3,8 +3,9 @@ import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } fr
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchMasterData } from "@/lib/fetch";
-import { ICardInfo, CHARACTER_NAMES, UNIT_DATA, UNIT_ICON_FILES } from "@/types/types";
+import { ICardInfo, UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCardFullUrl, getCharacterIconUrl, getStampUrl } from "@/lib/assets";
+import { getCharacterName } from "@/lib/i18n";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
     generateRoomCode, createRoom, findRoom, findRoomAcrossServers,
@@ -14,6 +15,7 @@ import {
 } from "@/lib/supabase";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import Modal from "@/components/common/Modal";
+import { useI18n } from "@/contexts/I18nContext";
 import "./multiplayer.css";
 
 // ==================== CONSTANTS ====================
@@ -34,6 +36,7 @@ const RARITY_OPTIONS = [
     { id: "rarity_birthday", num: 5 },
 ];
 const DEFAULT_RARITIES = ["rarity_3", "rarity_4"];
+const PLAYABLE_CHARACTER_IDS = UNIT_DATA.flatMap((unit) => unit.charIds);
 
 type Difficulty = "easy" | "normal" | "hard" | "extreme";
 
@@ -42,18 +45,27 @@ type DistortionType = "none" | "hue-rotate" | "flip-v" | "flip-h" | "grayscale" 
 
 interface ActiveDistortion {
     type: DistortionType;
-    label: string;
 }
 
-const DISTORTION_POOL: { type: DistortionType; label: string }[] = [
-    { type: "none", label: "不操作" },
-    { type: "hue-rotate", label: "色相反转" },
-    { type: "flip-v", label: "翻转" },
-    { type: "flip-h", label: "镜像" },
-    { type: "grayscale", label: "灰度" },
-    { type: "invert", label: "反色" },
-    { type: "rgb-shuffle", label: "RGB打乱" },
+const DISTORTION_POOL: { type: DistortionType }[] = [
+    { type: "none" },
+    { type: "hue-rotate" },
+    { type: "flip-v" },
+    { type: "flip-h" },
+    { type: "grayscale" },
+    { type: "invert" },
+    { type: "rgb-shuffle" },
 ];
+
+const DISTORTION_LABEL_KEYS: Record<DistortionType, string> = {
+    none: "none",
+    "hue-rotate": "hueRotate",
+    "flip-v": "flipV",
+    "flip-h": "flipH",
+    grayscale: "grayscale",
+    invert: "invert",
+    "rgb-shuffle": "rgbShuffle",
+};
 
 interface MultiplayerSettings {
     difficulty: Difficulty;
@@ -175,6 +187,15 @@ function MultiplayerContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { themeColor } = useTheme();
+    const { t } = useI18n();
+    const getRelayServerName = useCallback((serverId: string) => {
+        const server = SERVERS.find(s => s.id === serverId);
+        return server ? t(server.nameKey) : serverId;
+    }, [t]);
+    const getRelayServerRegion = useCallback((serverId: string) => {
+        const server = SERVERS.find(s => s.id === serverId);
+        return server ? t(server.regionKey) : "";
+    }, [t]);
 
     // Phase & identity
     const [phase, setPhase] = useState<Phase>("lobby");
@@ -305,11 +326,11 @@ function MultiplayerContent() {
             setCards(validCards);
         } catch (e) {
             console.error("Failed to load cards", e);
-            setLoadError("卡面数据加载失败，请检查网络后重试");
+            setLoadError(t("page.guessWho.common.errors.cardLoadFailed"));
         } finally {
             setCardsLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         loadCards();
@@ -317,7 +338,7 @@ function MultiplayerContent() {
 
     // Available characters based on unit filter
     const availableCharacters = useMemo(() => {
-        if (gameSettings.selectedUnitIds.length === 0) return Object.keys(CHARACTER_NAMES).map(Number);
+        if (gameSettings.selectedUnitIds.length === 0) return PLAYABLE_CHARACTER_IDS;
         const chars: number[] = [];
         UNIT_DATA.forEach(unit => {
             if (gameSettings.selectedUnitIds.includes(unit.id)) {
@@ -529,12 +550,12 @@ function MultiplayerContent() {
 
             // Show kill notification
             if (killInfo) {
-                const killerName = CHARACTER_NAMES[killInfo.killerCharId] || "???";
-                setKillNotify(`⚔️ ${killerName} 发动斩杀!`);
+                const killerName = getCharacterName(t, killInfo.killerCharId);
+                setKillNotify(t("page.guessWho.multiplayer.killNotify", { name: killerName }));
                 setTimeout(() => setKillNotify(""), 3000);
             }
             if (blockInfo && blockInfo.playerId === mySessionId) {
-                setKillNotify(`🛡️ 获得格挡条!`);
+                setKillNotify(t("page.guessWho.multiplayer.blockNotify"));
                 setTimeout(() => setKillNotify(""), 2000);
             }
 
@@ -1287,7 +1308,7 @@ function MultiplayerContent() {
 
         const room = await createRoom(code, hostPlayer, selectedServerId);
         if (!room) {
-            setError("创建房间失败，请重试");
+            setError(t("page.guessWho.multiplayer.errors.createRoomFailed"));
             return;
         }
 
@@ -1321,7 +1342,7 @@ function MultiplayerContent() {
     const handleJoinRoom = async () => {
         setError("");
         if (!joinCode.trim()) {
-            setError("请输入房间号");
+            setError(t("page.guessWho.multiplayer.errors.roomCodeRequired"));
             return;
         }
 
@@ -1340,7 +1361,7 @@ function MultiplayerContent() {
             }
 
             if (!foundRoom) {
-                setError("房间不存在（已搜索所有服务器）");
+                setError(t("page.guessWho.multiplayer.errors.roomNotFound"));
                 return;
             }
 
@@ -1363,12 +1384,12 @@ function MultiplayerContent() {
             }
 
             if (room.status !== "waiting") {
-                setError("游戏已开始，无法加入");
+                setError(t("page.guessWho.multiplayer.errors.gameAlreadyStarted"));
                 return;
             }
 
             if (currentPlayers.length >= MAX_PLAYERS) {
-                setError("房间已满");
+                setError(t("page.guessWho.multiplayer.errors.roomFull"));
                 return;
             }
 
@@ -1376,7 +1397,7 @@ function MultiplayerContent() {
             const charTaken = currentPlayers.some((p: RoomPlayer) => Number(p.characterId) === Number(myCharId));
 
             if (charTaken) {
-                setError("该角色已被选择，请换一个");
+                setError(t("page.guessWho.multiplayer.errors.characterTaken"));
                 return;
             }
 
@@ -1389,7 +1410,7 @@ function MultiplayerContent() {
 
             const updated = await updateRoomPlayers(room.id, [...currentPlayers, newPlayer], foundServerId);
             if (!updated) {
-                setError("加入房间失败，请重试");
+                setError(t("page.guessWho.multiplayer.errors.joinRoomFailed"));
                 return;
             }
 
@@ -1447,7 +1468,7 @@ function MultiplayerContent() {
             setPhase("room");
         } catch (e) {
             console.error("Join room exception:", e);
-            setError("加入房间时发生错误");
+            setError(t("page.guessWho.multiplayer.errors.joinRoomException"));
         }
     };
 
@@ -1476,7 +1497,7 @@ function MultiplayerContent() {
         });
 
         if (filtered.length < MAX_ROUNDS) {
-            setError(`卡池不足 (${filtered.length})，请扩大筛选范围`);
+            setError(t("page.guessWho.multiplayer.errors.deckInsufficient", { count: filtered.length }));
             return;
         }
 
@@ -1571,21 +1592,21 @@ function MultiplayerContent() {
     if (phase === "lobby") {
         return (
             <div className="mp-container">
-                <button className="mp-back-btn" onClick={() => router.push("/guess-who/")} title="返回">
+                <button className="mp-back-btn" onClick={() => router.push("/guess-who/")} title={t("page.guessWho.multiplayer.backTitle")}>
                     ←
                 </button>
                 <div className="mp-lobby">
                     <div className="mp-lobby-header">
-                        <div className="mp-lobby-title">联机模式</div>
-                        <div className="mp-lobby-subtitle">与好友一起猜卡面</div>
+                        <div className="mp-lobby-title">{t("page.guessWho.multiplayer.lobbyTitle")}</div>
+                        <div className="mp-lobby-subtitle">{t("page.guessWho.multiplayer.lobbySubtitle")}</div>
                     </div>
 
                     {/* Character Selection */}
                     <div className="mp-card">
-                        <div className="mp-card-title">选择你的角色ID</div>
+                        <div className="mp-card-title">{t("page.guessWho.multiplayer.chooseCharacter")}</div>
                         <div className="mp-char-grid">
-                            {Object.entries(CHARACTER_NAMES).map(([idStr, name]) => {
-                                const id = Number(idStr);
+                            {PLAYABLE_CHARACTER_IDS.map((id) => {
+                                const name = getCharacterName(t, id);
                                 return (
                                     <button
                                         key={id}
@@ -1599,7 +1620,7 @@ function MultiplayerContent() {
                             })}
                         </div>
                         <div style={{ textAlign: "center", marginTop: "0.5rem", fontSize: "0.875rem", color: "#94a3b8" }}>
-                            当前: <strong style={{ color: themeColor }}>{CHARACTER_NAMES[myCharId]}</strong>
+                            {t("page.guessWho.multiplayer.currentCharacter")} <strong style={{ color: themeColor }}>{getCharacterName(t, myCharId)}</strong>
                         </div>
                     </div>
 
@@ -1609,13 +1630,13 @@ function MultiplayerContent() {
                             className={`mp-tab ${lobbyTab === "create" ? "active" : ""}`}
                             onClick={() => setLobbyTab("create")}
                         >
-                            开设房间
+                            {t("page.guessWho.multiplayer.createTab")}
                         </button>
                         <button
                             className={`mp-tab ${lobbyTab === "join" ? "active" : ""}`}
                             onClick={() => setLobbyTab("join")}
                         >
-                            加入房间
+                            {t("page.guessWho.multiplayer.joinTab")}
                         </button>
                     </div>
 
@@ -1624,7 +1645,7 @@ function MultiplayerContent() {
                             {/* Server Selection Card (Compact) */}
                             <div className="mp-card">
                                 <div className="mp-card-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <span>服务器选择</span>
+                                    <span>{t("page.guessWho.multiplayer.serverSelection")}</span>
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => setIsServerListExpanded(!isServerListExpanded)}
@@ -1633,7 +1654,7 @@ function MultiplayerContent() {
                                                 color: themeColor, cursor: "pointer", fontWeight: 600,
                                             }}
                                         >
-                                            {isServerListExpanded ? "收起列表" : "更换服务器"}
+                                            {isServerListExpanded ? t("page.guessWho.multiplayer.collapseServerList") : t("page.guessWho.multiplayer.changeServer")}
                                         </button>
                                         <button
                                             onClick={testAllLatencies}
@@ -1645,7 +1666,7 @@ function MultiplayerContent() {
                                                 opacity: isTestingLatency ? 0.5 : 1,
                                             }}
                                         >
-                                            {isTestingLatency ? "测速中..." : "↻"}
+                                            {isTestingLatency ? t("page.guessWho.multiplayer.testingLatency") : "↻"}
                                         </button>
                                     </div>
                                 </div>
@@ -1658,10 +1679,10 @@ function MultiplayerContent() {
                                     >
                                         <div className="mp-server-info">
                                             <div className="mp-server-name">
-                                                {SERVERS.find(s => s.id === selectedServerId)?.name || selectedServerId}
-                                                <span className="bg-miku/10 text-miku text-[10px] px-1.5 py-0.5 rounded ml-2">当前选择</span>
+                                                {getRelayServerName(selectedServerId)}
+                                                <span className="bg-miku/10 text-miku text-[10px] px-1.5 py-0.5 rounded ml-2">{t("page.guessWho.multiplayer.currentSelected")}</span>
                                             </div>
-                                            <div className="mp-server-region">{SERVERS.find(s => s.id === selectedServerId)?.region}</div>
+                                            <div className="mp-server-region">{getRelayServerRegion(selectedServerId)}</div>
                                         </div>
                                         <div className={`mp-server-latency ${(serverLatencies.get(selectedServerId) || 999) < 100 ? "signal-good" :
                                             (serverLatencies.get(selectedServerId) || 999) < 200 ? "signal-ok" : "signal-bad"
@@ -1701,13 +1722,13 @@ function MultiplayerContent() {
                                                     }}
                                                 >
                                                     <div className="mp-server-info">
-                                                        <div className="mp-server-name">{server.name}</div>
-                                                        <div className="mp-server-region">{server.region}</div>
+                                                        <div className="mp-server-name">{t(server.nameKey)}</div>
+                                                        <div className="mp-server-region">{t(server.regionKey)}</div>
                                                     </div>
                                                     <div className={`mp-server-latency ${signalClass}`}>
                                                         <span className="mp-server-signal">{signalIcon}</span>
                                                         {latency !== undefined ? (
-                                                            latency < 0 ? "超时" : `${latency}ms`
+                                                            latency < 0 ? t("page.guessWho.multiplayer.latencyTimeout") : `${latency}ms`
                                                         ) : (
                                                             isTestingLatency ? "..." : "--"
                                                         )}
@@ -1719,38 +1740,38 @@ function MultiplayerContent() {
                                 )}
 
                                 <div className="mp-server-note">
-                                    ℹ️ 系统已自动选择延迟最低的服务器
+                                    {t("page.guessWho.multiplayer.autoServerNote")}
                                 </div>
                                 <div className="text-[10px] text-slate-400 mt-2 p-2 bg-slate-50 border border-slate-100 rounded">
-                                    ⚠️ 你连接的是位于<strong>日本/韩国/新加坡</strong>的公共AWS中继服务器。公共AWS服务器存在每月配额，配额用完即停，请合理使用。
+                                    {t("page.guessWho.multiplayer.awsQuotaWarningPrefix")}<strong>{t("page.guessWho.multiplayer.awsRegions")}</strong>{t("page.guessWho.multiplayer.awsQuotaWarningSuffix")}
                                 </div>
                             </div>
 
                             {/* Game Rules Card */}
                             <div className="mp-card">
                                 <div className="mp-card-title flex justify-between items-center">
-                                    <span>游戏规则</span>
+                                    <span>{t("page.guessWho.multiplayer.rules")}</span>
                                     <button
                                         onClick={() => setShowRules(true)}
                                         className="text-xs text-miku font-bold hover:underline"
                                     >
-                                        查看详细规则
+                                        {t("page.guessWho.multiplayer.viewDetailedRules")}
                                     </button>
                                 </div>
                                 <div className="text-xs text-slate-500 space-y-1">
-                                    <p>• <span className="font-bold">无限次猜测:</span> 猜错扣血, 猜对得分</p>
-                                    <p>• <span className="font-bold">斩杀/格挡:</span> 首猜即中可斩杀/格挡</p>
-                                    <p>• <span className="font-bold">最后机会:</span> 濒死状态下首猜即中可复活</p>
+                                    <p>• <span className="font-bold">{t("page.guessWho.multiplayer.ruleSummary.unlimitedTitle")}</span> {t("page.guessWho.multiplayer.ruleSummary.unlimitedDesc")}</p>
+                                    <p>• <span className="font-bold">{t("page.guessWho.multiplayer.ruleSummary.killBlockTitle")}</span> {t("page.guessWho.multiplayer.ruleSummary.killBlockDesc")}</p>
+                                    <p>• <span className="font-bold">{t("page.guessWho.multiplayer.ruleSummary.lastStandTitle")}</span> {t("page.guessWho.multiplayer.ruleSummary.lastStandDesc")}</p>
                                 </div>
                             </div>
 
                             {/* Game Settings Card */}
                             <div className="mp-card">
-                                <div className="mp-card-title">游戏设置</div>
+                                <div className="mp-card-title">{t("page.guessWho.multiplayer.gameSettings")}</div>
 
                                 {/* Difficulty */}
                                 <div style={{ marginBottom: "1rem" }}>
-                                    <div className="mp-settings-label">难度设置</div>
+                                    <div className="mp-settings-label">{t("page.guessWho.multiplayer.difficultySetting")}</div>
                                     <div className="mp-settings-grid">
                                         {(["easy", "normal", "hard", "extreme"] as Difficulty[]).map(d => (
                                             <button
@@ -1758,7 +1779,7 @@ function MultiplayerContent() {
                                                 className={`mp-settings-btn ${gameSettings.difficulty === d ? (d === "extreme" ? "active-danger" : "active") : ""}`}
                                                 onClick={() => updateGameSettings(prev => ({ ...prev, difficulty: d }))}
                                             >
-                                                {d === "easy" ? "简单" : d === "normal" ? "普通" : d === "hard" ? "困难" : "极限"}
+                                                {t(`page.guessWho.common.difficultyLabels.${d}`)}
                                             </button>
                                         ))}
                                     </div>
@@ -1766,7 +1787,7 @@ function MultiplayerContent() {
 
                                 {/* Rarity */}
                                 <div style={{ marginBottom: "1rem" }}>
-                                    <div className="mp-settings-label">卡面星级</div>
+                                    <div className="mp-settings-label">{t("page.guessWho.multiplayer.raritySetting")}</div>
                                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                                         {RARITY_OPTIONS.map(({ id, num }) => {
                                             const isSelected = gameSettings.selectedRarities.includes(id);
@@ -1800,7 +1821,7 @@ function MultiplayerContent() {
 
                                 {/* Time Limit */}
                                 <div style={{ marginBottom: "1rem" }}>
-                                    <div className="mp-settings-label">猜测时间 (秒)</div>
+                                    <div className="mp-settings-label">{t("page.guessWho.multiplayer.guessTime")}</div>
                                     <input
                                         className="mp-input"
                                         type="number"
@@ -1813,48 +1834,51 @@ function MultiplayerContent() {
                                 {/* Unit Filter */}
                                 <div style={{ marginBottom: "1rem" }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                                        <div className="mp-settings-label" style={{ marginBottom: 0 }}>角色筛选</div>
+                                        <div className="mp-settings-label" style={{ marginBottom: 0 }}>{t("page.guessWho.multiplayer.characterFilter")}</div>
                                         {gameSettings.selectedUnitIds.length > 0 && (
                                             <button
                                                 style={{ fontSize: "0.75rem", color: themeColor, background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}
                                                 onClick={() => updateGameSettings(prev => ({ ...prev, selectedUnitIds: [] }))}
                                             >
-                                                重置
+                                                {t("page.guessWho.multiplayer.reset")}
                                             </button>
                                         )}
                                     </div>
                                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "center" }}>
-                                        {UNIT_DATA.map(unit => (
-                                            <button
-                                                key={unit.id}
-                                                onClick={() => updateGameSettings(prev => ({
-                                                    ...prev,
-                                                    selectedUnitIds: prev.selectedUnitIds.includes(unit.id)
-                                                        ? prev.selectedUnitIds.filter(id => id !== unit.id)
-                                                        : [...prev.selectedUnitIds, unit.id]
-                                                }))}
-                                                style={{
-                                                    padding: "4px", borderRadius: "50%", border: "none", cursor: "pointer",
-                                                    background: gameSettings.selectedUnitIds.includes(unit.id) ? "rgba(var(--color-miku-rgb),0.15)" : "transparent",
-                                                    outline: gameSettings.selectedUnitIds.includes(unit.id) ? `2px solid ${themeColor}` : "none",
-                                                    opacity: gameSettings.selectedUnitIds.includes(unit.id) ? 1 : 0.5,
-                                                    transition: "all 0.2s",
-                                                    filter: gameSettings.selectedUnitIds.length > 0 && !gameSettings.selectedUnitIds.includes(unit.id) ? "grayscale(1)" : "none",
-                                                }}
-                                            >
-                                                <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unit.name} width={36} height={36} unoptimized style={{ objectFit: "contain" }} />
-                                            </button>
-                                        ))}
+                                        {UNIT_DATA.map(unit => {
+                                            const unitLabel = t(UNIT_ID_LABEL_KEYS[unit.id] ?? `common.units.${unit.id}`);
+                                            return (
+                                                <button
+                                                    key={unit.id}
+                                                    onClick={() => updateGameSettings(prev => ({
+                                                        ...prev,
+                                                        selectedUnitIds: prev.selectedUnitIds.includes(unit.id)
+                                                            ? prev.selectedUnitIds.filter(id => id !== unit.id)
+                                                            : [...prev.selectedUnitIds, unit.id]
+                                                    }))}
+                                                    style={{
+                                                        padding: "4px", borderRadius: "50%", border: "none", cursor: "pointer",
+                                                        background: gameSettings.selectedUnitIds.includes(unit.id) ? "rgba(var(--color-miku-rgb),0.15)" : "transparent",
+                                                        outline: gameSettings.selectedUnitIds.includes(unit.id) ? `2px solid ${themeColor}` : "none",
+                                                        opacity: gameSettings.selectedUnitIds.includes(unit.id) ? 1 : 0.5,
+                                                        transition: "all 0.2s",
+                                                        filter: gameSettings.selectedUnitIds.length > 0 && !gameSettings.selectedUnitIds.includes(unit.id) ? "grayscale(1)" : "none",
+                                                    }}
+                                                >
+                                                    <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unitLabel} width={36} height={36} unoptimized style={{ objectFit: "contain" }} />
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                     <div style={{ textAlign: "center", marginTop: "0.25rem", fontSize: "0.75rem", color: "#94a3b8" }}>
-                                        已选: {gameSettings.selectedUnitIds.length > 0 ? `~${availableCharacters.length} 名角色` : "全部26名角色"}
+                                        {gameSettings.selectedUnitIds.length > 0 ? t("page.guessWho.multiplayer.selectedCharacters", { count: availableCharacters.length }) : t("page.guessWho.multiplayer.selectedAllCharacters")}
                                     </div>
                                 </div>
 
                                 {/* Loading/Error State */}
                                 {cardsLoading && (
                                     <div style={{ textAlign: "center", padding: "0.5rem", color: "#94a3b8", fontSize: "0.875rem" }}>
-                                        加载卡面数据中...
+                                        {t("page.guessWho.common.loadingCards")}
                                     </div>
                                 )}
                                 {loadError && (
@@ -1864,7 +1888,7 @@ function MultiplayerContent() {
                                             onClick={loadCards}
                                             style={{ padding: "0.375rem 1rem", background: "#dc2626", color: "white", border: "none", borderRadius: "0.5rem", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
                                         >
-                                            重新加载
+                                            {t("page.guessWho.common.reload")}
                                         </button>
                                     </div>
                                 )}
@@ -1875,7 +1899,7 @@ function MultiplayerContent() {
                                     disabled={cardsLoading || !!loadError}
                                     style={{ width: "100%", marginTop: "0.5rem", opacity: (cardsLoading || loadError) ? 0.5 : 1 }}
                                 >
-                                    {cardsLoading ? "加载中..." : "创建房间"}
+                                    {cardsLoading ? t("page.guessWho.common.loading") : t("page.guessWho.multiplayer.createRoom")}
                                 </button>
                             </div>
                         </>
@@ -1886,14 +1910,14 @@ function MultiplayerContent() {
                                 type="text"
                                 value={joinCode}
                                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                                placeholder="输入房间号"
+                                placeholder={t("page.guessWho.multiplayer.roomCodePlaceholder")}
                                 maxLength={6}
                             />
 
                             {/* Loading/Error State for join tab too */}
                             {cardsLoading && (
                                 <div style={{ textAlign: "center", padding: "0.5rem", color: "#94a3b8", fontSize: "0.875rem" }}>
-                                    加载卡面数据中...
+                                    {t("page.guessWho.common.loadingCards")}
                                 </div>
                             )}
                             {loadError && (
@@ -1903,7 +1927,7 @@ function MultiplayerContent() {
                                         onClick={loadCards}
                                         style={{ padding: "0.375rem 1rem", background: "#dc2626", color: "white", border: "none", borderRadius: "0.5rem", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
                                     >
-                                        重新加载
+                                        {t("page.guessWho.common.reload")}
                                     </button>
                                 </div>
                             )}
@@ -1914,7 +1938,7 @@ function MultiplayerContent() {
                                 disabled={cardsLoading || !!loadError}
                                 style={{ opacity: (cardsLoading || loadError) ? 0.5 : 1 }}
                             >
-                                {cardsLoading ? "加载中..." : "加入房间"}
+                                    {cardsLoading ? t("page.guessWho.common.loading") : t("page.guessWho.multiplayer.joinRoom")}
                             </button>
 
                             {error && <div className="mp-error">{error}</div>}
@@ -1926,32 +1950,32 @@ function MultiplayerContent() {
                 <Modal
                     isOpen={showRules}
                     onClose={() => setShowRules(false)}
-                    title="游戏规则说明"
+                    title={t("page.guessWho.multiplayer.rulesModalTitle")}
                     size="lg"
                 >
                     <div className="space-y-6">
                         <section>
                             <h4 className="font-black text-slate-700 mb-2 flex items-center gap-2">
                                 <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs">1</span>
-                                无限次猜测
+                                {t("page.guessWho.multiplayer.rulesModal.unlimitedTitle")}
                             </h4>
                             <p className="text-sm text-slate-500 leading-relaxed pl-8">
-                                你可以无限次尝试猜测卡面。但要注意，<strong>每次错误猜测会扣除你的血量</strong>。
-                                如果不作答或超时，每局结束时也会扣除固定血量。
+                                {t("page.guessWho.multiplayer.rulesModal.unlimitedBody1")}
+                                {t("page.guessWho.multiplayer.rulesModal.unlimitedBody2")}
                             </p>
                         </section>
 
                         <section>
                             <h4 className="font-black text-slate-700 mb-2 flex items-center gap-2">
                                 <span className="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs">2</span>
-                                斩杀 & 格挡
+                                {t("page.guessWho.multiplayer.rulesModal.killBlockTitle")}
                             </h4>
                             <div className="text-sm text-slate-500 leading-relaxed pl-8 space-y-2">
                                 <p>
-                                    <strong>斩杀：</strong>在一次机会（无错误）就猜中，会发动“斩杀”，立即扣除所有在该回合还未答题玩家的血量！
+                                    {t("page.guessWho.multiplayer.rulesModal.killBody")}
                                 </p>
                                 <p>
-                                    <strong>格挡：</strong>同样地，猜中也会赋予你“格挡条”。格挡条可以用来抵消其他人对你发动的斩杀伤害，猜中花费的次数越少，格挡条越多。
+                                    {t("page.guessWho.multiplayer.rulesModal.blockBody")}
                                 </p>
                             </div>
                         </section>
@@ -1959,12 +1983,12 @@ function MultiplayerContent() {
                         <section>
                             <h4 className="font-black text-slate-700 mb-2 flex items-center gap-2">
                                 <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs">3</span>
-                                濒死状态 (Last Stand)
+                                {t("page.guessWho.multiplayer.rulesModal.lastStandTitle")}
                             </h4>
                             <p className="text-sm text-slate-500 leading-relaxed pl-8">
-                                当你的血量扣减至0以下时，你不会立即出局，而是进入<strong>濒死状态</strong>。
-                                在下一局中，如果你能<strong>一次猜中</strong>（无错误），你将立即复活并恢复 20% 的血量！
-                                否则，你将被彻底淘汰。
+                                {t("page.guessWho.multiplayer.rulesModal.lastStandBody1")}
+                                {t("page.guessWho.multiplayer.rulesModal.lastStandBody2")}
+                                {t("page.guessWho.multiplayer.rulesModal.lastStandBody3")}
                             </p>
                         </section>
 
@@ -1973,7 +1997,7 @@ function MultiplayerContent() {
                                 onClick={() => setShowRules(false)}
                                 className="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 transition-colors"
                             >
-                                明白了
+                                {t("page.guessWho.multiplayer.rulesModal.understood")}
                             </button>
                         </div>
                     </div>
@@ -1988,7 +2012,7 @@ function MultiplayerContent() {
             <div className="mp-container">
                 <div className="mp-lobby">
                     <div className="mp-room-code">
-                        <div className="mp-room-code-label">房间号</div>
+                        <div className="mp-room-code-label">{t("page.guessWho.multiplayer.roomCode")}</div>
                         <div className="mp-room-code-value">{roomCode}</div>
                         <button
                             style={{
@@ -2004,7 +2028,7 @@ function MultiplayerContent() {
                                 navigator.clipboard.writeText(roomCode);
                             }}
                         >
-                            📋 复制房间号
+                            {t("page.guessWho.multiplayer.copyRoomCode")}
                         </button>
                         <button
                             style={{
@@ -2018,26 +2042,25 @@ function MultiplayerContent() {
                                 fontWeight: 700,
                             }}
                             onClick={() => {
-                                const diffMap: Record<string, string> = { "easy": "简单", "normal": "普通", "hard": "困难", "extreme": "极限" };
-                                const diffText = diffMap[gameSettings.difficulty] || "普通";
-                                const serverName = SERVERS.find(s => s.id === currentServerId)?.name || currentServerId;
-                                const shareUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}&server=${currentServerId}`;
-                                const shareText = `我正在SnowyViewer游玩【${diffText}】难度的猜卡大师 房间号【${roomCode}】服务器【${serverName}】 点击链接加入房间 ${shareUrl}`;
+                                const diffText = t(`page.guessWho.common.difficultyLabels.${gameSettings.difficulty}`);
+                                const serverName = getRelayServerName(currentServerId);
+                                const shareUrl = `${window.location.origin}/guess-who/multiplayer?room=${roomCode}&server=${currentServerId}`;
+                                const shareText = t("page.guessWho.multiplayer.shareText", { difficulty: diffText, roomCode, serverName, shareUrl });
                                 navigator.clipboard.writeText(shareText);
-                                alert("分享链接已复制！");
+                                alert(t("page.guessWho.multiplayer.shareCopied"));
                             }}
                         >
-                            🔗 分享链接
+                            {t("page.guessWho.multiplayer.shareLink")}
                         </button>
                         {/* Server Badge */}
                         <div style={{ textAlign: "center", marginTop: "0.25rem", fontSize: "0.7rem", color: "#94a3b8" }}>
-                            🌐 {SERVERS.find(s => s.id === currentServerId)?.name || currentServerId}
+                            🌐 {getRelayServerName(currentServerId)}
                         </div>
                     </div>
 
                     {/* Player slots */}
                     <div className="mp-card">
-                        <div className="mp-card-title">玩家 ({players.length}/{MAX_PLAYERS})</div>
+                        <div className="mp-card-title">{t("page.guessWho.multiplayer.players", { count: players.length, max: MAX_PLAYERS })}</div>
                         <div className="mp-players">
                             {[1, 2, 3, 4].map(slot => {
                                 const p = players.find(pl => pl.slot === slot);
@@ -2049,14 +2072,14 @@ function MultiplayerContent() {
                                                     <Image src={getCharacterIconUrl(p.characterId)} alt="" fill sizes="40px" unoptimized />
                                                 </div>
                                                 <div>
-                                                    <div className="mp-player-name">{CHARACTER_NAMES[p.characterId]}</div>
+                                                    <div className="mp-player-name">{getCharacterName(t, p.characterId)}</div>
                                                     <div className="mp-player-label">
-                                                        P{slot} {p.isHost ? "· 房主" : ""} {p.id === mySessionId ? "· 你" : ""}
+                                                        P{slot} {p.isHost ? t("page.guessWho.multiplayer.hostBadge") : ""} {p.id === mySessionId ? t("page.guessWho.multiplayer.youBadge") : ""}
                                                     </div>
                                                 </div>
                                             </>
                                         ) : (
-                                            <div className="mp-empty-slot">P{slot} · 等待加入...</div>
+                                            <div className="mp-empty-slot">{t("page.guessWho.multiplayer.emptySlot", { slot })}</div>
                                         )}
                                     </div>
                                 );
@@ -2066,24 +2089,24 @@ function MultiplayerContent() {
 
                     {/* Settings Display */}
                     <div className="mp-card">
-                        <div className="mp-card-title">游戏设置 {!isHost && <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: 400 }}>(房主配置)</span>}</div>
+                        <div className="mp-card-title">{t("page.guessWho.multiplayer.gameSettings")} {!isHost && <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: 400 }}>{t("page.guessWho.multiplayer.hostConfig")}</span>}</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "0.875rem" }}>
-                            <div style={{ color: "#94a3b8" }}>难度</div>
+                            <div style={{ color: "#94a3b8" }}>{t("page.guessWho.multiplayer.labels.difficulty")}</div>
                             <div style={{ color: "#334155", fontWeight: 600 }}>
-                                {gameSettings.difficulty === "easy" ? "简单" : gameSettings.difficulty === "normal" ? "普通" : gameSettings.difficulty === "hard" ? "困难" : "极限"}
+                                {t(`page.guessWho.common.difficultyLabels.${gameSettings.difficulty}`)}
                             </div>
-                            <div style={{ color: "#94a3b8" }}>时间限制</div>
-                            <div style={{ color: "#334155", fontWeight: 600 }}>{gameSettings.timeLimit}秒</div>
-                            <div style={{ color: "#94a3b8" }}>星级</div>
+                            <div style={{ color: "#94a3b8" }}>{t("page.guessWho.multiplayer.labels.timeLimit")}</div>
+                            <div style={{ color: "#334155", fontWeight: 600 }}>{gameSettings.timeLimit}{t("page.guessWho.common.secondsSuffix")}</div>
+                            <div style={{ color: "#94a3b8" }}>{t("page.guessWho.multiplayer.labels.rarity")}</div>
                             <div style={{ color: "#334155", fontWeight: 600 }}>
-                                {gameSettings.selectedRarities.length === RARITY_OPTIONS.length || gameSettings.selectedRarities.length === 0 ? "全部" : gameSettings.selectedRarities.map(r => {
+                                {gameSettings.selectedRarities.length === RARITY_OPTIONS.length || gameSettings.selectedRarities.length === 0 ? t("page.guessWho.common.all") : gameSettings.selectedRarities.map(r => {
                                     const opt = RARITY_OPTIONS.find(o => o.id === r);
                                     return opt ? (r === "rarity_birthday" ? "BD" : `${opt.num}★`) : "";
                                 }).join(", ")}
                             </div>
-                            <div style={{ color: "#94a3b8" }}>角色</div>
+                            <div style={{ color: "#94a3b8" }}>{t("page.guessWho.multiplayer.labels.character")}</div>
                             <div style={{ color: "#334155", fontWeight: 600 }}>
-                                {gameSettings.selectedUnitIds.length === 0 ? "全部" : `${availableCharacters.length}名`}
+                                {gameSettings.selectedUnitIds.length === 0 ? t("page.guessWho.common.all") : t("page.guessWho.multiplayer.characterCount", { count: availableCharacters.length })}
                             </div>
                         </div>
                     </div>
@@ -2094,12 +2117,12 @@ function MultiplayerContent() {
                             onClick={handleStartGame}
                             disabled={players.length < 2}
                         >
-                            {players.length < 2 ? "等待更多玩家..." : "开始游戏"}
+                            {players.length < 2 ? t("page.guessWho.multiplayer.waitingMorePlayers") : t("page.guessWho.multiplayer.startGame")}
                         </button>
                     ) : (
                         <div className="mp-waiting">
                             <div className="mp-waiting-text">
-                                等待房主开始游戏
+                                {t("page.guessWho.multiplayer.waitHostStart")}
                                 <span className="mp-loading-dot">.</span>
                                 <span className="mp-loading-dot">.</span>
                                 <span className="mp-loading-dot">.</span>
@@ -2108,7 +2131,7 @@ function MultiplayerContent() {
                     )}
 
                     <button className="mp-btn mp-btn-danger" onClick={handleLeaveRoom}>
-                        离开房间
+                        {t("page.guessWho.multiplayer.leaveRoom")}
                     </button>
 
                     {error && <div className="mp-error">{error}</div>}
@@ -2123,8 +2146,8 @@ function MultiplayerContent() {
             return (
                 <div className="mp-container">
                     <div className="mp-loading-screen">
-                        <div className="mp-loading-title">正在加载资源...</div>
-                        <div className="mp-loading-subtitle">预加载第一题的图片数据</div>
+                        <div className="mp-loading-title">{t("page.guessWho.multiplayer.loadingResources")}</div>
+                        <div className="mp-loading-subtitle">{t("page.guessWho.multiplayer.preloadFirstQuestion")}</div>
                         <div className="mp-loading-players">
                             {players.map(p => {
                                 const progress = playerLoadProgress.get(p.id) || 0;
@@ -2136,11 +2159,11 @@ function MultiplayerContent() {
                                                 <Image src={getCharacterIconUrl(p.characterId)} alt="" fill sizes="32px" unoptimized />
                                             </div>
                                             <div className="mp-loading-player-name">
-                                                {CHARACTER_NAMES[p.characterId]}
-                                                {p.id === mySessionId && <span className="mp-loading-you">你</span>}
+                                                {getCharacterName(t, p.characterId)}
+                                                {p.id === mySessionId && <span className="mp-loading-you">{t("page.guessWho.multiplayer.you")}</span>}
                                             </div>
                                             {isComplete && (
-                                                <div className="mp-loading-complete-badge">✓ 加载完成</div>
+                                                <div className="mp-loading-complete-badge">{t("page.guessWho.multiplayer.loadingComplete")}</div>
                                             )}
                                         </div>
                                         <div className="mp-loading-bar">
@@ -2153,7 +2176,7 @@ function MultiplayerContent() {
                                 );
                             })}
                         </div>
-                        <div className="mp-loading-hint">所有玩家加载完成后将自动开始</div>
+                        <div className="mp-loading-hint">{t("page.guessWho.multiplayer.allPlayersLoadedHint")}</div>
                     </div>
                 </div>
             );
@@ -2168,7 +2191,7 @@ function MultiplayerContent() {
                     {/* Kill notification */}
                     {killNotify && (
                         <div className="mp-kill-notify">
-                            <div className={killNotify.includes("斩杀") ? "mp-kill-text" : "mp-block-text"}>
+                            <div className={killNotify.startsWith("⚔️") ? "mp-kill-text" : "mp-block-text"}>
                                 {killNotify}
                             </div>
                         </div>
@@ -2179,7 +2202,7 @@ function MultiplayerContent() {
                     {showFeedback && feedbackCard && (
                         <div className="mp-feedback-overlay" onClick={isHost ? handleSkipFeedback : undefined}>
                             <div className={`mp-feedback-result ${feedbackCorrect ? "mp-feedback-correct" : "mp-feedback-wrong"}`}>
-                                {feedbackCorrect ? "✓ 回答正确!" : "✗ 回答错误"}
+                                {feedbackCorrect ? t("page.guessWho.multiplayer.feedbackCorrect") : t("page.guessWho.multiplayer.feedbackWrong")}
                             </div>
                             {/* Answer card image */}
                             <div style={{
@@ -2194,7 +2217,7 @@ function MultiplayerContent() {
                             }}>
                                 <Image
                                     src={getCardFullUrl(feedbackCard.characterId, feedbackCard.assetbundleName, feedbackIsTrained)}
-                                    alt={CHARACTER_NAMES[feedbackCard.characterId] || ""}
+                                    alt={getCharacterName(t, feedbackCard.characterId)}
                                     fill
                                     sizes="280px"
                                     style={{ objectFit: "contain" }}
@@ -2202,13 +2225,13 @@ function MultiplayerContent() {
                                 />
                             </div>
                             <div style={{ color: "#334155", fontSize: "1.25rem", fontWeight: 700, marginTop: "0.5rem" }}>
-                                {CHARACTER_NAMES[feedbackCard.characterId]}
+                                {getCharacterName(t, feedbackCard.characterId)}
                             </div>
                             <div style={{ color: "#94a3b8", fontSize: "0.875rem", marginTop: "0.25rem" }}>
                                 {feedbackCard.prefix}
                             </div>
                             <div style={{ color: "#64748b", fontSize: "0.75rem", marginTop: "1.5rem" }}>
-                                {isHost ? "点击跳过" : "等待下一回合..."}
+                                {isHost ? t("page.guessWho.multiplayer.skipFeedback") : t("page.guessWho.multiplayer.waitingNextRound")}
                             </div>
                         </div>
                     )}
@@ -2244,7 +2267,7 @@ function MultiplayerContent() {
                                     {/* Status indicator */}
                                     {p.isDying && !p.eliminated ? (
                                         <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] px-1 rounded-bl font-bold animate-pulse">
-                                            濒死
+                                            {t("page.guessWho.multiplayer.dying")}
                                         </div>
                                     ) : null}
 
@@ -2326,7 +2349,7 @@ function MultiplayerContent() {
                                             opacity: 0.9,
                                             whiteSpace: "nowrap",
                                         }}>
-                                            {d.label}
+                                            {t(`page.guessWho.common.distortions.${DISTORTION_LABEL_KEYS[d.type]}`)}
                                         </span>
                                     ))}
                                 </div>
@@ -2343,25 +2366,24 @@ function MultiplayerContent() {
                                     fontWeight: 700,
                                     borderRadius: "1rem",
                                 }}>
-                                    准备中...
+                                    {t("page.guessWho.multiplayer.preparing")}
                                 </div>
                             )}
                         </div>
 
                         {/* Guess grid */}
                         <div className={`mp-guess-grid ${wrongGuessShake ? "mp-shake" : ""}`}>
-                            {Object.entries(CHARACTER_NAMES)
-                                .filter(([idStr]) => {
+                            {PLAYABLE_CHARACTER_IDS
+                                .filter((id) => {
                                     // Filter by selected units if any are selected
                                     if (activeSettings.selectedUnitIds.length === 0) return true;
-                                    const id = Number(idStr);
                                     // Check if char is in any selected unit
                                     return UNIT_DATA.some(u =>
                                         activeSettings.selectedUnitIds.includes(u.id) && u.charIds.includes(id)
                                     );
                                 })
-                                .map(([idStr, name]) => {
-                                    const id = Number(idStr);
+                                .map((id) => {
+                                    const name = getCharacterName(t, id);
                                     return (
                                         <button
                                             key={id}
@@ -2381,7 +2403,7 @@ function MultiplayerContent() {
                     <button
                         className="mp-sticker-toggle"
                         onClick={() => setShowStickerPicker(!showStickerPicker)}
-                        title="发送表情"
+                        title={t("page.guessWho.multiplayer.sendStickerTitle")}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -2419,7 +2441,7 @@ function MultiplayerContent() {
         return (
             <div className="mp-container">
                 <div className="mp-result">
-                    <div className="mp-result-title">🏆 游戏结束</div>
+                    <div className="mp-result-title">{t("page.guessWho.multiplayer.resultTitle")}</div>
 
                     <div className="mp-rank-list">
                         {rankedPlayers.map((p, idx) => {
@@ -2433,12 +2455,12 @@ function MultiplayerContent() {
                                     </div>
                                     <div className="mp-rank-info">
                                         <div className="mp-rank-name">
-                                            {CHARACTER_NAMES[p.characterId]}
-                                            {p.id === mySessionId && <span style={{ color: themeColor, marginLeft: "0.5rem", fontSize: "0.75rem" }}>(你)</span>}
+                                            {getCharacterName(t, p.characterId)}
+                                            {p.id === mySessionId && <span style={{ color: themeColor, marginLeft: "0.5rem", fontSize: "0.75rem" }}>({t("page.guessWho.multiplayer.you")})</span>}
                                         </div>
                                         <div className="mp-rank-hp">
                                             {Math.floor(p.hp)} HP
-                                            {p.hp <= 0 && <span style={{ color: "#f87171", marginLeft: "0.25rem" }}>· 已淘汰</span>}
+                                            {p.hp <= 0 && <span style={{ color: "#f87171", marginLeft: "0.25rem" }}>{t("page.guessWho.multiplayer.eliminated")}</span>}
                                         </div>
                                     </div>
                                 </div>
@@ -2448,7 +2470,7 @@ function MultiplayerContent() {
 
                     <div style={{ display: "flex", gap: "0.75rem", width: "100%", maxWidth: "24rem" }}>
                         <button className="mp-btn mp-btn-secondary" onClick={handleLeaveRoom} style={{ flex: 1 }}>
-                            返回大厅
+                            {t("page.guessWho.multiplayer.backToLobby")}
                         </button>
                         {isHost ? (
                             <button
@@ -2463,11 +2485,11 @@ function MultiplayerContent() {
                                 }}
                                 style={{ flex: 1 }}
                             >
-                                再来一局
+                                {t("page.guessWho.multiplayer.rematch")}
                             </button>
                         ) : (
                             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: "0.875rem" }}>
-                                等待房主开始...
+                                {t("page.guessWho.multiplayer.waitingHost")}
                             </div>
                         )}
                     </div>
@@ -2482,11 +2504,13 @@ function MultiplayerContent() {
 // ==================== EXPORT ====================
 
 export default function MultiplayerClient() {
+    const { t } = useI18n();
+
     return (
         <Suspense fallback={
             <div className="mp-container">
                 <div className="mp-verify">
-                    <div className="mp-verify-title">加载中...</div>
+                    <div className="mp-verify-title">{t("page.guessWho.multiplayer.verifying")}</div>
                 </div>
             </div>
         }>

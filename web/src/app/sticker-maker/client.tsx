@@ -3,8 +3,10 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import NextImage from "next/image";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
-import { UNIT_DATA, CHARACTER_NAMES, UNIT_ICON_FILES } from "@/types/types";
+import { useI18n } from "@/contexts/I18nContext";
+import { UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
+import { getCharacterName } from "@/lib/i18n";
 
 // Types
 interface CharacterData {
@@ -33,13 +35,14 @@ const CHAR_ID_MAP: Record<string, number> = {
 };
 
 // Available Fonts
-const DEFAULT_FONTS = [
-    { name: "MaokenAssortedSans", label: "猫啃什锦黑", file: "MaokenAssortedSans-Lite.ttf" },
+const DEFAULT_FONTS: FontOption[] = [
+    { name: "MaokenAssortedSans", labelKey: "page.stickerMaker.defaultFontLabel", file: "MaokenAssortedSans-Lite.ttf" },
 ];
 
 interface FontOption {
     name: string;
-    label: string;
+    label?: string;
+    labelKey?: string;
     file?: string;
     isCustom?: boolean;
 }
@@ -93,6 +96,8 @@ function RangeSlider({
 
 // ==================== Main StickerMakerContent ====================
 export default function StickerMakerContent() {
+    const { t, formatNumber } = useI18n();
+
     // Data
     const [allStickers, setAllStickers] = useState<CharacterData[]>([]);
 
@@ -180,7 +185,7 @@ export default function StickerMakerContent() {
             if (fileInputRef.current) fileInputRef.current.value = "";
         } catch (error) {
             console.error("Error loading custom font:", error);
-            alert("字体加载失败，请重试");
+            alert(t("page.stickerMaker.errors.fontLoadFailed"));
         }
     };
 
@@ -198,12 +203,12 @@ export default function StickerMakerContent() {
             // Create a temporary sticker object
             const customSticker: CharacterData = {
                 id: `custom_${Date.now()}`,
-                name: "自定义图片",
+                name: t("page.stickerMaker.customImageName"),
                 character: "custom", // Or use current selected char
                 img: dataUrl,
                 color: selectedSticker?.color || "#33CEC3", // Default color or current
                 defaultText: {
-                    text: "这是一串文字",
+                    text: t("page.stickerMaker.defaultText"),
                     x: 148,
                     y: 58,
                     r: -2,
@@ -286,7 +291,7 @@ export default function StickerMakerContent() {
 
         // Set defaults from sticker
         // Override "text" default if it is the generic "text"
-        setText(sticker.defaultText.text === "text" ? "这是一串文字" : sticker.defaultText.text);
+        setText(sticker.defaultText.text === "text" ? t("page.stickerMaker.defaultText") : sticker.defaultText.text);
         setPosition({ x: sticker.defaultText.x, y: sticker.defaultText.y });
         setRotate(sticker.defaultText.r);
         setFontSize(sticker.defaultText.s);
@@ -458,7 +463,7 @@ export default function StickerMakerContent() {
                 type ClipboardItemConstructor = new (items: Record<string, Blob>) => ClipboardItem;
                 const ClipboardItemCtor = (window as Window & { ClipboardItem?: ClipboardItemConstructor }).ClipboardItem;
                 if (!ClipboardItemCtor) {
-                    alert("当前浏览器不支持剪贴板图片复制，请使用下载功能");
+                    alert(t("page.stickerMaker.errors.clipboardUnsupported"));
                     return;
                 }
                 await navigator.clipboard.write([
@@ -468,7 +473,7 @@ export default function StickerMakerContent() {
                 setTimeout(() => setCopied(false), 2000);
             });
         } catch {
-            alert("复制失败，请尝试使用下载功能");
+            alert(t("page.stickerMaker.errors.copyFailed"));
         }
     };
 
@@ -479,13 +484,13 @@ export default function StickerMakerContent() {
                     {/* Page Header */}
                     <div className="text-center mb-8">
                         <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                            <span className="text-miku text-xs font-bold tracking-widest uppercase">Creativity Tool</span>
+                            <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.stickerMaker.badge")}</span>
                         </div>
                         <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                            表情包 <span className="text-miku">制作器</span>
+                            {t("page.stickerMaker.title")} <span className="text-miku">{t("page.stickerMaker.titleHighlight")}</span>
                         </h1>
                         <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                            选择角色，输入文字，制作你的专属 Sekai 表情包
+                            {t("page.stickerMaker.description")}
                         </p>
                     </div>
 
@@ -494,10 +499,11 @@ export default function StickerMakerContent() {
                         <div className="w-full lg:w-96 flex-shrink-0 space-y-6">
                             {/* Unit Filter */}
                             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100">
-                                <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">筛选团体</h3>
+                                <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">{t("page.stickerMaker.sections.unitFilter")}</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {UNIT_DATA.map(unit => {
                                         const iconName = UNIT_ICON_FILES[unit.id] || "";
+                                        const unitLabel = t(UNIT_ID_LABEL_KEYS[unit.id] ?? `common.units.${unit.id}`);
                                         return (
                                             <button
                                                 key={unit.id}
@@ -506,12 +512,12 @@ export default function StickerMakerContent() {
                                                     ? "ring-2 ring-miku shadow-lg bg-white"
                                                     : "hover:bg-slate-100/50 border border-transparent"
                                                     }`}
-                                                title={unit.name}
+                                                title={unitLabel}
                                             >
                                                 <div className="w-8 h-8 relative">
                                                     <NextImage
                                                         src={`/data/icon/${iconName}`}
-                                                        alt={unit.name}
+                                                        alt={unitLabel}
                                                         fill
                                                         className="object-contain"
                                                         unoptimized
@@ -525,30 +531,33 @@ export default function StickerMakerContent() {
 
                             {/* Character Filter */}
                             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100">
-                                <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">选择角色</h3>
+                                <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">{t("page.stickerMaker.sections.characterSelect")}</h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {availableCharacterIds.map(charId => (
-                                        <button
-                                            key={charId}
-                                            onClick={() => handleCharacterClick(charId)}
-                                            className={`relative transition-all ${selectedCharacterId === charId
-                                                ? "ring-2 ring-miku scale-110 z-10 rounded-full shadow-md"
-                                                : "ring-2 ring-transparent hover:ring-slate-200/50 rounded-full opacity-80 hover:opacity-100 grayscale hover:grayscale-0"
-                                                }`}
-                                            title={CHARACTER_NAMES[charId]}
-                                        >
-                                            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
-                                                <NextImage
-                                                    src={getCharacterIconUrl(charId)}
-                                                    alt={CHARACTER_NAMES[charId]}
-                                                    width={40}
-                                                    height={40}
-                                                    className="w-full h-full object-cover"
-                                                    unoptimized
-                                                />
-                                            </div>
-                                        </button>
-                                    ))}
+                                    {availableCharacterIds.map(charId => {
+                                        const characterName = getCharacterName(t, charId);
+                                        return (
+                                            <button
+                                                key={charId}
+                                                onClick={() => handleCharacterClick(charId)}
+                                                className={`relative transition-all ${selectedCharacterId === charId
+                                                    ? "ring-2 ring-miku scale-110 z-10 rounded-full shadow-md"
+                                                    : "ring-2 ring-transparent hover:ring-slate-200/50 rounded-full opacity-80 hover:opacity-100 grayscale hover:grayscale-0"
+                                                    }`}
+                                                title={characterName}
+                                            >
+                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
+                                                    <NextImage
+                                                        src={getCharacterIconUrl(charId)}
+                                                        alt={characterName}
+                                                        width={40}
+                                                        height={40}
+                                                        className="w-full h-full object-cover"
+                                                        unoptimized
+                                                    />
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -556,7 +565,7 @@ export default function StickerMakerContent() {
                             {selectedCharacterId && (
                                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100">
                                     <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">
-                                        选择底图 ({filteredStickers.length})
+                                        {t("page.stickerMaker.sections.stickerSelect", { count: formatNumber(filteredStickers.length) })}
                                     </h3>
                                     <div className="max-h-[400px] overflow-y-auto pr-1 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
                                         <div className="grid grid-cols-3 gap-2">
@@ -564,12 +573,12 @@ export default function StickerMakerContent() {
                                             <button
                                                 onClick={() => stickerFileInputRef.current?.click()}
                                                 className="relative rounded-lg overflow-hidden transition-all border-2 border-dashed border-slate-300 hover:border-miku hover:bg-white flex flex-col items-center justify-center gap-1 aspect-[296/256] text-slate-400 hover:text-miku"
-                                                title="上传自定义图片"
+                                                title={t("page.stickerMaker.uploadCustomImageTitle")}
                                             >
                                                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                                 </svg>
-                                                <span className="text-xs font-bold">上传图片</span>
+                                                <span className="text-xs font-bold">{t("page.stickerMaker.uploadImage")}</span>
                                             </button>
                                             <input
                                                 type="file"
@@ -611,8 +620,8 @@ export default function StickerMakerContent() {
                                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
                                         </svg>
                                     </div>
-                                    <p className="text-lg font-medium">请先选择角色和表情包样式</p>
-                                    <p className="text-sm mt-1">点击左侧头像开始制作</p>
+                                    <p className="text-lg font-medium">{t("page.stickerMaker.emptyTitle")}</p>
+                                    <p className="text-sm mt-1">{t("page.stickerMaker.emptyDescription")}</p>
                                 </div>
                             ) : (
                                 <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 lg:p-8 shadow-sm border border-slate-100 sticker-editor-container grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -690,19 +699,19 @@ export default function StickerMakerContent() {
                                     <div className="space-y-4 order-1 md:order-2">
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 mb-2">
-                                                文本内容
+                                                {t("page.stickerMaker.textContent")}
                                             </label>
                                             <textarea
                                                 value={text}
                                                 onChange={(e) => setText(e.target.value)}
                                                 rows={3}
                                                 className="w-full px-4 py-3 text-base border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-miku/30 focus:border-miku resize-none bg-slate-50"
-                                                placeholder="输入文字..."
+                                                placeholder={t("page.stickerMaker.textPlaceholder")}
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 mb-2">
-                                                字体选择
+                                                {t("page.stickerMaker.fontSelect")}
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {allFonts.map(font => (
@@ -713,9 +722,9 @@ export default function StickerMakerContent() {
                                                             ? "border-miku bg-miku/5 text-miku font-bold"
                                                             : "border-slate-200 hover:border-slate-300 text-slate-600"
                                                             }`}
-                                                        title={font.label}
+                                                        title={font.labelKey ? t(font.labelKey) : font.label}
                                                     >
-                                                        {font.label}
+                                                        {font.labelKey ? t(font.labelKey) : font.label}
                                                     </button>
                                                 ))}
 
@@ -724,7 +733,7 @@ export default function StickerMakerContent() {
                                                     onClick={() => fileInputRef.current?.click()}
                                                     className="px-3 py-2 text-sm rounded-lg border border-dashed border-slate-300 text-slate-500 hover:border-miku hover:text-miku hover:bg-white transition-all flex items-center justify-center gap-1"
                                                 >
-                                                    <span className="text-lg">+</span> 自定义字体
+                                                    <span className="text-lg">+</span> {t("page.stickerMaker.customFont")}
                                                 </button>
                                                 <input
                                                     type="file"
@@ -740,7 +749,7 @@ export default function StickerMakerContent() {
                                     {/* Param Sliders */}
                                     <div className="space-y-5 bg-slate-50 p-5 rounded-xl border border-slate-100 order-3 md:order-3">
                                         <RangeSlider
-                                            label="旋转"
+                                            label={t("page.stickerMaker.sliders.rotate")}
                                             value={rotate}
                                             onChange={setRotate}
                                             min={-10}
@@ -748,21 +757,21 @@ export default function StickerMakerContent() {
                                             step={0.2}
                                         />
                                         <RangeSlider
-                                            label="字号"
+                                            label={t("page.stickerMaker.sliders.fontSize")}
                                             value={fontSize}
                                             onChange={setFontSize}
                                             min={10}
                                             max={100}
                                         />
                                         <RangeSlider
-                                            label="行间距"
+                                            label={t("page.stickerMaker.sliders.lineSpacing")}
                                             value={spaceSize}
                                             onChange={setSpaceSize}
                                             min={18}
                                             max={100}
                                         />
                                         <RangeSlider
-                                            label="字间距"
+                                            label={t("page.stickerMaker.sliders.charSpacing")}
                                             value={charSpacing}
                                             onChange={setCharSpacing}
                                             min={-10}
@@ -772,7 +781,7 @@ export default function StickerMakerContent() {
 
                                         <div className="flex items-center justify-between pt-2 border-t border-slate-200">
                                             <span className="text-xs font-bold text-slate-500">
-                                                弧形文字 (Beta)
+                                                {t("page.stickerMaker.curveText")}
                                             </span>
                                             <button
                                                 onClick={() => setCurve(!curve)}
@@ -787,8 +796,8 @@ export default function StickerMakerContent() {
                                         </div>
 
                                         <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
-                                            <span className="text-xs font-bold text-slate-500 whitespace-nowrap">字体颜色:</span>
-                                            <label className="relative w-7 h-7 rounded-full border-2 border-slate-200 shadow-sm cursor-pointer overflow-hidden flex-shrink-0 hover:border-miku transition-colors" title="选择字体颜色">
+                                            <span className="text-xs font-bold text-slate-500 whitespace-nowrap">{t("page.stickerMaker.textColor")}</span>
+                                            <label className="relative w-7 h-7 rounded-full border-2 border-slate-200 shadow-sm cursor-pointer overflow-hidden flex-shrink-0 hover:border-miku transition-colors" title={t("page.stickerMaker.chooseTextColor")}>
                                                 <div
                                                     className="absolute inset-0 rounded-full"
                                                     style={{ backgroundColor: textColor || selectedSticker?.color }}
@@ -807,16 +816,16 @@ export default function StickerMakerContent() {
                                                 <button
                                                     onClick={() => setTextColor("")}
                                                     className="text-xs text-slate-400 hover:text-miku transition-colors whitespace-nowrap"
-                                                    title="重置为角色默认颜色"
+                                                    title={t("page.stickerMaker.resetDefaultColor")}
                                                 >
-                                                    重置
+                                                    {t("page.stickerMaker.reset")}
                                                 </button>
                                             )}
                                         </div>
 
                                         <div className="flex items-center justify-between pt-2 border-t border-slate-200">
                                             <span className="text-xs font-bold text-slate-500">
-                                                背景颜色
+                                                {t("page.stickerMaker.backgroundColor")}
                                             </span>
                                             <div className="flex bg-slate-200 rounded-lg p-1 gap-1">
                                                 <button
@@ -826,7 +835,7 @@ export default function StickerMakerContent() {
                                                         : "text-slate-500 hover:text-slate-700"
                                                         }`}
                                                 >
-                                                    透明
+                                                    {t("page.stickerMaker.transparent")}
                                                 </button>
                                                 <button
                                                     onClick={() => setBgColor("white")}
@@ -835,7 +844,7 @@ export default function StickerMakerContent() {
                                                         : "text-slate-500 hover:text-slate-700"
                                                         }`}
                                                 >
-                                                    白色
+                                                    {t("page.stickerMaker.white")}
                                                 </button>
                                             </div>
                                         </div>
@@ -850,7 +859,7 @@ export default function StickerMakerContent() {
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                             </svg>
-                                            {copied ? "已复制 ✓" : "复制图片"}
+                                            {copied ? t("page.stickerMaker.copied") : t("page.stickerMaker.copyImage")}
                                         </button>
 
                                         <button
@@ -860,7 +869,7 @@ export default function StickerMakerContent() {
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                             </svg>
-                                            下载图片
+                                            {t("page.stickerMaker.downloadImage")}
                                         </button>
                                     </div>
                                 </div>
@@ -871,7 +880,7 @@ export default function StickerMakerContent() {
                     {/* Footer / Credits */}
                     <div className="mt-12 pt-8 border-t border-slate-200 text-center text-slate-400 text-sm space-y-2">
                         <p>
-                            表情包制作器源代码参考{" "}
+                            {t("page.stickerMaker.credits.sourcePrefix")}{" "}
                             <ExternalLink
                                 href="https://github.com/TheOriginalAyaka/sekai-stickers"
                                 target="_blank"
@@ -882,10 +891,10 @@ export default function StickerMakerContent() {
                             </ExternalLink>
                         </p>
                         <p>
-                            猫啃什锦黑 由 <ExternalLink href="https://scripts.sil.org/OFL" target="_blank" rel="noopener noreferrer" className="hover:underline">SIL Open Font License 1.1</ExternalLink> 授权
+                            {t("page.stickerMaker.credits.fontLicensePrefix")} <ExternalLink href="https://scripts.sil.org/OFL" target="_blank" rel="noopener noreferrer" className="hover:underline">SIL Open Font License 1.1</ExternalLink>{t("page.stickerMaker.credits.fontLicenseSuffix") ? ` ${t("page.stickerMaker.credits.fontLicenseSuffix")}` : ""}
                         </p>
                         <p className="text-xs text-slate-300 mt-4">
-                            表情包制作器为完全本地运行 自行载入字体并以商用目的制作产生的后果用户自行承担
+                            {t("page.stickerMaker.credits.localNotice")}
                         </p>
                     </div>
                 </div>

@@ -23,19 +23,20 @@ import {
     getLeaderCardId,
     refreshOAuthAccountData,
     disconnectOAuthAccount,
-    SERVER_LABELS,
     type MoesekaiAccount,
     type ServerType,
 } from "@/lib/account";
 import { startOAuthConnect } from "@/lib/oauth";
+import { useI18n } from "@/contexts/I18nContext";
 
-const SERVER_OPTIONS: { value: ServerType; label: string }[] = [
-    { value: "cn", label: "简中服 (CN)" },
-    { value: "jp", label: "日服 (JP)" },
-    { value: "tw", label: "繁中服 (TW)" },
+const SERVER_OPTIONS: { value: ServerType }[] = [
+    { value: "cn" },
+    { value: "jp" },
+    { value: "tw" },
 ];
 
 export default function ProfileClient() {
+    const { t, formatDate } = useI18n();
     const searchParams = useSearchParams();
     const oauthStatus = searchParams.get("oauth");
     const [accounts, setAccounts] = useState<MoesekaiAccount[]>([]);
@@ -68,17 +69,17 @@ export default function ProfileClient() {
         });
 
 
-        // 自动刷新所有账号的数据（uploadTime、名称、头像等）
+        // Automatically refresh account data (uploadTime, name, avatar, etc.).
         const refreshAllAccounts = async () => {
             const accs = getAccounts();
             for (const acc of accs) {
-                console.log(`刷新账号数据: ${acc.gameId} (${acc.server})`);
+                console.log(`Refreshing account data: ${acc.gameId} (${acc.server})`);
 
                 if (acc.authSource === "oauth2") {
                     try {
                         await refreshOAuthAccountData(acc.id);
                     } catch (error) {
-                        console.warn(`OAuth2 账号 ${acc.gameId} 刷新失败，保留已有数据`, error);
+                        console.warn(`OAuth2 account ${acc.gameId} refresh failed; keeping existing data`, error);
                     }
                     continue;
                 }
@@ -86,7 +87,7 @@ export default function ProfileClient() {
                 const result = await verifyHarukiApi(acc.server, acc.gameId);
 
                 if (!result.success) {
-                    console.warn(`账号 ${acc.gameId} 刷新失败，保留已有数据`);
+                    console.warn(`Account ${acc.gameId} refresh failed; keeping existing data`);
                 } else {
                     const userGamedata = result.userGamedata || null;
                     const userDecks = result.userDecks || null;
@@ -123,7 +124,7 @@ export default function ProfileClient() {
                     });
                 }
             }
-            // 刷新完成后重新加载
+            // Reload after all refreshes finish.
             reload();
         };
 
@@ -140,11 +141,11 @@ export default function ProfileClient() {
 
         if (!result.success) {
             if (result.error === "API_NOT_PUBLIC") {
-                setVerifyError("该用户的公开API未开启，请先前往 Haruki 工具箱勾选「公开API访问」");
+                setVerifyError(t("common.harukiErrors.apiNotPublic"));
             } else if (result.error === "NOT_FOUND") {
-                setVerifyError("用户数据未找到，请确认UID和服务器是否正确，并已在 Haruki 上传数据");
+                setVerifyError(t("common.harukiErrors.userNotFound"));
             } else {
-                setVerifyError("网络错误，请稍后重试");
+                setVerifyError(t("common.harukiErrors.networkError"));
             }
             setIsVerifying(false);
             return;
@@ -163,14 +164,14 @@ export default function ProfileClient() {
         const userMysekaiGates = result.userMysekaiGates || null;
         const uploadTime = result.uploadTime || null;
 
-        // 获取 leader 卡面 ID
+        // Resolve the leader card ID.
         const avatarCardId = getLeaderCardId(userGamedata, userDecks);
         const nickname = userGamedata?.name || "";
         const avatarCharacterId = userCharacters && userCharacters.length > 0
             ? getTopCharacterId(userCharacters)
             : null;
 
-        // 创建账号并设置新字段
+        // Create the account and populate extended fields.
         const account = createAccount(formGameId.trim(), formServer, nickname, avatarCharacterId, userCharacters, true);
         updateAccount(account.id, {
             userCharacters,
@@ -194,7 +195,7 @@ export default function ProfileClient() {
         setShowAddForm(false);
         setIsVerifying(false);
         reload();
-    }, [formGameId, formServer, reload]);
+    }, [formGameId, formServer, reload, t]);
 
     const handleSetActive = useCallback((id: string) => {
         setActiveAccount(id);
@@ -203,7 +204,7 @@ export default function ProfileClient() {
 
     const handleDelete = useCallback((id: string) => {
         void disconnectOAuthAccount(id).catch(() => {
-            // 忽略断开失败，删除本地账号仍应成功
+            // Ignore disconnect failures; local account deletion should still succeed.
         }).finally(() => {
             removeAccount(id);
             setDeleteConfirmId(null);
@@ -221,9 +222,9 @@ export default function ProfileClient() {
             setVerifyError(null);
             await startOAuthConnect("/profile");
         } catch (err) {
-            setVerifyError(err instanceof Error ? err.message : "OAuth2 授权初始化失败");
+            setVerifyError(err instanceof Error ? err.message : t("common.harukiErrors.oauthInitFailed"));
         }
-    }, []);
+    }, [t]);
 
     const activeAccount = accounts.find((acc) => acc.id === activeId) || null;
     const activeCharacterRanks = new Map((activeAccount?.userCharacters || []).map((c) => [c.characterId, c.characterRank]));
@@ -237,7 +238,7 @@ export default function ProfileClient() {
         return (
             <MainLayout>
                 <div className="container mx-auto px-4 sm:px-6 py-8 max-w-7xl">
-                    <div className="text-center py-20 text-slate-400">加载中...</div>
+                    <div className="text-center py-20 text-slate-400">{t("common.state.loading")}</div>
                 </div>
             </MainLayout>
         );
@@ -249,19 +250,19 @@ export default function ProfileClient() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                        <span className="text-miku text-xs font-bold tracking-widest uppercase">My Profile</span>
+                        <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.profile.badge")}</span>
                     </div>
                     <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                        我的<span className="text-miku">主页</span>
+                        {t("page.profile.title")}<span className="text-miku">{t("page.profile.titleHighlight")}</span>
                     </h1>
                     <p className="text-slate-500 mt-2 text-sm">
-                        管理你的游戏账号，所有数据仅保存在浏览器本地
+                        {t("page.profile.description")}
                     </p>
                 </div>
 
                 {(oauthMessage || oauthStatus === "success") && (
                     <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                        {oauthMessage || "OAuth2 账号绑定成功，已自动设为当前使用账号。"}
+                        {oauthMessage || t("common.account.oauthBindSuccess")}
                     </div>
                 )}
 
@@ -270,7 +271,7 @@ export default function ProfileClient() {
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                             <span className="w-1.5 h-6 bg-miku rounded-full"></span>
-                            已绑定账号
+                            {t("page.profile.boundAccounts")}
                             {accounts.length > 0 && (
                                 <span className="text-xs font-normal text-slate-400 ml-1">({accounts.length})</span>
                             )}
@@ -280,7 +281,7 @@ export default function ProfileClient() {
                                 onClick={() => void handleOAuthBind()}
                                 className="px-3 py-1.5 border border-miku/30 text-miku rounded-lg font-bold text-xs hover:bg-miku/5 transition-all"
                             >
-                                OAuth2 绑定
+                                {t("common.account.oauthBind")}
                             </button>
                             <button
                                 onClick={() => { setShowAddForm(true); setVerifyError(null); }}
@@ -289,7 +290,7 @@ export default function ProfileClient() {
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
-                                添加账号
+                                {t("common.account.addAccount")}
                             </button>
                         </div>
                     </div>
@@ -301,19 +302,19 @@ export default function ProfileClient() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                             </div>
-                            <p className="text-slate-500 text-sm mb-4">还没有绑定任何账号</p>
+                            <p className="text-slate-500 text-sm mb-4">{t("common.account.noAccounts")}</p>
                             <button
                                 onClick={() => { setShowAddForm(true); setVerifyError(null); }}
                                 className="px-6 py-2.5 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold text-sm shadow-lg shadow-miku/20 hover:opacity-90 active:scale-[0.98] transition-all"
                             >
-                                添加第一个账号
+                                {t("common.account.addFirstAccount")}
                             </button>
                         </div>
                     ) : (
                         <div className="space-y-3">
                             {accounts.map((acc) => {
                                 const isActive = acc.id === activeId;
-                                // 优先使用 userGamedata.name，否则使用 nickname
+                                // Prefer userGamedata.name, otherwise use nickname.
                                 const displayName = acc.userGamedata?.name || acc.nickname;
 
                                 return (
@@ -325,7 +326,7 @@ export default function ProfileClient() {
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            {/* Avatar - 使用卡面缩略图 */}
+                                            {/* Avatar - use the leader card thumbnail. */}
                                             <AccountAvatar account={acc} size="lg" className={`ring-2 ring-offset-1 transition-all ${isActive ? "ring-miku/40" : "ring-slate-200"}`} />
 
                                             {/* Info */}
@@ -337,31 +338,31 @@ export default function ProfileClient() {
                                                     <span className="font-mono text-xs text-slate-500">{acc.gameId}</span>
                                                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${isActive ? "bg-miku/20 text-miku" : "bg-slate-100 text-slate-500"
                                                         }`}>
-                                                        {SERVER_LABELS[acc.server]}
+                                                        {t(`common.server.${acc.server}`)}
                                                     </span>
                                                     {isActive && (
                                                         <span className="px-1.5 py-0.5 bg-miku/10 text-miku text-[10px] font-bold rounded">
-                                                            当前使用
+                                                            {t("common.account.current")}
                                                         </span>
                                                     )}
                                                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${acc.authSource === "oauth2" ? "bg-indigo-100 text-indigo-600" : "bg-slate-100 text-slate-500"}`}>
-                                                        {acc.authSource === "oauth2" ? "OAuth2" : "公开 API"}
+                                                        {acc.authSource === "oauth2" ? "OAuth2" : t("common.account.publicApi")}
                                                     </span>
                                                     {acc.authError === "reauth_required" && (
                                                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-600">
-                                                            需重新授权
+                                                            {t("common.account.reauthRequired")}
                                                         </span>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-2 mt-0.5">
                                                     <p className="text-[10px] text-slate-400">
-                                                        添加于 {new Date(acc.createdAt).toLocaleDateString()}
+                                                        {t("common.account.createdAt", { date: formatDate(acc.createdAt) })}
                                                     </p>
                                                     {acc.uploadTime && (
                                                         <>
                                                             <span className="text-[10px] text-slate-300">•</span>
                                                             <p className="text-[10px] text-slate-400">
-                                                                数据更新于 {new Date(acc.uploadTime * 1000).toLocaleString()}
+                                                                {t("common.account.dataUpdatedAt", { date: formatDate(acc.uploadTime * 1000, { dateStyle: "medium", timeStyle: "short" }) })}
                                                             </p>
                                                         </>
                                                     )}
@@ -375,18 +376,18 @@ export default function ProfileClient() {
                                                         onClick={() => handleSetActive(acc.id)}
                                                         className="px-2.5 py-1.5 text-[11px] font-medium text-miku hover:bg-miku/10 rounded-lg transition-colors"
                                                     >
-                                                        设为默认
+                                                        {t("common.account.setDefault")}
                                                     </button>
                                                 )}
                                                 {acc.authSource === "oauth2" && (
                                                     <button
                                                         onClick={() => void refreshOAuthAccountData(acc.id).then(reload).catch((error) => {
-                                                            console.warn(`OAuth2 账号 ${acc.gameId} 手动同步失败`, error);
-                                                            setVerifyError("OAuth2 账号刷新失败，请稍后重试或查看控制台日志");
+                                                            console.warn(`OAuth2 account ${acc.gameId} manual sync failed`, error);
+                                                            setVerifyError(t("common.harukiErrors.oauthRefreshFailed"));
                                                         })}
                                                         className="px-2.5 py-1.5 text-[11px] font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                                                     >
-                                                        重新同步
+                                                        {t("common.account.resync")}
                                                     </button>
                                                 )}
                                                 {deleteConfirmId === acc.id ? (
@@ -395,20 +396,20 @@ export default function ProfileClient() {
                                                             onClick={() => handleDelete(acc.id)}
                                                             className="px-2 py-1 text-[11px] font-bold text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
                                                         >
-                                                            确认
+                                                            {t("common.action.confirm")}
                                                         </button>
                                                         <button
                                                             onClick={() => setDeleteConfirmId(null)}
                                                             className="px-2 py-1 text-[11px] font-medium text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
                                                         >
-                                                            取消
+                                                            {t("common.action.cancel")}
                                                         </button>
                                                     </div>
                                                 ) : (
                                                     <button
                                                         onClick={() => setDeleteConfirmId(acc.id)}
                                                         className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="删除账号"
+                                                        title={t("common.account.deleteAccount")}
                                                     >
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -428,24 +429,24 @@ export default function ProfileClient() {
                         <div className="mt-4 p-4 rounded-xl border border-miku/20 bg-miku/5">
                             <h3 className="text-sm font-bold text-primary-text mb-3 flex items-center gap-2">
                                 <span className="w-1 h-4 bg-miku rounded-full"></span>
-                                添加新账号
+                                {t("common.account.addNewAccount")}
                             </h3>
                             <div className="space-y-3">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        游戏UID <span className="text-red-400">*</span>
+                                        {t("common.form.gameUid")} <span className="text-red-400">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={formGameId}
                                         onChange={(e) => setFormGameId(e.target.value)}
-                                        placeholder="输入游戏UID"
+                                        placeholder={t("common.account.inputGameUid")}
                                         className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                                         disabled={isVerifying}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">服务器</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t("common.form.server")}</label>
                                     <div className="flex flex-wrap gap-2">
                                         {SERVER_OPTIONS.map((s) => (
                                             <button
@@ -457,7 +458,7 @@ export default function ProfileClient() {
                                                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                                     }`}
                                             >
-                                                {s.label}
+                                                {t(`common.server.${s.value}`)}
                                             </button>
                                         ))}
                                     </div>
@@ -477,7 +478,7 @@ export default function ProfileClient() {
                                                     rel="noopener noreferrer"
                                                     className="text-xs text-miku hover:underline mt-1 inline-block"
                                                 >
-                                                    前往 Haruki 工具箱 →
+                                                    {t("common.account.goHaruki")}
                                                 </ExternalLink>
                                             </div>
                                         </div>
@@ -485,7 +486,7 @@ export default function ProfileClient() {
                                 )}
 
                                 <p className="text-xs text-slate-400">
-                                    添加时会自动从 Haruki API 获取个性签名和角色数据作为头像
+                                    {t("common.account.addHint")}
                                 </p>
 
                                 <div className="flex gap-3 pt-1">
@@ -497,10 +498,10 @@ export default function ProfileClient() {
                                         {isVerifying ? (
                                             <>
                                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                验证中...
+                                                {t("common.account.verifyingWithDots")}
                                             </>
                                         ) : (
-                                            "验证并添加"
+                                            t("common.account.verifyAndAdd")
                                         )}
                                     </button>
                                     <button
@@ -508,7 +509,7 @@ export default function ProfileClient() {
                                         disabled={isVerifying}
                                         className="px-6 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all"
                                     >
-                                        取消
+                                        {t("common.action.cancel")}
                                     </button>
                                 </div>
                             </div>
@@ -558,10 +559,10 @@ export default function ProfileClient() {
                 <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6">
                     <h2 className="text-lg font-bold text-primary-text mb-4 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-amber-400 rounded-full"></span>
-                        工具快捷入口
+                        {t("page.profile.toolQuickLinks")}
                     </h2>
                     <p className="text-xs text-slate-400 mb-4">
-                        已绑定的账号可在以下工具中快速选择使用
+                        {t("page.profile.toolQuickLinksHint")}
                     </p>
                     <div className="space-y-3">
                         <Link
@@ -575,11 +576,11 @@ export default function ProfileClient() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div className="text-sm font-bold text-primary-text">组卡推荐器</div>
-                                    <div className="text-xs text-slate-400">自动计算最优卡组</div>
+                                    <div className="text-sm font-bold text-primary-text">{t("page.profile.tools.deckRecommend.title")}</div>
+                                    <div className="text-xs text-slate-400">{t("page.profile.tools.deckRecommend.description")}</div>
                                 </div>
                             </div>
-                            <span className="text-xs font-medium text-miku group-hover:translate-x-0.5 transition-transform">前往 →</span>
+                            <span className="text-xs font-medium text-miku group-hover:translate-x-0.5 transition-transform">{t("page.profile.goTo")}</span>
                         </Link>
 
                         <Link
@@ -593,11 +594,11 @@ export default function ProfileClient() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div className="text-sm font-bold text-primary-text">控分计算器</div>
-                                    <div className="text-xs text-slate-400">智能规划放置路线</div>
+                                    <div className="text-sm font-bold text-primary-text">{t("page.profile.tools.scoreControl.title")}</div>
+                                    <div className="text-xs text-slate-400">{t("page.profile.tools.scoreControl.description")}</div>
                                 </div>
                             </div>
-                            <span className="text-xs font-medium text-miku group-hover:translate-x-0.5 transition-transform">前往 →</span>
+                            <span className="text-xs font-medium text-miku group-hover:translate-x-0.5 transition-transform">{t("page.profile.goTo")}</span>
                         </Link>
 
                         <Link
@@ -611,11 +612,11 @@ export default function ProfileClient() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div className="text-sm font-bold text-primary-text">卡牌进度</div>
-                                    <div className="text-xs text-slate-400">查看卡牌收集进度</div>
+                                    <div className="text-sm font-bold text-primary-text">{t("page.profile.tools.myCards.title")}</div>
+                                    <div className="text-xs text-slate-400">{t("page.profile.tools.myCards.description")}</div>
                                 </div>
                             </div>
-                            <span className="text-xs font-medium text-miku group-hover:translate-x-0.5 transition-transform">前往 →</span>
+                            <span className="text-xs font-medium text-miku group-hover:translate-x-0.5 transition-transform">{t("page.profile.goTo")}</span>
                         </Link>
                     </div>
                 </div>
@@ -625,32 +626,32 @@ export default function ProfileClient() {
                     <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6 border border-red-100">
                         <h2 className="text-lg font-bold text-red-500 mb-2 flex items-center gap-2">
                             <span className="w-1.5 h-6 bg-red-400 rounded-full"></span>
-                            危险操作
+                            {t("page.profile.dangerZone")}
                         </h2>
                         <p className="text-xs text-slate-400 mb-4">
-                            清除所有账号将删除所有本地保存的数据，此操作不可恢复
+                            {t("page.profile.dangerDescription")}
                         </p>
                         {!showClearConfirm ? (
                             <button
                                 onClick={() => setShowClearConfirm(true)}
                                 className="px-4 py-2 border-2 border-red-300 text-red-500 rounded-lg text-sm font-bold hover:bg-red-50 transition-all"
                             >
-                                清除所有数据
+                                {t("page.profile.clearAllData")}
                             </button>
                         ) : (
                             <div className="flex items-center gap-3">
-                                <span className="text-sm text-red-500 font-medium">确定要清除所有账号吗？</span>
+                                <span className="text-sm text-red-500 font-medium">{t("page.profile.clearAllConfirm")}</span>
                                 <button
                                     onClick={handleClearAll}
                                     className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition-all"
                                 >
-                                    确认清除
+                                    {t("page.profile.confirmClear")}
                                 </button>
                                 <button
                                     onClick={() => setShowClearConfirm(false)}
                                     className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-all"
                                 >
-                                    取消
+                                    {t("common.action.cancel")}
                                 </button>
                             </div>
                         )}
@@ -659,7 +660,7 @@ export default function ProfileClient() {
 
                 {/* Info */}
                 <div className="text-center text-xs text-slate-400 mt-8">
-                    <p>所有数据仅保存在你的浏览器本地 (localStorage)，Moesekai 不会上传或存储任何个人信息</p>
+                    <p>{t("common.account.localOnlyNotice")}</p>
                 </div>
             </div>
         </MainLayout>

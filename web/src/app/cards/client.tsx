@@ -11,6 +11,7 @@ import { getCardSkillTypes } from "@/lib/skill";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface ICardSupply {
     id: number;
@@ -23,6 +24,7 @@ function CardsContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { isShowSpoiler } = useTheme();
+    const { t } = useI18n();
 
     const [cards, setCards] = useState<ICardInfo[]>([]);
     const [skills, setSkills] = useState<ISkillInfo[]>([]);
@@ -157,7 +159,6 @@ function CardsContent() {
 
     // Fetch cards data
     useEffect(() => {
-        // document.title = "Snowy SekaiViewer - 卡牌图鉴"; // Moved to metadata
         async function fetchCards() {
             try {
                 setIsLoading(true);
@@ -364,7 +365,7 @@ function CardsContent() {
         />
     );
 
-    useQuickFilter("卡牌筛选", quickFilterContent, [
+    useQuickFilter(t("page.cards.filterTitle"), quickFilterContent, [
         selectedCharacters,
         selectedUnitIds,
         selectedAttrs,
@@ -384,26 +385,26 @@ function CardsContent() {
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">卡牌数据库</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.cards.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    卡牌 <span className="text-miku">图鉴</span>
+                    {t("page.cards.title")} <span className="text-miku">{t("page.cards.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览并探索世界计划中的所有卡牌
+                    {t("page.cards.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{error}</p>
                     <button
                         onClick={() => window.location.reload()}
                         className="mt-2 text-red-500 underline hover:no-underline"
                     >
-                        重试
+                        {t("common.action.retry")}
                     </button>
                 </div>
             )}
@@ -424,7 +425,7 @@ function CardsContent() {
                     {/* Screenshot Mode Notice */}
                     {isScreenshotMode && (
                         <div className="mt-8 text-center text-slate-500 text-sm font-medium p-4 bg-slate-50 rounded-xl border border-slate-100">
-                            该模式下默认仅显示前 100 张相关卡牌
+                            {t("page.cards.screenshotModeNotice")}
                         </div>
                     )}
 
@@ -436,7 +437,7 @@ function CardsContent() {
                                 data-shortcut-load-more="true"
                                 className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                             >
-                                加载更多
+                                {t("page.cards.loadMore")}
                                 <span className="ml-2 text-sm opacity-80">
                                     ({displayedCards.length} / {filteredCards.length})
                                 </span>
@@ -447,7 +448,7 @@ function CardsContent() {
                     {/* All loaded indicator */}
                     {!isScreenshotMode && !isLoading && displayedCards.length > 0 && displayedCards.length >= filteredCards.length && (
                         <div className="mt-8 text-center text-slate-400 text-sm">
-                            已显示全部 {filteredCards.length} 张卡牌
+                            {t("page.cards.allLoaded", { count: String(filteredCards.length) })}
                         </div>
                     )}
                 </div>
@@ -459,7 +460,7 @@ function CardsContent() {
 export default function CardsClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载卡牌...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">Loading cards...</div>}>
                 <CardsContent />
             </Suspense>
         </MainLayout>

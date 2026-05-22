@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { useI18n } from "./I18nContext";
 
 // ============================================================================
 // Types
@@ -35,8 +36,10 @@ const QuickFilterContext = createContext<QuickFilterContextValue | null>(null);
 // ============================================================================
 
 export function QuickFilterProvider({ children }: { children: React.ReactNode }) {
+    const { t } = useI18n();
+    const defaultFilterTitle = t("common.filter.title");
     const [filterContent, setFilterContent] = useState<React.ReactNode | null>(null);
-    const [filterTitle, setFilterTitle] = useState("筛选");
+    const [filterTitle, setFilterTitle] = useState(defaultFilterTitle);
     const [isOpen, setIsOpen] = useState(false);
 
     const registerFilters = useCallback((title: string, content: React.ReactNode) => {
@@ -46,9 +49,9 @@ export function QuickFilterProvider({ children }: { children: React.ReactNode })
 
     const unregisterFilters = useCallback(() => {
         setFilterContent(null);
-        setFilterTitle("筛选");
+        setFilterTitle(defaultFilterTitle);
         setIsOpen(false);
-    }, []);
+    }, [defaultFilterTitle]);
 
     const open = useCallback(() => setIsOpen(true), []);
     const close = useCallback(() => setIsOpen(false), []);

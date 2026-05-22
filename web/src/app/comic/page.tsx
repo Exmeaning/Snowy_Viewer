@@ -1,13 +1,7 @@
-
-import { Metadata } from "next";
 import ComicContent from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "漫画图鉴",
-    description: "浏览 Project Sekai 官方一格漫画" + SEO_SUFFIX,
-    keywords: getPageKeywords("comic"),
-};
+export const generateMetadata = pageMetadata("comic");
 
 export default function ComicPage() {
     return <ComicContent />;

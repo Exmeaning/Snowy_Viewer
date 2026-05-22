@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function Error({
     error,
@@ -9,6 +10,8 @@ export default function Error({
     error: Error & { digest?: string };
     reset: () => void;
 }) {
+    const { t } = useI18n();
+
     useEffect(() => {
         // Detect ChunkLoadError (caused by stale CDN cache after deployment)
         // Automatically reload the page to fetch the latest chunks
@@ -45,10 +48,10 @@ export default function Error({
             textAlign: 'center',
         }}>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>
-                页面加载出错了
+                {t('common.errorBoundary.title')}
             </h2>
             <p style={{ color: '#666', marginBottom: '1.5rem', maxWidth: '400px' }}>
-                这可能是由于网络问题或页面更新导致的，请尝试刷新页面。
+                {t('common.errorBoundary.description')}
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
                 <button
@@ -63,7 +66,7 @@ export default function Error({
                         cursor: 'pointer',
                     }}
                 >
-                    刷新页面
+                    {t('common.errorBoundary.refreshPage')}
                 </button>
                 <button
                     onClick={reset}
@@ -76,7 +79,7 @@ export default function Error({
                         cursor: 'pointer',
                     }}
                 >
-                    重试
+                    {t('common.action.retry')}
                 </button>
             </div>
         </div>

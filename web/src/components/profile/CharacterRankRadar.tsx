@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
-import { CHAR_NAMES, UNIT_NAME_MAP } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 
 type UnitKey = "overview" | "ln" | "mmj" | "vbs" | "wxs" | "n25" | "vs";
 
@@ -11,20 +12,21 @@ interface Props {
     characterRanks: Map<number, number>;
 }
 
-const UNIT_CONFIG: Record<UnitKey, { label: string; color: string; icon?: string; ids: number[] }> = {
-    overview: { label: "总览", color: "#7b7b7b", ids: [21, 22, 23, 24, 25, 26, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] },
-    ln: { label: UNIT_NAME_MAP.light_sound, color: "#4455DD", icon: "/data/icon/ln.webp", ids: [1, 2, 3, 4] },
-    mmj: { label: UNIT_NAME_MAP.idol, color: "#88DD44", icon: "/data/icon/mmj.webp", ids: [5, 6, 7, 8] },
-    vbs: { label: UNIT_NAME_MAP.street, color: "#EE1166", icon: "/data/icon/vbs.webp", ids: [9, 10, 11, 12] },
-    wxs: { label: UNIT_NAME_MAP.theme_park, color: "#FF9900", icon: "/data/icon/wxs.webp", ids: [13, 14, 15, 16] },
-    n25: { label: UNIT_NAME_MAP.school_refusal, color: "#884499", icon: "/data/icon/n25.webp", ids: [17, 18, 19, 20] },
-    vs: { label: UNIT_NAME_MAP.piapro, color: "#33CCBB", icon: "/data/icon/vs.webp", ids: [21, 22, 23, 24, 25, 26] },
+const UNIT_CONFIG: Record<UnitKey, { labelKey: string; color: string; icon?: string; ids: number[] }> = {
+    overview: { labelKey: "page.profile.stats.overview", color: "#7b7b7b", ids: [21, 22, 23, 24, 25, 26, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] },
+    ln: { labelKey: "common.musicTags.light_music_club", color: "#4455DD", icon: "/data/icon/ln.webp", ids: [1, 2, 3, 4] },
+    mmj: { labelKey: "common.musicTags.idol", color: "#88DD44", icon: "/data/icon/mmj.webp", ids: [5, 6, 7, 8] },
+    vbs: { labelKey: "common.musicTags.street", color: "#EE1166", icon: "/data/icon/vbs.webp", ids: [9, 10, 11, 12] },
+    wxs: { labelKey: "common.musicTags.theme_park", color: "#FF9900", icon: "/data/icon/wxs.webp", ids: [13, 14, 15, 16] },
+    n25: { labelKey: "common.musicTags.school_refusal", color: "#884499", icon: "/data/icon/n25.webp", ids: [17, 18, 19, 20] },
+    vs: { labelKey: "common.musicTags.vocaloid", color: "#33CCBB", icon: "/data/icon/vs.webp", ids: [21, 22, 23, 24, 25, 26] },
 };
 
 const unitColor = (id: number) => id >= 21 ? UNIT_CONFIG.vs.color : id <= 4 ? UNIT_CONFIG.ln.color : id <= 8 ? UNIT_CONFIG.mmj.color : id <= 12 ? UNIT_CONFIG.vbs.color : id <= 16 ? UNIT_CONFIG.wxs.color : UNIT_CONFIG.n25.color;
 
 export default function CharacterRankRadar({ characterRanks }: Props) {
     const { themeColor } = useTheme();
+    const { t } = useI18n();
     const [unit, setUnit] = useState<UnitKey>("overview");
     const [mobile, setMobile] = useState(false);
     const [points, setPoints] = useState<Array<{ x: number; y: number; lx: number; ly: number; color: string; value: number }>>([]);
@@ -57,7 +59,7 @@ export default function CharacterRankRadar({ characterRanks }: Props) {
         radar: {
             startAngle: 90,
             clockwise: true,
-            indicator: orderedIds.map((id) => ({ name: CHAR_NAMES[id] || `ID ${id}`, max: chartData.max })),
+            indicator: orderedIds.map((id) => ({ name: getCharacterName(t, id, "short"), max: chartData.max })),
             center: ["50%", "54%"],
             radius: mobile ? (unit === "overview" ? "58%" : "64%") : (unit === "overview" ? "67%" : "74%"),
             splitNumber: 10,
@@ -75,7 +77,7 @@ export default function CharacterRankRadar({ characterRanks }: Props) {
                 symbol: "none",
             }],
         }],
-    }), [orderedIds, chartData, unit, mobile, themeColor]);
+    }), [orderedIds, chartData, unit, mobile, themeColor, t]);
 
     const refreshOverlay = useCallback(() => {
         const chart = chartRef.current?.getEchartsInstance();
@@ -112,7 +114,7 @@ export default function CharacterRankRadar({ characterRanks }: Props) {
             <div className="mb-4">
                 <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                     <span className="w-1.5 h-6 rounded-full" style={{ backgroundColor: themeColor }}></span>
-                    角色等级
+                    {t("page.profile.stats.characterRank")}
                 </h2>
             </div>
 
@@ -135,12 +137,12 @@ export default function CharacterRankRadar({ characterRanks }: Props) {
                                         boxShadow: `0 0 0 2px ${themeColor}1f`,
                                     }
                                     : undefined}
-                                title={u.label}
+                                title={t(u.labelKey)}
                             >
                                 <div className={`${mobile ? "w-6 h-6" : "w-8 h-8"} relative flex items-center justify-center`}>
                                     {k === "overview"
-                                        ? <span className={`${mobile ? "text-[10px]" : "text-[12px]"} font-black leading-tight`}>总览</span>
-                                        : <img src={u.icon} alt={u.label} className={`${mobile ? "w-6 h-6" : "w-8 h-8"} object-contain`} loading="lazy" />}
+                                        ? <span className={`${mobile ? "text-[10px]" : "text-[12px]"} font-black leading-tight`}>{t(u.labelKey)}</span>
+                                        : <img src={u.icon} alt={t(u.labelKey)} className={`${mobile ? "w-6 h-6" : "w-8 h-8"} object-contain`} loading="lazy" />}
                                 </div>
                             </button>
                         );

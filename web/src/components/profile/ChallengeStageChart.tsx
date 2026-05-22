@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import ReactECharts from "echarts-for-react";
-import { CHAR_NAMES, CHAR_COLORS, UNIT_NAME_MAP } from "@/types/types";
+import { CHAR_COLORS } from "@/types/types";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
+import { getCharacterName } from "@/lib/i18n";
 import Modal from "@/components/common/Modal";
 import type {
     ServerType,
@@ -34,16 +36,13 @@ interface BoxDetailMasterRow {
     resourceId?: number | null;
     resourceQuantity?: number | null;
 }
-interface CharMaster { id: number; firstName?: string; givenName?: string; }
-interface UnitMaster { unit: string; unitName: string; }
-
 const GROUPS = [
-    { key: "ln" as const, unit: "light_sound", name: UNIT_NAME_MAP.light_sound, icon: "/data/icon/ln.webp", ids: [1, 2, 3, 4] },
-    { key: "mmj" as const, unit: "idol", name: UNIT_NAME_MAP.idol, icon: "/data/icon/mmj.webp", ids: [5, 6, 7, 8] },
-    { key: "vbs" as const, unit: "street", name: UNIT_NAME_MAP.street, icon: "/data/icon/vbs.webp", ids: [9, 10, 11, 12] },
-    { key: "wxs" as const, unit: "theme_park", name: UNIT_NAME_MAP.theme_park, icon: "/data/icon/wxs.webp", ids: [13, 14, 15, 16] },
-    { key: "n25" as const, unit: "school_refusal", name: UNIT_NAME_MAP.school_refusal, icon: "/data/icon/n25.webp", ids: [17, 18, 19, 20] },
-    { key: "vs" as const, unit: "piapro", name: UNIT_NAME_MAP.piapro, icon: "/data/icon/vs.webp", ids: [21, 22, 23, 24, 25, 26] },
+    { key: "ln" as const, unit: "light_sound", labelKey: "common.musicTags.light_music_club", icon: "/data/icon/ln.webp", ids: [1, 2, 3, 4] },
+    { key: "mmj" as const, unit: "idol", labelKey: "common.musicTags.idol", icon: "/data/icon/mmj.webp", ids: [5, 6, 7, 8] },
+    { key: "vbs" as const, unit: "street", labelKey: "common.musicTags.street", icon: "/data/icon/vbs.webp", ids: [9, 10, 11, 12] },
+    { key: "wxs" as const, unit: "theme_park", labelKey: "common.musicTags.theme_park", icon: "/data/icon/wxs.webp", ids: [13, 14, 15, 16] },
+    { key: "n25" as const, unit: "school_refusal", labelKey: "common.musicTags.school_refusal", icon: "/data/icon/n25.webp", ids: [17, 18, 19, 20] },
+    { key: "vs" as const, unit: "piapro", labelKey: "common.musicTags.vocaloid", icon: "/data/icon/vs.webp", ids: [21, 22, 23, 24, 25, 26] },
 ];
 
 const CHALLENGE_BOX_PURPOSE = "challenge_live_high_score";
@@ -76,14 +75,12 @@ export default function ChallengeStageChart({
     challengeStageRanks, server, challengeSoloStages, challengeSoloResults, challengeHighScoreRewards,
 }: Props) {
     const { themeColor, serverSource } = useTheme();
+    const { t, formatNumber } = useI18n();
     const [mobile, setMobile] = useState(false);
     const [showDetail, setShowDetail] = useState(false);
     const [rows, setRows] = useState<Row[] | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [charNames, setCharNames] = useState<Map<number, string>>(new Map());
-    const [unitNames, setUnitNames] = useState<Map<string, string>>(new Map());
-
     useEffect(() => {
         const fn = () => setMobile(window.innerWidth <= 420);
         fn(); window.addEventListener("resize", fn); return () => window.removeEventListener("resize", fn);
@@ -109,7 +106,7 @@ export default function ChallengeStageChart({
             axisPointer: { type: "shadow" as const },
             formatter: (params: Array<{ name: string; value: number }>) => {
                 const p = params[0];
-                return `${p.name}<br/>等级: <b>${p.value}</b>`;
+                return t("page.profile.stats.chartLevelTooltip", { name: p.name, value: p.value });
             },
         },
         grid: {
@@ -121,7 +118,7 @@ export default function ChallengeStageChart({
         },
         xAxis: {
             type: "category" as const,
-            data: sortedChars.map((c) => CHAR_NAMES[c.id] || `ID ${c.id}`),
+            data: sortedChars.map((c) => getCharacterName(t, c.id, "short")),
             axisLabel: {
                 fontSize: mobile ? 8 : 10,
                 color: "#6e6e6e",
@@ -154,38 +151,26 @@ export default function ChallengeStageChart({
                 itemStyle: { shadowBlur: 10, shadowColor: "rgba(0,0,0,0.15)" },
             },
         }],
-    }), [sortedChars, mobile]);
+    }), [sortedChars, mobile, t]);
 
     const loadDetail = useCallback(async () => {
         if (loading || rows) return;
         setLoading(true); setError(null);
         try {
-                const nameServer: "jp" | "cn" = "cn"; // Always use CN for Chinese names
-            const [rewardPack, chars, units] = await Promise.all([
-                (async () => {
-                    const loadPack = async (targetServer: ServerType) => {
-                        const [rewards, boxes, boxDetails] = await Promise.all([
-                            fetchMasterDataForServer<RewardMaster[]>(targetServer, "challengeLiveHighScoreRewards.json"),
-                            fetchMasterDataForServer<BoxMaster[]>(targetServer, "resourceBoxes.json"),
-                            fetchMasterDataForServer<BoxDetailMasterRow[]>(targetServer, "resourceBoxDetails.json").catch(() => []),
-                        ]);
-                        return { rewards, boxes, boxDetails };
-                    };
+            const rewardPack = await (async () => {
+                const loadPack = async (targetServer: ServerType) => {
+                    const [rewards, boxes, boxDetails] = await Promise.all([
+                        fetchMasterDataForServer<RewardMaster[]>(targetServer, "challengeLiveHighScoreRewards.json"),
+                        fetchMasterDataForServer<BoxMaster[]>(targetServer, "resourceBoxes.json"),
+                        fetchMasterDataForServer<BoxDetailMasterRow[]>(targetServer, "resourceBoxDetails.json").catch(() => []),
+                    ]);
+                    return { rewards, boxes, boxDetails };
+                };
 
-                    const current = await loadPack(server);
-                    if (current.rewards.length) return current;
-                    return loadPack("jp");
-                })(),
-                fetchMasterDataForServer<CharMaster[]>(nameServer, "gameCharacters.json"),
-                fetchMasterDataForServer<UnitMaster[]>(nameServer, "unitProfiles.json"),
-            ]);
-
-            const cMap = new Map<number, string>();
-            chars.forEach((c) => { const n = `${c.firstName || ""}${c.givenName || ""}`.trim() || c.givenName || c.firstName; if (n) cMap.set(c.id, n); });
-            setCharNames(cMap);
-            const uMap = new Map<string, string>();
-            units.forEach((u) => { if (u.unit && u.unitName) uMap.set(u.unit, u.unitName); });
-            setUnitNames(uMap);
+                const current = await loadPack(server);
+                if (current.rewards.length) return current;
+                return loadPack("jp");
+            })();
 
             const rewardById = new Map<number, RewardMaster>(); rewardPack.rewards.forEach((r) => rewardById.set(r.id, r));
             const completed = new Map<number, Set<number>>();
@@ -247,12 +232,12 @@ export default function ChallengeStageChart({
             }
             setRows(next);
         } catch {
-            setError("挑战详情加载失败，请稍后重试");
+            setError(t("page.profile.stats.challengeDetailLoadFailed"));
         } finally {
             setLoading(false);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loading, rows, server, serverSource, challengeHighScoreRewards, challengeSoloResults, challengeSoloStages]);
+    }, [loading, rows, server, serverSource, challengeHighScoreRewards, challengeSoloResults, challengeSoloStages, t]);
 
     const openDetail = useCallback(() => {
         setShowDetail(true);
@@ -281,13 +266,13 @@ export default function ChallengeStageChart({
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                     <span className="w-1.5 h-6 rounded-full" style={{ backgroundColor: themeColor }}></span>
-                    挑战等级
+                    {t("page.profile.stats.challengeRank")}
                 </h2>
                 <button
                     onClick={openDetail}
                     className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:border-miku/40 hover:text-miku transition-colors"
                 >
-                    查看详情
+                    {t("page.profile.stats.viewDetails")}
                 </button>
             </div>
 
@@ -306,13 +291,13 @@ export default function ChallengeStageChart({
             <Modal
                 isOpen={showDetail}
                 onClose={() => setShowDetail(false)}
-                title="挑战信息详情"
+                title={t("page.profile.stats.challengeDetails")}
                 size="xl"
             >
-                {loading && <div className="text-sm text-slate-500 py-8 text-center">正在加载挑战详情...</div>}
+                {loading && <div className="text-sm text-slate-500 py-8 text-center">{t("page.profile.stats.loadingChallengeDetails")}</div>}
                 {error && <div className="text-sm text-red-500 py-8 text-center">{error}</div>}
                 {!loading && !error && groupedRows.length === 0 && (
-                    <div className="text-sm text-slate-500 py-8 text-center">暂无挑战数据</div>
+                    <div className="text-sm text-slate-500 py-8 text-center">{t("page.profile.stats.noChallengeData")}</div>
                 )}
                 {!loading && !error && groupedRows.length > 0 && (
                     <div>
@@ -320,20 +305,20 @@ export default function ChallengeStageChart({
                             <div className="space-y-4">
                                 <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
                                     <div className="flex items-center justify-between gap-2">
-                                        <span className="text-sm font-black text-slate-700">总计</span>
-                                        <span className="text-xs font-bold text-slate-500">全部角色</span>
+                                        <span className="text-sm font-black text-slate-700">{t("page.profile.stats.total")}</span>
+                                        <span className="text-xs font-bold text-slate-500">{t("page.profile.stats.allCharacters")}</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 text-xs">
-                                        <div className="rounded-lg bg-white px-2 py-1 text-slate-600">水晶 <span className="font-bold text-slate-700">{remainTotals.jewel.toLocaleString()}</span></div>
-                                        <div className="rounded-lg bg-white px-2 py-1 text-slate-600">碎片 <span className="font-bold text-slate-700">{remainTotals.fragment.toLocaleString()}</span></div>
+                                        <div className="rounded-lg bg-white px-2 py-1 text-slate-600">{t("page.profile.stats.jewel")} <span className="font-bold text-slate-700">{formatNumber(remainTotals.jewel)}</span></div>
+                                        <div className="rounded-lg bg-white px-2 py-1 text-slate-600">{t("page.profile.stats.fragment")} <span className="font-bold text-slate-700">{formatNumber(remainTotals.fragment)}</span></div>
                                     </div>
                                 </div>
                                 {groupedRows.map((g) => (
                                     <div key={g.key} className="space-y-2">
-                                        <div className="flex items-center gap-2 px-1 py-1 text-xs font-bold text-slate-600">{g.icon && <img src={g.icon} alt={g.name} className="w-4 h-4 object-contain" />}<span>{unitNames.get(g.unit) || g.name}</span></div>
+                                        <div className="flex items-center gap-2 px-1 py-1 text-xs font-bold text-slate-600">{g.icon && <img src={g.icon} alt={t(g.labelKey)} className="w-4 h-4 object-contain" />}<span>{t(g.labelKey)}</span></div>
                                         {g.rows.map((r) => {
                                             const prog = Math.max(0, Math.min((r.score / scoreCap(server)) * 100, 100));
-                                            const cname = charNames.get(r.characterId) || CHAR_NAMES[r.characterId] || `ID ${r.characterId}`;
+                                                    const cname = getCharacterName(t, r.characterId, "short");
                                             return (
                                                 <div key={r.characterId} className="rounded-xl border border-slate-200 bg-white p-3 space-y-2">
                                                     <div className="flex items-center justify-between gap-2">
@@ -343,11 +328,11 @@ export default function ChallengeStageChart({
                                                         </div>
                                                         <div className="text-xs font-bold text-slate-600">Lv {r.rank}</div>
                                                     </div>
-                                                    <div className="text-sm font-bold text-slate-700">最高分 {r.score.toLocaleString()}</div>
+                                                    <div className="text-sm font-bold text-slate-700">{t("page.profile.stats.highScoreValue", { value: formatNumber(r.score) })}</div>
                                                     <div className="h-3 rounded-full bg-slate-500/75 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${prog}%`, backgroundColor: themeColor }} /></div>
                                                     <div className="grid grid-cols-2 gap-2 text-xs">
-                                                        <div className="rounded-lg bg-slate-50 px-2 py-1 text-slate-600">水晶 <span className="font-bold text-slate-700">{r.remainJewel}</span></div>
-                                                        <div className="rounded-lg bg-slate-50 px-2 py-1 text-slate-600">碎片 <span className="font-bold text-slate-700">{r.remainFragment}</span></div>
+                                                        <div className="rounded-lg bg-slate-50 px-2 py-1 text-slate-600">{t("page.profile.stats.jewel")} <span className="font-bold text-slate-700">{formatNumber(r.remainJewel)}</span></div>
+                                                        <div className="rounded-lg bg-slate-50 px-2 py-1 text-slate-600">{t("page.profile.stats.fragment")} <span className="font-bold text-slate-700">{formatNumber(r.remainFragment)}</span></div>
                                                     </div>
                                                 </div>
                                             );
@@ -359,36 +344,36 @@ export default function ChallengeStageChart({
                             <div className="overflow-x-auto">
                                 <div className="min-w-[840px] space-y-4">
                                     <div className="grid grid-cols-[170px_70px_130px_minmax(240px,1fr)_90px_110px] items-center gap-3 px-4 py-2 text-sm font-bold text-slate-600">
-                                        <div className="text-left">角色</div>
-                                        <div className="text-center">等级</div>
-                                        <div className="text-center">最高分</div>
-                                        <div className="text-center">{`进度（上限${server === "jp" ? "300w分" : "250w分"}）`}</div>
-                                        <div className="text-center">剩余水晶</div>
-                                        <div className="text-center">剩余心愿碎片</div>
+                                        <div className="text-left">{t("page.profile.stats.character")}</div>
+                                        <div className="text-center">{t("page.profile.stats.level")}</div>
+                                        <div className="text-center">{t("page.profile.stats.highScore")}</div>
+                                        <div className="text-center">{t("page.profile.stats.progressWithCap", { cap: server === "jp" ? t("page.profile.stats.scoreCapJp") : t("page.profile.stats.scoreCapOther") })}</div>
+                                        <div className="text-center">{t("page.profile.stats.remainingJewel")}</div>
+                                        <div className="text-center">{t("page.profile.stats.remainingFragment")}</div>
                                     </div>
                                     <div className="grid grid-cols-[170px_70px_130px_minmax(240px,1fr)_90px_110px] items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-2">
-                                        <div className="text-sm font-black text-slate-700">总计</div>
+                                        <div className="text-sm font-black text-slate-700">{t("page.profile.stats.total")}</div>
                                         <div className="text-sm font-bold text-slate-400 text-center">-</div>
                                         <div className="text-sm font-bold text-slate-400 text-center">-</div>
                                         <div className="text-sm font-bold text-slate-400 text-center">-</div>
-                                        <div className="text-sm font-black text-slate-700 text-center">{remainTotals.jewel.toLocaleString()}</div>
-                                        <div className="text-sm font-black text-slate-700 text-center">{remainTotals.fragment.toLocaleString()}</div>
+                                        <div className="text-sm font-black text-slate-700 text-center">{formatNumber(remainTotals.jewel)}</div>
+                                        <div className="text-sm font-black text-slate-700 text-center">{formatNumber(remainTotals.fragment)}</div>
                                     </div>
                                     {groupedRows.map((g) => (
                                         <div key={g.key} className="space-y-2">
-                                            <div className="flex items-center gap-2 px-3 py-1 text-xs font-bold text-slate-600">{g.icon && <img src={g.icon} alt={g.name} className="w-4 h-4 object-contain" />}<span>{unitNames.get(g.unit) || g.name}</span></div>
+                                            <div className="flex items-center gap-2 px-3 py-1 text-xs font-bold text-slate-600">{g.icon && <img src={g.icon} alt={t(g.labelKey)} className="w-4 h-4 object-contain" />}<span>{t(g.labelKey)}</span></div>
                                             <div className="space-y-2">
                                                 {g.rows.map((r) => {
                                                     const prog = Math.max(0, Math.min((r.score / scoreCap(server)) * 100, 100));
-                                                    const cname = charNames.get(r.characterId) || CHAR_NAMES[r.characterId] || `ID ${r.characterId}`;
+                                            const cname = getCharacterName(t, r.characterId, "short");
                                                     return (
                                                         <div key={r.characterId} className="grid grid-cols-[170px_70px_130px_minmax(240px,1fr)_90px_110px] items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2">
                                                             <div className="flex items-center gap-2 min-w-0"><div className="relative w-9 h-9 rounded-full overflow-hidden border border-slate-200"><Image src={getCharacterIconUrl(r.characterId)} alt={cname} fill className="object-cover" unoptimized /></div><span className="text-sm font-semibold text-slate-700 truncate">{cname}</span></div>
                                                             <div className="text-sm font-bold text-slate-700 text-center">{r.rank}</div>
-                                                            <div className="text-sm font-bold text-slate-700 text-center">{r.score.toLocaleString()}</div>
+                                                            <div className="text-sm font-bold text-slate-700 text-center">{formatNumber(r.score)}</div>
                                                             <div className="h-4 rounded-full bg-slate-500/75 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${prog}%`, backgroundColor: themeColor }} /></div>
-                                                            <div className="text-sm font-bold text-slate-700 text-center">{r.remainJewel}</div>
-                                                            <div className="text-sm font-bold text-slate-700 text-center">{r.remainFragment}</div>
+                                                            <div className="text-sm font-bold text-slate-700 text-center">{formatNumber(r.remainJewel)}</div>
+                                                            <div className="text-sm font-bold text-slate-700 text-center">{formatNumber(r.remainFragment)}</div>
                                                         </div>
                                                     );
                                                 })}

@@ -1,6 +1,7 @@
 "use client";
 import React, { useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useI18n } from "@/contexts/I18nContext";
 
 // ============================================================================
 // Types
@@ -12,12 +13,12 @@ export interface SortOption {
 }
 
 export interface BaseFiltersProps {
-    /** Title shown in the header (default: "筛选") */
+    /** Title shown in the header (default: t("common.filter.title")) */
     title?: string;
     /** Count display format: "filtered / total" or just "total" */
     filteredCount: number;
     totalCount: number;
-    /** Unit name for count display (e.g., "张", "首", "个") */
+    /** Unit name for count display (e.g., cards, songs, items) */
     countUnit?: string;
 
     // Search
@@ -87,13 +88,13 @@ export function getFilterToggleStateClasses(selected: boolean) {
 // ============================================================================
 
 export default function BaseFilters({
-    title = "筛选",
+    title,
     filteredCount,
     totalCount,
     countUnit = "",
     searchQuery = "",
     onSearchChange,
-    searchPlaceholder = "搜索...",
+    searchPlaceholder,
     showSearch = true,
     sortOptions,
     sortBy,
@@ -103,6 +104,9 @@ export default function BaseFilters({
     onReset,
     children,
 }: BaseFiltersProps) {
+    const { t } = useI18n();
+    const resolvedTitle = title ?? t("common.filter.title");
+    const resolvedSearchPlaceholder = searchPlaceholder ?? t("common.filter.search") + "...";
     const pathname = usePathname();
     const STORAGE_KEY = `filters_collapsed:${pathname}`;
     const [rootElement, setRootElement] = useState<HTMLDivElement | null>(null);
@@ -144,7 +148,7 @@ export default function BaseFilters({
                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
-                    {title}
+                    {resolvedTitle}
                     {/* Active filter indicator dot — mobile only, shown when collapsed with active filters */}
                     {hasActiveFilters && mobileCollapsed && (
                         <span className="lg:hidden w-2 h-2 rounded-full bg-miku animate-pulse" />
@@ -172,13 +176,13 @@ export default function BaseFilters({
             {showSearch && onSearchChange && (
                 <div className="px-5 pt-5">
                     <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
-                        搜索
+                        {t("common.filter.search")}
                     </label>
                     <div className="relative">
                         <input
                             data-shortcut-search="true"
                             type="text"
-                            placeholder={searchPlaceholder}
+                            placeholder={resolvedSearchPlaceholder}
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
                             className="w-full px-4 py-2.5 pr-10 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-miku/30 dark:focus:ring-miku/40 focus:border-miku dark:focus:border-miku transition-all"
@@ -197,7 +201,7 @@ export default function BaseFilters({
                     {sortOptions && sortOptions.length > 0 && onSortChange && (
                         <div>
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
-                                排序
+                                {t("common.filter.sort")}
                             </label>
                             <div className={`grid gap-2 ${sortOptions.length <= 2 ? "grid-cols-2" : sortOptions.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
                                 {sortOptions.map((opt) => (
@@ -230,7 +234,7 @@ export default function BaseFilters({
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
-                            重置筛选
+                            {t("common.filter.reset")}
                         </button>
                     )}
 
@@ -244,7 +248,7 @@ export default function BaseFilters({
                         <svg className="w-3.5 h-3.5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
-                        点击收起
+                        {t("common.filter.collapse")}
                     </div>
                     )}
                 </div>
@@ -260,7 +264,7 @@ export default function BaseFilters({
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                    点击展开筛选
+                    {t("common.filter.expand")}
                 </div>
             )}
         </div>

@@ -15,14 +15,14 @@ export interface RankChart {
     PredictPoints: TimePoint[];
 }
 
-// PGAI K线数据 (全服积极指数)
+// PGAI candlestick data (global activity index)
 export interface KLinePoint {
     t: string;  // ISO timestamp
-    o: number;  // 开盘
-    c: number;  // 收盘
-    l: number;  // 最低
-    h: number;  // 最高
-    v: number;  // 成交量
+    o: number;  // open
+    c: number;  // close
+    l: number;  // low
+    h: number;  // high
+    v: number;  // volume
 }
 
 export interface TierKLine {
@@ -40,8 +40,8 @@ export interface PredictionData {
         event_id: number;
         event_name: string;
         charts: RankChart[];
-        global_kline: KLinePoint[];  // PGAI 全服K线
-        tier_klines: TierKLine[];    // 各榜线K线
+        global_kline: KLinePoint[];  // PGAI global candlesticks
+        tier_klines: TierKLine[];    // tier candlesticks
     };
 }
 

@@ -79,54 +79,57 @@ export interface ExchangeRewardLookups {
 
 const MATERIAL_EXCHANGE_PURPOSE = "material_exchange";
 
-export const EXCHANGE_CATEGORY_LABELS: Record<string, string> = {
-    master_piece: "大师宝石",
-    card_ticket: "卡牌券",
-    vocal_card_ticket: "Vocal 卡兑换券",
-    gacha_seal: "天井印记",
-    master_crystal: "大师水晶",
-    common_ticket: "通用兑换券",
-    consume_material: "消耗材料",
-    home_exchange: "MySekai 交换所",
-    mysekai_material_game_character: "角色记忆兑换",
+type ExchangeTranslationValue = string | number | boolean | null | undefined;
+export type ExchangeTranslationFn = (key: string, values?: Record<string, ExchangeTranslationValue>) => string;
+
+export const EXCHANGE_CATEGORY_LABEL_KEYS: Record<string, string> = {
+    master_piece: "common.exchange.categories.master_piece",
+    card_ticket: "common.exchange.categories.card_ticket",
+    vocal_card_ticket: "common.exchange.categories.vocal_card_ticket",
+    gacha_seal: "common.exchange.categories.gacha_seal",
+    master_crystal: "common.exchange.categories.master_crystal",
+    common_ticket: "common.exchange.categories.common_ticket",
+    consume_material: "common.exchange.categories.consume_material",
+    home_exchange: "common.exchange.categories.home_exchange",
+    mysekai_material_game_character: "common.exchange.categories.mysekai_material_game_character",
 };
 
-export const EXCHANGE_TYPE_LABELS: Record<string, string> = {
-    normal: "常驻",
-    beginner: "新手",
+export const EXCHANGE_TYPE_LABEL_KEYS: Record<string, string> = {
+    normal: "common.exchange.types.normal",
+    beginner: "common.exchange.types.beginner",
 };
 
-export const REFRESH_CYCLE_LABELS: Record<string, string> = {
-    none: "不限期",
-    monthly: "每月刷新",
+export const REFRESH_CYCLE_LABEL_KEYS: Record<string, string> = {
+    none: "common.exchange.refreshCycles.none",
+    monthly: "common.exchange.refreshCycles.monthly",
 };
 
-export const STATUS_LABELS: Record<ExchangeStatus, string> = {
-    active: "进行中",
-    upcoming: "即将开始",
-    ended: "已结束",
-    permanent: "常驻",
+export const STATUS_LABEL_KEYS: Record<ExchangeStatus, string> = {
+    active: "common.exchange.statuses.active",
+    upcoming: "common.exchange.statuses.upcoming",
+    ended: "common.exchange.statuses.ended",
+    permanent: "common.exchange.statuses.permanent",
 };
 
-export const REWARD_TYPE_LABELS: Record<string, string> = {
-    card: "卡牌",
-    material: "持有物",
-    mysekai_material: "MySekai 持有物",
-    stamp: "贴纸",
-    costume_3d: "服装",
-    mysekai_blueprint: "家具蓝图",
-    mysekai_fixture: "家具",
-    practice_ticket: "练习券",
-    skill_practice_ticket: "技能练习券",
-    boost_item: "加成道具",
-    gacha_ticket: "扭蛋券",
-    avatar_coordinate: "虚拟形象坐标",
-    mysekai_item: "MySekai 道具",
-    mysekai_tool: "MySekai 工具",
-    character_rank_exp: "角色等级经验",
-    coin: "金币",
-    jewel: "水晶",
-    virtual_coin: "虚拟币",
+export const REWARD_TYPE_LABEL_KEYS: Record<string, string> = {
+    card: "common.exchange.rewardTypes.card",
+    material: "common.exchange.rewardTypes.material",
+    mysekai_material: "common.exchange.rewardTypes.mysekai_material",
+    stamp: "common.exchange.rewardTypes.stamp",
+    costume_3d: "common.exchange.rewardTypes.costume_3d",
+    mysekai_blueprint: "common.exchange.rewardTypes.mysekai_blueprint",
+    mysekai_fixture: "common.exchange.rewardTypes.mysekai_fixture",
+    practice_ticket: "common.exchange.rewardTypes.practice_ticket",
+    skill_practice_ticket: "common.exchange.rewardTypes.skill_practice_ticket",
+    boost_item: "common.exchange.rewardTypes.boost_item",
+    gacha_ticket: "common.exchange.rewardTypes.gacha_ticket",
+    avatar_coordinate: "common.exchange.rewardTypes.avatar_coordinate",
+    mysekai_item: "common.exchange.rewardTypes.mysekai_item",
+    mysekai_tool: "common.exchange.rewardTypes.mysekai_tool",
+    character_rank_exp: "common.exchange.rewardTypes.character_rank_exp",
+    coin: "common.exchange.rewardTypes.coin",
+    jewel: "common.exchange.rewardTypes.jewel",
+    virtual_coin: "common.exchange.rewardTypes.virtual_coin",
 };
 
 function uniq<T>(values: T[]): T[] {
@@ -237,31 +240,49 @@ export function buildExchangeFilterQuery(filters: ExchangeListFilters): URLSearc
     return params;
 }
 
-export function getExchangeCategoryLabel(category: string): string {
-    return EXCHANGE_CATEGORY_LABELS[category] || category.replace(/_/g, " ");
+function formatFallbackLabel(value: string): string {
+    return value.replace(/_/g, " ");
 }
 
-export function getExchangeTypeLabel(type: string): string {
-    return EXCHANGE_TYPE_LABELS[type] || type;
+function translateLabel(key: string | undefined, fallback: string, t?: ExchangeTranslationFn): string {
+    if (!key || !t) return fallback;
+    const label = t(key);
+    return label === key ? fallback : label;
 }
 
-export function getRefreshCycleLabel(refreshCycle: string): string {
-    return REFRESH_CYCLE_LABELS[refreshCycle] || refreshCycle;
+export function getExchangeCategoryLabel(category: string, t?: ExchangeTranslationFn): string {
+    return translateLabel(EXCHANGE_CATEGORY_LABEL_KEYS[category], formatFallbackLabel(category), t);
 }
 
-export function getRewardTypeLabel(resourceType: string): string {
-    return REWARD_TYPE_LABELS[resourceType] || resourceType.replace(/_/g, " ");
+export function getExchangeTypeLabel(type: string, t?: ExchangeTranslationFn): string {
+    return translateLabel(EXCHANGE_TYPE_LABEL_KEYS[type], formatFallbackLabel(type), t);
 }
 
-export function formatExchangeTime(timestamp?: number): string {
+export function getRefreshCycleLabel(refreshCycle: string, t?: ExchangeTranslationFn): string {
+    return translateLabel(REFRESH_CYCLE_LABEL_KEYS[refreshCycle], formatFallbackLabel(refreshCycle), t);
+}
+
+export function getExchangeStatusLabel(status: ExchangeStatus, t?: ExchangeTranslationFn): string {
+    return translateLabel(STATUS_LABEL_KEYS[status], formatFallbackLabel(status), t);
+}
+
+export function getRewardTypeLabel(resourceType: string, t?: ExchangeTranslationFn): string {
+    return translateLabel(REWARD_TYPE_LABEL_KEYS[resourceType], formatFallbackLabel(resourceType), t);
+}
+
+export function formatExchangeTime(
+    timestamp?: number,
+    formatDate?: (value: Date | number | string, options?: Intl.DateTimeFormatOptions) => string
+): string {
     if (!timestamp) return "-";
-    return new Date(timestamp).toLocaleString("zh-CN", {
+    const options: Intl.DateTimeFormatOptions = {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
-    });
+    };
+    return formatDate ? formatDate(timestamp, options) : new Date(timestamp).toLocaleString(undefined, options);
 }
 
 export function getEffectiveExchangeStartAt(exchange: MaterialExchange, summary: MaterialExchangeSummary): number | undefined {
@@ -282,8 +303,22 @@ export function getExchangeStatus(exchange: MaterialExchange, summary: MaterialE
     return "permanent";
 }
 
-export function resolveExchangeDisplayName(exchange: MaterialExchange, summary: MaterialExchangeSummary): string {
-    return exchange.displayName?.trim() || summary.name?.trim() || `兑换项 #${exchange.id}`;
+function unknownId(value: number | undefined | null): string | number {
+    return value ?? "?";
+}
+
+function formatResourceFallback(key: string, id: number | undefined | null, t?: ExchangeTranslationFn): string {
+    const fallbackId = unknownId(id);
+    if (t) {
+        const labelKey = `common.exchange.resourceFallbacks.${key}`;
+        const label = t(labelKey, { id: fallbackId });
+        if (label !== labelKey) return label;
+    }
+    return `${formatFallbackLabel(key)} #${fallbackId}`;
+}
+
+export function resolveExchangeDisplayName(exchange: MaterialExchange, summary: MaterialExchangeSummary, t?: ExchangeTranslationFn): string {
+    return exchange.displayName?.trim() || summary.name?.trim() || formatResourceFallback("exchangeItem", exchange.id, t);
 }
 
 export function buildMaterialExchangeResourceBoxMap(resourceBoxes: ExchangeResourceBox[]): Map<number, ExchangeResourceBox> {
@@ -450,9 +485,16 @@ function resolveCostSubtitle(resourceType: MaterialExchangeCostResourceType, ite
     return (item as IMysekaiMaterial).mysekaiMaterialRarityType;
 }
 
-function resolveCostName(resourceType: MaterialExchangeCostResourceType, resourceId: number, item?: IMaterialInfo | IMysekaiMaterial) {
+function resolveCostName(
+    resourceType: MaterialExchangeCostResourceType,
+    resourceId: number,
+    item?: IMaterialInfo | IMysekaiMaterial,
+    t?: ExchangeTranslationFn
+) {
     if (item?.name) return item.name;
-    return resourceType === "material" ? `持有物 #${resourceId}` : `MySekai 材料 #${resourceId}`;
+    return resourceType === "material"
+        ? formatResourceFallback("material", resourceId, t)
+        : formatResourceFallback("mysekaiMaterial", resourceId, t);
 }
 
 function resolveCostImageUrl(
@@ -475,7 +517,8 @@ export function resolveExchangeCostGroups(
     exchange: FlattenedMaterialExchange,
     materialMap: Map<number, IMaterialInfo>,
     mysekaiMaterialMap: Map<number, IMysekaiMaterial>,
-    assetSource: AssetSourceType
+    assetSource: AssetSourceType,
+    t?: ExchangeTranslationFn
 ): {
     baseCostGroups: ResolvedExchangeCostGroup[];
     relationParents: ResolvedExchangeRelationParent[];
@@ -492,7 +535,7 @@ export function resolveExchangeCostGroups(
             resourceType: cost.resourceType,
             resourceId: cost.resourceId,
             quantity: cost.quantity,
-            name: resolveCostName(cost.resourceType, cost.resourceId, resolvedItem),
+            name: resolveCostName(cost.resourceType, cost.resourceId, resolvedItem, t),
             subtitle: resolveCostSubtitle(cost.resourceType, resolvedItem),
             imageUrl: resolveCostImageUrl(cost.resourceType, cost.resourceId, resolvedItem, assetSource),
         };
@@ -630,18 +673,17 @@ function extractGenericName(item: GenericNamedMasterRow | undefined, fallback: s
     return typeof name === "string" && name.trim() ? name : fallback;
 }
 
-function resolveStaticCurrency(resourceType: string, quantity: number, assetSource: AssetSourceType): ResolvedExchangeReward {
-    const nameMap: Record<string, string> = {
-        coin: "金币",
-        jewel: "水晶",
-        virtual_coin: "虚拟币",
-    };
-
+function resolveStaticCurrency(
+    resourceType: string,
+    quantity: number,
+    assetSource: AssetSourceType,
+    t?: ExchangeTranslationFn
+): ResolvedExchangeReward {
     return {
         seq: 0,
         resourceType,
         quantity,
-        name: nameMap[resourceType] || getRewardTypeLabel(resourceType),
+        name: getRewardTypeLabel(resourceType, t),
         imageUrl:
             resourceType === "coin" ? getCommonMaterialThumbnailUrl("coin", assetSource) :
                 resourceType === "jewel" ? getCommonMaterialThumbnailUrl("jewel", assetSource) :
@@ -655,7 +697,8 @@ export function resolveExchangeRewards(
     materialMap: Map<number, IMaterialInfo>,
     mysekaiMaterialMap: Map<number, IMysekaiMaterial>,
     rewardLookups: ExchangeRewardLookups,
-    assetSource: AssetSourceType
+    assetSource: AssetSourceType,
+    t?: ExchangeTranslationFn
 ): ResolvedExchangeReward[] {
     return exchange.rewardDetails.map((detail) => {
         const resourceId = detail.resourceId;
@@ -669,7 +712,7 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: card?.prefix || `卡牌 #${resourceId ?? "?"}`,
+                    name: card?.prefix || formatResourceFallback("card", resourceId, t),
                     subtitle: card ? CHARACTER_NAMES[card.characterId] : undefined,
                     imageUrl: card ? getCardThumbnailUrl(card.characterId, card.assetbundleName, false, assetSource) : undefined,
                     linkHref: card ? `/cards/${card.id}` : undefined,
@@ -682,7 +725,7 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: material?.name || `持有物 #${resourceId ?? "?"}`,
+                    name: material?.name || formatResourceFallback("material", resourceId, t),
                     subtitle: material?.materialType,
                     imageUrl: typeof resourceId === "number" ? getMaterialThumbnailUrl(resourceId, assetSource) : undefined,
                 };
@@ -694,7 +737,7 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: material?.name || `MySekai 材料 #${resourceId ?? "?"}`,
+                    name: material?.name || formatResourceFallback("mysekaiMaterial", resourceId, t),
                     subtitle: material?.mysekaiMaterialRarityType,
                     imageUrl: material?.iconAssetbundleName ? getMysekaiMaterialThumbnailUrl(material.iconAssetbundleName, assetSource) : undefined,
                 };
@@ -706,7 +749,7 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: stamp?.name || `贴纸 #${resourceId ?? "?"}`,
+                    name: stamp?.name || formatResourceFallback("stamp", resourceId, t),
                     imageUrl: stamp?.assetbundleName ? getStampUrl(stamp.assetbundleName, assetSource) : undefined,
                     linkHref: stamp ? `/sticker?search=${encodeURIComponent(String(stamp.id))}` : undefined,
                 };
@@ -719,7 +762,7 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: costume?.name || `服装 #${resourceId ?? "?"}`,
+                    name: costume?.name || formatResourceFallback("costume", resourceId, t),
                     subtitle: costume?.source,
                     imageUrl: assetbundleName ? getCostumeThumbnailUrl(assetbundleName, assetSource) : undefined,
                     linkHref: costume ? `/costumes/${costume.costumeNumber}` : undefined,
@@ -736,8 +779,8 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: fixture?.name || `家具蓝图 #${resourceId ?? "?"}`,
-                    subtitle: fixture ? "家具蓝图" : blueprint?.mysekaiCraftType,
+                    name: fixture?.name || formatResourceFallback("mysekaiBlueprint", resourceId, t),
+                    subtitle: fixture ? getRewardTypeLabel("mysekai_blueprint", t) : blueprint?.mysekaiCraftType,
                     imageUrl: fixture ? getMysekaiFixtureThumbnailUrl(fixture.assetbundleName, assetSource, fixture.mysekaiFixtureMainGenreId) : undefined,
                     linkHref: fixture ? `/mysekai/${fixture.id}` : undefined,
                 };
@@ -749,7 +792,7 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: fixture?.name || `家具 #${resourceId ?? "?"}`,
+                    name: fixture?.name || formatResourceFallback("mysekaiFixture", resourceId, t),
                     subtitle: fixture?.mysekaiFixtureType,
                     imageUrl: fixture ? getMysekaiFixtureThumbnailUrl(fixture.assetbundleName, assetSource, fixture.mysekaiFixtureMainGenreId) : undefined,
                     linkHref: fixture ? `/mysekai/${fixture.id}` : undefined,
@@ -762,8 +805,8 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: extractGenericName(item, `练习券 #${resourceId ?? "?"}`),
-                    subtitle: "练习券",
+                    name: extractGenericName(item, formatResourceFallback("practiceTicket", resourceId, t)),
+                    subtitle: getRewardTypeLabel("practice_ticket", t),
                     imageUrl: typeof resourceId === "number" ? getPracticeTicketThumbnailUrl(resourceId, assetSource) : undefined,
                 };
             }
@@ -774,8 +817,8 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: extractGenericName(item, `技能练习券 #${resourceId ?? "?"}`),
-                    subtitle: "技能练习券",
+                    name: extractGenericName(item, formatResourceFallback("skillPracticeTicket", resourceId, t)),
+                    subtitle: getRewardTypeLabel("skill_practice_ticket", t),
                     imageUrl: typeof resourceId === "number" ? getSkillPracticeTicketThumbnailUrl(resourceId, assetSource) : undefined,
                 };
             }
@@ -786,8 +829,8 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: extractGenericName(item, `加成道具 #${resourceId ?? "?"}`),
-                    subtitle: "Boost 道具",
+                    name: extractGenericName(item, formatResourceFallback("boostItem", resourceId, t)),
+                    subtitle: getRewardTypeLabel("boost_item", t),
                 };
             }
             case "gacha_ticket": {
@@ -797,8 +840,8 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: extractGenericName(item, `扭蛋券 #${resourceId ?? "?"}`),
-                    subtitle: "扭蛋券",
+                    name: extractGenericName(item, formatResourceFallback("gachaTicket", resourceId, t)),
+                    subtitle: getRewardTypeLabel("gacha_ticket", t),
                 };
             }
             case "avatar_coordinate": {
@@ -808,8 +851,8 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: extractGenericName(item, `虚拟形象坐标 #${resourceId ?? "?"}`),
-                    subtitle: "虚拟形象坐标",
+                    name: extractGenericName(item, formatResourceFallback("avatarCoordinate", resourceId, t)),
+                    subtitle: getRewardTypeLabel("avatar_coordinate", t),
                 };
             }
             case "mysekai_item": {
@@ -819,8 +862,8 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: extractGenericName(item, `MySekai 道具 #${resourceId ?? "?"}`),
-                    subtitle: "MySekai 道具",
+                    name: extractGenericName(item, formatResourceFallback("mysekaiItem", resourceId, t)),
+                    subtitle: getRewardTypeLabel("mysekai_item", t),
                 };
             }
             case "mysekai_tool": {
@@ -830,8 +873,8 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: extractGenericName(item, `MySekai 工具 #${resourceId ?? "?"}`),
-                    subtitle: "MySekai 工具",
+                    name: extractGenericName(item, formatResourceFallback("mysekaiTool", resourceId, t)),
+                    subtitle: getRewardTypeLabel("mysekai_tool", t),
                 };
             }
             case "character_rank_exp": {
@@ -841,8 +884,8 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: CHARACTER_NAMES[characterId] || `角色 #${resourceId ?? "?"}`,
-                    subtitle: "角色等级经验",
+                    name: CHARACTER_NAMES[characterId] || formatResourceFallback("character", resourceId, t),
+                    subtitle: getRewardTypeLabel("character_rank_exp", t),
                     imageUrl: characterId ? getCharacterIconUrl(characterId) : undefined,
                 };
             }
@@ -850,7 +893,7 @@ export function resolveExchangeRewards(
             case "jewel":
             case "virtual_coin": {
                 return {
-                    ...resolveStaticCurrency(detail.resourceType, quantity, assetSource),
+                    ...resolveStaticCurrency(detail.resourceType, quantity, assetSource, t),
                     seq: detail.seq,
                     resourceId,
                 };
@@ -861,7 +904,7 @@ export function resolveExchangeRewards(
                     resourceType: detail.resourceType,
                     resourceId,
                     quantity,
-                    name: getRewardTypeLabel(detail.resourceType),
+                    name: getRewardTypeLabel(detail.resourceType, t),
                     subtitle: typeof resourceId === "number" ? `ID #${resourceId}` : undefined,
                 };
         }
@@ -872,7 +915,8 @@ export function resolveExchangeDisplayResources(
     exchange: FlattenedMaterialExchange,
     materialMap: Map<number, IMaterialInfo>,
     mysekaiMaterialMap: Map<number, IMysekaiMaterial>,
-    assetSource: AssetSourceType
+    assetSource: AssetSourceType,
+    t?: ExchangeTranslationFn
 ): ResolvedExchangeDisplayResource[] {
     return [...exchange.materialExchangeDisplayResourceGroups]
         .sort((a, b) => a.seq - b.seq)
@@ -885,7 +929,7 @@ export function resolveExchangeDisplayResources(
                     seq: group.seq,
                     resourceType: group.resourceType,
                     resourceId: group.resourceId,
-                    name: material?.name || `持有物 #${group.resourceId}`,
+                    name: material?.name || formatResourceFallback("material", group.resourceId, t),
                     subtitle: material?.materialType,
                     imageUrl: getMaterialThumbnailUrl(group.resourceId, assetSource),
                 };
@@ -899,7 +943,7 @@ export function resolveExchangeDisplayResources(
                     seq: group.seq,
                     resourceType: group.resourceType,
                     resourceId: group.resourceId,
-                    name: material?.name || `MySekai 材料 #${group.resourceId}`,
+                    name: material?.name || formatResourceFallback("mysekaiMaterial", group.resourceId, t),
                     subtitle: material?.mysekaiMaterialRarityType,
                     imageUrl: material?.iconAssetbundleName ? getMysekaiMaterialThumbnailUrl(material.iconAssetbundleName, assetSource) : undefined,
                 };
@@ -911,7 +955,7 @@ export function resolveExchangeDisplayResources(
                 seq: group.seq,
                 resourceType: group.resourceType,
                 resourceId: group.resourceId,
-                name: getRewardTypeLabel(group.resourceType),
+                name: getRewardTypeLabel(group.resourceType, t),
                 subtitle: `ID #${group.resourceId}`,
             };
         });

@@ -4,26 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import BaseFilters from "@/components/common/BaseFilters";
+import { useI18n } from "@/contexts/I18nContext";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { IMangaItem, IMangaData } from "@/types/manga";
 import { getMangaImageUrl } from "@/lib/assets";
 import { fetchMangaData } from "@/lib/fetch";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 
-// ==================== Constants ====================
-
-function formatDate(timestamp: number): string {
-    const d = new Date(timestamp * 1000);
-    return d.toLocaleDateString("zh-CN", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-    });
-}
-
 // ==================== Component ====================
 
 function MangaContent() {
+    const { t, formatDate } = useI18n();
+
     const [mangas, setMangas] = useState<IMangaItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -51,13 +43,13 @@ function MangaContent() {
                 setError(null);
             } catch (err) {
                 console.error("Error fetching mangas:", err);
-                setError(err instanceof Error ? err.message : "未知错误");
+                setError(err instanceof Error ? err.message : t("page.manga.unknownError"));
             } finally {
                 setIsLoading(false);
             }
         }
         fetchMangas();
-    }, []);
+    }, [t]);
 
     // Filter and sort — supports searching by title AND episode number
     const filteredMangas = useMemo(() => {
@@ -91,22 +83,23 @@ function MangaContent() {
         <BaseFilters
             filteredCount={filteredMangas.length}
             totalCount={mangas.length}
-            countUnit="话"
+            countUnit={t("page.manga.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={(q) => { setSearchQuery(q); resetDisplayCount(); }}
-            searchPlaceholder="输入标题或话数（如 123）..."
-            sortOptions={[{ id: "id", label: "话数" }]}
+            searchPlaceholder={t("page.manga.searchPlaceholder")}
+            sortOptions={[{ id: "id", label: t("page.manga.sortLabelEpisode") }]}
             sortBy="id"
             sortOrder={sortOrder}
             onSortChange={(_: string, order: "asc" | "desc") => setSortOrder(order)}
         />
     );
 
-    useQuickFilter("官方四格筛选", quickFilterContent, [
+    useQuickFilter(t("page.manga.filterTitle"), quickFilterContent, [
         searchQuery,
         sortOrder,
         filteredMangas.length,
         mangas.length,
+        t,
     ]);
 
     return (
@@ -114,20 +107,20 @@ function MangaContent() {
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">官方四格</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.manga.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    官方四格漫画 <span className="text-miku">列表</span>
+                    {t("page.manga.title")} <span className="text-miku">{t("page.manga.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览世界计划中的所有官方四格漫画（中文翻译版）
+                    {t("page.manga.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("page.manga.loadFailed")}</p>
                     <p>{error}</p>
                 </div>
             )}
@@ -174,10 +167,14 @@ function MangaContent() {
                                                 </div>
                                                 <div className="flex items-center justify-between mt-1">
                                                     <span className="text-[10px] text-slate-400">
-                                                        第{manga.id}话
+                                                        {t("page.manga.episodeLabel", { id: manga.id })}
                                                     </span>
                                                     <span className="text-[10px] text-slate-400">
-                                                        {formatDate(manga.date)}
+                                                        {formatDate(manga.date * 1000, {
+                                                            year: "numeric",
+                                                            month: "2-digit",
+                                                            day: "2-digit",
+                                                        })}
                                                     </span>
                                                 </div>
                                             </div>
@@ -194,7 +191,7 @@ function MangaContent() {
                                         data-shortcut-load-more="true"
                                         className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                                     >
-                                        加载更多
+                                        {t("page.manga.loadMore")}
                                         <span className="ml-2 text-sm opacity-80">
                                             ({displayedMangas.length} / {filteredMangas.length})
                                         </span>
@@ -205,7 +202,7 @@ function MangaContent() {
                             {/* All loaded */}
                             {displayedMangas.length > 0 && displayedMangas.length >= filteredMangas.length && (
                                 <div className="mt-8 text-center text-slate-400 text-sm">
-                                    已显示全部 {filteredMangas.length} 话漫画
+                                    {t("page.manga.allLoaded", { count: filteredMangas.length })}
                                 </div>
                             )}
                         </>
@@ -217,9 +214,11 @@ function MangaContent() {
 }
 
 export default function MangaClient() {
+    const { t } = useI18n();
+
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载官方四格漫画...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.manga.loadingFallback")}</div>}>
                 <MangaContent />
             </Suspense>
         </MainLayout>

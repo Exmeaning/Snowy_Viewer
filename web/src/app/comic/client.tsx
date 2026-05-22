@@ -5,6 +5,7 @@ import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
 import BaseFilters from "@/components/common/BaseFilters";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { getComicUrl } from "@/lib/assets";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
@@ -24,6 +25,7 @@ interface ITipInfo {
 
 function ComicContent() {
     const { assetSource } = useTheme();
+    const { t } = useI18n();
 
     const [comics, setComics] = useState<ITipInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +48,6 @@ function ComicContent() {
 
     // Fetch comics data
     useEffect(() => {
-        // document.title = "Snowy SekaiViewer 漫画"; // Moved to metadata
         async function fetchComics() {
             try {
                 setIsLoading(true);
@@ -96,10 +97,10 @@ function ComicContent() {
         <BaseFilters
             filteredCount={filteredComics.length}
             totalCount={comics.length}
-            countUnit="篇"
+            countUnit={t("page.comic.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            searchPlaceholder="输入漫画标题..."
+            searchPlaceholder={t("page.comic.searchPlaceholder")}
             sortOptions={[{ id: "id", label: "ID" }]}
             sortBy="id"
             sortOrder={sortOrder}
@@ -107,11 +108,12 @@ function ComicContent() {
         />
     );
 
-    useQuickFilter("漫画筛选", quickFilterContent, [
+    useQuickFilter(t("page.comic.filterTitle"), quickFilterContent, [
         searchQuery,
         sortOrder,
         filteredComics.length,
         comics.length,
+        t,
     ]);
 
 
@@ -121,29 +123,29 @@ function ComicContent() {
             <ImagePreviewModal
                 isOpen={!!selectedComic}
                 onClose={() => setSelectedComic(null)}
-                title={selectedComic ? `${selectedComic.title} 大图` : "漫画大图"}
+                title={selectedComic ? t("page.comic.previewTitle", { title: selectedComic.title }) : t("page.comic.previewTitleFallback")}
                 imageUrl={selectedComic?.assetbundleName ? getComicUrl(selectedComic.assetbundleName, assetSource) : ""}
-                alt={selectedComic?.title || "Comic"}
+                alt={selectedComic?.title || t("page.comic.previewAltFallback")}
                 fileName={selectedComic ? `comic_${selectedComic.id}.png` : "comic.png"}
             />
 
             {/* Page Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">漫画图鉴</span>
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.comic.badge")}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    四格漫画 <span className="text-miku">列表</span>
+                    {t("page.comic.title")} <span className="text-miku">{t("page.comic.titleHighlight")}</span>
                 </h1>
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                    浏览世界计划中的所有四格漫画
+                    {t("page.comic.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">加载失败</p>
+                    <p className="font-bold">{t("page.comic.loadFailed")}</p>
                     <p>{error}</p>
                 </div>
             )}
@@ -216,7 +218,7 @@ function ComicContent() {
                                         data-shortcut-load-more="true"
                                         className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                                     >
-                                        加载更多
+                                        {t("page.comic.loadMore")}
                                         <span className="ml-2 text-sm opacity-80">
                                             ({displayedComics.length} / {filteredComics.length})
                                         </span>
@@ -227,7 +229,7 @@ function ComicContent() {
                             {/* All loaded */}
                             {displayedComics.length > 0 && displayedComics.length >= filteredComics.length && (
                                 <div className="mt-8 text-center text-slate-400 text-sm">
-                                    已显示全部 {filteredComics.length} 篇漫画
+                                    {t("page.comic.allLoaded", { count: filteredComics.length })}
                                 </div>
                             )}
                         </>
@@ -239,9 +241,11 @@ function ComicContent() {
 }
 
 export default function ComicClient() {
+    const { t } = useI18n();
+
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载漫画...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.comic.loadingFallback")}</div>}>
                 <ComicContent />
             </Suspense>
         </MainLayout>

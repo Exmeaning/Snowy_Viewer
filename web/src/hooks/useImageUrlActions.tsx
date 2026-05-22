@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useI18n } from "@/contexts/I18nContext";
 import { copyImageFromUrl, saveImageFromUrl } from "@/lib/imageActions";
 
 interface UseImageUrlActionsOptions {
@@ -20,6 +21,7 @@ export function useImageUrlActions({
     imageUrl,
     fileName,
 }: UseImageUrlActionsOptions) {
+    const { t } = useI18n();
     const [isCopying, setIsCopying] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
@@ -61,7 +63,7 @@ export function useImageUrlActions({
 
     const handleCopy = useCallback(async () => {
         if (!imageUrl) {
-            setErrorMessage("图片资源不可用，请稍后重试");
+            setErrorMessage(t("common.imageActions.imageUnavailable"));
             return;
         }
 
@@ -79,15 +81,15 @@ export function useImageUrlActions({
                 setCopySuccess(false);
             }, 1800);
         } catch {
-            setErrorMessage("复制失败：当前浏览器可能不支持，请使用下载图片");
+            setErrorMessage(t("common.imageActions.copyFailedUseDownload"));
         } finally {
             setIsCopying(false);
         }
-    }, [imageUrl]);
+    }, [imageUrl, t]);
 
     const handleSave = useCallback(async () => {
         if (!imageUrl) {
-            setErrorMessage("图片资源不可用，请稍后重试");
+            setErrorMessage(t("common.imageActions.imageUnavailable"));
             return;
         }
 
@@ -106,11 +108,11 @@ export function useImageUrlActions({
                 setSaveSuccess(false);
             }, 1800);
         } catch {
-            setErrorMessage("下载失败，请稍后重试");
+            setErrorMessage(t("common.imageActions.downloadFailed"));
         } finally {
             setIsSaving(false);
         }
-    }, [fileName, imageUrl]);
+    }, [fileName, imageUrl, t]);
 
     const headerActions = (
         <>
@@ -118,8 +120,8 @@ export function useImageUrlActions({
                 onClick={handleCopy}
                 disabled={isCopying || isSaving}
                 className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                aria-label="复制图片"
-                title={isCopying ? "复制中" : copySuccess ? "复制成功" : "复制图片"}
+                aria-label={t("common.imageActions.copyImage")}
+                title={isCopying ? t("common.imageActions.copying") : copySuccess ? t("common.imageActions.copySuccess") : t("common.imageActions.copyImage")}
             >
                 <span className="relative block w-4 h-4">
                     <svg
@@ -153,8 +155,8 @@ export function useImageUrlActions({
                 onClick={handleSave}
                 disabled={isSaving || isCopying}
                 className="p-1.5 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                aria-label="下载图片"
-                title={isSaving ? "下载中" : saveSuccess ? "下载完成" : "下载图片"}
+                aria-label={t("common.imageActions.downloadImage")}
+                title={isSaving ? t("common.imageActions.downloading") : saveSuccess ? t("common.imageActions.downloadSuccess") : t("common.imageActions.downloadImage")}
             >
                 <span className="relative block w-4 h-4">
                     <svg

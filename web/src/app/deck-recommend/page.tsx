@@ -1,12 +1,7 @@
-import { Metadata } from "next";
 import DeckRecommendClient from "./client";
-import { getPageKeywords, SEO_SUFFIX } from "@/lib/seo-keywords";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "组卡推荐器",
-    description: "Project Sekai 组卡推荐器，自动计算最优卡组" + SEO_SUFFIX,
-    keywords: getPageKeywords("deck_recommend"),
-};
+export const generateMetadata = pageMetadata("deck_recommend");
 
 import { Suspense } from "react";
 

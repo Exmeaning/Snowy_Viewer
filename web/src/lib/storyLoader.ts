@@ -16,7 +16,7 @@ import {
 import { fetchMasterData } from "./fetch";
 import { getBackgroundImageUrl, getStoryVoiceUrl, getCardStoryVoiceUrl, getAreaTalkVoiceUrl, getSpecialStoryVoiceUrl, getStoryBgmUrl, getStorySoundEffectUrl } from "./assets";
 import type { AssetSourceType } from "@/contexts/ThemeContext";
-import { CHAR_NAMES, UNIT_NAME_MAP } from "@/types/types";
+import { CHAR_NAMES } from "@/types/types";
 import { IGameChara, IUnitProfile } from "@/types/types";
 import { getPartVoiceUrl, getStandardVoiceUrl } from "./voiceUrlFinder";
 
@@ -62,12 +62,9 @@ async function getCharacterName(
         // Check if this is a virtual singer (characterId 21-26)
         const isVirtualSinger = chara2d.characterId >= 21 && chara2d.characterId <= 26;
         
-        // If it's a virtual singer and has a specific unit, use UNIT_NAME_MAP for consistency
+        // If it's a virtual singer and has a specific unit, keep the stable unit field for UI badges.
         if (isVirtualSinger && chara2d.unit && chara2d.unit !== "piapro" && chara2d.unit !== "none") {
-            const unitName = UNIT_NAME_MAP[chara2d.unit];
-            if (unitName) {
-                return { id: chara2d.characterId, name, unitName, unitField: chara2d.unit };
-            }
+            return { id: chara2d.characterId, name, unitField: chara2d.unit };
         }
         
         return { id: chara2d.characterId, name };

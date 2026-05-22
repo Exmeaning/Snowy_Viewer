@@ -6,9 +6,10 @@ import MainLayout from "@/components/MainLayout";
 import RankingHeader from "@/components/realtime-ranking/RankingHeader";
 import RankingList from "@/components/realtime-ranking/RankingList";
 import CurrentEventCard from "@/components/realtime-ranking/CurrentEventCard";
+import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchEventList } from "@/lib/prediction-api";
-import { fetchRealtimeRanking, fetchRealtimeRankingMasterData, fetchRealtimeRankingEvents, fetchChurnData, fetchWorldLinkChurnData, fetchWorldLinkRanking } from "@/lib/realtime-ranking-api";
+import { fetchRealtimeRanking, fetchRealtimeRankingMasterData, fetchRealtimeRankingEvents, fetchChurnData, fetchWorldLinkChurnData, fetchWorldLinkRanking, getRealtimeRankingErrorMessage } from "@/lib/realtime-ranking-api";
 import ParkingPeriodsModal from "@/components/realtime-ranking/ParkingPeriodsModal";
 import {
     RealtimeRankingBoardMode,
@@ -24,7 +25,7 @@ import {
 } from "@/types/realtime-ranking";
 import { IEventInfo } from "@/types/events";
 import { EventListItem } from "@/types/prediction";
-import { CHARACTER_NAMES } from "@/types/types";
+import { getCharacterName } from "@/lib/i18n";
 
 const DEFAULT_REGION: RealtimeRankingRegion = "cn";
 const POLL_INTERVAL = 10_000;
@@ -39,7 +40,7 @@ function scrollToRank(rank: number) {
     const y = el.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
     window.scrollTo({ top: y, behavior: "smooth" });
 
-    // 滚动到达后给目标行加高亮脉冲
+    // Add a highlight pulse after scrolling reaches the target row.
     const highlight = () => {
         el.style.transition = "box-shadow 0.3s ease, background-color 0.3s ease";
         el.style.boxShadow = "inset 0 0 0 2px var(--color-miku), 0 0 16px var(--color-miku)";
@@ -56,7 +57,7 @@ function scrollToRank(rank: number) {
         }, 600);
     };
 
-    // 等滚动结束后触发高亮
+    // Trigger the highlight after scrolling settles.
     let scrollTimer: ReturnType<typeof setTimeout>;
     const onScroll = () => {
         clearTimeout(scrollTimer);
@@ -66,7 +67,7 @@ function scrollToRank(rank: number) {
         }, 80);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    // 兜底：如果已经在目标位置不会触发 scroll 事件
+    // Fallback in case the row is already in view and no scroll event fires.
     scrollTimer = setTimeout(() => {
         window.removeEventListener("scroll", onScroll);
         highlight();
@@ -81,7 +82,7 @@ const EMPTY_MASTER_DATA: RealtimeRankingMasterData = {
     gameCharaUnits: [],
 };
 
-/** 获取当前小时的 ISO key，如 "2026-03-23T14:00:00Z" */
+/** Get the ISO key for the current hour, e.g. "2026-03-23T14:00:00Z". */
 function getCurrentHourKey(): string {
     const now = new Date();
     now.setMinutes(0, 0, 0);
@@ -125,8 +126,8 @@ function buildEntriesWithDiff(
     return snapshot.entries.map((entry) => {
         const isTierLine = entry.rank > 100;
 
-        // rank > 100 的榜线行：按 rank 位置 diff（不管换没换人）
-        // rank <= 100 的玩家行：按 userId diff
+        // Tier-line rows after rank 100 diff by rank position, regardless of player changes.
+        // Player rows within TOP100 diff by userId.
         const previous = isTierLine
             ? previousByRank.get(entry.rank)
             : previousByUserId.get(entry.userId);
@@ -134,7 +135,7 @@ function buildEntriesWithDiff(
         const rankDelta  = previous && !isTierLine ? previous.rank - entry.rank : 0;
         const scoreDelta = previous ? entry.score - previous.score : 0;
 
-        // lastChanges key：榜线用 tier:{rank}，玩家用 userId
+        // lastChanges key: use tier:{rank} for tier lines and userId for players.
         const scopedKey = isTierLine
             ? `${scopeKey}:tier:${entry.rank}`
             : `${scopeKey}:${entry.userId}`;
@@ -198,6 +199,7 @@ function applySnapshotChurnDiff(
 }
 
 function RealtimeRankingContent() {
+    const { t } = useI18n();
     const { assetSource, themeColor } = useTheme();
 
     const [hasInitializedQuery, setHasInitializedQuery] = useState(false);
@@ -232,7 +234,7 @@ function RealtimeRankingContent() {
     const churnRetryTimerRef = useRef<number | null>(null);
     const worldLinkCheckedRef = useRef(false);
 
-    /** 热更：某用户/榜线分数变化时，更新其时速数据 */
+    /** Hot update: when a user or tier line score changes, update its speed data. */
     const updateChurnForUser = useCallback((key: string, scoreDelta: number, isTierLine?: boolean) => {
         const map = churnDataRef.current;
         const entry = map.get(key);
@@ -241,7 +243,7 @@ function RealtimeRankingContent() {
         const now = Date.now();
         const cutoff1h = now - 3600_000;
 
-        // 榜线条目无周回网格，跳过 hourly_churn / churn_48h
+        // Tier-line entries have no churn grid, so skip hourly_churn / churn_48h.
         if (!isTierLine) {
             const hourKey = getCurrentHourKey();
             const existing = entry.hourly_churn.find((h) => h.hour === hourKey);
@@ -253,25 +255,25 @@ function RealtimeRankingContent() {
             entry.churn_48h += 1;
         }
 
-        // 更新 recent_score_changes（追加新记录，保留近1小时内的）
+        // Update recent_score_changes by appending the new record and keeping the latest hour.
         const newChange = { time: now, delta: scoreDelta };
         entry.recent_score_changes = [
             ...entry.recent_score_changes.filter((c) => c.time >= cutoff1h),
             newChange,
         ];
 
-        // 重算 growth_1h
+        // Recalculate growth_1h.
         entry.growth_1h = entry.recent_score_changes
             .filter((c) => c.time >= cutoff1h && c.delta > 0)
             .reduce((acc, c) => acc + c.delta, 0);
 
-        // 榜线：同步更新 recent_activity.count（近期采集次数）
+        // For tier lines, also update recent_activity.count.
         if (isTierLine && entry.recent_activity) {
             entry.recent_activity.count += 1;
             entry.recent_activity.changed_at = [...entry.recent_activity.changed_at, now];
         }
 
-        // 触发 React 重渲染
+        // Trigger a React re-render.
         const next = new Map(map);
         setChurnData(next);
         churnDataRef.current = next;
@@ -332,8 +334,7 @@ function RealtimeRankingContent() {
         }
 
         try {
-            // WL活动时分开刷新端点：初次加载同时请求两个端点；
-            // 轮询刷新时，仅请求当前查看的榜单端点，避免慢网下双倍带宽消耗
+            // During WL events, load both endpoints initially; during polling, only refresh the active board to avoid double bandwidth on slow networks.
             const skipOverall   = asRefresh && boardModeRef.current === "worldlink";
             const skipWorldLink = asRefresh && boardModeRef.current !== "worldlink";
 
@@ -347,11 +348,11 @@ function RealtimeRankingContent() {
             const [snapshotResult, worldLinkResult] = await Promise.allSettled([snapshotPromise, worldLinkPromise]);
             if (currentRequestId !== requestIdRef.current) return;
 
-            // 刷新前保存旧引用，用于 diff 计算
+            // Keep old references before refreshing so diff calculation can use them.
             const previousOverall   = snapshotRef.current;
             const previousWorldLink = worldLinkSnapshotRef.current;
 
-            // --- 总榜快照处理 ---
+            // --- Overall snapshot handling ---
             let nextOverallSnapshot: RealtimeRankingSnapshot | null = null;
 
             if (!skipOverall) {
@@ -365,7 +366,7 @@ function RealtimeRankingContent() {
                 snapshotRef.current = nextOverallSnapshot;
                 setSnapshot(nextOverallSnapshot);
 
-                // 若活动已切换，清除旧的 WL 快照，避免跨活动数据残留
+                // If the event changed, clear old WL snapshots to avoid cross-event residue.
                 if (previousWorldLink && nextOverallSnapshot &&
                     previousWorldLink.eventId !== nextOverallSnapshot.eventId) {
                     worldLinkSnapshotRef.current = null;
@@ -374,13 +375,12 @@ function RealtimeRankingContent() {
                 }
             }
 
-            // --- WL单人榜快照处理 ---
+            // --- WL solo-board snapshot handling ---
             let nextWorldLinkSnapshot: WorldLinkSnapshot | null = null;
 
             if (!skipWorldLink) {
                 const currentEventId = snapshotRef.current?.eventId ?? nextOverallSnapshot?.eventId;
-                // 只有请求成功（fulfilled）才算真正"检查过" WL 数据是否可用；
-                // 超时/网络错误（rejected）不算，避免慢网下误显"暂未同步"提示
+                // Only fulfilled requests count as checking WL availability; timeouts/network failures should not show the pending-sync hint.
                 const wlFulfilled = worldLinkResult.status === "fulfilled";
                 const candidate = wlFulfilled ? worldLinkResult.value : null;
                 nextWorldLinkSnapshot = candidate && candidate.eventId === currentEventId ? candidate : null;
@@ -396,15 +396,14 @@ function RealtimeRankingContent() {
                     worldLinkSnapshotRef.current = null;
                     setWorldLinkSnapshot(null);
                     setPreviousWorldLinkSnapshot(null);
-                    // 请求成功但无可用数据（404/503/eventId 不匹配）→ 确认不可用
-                    // 请求失败（超时/网络错误）→ 不确认，等下次轮询重试
+                    // Fulfilled but no usable data confirms unavailability; rejected requests retry on the next poll.
                     if (wlFulfilled) {
                         worldLinkCheckedRef.current = true;
                     }
                 }
             }
 
-            // --- 周回热更 diff ---
+            // --- Churn hot-update diff ---
             if (asRefresh) {
                 if (boardModeRef.current === "worldlink") {
                     const selectedCharacterId = selectedWorldLinkCharacterIdRef.current;
@@ -428,13 +427,13 @@ function RealtimeRankingContent() {
             setError(null);
         } catch (err) {
             if (currentRequestId !== requestIdRef.current) return;
-            setError(err instanceof Error ? err.message : "加载实时排行榜失败");
+            setError(getRealtimeRankingErrorMessage(err, t));
         } finally {
             if (currentRequestId !== requestIdRef.current) return;
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [updateChurnForUser]);
+    }, [t, updateChurnForUser]);
 
     const loadChurnData = useCallback(async (
         nextRegion: RealtimeRankingRegion,
@@ -452,13 +451,13 @@ function RealtimeRankingContent() {
             const map = new Map<string, ChurnRankingEntry>();
             const scopeKey = data.board_type === "worldlink" ? `worldlink:${data.target_id}` : "overall";
             for (const entry of data.rankings) {
-                // 无 userId 的条目是榜线数据点（如 TOP200），用 "tier:{rank}" 作为 key
+                // Entries without userId are tier-line data points such as TOP200; use "tier:{rank}" as the key.
                 const isTierLine = entry.userId == null;
                 const mapKey = isTierLine ? `tier:${entry.rank}` : String(entry.userId);
                 map.set(mapKey, { ...entry, isTierLine: isTierLine || undefined });
 
                 if (isTierLine) {
-                    // 榜线条目：取 recent_score_changes 最后一条作为首次加载的 diff 基准
+                    // Tier-line entries: use the latest recent_score_changes item as the initial diff baseline.
                     const scopedTierKey = `${scopeKey}:tier:${entry.rank}`;
                     const changes = entry.recent_score_changes;
                     if (changes && changes.length > 0 && !lastChangesRef.current.has(scopedTierKey)) {
@@ -473,11 +472,10 @@ function RealtimeRankingContent() {
                     continue;
                 }
 
-                // 将 churn 的 last_change 预注入 lastChangesRef，
-                // 这样首次自动刷新后仍然能显示涨跌幅而不会被覆盖为 "—"
+                // Preload churn last_change into lastChangesRef so the first automatic refresh still shows the delta instead of overwriting it with "—".
                 const scopedUid = `${scopeKey}:${mapKey}`;
                 if (entry.last_change && !lastChangesRef.current.has(scopedUid)) {
-                    // 时间戳兼容：秒级 vs 毫秒级
+                    // Timestamp compatibility: seconds vs milliseconds.
                     const rawTime = entry.last_change.time;
                     const changedAt = rawTime < 1e12 ? rawTime * 1000 : rawTime;
                     lastChangesRef.current.set(scopedUid, {
@@ -536,7 +534,7 @@ function RealtimeRankingContent() {
         if (!baseSnapshot) return null;
         return {
             id: baseSnapshot.eventId,
-            name: `活动 #${baseSnapshot.eventId}`,
+            name: t("page.realtimeRanking.eventFallback", { id: baseSnapshot.eventId }),
             eventType: "marathon",
             assetbundleName: "",
             bgmAssetbundleName: "",
@@ -552,7 +550,7 @@ function RealtimeRankingContent() {
             unit: "",
             isCountLeaderCharacterPlay: false,
         };
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         if (!hasInitializedQuery) return;
@@ -602,7 +600,7 @@ function RealtimeRankingContent() {
 
                 const correctedEvent: IEventInfo = {
                     id: eventId,
-                    name: matched?.name || activeEvent?.name || `活动 #${eventId}`,
+                    name: matched?.name || activeEvent?.name || t("page.realtimeRanking.eventFallback", { id: eventId }),
                     eventType: matched?.eventType || "marathon",
                     assetbundleName: matched?.assetbundleName || "",
                     bgmAssetbundleName: matched?.bgmAssetbundleName || "",
@@ -632,7 +630,7 @@ function RealtimeRankingContent() {
         return () => {
             cancelled = true;
         };
-    }, [buildCurrentEventFromSnapshot, hasInitializedQuery, region, snapshot?.eventId, snapshot?.startAt, snapshot?.endAt]);
+    }, [buildCurrentEventFromSnapshot, hasInitializedQuery, region, snapshot?.eventId, snapshot?.startAt, snapshot?.endAt, t]);
 
     useEffect(() => {
         if (!hasInitializedQuery) return;
@@ -660,8 +658,7 @@ function RealtimeRankingContent() {
         && !!snapshot
         && worldLinkSnapshot.eventId === snapshot.eventId
         && worldLinkSnapshot.groups.length > 0;
-    // 只在 WL API 真正被成功检查过后才显示"暂未同步"，
-    // 请求超时/网络错误时不显示（等待下次轮询重试）
+    // Show the pending-sync hint only after the WL API was successfully checked; timeouts/network errors retry on later polls.
     const worldLinkConfirmedUnavailable = worldLinkCheckedRef.current && !worldLinkAvailable;
     const isWorldBloomEvent = currentEvent?.eventType === "world_bloom";
     const activeWorldLinkGroup = useMemo(
@@ -675,9 +672,12 @@ function RealtimeRankingContent() {
     const isWorldLinkMode = boardMode === "worldlink" && worldLinkAvailable && !!activeWorldLinkGroup;
     const activeSnapshot = isWorldLinkMode ? activeWorldLinkGroup : snapshot;
     const activePreviousSnapshot = isWorldLinkMode ? previousWorldLinkGroup : previousSnapshot;
+    const activeWorldLinkCharacterName = activeWorldLinkGroup
+        ? getCharacterName(t, activeWorldLinkGroup.gameCharacterId)
+        : "";
     const activeScopeLabel = isWorldLinkMode && activeWorldLinkGroup
-        ? `WL单榜 · ${CHARACTER_NAMES[activeWorldLinkGroup.gameCharacterId] || `角色 ${activeWorldLinkGroup.gameCharacterId}`}`
-        : "总榜";
+        ? t("page.realtimeRanking.board.scopeWorldLink", { character: activeWorldLinkCharacterName })
+        : t("page.realtimeRanking.board.scopeOverall");
     const activeChurnData = churnData;
     const shouldShowChurnToggle = true;
     const activeChurnBoardMode: RealtimeRankingBoardMode = isWorldLinkMode ? "worldlink" : "overall";
@@ -788,7 +788,7 @@ function RealtimeRankingContent() {
                                         : "border border-slate-200 bg-white text-slate-600 hover:border-miku/40 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                                 }`}
                             >
-                                总榜
+                                {t("page.realtimeRanking.board.overall")}
                             </button>
                             <button
                                 onClick={() => {
@@ -805,12 +805,12 @@ function RealtimeRankingContent() {
                                             : "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500"
                                 }`}
                             >
-                                WL单榜
+                                {t("page.realtimeRanking.board.worldlink")}
                             </button>
                             <span className="text-xs text-slate-500 dark:text-slate-400">
                                 {isWorldLinkMode
-                                    ? "当前为单人榜高精度采集视图。"
-                                    : "World Link 活动期间可切换到单人榜。"}
+                                    ? t("page.realtimeRanking.board.worldlinkHighPrecision")
+                                    : t("page.realtimeRanking.board.worldlinkAvailableHint")}
                             </span>
                         </div>
 
@@ -828,7 +828,7 @@ function RealtimeRankingContent() {
                                                     : "border border-slate-200 bg-white text-slate-600 hover:border-miku/40 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                                             }`}
                                         >
-                                            {CHARACTER_NAMES[group.gameCharacterId] || `角色 ${group.gameCharacterId}`}
+                                            {getCharacterName(t, group.gameCharacterId)}
                                         </button>
                                     );
                                 })}
@@ -837,7 +837,7 @@ function RealtimeRankingContent() {
 
                         {isWorldLinkMode && (
                             <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                                WL 单榜的近 48H 周回按当前角色独立统计。
+                                {t("page.realtimeRanking.board.worldlinkIndependentNotice")}
                             </div>
                         )}
                     </div>
@@ -845,20 +845,20 @@ function RealtimeRankingContent() {
 
                 {isWorldBloomEvent && worldLinkConfirmedUnavailable && !isLoading && (
                     <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
-                        当前为 World Link 活动，但 WL 单人榜数据暂未同步完成，稍后会自动显示。
+                        {t("page.realtimeRanking.board.worldlinkPendingNotice")}
                     </div>
                 )}
 
                 {error && (
                     <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-                        <p className="font-bold">加载失败</p>
+                        <p className="font-bold">{t("page.realtimeRanking.loadFailedTitle")}</p>
                         <p>{error}</p>
                     </div>
                 )}
 
                 {isLoading && !activeSnapshot ? (
                     <div className="glass-card rounded-2xl p-10 text-center text-slate-500">
-                        正在加载实时排行榜...
+                        {t("page.realtimeRanking.loading")}
                     </div>
                 ) : (
                     <RankingList
@@ -933,7 +933,7 @@ function RealtimeRankingContent() {
                             onClick={() => void loadSnapshot(region, true)}
                             className="w-14 rounded-xl bg-miku px-1.5 py-1.5 text-[11px] font-black text-white shadow-md shadow-miku/25 transition-colors hover:bg-miku-dark dark:shadow-miku/15"
                         >
-                            刷新
+                                {t("page.realtimeRanking.refresh")}
                         </motion.button>
                     </motion.div>
 
@@ -972,14 +972,14 @@ function RealtimeRankingContent() {
                                 onClick={() => void loadSnapshot(region, true)}
                                 className="rounded-lg bg-miku px-3 py-1.5 text-[11px] font-black text-white shadow-sm shadow-miku/25 transition-colors active:bg-miku-dark"
                             >
-                                刷新
+                            {t("page.realtimeRanking.refresh")}
                             </motion.button>
                         </div>
                     </motion.div>
                 </>
             )}
 
-            {/* 停车区间弹窗 */}
+            {/* Parking periods modal */}
             <ParkingPeriodsModal
                 userId={parkingModalUserId}
                 churnEntry={parkingModalUserId ? activeChurnData.get(parkingModalUserId) : undefined}
@@ -990,8 +990,10 @@ function RealtimeRankingContent() {
 }
 
 export default function RealtimeRankingClient() {
+    const { t } = useI18n();
+
     return (
-        <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">正在加载实时排行榜...</div>}>
+        <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.realtimeRanking.loading")}</div>}>
             <RealtimeRankingContent />
         </Suspense>
     );

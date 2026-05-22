@@ -3,6 +3,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { IProcessedAction, SnippetAction } from "@/types/story";
 import { getCharacterIconUrl } from "@/lib/assets";
+import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { UNIT_FIELD_TO_ID, UNIT_ICON_FILES } from "@/types/types";
 
@@ -14,7 +15,7 @@ interface TalkSnippetProps {
     cnText?: string;
     cnDisplayName?: string;
     translationSource?: 'official_cn' | 'llm' | 'human';
-    unitName?: string; // Localized unit name for virtual singers
+    unitName?: string; // Legacy unit name for virtual singers
     unitField?: string; // Unit field for virtual singers (e.g., 'light_sound', 'school_refusal')
 }
 
@@ -126,6 +127,7 @@ function isCgImage(picName: string): boolean {
 
 export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSnippetProps) {
     const [isImageOpen, setIsImageOpen] = useState(false);
+    const { t } = useI18n();
 
     switch (seType) {
         case "FullScreenText":
@@ -133,7 +135,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                 <div className="bg-slate-900/90 dark:bg-slate-950/90 rounded-xl p-6 my-4 shadow-lg border border-slate-700">
                     <div className="flex items-center gap-2 mb-3">
                         <span className="px-2.5 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-full">
-                            全屏文字
+                            {t("page.story.snippet.fullScreenText")}
                         </span>
                     </div>
                     <p className="text-white text-lg leading-relaxed text-center whitespace-pre-wrap">
@@ -148,7 +150,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl p-4 my-3 border border-amber-200 dark:border-amber-700">
                     <div className="flex items-center gap-2 mb-2">
                         <span className="px-2.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-medium rounded-full">
-                            字幕
+                            {t("page.story.snippet.telop")}
                         </span>
                     </div>
                     <p className="text-amber-800 dark:text-amber-200 text-base leading-relaxed text-center whitespace-pre-wrap">
@@ -162,11 +164,11 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                 <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 my-3 border border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-2 mb-2">
                         <span className="px-2.5 py-0.5 bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full">
-                            地点提示
+                            {t("page.story.snippet.placeInfo")}
                         </span>
                     </div>
                     <p className="text-slate-700 dark:text-slate-300 text-base leading-relaxed">
-                        地点：{text}
+                        {t("page.story.snippet.placeText", { place: text })}
                     </p>
                 </div>
             );
@@ -179,7 +181,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                 <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 my-3 border border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-2 mb-3">
                         <span className="px-2.5 py-0.5 bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full">
-                            {isCg ? 'CG插入' : '场景切换'}
+                            {isCg ? t("page.story.snippet.cgInsert") : t("page.story.snippet.backgroundChange")}
                         </span>
                     </div>
 
@@ -199,7 +201,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                             onClick={() => setIsImageOpen(true)}
                             className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
                         >
-                            {isCg ? '显示CG' : '显示背景'}
+                            {isCg ? t("page.story.snippet.showCg") : t("page.story.snippet.showBackground")}
                         </button>
                     )}
                 </div>
@@ -210,7 +212,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                 <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl p-3 my-3 border border-yellow-300 dark:border-yellow-700/50">
                     <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-xs font-medium rounded-full">
-                            回忆切入
+                            {t("page.story.snippet.flashbackIn")}
                         </span>
                     </div>
                 </div>
@@ -221,7 +223,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                 <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl p-3 my-3 border border-yellow-300 dark:border-yellow-700/50">
                     <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-xs font-medium rounded-full">
-                            回忆切出
+                            {t("page.story.snippet.flashbackOut")}
                         </span>
                     </div>
                 </div>
@@ -232,7 +234,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                 <div className="bg-slate-900/80 dark:bg-slate-950/80 rounded-xl p-3 my-3 border border-slate-600 dark:border-slate-700">
                     <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 bg-slate-600/30 text-slate-300 text-xs font-medium rounded-full">
-                            黑屏转场
+                            {t("page.story.snippet.blackOut")}
                         </span>
                     </div>
                 </div>
@@ -243,7 +245,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                 <div className="bg-white/90 dark:bg-slate-200/20 rounded-xl p-3 my-3 border border-slate-300 dark:border-slate-500">
                     <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 bg-slate-200/50 text-slate-600 dark:text-slate-300 text-xs font-medium rounded-full">
-                            白屏转场
+                            {t("page.story.snippet.whiteOut")}
                         </span>
                     </div>
                 </div>
@@ -254,7 +256,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                 <div className="bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-900/30 dark:to-violet-900/30 rounded-xl p-4 my-3 border border-indigo-300 dark:border-indigo-700/50">
                     <div className="flex items-center gap-2 mb-2">
                         <span className="px-2.5 py-0.5 bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-medium rounded-full">
-                            选项
+                            {t("page.story.snippet.choice")}
                         </span>
                     </div>
                     <p className="text-indigo-800 dark:text-indigo-200 text-base leading-relaxed text-center whitespace-pre-wrap">
@@ -268,7 +270,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                 <div className="bg-slate-900 dark:bg-slate-950 rounded-xl p-4 my-3 border border-slate-700">
                     <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded-full">
-                            视频
+                            {t("page.story.snippet.movie")}
                         </span>
                         <span className="text-slate-400 text-sm">{text}</span>
                     </div>
@@ -286,7 +288,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
                             <span className="px-2.5 py-0.5 bg-purple-500/30 text-purple-200 text-xs font-medium rounded-full">
-                                播放MV
+                                {t("page.story.snippet.playMv")}
                             </span>
                         </div>
                         {mvName ? (
@@ -311,6 +313,7 @@ interface SoundSnippetProps {
 
 export function SoundSnippet({ hasBgm, hasSe, audioUrl }: SoundSnippetProps) {
     const isNoSound = audioUrl?.endsWith("bgm00000.mp3");
+    const { t } = useI18n();
 
     return (
         <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 my-2 border border-slate-200/50 dark:border-slate-700/50">
@@ -319,11 +322,11 @@ export function SoundSnippet({ hasBgm, hasSe, audioUrl }: SoundSnippetProps) {
                     ? "bg-green-500/20 text-green-600 dark:text-green-400"
                     : "bg-orange-500/20 text-orange-600 dark:text-orange-400"
                     }`}>
-                    {hasBgm ? "BGM" : hasSe ? "SE" : "音效"}
+                    {hasBgm ? "BGM" : hasSe ? "SE" : t("page.story.snippet.soundEffect")}
                 </span>
 
                 {isNoSound ? (
-                    <span className="text-slate-400 text-sm">静音</span>
+                    <span className="text-slate-400 text-sm">{t("page.story.snippet.silent")}</span>
                 ) : audioUrl ? (
                     <AudioPlayButton url={audioUrl} />
                 ) : null}
@@ -341,6 +344,7 @@ interface AudioPlayButtonProps {
 function AudioPlayButton({ url, className = "" }: AudioPlayButtonProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+    const { t } = useI18n();
 
     const handlePlay = () => {
         if (isPlaying && audio) {
@@ -364,7 +368,7 @@ function AudioPlayButton({ url, className = "" }: AudioPlayButtonProps) {
                 ? "bg-miku/20 text-miku"
                 : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-miku/10 hover:text-miku"
                 } ${className}`}
-            title={isPlaying ? "停止" : "播放"}
+            title={isPlaying ? t("page.story.snippet.stopAudio") : t("page.story.snippet.playAudio")}
         >
             {isPlaying ? (
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

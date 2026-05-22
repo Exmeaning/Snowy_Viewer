@@ -1,12 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
-import { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "服务条款",
-    description: "Moesekai 服务条款",
-};
+export const generateMetadata = pageMetadata("terms");
 
 export default function TermsPage() {
     return (

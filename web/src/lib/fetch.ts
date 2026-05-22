@@ -8,6 +8,7 @@
  * invalidation. Cache is transparent to all callers of fetchMasterData().
  */
 
+import { MOE_BGM_DURATIONS_URL } from "./assets";
 import { getMasterDataCache, setMasterDataCache, isIndexedDBAvailable } from "./masterdata-cache";
 
 // Server source type
@@ -343,6 +344,20 @@ export async function fetchBilibiliEventsData<T>(): Promise<T> {
     const response = await fetchWithCompression(BILIBILI_EVENTS_JSON_URL);
     if (!response.ok) {
         throw new Error(`Failed to fetch Bilibili events data: HTTP ${response.status}`);
+    }
+    return response.json();
+}
+
+// ==================== BGM Duration Data Fetching ====================
+
+/**
+ * Fetch BGM duration metadata from the Moe static CDN.
+ * This supplements soundtrack masterdata with unreleased/extra BGM candidates.
+ */
+export async function fetchBgmDurationsData<T>(): Promise<T> {
+    const response = await fetchWithCompression(MOE_BGM_DURATIONS_URL);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch BGM duration data: HTTP ${response.status}`);
     }
     return response.json();
 }

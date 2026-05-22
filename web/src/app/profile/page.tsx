@@ -1,11 +1,8 @@
-import { Metadata } from "next";
 import { Suspense } from "react";
 import ProfileClient from "./client";
+import { pageMetadata } from "@/lib/seo-metadata";
 
-export const metadata: Metadata = {
-    title: "我的主页",
-    description: "Moesekai 个人主页",
-};
+export const generateMetadata = pageMetadata("profile");
 
 export default function ProfilePage() {
     return (
