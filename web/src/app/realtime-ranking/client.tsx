@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import MainLayout from "@/components/MainLayout";
 import RankingHeader from "@/components/realtime-ranking/RankingHeader";
 import RankingList from "@/components/realtime-ranking/RankingList";
@@ -199,7 +199,7 @@ function applySnapshotChurnDiff(
 }
 
 function RealtimeRankingContent() {
-    const { t } = useI18n();
+    const { t, formatNumber } = useI18n();
     const { assetSource, themeColor } = useTheme();
 
     const [hasInitializedQuery, setHasInitializedQuery] = useState(false);
@@ -222,6 +222,46 @@ function RealtimeRankingContent() {
     const [showChurn, setShowChurn] = useState(false);
     const [churnData, setChurnData] = useState<Map<string, ChurnRankingEntry>>(new Map());
     const [parkingModalUserId, setParkingModalUserId] = useState<string | null>(null);
+    const [trackedUserId, setTrackedUserId] = useState<string | null>(null);
+    const [lastTrackedData, setLastTrackedData] = useState<RealtimeRankingEntryWithDiff | null>(null);
+
+    // Load tracked user ID from localStorage on region change or snapshot event change
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const eventId = snapshot?.eventId;
+        if (!eventId) {
+            setTrackedUserId(null);
+            return;
+        }
+        const key = `realtime-ranking:tracked:${region}:${eventId}`;
+        try {
+            const saved = localStorage.getItem(key);
+            setTrackedUserId(saved);
+        } catch {
+            setTrackedUserId(null);
+        }
+    }, [region, snapshot?.eventId]);
+
+    // Handle track toggle
+    const handleTrackToggle = useCallback((userId: string) => {
+        const eventId = snapshotRef.current?.eventId;
+        if (!eventId) return;
+        const key = `realtime-ranking:tracked:${region}:${eventId}`;
+        setTrackedUserId((prev) => {
+            const next = prev === userId ? null : userId;
+            try {
+                if (next) {
+                    localStorage.setItem(key, next);
+                } else {
+                    localStorage.removeItem(key);
+                }
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    }, [region]);
+
     const requestIdRef = useRef(0);
     const snapshotRef = useRef<RealtimeRankingSnapshot | null>(null);
     const worldLinkSnapshotRef = useRef<WorldLinkSnapshot | null>(null);
@@ -752,6 +792,17 @@ function RealtimeRankingContent() {
         );
     }, [activePreviousSnapshot, activeSnapshot, activeWorldLinkGroup, isWorldLinkMode]);
 
+    const trackedEntry = useMemo(() => {
+        if (!trackedUserId) return null;
+        return rankingEntries.find((entry) => entry.userId === trackedUserId) || null;
+    }, [rankingEntries, trackedUserId]);
+
+    useEffect(() => {
+        if (trackedEntry) {
+            setLastTrackedData(trackedEntry);
+        }
+    }, [trackedEntry]);
+
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 md:pr-24 py-8">
@@ -857,7 +908,7 @@ function RealtimeRankingContent() {
                 )}
 
                 {isLoading && !activeSnapshot ? (
-                    <div className="glass-card rounded-2xl p-10 text-center text-slate-500">
+                    <div className="ios-glass-card rounded-2xl p-10 text-center text-slate-500">
                         {t("page.realtimeRanking.loading")}
                     </div>
                 ) : (
@@ -870,6 +921,8 @@ function RealtimeRankingContent() {
                         churnData={activeChurnData}
                         onShowParkingPeriods={setParkingModalUserId}
                         showExtendedWarning={true}
+                        trackedUserId={trackedUserId}
+                        onTrackToggle={handleTrackToggle}
                     />
                 )}
             </div>
@@ -882,7 +935,7 @@ function RealtimeRankingContent() {
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ type: "spring", stiffness: 260, damping: 24, delay: 0.15 }}
-                        className="hidden md:flex fixed right-2 top-1/2 -translate-y-1/2 z-30 flex-col items-center gap-1.5 rounded-2xl border border-miku/20 bg-white/90 p-2 shadow-lg shadow-miku/10 backdrop-blur-md dark:border-miku/30 dark:bg-slate-900/90 dark:shadow-miku/5"
+                        className="hidden md:flex fixed right-2 top-1/2 -translate-y-1/2 z-30 flex-col items-center gap-1.5 rounded-2xl ios-glass-card border border-miku/20 p-2 shadow-lg dark:border-miku/30"
                     >
                         {QUICK_JUMP_RANKS.map((rank, i) => (
                             <motion.button
@@ -942,7 +995,7 @@ function RealtimeRankingContent() {
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ type: "spring", stiffness: 280, damping: 24, delay: 0.1 }}
-                        className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between gap-2 border-t border-miku/20 bg-white/90 px-4 py-2.5 backdrop-blur-md dark:border-miku/30 dark:bg-slate-900/90"
+                        className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between gap-2 border-t border-miku/20 px-4 py-2.5 ios-glass-card dark:border-miku/30"
                     >
                         <div className="flex items-center gap-1.5">
                             {QUICK_JUMP_RANKS.map((rank) => (
@@ -978,6 +1031,108 @@ function RealtimeRankingContent() {
                     </motion.div>
                 </>
             )}
+
+            {/* Tracked Player Floating Panel */}
+            <AnimatePresence>
+                {trackedUserId && lastTrackedData && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 40, scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                        className="fixed bottom-18 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[92%] sm:w-auto sm:min-w-[480px] max-w-[640px]"
+                    >
+                        <div className="ios-glass-panel rounded-2xl p-4 border border-miku/30 dark:border-miku/20 shadow-2xl flex flex-col gap-3 relative overflow-hidden">
+                            {/* Glow element */}
+                            <div className="absolute -inset-px bg-gradient-to-r from-miku/10 via-sky-500/10 to-miku/10 opacity-30 pointer-events-none rounded-2xl" />
+                            
+                            <div className="flex items-center justify-between gap-3 relative z-10">
+                                {/* Player Info Left */}
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="shrink-0 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 px-1.5 py-0.5 text-[10px] font-black leading-none">
+                                        #{lastTrackedData.rank}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-[10px] font-bold text-miku uppercase px-1.5 py-0.5 rounded-full bg-miku/10 border border-miku/20">
+                                                {t("page.realtimeRanking.trackingTarget")}
+                                            </span>
+                                            {!trackedEntry && (
+                                                <span className="text-[10px] font-bold text-amber-500 uppercase px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 animate-pulse-fast">
+                                                    {t("page.realtimeRanking.trackingSync")}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h4 className="font-bold text-sm text-primary-text truncate mt-0.5">
+                                            {lastTrackedData.displayName}
+                                        </h4>
+                                    </div>
+                                </div>
+
+                                {/* Score & Diff Right */}
+                                <div className="text-right shrink-0">
+                                    <div className="text-sm font-black text-primary-text">
+                                        {formatNumber(lastTrackedData.score)}<span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 ml-0.5">P</span>
+                                    </div>
+                                    {lastTrackedData.lastScoreDelta != null && lastTrackedData.lastScoreDelta !== 0 && (
+                                        <div className="text-[10px] font-black text-emerald-500">
+                                            +{formatNumber(lastTrackedData.lastScoreDelta)}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Extra stats: Churn/Speed & Actions */}
+                            <div className="flex items-center justify-between border-t border-slate-200/40 dark:border-slate-800/40 pt-2.5 gap-4 relative z-10">
+                                {/* Speed info if churn data is loaded */}
+                                <div className="flex items-center gap-2 min-w-0">
+                                    {(() => {
+                                        const key = lastTrackedData.rank > 100 ? `tier:${lastTrackedData.rank}` : lastTrackedData.userId;
+                                        const churn = activeChurnData.get(key);
+                                        if (churn) {
+                                            return (
+                                                <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                                                    <span className="shrink-0 inline-flex items-center gap-1 rounded bg-miku/10 px-1 py-0.5 font-bold text-miku">
+                                                        <span>1H:</span>
+                                                        <span>{churn.growth_1h ? `${Math.round(churn.growth_1h / 1000)}k` : "0k"}</span>
+                                                    </span>
+                                                    <span className="shrink-0 inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-800 px-1 py-0.5 font-bold">
+                                                        <span>48H:</span>
+                                                        <span className="text-slate-700 dark:text-slate-300">{churn.churn_48h}</span>
+                                                    </span>
+                                                </div>
+                                            );
+                                        }
+                                        return (
+                                            <p className="text-[10px] text-slate-400 truncate">
+                                                {t("page.realtimeRanking.trackingHelp")}
+                                            </p>
+                                        );
+                                    })()}
+                                </div>
+
+                                {/* Action buttons */}
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    {trackedEntry && (
+                                        <button
+                                            onClick={() => scrollToRank(lastTrackedData.rank)}
+                                            className="ios-glass-btn text-miku border border-miku/20 hover:bg-miku/10 px-2.5 py-1 text-xs font-bold rounded-lg transition-all"
+                                        >
+                                            {t("page.realtimeRanking.trackingFocus")}
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => handleTrackToggle(lastTrackedData.userId)}
+                                        className="ios-glass-btn text-slate-500 dark:text-slate-400 hover:text-rose-500 hover:border-rose-500/20 px-2.5 py-1 text-xs font-bold rounded-lg transition-all"
+                                    >
+                                        {t("page.realtimeRanking.untrackPlayer")}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Parking periods modal */}
             <ParkingPeriodsModal

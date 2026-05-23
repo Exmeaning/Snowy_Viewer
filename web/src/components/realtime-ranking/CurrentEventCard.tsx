@@ -51,7 +51,7 @@ export default function CurrentEventCard({ event, assetSource, themeColor }: Cur
 
     return (
         <Link href={`/events/${event.id}`} className="block group mb-6">
-            <div className="relative flex h-32 md:h-36 rounded-2xl overflow-hidden glass-card border border-white/40 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99] hover:shadow-md cursor-pointer">
+            <div className="relative flex h-32 md:h-36 rounded-2xl overflow-hidden ios-glass-card ios-glass-card-interactive shadow-sm transition-transform cursor-pointer">
                 {/* Left Side: Background & Logo */}
                 <div className="w-[45%] relative overflow-hidden">
                     {hasBanner ? (

@@ -21,6 +21,8 @@ interface RankingRowProps {
     churnEntry?: ChurnRankingEntry;
     churnData: Map<string, ChurnRankingEntry>;
     onShowParkingPeriods: (userId: string) => void;
+    isTracked?: boolean;
+    onTrackToggle?: (userId: string) => void;
 }
 
 type RealtimeRankingTranslationFn = ReturnType<typeof useI18n>["t"];
@@ -57,7 +59,7 @@ function getCurrentHourChurn(churnEntry?: ChurnRankingEntry): number {
     return found?.count ?? 0;
 }
 
-export default function RankingRow({ entry, masterData, assetSource, secondsSinceUpdate, showChurn, churnEntry, churnData, onShowParkingPeriods }: RankingRowProps) {
+export default function RankingRow({ entry, masterData, assetSource, secondsSinceUpdate, showChurn, churnEntry, churnData, onShowParkingPeriods, isTracked = false, onTrackToggle }: RankingRowProps) {
     const { t, formatNumber } = useI18n();
     const leaderCard = entry.leaderCardId
         ? masterData.cards.find((card) => card.id === entry.leaderCardId)
@@ -177,6 +179,8 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
             : "text-rose-600 dark:text-rose-400"
         : "text-primary-text";
 
+    const trackedClasses = isTracked ? "ring-2 ring-miku shadow-[0_0_15px_rgba(51,204,187,0.3)] dark:shadow-[0_0_20px_rgba(51,204,187,0.2)] z-20 rounded-xl" : "";
+
     return (
         <motion.div
             layout
@@ -184,7 +188,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
             initial={entry.isNewEntry ? { opacity: 0, y: 6 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
-            className={`relative overflow-hidden ${rowBg}`}
+            className={`relative overflow-hidden transition-all duration-300 ${rowBg} ${trackedClasses}`}
         >
             {/* Stock-style background flash */}
             <AnimatePresence>
@@ -273,7 +277,39 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                             className="flex items-baseline gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden sm:overflow-visible"
                             style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
                         >
-                            <h3 className="shrink-0 text-sm font-bold leading-tight text-primary-text sm:shrink sm:truncate">{entry.displayName}</h3>
+                            <h3 className="shrink-0 text-sm font-bold leading-tight text-primary-text sm:shrink sm:truncate flex items-center gap-1.5">
+                                <span className="truncate">{entry.displayName}</span>
+                                {!isExtendedTier && onTrackToggle && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            onTrackToggle(entry.userId);
+                                        }}
+                                        className={`inline-flex items-center justify-center p-0.5 rounded-md transition-all duration-200 hover:scale-110 active:scale-90 hover:bg-miku/15 ${
+                                            isTracked
+                                                ? "text-miku"
+                                                : "text-slate-300 hover:text-miku dark:text-slate-600 dark:hover:text-miku"
+                                        }`}
+                                        title={isTracked ? t("page.realtimeRanking.untrackPlayer") : t("page.realtimeRanking.trackPlayer")}
+                                    >
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth={2.8}
+                                            className="w-3.5 h-3.5"
+                                        >
+                                            <circle cx="12" cy="12" r="8" />
+                                            <circle cx="12" cy="12" r="3" fill={isTracked ? "currentColor" : "none"} />
+                                            <line x1="12" y1="1" x2="12" y2="3" />
+                                            <line x1="12" y1="21" x2="12" y2="23" />
+                                            <line x1="1" y1="12" x2="3" y2="12" />
+                                            <line x1="21" y1="12" x2="23" y2="12" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </h3>
                             {entry.signature && (
                                 <p className="shrink-0 text-[11px] leading-tight text-slate-400 dark:text-slate-500 sm:shrink sm:truncate">{entry.signature}</p>
                             )}
