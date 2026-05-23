@@ -769,7 +769,7 @@ export const enUSMessages = {
             refreshing: "Refreshing...",
         },
         footer: {
-            version: "Moesekai · 1.2-preview-beta2",
+            version: "Moesekai · 1.2-preview-beta3",
         },
         sidebar: {
             notLoggedIn: "Not signed in",
