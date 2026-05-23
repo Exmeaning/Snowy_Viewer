@@ -26,7 +26,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
 
     return (
         <Link href={`/music/${music.id}`} className="group block" data-shortcut-item="true">
-            <div className="relative rounded-xl overflow-hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200/60 dark:border-slate-700/60 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div className="relative rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive">
                 {/* Jacket Image */}
                 <div className="relative aspect-square overflow-hidden">
                     <Image

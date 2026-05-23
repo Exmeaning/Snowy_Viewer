@@ -447,7 +447,7 @@ export default function CardDetailPage() {
                             <div className="space-y-4">
                                 {/* Normal Image */}
                                 {!isTrainedOnlyCard && (
-                                    <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                                    <div className="ios-glass-card rounded-2xl overflow-hidden">
                                         <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
                                             <span className="text-sm font-bold text-slate-600">{t("page.cards.viewNormal")}</span>
                                         </div>
@@ -465,7 +465,7 @@ export default function CardDetailPage() {
                                 )}
                                 {/* Trained Image */}
                                 {(trainable && !isBirthday) && (
-                                    <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                                    <div className="ios-glass-card rounded-2xl overflow-hidden">
                                         <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
                                             <span className="text-sm font-bold text-slate-600">{t("page.cards.viewTrained")}</span>
                                         </div>
@@ -483,23 +483,23 @@ export default function CardDetailPage() {
                             </div>
                         ) : (
                             /* Normal Mode: Tabs and switchable view */
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                            <div className="ios-glass-card rounded-2xl overflow-hidden">
                                 {/* Image Toggle (only for trainable non-birthday cards that have both images) */}
                                 {trainable && !isBirthday && !isTrainedOnlyCard && (
-                                    <div className="flex border-b border-slate-100">
+                                    <div className="flex p-1 bg-slate-100/30 dark:bg-slate-900/30 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-800/80 gap-1">
                                         <button
-                                            className={`flex-1 py-3 text-sm font-bold transition-colors ${!showTrained
-                                                ? "text-miku bg-miku/5 border-b-2 border-miku"
-                                                : "text-slate-400 hover:text-slate-600"
+                                            className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${!showTrained
+                                                ? "ios-glass-tab-active bg-miku text-white shadow-sm"
+                                                : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/20 dark:hover:bg-slate-800/40"
                                                 }`}
                                             onClick={() => setShowTrained(false)}
                                         >
                                             {t("page.cards.viewNormal")}
                                         </button>
                                         <button
-                                            className={`flex-1 py-3 text-sm font-bold transition-colors ${showTrained
-                                                ? "text-miku bg-miku/5 border-b-2 border-miku"
-                                                : "text-slate-400 hover:text-slate-600"
+                                            className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${showTrained
+                                                ? "ios-glass-tab-active bg-miku text-white shadow-sm"
+                                                : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/20 dark:hover:bg-slate-800/40"
                                                 }`}
                                             onClick={() => setShowTrained(true)}
                                         >
@@ -577,7 +577,7 @@ export default function CardDetailPage() {
                     {/* Right: Card Info */}
                     <div className="space-y-6">
                         {/* Basic Info Card */}
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                        <div className="ios-glass-card rounded-2xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
                                 <h2 className="font-bold text-slate-800 flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -708,7 +708,7 @@ export default function CardDetailPage() {
                         </div>
 
                         {/* Stats Card */}
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                        <div className="ios-glass-card rounded-2xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
                                 <h2 className="font-bold text-slate-800 flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -747,7 +747,7 @@ export default function CardDetailPage() {
                         </div>
 
                         {/* Skill Card */}
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                        <div className="ios-glass-card rounded-2xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
                                 <h2 className="font-bold text-slate-800 flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -834,7 +834,7 @@ export default function CardDetailPage() {
 
                         {/* Costumes Card */}
                         {relatedCostumes.length > 0 && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                            <div className="ios-glass-card rounded-2xl overflow-hidden">
                                 <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
                                     <h2 className="font-bold text-slate-800 flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -851,7 +851,7 @@ export default function CardDetailPage() {
 
                         {/* Card Story Card */}
                         {hasCardStory && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden group">
+                            <div className="ios-glass-card rounded-2xl overflow-hidden group">
                                 <Link href={`/story/card/${cardId}`} className="block">
                                     <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-pink-500/10 to-transparent group-hover:from-pink-500/20 transition-colors">
                                         <h2 className="font-bold text-slate-800 flex items-center gap-2">
@@ -882,7 +882,7 @@ export default function CardDetailPage() {
 
                         {/* Related Event Card */}
                         {relatedEvent && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                            <div className="ios-glass-card rounded-2xl overflow-hidden">
                                 <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
                                     <h2 className="font-bold text-slate-800 flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -926,7 +926,7 @@ export default function CardDetailPage() {
 
                         {/* Related Gacha Card */}
                         {relatedGachas.length > 0 && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                            <div className="ios-glass-card rounded-2xl overflow-hidden">
                                 <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-purple-500/10 to-transparent">
                                     <h2 className="font-bold text-slate-800 flex items-center gap-2">
                                         <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
