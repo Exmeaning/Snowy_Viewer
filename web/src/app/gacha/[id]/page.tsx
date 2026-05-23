@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { getGachaLogoUrl } from "@/lib/assets";
 import { getGachaMeta } from "@/lib/metadata";
 import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
-import { formatDetailSeoDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
+import { formatDetailSeoDescription, getDetailFallbackDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
 import GachaDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         return buildDetailMetadata({
             locale,
             title: getDetailFallbackTitle("gacha", locale),
-            description: getDetailFallbackTitle("gacha", locale),
+            description: getDetailFallbackDescription("gacha", locale),
             path: `/gacha/${id}`,
         });
     }

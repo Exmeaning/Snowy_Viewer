@@ -15,13 +15,18 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {
+    fetchMangaJson,
     fetchMasterJson,
     getBuildFetchConcurrency,
+    getConfiguredMangaDataUrls,
     getConfiguredMasterDataUrls,
     mapWithConcurrency,
     readJsonIfExists,
     requireFreshBuildData,
 } from './lib/build-fetch.mjs';
+import seoRouteData from '../src/lib/seo-routes-data.json' with { type: 'json' };
+
+const SEO_ROUTE_DATA = seoRouteData;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,31 +70,22 @@ function hasUsefulDetails(detailRoutes) {
     return Array.isArray(detailRoutes) && detailRoutes.length > 0;
 }
 
-const mainRoutes = [
-    { path: '/', priority: 1.0, changefreq: 'daily' },
-    { path: '/about/', priority: 0.8, changefreq: 'monthly' },
-    { path: '/cards/', priority: 0.9, changefreq: 'daily' },
-    { path: '/music/', priority: 0.9, changefreq: 'daily' },
-    { path: '/events/', priority: 0.9, changefreq: 'daily' },
-    { path: '/gacha/', priority: 0.8, changefreq: 'daily' },
-    { path: '/sticker/', priority: 0.7, changefreq: 'weekly' },
-    { path: '/comic/', priority: 0.7, changefreq: 'weekly' },
-    { path: '/live/', priority: 0.7, changefreq: 'weekly' },
-    { path: '/character/', priority: 0.8, changefreq: 'weekly' },
-    { path: '/mysekai/', priority: 0.7, changefreq: 'weekly' },
-    { path: '/materials/', priority: 0.7, changefreq: 'weekly' },
-    { path: '/exchanges/', priority: 0.7, changefreq: 'weekly' },
-    { path: '/costumes/', priority: 0.7, changefreq: 'weekly' },
-    { path: '/manga/', priority: 0.6, changefreq: 'weekly' },
-    { path: '/eventstory/', priority: 0.7, changefreq: 'weekly' },
-    { path: '/honors/', priority: 0.6, changefreq: 'weekly' },
-    { path: '/prediction/', priority: 0.6, changefreq: 'daily' },
-    { path: '/deck-recommend/', priority: 0.6, changefreq: 'monthly' },
-    { path: '/score-control/', priority: 0.6, changefreq: 'monthly' },
-    { path: '/mysekai-preview/', priority: 0.6, changefreq: 'daily' },
-    { path: '/mysekai-preview/ranking/', priority: 0.5, changefreq: 'daily' },
-    { path: '/mysekai-preview/scene/', priority: 0.4, changefreq: 'monthly' },
-];
+const mainRoutes = SEO_ROUTE_DATA
+    .filter(route => route.indexable)
+    .map(route => ({
+        path: route.path,
+        priority: route.priority,
+        changefreq: route.changefreq,
+    }));
+
+function buildMangaRoutes(mangasRaw) {
+    return Object.entries(mangasRaw || {}).map(([id, manga]) => ({
+        path: `/manga/${id}/`,
+        lastmod: formatDate(manga?.publishedAt || manga?.updatedAt),
+        priority: 0.5,
+        changefreq: 'monthly',
+    }));
+}
 
 const routeSources = [
     {
@@ -150,9 +146,9 @@ const routeSources = [
             {
                 key: 'eventStories',
                 logLabel: 'event story pages',
-                prefix: '/eventstory/',
+                prefix: '/story/event/',
                 build: events => (Array.isArray(events) ? events : []).map(e => ({
-                    path: `/eventstory/${e.id}/`,
+                    path: `/story/event/${e.id}/`,
                     lastmod: formatDate(e.startAt),
                     priority: 0.5,
                     changefreq: 'weekly',
@@ -247,6 +243,58 @@ const routeSources = [
             },
         ],
     },
+    {
+        label: 'costumes',
+        filename: 'moe_costume.json',
+        fallback: { costumes: [] },
+        validate: data => data && Array.isArray(data.costumes),
+        groups: [
+            {
+                key: 'costumes',
+                logLabel: 'costume pages',
+                prefix: '/costumes/',
+                build: costumesRaw => (costumesRaw?.costumes || []).map(costume => ({
+                    path: `/costumes/${costume.costumeNumber}/`,
+                    lastmod: formatDate(costume.publishedAt || costume.archivePublishedAt),
+                    priority: 0.5,
+                    changefreq: 'monthly',
+                })),
+            },
+        ],
+    },
+    {
+        label: 'mysekaiFixtures',
+        filename: 'mysekaiFixtures.json',
+        fallback: [],
+        validate: Array.isArray,
+        groups: [
+            {
+                key: 'mysekaiFixtures',
+                logLabel: 'mysekai fixture pages',
+                prefix: '/mysekai/',
+                build: fixtures => (Array.isArray(fixtures) ? fixtures : []).map(fixture => ({
+                    path: `/mysekai/${fixture.id}/`,
+                    lastmod: formatDate(fixture.publishedAt || fixture.archivePublishedAt || fixture.updatedAt),
+                    priority: 0.5,
+                    changefreq: 'monthly',
+                })),
+            },
+        ],
+    },
+    {
+        label: 'mangas',
+        fallback: {},
+        validate: data => data && typeof data === 'object' && !Array.isArray(data),
+        fetch: () => fetchMangaJson('mangas'),
+        groups: [
+            {
+                key: 'mangas',
+                logLabel: 'manga pages',
+                prefix: '/manga/',
+                build: buildMangaRoutes,
+            },
+        ],
+    },
 ];
 
 function buildGroupFromRaw(group, raw, existingData, sourceLabel) {
@@ -268,10 +316,12 @@ function buildGroupFromRaw(group, raw, existingData, sourceLabel) {
 }
 
 async function loadRouteSource(source, existingData) {
-    console.log(`  Fetching ${source.filename}...`);
+    console.log(`  Fetching ${source.filename || source.label}...`);
 
     try {
-        const raw = await fetchMasterJson(source.filename, source.label);
+        const raw = source.fetch
+            ? await source.fetch()
+            : await fetchMasterJson(source.filename, source.label);
         if (source.validate && !source.validate(raw)) {
             throw new Error(`Unexpected ${source.label} response shape`);
         }
@@ -299,6 +349,7 @@ async function loadRouteSource(source, existingData) {
 async function main() {
     console.log('=== Sitemap Data Generator ===\n');
     console.log(`Master APIs: ${getConfiguredMasterDataUrls().join(', ')}`);
+    console.log(`Manga APIs: ${getConfiguredMangaDataUrls().join(', ')}`);
     console.log(`Require fresh build data: ${REQUIRE_FRESH ? 'yes' : 'no'}`);
     console.log(`Output: ${OUT_FILE}\n`);
 

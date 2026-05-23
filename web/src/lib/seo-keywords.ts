@@ -816,6 +816,59 @@ export const DETAIL_FALLBACK_TITLES = {
   mysekai: { "zh-CN": "家具详情", "en-US": "Furniture Details", "ja-JP": "家具詳細" },
 } as const satisfies Record<string, LocalizedText>;
 
+export const DETAIL_FALLBACK_DESCRIPTIONS = {
+  card: {
+    "zh-CN": "查看 Project SEKAI 卡牌详情、角色、稀有度与图片资源",
+    "en-US": "View Project Sekai card details, character, rarity, and card artwork",
+    "ja-JP": "Project SEKAI のカード詳細、キャラクター、レアリティ、画像を確認できます",
+  },
+  character: {
+    "zh-CN": "查看 Project SEKAI 角色资料、组合、生日与相关内容",
+    "en-US": "View Project Sekai character profiles, units, birthdays, and related content",
+    "ja-JP": "Project SEKAI のキャラクター情報、ユニット、誕生日、関連コンテンツを確認できます",
+  },
+  costume: {
+    "zh-CN": "查看 Project SEKAI 服装详情、适用角色与获取信息",
+    "en-US": "View Project SEKAI costume details, supported characters, and acquisition info",
+    "ja-JP": "Project SEKAI の衣装詳細、対応キャラクター、入手情報を確認できます",
+  },
+  event: {
+    "zh-CN": "查看 Project SEKAI 活动详情、时间、奖励与相关数据",
+    "en-US": "View Project Sekai event details, schedules, rewards, and related data",
+    "ja-JP": "Project SEKAI のイベント詳細、開催期間、報酬、関連データを確認できます",
+  },
+  exchange: {
+    "zh-CN": "查看 Project SEKAI 兑换条目详情、奖励、消耗与开放时间",
+    "en-US": "View Project Sekai exchange entry details, rewards, costs, and availability",
+    "ja-JP": "Project SEKAI の交換アイテム詳細、報酬、必要素材、開催期間を確認できます",
+  },
+  gacha: {
+    "zh-CN": "查看 Project SEKAI 扭蛋详情、卡池时间、PU 卡牌与概率信息",
+    "en-US": "View Project SEKAI gacha details, banner schedule, pickup cards, and rates",
+    "ja-JP": "Project SEKAI のガチャ詳細、開催期間、ピックアップカード、提供割合を確認できます",
+  },
+  live: {
+    "zh-CN": "查看 Project SEKAI 虚拟 Live 详情、时间与奖励信息",
+    "en-US": "View Project Sekai virtual live details, schedules, and rewards",
+    "ja-JP": "Project SEKAI のバーチャルライブ詳細、開催時間、報酬を確認できます",
+  },
+  manga: {
+    "zh-CN": "查看 Project SEKAI 官方四格漫画章节详情",
+    "en-US": "View Project Sekai official four-panel comic episode details",
+    "ja-JP": "Project SEKAI 公式4コマのエピソード詳細を確認できます",
+  },
+  music: {
+    "zh-CN": "查看 Project SEKAI 歌曲详情、谱面、作词作曲与封面资源",
+    "en-US": "View Project Sekai song details, charts, credits, and jacket artwork",
+    "ja-JP": "Project SEKAI の楽曲詳細、譜面、クレジット、ジャケット画像を確認できます",
+  },
+  mysekai: {
+    "zh-CN": "查看 Project SEKAI MySekai 家具详情、素材与风味文本",
+    "en-US": "View Project SEKAI MySEKAI furniture details, materials, and flavor text",
+    "ja-JP": "Project SEKAI MySekai の家具詳細、素材、フレーバーテキストを確認できます",
+  },
+} as const satisfies Record<DetailFallbackKind, LocalizedText>;
+
 export const DETAIL_SEO_TEMPLATES = {
   card: {
     "zh-CN": "Project SEKAI 卡牌「{prefix}」— {character}",
@@ -876,6 +929,10 @@ export const DETAIL_SEO_TEMPLATES = {
 
 export function getDetailFallbackTitle(kind: DetailFallbackKind, locale: UiLocale = DEFAULT_UI_LOCALE): string {
   return localizedText(DETAIL_FALLBACK_TITLES[kind], locale);
+}
+
+export function getDetailFallbackDescription(kind: DetailFallbackKind, locale: UiLocale = DEFAULT_UI_LOCALE): string {
+  return `${localizedText(DETAIL_FALLBACK_DESCRIPTIONS[kind], locale)}${getSeoLocaleConfig(locale).detailSuffix}`;
 }
 
 export function formatDetailSeoDescription(

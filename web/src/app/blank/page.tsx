@@ -1,8 +1,8 @@
 import React from "react";
 import BackgroundPattern from "@/components/BackgroundPattern";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { noIndexPageMetadata } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("blank");
+export const generateMetadata = noIndexPageMetadata("blank");
 
 export default function BlankPage() {
     return (

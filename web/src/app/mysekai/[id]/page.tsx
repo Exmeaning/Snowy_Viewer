@@ -6,6 +6,7 @@ import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
 import {
     formatDetailSeoDescription,
     formatMysekaiFlavorSuffix,
+    getDetailFallbackDescription,
     getDetailFallbackTitle,
 } from "@/lib/seo-keywords";
 import MysekaiFixtureDetailClient from "./client";
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         return buildDetailMetadata({
             locale,
             title: getDetailFallbackTitle("mysekai", locale),
-            description: getDetailFallbackTitle("mysekai", locale),
+            description: getDetailFallbackDescription("mysekai", locale),
             path: `/mysekai/${id}`,
         });
     }

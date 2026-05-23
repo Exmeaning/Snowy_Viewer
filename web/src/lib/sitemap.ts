@@ -9,6 +9,8 @@ import fs from 'fs';
 import path from 'path';
 import { headers } from 'next/headers';
 
+import { INDEXABLE_SEO_ROUTES } from '@/lib/seo-routes';
+
 interface SitemapRoute {
     path: string;
     lastmod?: string;
@@ -55,12 +57,25 @@ export async function getBaseUrl(): Promise<string> {
     return process.env.NEXT_PUBLIC_SITE_DOMAIN || 'https://pjsk.moe';
 }
 
+function escapeXml(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+}
+
+function joinUrl(baseUrl: string, routePath: string): string {
+    return `${baseUrl.replace(/\/$/, '')}${routePath.startsWith('/') ? routePath : `/${routePath}`}`;
+}
+
 function buildUrlEntry(baseUrl: string, route: SitemapRoute): string {
     const lastmod = route.lastmod || new Date().toISOString();
     return `  <url>
-    <loc>${baseUrl}${route.path}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>${route.changefreq}</changefreq>
+    <loc>${escapeXml(joinUrl(baseUrl, route.path))}</loc>
+    <lastmod>${escapeXml(lastmod)}</lastmod>
+    <changefreq>${escapeXml(route.changefreq)}</changefreq>
     <priority>${route.priority}</priority>
   </url>`;
 }
@@ -75,8 +90,8 @@ ${entries.join('\n')}
 function wrapSitemapIndex(baseUrl: string, sitemapNames: string[]): string {
     const now = new Date().toISOString();
     const entries = sitemapNames.map(name => `  <sitemap>
-    <loc>${baseUrl}/${name}</loc>
-    <lastmod>${now}</lastmod>
+    <loc>${escapeXml(joinUrl(baseUrl, `/${name}`))}</loc>
+    <lastmod>${escapeXml(now)}</lastmod>
   </sitemap>`);
 
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -91,8 +106,14 @@ export function buildSitemapIndex(baseUrl: string): string {
 
 export function buildMainSitemap(baseUrl: string): string {
     const data = getData();
-    if (!data) return wrapUrlset([]);
-    const entries = data.mainRoutes.map(r => buildUrlEntry(baseUrl, r));
+    const mainRoutes = data?.mainRoutes?.length
+        ? data.mainRoutes
+        : INDEXABLE_SEO_ROUTES.map((route) => ({
+            path: route.path,
+            priority: route.priority,
+            changefreq: route.changefreq,
+        }));
+    const entries = mainRoutes.map(r => buildUrlEntry(baseUrl, r));
     return wrapUrlset(entries);
 }
 

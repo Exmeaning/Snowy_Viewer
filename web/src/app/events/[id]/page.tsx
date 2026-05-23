@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { getEventBannerUrl } from "@/lib/assets";
 import { getEventMeta } from "@/lib/metadata";
 import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
-import { formatDetailSeoDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
+import { formatDetailSeoDescription, getDetailFallbackDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
 import EventDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         return buildDetailMetadata({
             locale,
             title: getDetailFallbackTitle("event", locale),
-            description: getDetailFallbackTitle("event", locale),
+            description: getDetailFallbackDescription("event", locale),
             path: `/events/${id}`,
         });
     }
