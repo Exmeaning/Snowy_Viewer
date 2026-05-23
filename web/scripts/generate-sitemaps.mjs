@@ -15,9 +15,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {
+    fetchGuidesJson,
     fetchMangaJson,
     fetchMasterJson,
     getBuildFetchConcurrency,
+    getConfiguredGuidesDataUrls,
     getConfiguredMangaDataUrls,
     getConfiguredMasterDataUrls,
     mapWithConcurrency,
@@ -82,6 +84,15 @@ function buildMangaRoutes(mangasRaw) {
     return Object.entries(mangasRaw || {}).map(([id, manga]) => ({
         path: `/manga/${id}/`,
         lastmod: formatDate(manga?.publishedAt || manga?.updatedAt),
+        priority: 0.5,
+        changefreq: 'monthly',
+    }));
+}
+
+function buildGuideRoutes(guidesRaw) {
+    return (guidesRaw?.guides || []).map(guide => ({
+        path: `/guides/${guide.id}/`,
+        lastmod: formatDate(guide.date || guidesRaw?.generated_at),
         priority: 0.5,
         changefreq: 'monthly',
     }));
@@ -295,6 +306,20 @@ const routeSources = [
             },
         ],
     },
+    {
+        label: 'guides',
+        fallback: { guides: [] },
+        validate: data => data && Array.isArray(data.guides),
+        fetch: () => fetchGuidesJson('guides'),
+        groups: [
+            {
+                key: 'guides',
+                logLabel: 'guide pages',
+                prefix: '/guides/',
+                build: buildGuideRoutes,
+            },
+        ],
+    },
 ];
 
 function buildGroupFromRaw(group, raw, existingData, sourceLabel) {
@@ -350,6 +375,7 @@ async function main() {
     console.log('=== Sitemap Data Generator ===\n');
     console.log(`Master APIs: ${getConfiguredMasterDataUrls().join(', ')}`);
     console.log(`Manga APIs: ${getConfiguredMangaDataUrls().join(', ')}`);
+    console.log(`Guides APIs: ${getConfiguredGuidesDataUrls().join(', ')}`);
     console.log(`Require fresh build data: ${REQUIRE_FRESH ? 'yes' : 'no'}`);
     console.log(`Output: ${OUT_FILE}\n`);
 

@@ -1,8 +1,7 @@
 import CostumesClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("costumes");
+const Page = withPageBreadcrumb("costumes", () => <CostumesClient />);
 
-export default function CostumesPage() {
-    return <CostumesClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

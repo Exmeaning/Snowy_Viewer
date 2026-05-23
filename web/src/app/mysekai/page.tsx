@@ -1,8 +1,7 @@
 import MysekaiClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("mysekai");
+const Page = withPageBreadcrumb("mysekai", () => <MysekaiClient />);
 
-export default function MysekaiPage() {
-    return <MysekaiClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

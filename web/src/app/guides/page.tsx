@@ -1,8 +1,7 @@
 import GuidesClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("guides");
+const Page = withPageBreadcrumb("guides", () => <GuidesClient />);
 
-export default function GuidesPage() {
-    return <GuidesClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

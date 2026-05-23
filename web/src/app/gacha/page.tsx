@@ -1,8 +1,7 @@
 import GachaContent from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("gacha");
+const Page = withPageBreadcrumb("gacha", () => <GachaContent />);
 
-export default function GachaPage() {
-    return <GachaContent />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

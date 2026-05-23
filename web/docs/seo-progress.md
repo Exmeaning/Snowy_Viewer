@@ -121,9 +121,11 @@
 - [x] `buildLocalizedMetadata()` 支持 robots 配置。
 - [x] 新增 `noIndexPageMetadata()` helper，`/blank` 与 OAuth flow 已接入。
 - [x] 新增 `noIndexRouteMetadata()` helper，`/design-system` 与 `/leave` 已通过 registry path 输出 noindex canonical/robots。
+- [x] `noIndexPageMetadata()` / `noIndexRouteMetadata()` 现在会强制校验 noindex 路由必须存在于 route registry 且 `indexable: false`，防止 robots、canonical 与 registry 分叉。
 - [x] 统一详情页 fallback description，避免 fallback description 仅等于 title。
 - [x] 逐步减少动态详情页重复 boilerplate：cards / character / costumes / events / exchanges / gacha / live / manga / music / mysekai 已迁到 `dynamicDetailMetadata()`。
 - [x] 新增 `seo-detail-metadata.ts` 集中维护十类动态详情页 metadata presets，并继续升级为 `defineXxxDetailPage()` 工厂；页面文件只保留页面渲染函数、`Page.generateMetadata` 与默认导出，进一步减少详情页 SEO boilerplate。
+- [x] 新增 `dynamicPageMetadata()` 与 `seo-dynamic-metadata.ts`，攻略详情页 `/guides/[id]` 已接入本地 `metadata-map.json`，canonical 直接输出 `/guides/{id}/`，不再复用泛用 `/guides/` metadata。
 
 ### P4：结构化数据
 
@@ -133,6 +135,7 @@
 - [ ] 评估 `SearchAction` 是否有真实站内搜索 URL 可落地。
 - [x] 为分组页/详情页预留 `BreadcrumbList` / `ItemList` helper。
 - [x] 十类动态详情页通过 `defineSeoDetailPage()` 自动输出详情页 `BreadcrumbList` JSON-LD，父级页面由 detail preset 的 `parentPageKey` 绑定。
+- [x] 新增 `withPageBreadcrumb()`，cards / music / events / gacha / character / costumes / exchanges / manga / mysekai / live / story / guides 等高权重入口页自动输出 registry-aware `BreadcrumbList` JSON-LD。
 
 ### P4.5：ja-JP 页面级 SEO 文案
 
@@ -140,7 +143,8 @@
 - [x] about / cards / music / events / gacha / character / story 已完成首批 `ja-JP` 精修。
 - [x] soundtrack / music meta / comic / costumes / exchanges / manga / materials / honors / live / sticker / mysekai 已完成第二批 `ja-JP` 精修。
 - [x] 工具页、个人页、breadcrumb 汇总页、法务/赞助页已完成第三批 `ja-JP` 精修。
-- [ ] 剧情子页面、详情 reader 页与剩余低权重页面继续按访问价值逐步精修。
+- [x] 剧情子页面、剧情 reader fallback、OAuth/blank 与 guides 详情已完成第四批 `ja-JP` SEO 文案补齐。
+- [ ] 剧情 reader 动态实体标题与剩余低权重页面继续按访问价值逐步精修。
 
 ### P5：locale URL / hreflang 专项
 
@@ -166,11 +170,34 @@ npm run build:next --prefix web
 
 - `public/data/sitemap-data.json` 中不包含 `/eventstory/`。
 - `mainRoutes` 来自 registry，非索引页不进入 sitemap。
-- `detailRoutes` 覆盖 cards / music / events / gacha / live / character / exchanges / costumes / mysekai / manga。
+- `detailRoutes` 覆盖 cards / music / events / gacha / live / character / exchanges / costumes / mysekai / manga / guides。
 - `robots.txt` 的 sitemap 地址仍正确。
 - 没有在无 locale URL 的情况下输出 hreflang。
 
 ## 5. 最近验证记录
+
+### 2026-05-23：攻略详情 metadata、noindex registry 守护与核心入口 Breadcrumb
+
+本轮新增/调整：
+
+- 新增 `dynamicPageMetadata()` 与 `src/lib/seo-dynamic-metadata.ts`，`/guides/[id]` 改为从 `metadata-map.json` 读取攻略标题、分类、标签并生成详情页 canonical `/guides/{id}/` 与 localized description，不再复用泛用 `/guides/` metadata。
+- `scripts/lib/build-fetch.mjs` 新增 guides 数据源配置；`generate-metadata-map.mjs` 与 `generate-sitemaps.mjs` 同步拉取 `guides-index.json`，metadata map 新增 `guides: 1`，detail sitemap 新增 1 条 `/guides/.../` 路由。
+- `noIndexPageMetadata()` / `noIndexRouteMetadata()` 现在通过 `assertNoIndexSeoRoute()` 强制要求路径存在于 route registry 且 `indexable: false`，避免未来 noindex metadata 与 robots/registry 漂移。
+- 新增 `withPageBreadcrumb()`，cards / music / events / gacha / character / costumes / exchanges / manga / mysekai / live / story / guides 等核心入口页自动输出 registry-aware `BreadcrumbList` JSON-LD。
+- `generatePageBreadcrumbJsonLd()` / `generateDetailBreadcrumbJsonLd()` 的父级 URL 优先使用 route registry path，减少结构化数据 URL 与 canonical 漂移。
+- 补齐第四批 `ja-JP` 页面级 SEO 文案：剧情子页面、剧情 reader fallback、guides / guides detail、OAuth flow 与 blank。
+- 本轮继续不输出 hreflang / sitemap alternate links；当前仍无稳定 locale URL。定向搜索未发现 `alternates.languages` / `hreflang` 输出。
+- `npm run sitemap --prefix web` 重新生成 `public/data/sitemap-data.json`：`Main routes: 54`，`Detail routes: 9718`；新增 guides 详情来源为 fresh，其余详情来源均为 fresh。
+- `npm run generate:metadata --prefix web` 重新生成 `public/data/metadata-map.json`：新增 `guides: 1`，所有 metadata sources 均为 fresh。
+
+本轮验证：
+
+- `npm run lint:i18n --prefix web`：通过，`i18n key structure OK (3028 keys across 3 locales)` / `Hardcoded UI Han scan OK (15 allowlisted file groups)`。
+- `npm run lint:i18n-usage --prefix web`：通过，`Literal i18n usage keys OK`。
+- `npm run lint --prefix web`：通过；仍有既有 warning：`src/app/soundtrack/client.tsx` 的 `react-hooks/exhaustive-deps` missing dependency `handleFilterChange`。
+- `npm run sitemap --prefix web`：通过，详情页来源均为 fresh；detail routes 为 cards 1376、musics 676、events 205、eventStories 205、gachas 953、virtualLives 476、characters 26、exchanges 3079、costumes 972、mysekaiFixtures 1395、mangas 354、guides 1。
+- `npm run generate:metadata --prefix web`：通过；entries 为 cards 1376、musics 676、events 205、gachas 953、characters 26、virtualLives 476、costumes 972、mysekaiFixtures 1395、mangas 354、exchanges 3079、guides 1，sources 均为 fresh。
+- `npm run build:next --prefix web`：通过；仍有已知 `turbopack.root should be absolute` warning。
 
 ### 2026-05-23：详情页工厂、Breadcrumb JSON-LD 与 ja-JP 第三批推进
 

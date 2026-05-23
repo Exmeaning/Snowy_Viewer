@@ -59,3 +59,16 @@ export function getRobotsDisallowPaths(): string[] {
         ]),
     ];
 }
+
+export function assertNoIndexSeoRoute(path: string): SeoRouteDefinition {
+    const route = findSeoRouteByPath(path);
+    if (!route) {
+        throw new Error(`No SEO route registry entry found for noindex path: ${path}`);
+    }
+
+    if (route.indexable) {
+        throw new Error(`SEO route registry marks noindex path as indexable: ${path}`);
+    }
+
+    return route;
+}

@@ -1,8 +1,7 @@
 import ExchangesClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("exchanges");
+const Page = withPageBreadcrumb("exchanges", () => <ExchangesClient />);
 
-export default function ExchangesPage() {
-    return <ExchangesClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

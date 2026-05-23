@@ -13,6 +13,7 @@ import { interpolateMessage, type MessageInterpolationValues } from "@/lib/i18n/
 
 export type SeoPageKey = keyof typeof SEO_PAGE_METADATA;
 export type DetailSeoKind = keyof typeof DETAIL_SEO_TEMPLATES;
+export type DynamicSeoKind = keyof typeof DYNAMIC_SEO_TEMPLATES;
 export type DetailFallbackKind = keyof typeof DETAIL_FALLBACK_TITLES;
 
 interface SeoLocaleConfig {
@@ -688,66 +689,101 @@ export const SEO_PAGE_METADATA = {
   ),
   story_unit: definePage(
     "/story/unit",
-    { "zh-CN": "主线剧情", "en-US": "Main Stories" },
+    { "zh-CN": "主线剧情", "en-US": "Main Stories", "ja-JP": "メインストーリー" },
     {
       "zh-CN": "浏览 Project SEKAI 主线剧情与组合剧情章节。",
       "en-US": "Browse Project Sekai main story and unit story episodes.",
+      "ja-JP": "Project SEKAI のメインストーリーとユニットストーリーのエピソードを閲覧できます。",
     },
-    { "zh-CN": ["主线剧情", "组合剧情", "Main Story"], "en-US": ["main story", "unit stories", "story episodes"] },
+    {
+      "zh-CN": ["主线剧情", "组合剧情", "Main Story"],
+      "en-US": ["main story", "unit stories", "story episodes"],
+      "ja-JP": ["メインストーリー", "ユニットストーリー", "エピソード"],
+    },
   ),
   story_event: definePage(
     "/story/event",
-    { "zh-CN": "活动剧情", "en-US": "Event Stories" },
+    { "zh-CN": "活动剧情", "en-US": "Event Stories", "ja-JP": "イベントストーリー" },
     {
       "zh-CN": "浏览 Project SEKAI 活动剧情、章节与剧情翻译。",
       "en-US": "Browse Project Sekai event stories, episodes, and story translations.",
+      "ja-JP": "Project SEKAI のイベントストーリー、エピソード、翻訳を閲覧できます。",
     },
-    { "zh-CN": ["活动剧情", "Event Story", "剧情翻译"], "en-US": ["event story", "story translations", "episodes"] },
+    {
+      "zh-CN": ["活动剧情", "Event Story", "剧情翻译"],
+      "en-US": ["event story", "story translations", "episodes"],
+      "ja-JP": ["イベントストーリー", "ストーリー翻訳", "エピソード"],
+    },
   ),
   story_card: definePage(
     "/story/card",
-    { "zh-CN": "卡牌剧情", "en-US": "Card Stories" },
+    { "zh-CN": "卡牌剧情", "en-US": "Card Stories", "ja-JP": "カードストーリー" },
     {
       "zh-CN": "浏览 Project SEKAI 卡牌剧情前篇、后篇与翻译。",
       "en-US": "Browse Project Sekai card stories, side story parts, and translations.",
+      "ja-JP": "Project SEKAI のカードストーリー前編・後編と翻訳を閲覧できます。",
     },
-    { "zh-CN": ["卡牌剧情", "Card Story", "前后篇"], "en-US": ["card story", "side story", "story parts"] },
+    {
+      "zh-CN": ["卡牌剧情", "Card Story", "前后篇"],
+      "en-US": ["card story", "side story", "story parts"],
+      "ja-JP": ["カードストーリー", "サイドストーリー", "前編 後編"],
+    },
   ),
   story_area: definePage(
     "/story/area",
-    { "zh-CN": "区域对话", "en-US": "Area Conversations" },
+    { "zh-CN": "区域对话", "en-US": "Area Conversations", "ja-JP": "エリア会話" },
     {
       "zh-CN": "浏览 Project SEKAI 区域对话、场景对话与 Area Talk。",
       "en-US": "Browse Project Sekai area conversations, scenario talks, and Area Talk entries.",
+      "ja-JP": "Project SEKAI のエリア会話、シナリオトーク、Area Talk を閲覧できます。",
     },
-    { "zh-CN": ["区域对话", "Area Conversation", "Area Talk"], "en-US": ["area conversations", "Area Talk", "scenario talks"] },
+    {
+      "zh-CN": ["区域对话", "Area Conversation", "Area Talk"],
+      "en-US": ["area conversations", "Area Talk", "scenario talks"],
+      "ja-JP": ["エリア会話", "Area Talk", "シナリオトーク"],
+    },
   ),
   story_self: definePage(
     "/story/self",
-    { "zh-CN": "自我介绍", "en-US": "Character Introductions" },
+    { "zh-CN": "自我介绍", "en-US": "Character Introductions", "ja-JP": "キャラクター自己紹介" },
     {
       "zh-CN": "浏览 Project SEKAI 角色自我介绍、角色介绍与语音剧情。",
       "en-US": "Browse Project Sekai character introductions, self introductions, and voiced story entries.",
+      "ja-JP": "Project SEKAI のキャラクター自己紹介、プロフィール紹介、ボイス付きストーリーを閲覧できます。",
     },
-    { "zh-CN": ["自我介绍", "角色介绍", "Character Introduction"], "en-US": ["character introductions", "self introductions", "voiced stories"] },
+    {
+      "zh-CN": ["自我介绍", "角色介绍", "Character Introduction"],
+      "en-US": ["character introductions", "self introductions", "voiced stories"],
+      "ja-JP": ["自己紹介", "キャラクター紹介", "ボイスストーリー"],
+    },
   ),
   story_special: definePage(
     "/story/special",
-    { "zh-CN": "特殊剧情", "en-US": "Special Stories" },
+    { "zh-CN": "特殊剧情", "en-US": "Special Stories", "ja-JP": "スペシャルストーリー" },
     {
       "zh-CN": "浏览 Project SEKAI 特殊剧情、周年剧情与限定故事。",
       "en-US": "Browse Project Sekai special stories, anniversary stories, and limited story entries.",
+      "ja-JP": "Project SEKAI のスペシャルストーリー、周年ストーリー、期間限定ストーリーを閲覧できます。",
     },
-    { "zh-CN": ["特殊剧情", "Special Story", "周年剧情"], "en-US": ["special story", "anniversary story", "limited stories"] },
+    {
+      "zh-CN": ["特殊剧情", "Special Story", "周年剧情"],
+      "en-US": ["special story", "anniversary story", "limited stories"],
+      "ja-JP": ["スペシャルストーリー", "周年ストーリー", "限定ストーリー"],
+    },
   ),
   guides: definePage(
     "/guides",
-    { "zh-CN": "社区攻略", "en-US": "Guides" },
+    { "zh-CN": "社区攻略", "en-US": "Guides", "ja-JP": "コミュニティガイド" },
     {
       "zh-CN": "浏览 PROJECT SEKAI 社区攻略、教程与实用指南集合。",
       "en-US": "Browse PROJECT SEKAI community guides, tutorials, and helpful reference articles.",
+      "ja-JP": "PROJECT SEKAI のコミュニティ攻略、チュートリアル、実用ガイドを閲覧できます。",
     },
-    { "zh-CN": ["攻略", "社区攻略", "Guide"], "en-US": ["guides", "community guides", "tutorials"] },
+    {
+      "zh-CN": ["攻略", "社区攻略", "Guide"],
+      "en-US": ["guides", "community guides", "tutorials"],
+      "ja-JP": ["攻略", "コミュニティガイド", "チュートリアル"],
+    },
   ),
   patreon: definePage(
     "/patreon",
@@ -877,120 +913,185 @@ export const SEO_PAGE_METADATA = {
   ),
   blank: definePage(
     "/blank",
-    { "zh-CN": "空白素材页", "en-US": "Blank Asset Page" },
+    { "zh-CN": "空白素材页", "en-US": "Blank Asset Page", "ja-JP": "空白アセットページ" },
     {
       "zh-CN": "Moesekai 空白素材展示页。",
       "en-US": "A blank Moesekai asset display page.",
+      "ja-JP": "Moesekai の空白アセット表示ページです。",
     },
-    { "zh-CN": ["空白页", "素材页"], "en-US": ["blank page", "asset page"] },
+    {
+      "zh-CN": ["空白页", "素材页"],
+      "en-US": ["blank page", "asset page"],
+      "ja-JP": ["空白ページ", "アセットページ"],
+    },
   ),
   guides_detail: definePage(
     "/guides",
-    { "zh-CN": "攻略详情", "en-US": "Guide Details" },
+    { "zh-CN": "攻略详情", "en-US": "Guide Details", "ja-JP": "ガイド詳細" },
     {
       "zh-CN": "阅读 PROJECT SEKAI 社区攻略详情。",
       "en-US": "Read detailed PROJECT SEKAI community guide content.",
+      "ja-JP": "PROJECT SEKAI コミュニティガイドの詳細を閲覧できます。",
     },
-    { "zh-CN": ["攻略详情", "社区攻略"], "en-US": ["guide details", "community guides"] },
+    {
+      "zh-CN": ["攻略详情", "社区攻略"],
+      "en-US": ["guide details", "community guides"],
+      "ja-JP": ["ガイド詳細", "コミュニティガイド"],
+    },
   ),
   oauth2_connect: definePage(
     "/oauth2/connect",
-    { "zh-CN": "OAuth2 绑定", "en-US": "OAuth2 Connect" },
+    { "zh-CN": "OAuth2 绑定", "en-US": "OAuth2 Connect", "ja-JP": "OAuth2連携" },
     {
       "zh-CN": "通过 OAuth2 将 Haruki 账号与 Moesekai 绑定。",
       "en-US": "Connect a Haruki account to Moesekai through OAuth2.",
+      "ja-JP": "OAuth2 を通じて Haruki アカウントを Moesekai に連携します。",
     },
-    { "zh-CN": ["OAuth2绑定", "账号绑定"], "en-US": ["OAuth2 connect", "account binding"] },
+    {
+      "zh-CN": ["OAuth2绑定", "账号绑定"],
+      "en-US": ["OAuth2 connect", "account binding"],
+      "ja-JP": ["OAuth2連携", "アカウント連携"],
+    },
   ),
   oauth2_callback: definePage(
     "/oauth2/callback/code",
-    { "zh-CN": "OAuth2 回调", "en-US": "OAuth2 Callback" },
+    { "zh-CN": "OAuth2 回调", "en-US": "OAuth2 Callback", "ja-JP": "OAuth2コールバック" },
     {
       "zh-CN": "处理 Moesekai OAuth2 授权回调。",
       "en-US": "Handle the Moesekai OAuth2 authorization callback.",
+      "ja-JP": "Moesekai OAuth2 認可コールバックを処理します。",
     },
-    { "zh-CN": ["OAuth2回调", "授权回调"], "en-US": ["OAuth2 callback", "authorization callback"] },
+    {
+      "zh-CN": ["OAuth2回调", "授权回调"],
+      "en-US": ["OAuth2 callback", "authorization callback"],
+      "ja-JP": ["OAuth2コールバック", "認可コールバック"],
+    },
   ),
   story_area_category: definePage(
     "/story/area",
-    { "zh-CN": "区域对话", "en-US": "Area Conversations" },
+    { "zh-CN": "区域对话", "en-US": "Area Conversations", "ja-JP": "エリア会話" },
     {
       "zh-CN": "浏览指定分类下的 Project SEKAI 区域对话。",
       "en-US": "Browse Project Sekai area conversations in a selected category.",
+      "ja-JP": "選択したカテゴリの Project SEKAI エリア会話を閲覧できます。",
     },
-    { "zh-CN": ["区域对话", "Area Talk"], "en-US": ["area conversations", "Area Talk"] },
+    {
+      "zh-CN": ["区域对话", "Area Talk"],
+      "en-US": ["area conversations", "Area Talk"],
+      "ja-JP": ["エリア会話", "Area Talk"],
+    },
   ),
   story_area_reader: definePage(
     "/story/area",
-    { "zh-CN": "区域对话阅读", "en-US": "Area Conversation Reader" },
+    { "zh-CN": "区域对话阅读", "en-US": "Area Conversation Reader", "ja-JP": "エリア会話リーダー" },
     {
       "zh-CN": "阅读 Project SEKAI 区域对话内容。",
       "en-US": "Read Project Sekai area conversation content.",
+      "ja-JP": "Project SEKAI のエリア会話本文を閲覧できます。",
     },
-    { "zh-CN": ["区域对话阅读", "Area Talk"], "en-US": ["area conversation reader", "Area Talk"] },
+    {
+      "zh-CN": ["区域对话阅读", "Area Talk"],
+      "en-US": ["area conversation reader", "Area Talk"],
+      "ja-JP": ["エリア会話リーダー", "Area Talk"],
+    },
   ),
   story_card_reader: definePage(
     "/story/card",
-    { "zh-CN": "卡牌剧情阅读", "en-US": "Card Story Reader" },
+    { "zh-CN": "卡牌剧情阅读", "en-US": "Card Story Reader", "ja-JP": "カードストーリーリーダー" },
     {
       "zh-CN": "阅读 Project SEKAI 卡牌剧情内容。",
       "en-US": "Read Project Sekai card story content.",
+      "ja-JP": "Project SEKAI のカードストーリー本文を閲覧できます。",
     },
-    { "zh-CN": ["卡牌剧情阅读", "Card Story"], "en-US": ["card story reader", "Card Story"] },
+    {
+      "zh-CN": ["卡牌剧情阅读", "Card Story"],
+      "en-US": ["card story reader", "Card Story"],
+      "ja-JP": ["カードストーリーリーダー", "カードストーリー"],
+    },
   ),
   story_event_group: definePage(
     "/story/event",
-    { "zh-CN": "活动剧情", "en-US": "Event Story" },
+    { "zh-CN": "活动剧情", "en-US": "Event Story", "ja-JP": "イベントストーリー" },
     {
       "zh-CN": "浏览指定 Project SEKAI 活动的剧情章节。",
       "en-US": "Browse story episodes for a selected Project Sekai event.",
+      "ja-JP": "選択した Project SEKAI イベントのストーリーエピソードを閲覧できます。",
     },
-    { "zh-CN": ["活动剧情", "剧情章节"], "en-US": ["event story", "story episodes"] },
+    {
+      "zh-CN": ["活动剧情", "剧情章节"],
+      "en-US": ["event story", "story episodes"],
+      "ja-JP": ["イベントストーリー", "ストーリーエピソード"],
+    },
   ),
   story_event_reader: definePage(
     "/story/event",
-    { "zh-CN": "活动剧情阅读", "en-US": "Event Story Reader" },
+    { "zh-CN": "活动剧情阅读", "en-US": "Event Story Reader", "ja-JP": "イベントストーリーリーダー" },
     {
       "zh-CN": "阅读 Project SEKAI 活动剧情内容。",
       "en-US": "Read Project Sekai event story content.",
+      "ja-JP": "Project SEKAI のイベントストーリー本文を閲覧できます。",
     },
-    { "zh-CN": ["活动剧情阅读", "Event Story"], "en-US": ["event story reader", "Event Story"] },
+    {
+      "zh-CN": ["活动剧情阅读", "Event Story"],
+      "en-US": ["event story reader", "Event Story"],
+      "ja-JP": ["イベントストーリーリーダー", "イベントストーリー"],
+    },
   ),
   story_self_reader: definePage(
     "/story/self",
-    { "zh-CN": "角色介绍阅读", "en-US": "Character Introduction Reader" },
+    { "zh-CN": "角色介绍阅读", "en-US": "Character Introduction Reader", "ja-JP": "自己紹介リーダー" },
     {
       "zh-CN": "阅读 Project SEKAI 角色自我介绍内容。",
       "en-US": "Read Project Sekai character introduction content.",
+      "ja-JP": "Project SEKAI のキャラクター自己紹介本文を閲覧できます。",
     },
-    { "zh-CN": ["角色介绍阅读", "自我介绍"], "en-US": ["character introduction reader", "self introduction"] },
+    {
+      "zh-CN": ["角色介绍阅读", "自我介绍"],
+      "en-US": ["character introduction reader", "self introduction"],
+      "ja-JP": ["自己紹介リーダー", "キャラクター紹介"],
+    },
   ),
   story_special_reader: definePage(
     "/story/special",
-    { "zh-CN": "特殊剧情阅读", "en-US": "Special Story Reader" },
+    { "zh-CN": "特殊剧情阅读", "en-US": "Special Story Reader", "ja-JP": "スペシャルストーリーリーダー" },
     {
       "zh-CN": "阅读 Project SEKAI 特殊剧情内容。",
       "en-US": "Read Project Sekai special story content.",
+      "ja-JP": "Project SEKAI のスペシャルストーリー本文を閲覧できます。",
     },
-    { "zh-CN": ["特殊剧情阅读", "Special Story"], "en-US": ["special story reader", "Special Story"] },
+    {
+      "zh-CN": ["特殊剧情阅读", "Special Story"],
+      "en-US": ["special story reader", "Special Story"],
+      "ja-JP": ["スペシャルストーリーリーダー", "スペシャルストーリー"],
+    },
   ),
   story_unit_group: definePage(
     "/story/unit",
-    { "zh-CN": "主线剧情", "en-US": "Main Story" },
+    { "zh-CN": "主线剧情", "en-US": "Main Story", "ja-JP": "メインストーリー" },
     {
       "zh-CN": "浏览指定组合的 Project SEKAI 主线剧情章节。",
       "en-US": "Browse Project Sekai main story episodes for a selected unit.",
+      "ja-JP": "選択したユニットの Project SEKAI メインストーリーエピソードを閲覧できます。",
     },
-    { "zh-CN": ["主线剧情", "组合剧情"], "en-US": ["main story", "unit stories"] },
+    {
+      "zh-CN": ["主线剧情", "组合剧情"],
+      "en-US": ["main story", "unit stories"],
+      "ja-JP": ["メインストーリー", "ユニットストーリー"],
+    },
   ),
   story_unit_reader: definePage(
     "/story/unit",
-    { "zh-CN": "主线剧情阅读", "en-US": "Main Story Reader" },
+    { "zh-CN": "主线剧情阅读", "en-US": "Main Story Reader", "ja-JP": "メインストーリーリーダー" },
     {
       "zh-CN": "阅读 Project SEKAI 主线剧情内容。",
       "en-US": "Read Project Sekai main story content.",
+      "ja-JP": "Project SEKAI のメインストーリー本文を閲覧できます。",
     },
-    { "zh-CN": ["主线剧情阅读", "Main Story"], "en-US": ["main story reader", "Main Story"] },
+    {
+      "zh-CN": ["主线剧情阅读", "Main Story"],
+      "en-US": ["main story reader", "Main Story"],
+      "ja-JP": ["メインストーリーリーダー", "メインストーリー"],
+    },
   ),
 } as const;
 
@@ -1026,6 +1127,61 @@ export function getRootSeo(locale: UiLocale = DEFAULT_UI_LOCALE) {
 // Compatibility exports for older route metadata. Prefer localized helpers above.
 export const SEO_SUFFIX = SEO_LOCALE_CONFIG[DEFAULT_UI_LOCALE].suffix;
 export const DETAIL_SEO_SUFFIX = SEO_LOCALE_CONFIG[DEFAULT_UI_LOCALE].detailSuffix;
+
+// ==================== Dynamic Page Metadata Templates ====================
+
+export const DYNAMIC_SEO_TEMPLATES = {
+  guide: {
+    title: {
+      "zh-CN": "{title}",
+      "en-US": "{title}",
+      "ja-JP": "{title}",
+    },
+    description: {
+      "zh-CN": "阅读 PROJECT SEKAI 社区攻略「{title}」，分类：{category}，标签：{tags}",
+      "en-US": "Read the PROJECT SEKAI community guide \"{title}\". Category: {category}. Tags: {tags}",
+      "ja-JP": "PROJECT SEKAI コミュニティガイド「{title}」を閲覧できます。カテゴリ：{category}。タグ：{tags}",
+    },
+    fallbackTitle: {
+      "zh-CN": "攻略详情",
+      "en-US": "Guide Details",
+      "ja-JP": "ガイド詳細",
+    },
+    fallbackDescription: {
+      "zh-CN": "阅读 PROJECT SEKAI 社区攻略详情",
+      "en-US": "Read detailed PROJECT SEKAI community guide content",
+      "ja-JP": "PROJECT SEKAI コミュニティガイドの詳細を閲覧できます",
+    },
+  },
+} as const;
+
+function dynamicText(kind: DynamicSeoKind, field: keyof typeof DYNAMIC_SEO_TEMPLATES[DynamicSeoKind], locale: UiLocale): string {
+  return localizedText(DYNAMIC_SEO_TEMPLATES[kind][field], locale);
+}
+
+export function formatDynamicSeoTitle(
+  kind: DynamicSeoKind,
+  values: MessageInterpolationValues,
+  locale: UiLocale = DEFAULT_UI_LOCALE,
+): string {
+  return interpolateMessage(dynamicText(kind, "title", locale), values);
+}
+
+export function formatDynamicSeoDescription(
+  kind: DynamicSeoKind,
+  values: MessageInterpolationValues,
+  locale: UiLocale = DEFAULT_UI_LOCALE,
+): string {
+  return `${interpolateMessage(dynamicText(kind, "description", locale), values)}${getSeoLocaleConfig(locale).detailSuffix}`;
+}
+
+export function getDynamicFallbackTitle(kind: DynamicSeoKind, locale: UiLocale = DEFAULT_UI_LOCALE): string {
+  return dynamicText(kind, "fallbackTitle", locale);
+}
+
+export function getDynamicFallbackDescription(kind: DynamicSeoKind, locale: UiLocale = DEFAULT_UI_LOCALE): string {
+  return `${dynamicText(kind, "fallbackDescription", locale)}${getSeoLocaleConfig(locale).detailSuffix}`;
+}
 
 // ==================== Detail Metadata Templates ====================
 

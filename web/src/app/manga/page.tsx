@@ -1,8 +1,7 @@
 import MangaClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("manga");
+const Page = withPageBreadcrumb("manga", () => <MangaClient />);
 
-export default function MangaPage() {
-    return <MangaClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

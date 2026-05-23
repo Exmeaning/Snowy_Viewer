@@ -70,6 +70,14 @@ export interface ExchangeMeta {
     type: string;
 }
 
+export interface GuideMeta {
+    title: string;
+    category: string;
+    tags: string[];
+    date: string;
+    authorGroup: string;
+}
+
 interface MetadataMap {
     cards: Record<string, CardMeta>;
     musics: Record<string, MusicMeta>;
@@ -81,6 +89,7 @@ interface MetadataMap {
     mysekaiFixtures: Record<string, FixtureMeta>;
     mangas: Record<string, MangaMeta>;
     exchanges: Record<string, ExchangeMeta>;
+    guides?: Record<string, GuideMeta>;
 }
 
 // ==================== Process-level Cache ====================
@@ -140,4 +149,8 @@ export function getMangaMeta(id: number): MangaMeta | null {
 
 export function getExchangeMeta(id: number): ExchangeMeta | null {
     return getMap()?.exchanges[String(id)] ?? null;
+}
+
+export function getGuideMeta(id: string): GuideMeta | null {
+    return getMap()?.guides?.[id] ?? null;
 }

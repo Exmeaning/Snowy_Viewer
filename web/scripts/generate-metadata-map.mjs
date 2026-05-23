@@ -15,9 +15,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {
+    fetchGuidesJson,
     fetchMangaJson,
     fetchMasterJson,
     getBuildFetchConcurrency,
+    getConfiguredGuidesDataUrls,
     getConfiguredMangaDataUrls,
     getConfiguredMasterDataUrls,
     mapWithConcurrency,
@@ -195,6 +197,22 @@ const datasets = [
                 }]))
         ),
     },
+    {
+        key: 'guides',
+        label: 'guides',
+        fallback: { guides: [] },
+        validate: data => data && Array.isArray(data.guides),
+        fetch: () => fetchGuidesJson('guides'),
+        build: guidesRaw => Object.fromEntries(
+            (guidesRaw?.guides || []).map(guide => [guide.id, {
+                title: guide.title || '',
+                category: guide.category || '',
+                tags: Array.isArray(guide.tags) ? guide.tags.slice(0, 8) : [],
+                date: guide.date || '',
+                authorGroup: guide.author?.group || '',
+            }])
+        ),
+    },
 ];
 
 async function loadDataset(dataset, existingMap) {
@@ -244,6 +262,7 @@ async function main() {
     console.log('=== Metadata Map Generator ===\n');
     console.log(`Master APIs: ${getConfiguredMasterDataUrls().join(', ')}`);
     console.log(`Manga APIs: ${getConfiguredMangaDataUrls().join(', ')}`);
+    console.log(`Guides APIs: ${getConfiguredGuidesDataUrls().join(', ')}`);
     console.log(`Require fresh build data: ${REQUIRE_FRESH ? 'yes' : 'no'}`);
     console.log(`Output: ${OUT_FILE}\n`);
 
