@@ -1,38 +1,20 @@
-import { Metadata } from "next";
 import { Suspense } from "react";
 import { getVirtualLiveBannerUrl } from "@/lib/assets";
 import { getVirtualLiveMeta } from "@/lib/metadata";
-import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
-import { formatDetailSeoDescription, getDetailFallbackDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
+import { dynamicDetailMetadata } from "@/lib/seo-metadata";
 import VirtualLiveDetailClient from "./client";
 
-type Props = { params: Promise<{ id: string }> };
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { id } = await params;
-    const locale = await getRequestSeoLocale();
-    const live = getVirtualLiveMeta(Number(id));
-    if (!live) {
-        return buildDetailMetadata({
-            locale,
-            title: getDetailFallbackTitle("live", locale),
-            description: getDetailFallbackDescription("live", locale),
-            path: `/live/${id}`,
-        });
-    }
-
-    const title = live.name;
-    const description = formatDetailSeoDescription("live", { name: live.name }, locale);
-    const ogImage = getVirtualLiveBannerUrl(live.asset, "main-jp");
-
-    return buildDetailMetadata({
-        locale,
-        title,
-        description,
-        path: `/live/${id}`,
-        images: [ogImage],
-    });
-}
+export const generateMetadata = dynamicDetailMetadata({
+    kind: "live",
+    routePrefix: "live",
+    getData: getVirtualLiveMeta,
+    build: (live) => ({
+        title: live.name,
+        descriptionKind: "live",
+        descriptionValues: { name: live.name },
+        images: [getVirtualLiveBannerUrl(live.asset, "main-jp")],
+    }),
+});
 
 export default function VirtualLiveDetailPage() {
     return (

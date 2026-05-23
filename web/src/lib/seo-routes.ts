@@ -26,6 +26,8 @@ export const SEO_ROUTES = (SEO_ROUTE_DATA as readonly RawSeoRouteDefinition[]).m
 export const INDEXABLE_SEO_ROUTES = SEO_ROUTES.filter((route) => route.indexable);
 export const NON_INDEXABLE_SEO_ROUTES = SEO_ROUTES.filter((route) => !route.indexable);
 
+const BASE_ROBOTS_DISALLOW_PATHS = ["/api/"] as const;
+
 export function normalizeSeoPath(path: string): string {
     if (!path || path === "/") return "/";
     const withLeadingSlash = path.startsWith("/") ? path : `/${path}`;
@@ -37,6 +39,23 @@ export function findSeoRouteByPath(path: string): SeoRouteDefinition | undefined
     return SEO_ROUTES.find((route) => normalizeSeoPath(route.path) === normalized);
 }
 
+export function findSeoRouteByPageKey(pageKey: SeoPageKey): SeoRouteDefinition | undefined {
+    return SEO_ROUTES.find((route) => route.pageKey === pageKey);
+}
+
 export function isIndexableSeoPath(path: string): boolean {
     return findSeoRouteByPath(path)?.indexable ?? true;
+}
+
+export function isIndexableSeoPage(pageKey: SeoPageKey): boolean {
+    return findSeoRouteByPageKey(pageKey)?.indexable ?? true;
+}
+
+export function getRobotsDisallowPaths(): string[] {
+    return [
+        ...new Set([
+            ...BASE_ROBOTS_DISALLOW_PATHS,
+            ...NON_INDEXABLE_SEO_ROUTES.map((route) => normalizeSeoPath(route.path)),
+        ]),
+    ];
 }

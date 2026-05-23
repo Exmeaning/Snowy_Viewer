@@ -1,6 +1,6 @@
 # Moesekai i18n 收尾阶段技术 Plan
 
-> 更新时间：2026-05-22  
+> 更新时间：2026-05-23  
 > 适用范围：`web/` Next.js 前端应用  
 > 当前判断：硬编码 UI 中文的主体迁移已初步完成；后续工作应从“继续铺页面”转为“收尾清点、边界决策、自动化守护与质量复核”。
 
@@ -14,7 +14,7 @@
 - 当前残留的中文不再主要集中在普通页面 UI，而是集中在以下边界：
   - SEO/站点品牌关键词（已集中到 server-safe SEO i18n 配置）。
   - 法务/赞助类静态长文本。
-  - 设计系统演示页。
+  - 设计系统演示页（已因 SEO noindex metadata 拆为 server `page.tsx` + allowlisted `client.tsx`）。
   - Project SEKAI masterdata / 角色名 / 漫画标题 / 搜索关键词。
   - 注释、开发辅助 fallback。
   - 少量待产品边界确认的枚举/display 常量。
@@ -226,8 +226,17 @@ t(`page.honors.filterTitle.${activeTab}`)
 - 角色名、组合名：如果视为游戏官方名，可以保留；如果作为 UI 语言体验的一部分，需要先制定统一名称表。
 - 用户输入内容。
 - API 原始错误文本：除非已有 error code 可映射。
-- SEO keywords：当前中文 SEO 是站点定位的一部分，不应被普通 UI 扫描误判。
+- SEO keywords / structured data aliases：当前中文 SEO 和 Project SEKAI 别名是站点定位的一部分，不应被普通 UI 扫描误判；`structured-data.ts` 已单独 allowlist。
 - 法务/赞助长文本：属于内容本地化，不应和 UI 文案迁移混在同一个 PR。
+
+## 6.3 近期维护记录
+
+### 2026-05-23：SEO 重构联动
+
+- `src/lib/seo-keywords.ts` 新增 ja-JP 核心页面 SEO 文案：about / cards / music / events / gacha / character / story。
+- `src/lib/structured-data.ts` 承接 Root JSON-LD 与结构化数据 helper，并在硬编码中文扫描中作为 SEO/Project SEKAI 别名边界单独 allowlist。
+- `src/app/design-system/page.tsx` 拆为 server metadata wrapper，原演示内容迁到 `src/app/design-system/client.tsx`，allowlist 路径同步调整。
+- 本轮 `npm run lint:i18n --prefix web` 与 `npm run lint:i18n-usage --prefix web` 均通过。
 
 ## 7. 工具层与枚举 label 规范
 

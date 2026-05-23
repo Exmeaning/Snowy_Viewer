@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server';
+import { getRobotsDisallowPaths } from '@/lib/seo-routes';
 import { getBaseUrl } from '@/lib/sitemap';
-import { NON_INDEXABLE_SEO_ROUTES } from '@/lib/seo-routes';
 
 export async function GET() {
     const baseUrl = await getBaseUrl();
-
-    const disallowLines = [
-        '/api/',
-        ...NON_INDEXABLE_SEO_ROUTES.map((route) => route.path),
-    ].map((path) => `Disallow: ${path}`);
+    const disallowLines = getRobotsDisallowPaths().map((path) => `Disallow: ${path}`);
 
     const body = `User-agent: *
 Allow: /
