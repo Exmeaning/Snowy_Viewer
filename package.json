@@ -11,5 +11,8 @@
     "workspaces": [
         "web",
         "refer/re_sekai-calculator"
-    ]
+    ],
+    "dependencies": {
+        "audiomotion-analyzer": "^4.5.4"
+    }
 }

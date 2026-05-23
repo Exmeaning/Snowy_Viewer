@@ -3,13 +3,13 @@
 import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchBgmDurationsData, fetchMasterData } from "@/lib/fetch";
 import { getMysekaiRawAssetUrl } from "@/lib/assets";
 import { getMysekaiSoundTrackAudioUrl } from "@/lib/mysekai-preview/assets";
+import { AudioSpectrumVisualizer } from "./components/AudioSpectrumVisualizer";
 
 // Interface definitions based on masterdata schemas
 interface MysekaiMusicSoundTrackCategory {
@@ -67,6 +67,10 @@ const MYSEKAI_SOUNDTRACK_CATEGORY_ID = 12;
 const SCENARIO_SOUNDTRACK_CATEGORY_ID = 13;
 const SPOILER_CATEGORY_FILTER = "spoiler" as const;
 const SPOILER_CATEGORY_THEME = { from: "#F97316", to: "#C2410C", shadow: "shadow-orange-500/20", bgGlow: "from-orange-950/20 to-rose-950/20", text: "text-orange-400" };
+const SOUNDTRACK_INITIAL_LIST_LIMIT = 80;
+const SOUNDTRACK_LIST_BATCH_SIZE = 80;
+const SOUNDTRACK_LIST_SCROLL_THRESHOLD_PX = 280;
+const SOUNDTRACK_PROGRESS_UPDATE_INTERVAL_MS = 500;
 
 function sanitizeDownloadFileName(value: string) {
     return value
@@ -256,6 +260,7 @@ function SoundtrackContent() {
     // Audio Ref
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const playRequestIdRef = useRef(0);
+    const lastProgressUpdateRef = useRef(0);
 
     // Audio states
     const [isPlaying, setIsPlaying] = useState(false);
@@ -276,6 +281,7 @@ function SoundtrackContent() {
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState<"seq" | "title">("seq");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    const [visibleTrackLimit, setVisibleTrackLimit] = useState(SOUNDTRACK_INITIAL_LIST_LIMIT);
 
     const setVolumeAndPersist = useCallback((nextVolume: number) => {
         const clampedVolume = clampVolume(nextVolume);
@@ -403,20 +409,6 @@ function SoundtrackContent() {
         };
     }, [searchParams, t, isShowSpoiler]);
 
-    // Generate stable animation heights and durations for the visualizer to prevent twitching & excessive renders
-    const visualizerHeights = useMemo(() => {
-        return Array.from({ length: 14 }).map(() => {
-            const h1 = Math.random() * 28 + 6;
-            const h2 = Math.random() * 12 + 6;
-            const h3 = Math.random() * 32 + 8;
-            return [8, h1, h2, h3, 8];
-        });
-    }, []);
-
-    const visualizerDurations = useMemo(() => {
-        return Array.from({ length: 14 }).map(() => Math.random() * 0.7 + 0.5);
-    }, []);
-
     // Track audio source URL (correctly resolving Mysekai paths too)
     const audioUrl = useMemo(() => {
         if (!currentTrack) return "";
@@ -530,7 +522,7 @@ function SoundtrackContent() {
 
     // Filtered and Sorted Tracks
     const filteredTracks = useMemo(() => {
-        let result = [...tracks];
+        let result = tracks;
 
         // 1. Hide spoiler-only supplemental tracks unless the global spoiler setting is enabled.
         if (!isShowSpoiler) {
@@ -551,6 +543,7 @@ function SoundtrackContent() {
         }
 
         // 4. Sort
+        result = [...result];
         result.sort((a, b) => {
             let comparison = 0;
             if (sortBy === "seq") {
@@ -564,6 +557,26 @@ function SoundtrackContent() {
         return result;
     }, [tracks, selectedCategoryId, searchQuery, sortBy, sortOrder, isShowSpoiler]);
 
+    const displayedTracks = useMemo(() => {
+        return filteredTracks.slice(0, visibleTrackLimit);
+    }, [filteredTracks, visibleTrackLimit]);
+
+    const hasMoreTracks = visibleTrackLimit < filteredTracks.length;
+
+    useEffect(() => {
+        setVisibleTrackLimit(SOUNDTRACK_INITIAL_LIST_LIMIT);
+    }, [selectedCategoryId, searchQuery, sortBy, sortOrder, isShowSpoiler]);
+
+    const handlePlaylistScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+        if (!hasMoreTracks) return;
+
+        const target = event.currentTarget;
+        const distanceToBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+        if (distanceToBottom > SOUNDTRACK_LIST_SCROLL_THRESHOLD_PX) return;
+
+        setVisibleTrackLimit(limit => Math.min(limit + SOUNDTRACK_LIST_BATCH_SIZE, filteredTracks.length));
+    }, [filteredTracks.length, hasMoreTracks]);
+
     const updateTrackUrlParam = useCallback((track: MysekaiMusicSoundTrackMaster | null) => {
         if (typeof window === "undefined") return;
         const url = new URL(window.location.href);
@@ -572,27 +585,10 @@ function SoundtrackContent() {
         window.history.replaceState({}, "", url.toString());
     }, []);
 
-    useEffect(() => {
-        if (isShowSpoiler || selectedCategoryId !== SPOILER_CATEGORY_FILTER) return;
-
-        setSelectedCategoryId(null);
-        handleFilterChange(null, searchQuery, sortBy, sortOrder);
-    }, [isShowSpoiler, selectedCategoryId, searchQuery, sortBy, sortOrder]);
-
-    useEffect(() => {
-        if (!currentTrack) return;
-        if (isShowSpoiler || !currentTrack.isSpoiler) return;
-
-        const fallbackTrack = filteredTracks[0] ?? tracks.find(track => !track.isSpoiler) ?? null;
-        setCurrentTrack(fallbackTrack);
-        updateTrackUrlParam(fallbackTrack);
-        setIsPlaying(false);
-    }, [currentTrack, filteredTracks, tracks, isShowSpoiler, updateTrackUrlParam]);
-
     // Sync states to URL query parameters
-    const handleFilterChange = (catId: SoundtrackCategoryFilter, search: string, sort: "seq" | "title", order: "asc" | "desc") => {
+    const handleFilterChange = useCallback((catId: SoundtrackCategoryFilter, search: string, sort: "seq" | "title", order: "asc" | "desc") => {
         const url = new URL(window.location.href);
-        
+
         if (catId !== null) url.searchParams.set("category", catId.toString());
         else url.searchParams.delete("category");
 
@@ -609,7 +605,24 @@ function SoundtrackContent() {
         else url.searchParams.delete("track");
 
         window.history.replaceState({}, "", url.toString());
-    };
+    }, [currentTrack]);
+
+    useEffect(() => {
+        if (isShowSpoiler || selectedCategoryId !== SPOILER_CATEGORY_FILTER) return;
+
+        setSelectedCategoryId(null);
+        handleFilterChange(null, searchQuery, sortBy, sortOrder);
+    }, [handleFilterChange, isShowSpoiler, selectedCategoryId, searchQuery, sortBy, sortOrder]);
+
+    useEffect(() => {
+        if (!currentTrack) return;
+        if (isShowSpoiler || !currentTrack.isSpoiler) return;
+
+        const fallbackTrack = filteredTracks[0] ?? tracks.find(track => !track.isSpoiler) ?? null;
+        setCurrentTrack(fallbackTrack);
+        updateTrackUrlParam(fallbackTrack);
+        setIsPlaying(false);
+    }, [currentTrack, filteredTracks, tracks, isShowSpoiler, updateTrackUrlParam]);
 
     // Update active category
     const selectCategory = (catId: SoundtrackCategoryFilter) => {
@@ -655,11 +668,23 @@ function SoundtrackContent() {
         setIsPlaying(prev => !prev);
     };
 
+    const syncCurrentTime = useCallback((force = false) => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const now = performance.now();
+        if (!force && now - lastProgressUpdateRef.current < SOUNDTRACK_PROGRESS_UPDATE_INTERVAL_MS) return;
+
+        lastProgressUpdateRef.current = now;
+        const nextTime = audio.currentTime;
+        setCurrentTime(prevTime => {
+            const safeNextTime = Number.isFinite(nextTime) ? nextTime : 0;
+            return Math.abs(prevTime - safeNextTime) > 0.2 ? safeNextTime : prevTime;
+        });
+    }, []);
+
     const handleTimeUpdate = () => {
-        if (audioRef.current) {
-            const nextTime = audioRef.current.currentTime;
-            setCurrentTime(Number.isFinite(nextTime) ? nextTime : 0);
-        }
+        syncCurrentTime();
     };
 
     const handleLoadedMetadata = () => {
@@ -882,8 +907,10 @@ function SoundtrackContent() {
         return rawGlow.replace(/-950/g, "-200").replace(/-900/g, "-200");
     }, [currentTheme, isDark]);
 
+    const progressPercent = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0;
+
     return (
-        <div className="relative min-h-[calc(100vh-4rem)] w-full overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white select-none transition-colors duration-1000">
+        <div className="relative w-full text-slate-800 dark:text-white select-none transition-colors duration-1000">
             {/* Embedded styles for spinning CD animations to ensure smooth pause/resumes */}
             <style dangerouslySetInnerHTML={{__html: `
                 @keyframes spin-cd {
@@ -891,7 +918,8 @@ function SoundtrackContent() {
                     to { transform: rotate(360deg); }
                 }
                 .animate-cd-spin {
-                    animation: spin-cd 20s linear infinite;
+                    animation: spin-cd 30s linear infinite;
+                    will-change: transform;
                 }
                 .play-state-paused {
                     animation-play-state: paused;
@@ -908,6 +936,7 @@ function SoundtrackContent() {
                 .custom-slider-thumb::-webkit-slider-thumb:hover {
                     transform: scale(1.3);
                 }
+
                 .vertical-volume-hitbox {
                     touch-action: none;
                 }
@@ -933,47 +962,13 @@ function SoundtrackContent() {
                 .custom-playlist-scrollbar::-webkit-scrollbar-thumb:hover {
                     background: ${isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.25)'};
                 }
-
-                /* Soundtrack-specific overrides to bypass global !important rules */
-                .soundtrack-bg-container {
-                    background-color: ${isDark ? '#08111b' : '#f8fafc'} !important;
-                }
-                .soundtrack-card-bg {
-                    background-color: ${isDark ? 'rgba(15, 23, 42, 0.45)' : 'rgba(255, 255, 255, 0.7)'} !important;
-                }
-                .soundtrack-panel-bg {
-                    background-color: ${isDark ? 'rgba(8, 17, 27, 0.8)' : 'rgba(241, 245, 249, 0.5)'} !important;
-                }
-                .soundtrack-cat-active {
-                    background-color: ${isDark ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.9)'} !important;
-                }
-                .soundtrack-cat-inactive {
-                    background-color: ${isDark ? 'rgba(15, 23, 42, 0.4)' : 'rgba(255, 255, 255, 0.4)'} !important;
-                }
-                .soundtrack-input-bg {
-                    background-color: ${isDark ? 'rgba(8, 17, 27, 0.8)' : '#f1f5f9'} !important;
-                }
-                .soundtrack-btn-inactive {
-                    background-color: ${isDark ? 'rgba(8, 17, 27, 0.6)' : '#f1f5f9'} !important;
-                }
-                .soundtrack-playlist-bg {
-                    background-color: ${isDark ? 'rgba(15, 23, 42, 0.2)' : 'rgba(255, 255, 255, 0.5)'} !important;
-                }
-                .soundtrack-row-active {
-                    background-color: ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.8)'} !important;
-                }
-                .soundtrack-row-inactive {
-                    background-color: ${isDark ? 'rgba(15, 23, 42, 0.1)' : 'rgba(248, 250, 252, 0.5)'} !important;
-                }
-                .soundtrack-footer-bg {
-                    background-color: ${isDark ? '#08111b' : '#f1f5f9'} !important;
-                }
             `}} />
 
             {/* Hidden HTML5 Audio Element */}
             <audio
                 ref={audioRef}
                 preload="metadata"
+                crossOrigin="anonymous"
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
                 onDurationChange={handleLoadedMetadata}
@@ -986,9 +981,9 @@ function SoundtrackContent() {
             />
 
             {/* Ambient Lighting Layers */}
-            <div className={`absolute inset-0 bg-gradient-to-tr ${ambientBgGlow} opacity-70 filter blur-3xl pointer-events-none transition-all duration-1000`} />
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-miku/10 filter blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-purple-500/5 filter blur-[120px] pointer-events-none" />
+            <div className={`absolute inset-0 bg-gradient-to-tr ${ambientBgGlow} opacity-45 blur-2xl pointer-events-none transition-colors duration-1000`} />
+            <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-miku/10 blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-purple-500/5 blur-3xl pointer-events-none" />
 
             <div className="container mx-auto px-4 sm:px-6 py-8 relative z-10 max-w-7xl">
                 {/* Header */}
@@ -1012,7 +1007,7 @@ function SoundtrackContent() {
                     
                     {/* Left Column: Premium Music Player (Glass Card) */}
                     <div className="lg:col-span-5 w-full">
-                        <div className="relative overflow-hidden rounded-3xl bg-white/70 dark:bg-slate-900/40 backdrop-blur-2xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 shadow-xl dark:shadow-2xl transition-all duration-1000">
+                        <div className="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-slate-900/75 backdrop-blur-sm border border-slate-200 dark:border-white/10 p-6 sm:p-8 shadow-xl dark:shadow-2xl transition-colors duration-500">
                             
                             {/* Accent Glow Overlay */}
                             <div 
@@ -1023,7 +1018,7 @@ function SoundtrackContent() {
                             {/* Album Art - Rotating CD */}
                             <div className="relative w-full aspect-square max-w-[280px] sm:max-w-[320px] mx-auto mb-8 flex items-center justify-center">
                                 {/* CD Case Shadow */}
-                                <div className="absolute inset-0 bg-black/20 dark:bg-black/40 rounded-full filter blur-xl scale-95 pointer-events-none" />
+                                <div className="absolute inset-4 bg-black/20 dark:bg-black/40 rounded-full blur-lg scale-95 pointer-events-none" />
 
                                 {/* Vinyl Track Body */}
                                 <div className="relative w-full h-full rounded-full bg-neutral-950 p-[6px] border border-slate-800 shadow-inner flex items-center justify-center select-none">
@@ -1067,96 +1062,77 @@ function SoundtrackContent() {
                                 </div>
                             </div>
 
-                            {/* Active Visualizer Bars (Equalizer) */}
-                            <div className="h-8 flex items-end justify-center gap-1.5 mb-6 overflow-hidden">
-                                {Array.from({ length: 14 }).map((_, i) => (
-                                    <motion.div
-                                        key={i}
-                                        className="w-1 rounded-full"
-                                        style={{
-                                            background: `linear-gradient(to top, ${currentTheme.from}, ${currentTheme.to})`,
-                                            boxShadow: `0 0 8px ${currentTheme.from}40`
-                                        }}
-                                        animate={{
-                                            height: isPlaying ? visualizerHeights[i] : 4
-                                        }}
-                                        transition={{
-                                            repeat: isPlaying ? Infinity : 0,
-                                            duration: isPlaying ? visualizerDurations[i] : 0.2,
-                                            ease: "easeInOut"
-                                        }}
-                                    />
-                                ))}
+                            {/* Real-time Audio Spectrum Visualizer */}
+                            <div className="mb-6 max-w-[240px] sm:max-w-[280px] mx-auto">
+                                <AudioSpectrumVisualizer
+                                    audioRef={audioRef}
+                                    themeColors={{ from: currentTheme.from, to: currentTheme.to }}
+                                    isPlaying={isPlaying}
+                                    isDark={isDark}
+                                    height={64}
+                                />
                             </div>
 
                             {/* Song Meta Info */}
                             <div className="text-center mb-6 px-2">
-                                <AnimatePresence mode="wait">
-                                    <motion.div
-                                        key={currentTrack?.id || "empty"}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ duration: 0.2 }}
-                                    >
-                                        <h3 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white truncate max-w-full">
-                                            {getDisplayTrackTitle(currentTrack, t)}
-                                        </h3>
-                                        <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 truncate">
-                                            {currentTrack?.pronunciation || t("page.soundtrack.pronunciationLoading")}
-                                        </p>
-                                        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                                            <div className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                                                {currentTrack ? (categoryMap.get(currentTrack.musicSoundTrackCategoryId)?.name || "BGM") : "..."}
-                                            </div>
-                                            {currentTrack?.isSpoiler && (
-                                                <span className="px-3 py-1 bg-orange-500/10 border border-orange-400/30 rounded-full text-[10px] font-bold text-orange-600 dark:text-orange-300">
-                                                    {t("common.badge.spoiler")}
-                                                </span>
-                                            )}
-                                            {currentTrack && Number.isFinite(displayDuration) && displayDuration > 0 && (
-                                                <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[10px] font-mono font-bold text-slate-500 dark:text-slate-300" title={t("page.soundtrack.durationLabel")}>
-                                                    {formatTime(displayDuration)}
-                                                </span>
-                                            )}
-                                            <button
-                                                onClick={handleDownloadCurrentTrack}
-                                                disabled={!currentTrack || !audioUrl || isDownloading}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-all hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                                                title={isDownloading ? t("page.soundtrack.download.preparingTitle") : t("page.soundtrack.download.currentTitle")}
-                                            >
-                                                {isDownloading ? (
-                                                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                                                    </svg>
-                                                ) : (
-                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                                                        <path d="M12 3v12" />
-                                                        <path d="M7 10l5 5 5-5" />
-                                                        <path d="M5 21h14" />
-                                                    </svg>
-                                                )}
-                                                <span>{isDownloading ? t("page.soundtrack.download.preparing") : t("page.soundtrack.download.button")}</span>
-                                            </button>
-                                            <button
-                                                onClick={handleShareCurrentTrack}
-                                                disabled={!currentTrack}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-all hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                                                title={t("page.soundtrack.share.currentTitle")}
-                                            >
-                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                                                    <circle cx="18" cy="5" r="3" />
-                                                    <circle cx="6" cy="12" r="3" />
-                                                    <circle cx="18" cy="19" r="3" />
-                                                    <path d="M8.59 13.51l6.83 3.98" />
-                                                    <path d="M15.41 6.51L8.59 10.49" />
-                                                </svg>
-                                                <span>{t("page.soundtrack.share.button")}</span>
-                                            </button>
+                                <div key={currentTrack?.id || "empty"} className="transition-opacity duration-200">
+                                    <h3 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white truncate max-w-full">
+                                        {getDisplayTrackTitle(currentTrack, t)}
+                                    </h3>
+                                    <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 truncate">
+                                        {currentTrack?.pronunciation || t("page.soundtrack.pronunciationLoading")}
+                                    </p>
+                                    <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                                        <div className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                                            {currentTrack ? (categoryMap.get(currentTrack.musicSoundTrackCategoryId)?.name || "BGM") : "..."}
                                         </div>
-                                    </motion.div>
-                                </AnimatePresence>
+                                        {currentTrack?.isSpoiler && (
+                                            <span className="px-3 py-1 bg-orange-500/10 border border-orange-400/30 rounded-full text-[10px] font-bold text-orange-600 dark:text-orange-300">
+                                                {t("common.badge.spoiler")}
+                                            </span>
+                                        )}
+                                        {currentTrack && Number.isFinite(displayDuration) && displayDuration > 0 && (
+                                            <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[10px] font-mono font-bold text-slate-500 dark:text-slate-300" title={t("page.soundtrack.durationLabel")}>
+                                                {formatTime(displayDuration)}
+                                            </span>
+                                        )}
+                                        <button
+                                            onClick={handleDownloadCurrentTrack}
+                                            disabled={!currentTrack || !audioUrl || isDownloading}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-all hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                                            title={isDownloading ? t("page.soundtrack.download.preparingTitle") : t("page.soundtrack.download.currentTitle")}
+                                        >
+                                            {isDownloading ? (
+                                                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                                </svg>
+                                            ) : (
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                                    <path d="M12 3v12" />
+                                                    <path d="M7 10l5 5 5-5" />
+                                                    <path d="M5 21h14" />
+                                                </svg>
+                                            )}
+                                            <span>{isDownloading ? t("page.soundtrack.download.preparing") : t("page.soundtrack.download.button")}</span>
+                                        </button>
+                                        <button
+                                            onClick={handleShareCurrentTrack}
+                                            disabled={!currentTrack}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-all hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                                            title={t("page.soundtrack.share.currentTitle")}
+                                        >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                                <circle cx="18" cy="5" r="3" />
+                                                <circle cx="6" cy="12" r="3" />
+                                                <circle cx="18" cy="19" r="3" />
+                                                <path d="M8.59 13.51l6.83 3.98" />
+                                                <path d="M15.41 6.51L8.59 10.49" />
+                                            </svg>
+                                            <span>{t("page.soundtrack.share.button")}</span>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
                             {audioError && (
@@ -1178,9 +1154,10 @@ function SoundtrackContent() {
                                     max={duration || 100}
                                     value={currentTime}
                                     onChange={handleSeek}
+                                    onPointerDown={() => syncCurrentTime(true)}
                                     className="w-full h-1 bg-slate-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-miku hover:h-1.5 transition-all outline-none custom-slider-thumb"
                                     style={{
-                                        background: `linear-gradient(to right, ${currentTheme.from} 0%, ${currentTheme.from} ${(currentTime / (duration || 1)) * 100}%, ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} ${(currentTime / (duration || 1)) * 100}%, ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 100%)`
+                                        background: `linear-gradient(to right, ${currentTheme.from} 0%, ${currentTheme.from} ${progressPercent}%, ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} ${progressPercent}%, ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 100%)`
                                     }}
                                 />
                                 <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 dark:text-slate-400 mt-2">
@@ -1521,7 +1498,7 @@ function SoundtrackContent() {
                         </div>
 
                         {/* Search and Sort Toolbar */}
-                        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/70 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-white/5 p-4">
+                        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/80 dark:bg-slate-900/75 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/5 p-4">
                             
                             {/* Fuzzy Search Box */}
                             <div className="relative w-full sm:w-72">
@@ -1605,7 +1582,7 @@ function SoundtrackContent() {
                         <div className="relative rounded-3xl bg-white/50 dark:bg-slate-900/20 border border-slate-200 dark:border-white/5 overflow-hidden flex-1 flex flex-col min-h-[420px] max-h-[560px]">
                             
                             {/* Inner Scroll container with custom light/dark adaptive thin scrollbar */}
-                            <div className="overflow-y-auto flex-1 p-3 custom-playlist-scrollbar">
+                            <div className="overflow-y-auto flex-1 p-3 custom-playlist-scrollbar" onScroll={handlePlaylistScroll}>
                                 {isLoading ? (
                                     <div className="flex flex-col items-center justify-center h-80 gap-3">
                                         <div className="loading-spinner loading-spinner-sm" />
@@ -1633,7 +1610,7 @@ function SoundtrackContent() {
                                     </div>
                                 ) : (
                                     <div className="flex flex-col gap-1.5">
-                                        {filteredTracks.map((track) => {
+                                        {displayedTracks.map((track) => {
                                             const isActive = currentTrack?.id === track.id;
                                             const trackTheme = CATEGORY_THEMES[track.musicSoundTrackCategoryId] ?? DEFAULT_THEME;
                                             
@@ -1674,6 +1651,8 @@ function SoundtrackContent() {
                                                                 alt={track.title}
                                                                 fill
                                                                 className="object-cover"
+                                                                sizes="40px"
+                                                                loading="lazy"
                                                                 unoptimized
                                                             />
                                                             {/* Hover Play Arrow Overlay */}
@@ -1719,6 +1698,17 @@ function SoundtrackContent() {
                                                 </button>
                                             );
                                         })}
+                                        {hasMoreTracks && (
+                                            <div className="flex justify-center py-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setVisibleTrackLimit(limit => Math.min(limit + SOUNDTRACK_LIST_BATCH_SIZE, filteredTracks.length))}
+                                                    className="rounded-full border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-white/5 px-4 py-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-colors hover:text-slate-800 dark:hover:text-white"
+                                                >
+                                                    {formatNumber(Math.min(visibleTrackLimit, filteredTracks.length))} / {formatNumber(filteredTracks.length)}
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
