@@ -8,6 +8,7 @@ import {
     resolveUiLocale,
     type UiLocale,
 } from "@/lib/i18n/locales";
+import { isIndexableSeoPage } from "@/lib/seo-routes";
 import {
     formatDetailSeoDescription,
     getDetailFallbackDescription,
@@ -154,6 +155,7 @@ export async function createPageMetadata(pageKey: SeoPageKey): Promise<Metadata>
         description: page.description,
         keywords: page.keywords,
         path: page.path,
+        robots: isIndexableSeoPage(pageKey) ? undefined : noIndexRobots(),
     });
 }
 
@@ -193,6 +195,24 @@ interface DetailMetadataOptions {
     robots?: Metadata["robots"];
 }
 
+export interface DetailMetadataResultOptions {
+    title: string;
+    descriptionKind: DetailSeoKind;
+    descriptionValues: Parameters<typeof formatDetailSeoDescription>[1];
+    images?: string[];
+    twitterCard?: "summary" | "summary_large_image";
+    robots?: Metadata["robots"];
+}
+
+interface CreateDynamicDetailMetadataOptions<T> {
+    params: Promise<{ id: string }>;
+    kind: DetailFallbackKind;
+    routePrefix: string;
+    getData: (id: number) => T | null;
+    build: (data: T, context: { id: string; numericId: number; locale: UiLocale; path: string }) => DetailMetadataResultOptions;
+    fallbackTwitterCard?: "summary" | "summary_large_image";
+}
+
 export function buildDetailMetadata({
     locale,
     title,
@@ -214,7 +234,11 @@ export function buildDetailMetadata({
     });
 }
 
-export async function createDetailFallbackMetadata(kind: DetailFallbackKind, path: string): Promise<Metadata> {
+export async function createDetailFallbackMetadata(
+    kind: DetailFallbackKind,
+    path: string,
+    twitterCard?: "summary" | "summary_large_image",
+): Promise<Metadata> {
     const locale = await getRequestSeoLocale();
     const title = getDetailFallbackTitle(kind, locale);
 
@@ -227,7 +251,51 @@ export async function createDetailFallbackMetadata(kind: DetailFallbackKind, pat
         title,
         description,
         path,
+        twitterCard,
     });
+}
+
+export async function createDynamicDetailMetadata<T>({
+    params,
+    kind,
+    routePrefix,
+    getData,
+    build,
+    fallbackTwitterCard,
+}: CreateDynamicDetailMetadataOptions<T>): Promise<Metadata> {
+    const { id } = await params;
+    const locale = await getRequestSeoLocale();
+    const numericId = Number(id);
+    const path = `/${routePrefix.replace(/^\/+|\/+$/g, "")}/${id}`;
+    const data = Number.isFinite(numericId) ? getData(numericId) : null;
+
+    if (!data) {
+        return buildDetailMetadata({
+            locale,
+            title: getDetailFallbackTitle(kind, locale),
+            description: kind === "exchange"
+                ? formatDetailSeoDescription("exchangeFallback", {}, locale)
+                : getDetailFallbackDescription(kind, locale),
+            path,
+            twitterCard: fallbackTwitterCard,
+        });
+    }
+
+    const result = build(data, { id, numericId, locale, path });
+
+    return buildDetailMetadata({
+        locale,
+        title: result.title,
+        description: formatDetailSeoDescription(result.descriptionKind, result.descriptionValues, locale),
+        path,
+        images: result.images,
+        twitterCard: result.twitterCard,
+        robots: result.robots,
+    });
+}
+
+export function dynamicDetailMetadata<T>(options: Omit<CreateDynamicDetailMetadataOptions<T>, "params">) {
+    return ({ params }: { params: Promise<{ id: string }> }) => createDynamicDetailMetadata({ ...options, params });
 }
 
 export async function getDetailSeoContext() {

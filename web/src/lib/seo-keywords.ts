@@ -17,7 +17,6 @@ export type DetailFallbackKind = keyof typeof DETAIL_FALLBACK_TITLES;
 
 interface SeoLocaleConfig {
   htmlLang: string;
-  hreflang: string;
   openGraphLocale: string;
   alternateOpenGraphLocales: readonly string[];
   titleTemplate: string;
@@ -51,7 +50,6 @@ type SeoPageDefinition = {
 export const SEO_LOCALE_CONFIG = {
   "zh-CN": {
     htmlLang: "zh-CN",
-    hreflang: "zh-CN",
     openGraphLocale: "zh_CN",
     alternateOpenGraphLocales: ["en_US", "ja_JP"],
     titleTemplate: "%s | Moesekai",
@@ -80,7 +78,6 @@ export const SEO_LOCALE_CONFIG = {
   },
   "en-US": {
     htmlLang: "en-US",
-    hreflang: "en-US",
     openGraphLocale: "en_US",
     alternateOpenGraphLocales: ["zh_CN", "ja_JP"],
     titleTemplate: "%s | Moesekai",
@@ -109,7 +106,6 @@ export const SEO_LOCALE_CONFIG = {
   },
   "ja-JP": {
     htmlLang: "ja-JP",
-    hreflang: "ja-JP",
     openGraphLocale: "ja_JP",
     alternateOpenGraphLocales: ["zh_CN", "en_US"],
     titleTemplate: "%s | Moesekai",
@@ -174,30 +170,45 @@ function definePage(path: string, title: LocalizedText, description: LocalizedTe
 export const SEO_PAGE_METADATA = {
   about: definePage(
     "/about",
-    { "zh-CN": "关于", "en-US": "About" },
+    { "zh-CN": "关于", "en-US": "About", "ja-JP": "Moesekaiについて" },
     {
       "zh-CN": "了解 Moesekai（原 Snowy SekaiViewer）的站点定位、数据来源与致谢。",
       "en-US": "Learn about Moesekai (formerly Snowy SekaiViewer), its data sources, credits, and site mission.",
+      "ja-JP": "Moesekai（旧 Snowy SekaiViewer）のサイト方針、データ出典、クレジットを確認できます。",
     },
-    { "zh-CN": ["关于", "数据来源", "致谢"], "en-US": ["about Moesekai", "data sources", "credits"] },
+    {
+      "zh-CN": ["关于", "数据来源", "致谢"],
+      "en-US": ["about Moesekai", "data sources", "credits"],
+      "ja-JP": ["Moesekaiについて", "データ出典", "クレジット"],
+    },
   ),
   cards: definePage(
     "/cards",
-    { "zh-CN": "卡牌图鉴", "en-US": "Card Encyclopedia" },
+    { "zh-CN": "卡牌图鉴", "en-US": "Card Encyclopedia", "ja-JP": "カード図鑑" },
     {
       "zh-CN": "浏览 Project SEKAI 全部卡牌，按角色、稀有度、属性、技能与团体归属筛选。",
       "en-US": "Browse all Project Sekai cards with character, rarity, attribute, skill, and unit filters.",
+      "ja-JP": "Project SEKAI のカードをキャラクター、レアリティ、属性、スキル、ユニットで絞り込めます。",
     },
-    { "zh-CN": ["卡牌", "卡牌图鉴", "卡牌数据库"], "en-US": ["cards", "card database", "card encyclopedia"] },
+    {
+      "zh-CN": ["卡牌", "卡牌图鉴", "卡牌数据库"],
+      "en-US": ["cards", "card database", "card encyclopedia"],
+      "ja-JP": ["カード", "カード図鑑", "カードデータベース"],
+    },
   ),
   music: definePage(
     "/music",
-    { "zh-CN": "歌曲图鉴", "en-US": "Music Encyclopedia" },
+    { "zh-CN": "歌曲图鉴", "en-US": "Music Encyclopedia", "ja-JP": "楽曲図鑑" },
     {
       "zh-CN": "浏览 Project SEKAI 歌曲列表，查看谱面难度、定数、作词作曲与 MV 信息。",
       "en-US": "Browse Project Sekai songs with chart difficulty, constants, lyricist, composer, and MV information.",
+      "ja-JP": "Project SEKAI の楽曲一覧、譜面難易度、定数、作詞作曲、MV 情報を確認できます。",
     },
-    { "zh-CN": ["音乐", "歌曲图鉴", "谱面", "歌曲Meta"], "en-US": ["songs", "music", "chart difficulty", "song database"] },
+    {
+      "zh-CN": ["音乐", "歌曲图鉴", "谱面", "歌曲Meta"],
+      "en-US": ["songs", "music", "chart difficulty", "song database"],
+      "ja-JP": ["楽曲", "楽曲図鑑", "譜面", "楽曲データベース"],
+    },
   ),
   soundtrack: definePage(
     "/soundtrack",
@@ -219,30 +230,45 @@ export const SEO_PAGE_METADATA = {
   ),
   events: definePage(
     "/events",
-    { "zh-CN": "活动图鉴", "en-US": "Event Encyclopedia" },
+    { "zh-CN": "活动图鉴", "en-US": "Event Encyclopedia", "ja-JP": "イベント図鑑" },
     {
       "zh-CN": "浏览 Project SEKAI 活动列表，查看活动详情、加成角色、活动歌曲与排名数据。",
       "en-US": "Browse Project Sekai events with event details, bonus characters, event songs, and ranking data.",
+      "ja-JP": "Project SEKAI のイベント一覧、イベント詳細、ボーナスキャラクター、関連楽曲、ランキングデータを確認できます。",
     },
-    { "zh-CN": ["活动", "活动图鉴", "活动排名"], "en-US": ["events", "event database", "event rankings"] },
+    {
+      "zh-CN": ["活动", "活动图鉴", "活动排名"],
+      "en-US": ["events", "event database", "event rankings"],
+      "ja-JP": ["イベント", "イベント図鑑", "イベントランキング"],
+    },
   ),
   gacha: definePage(
     "/gacha",
-    { "zh-CN": "扭蛋数据库", "en-US": "Gacha Database" },
+    { "zh-CN": "扭蛋数据库", "en-US": "Gacha Database", "ja-JP": "ガチャデータベース" },
     {
       "zh-CN": "浏览 Project SEKAI 扭蛋卡池，查看卡池时间、PU 卡牌与概率信息。",
       "en-US": "Browse Project Sekai gacha banners with schedules, pickup cards, and rate information.",
+      "ja-JP": "Project SEKAI のガチャ一覧、開催期間、ピックアップカード、提供割合を確認できます。",
     },
-    { "zh-CN": ["扭蛋", "卡池", "Gacha", "PU卡牌"], "en-US": ["gacha", "banners", "pickup cards", "rates"] },
+    {
+      "zh-CN": ["扭蛋", "卡池", "Gacha", "PU卡牌"],
+      "en-US": ["gacha", "banners", "pickup cards", "rates"],
+      "ja-JP": ["ガチャ", "ガチャ一覧", "ピックアップカード", "提供割合"],
+    },
   ),
   character: definePage(
     "/character",
-    { "zh-CN": "角色图鉴", "en-US": "Character Encyclopedia" },
+    { "zh-CN": "角色图鉴", "en-US": "Character Encyclopedia", "ja-JP": "キャラクター図鑑" },
     {
       "zh-CN": "浏览 Project SEKAI 角色资料、组合信息、生日与角色详情。",
       "en-US": "Browse Project Sekai character profiles, units, birthdays, and detailed character information.",
+      "ja-JP": "Project SEKAI のキャラクター情報、ユニット、誕生日、詳細プロフィールを確認できます。",
     },
-    { "zh-CN": ["角色", "角色图鉴", "组合", "生日"], "en-US": ["characters", "character profiles", "units", "birthdays"] },
+    {
+      "zh-CN": ["角色", "角色图鉴", "组合", "生日"],
+      "en-US": ["characters", "character profiles", "units", "birthdays"],
+      "ja-JP": ["キャラクター", "キャラクター図鑑", "ユニット", "誕生日"],
+    },
   ),
   comic: definePage(
     "/comic",
@@ -498,12 +524,17 @@ export const SEO_PAGE_METADATA = {
   ),
   story: definePage(
     "/story",
-    { "zh-CN": "剧情浏览", "en-US": "Story Browser" },
+    { "zh-CN": "剧情浏览", "en-US": "Story Browser", "ja-JP": "ストーリーブラウザ" },
     {
       "zh-CN": "浏览 Project SEKAI 主线、活动、卡牌、区域、自我介绍与特殊剧情。",
       "en-US": "Browse Project Sekai main, event, card, area, character introduction, and special stories.",
+      "ja-JP": "Project SEKAI のメイン、イベント、カード、エリア、自己紹介、特殊ストーリーを閲覧できます。",
     },
-    { "zh-CN": ["剧情", "故事", "剧情翻译"], "en-US": ["stories", "story reader", "translations"] },
+    {
+      "zh-CN": ["剧情", "故事", "剧情翻译"],
+      "en-US": ["stories", "story reader", "translations"],
+      "ja-JP": ["ストーリー", "ストーリーブラウザ", "翻訳"],
+    },
   ),
   story_unit: definePage(
     "/story/unit",
@@ -957,36 +988,3 @@ export function formatMysekaiFlavorSuffix(flavor: string | undefined, locale: Ui
   return locale === "zh-CN" || locale === "ja-JP" ? ` — ${clipped}` : ` - ${clipped}`;
 }
 
-// ==================== JSON-LD Structured Data ====================
-
-/** Generate JSON-LD structured data for the root page. */
-export function generateJsonLd(baseUrl: string, locale: UiLocale = DEFAULT_UI_LOCALE) {
-  const config = getSeoLocaleConfig(locale);
-
-  const website = {
-    "@context": "https://schema.org" as const,
-    "@type": "WebSite" as const,
-    name: "Moesekai",
-    alternateName: config.root.jsonLdAlternateName,
-    url: baseUrl,
-    inLanguage: config.htmlLang,
-    description: config.root.jsonLdDescription,
-  };
-
-  const videoGame = {
-    "@context": "https://schema.org" as const,
-    "@type": "VideoGame" as const,
-    name: "Project Sekai",
-    alternateName: [
-      "世界计划 彩色舞台 feat. 初音未来",
-      "Hatsune Miku: Colorful Stage!",
-      "プロジェクトセカイ",
-      "PJSK",
-    ],
-    gamePlatform: ["iOS", "Android"],
-    applicationCategory: "GameApplication",
-    genre: "Rhythm Game",
-  };
-
-  return { website, videoGame };
-}

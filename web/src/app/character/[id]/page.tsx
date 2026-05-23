@@ -1,40 +1,22 @@
-import { Metadata } from "next";
 import { Suspense } from "react";
 import MainLayout from "@/components/MainLayout";
-import { getCharacterMeta } from "@/lib/metadata";
-import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
-import { formatDetailSeoDescription, getDetailFallbackDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
 import { getCharacterIconUrl } from "@/lib/assets";
+import { getCharacterMeta } from "@/lib/metadata";
+import { dynamicDetailMetadata } from "@/lib/seo-metadata";
 import CharacterDetailClient from "./client";
 
-type Props = { params: Promise<{ id: string }> };
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { id } = await params;
-    const locale = await getRequestSeoLocale();
-    const character = getCharacterMeta(Number(id));
-    if (!character) {
-        return buildDetailMetadata({
-            locale,
-            title: getDetailFallbackTitle("character", locale),
-            description: getDetailFallbackDescription("character", locale),
-            path: `/character/${id}`,
-        });
-    }
-
-    const title = character.name;
-    const description = formatDetailSeoDescription("character", { name: character.name }, locale);
-    const ogImage = getCharacterIconUrl(Number(id));
-
-    return buildDetailMetadata({
-        locale,
-        title,
-        description,
-        path: `/character/${id}`,
-        images: [ogImage],
+export const generateMetadata = dynamicDetailMetadata({
+    kind: "character",
+    routePrefix: "character",
+    getData: getCharacterMeta,
+    build: (character, { numericId }) => ({
+        title: character.name,
+        descriptionKind: "character",
+        descriptionValues: { name: character.name },
+        images: [getCharacterIconUrl(numericId)],
         twitterCard: "summary",
-    });
-}
+    }),
+});
 
 export default function CharacterDetailPage() {
     return (

@@ -121,14 +121,14 @@
 - [x] `buildLocalizedMetadata()` 支持 robots 配置。
 - [x] 新增 `noIndexPageMetadata()` helper，`/blank` 与 OAuth flow 已接入。
 - [x] 统一详情页 fallback description，避免 fallback description 仅等于 title。
-- [ ] 逐步减少动态详情页重复 boilerplate。
+- [x] 逐步减少动态详情页重复 boilerplate：cards / character / costumes / events / exchanges / gacha / live / manga / music / mysekai 已迁到 `dynamicDetailMetadata()`。
 
 ### P4：结构化数据
 
-- [ ] 将 JSON-LD helper 从 `seo-keywords.ts` 拆到 `structured-data.ts` 或保持兼容导出。
-- [ ] Root 保留 `WebSite` / `VideoGame`。
+- [x] 将 JSON-LD helper 从 `seo-keywords.ts` 拆到 `structured-data.ts`。
+- [x] Root 保留 `WebSite` / `VideoGame`。
 - [ ] 评估 `SearchAction` 是否有真实站内搜索 URL 可落地。
-- [ ] 为分组页/详情页预留 `BreadcrumbList` / `ItemList` helper。
+- [x] 为分组页/详情页预留 `BreadcrumbList` / `ItemList` helper。
 
 ### P5：locale URL / hreflang 专项
 
@@ -176,3 +176,24 @@ npm run build:next --prefix web
 - `npm run lint --prefix web` 已通过但有既有 warning：`src/app/soundtrack/client.tsx` 的 `react-hooks/exhaustive-deps` missing dependency `handleFilterChange`。
 - `npm run build:next --prefix web` 已通过；仅出现已知 `turbopack.root should be absolute` warning。
 - 当前 SEO 重构不启用 hreflang，仅修复 sitemap/metadata/robots/canonical 基础设施。
+
+### 2026-05-23：详情页 metadata 与 noindex/robots 对齐推进
+
+本轮新增/调整：
+
+- 新增 `dynamicDetailMetadata()`，将 cards / character / costumes / events / exchanges / gacha / live / manga / music / mysekai 十个动态详情页迁到统一 helper，减少各页面重复的 locale、fallback、description 与 OpenGraph boilerplate。
+- `pageMetadata()` 现在会通过 route registry 自动对非索引 `pageKey` 附加 `noIndexRobots()`；`robots.txt` 改为复用 `getRobotsDisallowPaths()`，避免 robots 排除列表与 `NON_INDEXABLE_SEO_ROUTES` 分叉。
+- `/leave` 与 `/design-system` 拆为 server page + client body，使两条非索引路由也能输出稳定 `metadata.robots`；i18n hardcoded Han allowlist 同步改到 `design-system/client.tsx`。
+- JSON-LD 迁移到 `src/lib/structured-data.ts`；Root 继续输出 `WebSite` / `VideoGame`，并预留 `BreadcrumbList` / `ItemList` helper。
+- 移除 SEO locale config 中未使用的 `hreflang` 字段；仍不输出 hreflang，等待稳定 locale URL 策略。
+- 补齐 ja-JP 核心页面 SEO 文案：about / cards / music / events / gacha / character / story。
+- `npm run sitemap --prefix web` 重新生成 `public/data/sitemap-data.json`：`Main routes: 54`，`Detail routes: 9717`；本次远程数据更新导致 1749 条 detail route lastmod 变化，路由数量与主路由集合未变。
+
+本轮验证：
+
+- `npm run lint:i18n --prefix web`：通过，`Hardcoded UI Han scan OK (15 allowlisted file groups)`。
+- `npm run lint:i18n-usage --prefix web`：通过。
+- `npm run lint --prefix web`：通过；仍有既有 warning：`src/app/soundtrack/client.tsx` 的 `react-hooks/exhaustive-deps` missing dependency `handleFilterChange`。
+- `npm run sitemap --prefix web`：通过，详情页来源均为 fresh。
+- `npm run generate:metadata --prefix web`：通过；entries 维持 cards 1376、musics 676、events 205、gachas 953、characters 26、virtualLives 476、costumes 972、mysekaiFixtures 1395、mangas 354、exchanges 3079。
+- `npm run build:next --prefix web`：通过；仍有已知 `turbopack.root should be absolute` warning。

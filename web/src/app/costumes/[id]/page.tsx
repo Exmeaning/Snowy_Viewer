@@ -1,36 +1,20 @@
-import { Metadata } from "next";
 import { Suspense } from "react";
 import { getCostumeMeta } from "@/lib/metadata";
-import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
-import { formatDetailSeoDescription, getDetailFallbackDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
+import { dynamicDetailMetadata } from "@/lib/seo-metadata";
 import CostumeDetailClient from "./client";
 
-type Props = { params: Promise<{ id: string }> };
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { id } = await params;
-    const locale = await getRequestSeoLocale();
-    const costume = getCostumeMeta(Number(id));
-    if (!costume) {
-        return buildDetailMetadata({
-            locale,
-            title: getDetailFallbackTitle("costume", locale),
-            description: getDetailFallbackDescription("costume", locale),
-            path: `/costumes/${id}`,
-        });
-    }
-
-    const title = costume.name;
-    const description = formatDetailSeoDescription("costume", { name: costume.name }, locale);
-
-    return buildDetailMetadata({
-        locale,
-        title,
-        description,
-        path: `/costumes/${id}`,
+export const generateMetadata = dynamicDetailMetadata({
+    kind: "costume",
+    routePrefix: "costumes",
+    getData: getCostumeMeta,
+    fallbackTwitterCard: "summary",
+    build: (costume) => ({
+        title: costume.name,
+        descriptionKind: "costume",
+        descriptionValues: { name: costume.name },
         twitterCard: "summary",
-    });
-}
+    }),
+});
 
 export default function CostumeDetailPage() {
     return (

@@ -1,51 +1,25 @@
-import { Metadata } from "next";
 import { Suspense } from "react";
 import { getMysekaiFixtureThumbnailUrl } from "@/lib/assets";
 import { getFixtureMeta } from "@/lib/metadata";
-import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
-import {
-    formatDetailSeoDescription,
-    formatMysekaiFlavorSuffix,
-    getDetailFallbackDescription,
-    getDetailFallbackTitle,
-} from "@/lib/seo-keywords";
+import { dynamicDetailMetadata } from "@/lib/seo-metadata";
+import { formatMysekaiFlavorSuffix } from "@/lib/seo-keywords";
 import MysekaiFixtureDetailClient from "./client";
 
-type Props = { params: Promise<{ id: string }> };
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { id } = await params;
-    const locale = await getRequestSeoLocale();
-    const fixture = getFixtureMeta(Number(id));
-    if (!fixture) {
-        return buildDetailMetadata({
-            locale,
-            title: getDetailFallbackTitle("mysekai", locale),
-            description: getDetailFallbackDescription("mysekai", locale),
-            path: `/mysekai/${id}`,
-        });
-    }
-
-    const title = fixture.name;
-    const description = formatDetailSeoDescription(
-        "mysekai",
-        {
+export const generateMetadata = dynamicDetailMetadata({
+    kind: "mysekai",
+    routePrefix: "mysekai",
+    getData: getFixtureMeta,
+    build: (fixture, { locale }) => ({
+        title: fixture.name,
+        descriptionKind: "mysekai",
+        descriptionValues: {
             name: fixture.name,
             flavorSuffix: formatMysekaiFlavorSuffix(fixture.flavor, locale),
         },
-        locale,
-    );
-    const ogImage = getMysekaiFixtureThumbnailUrl(fixture.asset, "main-jp");
-
-    return buildDetailMetadata({
-        locale,
-        title,
-        description,
-        path: `/mysekai/${id}`,
-        images: [ogImage],
+        images: [getMysekaiFixtureThumbnailUrl(fixture.asset, "main-jp")],
         twitterCard: "summary",
-    });
-}
+    }),
+});
 
 export default function MysekaiFixtureDetailPage() {
     return (

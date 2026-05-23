@@ -21,8 +21,8 @@ import {
   DEFAULT_SHOW_ADS,
   SHOW_ADS_STORAGE_KEY,
 } from "@/lib/ads";
-import { generateJsonLd } from "@/lib/seo-keywords";
 import { generateRootMetadata, getSiteBaseUrl } from "@/lib/seo-metadata";
+import { generateRootJsonLd } from "@/lib/structured-data";
 import { buildGoogleTagBootstrapScript } from "@/lib/googleTag";
 import {
   SUPPORTED_UI_LOCALES,
@@ -58,7 +58,7 @@ export default async function RootLayout({
   const initialUiLocale =
     resolveUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value) ??
     resolveAcceptLanguageUiLocale(requestHeaders.get("accept-language"));
-  const jsonLd = generateJsonLd(SITE_BASE_URL, initialUiLocale);
+  const jsonLd = generateRootJsonLd(SITE_BASE_URL, initialUiLocale);
   const supportedUiLocales = JSON.stringify(SUPPORTED_UI_LOCALES);
   // Inline script to apply theme color before React hydration
   const themeScript = `
