@@ -111,7 +111,7 @@ export default function Breadcrumb() {
     const groupMatch = findGroupMatch(pathname);
     if (groupMatch) {
         return (
-            <div ref={dropdownRef} className="flex items-center gap-1.5">
+            <div ref={dropdownRef} className="flex items-center gap-1.5 min-w-0">
                 <span className="text-miku/30 shrink-0">/</span>
                 <div className="relative flex items-center gap-0.5">
                     <span className="text-miku font-medium shrink-0 text-sm">
@@ -165,7 +165,7 @@ export default function Breadcrumb() {
     const detail = detailNode || detailName;
 
     return (
-        <div ref={dropdownRef} className="flex items-center gap-1.5">
+        <div ref={dropdownRef} className="flex items-center gap-1.5 min-w-0">
             {/* First level: group label with dropdown. */}
             <span className="text-miku/30 shrink-0">/</span>
             <div className="relative flex items-center gap-0.5">
@@ -228,7 +228,7 @@ export default function Breadcrumb() {
             {isDetailPage && detail && (
                 <>
                     <span className="text-miku/30 shrink-0">/</span>
-                    <span className="text-miku font-medium text-sm truncate max-w-[120px] sm:max-w-[200px]">
+                    <span className="inline-block text-miku font-medium text-sm truncate max-w-[120px] sm:max-w-[200px] align-middle">
                         {detail}
                     </span>
                 </>
