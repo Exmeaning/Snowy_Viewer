@@ -17,9 +17,23 @@ interface TalkSnippetProps {
     translationSource?: 'official_cn' | 'llm' | 'human';
     unitName?: string; // Legacy unit name for virtual singers
     unitField?: string; // Unit field for virtual singers (e.g., 'light_sound', 'school_refusal')
+    active?: boolean;
+    progress?: number;
 }
 
-export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText, cnDisplayName, translationSource: _translationSource, unitName: _unitName, unitField }: TalkSnippetProps) {
+export function TalkSnippet({ 
+    characterId, 
+    characterName, 
+    text, 
+    voiceUrl, 
+    cnText, 
+    cnDisplayName, 
+    translationSource: _translationSource, 
+    unitName: _unitName, 
+    unitField,
+    active = false,
+    progress = 0
+}: TalkSnippetProps) {
     const { useLLMTranslation } = useTheme();
     const iconUrl = characterId > 0 && characterId <= 26
         ? getCharacterIconUrl(characterId)
@@ -40,7 +54,20 @@ export function TalkSnippet({ characterId, characterName, text, voiceUrl, cnText
     const badgeIcon = badgeUnitId ? UNIT_ICON_FILES[badgeUnitId] : null;
 
     return (
-        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 my-3 shadow-sm border border-slate-200/50 dark:border-slate-700/50 relative">
+        <div 
+            className={`ios-glass-card rounded-xl p-4 my-3 relative border-none shadow-sm overflow-hidden transition-all duration-300 ${
+                active 
+                    ? "ring-2 ring-miku shadow-[0_0_20px_rgba(51,204,187,0.3)] scale-[1.01] z-10" 
+                    : ""
+            }`}
+        >
+            {/* Smooth linear frosted brand progress bar */}
+            {active && (
+                <div 
+                    className="absolute top-0 left-0 h-[3px] bg-gradient-to-r from-miku to-cyan-400 transition-all duration-100 shadow-[0_0_8px_var(--color-miku)]" 
+                    style={{ width: `${progress}%` }} 
+                />
+            )}
             <div className="flex items-start gap-3">
                 {/* Character Avatar */}
                 <div className="shrink-0 relative">
@@ -132,28 +159,36 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
     switch (seType) {
         case "FullScreenText":
             return (
-                <div className="bg-slate-900/90 dark:bg-slate-950/90 rounded-xl p-6 my-4 shadow-lg border border-slate-700">
-                    <div className="flex items-center gap-2 mb-3">
-                        <span className="px-2.5 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-full">
+                <div className="ios-glass-panel rounded-2xl p-6 my-4 shadow-xl border border-purple-500/30 dark:border-purple-500/20 relative overflow-hidden backdrop-blur-3xl bg-slate-950/75 dark:bg-slate-950/85">
+                    {/* Decorative glow */}
+                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
+                    <div className="flex items-center gap-2 mb-3 relative z-10">
+                        <span className="px-2.5 py-0.5 bg-purple-500/20 text-purple-300 text-xs font-semibold rounded-full border border-purple-500/30 tracking-wider shadow-sm">
                             {t("page.story.snippet.fullScreenText")}
                         </span>
                     </div>
-                    <p className="text-white text-lg leading-relaxed text-center whitespace-pre-wrap">
+                    <p className="text-white text-lg sm:text-xl font-light leading-relaxed text-center whitespace-pre-wrap my-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] relative z-10">
                         {text?.trimStart()}
                     </p>
-                    {resource && <AudioPlayButton url={resource} className="mt-3" />}
+                    {resource && (
+                        <div className="flex justify-center mt-3 relative z-10">
+                            <AudioPlayButton url={resource} className="shadow-[0_0_15px_rgba(168,85,247,0.4)] bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30" />
+                        </div>
+                    )}
                 </div>
             );
 
         case "Telop":
             return (
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl p-4 my-3 border border-amber-200 dark:border-amber-700">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-medium rounded-full">
+                <div className="ios-glass-card rounded-xl p-4 my-3 border border-amber-500/30 dark:border-amber-500/20 bg-gradient-to-r from-amber-50/50 to-orange-50/50 dark:from-amber-950/40 dark:to-orange-950/40 relative overflow-hidden">
+                    {/* Subtle warm decorative glow */}
+                    <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
+                    <div className="flex items-center gap-2 mb-2 relative z-10">
+                        <span className="px-2.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-300 text-xs font-semibold rounded-full border border-amber-500/30 tracking-wider shadow-sm">
                             {t("page.story.snippet.telop")}
                         </span>
                     </div>
-                    <p className="text-amber-800 dark:text-amber-200 text-base leading-relaxed text-center whitespace-pre-wrap">
+                    <p className="text-amber-900 dark:text-amber-100 text-base leading-relaxed text-center font-medium whitespace-pre-wrap relative z-10">
                         {text?.trimStart()}
                     </p>
                 </div>
@@ -161,45 +196,44 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "PlaceInfo":
             return (
-                <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 my-3 border border-slate-200 dark:border-slate-700">
+                <div className="ios-glass-card rounded-xl p-4 my-3 border border-blue-500/30 dark:border-blue-500/20 bg-blue-50/20 dark:bg-blue-950/20">
                     <div className="flex items-center gap-2 mb-2">
                         <span className="px-2.5 py-0.5 bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full">
                             {t("page.story.snippet.placeInfo")}
                         </span>
                     </div>
-                    <p className="text-slate-700 dark:text-slate-300 text-base leading-relaxed">
+                    <p className="text-slate-700 dark:text-slate-300 text-base leading-relaxed font-medium">
                         {t("page.story.snippet.placeText", { place: text })}
                     </p>
                 </div>
             );
 
-
         case "ChangeBackground":
             //case "ChangeBackgroundStill":
             const isCg = isCgImage(text || '');
             return (
-                <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 my-3 border border-slate-200 dark:border-slate-700">
+                <div className="ios-glass-card rounded-xl p-4 my-3 border border-emerald-500/30 dark:border-emerald-500/20 bg-emerald-50/10 dark:bg-emerald-950/10">
                     <div className="flex items-center gap-2 mb-3">
-                        <span className="px-2.5 py-0.5 bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full">
+                        <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium rounded-full">
                             {isCg ? t("page.story.snippet.cgInsert") : t("page.story.snippet.backgroundChange")}
                         </span>
                     </div>
 
                     {isImageOpen && resource ? (
                         <div
-                            className="cursor-pointer"
+                            className="cursor-pointer overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
                             onClick={() => window.open(resource, "_blank")}
                         >
                             <img
                                 src={resource}
                                 alt="Background"
-                                className="w-full rounded-lg shadow-md hover:opacity-90 transition-opacity"
+                                className="w-full rounded-lg hover:scale-[1.02] transition-transform duration-500"
                             />
                         </div>
                     ) : (
                         <button
                             onClick={() => setIsImageOpen(true)}
-                            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+                            className="ios-glass-btn px-4 py-2 text-sm font-medium rounded-lg text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/10"
                         >
                             {isCg ? t("page.story.snippet.showCg") : t("page.story.snippet.showBackground")}
                         </button>
@@ -209,7 +243,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "FlashbackIn":
             return (
-                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl p-3 my-3 border border-yellow-300 dark:border-yellow-700/50">
+                <div className="ios-glass-card rounded-xl p-3 my-3 border border-yellow-500/30 dark:border-yellow-500/20 bg-yellow-500/10">
                     <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-xs font-medium rounded-full">
                             {t("page.story.snippet.flashbackIn")}
@@ -220,7 +254,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "FlashbackOut":
             return (
-                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl p-3 my-3 border border-yellow-300 dark:border-yellow-700/50">
+                <div className="ios-glass-card rounded-xl p-3 my-3 border border-yellow-500/30 dark:border-yellow-500/20 bg-yellow-500/10">
                     <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-xs font-medium rounded-full">
                             {t("page.story.snippet.flashbackOut")}
@@ -231,7 +265,7 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "BlackOut":
             return (
-                <div className="bg-slate-900/80 dark:bg-slate-950/80 rounded-xl p-3 my-3 border border-slate-600 dark:border-slate-700">
+                <div className="ios-glass-card rounded-xl p-3 my-3 border border-slate-600/30 bg-black/40">
                     <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 bg-slate-600/30 text-slate-300 text-xs font-medium rounded-full">
                             {t("page.story.snippet.blackOut")}
@@ -242,9 +276,9 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "WhiteOut":
             return (
-                <div className="bg-white/90 dark:bg-slate-200/20 rounded-xl p-3 my-3 border border-slate-300 dark:border-slate-500">
+                <div className="ios-glass-card rounded-xl p-3 my-3 border border-white/30 bg-white/40">
                     <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 bg-slate-200/50 text-slate-600 dark:text-slate-300 text-xs font-medium rounded-full">
+                        <span className="px-2.5 py-0.5 bg-white/30 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-full">
                             {t("page.story.snippet.whiteOut")}
                         </span>
                     </div>
@@ -253,13 +287,13 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "SimpleSelectable":
             return (
-                <div className="bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-900/30 dark:to-violet-900/30 rounded-xl p-4 my-3 border border-indigo-300 dark:border-indigo-700/50">
+                <div className="ios-glass-card rounded-xl p-4 my-3 border border-indigo-500/30 dark:border-indigo-500/20 bg-indigo-500/10">
                     <div className="flex items-center gap-2 mb-2">
                         <span className="px-2.5 py-0.5 bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-medium rounded-full">
                             {t("page.story.snippet.choice")}
                         </span>
                     </div>
-                    <p className="text-indigo-800 dark:text-indigo-200 text-base leading-relaxed text-center whitespace-pre-wrap">
+                    <p className="text-indigo-800 dark:text-indigo-200 text-base leading-relaxed text-center font-medium whitespace-pre-wrap">
                         {text?.trimStart()}
                     </p>
                 </div>
@@ -267,12 +301,12 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "Movie":
             return (
-                <div className="bg-slate-900 dark:bg-slate-950 rounded-xl p-4 my-3 border border-slate-700">
+                <div className="ios-glass-card rounded-xl p-4 my-3 border border-red-500/30 dark:border-red-500/20 bg-red-950/20">
                     <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded-full">
                             {t("page.story.snippet.movie")}
                         </span>
-                        <span className="text-slate-400 text-sm">{text}</span>
+                        <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">{text}</span>
                     </div>
                 </div>
             );
@@ -284,17 +318,17 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
             const mvName = mvParts[1] || '';
             
             return (
-                <div className="bg-gradient-to-r from-purple-900/80 to-pink-900/80 dark:from-purple-950/80 dark:to-pink-950/80 rounded-xl p-4 my-3 border border-purple-500/50">
+                <div className="ios-glass-card rounded-xl p-4 my-3 border border-purple-500/30 dark:border-purple-500/20 bg-gradient-to-r from-purple-500/10 to-pink-500/10">
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
-                            <span className="px-2.5 py-0.5 bg-purple-500/30 text-purple-200 text-xs font-medium rounded-full">
+                            <span className="px-2.5 py-0.5 bg-purple-500/20 text-purple-600 dark:text-purple-300 text-xs font-semibold rounded-full border border-purple-500/20">
                                 {t("page.story.snippet.playMv")}
                             </span>
                         </div>
                         {mvName ? (
-                            <p className="text-purple-100 text-base font-medium">{mvName}</p>
+                            <p className="text-purple-700 dark:text-purple-300 text-base font-semibold">{mvName}</p>
                         ) : (
-                            <p className="text-purple-200 text-sm">MV ID: {mvId}</p>
+                            <p className="text-purple-600 dark:text-purple-400 text-sm font-medium">MV ID: {mvId}</p>
                         )}
                     </div>
                 </div>
@@ -387,9 +421,14 @@ function AudioPlayButton({ url, className = "" }: AudioPlayButtonProps) {
 // Main snippet renderer
 interface StorySnippetProps {
     action: IProcessedAction;
+    index?: number;
+    activeIndex?: number;
+    playbackProgress?: number;
 }
 
-export function StorySnippet({ action }: StorySnippetProps) {
+export function StorySnippet({ action, index, activeIndex, playbackProgress }: StorySnippetProps) {
+    const active = index !== undefined && activeIndex !== undefined && index === activeIndex;
+    
     switch (action.type) {
         case SnippetAction.Talk:
             return (
@@ -403,6 +442,8 @@ export function StorySnippet({ action }: StorySnippetProps) {
                     translationSource={action.translationSource}
                     unitName={action.chara?.unitName}
                     unitField={action.chara?.unitField}
+                    active={active}
+                    progress={playbackProgress}
                 />
             );
 

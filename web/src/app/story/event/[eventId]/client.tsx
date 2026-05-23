@@ -158,18 +158,18 @@ function ChapterItem({
       href={`/story/event/${eventId}/${chapter.chapter_no}`}
       className="block mb-4 last:mb-0"
     >
-      <div className="bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 backdrop-blur-sm rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-md transition-all group overflow-hidden">
+      <div className="ios-glass-card ios-glass-card-interactive rounded-xl p-4 border-none group overflow-hidden">
         <div className="flex flex-col sm:flex-row gap-4">
           {showImage && (
-            <div className="relative w-full sm:w-64 aspect-video sm:aspect-[16/9] rounded-lg overflow-hidden shrink-0 bg-slate-200 dark:bg-slate-700 self-center sm:self-start">
+            <div className="relative w-full sm:w-64 aspect-video sm:aspect-[16/9] rounded-lg overflow-hidden shrink-0 bg-slate-200/20 dark:bg-slate-700/20 self-center sm:self-start border border-white/10">
               <Image
                 src={imageUrl}
                 alt={`Episode ${chapter.chapter_no}`}
                 fill
-                className="object-contain"
+                className="object-contain transition-transform duration-500 group-hover:scale-105"
                 unoptimized
               />
-              <div className="absolute top-1 left-1 bg-black/50 backdrop-blur-[2px] text-white text-[10px] px-1.5 py-0.5 rounded">
+              <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-[2px] text-white text-[10px] px-1.5 py-0.5 rounded font-black">
                 #{chapter.chapter_no}
               </div>
             </div>
@@ -179,7 +179,7 @@ function ChapterItem({
               <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 group-hover:text-miku transition-colors line-clamp-1">
                 {chapter.title_cn || chapter.title_jp}
               </h3>
-              <div className="sm:hidden text-slate-400 group-hover:text-miku transition-colors">
+              <div className="sm:hidden text-slate-400 group-hover:text-miku transition-all group-hover:translate-x-1">
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -203,7 +203,7 @@ function ChapterItem({
               <p className="text-sm text-slate-400 italic mt-1">{t("page.story.event.noChapterSummary")}</p>
             )}
           </div>
-          <div className="hidden sm:block text-slate-400 group-hover:text-miku transition-colors self-center">
+          <div className="hidden sm:block text-slate-400 group-hover:text-miku transition-all group-hover:translate-x-1 self-center">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -355,7 +355,7 @@ export default function StoryEventDetailClient() {
     <MainLayout>
       <div className="container mx-auto px-4 sm:px-6 py-8">
         {/* Banner */}
-        <div className="relative rounded-2xl overflow-hidden shadow-lg mb-8 bg-white dark:bg-slate-800 min-h-[200px] sm:min-h-[250px] flex items-center">
+        <div className="relative rounded-2xl overflow-hidden ios-glass-card mb-8 min-h-[200px] sm:min-h-[250px] flex items-center border-none">
           <div className="absolute inset-0 z-0">
             <div className="absolute inset-0 bg-gradient-to-r from-miku/10 to-purple-500/10 mix-blend-multiply z-10" />
             <Image
@@ -391,7 +391,7 @@ export default function StoryEventDetailClient() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Left: Summary */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-700 group">
+            <div className="ios-glass-card ios-glass-card-interactive rounded-2xl overflow-hidden border-none group">
               <Link href={`/events/${eventId}`} className="block">
                 <div className="p-5 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                   <div className="w-12 h-12 rounded-xl bg-miku/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
@@ -435,7 +435,7 @@ export default function StoryEventDetailClient() {
             </div>
 
             {bilibiliEvent && (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-700 group">
+              <div className="ios-glass-card ios-glass-card-interactive rounded-2xl overflow-hidden border-none group">
                 <ExternalLink
                   href={bilibiliEvent.bilibili_url!}
                   className="block"
@@ -482,7 +482,7 @@ export default function StoryEventDetailClient() {
               </div>
             )}
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm p-6 border border-slate-100 dark:border-slate-700">
+            <div className="ios-glass-card rounded-2xl p-6 border-none">
               <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                 <svg
                   className="w-5 h-5 text-miku"

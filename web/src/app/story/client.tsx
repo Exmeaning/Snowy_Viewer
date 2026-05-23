@@ -25,11 +25,11 @@ export default function StoryIndexClient() {
                         <Link
                             key={storyType.href}
                             href={storyType.href}
-                            className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                            className="ios-glass-card ios-glass-card-interactive group relative overflow-hidden rounded-2xl border-none"
                         >
-                            <div className={`absolute inset-0 bg-gradient-to-br ${storyType.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
+                            <div className={`absolute inset-0 bg-gradient-to-br ${storyType.color} opacity-0 group-hover:opacity-[0.06] transition-opacity duration-300`} />
                             <div className="p-6 flex items-start gap-4">
-                                <div className={`shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${storyType.color} flex items-center justify-center text-white shadow-md`}>
+                                <div className={`shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${storyType.color} flex items-center justify-center text-white shadow-md transition-transform group-hover:scale-110 duration-300`}>
                                     {storyType.icon}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -40,7 +40,7 @@ export default function StoryIndexClient() {
                                         {t(storyType.descKey)}
                                     </p>
                                 </div>
-                                <svg className="w-5 h-5 text-slate-300 group-hover:text-miku transition-colors shrink-0 self-center" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-5 h-5 text-slate-300 group-hover:text-miku transition-all group-hover:translate-x-1 shrink-0 self-center" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                             </div>
