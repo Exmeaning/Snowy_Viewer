@@ -100,13 +100,50 @@ function hasUsefulDetails(detailRoutes) {
     return Array.isArray(detailRoutes) && detailRoutes.length > 0;
 }
 
+function normalizeRoutePath(routePath) {
+    if (!routePath || routePath === '/') return '/';
+    const withLeadingSlash = routePath.startsWith('/') ? routePath : `/${routePath}`;
+    return withLeadingSlash.endsWith('/') ? withLeadingSlash : `${withLeadingSlash}/`;
+}
+
+function assertMainRoutesAligned(routes) {
+    const seen = new Set();
+
+    for (const route of routes) {
+        const normalized = normalizeRoutePath(route.path);
+        if (seen.has(normalized)) {
+            throw new Error(`Duplicate main sitemap route: ${normalized}`);
+        }
+        seen.add(normalized);
+    }
+
+    const expected = SEO_ROUTE_DATA
+        .filter(route => route.indexable)
+        .map(route => normalizeRoutePath(route.path));
+
+    const actual = routes.map(route => normalizeRoutePath(route.path));
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        throw new Error('Main sitemap routes are not aligned with indexable SEO route registry entries.');
+    }
+
+    const noindexInMain = SEO_ROUTE_DATA
+        .filter(route => !route.indexable && seen.has(normalizeRoutePath(route.path)))
+        .map(route => normalizeRoutePath(route.path));
+
+    if (noindexInMain.length > 0) {
+        throw new Error(`Noindex routes leaked into main sitemap: ${noindexInMain.join(', ')}`);
+    }
+}
+
 const mainRoutes = SEO_ROUTE_DATA
     .filter(route => route.indexable)
     .map(route => ({
-        path: route.path,
+        path: normalizeRoutePath(route.path),
         priority: route.priority,
         changefreq: route.changefreq,
     }));
+
+assertMainRoutesAligned(mainRoutes);
 
 function buildMangaRoutes(mangasRaw) {
     return Object.entries(mangasRaw || {}).map(([id, manga]) => ({

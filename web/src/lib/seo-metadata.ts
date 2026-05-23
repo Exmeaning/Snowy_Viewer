@@ -10,7 +10,7 @@ import {
     type UiLocale,
 } from "@/lib/i18n/locales";
 import { assertNoIndexSeoRoute, findSeoRouteByPageKey, findSeoRouteByPath, isIndexableSeoPath, normalizeSeoPath } from "@/lib/seo-routes";
-import { generateDetailBreadcrumbJsonLd, generatePageBreadcrumbJsonLd } from "@/lib/structured-data";
+import { generateCollectionItemListJsonLd, generateDetailBreadcrumbJsonLd, generatePageBreadcrumbJsonLd } from "@/lib/structured-data";
 import {
     formatDetailSeoDescription,
     formatDynamicSeoDescription,
@@ -369,8 +369,11 @@ export interface DetailMetadataResultOptions {
     robots?: Metadata["robots"];
 }
 
-export interface DetailStructuredDataOptions {
+export interface DetailStructuredDataOptions<T = unknown> {
     parentPageKey: SeoPageKey;
+    itemList?: {
+        getName: (data: T, context: { id: string; numericId: number; locale: UiLocale; path: string }) => string;
+    };
 }
 
 export interface CreateDynamicDetailMetadataOptions<T> {
@@ -380,7 +383,7 @@ export interface CreateDynamicDetailMetadataOptions<T> {
     getData: (id: number) => T | null;
     build: (data: T, context: { id: string; numericId: number; locale: UiLocale; path: string }) => DetailMetadataResultOptions;
     fallbackTwitterCard?: "summary" | "summary_large_image";
-    structuredData?: DetailStructuredDataOptions;
+    structuredData?: DetailStructuredDataOptions<T>;
 }
 
 export function buildDetailMetadata({
@@ -486,8 +489,9 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
         const routePrefix = metadataOptions.routePrefix.replace(/^\/+|\/+$/g, "");
         const path = id ? normalizeSeoPath(`/${routePrefix}/${id}`) : normalizeSeoPath(`/${routePrefix}/`);
         const data = Number.isFinite(numericId) ? metadataOptions.getData(numericId) : null;
+        const context = { id, numericId, locale, path };
         const detailName = data
-            ? metadataOptions.build(data, { id, numericId, locale, path }).title
+            ? metadataOptions.build(data, context).title
             : getDetailFallbackTitle(metadataOptions.kind, locale);
         const breadcrumbJsonLd = generateDetailBreadcrumbJsonLd(
             SITE_BASE_URL,
@@ -495,15 +499,30 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
             { name: detailName, path },
             locale,
         );
+        const itemListJsonLd = data && structuredData.itemList
+            ? generateCollectionItemListJsonLd(
+                SITE_BASE_URL,
+                structuredData.parentPageKey,
+                [{ id, name: structuredData.itemList.getName(data, context) }],
+            )
+            : null;
+        const scriptId = id ? `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}-${id}` : `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}`;
 
         return createElement(
             Fragment,
             null,
             createElement("script", {
-                id: id ? `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}-${id}` : `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}`,
+                id: scriptId,
                 type: "application/ld+json",
                 dangerouslySetInnerHTML: { __html: JSON.stringify(breadcrumbJsonLd) },
             }),
+            itemListJsonLd
+                ? createElement("script", {
+                    id: `${scriptId}-itemlist`,
+                    type: "application/ld+json",
+                    dangerouslySetInnerHTML: { __html: JSON.stringify(itemListJsonLd) },
+                })
+                : null,
             render({ params }),
         );
     };
