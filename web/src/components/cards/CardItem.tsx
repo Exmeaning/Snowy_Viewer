@@ -28,7 +28,7 @@ export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: Car
 
     return (
         <Link href={`${hrefPrefix}/${card.id}`} className="group block" data-shortcut-item="true">
-            <div className="relative cursor-pointer rounded-xl overflow-hidden transition-all bg-white ring-1 ring-slate-200 hover:ring-miku hover:shadow-xl hover:-translate-y-1">
+            <div className="relative cursor-pointer rounded-xl overflow-hidden transition-all ios-glass-card ios-glass-card-interactive">
                 {/* Card Image Container */}
                 <div className="w-full relative">
                     <SekaiCardThumbnail
@@ -39,7 +39,7 @@ export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: Car
                 </div>
 
                 {/* Card Info - Persistent Footer */}
-                <div className="px-2 py-1.5 bg-white border-t border-slate-100">
+                <div className="px-2 py-1.5 bg-slate-50/30 dark:bg-slate-900/30 border-t border-slate-200/50 dark:border-slate-800">
                     {/* Spoiler Badge - inline in footer */}
                     {isSpoiler && (
                         <div className="mb-0.5">
@@ -53,13 +53,13 @@ export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: Car
                             original={card.prefix}
                             category="cards"
                             field="prefix"
-                            originalClassName="text-slate-800 text-[10px] font-bold truncate leading-tight group-hover:text-miku transition-colors block"
-                            translationClassName="text-slate-400 text-[9px] truncate leading-tight block"
+                            originalClassName="text-slate-800 dark:text-slate-200 text-[10px] font-bold truncate leading-tight group-hover:text-miku transition-colors block"
+                            translationClassName="text-slate-400 dark:text-slate-500 text-[9px] truncate leading-tight block"
                         />
                     </div>
                     <div className="flex items-center justify-between gap-1">
-                        <p className="text-slate-400 text-[9px] truncate leading-tight flex-1">{characterName}</p>
-                        <span className="flex-shrink-0 text-[8px] text-slate-400 bg-slate-100 px-1 py-0.5 rounded leading-none font-mono">
+                        <p className="text-slate-400 dark:text-slate-500 text-[9px] truncate leading-tight flex-1">{characterName}</p>
+                        <span className="flex-shrink-0 text-[8px] text-slate-400 bg-slate-100/50 dark:bg-slate-800/50 ios-glass-tab px-1 py-0.5 rounded leading-none font-mono">
                             ID:{card.id}
                         </span>
                     </div>

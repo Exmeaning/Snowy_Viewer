@@ -41,9 +41,9 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
 
     return (
         <Link href={`${basePath}/${event.id}`} className="group block" data-shortcut-item="true">
-            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:ring-miku/30">
+            <div className="ios-glass-card ios-glass-card-interactive rounded-2xl overflow-hidden cursor-pointer">
                 {/* Event Logo */}
-                <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+                <div className="relative aspect-[16/9] bg-slate-100/50 dark:bg-slate-800/40 overflow-hidden">
                     <Image
                         src={thumbnailUrl}
                         alt={event.name}
@@ -54,7 +54,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
 
                     {/* Status Badge */}
                     <div
-                        className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
+                        className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white shadow-sm"
                         style={{ backgroundColor: statusDisplay.color }}
                     >
                         {t(`common.status.${status}`)}
@@ -62,7 +62,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
 
                     {/* Event Type Badge */}
                     <div
-                        className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white"
+                        className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white shadow-sm"
                         style={{ backgroundColor: EVENT_TYPE_COLORS[event.eventType as EventType] }}
                     >
                         {t(`common.eventTypes.${event.eventType}`)}
@@ -70,7 +70,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
 
                     {/* Spoiler Badge - Bottom Right */}
                     {isSpoiler && (
-                        <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-orange-500 rounded-full text-[10px] sm:text-xs font-bold text-white shadow">
+                        <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-orange-500 rounded-full text-[10px] sm:text-xs font-bold text-white shadow-sm animate-pulse">
                             {t("common.badge.spoiler")}
                         </div>
                     )}
@@ -80,7 +80,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                 <div className="p-2.5 sm:p-4">
                     {/* ID Badge + Unit Badge */}
                     <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                        <span className="px-1.5 sm:px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] sm:text-xs font-mono rounded-full">
+                        <span className="px-1.5 sm:px-2 py-0.5 ios-glass-tab text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-mono rounded-full">
                             #{event.id}
                         </span>
                         {unitType && (
