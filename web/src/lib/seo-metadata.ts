@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { createElement, Fragment, type ReactNode } from "react";
 import { cookies, headers } from "next/headers";
 
 import {
@@ -8,7 +9,8 @@ import {
     resolveUiLocale,
     type UiLocale,
 } from "@/lib/i18n/locales";
-import { findSeoRouteByPath, isIndexableSeoPage } from "@/lib/seo-routes";
+import { findSeoRouteByPageKey, findSeoRouteByPath, isIndexableSeoPath, normalizeSeoPath } from "@/lib/seo-routes";
+import { generateDetailBreadcrumbJsonLd } from "@/lib/structured-data";
 import {
     formatDetailSeoDescription,
     getDetailFallbackDescription,
@@ -22,6 +24,7 @@ import {
 } from "@/lib/seo-keywords";
 
 const SITE_BASE_URL = process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe";
+const DETAIL_BREADCRUMB_SCRIPT_PREFIX = "detail-breadcrumb";
 const DEFAULT_ICON_URL = "/data/icon/icon.jpg";
 
 export function getSiteBaseUrl(): string {
@@ -41,13 +44,8 @@ export async function getRequestSeoLocale(): Promise<UiLocale> {
     }
 }
 
-function normalizePath(path: string): string {
-    if (!path || path === "/") return "/";
-    return path.startsWith("/") ? path : `/${path}`;
-}
-
 function absolutePath(path: string): string {
-    return new URL(normalizePath(path), SITE_BASE_URL).toString();
+    return new URL(normalizeSeoPath(path), SITE_BASE_URL).toString();
 }
 
 function metadataBase() {
@@ -148,14 +146,16 @@ export function noIndexRobots(): Metadata["robots"] {
 export async function createPageMetadata(pageKey: SeoPageKey): Promise<Metadata> {
     const locale = await getRequestSeoLocale();
     const page = getPageSeo(pageKey, locale);
+    const route = findSeoRouteByPageKey(pageKey);
+    const path = route?.path ?? page.path;
 
     return buildLocalizedMetadata({
         locale,
         title: page.title,
         description: page.description,
         keywords: page.keywords,
-        path: page.path,
-        robots: isIndexableSeoPage(pageKey) ? undefined : noIndexRobots(),
+        path,
+        robots: route?.indexable === false || !isIndexableSeoPath(path) ? noIndexRobots() : undefined,
     });
 }
 
@@ -166,13 +166,14 @@ export function pageMetadata(pageKey: SeoPageKey) {
 export async function createNoIndexPageMetadata(pageKey: SeoPageKey): Promise<Metadata> {
     const locale = await getRequestSeoLocale();
     const page = getPageSeo(pageKey, locale);
+    const route = findSeoRouteByPageKey(pageKey);
 
     return buildLocalizedMetadata({
         locale,
         title: page.title,
         description: page.description,
         keywords: page.keywords,
-        path: page.path,
+        path: route?.path ?? page.path,
         robots: noIndexRobots(),
     });
 }
@@ -220,13 +221,18 @@ export interface DetailMetadataResultOptions {
     robots?: Metadata["robots"];
 }
 
-interface CreateDynamicDetailMetadataOptions<T> {
+export interface DetailStructuredDataOptions {
+    parentPageKey: SeoPageKey;
+}
+
+export interface CreateDynamicDetailMetadataOptions<T> {
     params: Promise<{ id: string }>;
     kind: DetailFallbackKind;
     routePrefix: string;
     getData: (id: number) => T | null;
     build: (data: T, context: { id: string; numericId: number; locale: UiLocale; path: string }) => DetailMetadataResultOptions;
     fallbackTwitterCard?: "summary" | "summary_large_image";
+    structuredData?: DetailStructuredDataOptions;
 }
 
 export function buildDetailMetadata({
@@ -282,7 +288,7 @@ export async function createDynamicDetailMetadata<T>({
     const { id } = await params;
     const locale = await getRequestSeoLocale();
     const numericId = Number(id);
-    const path = `/${routePrefix.replace(/^\/+|\/+$/g, "")}/${id}`;
+    const path = normalizeSeoPath(`/${routePrefix.replace(/^\/+|\/+$/g, "")}/${id}`);
     const data = Number.isFinite(numericId) ? getData(numericId) : null;
 
     if (!data) {
@@ -312,6 +318,51 @@ export async function createDynamicDetailMetadata<T>({
 
 export function dynamicDetailMetadata<T>(options: Omit<CreateDynamicDetailMetadataOptions<T>, "params">) {
     return ({ params }: { params: Promise<{ id: string }> }) => createDynamicDetailMetadata({ ...options, params });
+}
+
+export interface SeoDetailPageProps {
+    params: Promise<{ id: string }>;
+}
+
+export interface SeoDetailPageOptions<T> extends Omit<CreateDynamicDetailMetadataOptions<T>, "params"> {
+    render: (props: { params?: Promise<{ id: string }> }) => ReactNode;
+}
+
+export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOptions }: SeoDetailPageOptions<T>) {
+    const Page = async ({ params }: { params?: Promise<{ id: string }> }) => {
+        if (!structuredData) return render({ params });
+
+        const { id = "" } = params ? await params : {};
+        const locale = await getRequestSeoLocale();
+        const numericId = Number(id);
+        const routePrefix = metadataOptions.routePrefix.replace(/^\/+|\/+$/g, "");
+        const path = id ? normalizeSeoPath(`/${routePrefix}/${id}`) : normalizeSeoPath(`/${routePrefix}/`);
+        const data = Number.isFinite(numericId) ? metadataOptions.getData(numericId) : null;
+        const detailName = data
+            ? metadataOptions.build(data, { id, numericId, locale, path }).title
+            : getDetailFallbackTitle(metadataOptions.kind, locale);
+        const breadcrumbJsonLd = generateDetailBreadcrumbJsonLd(
+            SITE_BASE_URL,
+            structuredData.parentPageKey,
+            { name: detailName, path },
+            locale,
+        );
+
+        return createElement(
+            Fragment,
+            null,
+            createElement("script", {
+                id: id ? `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}-${id}` : `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}`,
+                type: "application/ld+json",
+                dangerouslySetInnerHTML: { __html: JSON.stringify(breadcrumbJsonLd) },
+            }),
+            render({ params }),
+        );
+    };
+
+    return Object.assign(Page, {
+        generateMetadata: dynamicDetailMetadata(metadataOptions),
+    });
 }
 
 export async function getDetailSeoContext() {

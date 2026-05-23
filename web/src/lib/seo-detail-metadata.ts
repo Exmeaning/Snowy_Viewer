@@ -19,14 +19,30 @@ import {
     getMusicMeta,
     getVirtualLiveMeta,
 } from "@/lib/metadata";
-import { dynamicDetailMetadata } from "@/lib/seo-metadata";
+import type { ReactNode } from "react";
+
+import {
+    defineSeoDetailPage,
+    type CreateDynamicDetailMetadataOptions,
+} from "@/lib/seo-metadata";
 import { formatExchangeShopSuffix, formatMysekaiFlavorSuffix } from "@/lib/seo-keywords";
 import { CHARACTER_NAMES } from "@/types/types";
 
-export const cardDetailMetadata = dynamicDetailMetadata({
+type DetailPreset<T> = Omit<CreateDynamicDetailMetadataOptions<T>, "params">;
+
+function defineDetailPreset<T>(preset: DetailPreset<T>) {
+    return preset;
+}
+
+function detailPageFactory<T>(preset: DetailPreset<T>) {
+    return (render: (props: { params?: Promise<{ id: string }> }) => ReactNode) => defineSeoDetailPage({ ...preset, render });
+}
+
+const cardDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getCardMeta>>>({
     kind: "card",
     routePrefix: "cards",
     getData: getCardMeta,
+    structuredData: { parentPageKey: "cards" },
     build: (card) => {
         const characterName = CHARACTER_NAMES[card.characterId] || "";
 
@@ -39,10 +55,13 @@ export const cardDetailMetadata = dynamicDetailMetadata({
     },
 });
 
-export const characterDetailMetadata = dynamicDetailMetadata({
+export const defineCardDetailPage = detailPageFactory(cardDetailPreset);
+
+const characterDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getCharacterMeta>>>({
     kind: "character",
     routePrefix: "character",
     getData: getCharacterMeta,
+    structuredData: { parentPageKey: "character" },
     build: (character, { numericId }) => ({
         title: character.name,
         descriptionKind: "character",
@@ -52,10 +71,13 @@ export const characterDetailMetadata = dynamicDetailMetadata({
     }),
 });
 
-export const costumeDetailMetadata = dynamicDetailMetadata({
+export const defineCharacterDetailPage = detailPageFactory(characterDetailPreset);
+
+const costumeDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getCostumeMeta>>>({
     kind: "costume",
     routePrefix: "costumes",
     getData: getCostumeMeta,
+    structuredData: { parentPageKey: "costumes" },
     fallbackTwitterCard: "summary",
     build: (costume) => ({
         title: costume.name,
@@ -65,10 +87,13 @@ export const costumeDetailMetadata = dynamicDetailMetadata({
     }),
 });
 
-export const eventDetailMetadata = dynamicDetailMetadata({
+export const defineCostumeDetailPage = detailPageFactory(costumeDetailPreset);
+
+const eventDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getEventMeta>>>({
     kind: "event",
     routePrefix: "events",
     getData: getEventMeta,
+    structuredData: { parentPageKey: "events" },
     build: (event) => ({
         title: event.name,
         descriptionKind: "event",
@@ -77,10 +102,13 @@ export const eventDetailMetadata = dynamicDetailMetadata({
     }),
 });
 
-export const exchangeDetailMetadata = dynamicDetailMetadata({
+export const defineEventDetailPage = detailPageFactory(eventDetailPreset);
+
+const exchangeDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getExchangeMeta>>>({
     kind: "exchange",
     routePrefix: "exchanges",
     getData: getExchangeMeta,
+    structuredData: { parentPageKey: "exchanges" },
     fallbackTwitterCard: "summary",
     build: (exchange, { locale }) => ({
         title: exchange.summaryName && exchange.summaryName !== exchange.name
@@ -95,10 +123,13 @@ export const exchangeDetailMetadata = dynamicDetailMetadata({
     }),
 });
 
-export const gachaDetailMetadata = dynamicDetailMetadata({
+export const defineExchangeDetailPage = detailPageFactory(exchangeDetailPreset);
+
+const gachaDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getGachaMeta>>>({
     kind: "gacha",
     routePrefix: "gacha",
     getData: getGachaMeta,
+    structuredData: { parentPageKey: "gacha" },
     build: (gacha) => ({
         title: gacha.name,
         descriptionKind: "gacha",
@@ -108,10 +139,13 @@ export const gachaDetailMetadata = dynamicDetailMetadata({
     }),
 });
 
-export const liveDetailMetadata = dynamicDetailMetadata({
+export const defineGachaDetailPage = detailPageFactory(gachaDetailPreset);
+
+const liveDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getVirtualLiveMeta>>>({
     kind: "live",
     routePrefix: "live",
     getData: getVirtualLiveMeta,
+    structuredData: { parentPageKey: "live" },
     build: (live) => ({
         title: live.name,
         descriptionKind: "live",
@@ -120,10 +154,13 @@ export const liveDetailMetadata = dynamicDetailMetadata({
     }),
 });
 
-export const mangaDetailMetadata = dynamicDetailMetadata({
+export const defineLiveDetailPage = detailPageFactory(liveDetailPreset);
+
+const mangaDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMangaMeta>>>({
     kind: "manga",
     routePrefix: "manga",
     getData: getMangaMeta,
+    structuredData: { parentPageKey: "manga" },
     build: (manga, { id }) => ({
         title: manga.title,
         descriptionKind: "manga",
@@ -132,10 +169,13 @@ export const mangaDetailMetadata = dynamicDetailMetadata({
     }),
 });
 
-export const musicDetailMetadata = dynamicDetailMetadata({
+export const defineMangaDetailPage = detailPageFactory(mangaDetailPreset);
+
+const musicDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMusicMeta>>>({
     kind: "music",
     routePrefix: "music",
     getData: getMusicMeta,
+    structuredData: { parentPageKey: "music" },
     build: (music) => ({
         title: music.title,
         descriptionKind: "music",
@@ -145,10 +185,13 @@ export const musicDetailMetadata = dynamicDetailMetadata({
     }),
 });
 
-export const mysekaiFixtureDetailMetadata = dynamicDetailMetadata({
+export const defineMusicDetailPage = detailPageFactory(musicDetailPreset);
+
+const mysekaiFixtureDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getFixtureMeta>>>({
     kind: "mysekai",
     routePrefix: "mysekai",
     getData: getFixtureMeta,
+    structuredData: { parentPageKey: "mysekai" },
     build: (fixture, { locale }) => ({
         title: fixture.name,
         descriptionKind: "mysekai",
@@ -160,3 +203,5 @@ export const mysekaiFixtureDetailMetadata = dynamicDetailMetadata({
         twitterCard: "summary",
     }),
 });
+
+export const defineMysekaiFixtureDetailPage = detailPageFactory(mysekaiFixtureDetailPreset);
