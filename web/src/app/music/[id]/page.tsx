@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { getMusicJacketUrl } from "@/lib/assets";
 import { getMusicMeta } from "@/lib/metadata";
 import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
-import { formatDetailSeoDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
+import { formatDetailSeoDescription, getDetailFallbackDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
 import MusicDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         return buildDetailMetadata({
             locale,
             title: getDetailFallbackTitle("music", locale),
-            description: getDetailFallbackTitle("music", locale),
+            description: getDetailFallbackDescription("music", locale),
             path: `/music/${id}`,
         });
     }

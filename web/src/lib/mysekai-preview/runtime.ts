@@ -1817,8 +1817,8 @@ export class MysekaiScenePreviewRuntime {
         const cellMap = new Map<string, FloorPlacementRecord[]>();
         const eps = 0.001;
         for (const record of ordered) {
-            // 对于put_either类型，目前游戏中只有砖块，并且只允许放置在严格和坐标对齐的位置
-            // 所以无论在上面还是下面都不需要考虑
+            // For put_either, the current game data only uses bricks aligned to exact grid positions.
+            // Therefore stacking does not need to distinguish whether they are above or below.
             if (customOnly || record.putType === "put_target") {
                 let supportTop: number | null = null;
                 for (const key of record.cellKeys) {

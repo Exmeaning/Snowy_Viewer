@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getBaseUrl } from '@/lib/sitemap';
+import { NON_INDEXABLE_SEO_ROUTES } from '@/lib/seo-routes';
 
 export async function GET() {
     const baseUrl = await getBaseUrl();
 
+    const disallowLines = [
+        '/api/',
+        ...NON_INDEXABLE_SEO_ROUTES.map((route) => route.path),
+    ].map((path) => `Disallow: ${path}`);
+
     const body = `User-agent: *
 Allow: /
-Disallow: /api/
-Disallow: /blank/
-Disallow: /design-system/
-Disallow: /leave/
+${disallowLines.join('\n')}
 
 Sitemap: ${baseUrl}/sitemap.xml
 `;

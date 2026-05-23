@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import MainLayout from "@/components/MainLayout";
 import { getCharacterMeta } from "@/lib/metadata";
 import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
-import { formatDetailSeoDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
+import { formatDetailSeoDescription, getDetailFallbackDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
 import { getCharacterIconUrl } from "@/lib/assets";
 import CharacterDetailClient from "./client";
 
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         return buildDetailMetadata({
             locale,
             title: getDetailFallbackTitle("character", locale),
-            description: getDetailFallbackTitle("character", locale),
+            description: getDetailFallbackDescription("character", locale),
             path: `/character/${id}`,
         });
     }

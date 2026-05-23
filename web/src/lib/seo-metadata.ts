@@ -10,6 +10,7 @@ import {
 } from "@/lib/i18n/locales";
 import {
     formatDetailSeoDescription,
+    getDetailFallbackDescription,
     getDetailFallbackTitle,
     getPageSeo,
     getRootSeo,
@@ -61,6 +62,7 @@ interface BuildMetadataOptions {
     images?: Metadata["openGraph"] extends { images?: infer Images } ? Images : string[];
     twitterCard?: "summary" | "summary_large_image";
     type?: "website" | "article";
+    robots?: Metadata["robots"];
 }
 
 export function buildLocalizedMetadata({
@@ -72,6 +74,7 @@ export function buildLocalizedMetadata({
     images = [DEFAULT_ICON_URL],
     twitterCard = "summary",
     type = "website",
+    robots,
 }: BuildMetadataOptions): Metadata {
     const localeConfig = getSeoLocaleConfig(locale);
     const titleText = typeof title === "string"
@@ -108,6 +111,7 @@ export function buildLocalizedMetadata({
 
     if (description) metadata.description = description;
     if (keywords?.length) metadata.keywords = [...keywords];
+    if (robots) metadata.robots = robots;
 
     return metadata;
 }
@@ -129,6 +133,17 @@ export async function generateRootMetadata(): Promise<Metadata> {
     });
 }
 
+export function noIndexRobots(): Metadata["robots"] {
+    return {
+        index: false,
+        follow: false,
+        googleBot: {
+            index: false,
+            follow: false,
+        },
+    };
+}
+
 export async function createPageMetadata(pageKey: SeoPageKey): Promise<Metadata> {
     const locale = await getRequestSeoLocale();
     const page = getPageSeo(pageKey, locale);
@@ -146,6 +161,24 @@ export function pageMetadata(pageKey: SeoPageKey) {
     return () => createPageMetadata(pageKey);
 }
 
+export async function createNoIndexPageMetadata(pageKey: SeoPageKey): Promise<Metadata> {
+    const locale = await getRequestSeoLocale();
+    const page = getPageSeo(pageKey, locale);
+
+    return buildLocalizedMetadata({
+        locale,
+        title: page.title,
+        description: page.description,
+        keywords: page.keywords,
+        path: page.path,
+        robots: noIndexRobots(),
+    });
+}
+
+export function noIndexPageMetadata(pageKey: SeoPageKey) {
+    return () => createNoIndexPageMetadata(pageKey);
+}
+
 export async function createSimpleMetadata(pageKey: SeoPageKey): Promise<Metadata> {
     return createPageMetadata(pageKey);
 }
@@ -157,6 +190,7 @@ interface DetailMetadataOptions {
     path: string;
     images?: string[];
     twitterCard?: "summary" | "summary_large_image";
+    robots?: Metadata["robots"];
 }
 
 export function buildDetailMetadata({
@@ -166,6 +200,7 @@ export function buildDetailMetadata({
     path,
     images,
     twitterCard,
+    robots,
 }: DetailMetadataOptions): Metadata {
     return buildLocalizedMetadata({
         locale,
@@ -175,6 +210,7 @@ export function buildDetailMetadata({
         images,
         twitterCard: twitterCard ?? (images?.length ? "summary_large_image" : "summary"),
         type: "article",
+        robots,
     });
 }
 
@@ -184,7 +220,7 @@ export async function createDetailFallbackMetadata(kind: DetailFallbackKind, pat
 
     const description = kind === "exchange"
         ? formatDetailSeoDescription("exchangeFallback", {}, locale)
-        : `${title}${getSeoLocaleConfig(locale).detailSuffix}`;
+        : getDetailFallbackDescription(kind, locale);
 
     return buildDetailMetadata({
         locale,

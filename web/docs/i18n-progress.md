@@ -449,7 +449,35 @@ npm run build:next --prefix web
 
 ## 11. 最近已知验证记录
 
-最近一轮（2026-05-22，多语言 SEO / server metadata 收尾）已完成并记录为通过的范围：
+最近一轮（2026-05-23，大型 SEO 重构启动 / i18n 守护收口）推进范围：
+
+```text
+web/src/lib/mysekai-preview/runtime.ts
+web/src/hooks/useEventListData.ts
+web/src/lib/seo-routes.ts
+web/src/lib/seo-routes-data.json
+web/src/lib/seo-keywords.ts
+web/src/lib/seo-metadata.ts
+web/src/lib/sitemap.ts
+web/src/app/robots.txt/route.ts
+web/src/app/**/[id]/page.tsx metadata fallback
+web/scripts/generate-sitemaps.mjs
+web/public/data/sitemap-data.json
+web/docs/seo-progress.md
+web/docs/i18n-progress.md
+```
+
+结果：
+
+- 清理 `src/lib/mysekai-preview/runtime.ts` 两行中文注释扫描噪声，不把运行时实现注释加入 allowlist。
+- 更新 `src/hooks/useEventListData.ts` 中旧 `/eventstory` 示例注释为当前 `/story/event` 路径。
+- 新增 `web/docs/seo-progress.md`，SEO 路由 registry、sitemap、metadata fallback、robots 与 hreflang 后续工作迁入独立进度文档维护。
+- i18n 当前判断保持为“守护与边界维护”阶段：UI 文案主体已完成，后续新增用户可见文案继续由字典和校验脚本守护。
+- 本轮启动前 `check-i18n-keys.mjs` 已确认：`i18n key structure OK (3028 keys across 3 locales)`。
+- 本轮启动前 `check-i18n-usage.mjs` 已确认：`Literal i18n usage keys OK`。
+- 完整 lint / build 验证结果见 `web/docs/seo-progress.md` 最近验证记录。
+
+上一轮（2026-05-22，多语言 SEO / server metadata 收尾）已完成并记录为通过的范围：
 
 ```text
 web/src/lib/seo-keywords.ts

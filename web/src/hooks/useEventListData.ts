@@ -15,9 +15,9 @@ import { IActionSet, IEventStory, buildEventRawUnitMap, rawUnitToFilterId, build
 // ---------------------------------------------------------------------------
 
 export interface UseEventListDataConfig {
-    /** Storage key prefix, e.g. "events" or "eventstory" */
+    /** Storage key prefix, e.g. "events" or "storyEvent" */
     storageKey: string;
-    /** URL base path, e.g. "/events" or "/eventstory" */
+    /** URL base path, e.g. "/events" or "/story/event" */
     basePath: string;
 }
 

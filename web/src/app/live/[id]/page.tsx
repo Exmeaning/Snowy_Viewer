@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { getVirtualLiveBannerUrl } from "@/lib/assets";
 import { getVirtualLiveMeta } from "@/lib/metadata";
 import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
-import { formatDetailSeoDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
+import { formatDetailSeoDescription, getDetailFallbackDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
 import VirtualLiveDetailClient from "./client";
 
 type Props = { params: Promise<{ id: string }> };
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         return buildDetailMetadata({
             locale,
             title: getDetailFallbackTitle("live", locale),
-            description: getDetailFallbackTitle("live", locale),
+            description: getDetailFallbackDescription("live", locale),
             path: `/live/${id}`,
         });
     }

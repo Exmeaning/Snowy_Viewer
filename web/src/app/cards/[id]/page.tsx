@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { getCardThumbnailUrl } from "@/lib/assets";
 import { getCardMeta } from "@/lib/metadata";
 import { buildDetailMetadata, getRequestSeoLocale } from "@/lib/seo-metadata";
-import { formatDetailSeoDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
+import { formatDetailSeoDescription, getDetailFallbackDescription, getDetailFallbackTitle } from "@/lib/seo-keywords";
 import { CHARACTER_NAMES } from "@/types/types";
 import CardDetailClient from "./client";
 
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         return buildDetailMetadata({
             locale,
             title: getDetailFallbackTitle("card", locale),
-            description: getDetailFallbackTitle("card", locale),
+            description: getDetailFallbackDescription("card", locale),
             path: `/cards/${id}`,
         });
     }
