@@ -60,8 +60,8 @@ export function getFilterChipStateClasses(
     selectedClassName?: string,
     unselectedClassName?: string
 ) {
-    const selectedState = selectedClassName ?? "bg-miku text-white shadow-md border border-transparent dark:bg-miku/20 dark:text-white dark:border-miku/40 dark:ring-1 dark:ring-miku/35";
-    const unselectedState = unselectedClassName ?? "bg-slate-100 text-slate-600 border border-transparent hover:bg-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600";
+    const selectedState = selectedClassName ?? "ios-glass-tab ios-glass-tab-active font-extrabold";
+    const unselectedState = unselectedClassName ?? "ios-glass-tab text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200";
 
     return selected ? selectedState : unselectedState;
 }
@@ -71,16 +71,16 @@ export function getFilterIconStateClasses(
     selectedClassName?: string,
     unselectedClassName?: string
 ) {
-    const selectedState = selectedClassName ?? "ring-2 ring-miku shadow-lg bg-white border border-transparent dark:bg-miku/15 dark:border-miku/40 dark:ring-miku/75";
-    const unselectedState = unselectedClassName ?? "bg-slate-50 border border-transparent hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600";
+    const selectedState = selectedClassName ?? "ios-glass-tab ios-glass-tab-active font-extrabold scale-[1.03]";
+    const unselectedState = unselectedClassName ?? "ios-glass-tab text-slate-600 dark:text-slate-400";
 
     return selected ? selectedState : unselectedState;
 }
 
 export function getFilterToggleStateClasses(selected: boolean) {
     return selected
-        ? "ring-2 ring-miku shadow-lg bg-white border-transparent dark:bg-miku/10 dark:border-miku/40 dark:ring-miku/75"
-        : "border-slate-200 bg-slate-50/50 hover:bg-slate-50 dark:bg-slate-800/70 dark:border-slate-700 dark:hover:bg-slate-700/70 dark:hover:border-slate-600";
+        ? "ios-glass-tab ios-glass-tab-active font-extrabold"
+        : "ios-glass-tab text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200";
 }
 
 // ============================================================================
@@ -138,10 +138,10 @@ export default function BaseFilters({
     };
 
     return (
-        <div ref={rootRef} data-shortcut-filters="true" className="bg-white dark:bg-slate-900/85 rounded-2xl shadow-lg ring-1 ring-slate-200 dark:ring-slate-700/70 overflow-hidden">
+        <div ref={rootRef} data-shortcut-filters="true" className="ios-glass-card rounded-2xl overflow-hidden">
             {/* Header — clickable on mobile to toggle collapse */}
             <div
-                className="px-5 py-4 border-b border-slate-100 dark:border-slate-700/70 bg-gradient-to-r from-miku/5 to-transparent dark:from-miku/10 dark:to-slate-900/30 flex items-center justify-between lg:cursor-default cursor-pointer select-none"
+                className="px-5 py-4 border-b border-slate-200/50 dark:border-slate-800 bg-gradient-to-r from-miku/10 to-transparent dark:from-miku/15 dark:to-slate-900/10 flex items-center justify-between lg:cursor-default cursor-pointer select-none"
                 onClick={toggleCollapsed}
             >
                 <h2 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -175,7 +175,7 @@ export default function BaseFilters({
             {/* Search — always visible */}
             {showSearch && onSearchChange && (
                 <div className="px-5 pt-5">
-                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-350 uppercase tracking-wider mb-2">
                         {t("common.filter.search")}
                     </label>
                     <div className="relative">
@@ -185,7 +185,7 @@ export default function BaseFilters({
                             placeholder={resolvedSearchPlaceholder}
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full px-4 py-2.5 pr-10 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-miku/30 dark:focus:ring-miku/40 focus:border-miku dark:focus:border-miku transition-all"
+                            className="w-full ios-glass-input px-4 py-2.5 pr-10 rounded-xl text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                         />
                         <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -323,10 +323,10 @@ export function FilterToggle({ selected, onClick, label }: FilterToggleProps) {
             onClick={onClick}
             className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all border ${getFilterToggleStateClasses(selected)}`}
         >
-            <span className={`text-sm font-bold ${selected ? "text-slate-800 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}`}>
+            <span className={`text-sm font-bold ${selected ? "text-slate-800 dark:text-slate-105" : "text-slate-600 dark:text-slate-300"}`}>
                 {label}
             </span>
-            <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selected ? "bg-miku border-miku dark:bg-miku dark:border-miku" : "border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-700"}`}>
+            <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selected ? "bg-miku border-miku shadow-sm shadow-miku/20" : "border-slate-200/60 bg-white/20 dark:border-slate-700 dark:bg-slate-800/40"}`}>
                 {selected && (
                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
