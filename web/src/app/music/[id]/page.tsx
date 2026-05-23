@@ -1,13 +1,15 @@
 import { Suspense } from "react";
-import { musicDetailMetadata } from "@/lib/seo-detail-metadata";
+import { defineMusicDetailPage } from "@/lib/seo-detail-metadata";
 import MusicDetailClient from "./client";
 
-export const generateMetadata = musicDetailMetadata;
-
-export default function MusicDetailPage() {
+function MusicDetailPage(_: { params?: Promise<{ id: string }> }) {
     return (
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="loading-spinner"></div></div>}>
             <MusicDetailClient />
         </Suspense>
     );
 }
+
+const Page = defineMusicDetailPage(MusicDetailPage);
+export const generateMetadata = Page.generateMetadata;
+export default Page;

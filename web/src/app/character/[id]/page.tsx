@@ -1,11 +1,9 @@
 import { Suspense } from "react";
 import MainLayout from "@/components/MainLayout";
-import { characterDetailMetadata } from "@/lib/seo-detail-metadata";
+import { defineCharacterDetailPage } from "@/lib/seo-detail-metadata";
 import CharacterDetailClient from "./client";
 
-export const generateMetadata = characterDetailMetadata;
-
-export default function CharacterDetailPage() {
+function CharacterDetailPage(_: { params?: Promise<{ id: string }> }) {
     return (
         <MainLayout>
             <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">Loading character details...</div>}>
@@ -14,3 +12,7 @@ export default function CharacterDetailPage() {
         </MainLayout>
     );
 }
+
+const Page = defineCharacterDetailPage(CharacterDetailPage);
+export const generateMetadata = Page.generateMetadata;
+export default Page;

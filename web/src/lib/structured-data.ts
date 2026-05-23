@@ -65,6 +65,26 @@ export function generatePageBreadcrumbJsonLd(
     };
 }
 
+export function generateDetailBreadcrumbJsonLd(
+    baseUrl: string,
+    parentPageKey: SeoPageKey,
+    detail: { name: string; path: string },
+    locale: UiLocale = DEFAULT_UI_LOCALE,
+) {
+    const root = getRootSeo(locale);
+    const parent = getPageSeo(parentPageKey, locale);
+
+    return {
+        "@context": "https://schema.org" as const,
+        "@type": "BreadcrumbList" as const,
+        itemListElement: [
+            listItem(1, root.title, absoluteUrl(baseUrl, "/")),
+            listItem(2, parent.title, absoluteUrl(baseUrl, parent.path)),
+            listItem(3, detail.name, absoluteUrl(baseUrl, detail.path)),
+        ],
+    };
+}
+
 export interface ItemListEntry {
     name: string;
     url: string;

@@ -123,7 +123,7 @@
 - [x] 新增 `noIndexRouteMetadata()` helper，`/design-system` 与 `/leave` 已通过 registry path 输出 noindex canonical/robots。
 - [x] 统一详情页 fallback description，避免 fallback description 仅等于 title。
 - [x] 逐步减少动态详情页重复 boilerplate：cards / character / costumes / events / exchanges / gacha / live / manga / music / mysekai 已迁到 `dynamicDetailMetadata()`。
-- [x] 新增 `seo-detail-metadata.ts` 集中维护十类动态详情页 metadata presets，页面文件只保留 `generateMetadata = xxxDetailMetadata`。
+- [x] 新增 `seo-detail-metadata.ts` 集中维护十类动态详情页 metadata presets，并继续升级为 `defineXxxDetailPage()` 工厂；页面文件只保留页面渲染函数、`Page.generateMetadata` 与默认导出，进一步减少详情页 SEO boilerplate。
 
 ### P4：结构化数据
 
@@ -132,13 +132,15 @@
 - [x] Root 新增基于 route registry 的站点导航 `ItemList`，优先输出高权重可索引主路由。
 - [ ] 评估 `SearchAction` 是否有真实站内搜索 URL 可落地。
 - [x] 为分组页/详情页预留 `BreadcrumbList` / `ItemList` helper。
+- [x] 十类动态详情页通过 `defineSeoDetailPage()` 自动输出详情页 `BreadcrumbList` JSON-LD，父级页面由 detail preset 的 `parentPageKey` 绑定。
 
 ### P4.5：ja-JP 页面级 SEO 文案
 
 - [x] root 与详情页模板已覆盖 `ja-JP`。
 - [x] about / cards / music / events / gacha / character / story 已完成首批 `ja-JP` 精修。
 - [x] soundtrack / music meta / comic / costumes / exchanges / manga / materials / honors / live / sticker / mysekai 已完成第二批 `ja-JP` 精修。
-- [ ] 工具页、个人页、breadcrumb 汇总页、法务/赞助页继续按核心程度逐步精修。
+- [x] 工具页、个人页、breadcrumb 汇总页、法务/赞助页已完成第三批 `ja-JP` 精修。
+- [ ] 剧情子页面、详情 reader 页与剩余低权重页面继续按访问价值逐步精修。
 
 ### P5：locale URL / hreflang 专项
 
@@ -169,6 +171,26 @@ npm run build:next --prefix web
 - 没有在无 locale URL 的情况下输出 hreflang。
 
 ## 5. 最近验证记录
+
+### 2026-05-23：详情页工厂、Breadcrumb JSON-LD 与 ja-JP 第三批推进
+
+本轮新增/调整：
+
+- `src/lib/seo-metadata.ts` 的 canonical 统一复用 `normalizeSeoPath()`，`pageMetadata()` / `noIndexPageMetadata()` 优先使用 route registry 的 path 与 indexable 状态，进一步减少 page SEO path 与 registry 漂移。
+- 新增 `defineSeoDetailPage()`，十类动态详情页从 `generateMetadata = xxxDetailMetadata` 继续收敛为 `defineXxxDetailPage(Page)`；详情 preset 同时维护 metadata、父级 `pageKey` 与详情页结构化数据配置。
+- `src/lib/structured-data.ts` 新增 `generateDetailBreadcrumbJsonLd()`；cards / character / costumes / events / exchanges / gacha / live / manga / music / mysekai 详情页会随页面输出 `BreadcrumbList` JSON-LD。
+- 补齐第三批 `ja-JP` 页面级 SEO 文案：prediction、deck recommend / comparator、chart preview、MySekai preview 子页、个人数据页、profile、score control、sticker maker、realtime ranking、guess games、goods gacha、patreon、privacy、terms 与 breadcrumb 汇总页。
+- 本轮继续不输出 hreflang / sitemap alternate links；当前仍无稳定 locale URL。定向搜索仅发现 `alternates.canonical`，未发现 `alternates.languages` / hreflang 输出。
+- `npm run sitemap --prefix web` 重新生成 `public/data/sitemap-data.json`：`Main routes: 54`，`Detail routes: 9717`；本次路由数量与主路由集合未变，详情来源均为 fresh。
+
+本轮验证：
+
+- `npm run lint:i18n --prefix web`：通过，`i18n key structure OK (3028 keys across 3 locales)` / `Hardcoded UI Han scan OK (15 allowlisted file groups)`。
+- `npm run lint:i18n-usage --prefix web`：通过，`Literal i18n usage keys OK`。
+- `npm run lint --prefix web`：通过；仍有既有 warning：`src/app/soundtrack/client.tsx` 的 `react-hooks/exhaustive-deps` missing dependency `handleFilterChange`。
+- `npm run sitemap --prefix web`：通过，详情页来源均为 fresh；detail routes 维持 cards 1376、musics 676、events 205、eventStories 205、gachas 953、virtualLives 476、characters 26、exchanges 3079、costumes 972、mysekaiFixtures 1395、mangas 354。
+- `npm run generate:metadata --prefix web`：通过；entries 维持 cards 1376、musics 676、events 205、gachas 953、characters 26、virtualLives 476、costumes 972、mysekaiFixtures 1395、mangas 354、exchanges 3079，sources 均为 fresh。
+- `npm run build:next --prefix web`：通过；仍有已知 `turbopack.root should be absolute` warning。
 
 ### 2026-05-23：大型 SEO 重构启动
 
