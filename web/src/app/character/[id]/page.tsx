@@ -1,22 +1,9 @@
 import { Suspense } from "react";
 import MainLayout from "@/components/MainLayout";
-import { getCharacterIconUrl } from "@/lib/assets";
-import { getCharacterMeta } from "@/lib/metadata";
-import { dynamicDetailMetadata } from "@/lib/seo-metadata";
+import { characterDetailMetadata } from "@/lib/seo-detail-metadata";
 import CharacterDetailClient from "./client";
 
-export const generateMetadata = dynamicDetailMetadata({
-    kind: "character",
-    routePrefix: "character",
-    getData: getCharacterMeta,
-    build: (character, { numericId }) => ({
-        title: character.name,
-        descriptionKind: "character",
-        descriptionValues: { name: character.name },
-        images: [getCharacterIconUrl(numericId)],
-        twitterCard: "summary",
-    }),
-});
+export const generateMetadata = characterDetailMetadata;
 
 export default function CharacterDetailPage() {
     return (

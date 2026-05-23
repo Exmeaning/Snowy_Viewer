@@ -120,15 +120,25 @@
 
 - [x] `buildLocalizedMetadata()` 支持 robots 配置。
 - [x] 新增 `noIndexPageMetadata()` helper，`/blank` 与 OAuth flow 已接入。
+- [x] 新增 `noIndexRouteMetadata()` helper，`/design-system` 与 `/leave` 已通过 registry path 输出 noindex canonical/robots。
 - [x] 统一详情页 fallback description，避免 fallback description 仅等于 title。
 - [x] 逐步减少动态详情页重复 boilerplate：cards / character / costumes / events / exchanges / gacha / live / manga / music / mysekai 已迁到 `dynamicDetailMetadata()`。
+- [x] 新增 `seo-detail-metadata.ts` 集中维护十类动态详情页 metadata presets，页面文件只保留 `generateMetadata = xxxDetailMetadata`。
 
 ### P4：结构化数据
 
 - [x] 将 JSON-LD helper 从 `seo-keywords.ts` 拆到 `structured-data.ts`。
 - [x] Root 保留 `WebSite` / `VideoGame`。
+- [x] Root 新增基于 route registry 的站点导航 `ItemList`，优先输出高权重可索引主路由。
 - [ ] 评估 `SearchAction` 是否有真实站内搜索 URL 可落地。
 - [x] 为分组页/详情页预留 `BreadcrumbList` / `ItemList` helper。
+
+### P4.5：ja-JP 页面级 SEO 文案
+
+- [x] root 与详情页模板已覆盖 `ja-JP`。
+- [x] about / cards / music / events / gacha / character / story 已完成首批 `ja-JP` 精修。
+- [x] soundtrack / music meta / comic / costumes / exchanges / manga / materials / honors / live / sticker / mysekai 已完成第二批 `ja-JP` 精修。
+- [ ] 工具页、个人页、breadcrumb 汇总页、法务/赞助页继续按核心程度逐步精修。
 
 ### P5：locale URL / hreflang 专项
 
@@ -176,6 +186,26 @@ npm run build:next --prefix web
 - `npm run lint --prefix web` 已通过但有既有 warning：`src/app/soundtrack/client.tsx` 的 `react-hooks/exhaustive-deps` missing dependency `handleFilterChange`。
 - `npm run build:next --prefix web` 已通过；仅出现已知 `turbopack.root should be absolute` warning。
 - 当前 SEO 重构不启用 hreflang，仅修复 sitemap/metadata/robots/canonical 基础设施。
+
+### 2026-05-23：详情页 metadata presets、noindex route helper 与结构化导航推进
+
+本轮新增/调整：
+
+- 新增 `src/lib/seo-detail-metadata.ts`，把 cards / character / costumes / events / exchanges / gacha / live / manga / music / mysekai 十类动态详情页 metadata build 配置集中为 presets；对应动态详情页 `page.tsx` 只保留 `generateMetadata = xxxDetailMetadata` 与页面渲染，进一步减少详情页 boilerplate。
+- 新增 `noIndexRouteMetadata(path, title)`，`/design-system` 与 `/leave` 从手写静态 `metadata` 改为 registry-backed helper，canonical path 与 `robots` noindex/nofollow 继续跟 `seo-routes-data.json` 对齐。
+- Root JSON-LD 新增基于 `INDEXABLE_SEO_ROUTES` 的站点导航 `ItemList`，优先输出高权重可索引主路由；未新增 `SearchAction`，因为当前还没有稳定站内搜索 URL。
+- 补齐第二批 ja-JP 核心页面 SEO 文案：soundtrack / music meta / comic / costumes / exchanges / manga / materials / honors / live / sticker / mysekai。
+- 本轮继续不输出 hreflang / sitemap alternate links；当前仍无稳定 locale URL。
+- `npm run sitemap --prefix web` 重新生成 `public/data/sitemap-data.json`：`Main routes: 54`，`Detail routes: 9717`；本次远程数据更新导致 1749 条 mysekai detail route lastmod 变化，路由数量与主路由集合未变。
+
+本轮验证：
+
+- `npm run lint:i18n --prefix web`：通过，`i18n key structure OK (3028 keys across 3 locales)` / `Hardcoded UI Han scan OK (15 allowlisted file groups)`。
+- `npm run lint:i18n-usage --prefix web`：通过，`Literal i18n usage keys OK`。
+- `npm run lint --prefix web`：通过；仍有既有 warning：`src/app/soundtrack/client.tsx` 的 `react-hooks/exhaustive-deps` missing dependency `handleFilterChange`。
+- `npm run sitemap --prefix web`：通过，详情页来源均为 fresh。
+- `npm run generate:metadata --prefix web`：通过；过程中 cards / gachas 各出现一次网络重试后成功，最终 sources 均为 fresh；entries 维持 cards 1376、musics 676、events 205、gachas 953、characters 26、virtualLives 476、costumes 972、mysekaiFixtures 1395、mangas 354、exchanges 3079。
+- `npm run build:next --prefix web`：通过；仍有已知 `turbopack.root should be absolute` warning。
 
 ### 2026-05-23：详情页 metadata 与 noindex/robots 对齐推进
 

@@ -1,20 +1,8 @@
 import { Suspense } from "react";
-import { getVirtualLiveBannerUrl } from "@/lib/assets";
-import { getVirtualLiveMeta } from "@/lib/metadata";
-import { dynamicDetailMetadata } from "@/lib/seo-metadata";
+import { liveDetailMetadata } from "@/lib/seo-detail-metadata";
 import VirtualLiveDetailClient from "./client";
 
-export const generateMetadata = dynamicDetailMetadata({
-    kind: "live",
-    routePrefix: "live",
-    getData: getVirtualLiveMeta,
-    build: (live) => ({
-        title: live.name,
-        descriptionKind: "live",
-        descriptionValues: { name: live.name },
-        images: [getVirtualLiveBannerUrl(live.asset, "main-jp")],
-    }),
-});
+export const generateMetadata = liveDetailMetadata;
 
 export default function VirtualLiveDetailPage() {
     return (

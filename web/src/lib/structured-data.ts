@@ -1,4 +1,5 @@
 import { DEFAULT_UI_LOCALE, type UiLocale } from "@/lib/i18n/locales";
+import { INDEXABLE_SEO_ROUTES } from "@/lib/seo-routes";
 import { getPageSeo, getRootSeo, getSeoLocaleConfig, type SeoPageKey } from "@/lib/seo-keywords";
 
 function absoluteUrl(baseUrl: string, path = "/"): string {
@@ -75,6 +76,26 @@ export function generateItemListJsonLd(baseUrl: string, entries: readonly ItemLi
         "@type": "ItemList" as const,
         itemListElement: entries.map((entry, index) => listItem(index + 1, entry.name, absoluteUrl(baseUrl, entry.url))),
     };
+}
+
+export function generateSiteNavigationItemListJsonLd(
+    baseUrl: string,
+    locale: UiLocale = DEFAULT_UI_LOCALE,
+    maxItems = 12,
+) {
+    const entries = INDEXABLE_SEO_ROUTES
+        .filter((route) => route.pageKey && route.priority >= 0.7)
+        .sort((a, b) => b.priority - a.priority || a.path.localeCompare(b.path))
+        .slice(0, maxItems)
+        .map((route) => {
+            const page = getPageSeo(route.pageKey as SeoPageKey, locale);
+            return {
+                name: page.title,
+                url: route.path,
+            };
+        });
+
+    return generateItemListJsonLd(baseUrl, entries);
 }
 
 export { generateRootJsonLd as generateJsonLd };

@@ -8,7 +8,7 @@ import {
     resolveUiLocale,
     type UiLocale,
 } from "@/lib/i18n/locales";
-import { isIndexableSeoPage } from "@/lib/seo-routes";
+import { findSeoRouteByPath, isIndexableSeoPage } from "@/lib/seo-routes";
 import {
     formatDetailSeoDescription,
     getDetailFallbackDescription,
@@ -179,6 +179,22 @@ export async function createNoIndexPageMetadata(pageKey: SeoPageKey): Promise<Me
 
 export function noIndexPageMetadata(pageKey: SeoPageKey) {
     return () => createNoIndexPageMetadata(pageKey);
+}
+
+export async function createNoIndexRouteMetadata(path: string, title: string): Promise<Metadata> {
+    const locale = await getRequestSeoLocale();
+    const route = findSeoRouteByPath(path);
+
+    return buildLocalizedMetadata({
+        locale,
+        title,
+        path: route?.path ?? path,
+        robots: noIndexRobots(),
+    });
+}
+
+export function noIndexRouteMetadata(path: string, title: string) {
+    return () => createNoIndexRouteMetadata(path, title);
 }
 
 export async function createSimpleMetadata(pageKey: SeoPageKey): Promise<Metadata> {

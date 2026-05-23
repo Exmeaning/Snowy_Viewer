@@ -1,21 +1,8 @@
 import { Suspense } from "react";
-import { getGachaLogoUrl } from "@/lib/assets";
-import { getGachaMeta } from "@/lib/metadata";
-import { dynamicDetailMetadata } from "@/lib/seo-metadata";
+import { gachaDetailMetadata } from "@/lib/seo-detail-metadata";
 import GachaDetailClient from "./client";
 
-export const generateMetadata = dynamicDetailMetadata({
-    kind: "gacha",
-    routePrefix: "gacha",
-    getData: getGachaMeta,
-    build: (gacha) => ({
-        title: gacha.name,
-        descriptionKind: "gacha",
-        descriptionValues: { name: gacha.name },
-        images: [getGachaLogoUrl(gacha.asset, "main-jp")],
-        twitterCard: "summary",
-    }),
-});
+export const generateMetadata = gachaDetailMetadata;
 
 export default function GachaDetailPage() {
     return (
