@@ -199,7 +199,7 @@ function applySnapshotChurnDiff(
 }
 
 function RealtimeRankingContent() {
-    const { t, formatNumber } = useI18n();
+    const { t, formatNumber = (val: number) => val.toLocaleString() } = useI18n();
     const { assetSource, themeColor } = useTheme();
 
     const [hasInitializedQuery, setHasInitializedQuery] = useState(false);
