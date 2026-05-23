@@ -15,6 +15,8 @@ interface RankingListProps {
     churnData: Map<string, ChurnRankingEntry>;
     onShowParkingPeriods: (userId: string) => void;
     showExtendedWarning?: boolean;
+    trackedUserId: string | null;
+    onTrackToggle: (userId: string) => void;
 }
 
 export default function RankingList({
@@ -26,28 +28,30 @@ export default function RankingList({
     churnData,
     onShowParkingPeriods,
     showExtendedWarning = true,
+    trackedUserId,
+    onTrackToggle,
 }: RankingListProps) {
     const { t } = useI18n();
 
     if (entries.length === 0) {
         return (
-            <div className="glass-card rounded-2xl p-10 text-center text-slate-500">
+            <div className="ios-glass-card rounded-2xl p-10 text-center text-slate-500">
                 {t("page.realtimeRanking.list.empty")}
             </div>
         );
     }
 
     return (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
+        <div className="overflow-hidden rounded-2xl ios-glass-card">
             {/* Table header */}
-            <div className="flex items-center border-b border-slate-200 bg-slate-50/80 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-500">
+            <div className="flex items-center border-b border-slate-200/50 bg-slate-50/50 px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:border-slate-700/30 dark:bg-slate-800/30 dark:text-slate-500">
                 <div className="w-10 shrink-0 text-center sm:w-12">{t("page.realtimeRanking.list.rank")}</div>
                 <div className="ml-2 flex-1">{t("page.realtimeRanking.list.playerInfo")}</div>
                 <div className="w-32 shrink-0 text-right sm:w-40">{t("page.realtimeRanking.list.score")}</div>
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="divide-y divide-slate-100/50 dark:divide-slate-800/40">
                 {entries.map((entry, index) => {
                     const prevRank = index > 0 ? entries[index - 1].rank : 0;
                     const showNotice = showExtendedWarning && entry.rank > 100 && prevRank <= 100;
@@ -72,6 +76,8 @@ export default function RankingList({
                                 churnEntry={churnEntry}
                                 churnData={churnData}
                                 onShowParkingPeriods={onShowParkingPeriods}
+                                isTracked={entry.userId === trackedUserId}
+                                onTrackToggle={onTrackToggle}
                             />
                         </React.Fragment>
                     );

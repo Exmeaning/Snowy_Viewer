@@ -48,14 +48,14 @@ export default function RankingHeader({
             {/* Controls */}
             <div className="flex flex-wrap gap-3 mb-8 items-center">
                 {/* Region Toggle */}
-                <div className="shrink-0 flex max-w-full overflow-x-auto bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
+                <div className="shrink-0 flex max-w-full overflow-x-auto ios-glass-card p-1 rounded-xl border border-slate-200/30 dark:border-slate-700/30">
                     {REALTIME_RANKING_REGION_OPTIONS.map((value) => (
                         <button
                             key={value}
                             onClick={() => onRegionChange(value)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${region === value
-                                ? "bg-miku text-white shadow-md"
-                                : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                                ? "ios-glass-tab-active text-white shadow-sm"
+                                : "ios-glass-tab text-slate-600 dark:text-slate-300 hover:bg-white/20"
                                 }`}
                         >
                             {t(`page.realtimeRanking.regions.${value}`)}
@@ -66,18 +66,18 @@ export default function RankingHeader({
                 {showChurnToggle && (
                     <button
                         onClick={() => onShowChurnChange(!showChurn)}
-                        className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold transition-all border whitespace-nowrap ${showChurn
-                            ? "ring-2 ring-miku shadow-md bg-white border-transparent dark:bg-slate-800"
-                            : "hover:bg-slate-50 border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                        className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold transition-all border whitespace-nowrap active:scale-[0.98] ${showChurn
+                            ? "bg-miku text-white border-miku shadow-md shadow-miku/20"
+                            : "ios-glass-btn text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
                             }`}
                     >
-                        <span className={showChurn ? "text-slate-800 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}>
+                        <span className={showChurn ? "text-white" : "text-slate-600 dark:text-slate-300"}>
                             {t("page.realtimeRanking.showChurn")}
                         </span>
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${showChurn ? "bg-miku border-miku" : "border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-700"}`}>
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${showChurn ? "bg-white border-white" : "border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-700"}`}>
                             {showChurn && (
-                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                <svg className="w-2.5 h-2.5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4.5} d="M5 13l4 4L19 7" />
                                 </svg>
                             )}
                         </div>
@@ -85,28 +85,28 @@ export default function RankingHeader({
                 )}
 
                 {/* Status Tags */}
-                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                <div className="flex flex-wrap items-center gap-2 text-xs">
                     {typeof eventId === "number" && (
-                        <span className="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-3 py-1.5 font-medium whitespace-nowrap">
+                        <span className="rounded-full bg-white/40 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-700/50 dark:text-slate-300 px-3 py-1.5 font-medium whitespace-nowrap backdrop-blur-[2px]">
                             {t("page.realtimeRanking.eventId", { id: eventId })}
                         </span>
                     )}
                     {scopeLabel && (
-                        <span className="rounded-full bg-miku/10 text-miku px-3 py-1.5 font-medium whitespace-nowrap dark:bg-miku/15">
+                        <span className="rounded-full bg-miku/10 text-miku border border-miku/20 px-3 py-1.5 font-medium whitespace-nowrap dark:bg-miku/15 backdrop-blur-[2px]">
                             {scopeLabel}
                         </span>
                     )}
-                    <span className="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-3 py-1.5 font-medium whitespace-nowrap">
+                    <span className="rounded-full bg-white/40 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-700/50 dark:text-slate-300 px-3 py-1.5 font-medium whitespace-nowrap backdrop-blur-[2px]">
                         {t("page.realtimeRanking.totalEntries", { count: formatNumber(totalEntries) })}
                     </span>
-                    <span className={`rounded-full px-3 py-1.5 font-medium whitespace-nowrap ${isRefreshing
-                        ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
-                        : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
+                    <span className={`rounded-full px-3 py-1.5 font-medium whitespace-nowrap border backdrop-blur-[2px] ${isRefreshing
+                        ? "bg-amber-100/70 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
+                        : "bg-emerald-100/70 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
                         }`}>
                         {isRefreshing ? t("page.realtimeRanking.refreshing") : t("page.realtimeRanking.synced")}
                     </span>
                     {updatedAt ? (
-                        <span className="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-3 py-1.5 font-medium whitespace-nowrap">
+                        <span className="rounded-full bg-white/40 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-700/50 dark:text-slate-300 px-3 py-1.5 font-medium whitespace-nowrap backdrop-blur-[2px]">
                             {t("page.realtimeRanking.updatedAt", { time: formatDate(updatedAt) })}
                         </span>
                     ) : null}
