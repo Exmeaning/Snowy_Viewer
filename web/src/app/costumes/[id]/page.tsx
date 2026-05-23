@@ -1,20 +1,8 @@
 import { Suspense } from "react";
-import { getCostumeMeta } from "@/lib/metadata";
-import { dynamicDetailMetadata } from "@/lib/seo-metadata";
+import { costumeDetailMetadata } from "@/lib/seo-detail-metadata";
 import CostumeDetailClient from "./client";
 
-export const generateMetadata = dynamicDetailMetadata({
-    kind: "costume",
-    routePrefix: "costumes",
-    getData: getCostumeMeta,
-    fallbackTwitterCard: "summary",
-    build: (costume) => ({
-        title: costume.name,
-        descriptionKind: "costume",
-        descriptionValues: { name: costume.name },
-        twitterCard: "summary",
-    }),
-});
+export const generateMetadata = costumeDetailMetadata;
 
 export default function CostumeDetailPage() {
     return (

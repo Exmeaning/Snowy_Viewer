@@ -22,7 +22,7 @@ import {
   SHOW_ADS_STORAGE_KEY,
 } from "@/lib/ads";
 import { generateRootMetadata, getSiteBaseUrl } from "@/lib/seo-metadata";
-import { generateRootJsonLd } from "@/lib/structured-data";
+import { generateRootJsonLd, generateSiteNavigationItemListJsonLd } from "@/lib/structured-data";
 import { buildGoogleTagBootstrapScript } from "@/lib/googleTag";
 import {
   SUPPORTED_UI_LOCALES,
@@ -59,6 +59,7 @@ export default async function RootLayout({
     resolveUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value) ??
     resolveAcceptLanguageUiLocale(requestHeaders.get("accept-language"));
   const jsonLd = generateRootJsonLd(SITE_BASE_URL, initialUiLocale);
+  const navigationJsonLd = generateSiteNavigationItemListJsonLd(SITE_BASE_URL, initialUiLocale);
   const supportedUiLocales = JSON.stringify(SUPPORTED_UI_LOCALES);
   // Inline script to apply theme color before React hydration
   const themeScript = `
@@ -181,6 +182,10 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd.videoGame) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(navigationJsonLd) }}
         />
       </head>
       <body className="font-sans">

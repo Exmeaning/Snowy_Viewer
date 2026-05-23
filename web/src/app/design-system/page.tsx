@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
-
-import { noIndexRobots } from "@/lib/seo-metadata";
+import { noIndexRouteMetadata } from "@/lib/seo-metadata";
 import DesignSystemClient from "./client";
 
-export const metadata: Metadata = {
-    title: "Design System",
-    robots: noIndexRobots(),
-};
+export const generateMetadata = noIndexRouteMetadata("/design-system", "Design System");
 
 export default function DesignSystemPage() {
     return <DesignSystemClient />;

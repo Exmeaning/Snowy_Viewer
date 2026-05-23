@@ -234,8 +234,10 @@ t(`page.honors.filterTitle.${activeTab}`)
 ### 2026-05-23：SEO 重构联动
 
 - `src/lib/seo-keywords.ts` 新增 ja-JP 核心页面 SEO 文案：about / cards / music / events / gacha / character / story。
-- `src/lib/structured-data.ts` 承接 Root JSON-LD 与结构化数据 helper，并在硬编码中文扫描中作为 SEO/Project SEKAI 别名边界单独 allowlist。
-- `src/app/design-system/page.tsx` 拆为 server metadata wrapper，原演示内容迁到 `src/app/design-system/client.tsx`，allowlist 路径同步调整。
+- 继续补齐第二批 ja-JP 核心页面 SEO 文案：soundtrack / music meta / comic / costumes / exchanges / manga / materials / honors / live / sticker / mysekai；这些仍属于 server-side SEO 配置，不进入客户端 UI 字典。
+- `src/lib/seo-detail-metadata.ts` 集中十类动态详情页 metadata presets，减少页面文件重复 SEO boilerplate，同时保留详情模板按 cookie/Accept-Language 输出。
+- `src/lib/structured-data.ts` 承接 Root JSON-LD 与结构化数据 helper，并在硬编码中文扫描中作为 SEO/Project SEKAI 别名边界单独 allowlist；Root 本轮新增 registry-backed 站点导航 `ItemList`。
+- `src/app/design-system/page.tsx` 拆为 server metadata wrapper，原演示内容迁到 `src/app/design-system/client.tsx`，allowlist 路径同步调整；本轮 `/design-system` 与 `/leave` 改为 registry-backed `noIndexRouteMetadata()`。
 - 本轮 `npm run lint:i18n --prefix web` 与 `npm run lint:i18n-usage --prefix web` 均通过。
 
 ## 7. 工具层与枚举 label 规范
@@ -283,10 +285,10 @@ React hook 内可以调用 `useI18n()`，但如果 hook 是低层数据 hook，�
 当前已完成第一阶段 server-side SEO i18n：
 
 - server/static `page.tsx` 仍不能直接使用客户端 `useI18n()`；SEO 改为通过 server-safe helper 读取 cookie locale。
-- `src/lib/seo-keywords.ts` 集中保存 `zh-CN` / `en-US` SEO 文案、关键词、OpenGraph locale、JSON-LD 文案、详情页模板与后续 locale registry。
+- `src/lib/seo-keywords.ts` 集中保存 `zh-CN` / `en-US` / `ja-JP` SEO 文案、关键词、OpenGraph locale、JSON-LD 文案、详情页模板与后续 locale registry。
 - `src/lib/seo-metadata.ts` 负责在 server 侧解析 `moesekai_ui_locale` cookie，并生成统一的 `Metadata`：title、description、keywords、canonical、OpenGraph、Twitter。
 - 根布局 `app/layout.tsx` 已改为 `generateMetadata()`，root title/description/keywords/OpenGraph/JSON-LD 均按 locale 输出，不再在 layout 内硬编码中文品牌 SEO 文案。
-- 页面级静态 metadata 已从“英文兜底 + SEO suffix”改为 `pageMetadata("...")`；动态详情页继续使用 masterdata 名称，但固定描述模板和 suffix 按 locale 输出。
+- 页面级静态 metadata 已从“英文兜底 + SEO suffix”改为 `pageMetadata("...")`；动态详情页继续使用 masterdata 名称，但固定描述模板和 suffix 按 locale 输出，详情页配置已集中到 `seo-detail-metadata.ts`。
 - `/privacy`、`/terms`、`/patreon` 正文仍属于内容页边界，暂不拆正文；metadata 已接入 server-side SEO i18n。
 
 当前 locale 来源策略：

@@ -212,21 +212,31 @@ export const SEO_PAGE_METADATA = {
   ),
   soundtrack: definePage(
     "/soundtrack",
-    { "zh-CN": "游戏原声带", "en-US": "Soundtrack" },
+    { "zh-CN": "游戏原声带", "en-US": "Soundtrack", "ja-JP": "サウンドトラック" },
     {
       "zh-CN": "收听与浏览 Project SEKAI 游戏原声带、背景音乐与相关音频资源。",
       "en-US": "Browse Project Sekai soundtrack, background music, and related in-game audio resources.",
+      "ja-JP": "Project SEKAI のサウンドトラック、BGM、ゲーム内音源を閲覧できます。",
     },
-    { "zh-CN": ["游戏原声带", "背景音乐", "BGM", "OST"], "en-US": ["soundtrack", "BGM", "OST", "game audio"] },
+    {
+      "zh-CN": ["游戏原声带", "背景音乐", "BGM", "OST"],
+      "en-US": ["soundtrack", "BGM", "OST", "game audio"],
+      "ja-JP": ["サウンドトラック", "BGM", "OST", "ゲーム音源"],
+    },
   ),
   music_meta: definePage(
     "/music/meta",
-    { "zh-CN": "歌曲 Meta", "en-US": "Music Meta" },
+    { "zh-CN": "歌曲 Meta", "en-US": "Music Meta", "ja-JP": "楽曲Meta" },
     {
       "zh-CN": "查看 Project SEKAI 歌曲效率、难度定数与活动周回相关 Meta 数据。",
       "en-US": "Explore Project Sekai song meta data for efficiency, chart constants, and event play planning.",
+      "ja-JP": "Project SEKAI の楽曲効率、譜面定数、イベント周回に役立つMetaデータを確認できます。",
     },
-    { "zh-CN": ["歌曲Meta", "效率排行", "定数", "周回"], "en-US": ["music meta", "efficiency ranking", "chart constants"] },
+    {
+      "zh-CN": ["歌曲Meta", "效率排行", "定数", "周回"],
+      "en-US": ["music meta", "efficiency ranking", "chart constants"],
+      "ja-JP": ["楽曲Meta", "効率ランキング", "譜面定数", "周回"],
+    },
   ),
   events: definePage(
     "/events",
@@ -272,84 +282,129 @@ export const SEO_PAGE_METADATA = {
   ),
   comic: definePage(
     "/comic",
-    { "zh-CN": "一格漫画", "en-US": "Comic Database" },
+    { "zh-CN": "一格漫画", "en-US": "Comic Database", "ja-JP": "1コマ漫画" },
     {
       "zh-CN": "浏览 Project SEKAI 官方一格漫画与翻译。",
       "en-US": "Browse Project Sekai official one-panel comics and translations.",
+      "ja-JP": "Project SEKAI 公式1コマ漫画と翻訳を閲覧できます。",
     },
-    { "zh-CN": ["漫画", "一格漫画", "官方漫画"], "en-US": ["comic", "one-panel comics", "official comics"] },
+    {
+      "zh-CN": ["漫画", "一格漫画", "官方漫画"],
+      "en-US": ["comic", "one-panel comics", "official comics"],
+      "ja-JP": ["漫画", "1コマ漫画", "公式漫画"],
+    },
   ),
   costumes: definePage(
     "/costumes",
-    { "zh-CN": "服装图鉴", "en-US": "Costumes" },
+    { "zh-CN": "服装图鉴", "en-US": "Costumes", "ja-JP": "衣装図鑑" },
     {
       "zh-CN": "浏览 Project SEKAI 服装图鉴，按角色、获取来源与服装信息筛选。",
       "en-US": "Browse Project SEKAI costumes with character, source, and costume detail filters.",
+      "ja-JP": "Project SEKAI の衣装をキャラクター、入手方法、衣装情報で絞り込めます。",
     },
-    { "zh-CN": ["服装", "服装图鉴", "衣装"], "en-US": ["costumes", "outfits", "costume database"] },
+    {
+      "zh-CN": ["服装", "服装图鉴", "衣装"],
+      "en-US": ["costumes", "outfits", "costume database"],
+      "ja-JP": ["衣装", "衣装図鑑", "コスチューム"],
+    },
   ),
   exchanges: definePage(
     "/exchanges",
-    { "zh-CN": "兑换所", "en-US": "Exchange Shop" },
+    { "zh-CN": "兑换所", "en-US": "Exchange Shop", "ja-JP": "交換所" },
     {
       "zh-CN": "浏览 Project SEKAI 兑换所与兑换条目，查看奖励、消耗与开放时间。",
       "en-US": "Browse Project Sekai exchange shops and entries with rewards, costs, and availability.",
+      "ja-JP": "Project SEKAI の交換所と交換アイテムを閲覧し、報酬、必要素材、開催期間を確認できます。",
     },
-    { "zh-CN": ["兑换所", "兑换奖励", "交换所"], "en-US": ["exchange shop", "exchange rewards", "shop entries"] },
+    {
+      "zh-CN": ["兑换所", "兑换奖励", "交换所"],
+      "en-US": ["exchange shop", "exchange rewards", "shop entries"],
+      "ja-JP": ["交換所", "交換アイテム", "報酬交換"],
+    },
   ),
   manga: definePage(
     "/manga",
-    { "zh-CN": "官方四格漫画", "en-US": "Official 4-Koma" },
+    { "zh-CN": "官方四格漫画", "en-US": "Official 4-Koma", "ja-JP": "公式4コマ" },
     {
       "zh-CN": "浏览 Project SEKAI 官方四格漫画与章节。",
       "en-US": "Browse Project Sekai official four-panel comics and episodes.",
+      "ja-JP": "Project SEKAI 公式4コマ漫画とエピソードを閲覧できます。",
     },
-    { "zh-CN": ["四格漫画", "官方四格", "漫画"], "en-US": ["4-koma", "four-panel comics", "official manga"] },
+    {
+      "zh-CN": ["四格漫画", "官方四格", "漫画"],
+      "en-US": ["4-koma", "four-panel comics", "official manga"],
+      "ja-JP": ["4コマ", "公式4コマ", "漫画"],
+    },
   ),
   materials: definePage(
     "/materials",
-    { "zh-CN": "素材数据库", "en-US": "Materials Database" },
+    { "zh-CN": "素材数据库", "en-US": "Materials Database", "ja-JP": "素材データベース" },
     {
       "zh-CN": "浏览 Project SEKAI 素材、持有物与 MySekai 材料数据。",
       "en-US": "Browse Project Sekai materials, items, and MySekai resource data.",
+      "ja-JP": "Project SEKAI の素材、所持アイテム、MySekai関連リソースを確認できます。",
     },
-    { "zh-CN": ["持有物", "素材", "材料", "MySekai材料"], "en-US": ["materials", "items", "resources", "MySekai materials"] },
+    {
+      "zh-CN": ["持有物", "素材", "材料", "MySekai材料"],
+      "en-US": ["materials", "items", "resources", "MySekai materials"],
+      "ja-JP": ["素材", "アイテム", "リソース", "MySekai素材"],
+    },
   ),
   honors: definePage(
     "/honors",
-    { "zh-CN": "称号成就", "en-US": "Honor Achievements" },
+    { "zh-CN": "称号成就", "en-US": "Honor Achievements", "ja-JP": "称号・実績" },
     {
       "zh-CN": "浏览 Project SEKAI 称号、成就与羁绊称号信息。",
       "en-US": "Browse Project Sekai honors, achievements, and bonds honor information.",
+      "ja-JP": "Project SEKAI の称号、実績、キズナ称号の情報を閲覧できます。",
     },
-    { "zh-CN": ["称号", "成就", "羁绊称号"], "en-US": ["honors", "achievements", "bonds honors"] },
+    {
+      "zh-CN": ["称号", "成就", "羁绊称号"],
+      "en-US": ["honors", "achievements", "bonds honors"],
+      "ja-JP": ["称号", "実績", "キズナ称号"],
+    },
   ),
   live: definePage(
     "/live",
-    { "zh-CN": "虚拟 Live 数据库", "en-US": "Virtual Live Database" },
+    { "zh-CN": "虚拟 Live 数据库", "en-US": "Virtual Live Database", "ja-JP": "バーチャルライブDB" },
     {
       "zh-CN": "浏览 Project SEKAI 虚拟 Live、演唱会时间与奖励信息。",
       "en-US": "Browse Project Sekai virtual live schedules, live details, and rewards.",
+      "ja-JP": "Project SEKAI のバーチャルライブ、開催時間、報酬情報を確認できます。",
     },
-    { "zh-CN": ["演唱会", "虚拟Live", "Virtual Live"], "en-US": ["virtual live", "live schedule", "concerts"] },
+    {
+      "zh-CN": ["演唱会", "虚拟Live", "Virtual Live"],
+      "en-US": ["virtual live", "live schedule", "concerts"],
+      "ja-JP": ["バーチャルライブ", "ライブスケジュール", "報酬"],
+    },
   ),
   sticker: definePage(
     "/sticker",
-    { "zh-CN": "贴纸表情", "en-US": "Sticker Database" },
+    { "zh-CN": "贴纸表情", "en-US": "Sticker Database", "ja-JP": "スタンプデータベース" },
     {
       "zh-CN": "浏览 Project SEKAI 贴纸、表情与角色贴图资源。",
       "en-US": "Browse Project Sekai stickers, emotes, and character stamp assets.",
+      "ja-JP": "Project SEKAI のスタンプ、エモート、キャラクター画像素材を閲覧できます。",
     },
-    { "zh-CN": ["贴纸", "表情", "Stamp"], "en-US": ["stickers", "emotes", "stamps"] },
+    {
+      "zh-CN": ["贴纸", "表情", "Stamp"],
+      "en-US": ["stickers", "emotes", "stamps"],
+      "ja-JP": ["スタンプ", "エモート", "ステッカー"],
+    },
   ),
   mysekai: definePage(
     "/mysekai",
-    { "zh-CN": "MySekai 家具数据库", "en-US": "Furniture Database" },
+    { "zh-CN": "MySekai 家具数据库", "en-US": "Furniture Database", "ja-JP": "MySekai家具DB" },
     {
       "zh-CN": "浏览 Project SEKAI MySekai 家具、摆件、素材与风味文本。",
       "en-US": "Browse the Project SEKAI MySEKAI furniture database with fixtures, materials, and flavor text.",
+      "ja-JP": "Project SEKAI MySekai の家具、設置物、素材、フレーバーテキストを閲覧できます。",
     },
-    { "zh-CN": ["家具", "MySekai", "摆件", "MySekai材料"], "en-US": ["MySekai", "furniture", "fixtures", "housing"] },
+    {
+      "zh-CN": ["家具", "MySekai", "摆件", "MySekai材料"],
+      "en-US": ["MySekai", "furniture", "fixtures", "housing"],
+      "ja-JP": ["MySekai", "家具", "設置物", "ハウジング"],
+    },
   ),
   prediction: definePage(
     "/prediction",

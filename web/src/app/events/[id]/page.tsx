@@ -1,20 +1,8 @@
 import { Suspense } from "react";
-import { getEventBannerUrl } from "@/lib/assets";
-import { getEventMeta } from "@/lib/metadata";
-import { dynamicDetailMetadata } from "@/lib/seo-metadata";
+import { eventDetailMetadata } from "@/lib/seo-detail-metadata";
 import EventDetailClient from "./client";
 
-export const generateMetadata = dynamicDetailMetadata({
-    kind: "event",
-    routePrefix: "events",
-    getData: getEventMeta,
-    build: (event) => ({
-        title: event.name,
-        descriptionKind: "event",
-        descriptionValues: { name: event.name },
-        images: [getEventBannerUrl(event.asset, "main-jp")],
-    }),
-});
+export const generateMetadata = eventDetailMetadata;
 
 export default function EventDetailPage() {
     return (
