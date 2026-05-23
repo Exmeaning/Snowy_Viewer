@@ -249,9 +249,11 @@ export default function MainLayout({
             <BackgroundPattern />
 
             {/* iOS 26 Ambient Colorful Glowing Blobs */}
-            <div className="absolute top-1/4 left-10 w-72 h-72 rounded-full pointer-events-none animate-float-blob-1 z-0 will-change-transform" style={{ backgroundColor: "rgba(var(--color-miku-rgb, 51, 204, 187), 0.12)", filter: "blur(90px)" }} />
-            <div className="absolute bottom-1/3 right-10 w-96 h-96 rounded-full pointer-events-none animate-float-blob-2 z-0 will-change-transform" style={{ backgroundColor: "rgba(var(--color-comp-rgb, 255, 117, 168), 0.12)", filter: "blur(100px)" }} />
-            <div className="absolute top-2/3 left-1/3 w-80 h-80 rounded-full pointer-events-none animate-float-blob-1 z-0 will-change-transform" style={{ backgroundColor: "rgba(var(--color-mid-rgb, 255, 229, 138), 0.08)", filter: "blur(90px)" }} />
+            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-1/4 left-10 w-72 h-72 rounded-full pointer-events-none animate-float-blob-1 will-change-transform" style={{ backgroundColor: "rgba(var(--color-miku-rgb, 51, 204, 187), 0.12)", filter: "blur(90px)" }} />
+                <div className="absolute bottom-1/3 right-10 w-96 h-96 rounded-full pointer-events-none animate-float-blob-2 will-change-transform" style={{ backgroundColor: "rgba(var(--color-comp-rgb, 255, 117, 168), 0.12)", filter: "blur(100px)" }} />
+                <div className="absolute top-2/3 left-1/3 w-80 h-80 rounded-full pointer-events-none animate-float-blob-1 will-change-transform" style={{ backgroundColor: "rgba(var(--color-mid-rgb, 255, 229, 138), 0.08)", filter: "blur(90px)" }} />
+            </div>
 
             {/* Navbar */}
             {!immersiveMode && (
