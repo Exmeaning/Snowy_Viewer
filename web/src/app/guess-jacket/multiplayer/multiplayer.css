@@ -1489,3 +1489,172 @@
     background: rgba(148, 163, 184, 0.3);
     border-radius: 2px;
 }
+
+/* ========================================== */
+/* iOS 26 Frosted Glass Style Overrides       */
+/* ========================================== */
+
+.mp-container {
+    background: linear-gradient(135deg, rgba(240, 253, 250, 0.5) 0%, rgba(248, 250, 252, 0.5) 50%, rgba(236, 253, 245, 0.5) 100%) !important;
+    backdrop-filter: blur(20px);
+}
+
+.mp-tabs,
+.mp-room-code,
+.mp-player-slot,
+.mp-card,
+.mp-hud,
+.mp-round-bar,
+.mp-guess-grid,
+.mp-sticker-picker,
+.mp-chat-bubble,
+.mp-rank-item,
+.mp-loading-player,
+.mp-back-btn,
+.mp-music-options {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
+}
+
+.mp-player-slot.filled {
+    background: rgba(255, 255, 255, 0.55) !important;
+    border-color: rgba(var(--color-miku-rgb), 0.3) !important;
+}
+
+.mp-player-slot.host,
+.mp-rank-item.first {
+    background: rgba(254, 243, 199, 0.45) !important;
+    border-color: rgba(250, 204, 21, 0.4) !important;
+}
+
+.mp-btn-secondary {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    color: #64748b !important;
+    transition: all 0.2s !important;
+}
+
+.mp-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.7) !important;
+    border-color: var(--color-miku) !important;
+    color: var(--color-miku) !important;
+}
+
+.mp-input {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    transition: all 0.2s !important;
+}
+
+.mp-input:focus {
+    border-color: var(--color-miku) !important;
+    box-shadow: 0 0 0 3px rgba(var(--color-miku-rgb), 0.15) !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+}
+
+.mp-game-area {
+    background: transparent !important;
+}
+
+.mp-feedback-overlay {
+    background: rgba(255, 255, 255, 0.35) !important;
+    backdrop-filter: blur(20px) !important;
+}
+
+.mp-loading-player.complete {
+    background: rgba(209, 250, 229, 0.45) !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+.mp-music-option-btn {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
+    color: #334155 !important;
+    transition: all 0.15s !important;
+}
+
+.mp-music-option-btn:hover:not(:disabled) {
+    border-color: var(--color-miku) !important;
+    background: rgba(var(--color-miku-rgb), 0.1) !important;
+}
+
+/* ========================================== */
+/* Dark Mode Cascade Support                  */
+/* ========================================== */
+
+[data-theme="dark"] .mp-container {
+    background: linear-gradient(135deg, rgba(2, 44, 34, 0.5) 0%, rgba(15, 23, 42, 0.5) 50%, rgba(6, 78, 59, 0.5) 100%) !important;
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .mp-tabs,
+[data-theme="dark"] .mp-room-code,
+[data-theme="dark"] .mp-player-slot,
+[data-theme="dark"] .mp-card,
+[data-theme="dark"] .mp-hud,
+[data-theme="dark"] .mp-round-bar,
+[data-theme="dark"] .mp-guess-grid,
+[data-theme="dark"] .mp-sticker-picker,
+[data-theme="dark"] .mp-chat-bubble,
+[data-theme="dark"] .mp-rank-item,
+[data-theme="dark"] .mp-loading-player,
+[data-theme="dark"] .mp-back-btn,
+[data-theme="dark"] .mp-input,
+[data-theme="dark"] .mp-btn-secondary,
+[data-theme="dark"] .mp-music-options {
+    background: rgba(15, 23, 42, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .mp-player-slot.filled {
+    background: rgba(15, 23, 42, 0.55) !important;
+}
+
+[data-theme="dark"] .mp-player-slot.host,
+[data-theme="dark"] .mp-rank-item.first {
+    background: rgba(251, 191, 36, 0.1) !important;
+    border-color: rgba(251, 191, 36, 0.3) !important;
+}
+
+[data-theme="dark"] .mp-loading-player.complete {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .mp-player-name,
+[data-theme="dark"] .mp-hud-hp,
+[data-theme="dark"] .mp-rank-name,
+[data-theme="dark"] .mp-loading-player-name,
+[data-theme="dark"] .mp-music-option-title {
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .mp-lobby-subtitle,
+[data-theme="dark"] .mp-room-code-label,
+[data-theme="dark"] .mp-player-label,
+[data-theme="dark"] .mp-card-title,
+[data-theme="dark"] .mp-hud-label,
+[data-theme="dark"] .mp-status,
+[data-theme="dark"] .mp-waiting-text,
+[data-theme="dark"] .mp-settings-label,
+[data-theme="dark"] .mp-server-region,
+[data-theme="dark"] .mp-loading-subtitle,
+[data-theme="dark"] .mp-loading-hint {
+    color: #64748b !important;
+}
+
+[data-theme="dark"] .mp-feedback-overlay {
+    background: rgba(15, 23, 42, 0.55) !important;
+}
+
+[data-theme="dark"] .mp-music-option-btn {
+    background: rgba(15, 23, 42, 0.5) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #cbd5e1 !important;
+}

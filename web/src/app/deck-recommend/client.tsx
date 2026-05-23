@@ -734,13 +734,13 @@ export default function DeckRecommendClient() {
                     <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm sm:text-base">{t("page.deckRecommend.description")}</p>
                 </div>
 
-                <div className="dr-mobile-warning glass-card p-3 rounded-xl mb-6 flex items-center gap-2 text-sm text-amber-700 bg-amber-50/80 border border-amber-200/50">
+                <div className="dr-mobile-warning ios-glass-card p-3 rounded-xl mb-6 flex items-center gap-2 text-sm text-amber-700 bg-amber-50/80 border border-amber-200/50">
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
                     <span>{t("page.deckRecommend.mobileWarning")}</span>
                 </div>
 
                 {/* Input Form */}
-                <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6">
+                <div className="ios-glass-card p-5 sm:p-6 rounded-2xl mb-6">
                     <h2 className="text-lg font-bold text-primary-text mb-4 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-miku rounded-full"></span>{t("page.deckRecommend.basicSettings")}
                     </h2>
@@ -751,7 +751,7 @@ export default function DeckRecommendClient() {
                         <div className="flex gap-2 flex-wrap">
                             {modeOptions.map((m) => (
                                 <button key={m.value} onClick={() => setMode(m.value)} title={m.desc}
-                                    className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${mode === m.value ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20" : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"}`}>
+                                    className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${mode === m.value ? "ios-glass-tab-active text-white shadow-lg shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60 border border-slate-200/50"}`}>
                                     {m.label}
                                 </button>
                             ))}
@@ -777,7 +777,7 @@ export default function DeckRecommendClient() {
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckRecommend.userId")} <span className="text-red-400">*</span></label>
                             <input type="text" value={userId} onChange={(e) => { setUserId(e.target.value); if (allowSaveUserId) localStorage.setItem("deck_recommend_userid", e.target.value); }}
-                                placeholder={t("page.deckRecommend.userIdPlaceholder")} className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm" />
+                                placeholder={t("page.deckRecommend.userIdPlaceholder")} className="ios-glass-input w-full px-4 py-2.5 rounded-lg transition-all text-sm" />
                             <div className="flex items-center justify-between mt-2 px-1">
                                 <span className="text-sm text-slate-500">{t("page.deckRecommend.saveLocally")}</span>
                                 <button onClick={() => { const ns = !allowSaveUserId; setAllowSaveUserId(ns); if (ns) { localStorage.setItem("deck_recommend_userid", userId); localStorage.setItem("deck_recommend_server", server); saveToolState("deckRecommend", userId, server); } else { localStorage.removeItem("deck_recommend_userid"); localStorage.removeItem("deck_recommend_server"); } }}
@@ -792,7 +792,7 @@ export default function DeckRecommendClient() {
                             <div className="flex flex-wrap gap-2">
                                 {serverOptions.map((s) => (
                                     <button key={s.value} onClick={() => { setServer(s.value); if (allowSaveUserId) localStorage.setItem("deck_recommend_server", s.value); }}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${server === s.value ? "bg-miku text-white shadow-md shadow-miku/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${server === s.value ? "ios-glass-tab-active text-white shadow-md shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60"}`}>
                                         {s.label}
                                     </button>
                                 ))}
@@ -814,11 +814,11 @@ export default function DeckRecommendClient() {
                             <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.optimizationTarget")}</label>
                             <div className="flex gap-2 flex-wrap">
                                 <button onClick={() => setStrongestTarget("power")}
-                                    className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${strongestTarget === "power" ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20" : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"}`}>
+                                    className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${strongestTarget === "power" ? "ios-glass-tab-active text-white shadow-lg shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60 border border-slate-200/50"}`}>
                                     {t("page.deckRecommend.strongestTargets.power")}
                                 </button>
                                 <button onClick={() => setStrongestTarget("skill")}
-                                    className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${strongestTarget === "skill" ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20" : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"}`}>
+                                    className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${strongestTarget === "skill" ? "ios-glass-tab-active text-white shadow-lg shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60 border border-slate-200/50"}`}>
                                     {t("page.deckRecommend.strongestTargets.skill")}
                                 </button>
                             </div>
@@ -831,7 +831,7 @@ export default function DeckRecommendClient() {
                     {/* Leader Character (all modes except challenge which has its own) */}
                     {mode !== "challenge" && (
                         <div className="mb-5">
-                            <div className="border border-slate-200 rounded-lg p-3 bg-slate-50/50">
+                            <div className="border border-slate-200/50 rounded-lg p-3 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
                                 <div className="flex items-center justify-between">
                                     <div className="flex flex-col">
                                         <span className="text-sm text-slate-700 font-medium">{t("page.deckRecommend.fixedCharacter")}</span>
@@ -865,8 +865,8 @@ export default function DeckRecommendClient() {
                                                 key={group.groupId}
                                                 onClick={() => setWl3GroupId(isSelected ? null : group.groupId)}
                                                 className={`rounded-xl border p-3 text-left transition-all ${isSelected
-                                                    ? "border-emerald-400 bg-white shadow-sm ring-2 ring-emerald-100"
-                                                    : "border-slate-200 bg-white/80 hover:border-emerald-300 hover:bg-white"
+                                                    ? "border-emerald-400/80 bg-emerald-50/10 shadow-sm ring-2 ring-emerald-100/20 backdrop-blur-md"
+                                                    : "border-slate-200/50 bg-white/30 dark:bg-slate-900/30 hover:border-emerald-300 hover:bg-white/50 backdrop-blur-md"
                                                 }`}
                                             >
                                                 <div className="flex items-center justify-between gap-2 mb-2">
@@ -895,7 +895,7 @@ export default function DeckRecommendClient() {
                                 <div className="flex flex-wrap gap-2">
                                     {liveTypeOptions.map((lt) => (
                                         <button key={lt.value} onClick={() => setLiveType(lt.value)}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${liveType === lt.value ? "bg-miku text-white shadow-md shadow-miku/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${liveType === lt.value ? "ios-glass-tab-active text-white shadow-md shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60"}`}>
                                             {lt.label}
                                         </button>
                                     ))}
@@ -927,7 +927,7 @@ export default function DeckRecommendClient() {
                                     <div className="flex flex-wrap gap-2">
                                         {liveTypeOptions.map((lt) => (
                                             <button key={lt.value} onClick={() => setLiveType(lt.value)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${liveType === lt.value ? "bg-miku text-white shadow-md shadow-miku/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${liveType === lt.value ? "ios-glass-tab-active text-white shadow-md shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60"}`}>
                                                 {lt.label}
                                             </button>
                                         ))}
@@ -936,7 +936,7 @@ export default function DeckRecommendClient() {
                             )}
                             {mode === "mysekai" && (
                                 <div className="flex items-center">
-                                    <div className="border border-amber-200 rounded-lg p-3 bg-amber-50/50 w-full">
+                                    <div className="border border-amber-200/30 rounded-lg p-3 bg-amber-50/20 backdrop-blur-md w-full">
                                         <div className="flex items-center gap-2 text-sm text-amber-700">
                                             <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                             <span>{t("page.deckRecommend.mysekaiNoMusicHint")}</span>
@@ -946,7 +946,7 @@ export default function DeckRecommendClient() {
                             )}
                             {selectedEventType === "world_bloom" && (
                                 <div className="sm:col-span-2">
-                                    <div className="border border-slate-200 rounded-lg p-3 bg-slate-50/50">
+                                    <div className="border border-slate-200/50 rounded-lg p-3 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
                                         <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.supportCharacter")} <span className="text-red-400">*</span></label>
                                         <CharacterSelector
                                             selectedCharacterId={supportCharacterId}
@@ -963,13 +963,13 @@ export default function DeckRecommendClient() {
                     {/* Custom Mode */}
                     {mode === "custom" && (
                         <div className="mb-5">
-                            <div className="border border-indigo-200 rounded-lg p-4 bg-indigo-50/30">
+                            <div className="border border-indigo-200/30 rounded-lg p-4 bg-indigo-50/10 backdrop-blur-md">
                                 <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
                                     <span className="w-1 h-4 bg-indigo-400 rounded-full"></span>{t("page.deckRecommend.customBonus")}
                                 </h3>
 
                                 {/* Custom bonus mode switch */}
-                                <div className="flex gap-1 p-0.5 bg-slate-100 rounded-lg w-fit mb-4">
+                                <div className="flex gap-1 p-0.5 bg-slate-100/50 dark:bg-slate-800/50 rounded-lg w-fit mb-4 backdrop-blur-sm">
                                     <button onClick={() => setCustomSubMode("unit")}
                                         className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${customSubMode === "unit" ? "bg-white text-slate-700 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
                                         {t("page.deckRecommend.customModes.unit")}
@@ -989,7 +989,7 @@ export default function DeckRecommendClient() {
                                                 const unitLabel = t(u.labelKey);
                                                 return (
                                                     <button key={u.value} onClick={() => setCustomUnit(customUnit === u.value ? "" : u.value)}
-                                                        className={`p-1.5 rounded-xl transition-all ${customUnit === u.value ? "ring-2 ring-miku shadow-lg bg-white" : "hover:bg-slate-100 border border-transparent bg-slate-50"}`}
+                                                        className={`p-1.5 rounded-xl transition-all ${customUnit === u.value ? "ring-2 ring-miku shadow-lg bg-white/60 dark:bg-slate-900/60" : "hover:bg-white/40 border border-transparent bg-slate-50/30 dark:bg-slate-900/30"}`}
                                                         title={unitLabel}>
                                                         <div className="w-8 h-8 relative">
                                                             <Image src={`/data/icon/${u.icon}`} alt={unitLabel} fill className="object-contain" unoptimized />
@@ -1057,7 +1057,7 @@ export default function DeckRecommendClient() {
 
                                         {/* Virtual singer unit selector */}
                                         {customCharacterIds.some(cid => cid >= 21 && cid <= 26) && (
-                                            <div className="mt-3 p-3 bg-teal-50/50 border border-teal-200 rounded-lg">
+                                            <div className="mt-3 p-3 bg-teal-50/20 border border-teal-200/30 rounded-lg backdrop-blur-md">
                                                 <label className="block text-xs font-bold text-slate-600 mb-2">{t("page.deckRecommend.virtualSingerUnit")}</label>
                                                 {customCharacterIds.filter(cid => cid >= 21 && cid <= 26).map(cid => {
                                                 const characterName = getCharacterName(t, cid);
@@ -1081,8 +1081,8 @@ export default function DeckRecommendClient() {
                                                                     })}
                                                                     className={`p-1 rounded-lg transition-all ${
                                                                         customCharacterUnits[cid] === opt.value
-                                                                            ? "ring-2 ring-miku shadow-sm bg-white"
-                                                                            : "hover:bg-slate-100 bg-white border border-slate-200"
+                                                                            ? "ring-2 ring-miku shadow-sm bg-white/60 dark:bg-slate-900/60"
+                                                                            : "hover:bg-white/40 bg-white/20 dark:bg-slate-900/20 border border-slate-200/50"
                                                                     }`}
                                                                     title={opt.labelKey ? t(opt.labelKey) : opt.label}>
                                                                     <div className="w-5 h-5 relative">
@@ -1111,7 +1111,7 @@ export default function DeckRecommendClient() {
                                     <div className="flex flex-wrap gap-2">
                                         {ATTR_OPTIONS.map((a) => (
                                             <button key={a.value} onClick={() => setCustomAttr(customAttr === a.value ? "" : a.value)}
-                                                className={`p-1.5 rounded-xl transition-all ${customAttr === a.value ? "ring-2 ring-miku shadow-lg bg-white" : "hover:bg-slate-100 border border-transparent bg-slate-50"}`}
+                                                className={`p-1.5 rounded-xl transition-all ${customAttr === a.value ? "ring-2 ring-miku shadow-lg bg-white/60 dark:bg-slate-900/60" : "hover:bg-white/40 border border-transparent bg-slate-50/30 dark:bg-slate-900/30"}`}
                                                 title={a.label}>
                                                 <div className="w-6 h-6 relative">
                                                     <Image src={`/data/icon/${a.icon}`} alt={a.label} fill className="object-contain" unoptimized />
@@ -1139,7 +1139,7 @@ export default function DeckRecommendClient() {
                                         const colors: Record<string, string> = { easy: "bg-blue-500 text-white shadow-blue-500/20", normal: "bg-emerald-500 text-white shadow-emerald-500/20", hard: "bg-orange-500 text-white shadow-orange-500/20", expert: "bg-red-500 text-white shadow-red-500/20", master: "bg-purple-500 text-white shadow-purple-500/20", append: "bg-fuchsia-500 text-white shadow-fuchsia-500/20" };
                                         return (
                                             <button key={d.value} onClick={() => setDifficulty(d.value)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all shadow-md ${difficulty === d.value ? (colors[d.value] || "bg-miku text-white shadow-miku/20") : "bg-slate-100 text-slate-600 hover:bg-slate-200 shadow-none"}`}>
+                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all shadow-md ${difficulty === d.value ? (colors[d.value] || "ios-glass-tab-active text-white shadow-miku/20") : "ios-glass-tab text-slate-600 hover:bg-white/60 shadow-none"}`}>
                                                 {d.label}
                                             </button>
                                         );
@@ -1198,14 +1198,14 @@ export default function DeckRecommendClient() {
                     {/* Action Buttons */}
                     <div className="flex gap-3">
                         <button onClick={handleCalculate} disabled={isCalculating}
-                            className="flex-1 px-6 py-3 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold shadow-lg shadow-miku/20 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            className="flex-1 px-6 py-3 ios-glass-btn ios-glass-btn-primary rounded-xl font-bold shadow-lg shadow-miku/20 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                             {isCalculating ? (<><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>{t("page.deckRecommend.calculating")}</>) : (<>
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                                 {t("page.deckRecommend.startCalculate")}
                             </>)}
                         </button>
                         {isCalculating && (
-                            <button onClick={handleCancel} className="px-6 py-3 border-2 border-red-400 text-red-500 rounded-xl font-bold hover:bg-red-50 active:scale-[0.98] transition-all">{t("page.deckRecommend.cancel")}</button>
+                            <button onClick={handleCancel} className="px-6 py-3 ios-glass-btn border border-red-400/50 text-red-500 rounded-xl font-bold hover:bg-red-500/10 transition-all">{t("page.deckRecommend.cancel")}</button>
                         )}
                     </div>
 
@@ -1219,7 +1219,7 @@ export default function DeckRecommendClient() {
 
                 {/* Error */}
                 {error && (
-                    <div className="glass-card p-4 rounded-2xl mb-6 bg-red-50/80 border border-red-200/50">
+                    <div className="ios-glass-card p-4 rounded-2xl mb-6 bg-red-50/80 border border-red-200/50">
                         <div className="flex items-start gap-3">
                             <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             <p className="text-sm font-medium text-red-700">{error}</p>
@@ -1229,7 +1229,7 @@ export default function DeckRecommendClient() {
 
                 {/* Results */}
                 {results && results.length > 0 && (
-                    <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6">
+                    <div className="ios-glass-panel p-5 sm:p-6 rounded-2xl mb-6">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                                 <span className="w-1.5 h-6 bg-miku rounded-full"></span>
@@ -1256,7 +1256,7 @@ export default function DeckRecommendClient() {
                 )}
 
                 {results && results.length === 0 && (
-                    <div className="glass-card p-8 rounded-2xl mb-6 text-center">
+                    <div className="ios-glass-card p-8 rounded-2xl mb-6 text-center">
                         <p className="text-slate-500">{t("page.deckRecommend.noDecks")}</p>
                     </div>
                 )}

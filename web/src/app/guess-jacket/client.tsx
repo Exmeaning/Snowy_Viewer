@@ -642,40 +642,40 @@ function GuessJacketContent() {
             <MainLayout>
                 <div className="min-h-screen">
                     <div className="container mx-auto px-4 py-8 pb-20">
-                        <div className="max-w-4xl mx-auto rounded-3xl overflow-hidden bg-white/60 backdrop-blur-md shadow-lg border border-slate-100">
-                            <div className="p-8 text-center border-b border-slate-200/50">
-                                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
+                        <div className="max-w-4xl mx-auto rounded-3xl overflow-hidden ios-glass-card">
+                            <div className="p-8 text-center border-b border-slate-200/20">
+                                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4 bg-white/10">
                                     <span className="text-miku text-xs font-bold tracking-widest uppercase">GUESS JACKET</span>
                                 </div>
-                                <h1 className="text-4xl font-black text-slate-800 mb-2">{t("page.guessJacket.single.challengeComplete")}</h1>
+                                <h1 className="text-4xl font-black text-slate-800 dark:text-slate-100 mb-2">{t("page.guessJacket.single.challengeComplete")}</h1>
                                 <p className="text-xl text-slate-500 mb-6">{t("page.guessJacket.single.finalScore")}</p>
                                 <div className="text-6xl font-black text-miku mb-8 animate-bounce">{currentTotalScore}</div>
 
-                                <div className="flex flex-col md:flex-row items-center justify-center gap-8 bg-slate-50/50 rounded-2xl p-6 mb-8">
+                                <div className="flex flex-col md:flex-row items-center justify-center gap-8 ios-glass-panel rounded-2xl p-6 mb-8">
                                     <div className="text-left space-y-2 text-sm text-slate-500">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">{t("page.guessJacket.common.seed")}</span>
-                                            <code className="bg-white px-2 py-1 rounded border">{settings.seed}</code>
+                                            <span className="font-bold text-slate-700 dark:text-slate-300 w-16">{t("page.guessJacket.common.seed")}</span>
+                                            <code className="ios-glass-panel px-2 py-1 rounded border border-slate-200/10 font-mono text-slate-800 dark:text-slate-200">{settings.seed}</code>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">{t("page.guessJacket.common.server")}</span>
-                                            <span className="font-bold text-slate-900">{getServerLabel(settings.server)}</span>
+                                            <span className="font-bold text-slate-700 dark:text-slate-300 w-16">{t("page.guessJacket.common.server")}</span>
+                                            <span className="font-bold text-slate-900 dark:text-slate-100">{getServerLabel(settings.server)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">{t("page.guessJacket.common.difficulty")}</span>
+                                            <span className="font-bold text-slate-700 dark:text-slate-300 w-16">{t("page.guessJacket.common.difficulty")}</span>
                                             <span className="font-bold text-miku">{getDifficultyLabel(settings.difficulty)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">{t("page.guessJacket.common.timeLimit")}</span>
-                                            <span>{settings.timeLimit}{t("page.guessJacket.common.secondsSuffix")}</span>
+                                            <span className="font-bold text-slate-700 dark:text-slate-300 w-16">{t("page.guessJacket.common.timeLimit")}</span>
+                                            <span className="text-slate-800 dark:text-slate-200">{settings.timeLimit}{t("page.guessJacket.common.secondsSuffix")}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">{t("page.guessJacket.common.questionCount")}</span>
-                                            <span>{t("page.guessJacket.common.questionCountValue", { rounds: ROUNDS_PER_GAME, options: settings.optionsCount })}</span>
+                                            <span className="font-bold text-slate-700 dark:text-slate-300 w-16">{t("page.guessJacket.common.questionCount")}</span>
+                                            <span className="text-slate-800 dark:text-slate-200">{t("page.guessJacket.common.questionCountValue", { rounds: ROUNDS_PER_GAME, options: settings.optionsCount })}</span>
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-center gap-2">
-                                        <div className="w-[120px] h-[120px] bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+                                        <div className="w-[120px] h-[120px] bg-white p-2 rounded-xl shadow-sm border border-slate-200/50">
                                             <Image src={qrCodeUrl} alt="Share QR Code" width={120} height={120} className="w-full h-full object-contain" unoptimized />
                                         </div>
                                         <span className="text-xs text-slate-400 font-bold uppercase tracking-wide">{t("page.guessJacket.single.scanToChallenge")}</span>
@@ -685,7 +685,7 @@ function GuessJacketContent() {
                                 <div className="flex justify-center gap-4">
                                     <button
                                         onClick={copyShareLink}
-                                        className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center gap-2 shadow-sm"
+                                        className="px-6 py-3 ios-glass-btn text-slate-700 dark:text-slate-200 rounded-xl font-bold hover:bg-white/10 transition-all flex items-center gap-2 shadow-sm"
                                     >
                                         {t("page.guessJacket.single.copyLink")}
                                     </button>
@@ -697,14 +697,14 @@ function GuessJacketContent() {
                                             }));
                                             setGameState("setup");
                                         }}
-                                        className="px-6 py-3 bg-miku text-white rounded-xl font-bold hover:bg-miku-dark transition-colors shadow-lg shadow-miku/30"
+                                        className="px-6 py-3 ios-glass-btn ios-glass-btn-primary text-white rounded-xl font-bold shadow-lg shadow-miku/30"
                                     >
                                         {t("page.guessJacket.single.playAgainNewSeed")}
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="p-8 bg-slate-50/30">
+                            <div className="p-8 bg-slate-50/10">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                                     {currentResults.map((result) => (
                                         <Link
@@ -906,34 +906,34 @@ function GuessJacketContent() {
             <div className="min-h-screen pt-8 pb-20">
                 <div className="container mx-auto px-4 max-w-2xl">
                     <div className="text-center mb-10">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4 bg-white/80 backdrop-blur-sm shadow-sm">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4 bg-white/10 backdrop-blur-sm shadow-sm">
                             <span className="text-miku text-xs font-bold tracking-widest uppercase">Creativity Game</span>
                         </div>
-                        <h1 className="text-4xl font-black text-slate-800 mb-2 drop-shadow-sm">{t("page.guessJacket.title")} <span className="text-miku">?</span></h1>
+                        <h1 className="text-4xl font-black text-slate-800 dark:text-slate-100 mb-2 drop-shadow-sm">{t("page.guessJacket.title")} <span className="text-miku">?</span></h1>
                         <p className="text-slate-500 font-medium">{t("page.guessJacket.description")}</p>
                         <a
                             href="/guess-jacket/multiplayer/"
-                            className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-miku text-white rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 hover:bg-miku-dark"
+                            className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 ios-glass-btn ios-glass-btn-primary text-white rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
                         >
                             <span>{t("page.guessJacket.single.multiplayerMode")}</span>
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                         </a>
                     </div>
 
-                    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-sm border border-slate-100 space-y-6 sm:space-y-8">
+                    <div className="ios-glass-card p-4 sm:p-8 rounded-3xl space-y-6 sm:space-y-8">
                         <div className="flex flex-col sm:flex-row gap-4">
                             <div className="flex-1">
-                                <label className="block text-sm font-bold text-slate-700 mb-2">{t("page.guessJacket.common.seed")}</label>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t("page.guessJacket.common.seed")}</label>
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
                                         value={settings.seed}
                                         onChange={(event) => setSettings((prev) => ({ ...prev, seed: event.target.value }))}
-                                        className="flex-1 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-miku font-mono text-sm bg-slate-50"
+                                        className="flex-1 px-4 py-2 ios-glass-input rounded-xl focus:outline-none font-mono text-sm"
                                     />
                                     <button
                                         onClick={() => setSettings((prev) => ({ ...prev, seed: Math.random().toString(36).substring(7) }))}
-                                        className="px-3 py-2 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors"
+                                        className="px-3 py-2 text-slate-400 hover:text-miku hover:bg-white/10 rounded-lg transition-colors"
                                         title={t("page.guessJacket.single.regenerateSeed")}
                                     >
                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -943,7 +943,7 @@ function GuessJacketContent() {
                                 </div>
                             </div>
                             <div className="flex items-end w-full sm:w-auto">
-                                <button onClick={copyShareLink} className="w-full sm:w-auto justify-center px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center gap-2 h-[42px]">
+                                <button onClick={copyShareLink} className="w-full sm:w-auto justify-center px-4 py-2.5 ios-glass-btn text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-white/10 transition-colors flex items-center gap-2 h-[42px]">
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
                                     {t("page.guessJacket.single.share")}
                                 </button>
@@ -952,17 +952,17 @@ function GuessJacketContent() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessJacket.single.serverScope")}</label>
-                                <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">{t("page.guessJacket.single.serverScope")}</label>
+                                <div className="flex gap-2 p-1 ios-glass-panel rounded-lg">
                                     {(["jp", "cn"] as ServerScope[]).map(s => (
-                                        <button key={s} onClick={() => setSettings({ ...settings, server: s })} className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${settings.server === s ? "bg-white text-miku shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+                                        <button key={s} onClick={() => setSettings({ ...settings, server: s })} className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${settings.server === s ? "ios-glass-tab-active text-miku shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
                                             {getServerShortLabel(s)}
                                         </button>
                                     ))}
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessJacket.single.roundTime")}</label>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">{t("page.guessJacket.single.roundTime")}</label>
                                 <input
                                     type="number"
                                     value={settings.timeLimit}
@@ -971,13 +971,13 @@ function GuessJacketContent() {
                                         const safeValue = Number.isFinite(nextValue) ? Math.max(5, Math.min(120, nextValue)) : 30;
                                         setSettings((prev) => ({ ...prev, timeLimit: safeValue }));
                                     }}
-                                    className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-miku font-mono text-center"
+                                    className="w-full px-4 py-2 ios-glass-input rounded-xl focus:outline-none font-mono text-center"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessJacket.single.difficultySetting")}</label>
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">{t("page.guessJacket.single.difficultySetting")}</label>
                             <div className="grid grid-cols-4 gap-2">
                                 {(["easy", "normal", "hard", "extreme"] as Difficulty[]).map((difficulty) => (
                                     <button
@@ -985,7 +985,7 @@ function GuessJacketContent() {
                                         onClick={() => setSettings((prev) => ({ ...prev, difficulty }))}
                                         className={`py-3 rounded-xl font-bold capitalize transition-all text-sm ${settings.difficulty === difficulty
                                             ? `${difficulty === "extreme" ? "bg-red-500 ring-red-300" : "bg-miku ring-miku/30"} text-white shadow-md ring-2`
-                                            : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                            : "ios-glass-tab text-slate-500 hover:bg-white/60"
                                             }`}
                                     >
                                         {getDifficultyLabel(difficulty)}
@@ -995,15 +995,15 @@ function GuessJacketContent() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessJacket.single.optionsCount")}</label>
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">{t("page.guessJacket.single.optionsCount")}</label>
                             <div className="grid grid-cols-4 gap-2">
                                 {OPTIONS_CHOICES.map((count) => (
                                     <button
                                         key={count}
                                         onClick={() => setSettings((prev) => ({ ...prev, optionsCount: count }))}
                                         className={`py-3 rounded-xl font-bold transition-all text-sm ${settings.optionsCount === count
-                                            ? "bg-miku text-white shadow-md ring-2 ring-miku/30"
-                                            : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                            ? "ios-glass-tab-active bg-miku text-white shadow-md ring-2 ring-miku/30"
+                                            : "ios-glass-tab text-slate-500 hover:bg-white/60"
                                             }`}
                                     >
                                         {t("page.guessJacket.common.optionCountLabel", { count })}
@@ -1012,7 +1012,7 @@ function GuessJacketContent() {
                             </div>
                         </div>
 
-                        <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-sm text-slate-600 space-y-1">
+                        <div className="rounded-2xl ios-glass-panel p-4 text-sm text-slate-600 dark:text-slate-300 space-y-1">
                             <div>• {t("page.guessJacket.single.rules.roundCount", { rounds: ROUNDS_PER_GAME, options: settings.optionsCount })}</div>
                             <div>• {t("page.guessJacket.single.rules.strikes", { strikes: MAX_STRIKES_PER_ROUND })}</div>
                             <div>• {t("page.guessJacket.single.rules.combo")}</div>
@@ -1021,7 +1021,7 @@ function GuessJacketContent() {
                     </div>
 
                     {loadError && (
-                        <div className="mt-4 text-center p-4 bg-red-50 border border-red-200 rounded-2xl">
+                        <div className="mt-4 text-center p-4 ios-glass-card border border-red-500/20 bg-red-500/5 rounded-2xl">
                             <p className="text-red-600 text-sm font-medium mb-2">{loadError}</p>
                             <button
                                 onClick={loadMusics}
@@ -1035,7 +1035,7 @@ function GuessJacketContent() {
                     <button
                         onClick={startGame}
                         disabled={isLoading || !!loadError}
-                        className={`mt-6 w-full py-4 bg-gradient-to-r from-miku to-miku-dark text-white rounded-2xl font-black text-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all ${(isLoading || loadError) ? "opacity-50 cursor-not-allowed" : ""}`}
+                        className={`mt-6 w-full py-4 ios-glass-btn ios-glass-btn-primary text-white rounded-2xl font-black text-xl shadow-lg shadow-miku/20 active:scale-[0.99] transition-all ${(isLoading || loadError) ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                         {isLoading ? t("page.guessJacket.common.loading") : t("page.guessJacket.single.startChallenge")}
                     </button>

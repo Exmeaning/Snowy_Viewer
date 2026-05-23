@@ -592,37 +592,37 @@ function GuessWhoContent() {
             <MainLayout>
                 <div className="min-h-screen">
                     <div className="container mx-auto px-4 py-8 pb-20">
-                        <div className="max-w-4xl mx-auto rounded-3xl overflow-hidden bg-white/60 backdrop-blur-md shadow-lg border border-slate-100">
-                            <div className="p-8 text-center border-b border-slate-200/50">
+                        <div className="max-w-4xl mx-auto rounded-3xl overflow-hidden ios-glass-card">
+                            <div className="p-8 text-center border-b border-slate-200/20">
                                 {/* Header */}
-                                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
+                                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4 bg-white/10">
                                     <span className="text-miku text-xs font-bold tracking-widest uppercase">GAME OVER</span>
                                 </div>
-                                <h1 className="text-4xl font-black text-slate-800 mb-2">{t("page.guessWho.single.challengeComplete")}</h1>
+                                <h1 className="text-4xl font-black text-slate-800 dark:text-slate-100 mb-2">{t("page.guessWho.single.challengeComplete")}</h1>
                                 <p className="text-xl text-slate-500 mb-6">{t("page.guessWho.single.finalScore")}</p>
                                 <div className="text-6xl font-black text-miku mb-8 animate-bounce">{currentTotalScore}</div>
 
-                                <div className="flex flex-col md:flex-row items-center justify-center gap-8 bg-slate-50/50 rounded-2xl p-6 mb-8">
+                                <div className="flex flex-col md:flex-row items-center justify-center gap-8 ios-glass-panel rounded-2xl p-6 mb-8">
                                     <div className="text-left space-y-2 text-sm text-slate-500">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">{t("page.guessWho.common.seed")}</span>
-                                            <code className="bg-white px-2 py-1 rounded border">{settings.seed}</code>
+                                            <span className="font-bold text-slate-700 dark:text-slate-300 w-16">{t("page.guessWho.common.seed")}</span>
+                                            <code className="ios-glass-panel px-2 py-1 rounded border border-slate-200/10 font-mono text-slate-800 dark:text-slate-200">{settings.seed}</code>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">{t("page.guessWho.common.server")}</span>
-                                            <span className="font-bold text-slate-900">{getServerLabel(settings.server)}</span>
+                                            <span className="font-bold text-slate-700 dark:text-slate-300 w-16">{t("page.guessWho.common.server")}</span>
+                                            <span className="font-bold text-slate-900 dark:text-slate-100">{getServerLabel(settings.server)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">{t("page.guessWho.common.difficulty")}</span>
+                                            <span className="font-bold text-slate-700 dark:text-slate-300 w-16">{t("page.guessWho.common.difficulty")}</span>
                                             <span className="capitalize font-bold text-miku">{getDifficultyLabel(settings.difficulty)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-700 w-16">{t("page.guessWho.common.timeLimit")}</span>
-                                            <span>{settings.timeLimit}{t("page.guessWho.common.secondsSuffix")}</span>
+                                            <span className="font-bold text-slate-700 dark:text-slate-300 w-16">{t("page.guessWho.common.timeLimit")}</span>
+                                            <span className="text-slate-800 dark:text-slate-200">{settings.timeLimit}{t("page.guessWho.common.secondsSuffix")}</span>
                                         </div>
                                         {settings.selectedUnitIds.length > 0 && (
                                             <div className="flex items-start gap-2">
-                                                <span className="font-bold text-slate-700 w-16 shrink-0">{t("page.guessWho.common.selectedUnits")}</span>
+                                                <span className="font-bold text-slate-700 dark:text-slate-300 w-16 shrink-0">{t("page.guessWho.common.selectedUnits")}</span>
                                                 <div className="flex flex-wrap gap-1">
                                                     {settings.selectedUnitIds.map(uid => (
                                                         <Image key={uid} src={`/data/icon/${UNIT_ICON_FILES[uid]}`} width={20} height={20} alt={uid} className="w-5 h-5 object-contain" unoptimized />
@@ -632,13 +632,13 @@ function GuessWhoContent() {
                                         )}
 
                                         {settings.difficulty === "extreme" && (
-                                            <div className="text-xs text-red-500 font-bold mt-2 pt-2 border-t border-slate-200">
+                                            <div className="text-xs text-red-500 font-bold mt-2 pt-2 border-t border-slate-200/20">
                                                 {t("page.guessWho.common.distortions.extremeSummary")}
                                             </div>
                                         )}
                                     </div>
                                     <div className="flex flex-col items-center gap-2">
-                                        <div className="w-[120px] h-[120px] bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+                                        <div className="w-[120px] h-[120px] bg-white p-2 rounded-xl shadow-sm border border-slate-200/50">
                                             <img src={qrCodeUrl} alt="Share QR Code" className="w-full h-full object-contain" />
                                         </div>
                                         <span className="text-xs text-slate-400 font-bold uppercase tracking-wide">{t("page.guessWho.single.scanToChallenge")}</span>
@@ -646,18 +646,18 @@ function GuessWhoContent() {
                                 </div>
 
                                 <div className="flex justify-center gap-4">
-                                    <button onClick={copyShareLink} className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center gap-2 shadow-sm">
+                                    <button onClick={copyShareLink} className="px-6 py-3 ios-glass-btn text-slate-700 dark:text-slate-200 rounded-xl font-bold hover:bg-white/10 transition-all flex items-center gap-2 shadow-sm">
                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
                                         {t("page.guessWho.single.copyLink")}
                                     </button>
-                                    <button onClick={() => { setSettings(prev => ({ ...prev, seed: Math.random().toString(36).substring(7) })); setGameState("setup"); }} className="px-6 py-3 bg-miku text-white rounded-xl font-bold hover:bg-miku-dark transition-colors shadow-lg shadow-miku/30">
+                                    <button onClick={() => { setSettings(prev => ({ ...prev, seed: Math.random().toString(36).substring(7) })); setGameState("setup"); }} className="px-6 py-3 ios-glass-btn ios-glass-btn-primary text-white rounded-xl font-bold shadow-lg shadow-miku/30">
                                         {t("page.guessWho.single.playAgainNewSeed")}
                                     </button>
                                 </div>
                             </div>
 
                             {/* Results Grid */}
-                            <div className="p-8 bg-slate-50/30">
+                            <div className="p-8 bg-slate-50/10">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                                     {currentResults.map((res, idx) => (
                                         <Link href={`/cards/${res.card.id}`} key={idx} className={`relative block p-4 rounded-xl border flex gap-4 overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-md ${res.isCorrect ? "bg-green-50/90 dark:bg-black/50 border-green-200" : "bg-red-50/90 dark:bg-black/50 border-red-200"}`}>
@@ -885,33 +885,33 @@ function GuessWhoClientPlayingAndSetup({
             <div className="min-h-screen pt-8 pb-20">
                 <div className="container mx-auto px-4 max-w-2xl">
                     <div className="text-center mb-10">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4 bg-white/80 backdrop-blur-sm shadow-sm">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4 bg-white/10 backdrop-blur-sm shadow-sm">
                             <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.guessWho.badge")}</span>
                         </div>
-                        <h1 className="text-4xl font-black text-slate-800 mb-2 drop-shadow-sm">{t("page.guessWho.title")} <span className="text-miku">?</span></h1>
+                        <h1 className="text-4xl font-black text-slate-800 dark:text-slate-100 mb-2 drop-shadow-sm">{t("page.guessWho.title")} <span className="text-miku">?</span></h1>
                         <p className="text-slate-500 font-medium">{t("page.guessWho.description")}</p>
                         <a
                             href="/guess-who/multiplayer/"
-                            className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-miku text-white rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 hover:bg-miku-dark"
+                            className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 ios-glass-btn ios-glass-btn-primary text-white rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
                         >
                             <span>{t("page.guessWho.single.multiplayerMode")}</span>
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                         </a>
                     </div>
 
-                    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-sm border border-slate-100 space-y-6 sm:space-y-8">
+                    <div className="ios-glass-card p-4 sm:p-8 rounded-3xl space-y-6 sm:space-y-8">
                         <div className="flex flex-col sm:flex-row gap-4">
                             <div className="flex-1">
-                                <label className="block text-sm font-bold text-slate-700 mb-2">{t("page.guessWho.common.seed")}</label>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t("page.guessWho.common.seed")}</label>
                                 <div className="flex gap-2">
-                                    <input type="text" value={settings.seed} onChange={(e) => setSettings({ ...settings, seed: e.target.value })} className="flex-1 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-miku font-mono text-sm bg-slate-50" />
-                                    <button onClick={() => setSettings({ ...settings, seed: Math.random().toString(36).substring(7) })} className="px-3 py-2 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors" title={t("page.guessWho.single.regenerateSeed")}>
+                                    <input type="text" value={settings.seed} onChange={(e) => setSettings({ ...settings, seed: e.target.value })} className="flex-1 px-4 py-2 ios-glass-input rounded-xl focus:outline-none font-mono text-sm" />
+                                    <button onClick={() => setSettings({ ...settings, seed: Math.random().toString(36).substring(7) })} className="px-3 py-2 text-slate-400 hover:text-miku hover:bg-white/10 rounded-lg transition-colors" title={t("page.guessWho.single.regenerateSeed")}>
                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                                     </button>
                                 </div>
                             </div>
                             <div className="flex items-end w-full sm:w-auto">
-                                <button onClick={copyShareLink} className="w-full sm:w-auto justify-center px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center gap-2 h-[42px]">
+                                <button onClick={copyShareLink} className="w-full sm:w-auto justify-center px-4 py-2.5 ios-glass-btn text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-white/10 transition-colors flex items-center gap-2 h-[42px]">
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
                                     {t("page.guessWho.single.share")}
                                 </button>
@@ -919,7 +919,7 @@ function GuessWhoClientPlayingAndSetup({
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessWho.single.difficultySetting")}</label>
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">{t("page.guessWho.single.difficultySetting")}</label>
                             <div className="grid grid-cols-4 gap-2">
                                 {(["easy", "normal", "hard", "extreme"] as Difficulty[]).map(d => (
                                     <button
@@ -927,7 +927,7 @@ function GuessWhoClientPlayingAndSetup({
                                         onClick={() => setSettings({ ...settings, difficulty: d })}
                                         className={`py-3 rounded-xl font-bold capitalize transition-all text-sm ${settings.difficulty === d
                                             ? `${d === 'extreme' ? 'bg-red-500 ring-red-300' : 'bg-miku ring-miku/30'} text-white shadow-md ring-2`
-                                            : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                            : "ios-glass-tab text-slate-500 hover:bg-white/60"
                                             }`}
                                     >
                                         {t(`page.guessWho.common.difficultyLabels.${d}`)}
@@ -937,12 +937,12 @@ function GuessWhoClientPlayingAndSetup({
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessWho.single.raritySetting")}</label>
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">{t("page.guessWho.single.raritySetting")}</label>
                             <div className="flex flex-wrap gap-2">
                                 {RARITY_OPTIONS.map(({ id, num }) => {
                                     const isSelected = settings.selectedRarities.includes(id);
                                     return (
-                                        <button key={id} onClick={() => handleRarityToggle(id)} className={`h-11 px-3 rounded-xl transition-all flex items-center justify-center gap-0.5 border ${isSelected ? "ring-2 ring-miku shadow-sm bg-white border-transparent" : "bg-slate-50 text-slate-400 border-slate-100 hover:bg-slate-100"}`}>
+                                        <button key={id} onClick={() => handleRarityToggle(id)} className={`h-11 px-3 rounded-xl transition-all flex items-center justify-center gap-0.5 ${isSelected ? "ring-2 ring-miku shadow-sm ios-glass-tab-active text-white border-transparent" : "ios-glass-tab text-slate-400"}`}>
                                             {id === "rarity_birthday" ? (<div className="w-5 h-5 relative"><Image src="/data/icon/birthday.webp" alt="Birthday" fill className="object-contain" unoptimized /></div>) : (Array.from({ length: num }).map((_, i) => (<div key={i} className="w-4 h-4 relative"><Image src="/data/icon/star.webp" alt="Star" fill className="object-contain" unoptimized /></div>)))}
                                         </button>
                                     );
@@ -952,32 +952,32 @@ function GuessWhoClientPlayingAndSetup({
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessWho.single.serverScope")}</label>
-                                <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">{t("page.guessWho.single.serverScope")}</label>
+                                <div className="flex gap-2 p-1 ios-glass-panel rounded-lg">
                                     {(["jp", "cn"] as ServerScope[]).map(s => (
-                                        <button key={s} onClick={() => setSettings({ ...settings, server: s })} className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${settings.server === s ? "bg-white text-miku shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+                                        <button key={s} onClick={() => setSettings({ ...settings, server: s })} className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${settings.server === s ? "ios-glass-tab-active text-miku shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
                                             {t(`page.guessWho.common.serverLabels.${s}`)}
                                         </button>
                                     ))}
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-3">{t("page.guessWho.single.guessTime")}</label>
-                                <input type="number" value={settings.timeLimit} onChange={(e) => setSettings({ ...settings, timeLimit: Math.max(3, Math.min(120, Number(e.target.value))) })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-miku font-mono text-center" />
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">{t("page.guessWho.single.guessTime")}</label>
+                                <input type="number" value={settings.timeLimit} onChange={(e) => setSettings({ ...settings, timeLimit: Math.max(3, Math.min(120, Number(e.target.value))) })} className="w-full px-4 py-2 ios-glass-input rounded-xl focus:outline-none font-mono text-center" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="border-t border-slate-100 pt-6">
+                    <div className="border-t border-slate-200/20 pt-6">
                         <div className="flex justify-between items-center mb-4">
-                            <label className="text-sm font-bold text-slate-700">{t("page.guessWho.single.characterFilter")}</label>
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300">{t("page.guessWho.single.characterFilter")}</label>
                             <button onClick={() => setSettings({ ...settings, selectedUnitIds: [] })} className="text-xs text-miku hover:underline">{t("page.guessWho.single.resetFilter")}</button>
                         </div>
                         <div className="flex flex-wrap gap-3 mb-4 justify-center">
                             {UNIT_DATA.map(unit => {
                                 const unitLabel = t(UNIT_ID_LABEL_KEYS[unit.id] ?? `common.units.${unit.id}`);
                                 return (
-                                    <button key={unit.id} onClick={() => handleUnitToggle(unit.id)} className={`transition-all p-1 rounded-full ${settings.selectedUnitIds.includes(unit.id) ? "bg-slate-100 ring-2 ring-miku scale-110" : "opacity-60 hover:opacity-100 grayscale hover:grayscale-0 hover:bg-slate-50"}`}>
+                                    <button key={unit.id} onClick={() => handleUnitToggle(unit.id)} className={`transition-all p-1 rounded-full ${settings.selectedUnitIds.includes(unit.id) ? "bg-white/20 ring-2 ring-miku scale-110" : "opacity-60 hover:opacity-100 grayscale hover:grayscale-0 hover:bg-white/10"}`}>
                                         <Image src={`/data/icon/${UNIT_ICON_FILES[unit.id]}`} alt={unitLabel} width={40} height={40} className="w-10 h-10 object-contain" unoptimized />
                                     </button>
                                 );
@@ -987,7 +987,7 @@ function GuessWhoClientPlayingAndSetup({
                     </div>
 
                     {loadError && (
-                        <div className="text-center p-4 bg-red-50 border border-red-200 rounded-2xl">
+                        <div className="text-center p-4 ios-glass-card border border-red-500/20 bg-red-500/5 rounded-2xl">
                             <p className="text-red-600 text-sm font-medium mb-2">{loadError}</p>
                             <button onClick={loadCards} className="px-4 py-2 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors">
                                 {t("page.guessWho.common.reload")}
@@ -995,7 +995,7 @@ function GuessWhoClientPlayingAndSetup({
                         </div>
                     )}
 
-                    <button onClick={startGame} disabled={isLoading || !!loadError} className={`w-full py-4 bg-gradient-to-r from-miku to-miku-dark text-white rounded-2xl font-black text-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all ${(isLoading || loadError) ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    <button onClick={startGame} disabled={isLoading || !!loadError} className={`w-full py-4 ios-glass-btn ios-glass-btn-primary text-white rounded-2xl font-black text-xl shadow-lg shadow-miku/20 active:scale-[0.99] transition-all ${(isLoading || loadError) ? 'opacity-50 cursor-not-allowed' : ''}`}>
                         {isLoading ? t("page.guessWho.common.loading") : t("page.guessWho.single.startChallenge")}
                     </button>
 
