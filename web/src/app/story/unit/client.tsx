@@ -89,9 +89,9 @@ export default function StoryUnitListClient() {
                                 <Link
                                     key={profile.seq}
                                     href={`/story/unit/${profile.seq}`}
-                                    className="group bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-md transition-all p-5 flex flex-col items-center gap-3 text-center"
+                                    className="ios-glass-card ios-glass-card-interactive border-none p-5 flex flex-col items-center gap-3 text-center group"
                                 >
-                                    <div className="w-full h-14 flex items-center justify-center">
+                                    <div className="w-full h-14 flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
                                         <img
                                             src={logoUrl}
                                             alt={profile.unitName}

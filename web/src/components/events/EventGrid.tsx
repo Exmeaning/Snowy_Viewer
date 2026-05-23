@@ -17,12 +17,12 @@ interface EventGridProps {
 // Skeleton loading component
 function EventSkeleton() {
     return (
-        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden animate-pulse">
-            <div className="aspect-[16/9] bg-slate-200" />
+        <div className="ios-glass-card rounded-2xl overflow-hidden animate-pulse border-none">
+            <div className="aspect-[16/9] bg-slate-200/20 dark:bg-slate-700/20" />
             <div className="p-4 space-y-3">
-                <div className="h-4 bg-slate-200 rounded w-16" />
-                <div className="h-4 bg-slate-200 rounded w-3/4" />
-                <div className="h-3 bg-slate-200 rounded w-1/2" />
+                <div className="h-4 bg-slate-200/20 dark:bg-slate-700/20 rounded w-16" />
+                <div className="h-4 bg-slate-200/20 dark:bg-slate-700/20 rounded w-3/4" />
+                <div className="h-3 bg-slate-200/20 dark:bg-slate-700/20 rounded w-1/2" />
             </div>
         </div>
     );
