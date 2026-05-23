@@ -1,5 +1,5 @@
 import { DEFAULT_UI_LOCALE, type UiLocale } from "@/lib/i18n/locales";
-import { INDEXABLE_SEO_ROUTES, findSeoRouteByPageKey } from "@/lib/seo-routes";
+import { INDEXABLE_SEO_ROUTES, findSeoRouteByPageKey, normalizeSeoPath } from "@/lib/seo-routes";
 import { getPageSeo, getRootSeo, getSeoLocaleConfig, type SeoPageKey } from "@/lib/seo-keywords";
 
 function absoluteUrl(baseUrl: string, path = "/"): string {
@@ -98,6 +98,26 @@ export function generateItemListJsonLd(baseUrl: string, entries: readonly ItemLi
         "@type": "ItemList" as const,
         itemListElement: entries.map((entry, index) => listItem(index + 1, entry.name, absoluteUrl(baseUrl, entry.url))),
     };
+}
+
+function collectionItemId(baseUrl: string, pageKey: SeoPageKey, id: string | number): string {
+    const route = findSeoRouteByPageKey(pageKey);
+    const parentPath = normalizeSeoPath(route?.path ?? getPageSeo(pageKey, DEFAULT_UI_LOCALE).path);
+    return absoluteUrl(baseUrl, `${parentPath}${encodeURIComponent(String(id))}/`);
+}
+
+export function generateCollectionItemListJsonLd(
+    baseUrl: string,
+    pageKey: SeoPageKey,
+    entries: readonly { id: string | number; name: string }[],
+) {
+    return generateItemListJsonLd(
+        baseUrl,
+        entries.map((entry) => ({
+            name: entry.name,
+            url: collectionItemId(baseUrl, pageKey, entry.id),
+        })),
+    );
 }
 
 export function generateSiteNavigationItemListJsonLd(

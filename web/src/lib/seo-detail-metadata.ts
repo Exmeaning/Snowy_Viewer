@@ -19,7 +19,7 @@ import {
     getMusicMeta,
     getVirtualLiveMeta,
 } from "@/lib/metadata";
-import type { ReactNode } from "react";
+import { createElement, Suspense, type ComponentType, type ReactNode } from "react";
 
 import {
     defineSeoDetailPage,
@@ -30,19 +30,49 @@ import { CHARACTER_NAMES } from "@/types/types";
 
 type DetailPreset<T> = Omit<CreateDynamicDetailMetadataOptions<T>, "params">;
 
+type DetailPageRender = (props: { params?: Promise<{ id: string }> }) => ReactNode;
+
+const DETAIL_LOADING_FALLBACK = createElement(
+    "div",
+    { className: "min-h-screen flex items-center justify-center" },
+    createElement("div", { className: "loading-spinner" }),
+);
+
 function defineDetailPreset<T>(preset: DetailPreset<T>) {
     return preset;
 }
 
 function detailPageFactory<T>(preset: DetailPreset<T>) {
-    return (render: (props: { params?: Promise<{ id: string }> }) => ReactNode) => defineSeoDetailPage({ ...preset, render });
+    return (render: DetailPageRender) => defineSeoDetailPage({ ...preset, render });
+}
+
+interface DetailClientPageOptions {
+    fallback?: ReactNode;
+    wrap?: (children: ReactNode) => ReactNode;
+}
+
+function renderClientWithSuspense(Client: ComponentType, options: DetailClientPageOptions = {}) {
+    function DetailClientSuspensePage() {
+        const content = createElement(Suspense, { fallback: options.fallback ?? DETAIL_LOADING_FALLBACK }, createElement(Client));
+        return options.wrap ? options.wrap(content) : content;
+    }
+
+    DetailClientSuspensePage.displayName = `SeoDetailClientPage(${Client.displayName || Client.name || "Client"})`;
+    return DetailClientSuspensePage;
+}
+
+function detailClientPageFactory<T>(preset: DetailPreset<T>) {
+    return (Client: ComponentType, options?: DetailClientPageOptions) => defineSeoDetailPage({
+        ...preset,
+        render: renderClientWithSuspense(Client, options),
+    });
 }
 
 const cardDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getCardMeta>>>({
     kind: "card",
     routePrefix: "cards",
     getData: getCardMeta,
-    structuredData: { parentPageKey: "cards" },
+    structuredData: { parentPageKey: "cards", itemList: { getName: (card) => card.prefix } },
     build: (card) => {
         const characterName = CHARACTER_NAMES[card.characterId] || "";
 
@@ -56,6 +86,7 @@ const cardDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getCar
 });
 
 export const defineCardDetailPage = detailPageFactory(cardDetailPreset);
+export const defineCardDetailClientPage = detailClientPageFactory(cardDetailPreset);
 
 const characterDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getCharacterMeta>>>({
     kind: "character",
@@ -72,6 +103,7 @@ const characterDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof g
 });
 
 export const defineCharacterDetailPage = detailPageFactory(characterDetailPreset);
+export const defineCharacterDetailClientPage = detailClientPageFactory(characterDetailPreset);
 
 const costumeDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getCostumeMeta>>>({
     kind: "costume",
@@ -88,12 +120,13 @@ const costumeDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof get
 });
 
 export const defineCostumeDetailPage = detailPageFactory(costumeDetailPreset);
+export const defineCostumeDetailClientPage = detailClientPageFactory(costumeDetailPreset);
 
 const eventDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getEventMeta>>>({
     kind: "event",
     routePrefix: "events",
     getData: getEventMeta,
-    structuredData: { parentPageKey: "events" },
+    structuredData: { parentPageKey: "events", itemList: { getName: (event) => event.name } },
     build: (event) => ({
         title: event.name,
         descriptionKind: "event",
@@ -103,6 +136,7 @@ const eventDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getEv
 });
 
 export const defineEventDetailPage = detailPageFactory(eventDetailPreset);
+export const defineEventDetailClientPage = detailClientPageFactory(eventDetailPreset);
 
 const exchangeDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getExchangeMeta>>>({
     kind: "exchange",
@@ -124,12 +158,13 @@ const exchangeDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof ge
 });
 
 export const defineExchangeDetailPage = detailPageFactory(exchangeDetailPreset);
+export const defineExchangeDetailClientPage = detailClientPageFactory(exchangeDetailPreset);
 
 const gachaDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getGachaMeta>>>({
     kind: "gacha",
     routePrefix: "gacha",
     getData: getGachaMeta,
-    structuredData: { parentPageKey: "gacha" },
+    structuredData: { parentPageKey: "gacha", itemList: { getName: (gacha) => gacha.name } },
     build: (gacha) => ({
         title: gacha.name,
         descriptionKind: "gacha",
@@ -140,12 +175,13 @@ const gachaDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getGa
 });
 
 export const defineGachaDetailPage = detailPageFactory(gachaDetailPreset);
+export const defineGachaDetailClientPage = detailClientPageFactory(gachaDetailPreset);
 
 const liveDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getVirtualLiveMeta>>>({
     kind: "live",
     routePrefix: "live",
     getData: getVirtualLiveMeta,
-    structuredData: { parentPageKey: "live" },
+    structuredData: { parentPageKey: "live", itemList: { getName: (live) => live.name } },
     build: (live) => ({
         title: live.name,
         descriptionKind: "live",
@@ -155,6 +191,7 @@ const liveDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getVir
 });
 
 export const defineLiveDetailPage = detailPageFactory(liveDetailPreset);
+export const defineLiveDetailClientPage = detailClientPageFactory(liveDetailPreset);
 
 const mangaDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMangaMeta>>>({
     kind: "manga",
@@ -170,12 +207,13 @@ const mangaDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMa
 });
 
 export const defineMangaDetailPage = detailPageFactory(mangaDetailPreset);
+export const defineMangaDetailClientPage = detailClientPageFactory(mangaDetailPreset);
 
 const musicDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMusicMeta>>>({
     kind: "music",
     routePrefix: "music",
     getData: getMusicMeta,
-    structuredData: { parentPageKey: "music" },
+    structuredData: { parentPageKey: "music", itemList: { getName: (music) => music.title } },
     build: (music) => ({
         title: music.title,
         descriptionKind: "music",
@@ -186,6 +224,7 @@ const musicDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMu
 });
 
 export const defineMusicDetailPage = detailPageFactory(musicDetailPreset);
+export const defineMusicDetailClientPage = detailClientPageFactory(musicDetailPreset);
 
 const mysekaiFixtureDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getFixtureMeta>>>({
     kind: "mysekai",
@@ -205,3 +244,4 @@ const mysekaiFixtureDetailPreset = defineDetailPreset<NonNullable<ReturnType<typ
 });
 
 export const defineMysekaiFixtureDetailPage = detailPageFactory(mysekaiFixtureDetailPreset);
+export const defineMysekaiFixtureDetailClientPage = detailClientPageFactory(mysekaiFixtureDetailPreset);

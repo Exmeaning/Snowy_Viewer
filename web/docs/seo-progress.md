@@ -127,6 +127,8 @@
 - [x] 新增 `seo-detail-metadata.ts` 集中维护十类动态详情页 metadata presets，并继续升级为 `defineXxxDetailPage()` 工厂；页面文件只保留页面渲染函数、`Page.generateMetadata` 与默认导出，进一步减少详情页 SEO boilerplate。
 - [x] 新增 `dynamicPageMetadata()` 与 `seo-dynamic-metadata.ts`，攻略详情页 `/guides/[id]` 已接入本地 `metadata-map.json`，canonical 直接输出 `/guides/{id}/`，不再复用泛用 `/guides/` metadata。
 - [x] 新增 `defineSeoDynamicPage()` 与 `seo-story-metadata.ts`，story event/unit/card/self/special/area 动态分组与 reader 页已从父级 `pageMetadata()` 迁到本地 metadata-map 驱动的动态 canonical、localized title/description 与 Breadcrumb JSON-LD。
+- [x] 新增 `defineXxxDetailClientPage()` 工厂，cards / character / costumes / events / exchanges / gacha / live / manga / music / mysekai 十类 `[id]` 详情页进一步收敛到“导入 client + 绑定工厂”，Suspense fallback 与 metadata/JSON-LD 绑定逻辑集中在 `seo-detail-metadata.ts`。
+- [x] 新增 `check-seo-routes.mjs` 并接入 `lint:i18n`，静态校验 route registry、SEO pageKey、noindex excludeReason 与动态 metadata 例外集合；`robots.txt` runtime 也升级为调用完整 registry 对齐断言。
 
 ### P4：结构化数据
 
@@ -136,6 +138,7 @@
 - [ ] 评估 `SearchAction` 是否有真实站内搜索 URL 可落地。
 - [x] 为分组页/详情页预留 `BreadcrumbList` / `ItemList` helper。
 - [x] 十类动态详情页通过 `defineSeoDetailPage()` 自动输出详情页 `BreadcrumbList` JSON-LD，父级页面由 detail preset 的 `parentPageKey` 绑定。
+- [x] 高权重详情页新增轻量集合 `ItemList` JSON-LD：cards / music / events / gacha / live 详情会同时输出指向自身 canonical 的集合条目，URL 继续由 route registry parent path 推导。
 - [x] 新增 `withPageBreadcrumb()`，cards / music / events / gacha / character / costumes / exchanges / manga / mysekai / live / story / guides 等高权重入口页自动输出 registry-aware `BreadcrumbList` JSON-LD。
 - [x] 故事动态分组与 reader 页通过 `defineSeoDynamicPage()` 自动输出 `BreadcrumbList` JSON-LD，canonical 使用真实动态路径，不再落到 `/story/event/`、`/story/unit/` 等父级 canonical。
 
@@ -177,6 +180,28 @@ npm run build:next --prefix web
 - 没有在无 locale URL 的情况下输出 hreflang。
 
 ## 5. 最近验证记录
+
+### 2026-05-23：详情页 client 工厂、registry 守护与详情 ItemList
+
+本轮新增/调整：
+
+- `seo-detail-metadata.ts` 新增 `defineXxxDetailClientPage()` 工厂，cards / character / costumes / events / exchanges / gacha / live / manga / music / mysekai 十类 `[id]` 页面从手写 Suspense 包装进一步收敛为 client 工厂绑定；页面文件只保留 client import、Page 定义、`generateMetadata` 与默认导出。
+- `defineSeoDetailPage()` 支持 detail preset 配置轻量集合 `ItemList` JSON-LD；cards / music / events / gacha / live 详情页现在除 `BreadcrumbList` 外，也输出指向自身 canonical 的集合条目。
+- `structured-data.ts` 新增 `generateCollectionItemListJsonLd()`，集合条目 URL 从 route registry 的父级 path 推导，避免结构化数据 URL 与 canonical 漂移。
+- 新增 `scripts/check-seo-routes.mjs` 并接入 `npm run lint:i18n`，校验 route registry 的重复 path/pageKey、未知 pageKey、noindex `excludeReason` 与动态 metadata 例外集合。
+- `assertSeoRouteRegistryAligned()` 新增到 `seo-routes.ts`，`robots.txt` route handler 在输出前执行完整 registry 对齐断言；`generate-sitemaps.mjs` 也新增主 sitemap 与 indexable registry 对齐检查，防止 noindex 路由漏进 main sitemap。
+- 本轮继续不输出 hreflang / sitemap alternate links；定向搜索未发现 `alternates.languages` / `hreflang` / `x-default` 输出。
+- `npm run sitemap --prefix web` 重新生成 `public/data/sitemap-data.json`：`Main routes: 54`，`Detail routes: 15897`；所有详情来源均为 fresh，`/eventstory/` 未重新引入。
+- `npm run generate:metadata --prefix web` 重新生成 `public/data/metadata-map.json`：entries 维持 cards 1376、musics 676、events 205、gachas 953、characters 26、virtualLives 476、costumes 972、mysekaiFixtures 1395、mangas 354、exchanges 3079、guides 1、story 动态 sections 同上一轮；所有 metadata sources 均为 fresh。
+
+本轮验证：
+
+- `npm run lint:i18n --prefix web`：通过，`i18n key structure OK (3028 keys across 3 locales)` / `Hardcoded UI Han scan OK (15 allowlisted file groups)` / `SEO route registry OK (54 indexable, 5 noindex)`。
+- `npm run lint:i18n-usage --prefix web`：通过，`Literal i18n usage keys OK`。
+- `npm run lint --prefix web`：通过；仍有既有 warning：`src/app/soundtrack/client.tsx` 的 `react-hooks/exhaustive-deps` missing dependency `handleFilterChange`。
+- `npm run sitemap --prefix web`：通过，详情来源均为 fresh；detail routes 为 15897。
+- `npm run generate:metadata --prefix web`：通过，所有 metadata sources 均为 fresh。
+- `npm run build:next --prefix web`：通过；仍有已知 `turbopack.root should be absolute` warning。
 
 ### 2026-05-23：故事动态 metadata、reader canonical 与 sitemap 覆盖
 

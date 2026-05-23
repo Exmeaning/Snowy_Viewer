@@ -10,7 +10,7 @@
     "generate:metadata": "node scripts/generate-metadata-map.mjs",
     "start": "next start",
     "lint": "eslint",
-    "lint:i18n": "node scripts/check-i18n-keys.mjs && node scripts/scan-hardcoded-ui-text.mjs",
+    "lint:i18n": "node scripts/check-i18n-keys.mjs && node scripts/scan-hardcoded-ui-text.mjs && node scripts/check-seo-routes.mjs",
     "lint:i18n-usage": "node scripts/check-i18n-usage.mjs"
   },
   "dependencies": {

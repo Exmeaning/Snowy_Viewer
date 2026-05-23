@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { assertRobotsDisallowPathsAligned, getRobotsDisallowPaths } from '@/lib/seo-routes';
+import { assertSeoRouteRegistryAligned, getRobotsDisallowPaths } from '@/lib/seo-routes';
 import { getBaseUrl } from '@/lib/sitemap';
 
 export async function GET() {
     const baseUrl = await getBaseUrl();
+    assertSeoRouteRegistryAligned();
     const disallowPaths = getRobotsDisallowPaths();
-    assertRobotsDisallowPathsAligned(disallowPaths);
     const disallowLines = disallowPaths.map((path) => `Disallow: ${path}`);
 
     const body = `User-agent: *
