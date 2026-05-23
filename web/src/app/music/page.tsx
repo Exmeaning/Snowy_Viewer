@@ -1,8 +1,7 @@
 import MusicContent from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("music");
+const Page = withPageBreadcrumb("music", () => <MusicContent />);
 
-export default function MusicPage() {
-    return <MusicContent />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

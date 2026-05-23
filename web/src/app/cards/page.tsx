@@ -1,8 +1,7 @@
 import CardsClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("cards");
+const Page = withPageBreadcrumb("cards", () => <CardsClient />);
 
-export default function CardsPage() {
-    return <CardsClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

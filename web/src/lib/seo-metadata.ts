@@ -9,22 +9,28 @@ import {
     resolveUiLocale,
     type UiLocale,
 } from "@/lib/i18n/locales";
-import { findSeoRouteByPageKey, findSeoRouteByPath, isIndexableSeoPath, normalizeSeoPath } from "@/lib/seo-routes";
-import { generateDetailBreadcrumbJsonLd } from "@/lib/structured-data";
+import { assertNoIndexSeoRoute, findSeoRouteByPageKey, findSeoRouteByPath, isIndexableSeoPath, normalizeSeoPath } from "@/lib/seo-routes";
+import { generateDetailBreadcrumbJsonLd, generatePageBreadcrumbJsonLd } from "@/lib/structured-data";
 import {
     formatDetailSeoDescription,
+    formatDynamicSeoDescription,
+    formatDynamicSeoTitle,
     getDetailFallbackDescription,
     getDetailFallbackTitle,
+    getDynamicFallbackDescription,
+    getDynamicFallbackTitle,
     getPageSeo,
     getRootSeo,
     getSeoLocaleConfig,
     type DetailFallbackKind,
     type DetailSeoKind,
+    type DynamicSeoKind,
     type SeoPageKey,
 } from "@/lib/seo-keywords";
 
 const SITE_BASE_URL = process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe";
 const DETAIL_BREADCRUMB_SCRIPT_PREFIX = "detail-breadcrumb";
+const PAGE_BREADCRUMB_SCRIPT_PREFIX = "page-breadcrumb";
 const DEFAULT_ICON_URL = "/data/icon/icon.jpg";
 
 export function getSiteBaseUrl(): string {
@@ -163,17 +169,40 @@ export function pageMetadata(pageKey: SeoPageKey) {
     return () => createPageMetadata(pageKey);
 }
 
+export function withPageBreadcrumb(pageKey: SeoPageKey, render: () => ReactNode) {
+    const Page = async () => {
+        const locale = await getRequestSeoLocale();
+        const breadcrumbJsonLd = generatePageBreadcrumbJsonLd(SITE_BASE_URL, pageKey, locale);
+
+        return createElement(
+            Fragment,
+            null,
+            createElement("script", {
+                id: `${PAGE_BREADCRUMB_SCRIPT_PREFIX}-${pageKey}`,
+                type: "application/ld+json",
+                dangerouslySetInnerHTML: { __html: JSON.stringify(breadcrumbJsonLd) },
+            }),
+            render(),
+        );
+    };
+
+    return Object.assign(Page, {
+        generateMetadata: pageMetadata(pageKey),
+    });
+}
+
 export async function createNoIndexPageMetadata(pageKey: SeoPageKey): Promise<Metadata> {
     const locale = await getRequestSeoLocale();
     const page = getPageSeo(pageKey, locale);
     const route = findSeoRouteByPageKey(pageKey);
+    const noIndexRoute = assertNoIndexSeoRoute(route?.path ?? page.path);
 
     return buildLocalizedMetadata({
         locale,
         title: page.title,
         description: page.description,
         keywords: page.keywords,
-        path: route?.path ?? page.path,
+        path: noIndexRoute.path,
         robots: noIndexRobots(),
     });
 }
@@ -184,18 +213,77 @@ export function noIndexPageMetadata(pageKey: SeoPageKey) {
 
 export async function createNoIndexRouteMetadata(path: string, title: string): Promise<Metadata> {
     const locale = await getRequestSeoLocale();
-    const route = findSeoRouteByPath(path);
+    const route = assertNoIndexSeoRoute(findSeoRouteByPath(path)?.path ?? path);
 
     return buildLocalizedMetadata({
         locale,
         title,
-        path: route?.path ?? path,
+        path: route.path,
         robots: noIndexRobots(),
     });
 }
 
 export function noIndexRouteMetadata(path: string, title: string) {
     return () => createNoIndexRouteMetadata(path, title);
+}
+
+export interface DynamicMetadataResultOptions {
+    title: string;
+    descriptionKind: DynamicSeoKind;
+    descriptionValues: Parameters<typeof formatDynamicSeoDescription>[1];
+    images?: string[];
+    twitterCard?: "summary" | "summary_large_image";
+    robots?: Metadata["robots"];
+}
+
+export interface CreateDynamicPageMetadataOptions<TData, TParams extends Record<string, string>> {
+    params: Promise<TParams>;
+    kind: DynamicSeoKind;
+    routePrefix: string;
+    getData: (params: TParams) => TData | null;
+    build: (data: TData, context: { params: TParams; locale: UiLocale; path: string }) => DynamicMetadataResultOptions;
+    fallbackTwitterCard?: "summary" | "summary_large_image";
+}
+
+export async function createDynamicPageMetadata<TData, TParams extends Record<string, string>>({
+    params,
+    kind,
+    routePrefix,
+    getData,
+    build,
+    fallbackTwitterCard,
+}: CreateDynamicPageMetadataOptions<TData, TParams>): Promise<Metadata> {
+    const resolvedParams = await params;
+    const locale = await getRequestSeoLocale();
+    const suffix = Object.values(resolvedParams).map((part) => encodeURIComponent(part)).join("/");
+    const path = normalizeSeoPath(`/${routePrefix.replace(/^\/+|\/+$/g, "")}${suffix ? `/${suffix}` : ""}`);
+    const data = getData(resolvedParams);
+
+    if (!data) {
+        return buildDetailMetadata({
+            locale,
+            title: getDynamicFallbackTitle(kind, locale),
+            description: getDynamicFallbackDescription(kind, locale),
+            path,
+            twitterCard: fallbackTwitterCard,
+        });
+    }
+
+    const result = build(data, { params: resolvedParams, locale, path });
+
+    return buildDetailMetadata({
+        locale,
+        title: result.title || formatDynamicSeoTitle(kind, result.descriptionValues, locale),
+        description: formatDynamicSeoDescription(result.descriptionKind, result.descriptionValues, locale),
+        path,
+        images: result.images,
+        twitterCard: result.twitterCard,
+        robots: result.robots,
+    });
+}
+
+export function dynamicPageMetadata<TData, TParams extends Record<string, string>>(options: Omit<CreateDynamicPageMetadataOptions<TData, TParams>, "params">) {
+    return ({ params }: { params: Promise<TParams> }) => createDynamicPageMetadata({ ...options, params });
 }
 
 export async function createSimpleMetadata(pageKey: SeoPageKey): Promise<Metadata> {

@@ -1,5 +1,5 @@
 import { DEFAULT_UI_LOCALE, type UiLocale } from "@/lib/i18n/locales";
-import { INDEXABLE_SEO_ROUTES } from "@/lib/seo-routes";
+import { INDEXABLE_SEO_ROUTES, findSeoRouteByPageKey } from "@/lib/seo-routes";
 import { getPageSeo, getRootSeo, getSeoLocaleConfig, type SeoPageKey } from "@/lib/seo-keywords";
 
 function absoluteUrl(baseUrl: string, path = "/"): string {
@@ -54,13 +54,14 @@ export function generatePageBreadcrumbJsonLd(
 ) {
     const root = getRootSeo(locale);
     const page = getPageSeo(pageKey, locale);
+    const route = findSeoRouteByPageKey(pageKey);
 
     return {
         "@context": "https://schema.org" as const,
         "@type": "BreadcrumbList" as const,
         itemListElement: [
             listItem(1, root.title, absoluteUrl(baseUrl, "/")),
-            listItem(2, page.title, absoluteUrl(baseUrl, page.path)),
+            listItem(2, page.title, absoluteUrl(baseUrl, route?.path ?? page.path)),
         ],
     };
 }
@@ -73,13 +74,14 @@ export function generateDetailBreadcrumbJsonLd(
 ) {
     const root = getRootSeo(locale);
     const parent = getPageSeo(parentPageKey, locale);
+    const parentRoute = findSeoRouteByPageKey(parentPageKey);
 
     return {
         "@context": "https://schema.org" as const,
         "@type": "BreadcrumbList" as const,
         itemListElement: [
             listItem(1, root.title, absoluteUrl(baseUrl, "/")),
-            listItem(2, parent.title, absoluteUrl(baseUrl, parent.path)),
+            listItem(2, parent.title, absoluteUrl(baseUrl, parentRoute?.path ?? parent.path)),
             listItem(3, detail.name, absoluteUrl(baseUrl, detail.path)),
         ],
     };

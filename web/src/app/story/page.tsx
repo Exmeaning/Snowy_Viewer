@@ -1,8 +1,7 @@
 import StoryIndexClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("story");
+const Page = withPageBreadcrumb("story", () => <StoryIndexClient />);
 
-export default function StoryIndexPage() {
-    return <StoryIndexClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

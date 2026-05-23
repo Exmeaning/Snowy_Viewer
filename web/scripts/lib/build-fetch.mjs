@@ -9,6 +9,10 @@ const DEFAULT_MANGA_DATA_URLS = [
     'https://moe.exmeaning.com/mangas/mangas.json',
 ];
 
+const DEFAULT_GUIDES_DATA_URLS = [
+    'https://moe.exmeaning.com/guides/guides-index.json',
+];
+
 function splitUrlList(value) {
     return String(value || '')
         .split(',')
@@ -42,6 +46,16 @@ export function getConfiguredMangaDataUrls() {
 
     const singleUrl = process.env.MANGA_DATA_URL ? [process.env.MANGA_DATA_URL] : [];
     return unique([...singleUrl, ...DEFAULT_MANGA_DATA_URLS]);
+}
+
+export function getConfiguredGuidesDataUrls() {
+    const explicitList = splitUrlList(process.env.GUIDES_DATA_URLS);
+    if (explicitList.length > 0) {
+        return unique(explicitList);
+    }
+
+    const singleUrl = process.env.GUIDES_DATA_URL ? [process.env.GUIDES_DATA_URL] : [];
+    return unique([...singleUrl, ...DEFAULT_GUIDES_DATA_URLS]);
 }
 
 export function getBuildFetchConcurrency(defaultValue = 3) {
@@ -146,6 +160,10 @@ export async function fetchMasterJson(filename, label = filename, options = {}) 
 
 export async function fetchMangaJson(label = 'mangas', options = {}) {
     return fetchJsonWithFallback(label, getConfiguredMangaDataUrls(), options);
+}
+
+export async function fetchGuidesJson(label = 'guides', options = {}) {
+    return fetchJsonWithFallback(label, getConfiguredGuidesDataUrls(), options);
 }
 
 export function readJsonIfExists(filePath, fallback = null) {

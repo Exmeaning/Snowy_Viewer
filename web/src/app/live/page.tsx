@@ -1,8 +1,7 @@
 import VirtualLiveContent from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("live");
+const Page = withPageBreadcrumb("live", () => <VirtualLiveContent />);
 
-export default function LivePage() {
-    return <VirtualLiveContent />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

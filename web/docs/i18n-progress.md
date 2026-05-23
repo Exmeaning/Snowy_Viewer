@@ -236,10 +236,13 @@ t(`page.honors.filterTitle.${activeTab}`)
 - `src/lib/seo-keywords.ts` 新增 ja-JP 核心页面 SEO 文案：about / cards / music / events / gacha / character / story。
 - 继续补齐第二批 ja-JP 核心页面 SEO 文案：soundtrack / music meta / comic / costumes / exchanges / manga / materials / honors / live / sticker / mysekai；这些仍属于 server-side SEO 配置，不进入客户端 UI 字典。
 - 继续补齐第三批 ja-JP 页面级 SEO 文案：prediction、deck recommend / comparator、chart preview、MySekai preview 子页、个人数据页、profile、score control、sticker maker、realtime ranking、guess games、goods gacha、patreon、privacy、terms 与 breadcrumb 汇总页。
+- 继续补齐第四批 ja-JP server-side SEO 文案：剧情子页面、剧情 reader fallback、guides / guides detail、OAuth flow 与 blank；这些仍属于 `seo-keywords.ts` server-safe SEO 配置，不进入客户端 UI 字典。
 - `src/lib/seo-detail-metadata.ts` 集中十类动态详情页 metadata presets，并升级为 `defineXxxDetailPage()` 工厂；页面文件重复 SEO boilerplate 进一步降低，同时保留详情模板按 cookie/Accept-Language 输出。
-- `src/lib/seo-metadata.ts` 的页面 canonical/noindex path 更靠近 route registry，动态详情 canonical 统一使用 `normalizeSeoPath()`，仍不输出 hreflang / sitemap alternate links。
-- `src/lib/structured-data.ts` 承接 Root JSON-LD 与结构化数据 helper，并在硬编码中文扫描中作为 SEO/Project SEKAI 别名边界单独 allowlist；Root 本轮新增 registry-backed 站点导航 `ItemList`，详情页本轮开始自动输出 `BreadcrumbList` JSON-LD。
-- `src/app/design-system/page.tsx` 拆为 server metadata wrapper，原演示内容迁到 `src/app/design-system/client.tsx`，allowlist 路径同步调整；本轮 `/design-system` 与 `/leave` 改为 registry-backed `noIndexRouteMetadata()`。
+- 新增 `src/lib/seo-dynamic-metadata.ts` 与 `dynamicPageMetadata()`，`/guides/[id]` 从 `metadata-map.json` 读取攻略标题、分类与标签生成 localized metadata；仍使用 cookie / Accept-Language locale，不输出 hreflang。
+- `src/lib/seo-metadata.ts` 的页面 canonical/noindex path 更靠近 route registry，动态详情 canonical 统一使用 `normalizeSeoPath()`；`noIndexPageMetadata()` / `noIndexRouteMetadata()` 本轮进一步强制校验 route registry 的 noindex 状态，仍不输出 hreflang / sitemap alternate links。
+- `src/lib/structured-data.ts` 承接 Root JSON-LD 与结构化数据 helper，并在硬编码中文扫描中作为 SEO/Project SEKAI 别名边界单独 allowlist；Root 已新增 registry-backed 站点导航 `ItemList`，详情页自动输出 `BreadcrumbList` JSON-LD，本轮核心入口页也通过 `withPageBreadcrumb()` 输出 registry-aware `BreadcrumbList`。
+- `scripts/generate-sitemaps.mjs` 与 `scripts/generate-metadata-map.mjs` 本轮接入 guides 索引：detail sitemap 新增 1 条 `/guides/.../`，metadata map 新增 `guides: 1`。
+- `src/app/design-system/page.tsx` 拆为 server metadata wrapper，原演示内容迁到 `src/app/design-system/client.tsx`，allowlist 路径同步调整；`/design-system` 与 `/leave` 已改为 registry-backed `noIndexRouteMetadata()`。
 - 本轮 `npm run lint:i18n --prefix web`、`npm run lint:i18n-usage --prefix web`、`npm run lint --prefix web`、`npm run sitemap --prefix web`、`npm run generate:metadata --prefix web` 与 `npm run build:next --prefix web` 均通过；`lint` 仍仅有既有 soundtrack hook dependency warning。
 
 ## 7. 工具层与枚举 label 规范

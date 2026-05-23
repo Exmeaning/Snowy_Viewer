@@ -1,7 +1,7 @@
 import GuideDetailClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { guideDetailMetadata } from "@/lib/seo-dynamic-metadata";
 
-export const generateMetadata = pageMetadata("guides_detail");
+export const generateMetadata = guideDetailMetadata;
 
 export default function GuideDetailPage() {
     return <GuideDetailClient />;

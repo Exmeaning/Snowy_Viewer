@@ -1,8 +1,7 @@
 import CharacterListContent from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("character");
+const Page = withPageBreadcrumb("character", () => <CharacterListContent />);
 
-export default function CharacterPage() {
-    return <CharacterListContent />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

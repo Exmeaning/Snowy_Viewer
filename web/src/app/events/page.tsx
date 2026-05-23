@@ -1,8 +1,7 @@
 import EventsContent from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { withPageBreadcrumb } from "@/lib/seo-metadata";
 
-export const generateMetadata = pageMetadata("events");
+const Page = withPageBreadcrumb("events", () => <EventsContent />);
 
-export default function EventsPage() {
-    return <EventsContent />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;
