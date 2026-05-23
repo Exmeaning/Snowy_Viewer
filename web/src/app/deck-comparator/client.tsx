@@ -246,7 +246,7 @@ export default function DeckComparatorClient() {
                 </div>
 
                 {/* Mobile Info */}
-                <div className="dc-mobile-info glass-card p-3 rounded-xl mb-6 flex items-center gap-2 text-sm text-blue-700 bg-blue-50/80 border border-blue-200/50">
+                <div className="dc-mobile-info ios-glass-card p-3 rounded-xl mb-6 flex items-center gap-2 text-sm text-blue-700 bg-blue-50/80 border border-blue-200/50">
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -254,7 +254,7 @@ export default function DeckComparatorClient() {
                 </div>
 
                 {/* Input Form */}
-                <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6">
+                <div className="ios-glass-card p-5 sm:p-6 rounded-2xl mb-6">
                     <h2 className="text-lg font-bold text-primary-text mb-4 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-miku rounded-full"></span>
                         {t("page.deckComparator.musicAndDifficulty")}
@@ -296,7 +296,7 @@ export default function DeckComparatorClient() {
                                             onClick={() => setDifficulty(d.value)}
                                             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all shadow-md ${difficulty === d.value
                                                 ? activeClass
-                                                : "bg-slate-100 text-slate-600 hover:bg-slate-200 shadow-none"
+                                                : "ios-glass-tab text-slate-600 hover:bg-white/60 shadow-none"
                                                 }`}
                                         >
                                             {t(d.labelKey)}
@@ -309,7 +309,7 @@ export default function DeckComparatorClient() {
                 </div>
 
                 {/* User Config */}
-                <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6">
+                <div className="ios-glass-panel p-5 sm:p-6 rounded-2xl mb-6">
                     <h2 className="text-lg font-bold text-primary-text mb-4 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-miku rounded-full"></span>
                         {t("page.deckComparator.playerConfig")}
@@ -326,7 +326,7 @@ export default function DeckComparatorClient() {
                                 value={userPower}
                                 onChange={(e) => setUserPower(Number(e.target.value))}
                                 placeholder="280000"
-                                className="dc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                className="dc-number-input ios-glass-input w-full px-4 py-2.5 rounded-lg transition-all text-sm"
                             />
                         </div>
                         <div>
@@ -338,7 +338,7 @@ export default function DeckComparatorClient() {
                                 value={userEffectiveness}
                                 onChange={(e) => setUserEffectiveness(Number(e.target.value))}
                                 placeholder="250"
-                                className="dc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                className="dc-number-input ios-glass-input w-full px-4 py-2.5 rounded-lg transition-all text-sm"
                             />
                         </div>
                         <div>
@@ -350,7 +350,7 @@ export default function DeckComparatorClient() {
                                 value={deckBonus}
                                 onChange={(e) => setDeckBonus(Number(e.target.value))}
                                 placeholder="150"
-                                className="dc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                className="dc-number-input ios-glass-input w-full px-4 py-2.5 rounded-lg transition-all text-sm"
                             />
                             <p className="mt-1 text-xs text-slate-400">{t("page.deckComparator.deckBonusHint")}</p>
                         </div>
@@ -383,7 +383,7 @@ export default function DeckComparatorClient() {
                                         type="number"
                                         value={teammatePower}
                                         onChange={(e) => setTeammatePower(Number(e.target.value))}
-                                        className="dc-number-input w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                        className="dc-number-input ios-glass-input w-full px-3 py-2 rounded-lg transition-all text-sm"
                                     />
                                 </div>
                                 <div>
@@ -392,14 +392,14 @@ export default function DeckComparatorClient() {
                                         type="number"
                                         value={teammateEffectiveness}
                                         onChange={(e) => setTeammateEffectiveness(Number(e.target.value))}
-                                        className="dc-number-input w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                        className="dc-number-input ios-glass-input w-full px-3 py-2 rounded-lg transition-all text-sm"
                                     />
                                 </div>
                             </div>
                         ) : (
                             <div className="space-y-2">
                                 {teammates.map((tm, i) => (
-                                    <div key={i} className="dc-teammate-row grid grid-cols-[auto_1fr_1fr] gap-2 items-center p-2 rounded-lg">
+                                    <div key={i} className="dc-teammate-row grid grid-cols-[auto_1fr_1fr] gap-2 items-center p-2 rounded-lg border border-slate-200/20 bg-white/10 dark:bg-slate-900/10 backdrop-blur-md">
                                         <span className="text-xs font-bold text-slate-400 w-6 text-center">
                                             P{i + 2}
                                         </span>
@@ -408,14 +408,14 @@ export default function DeckComparatorClient() {
                                             value={tm.power}
                                             onChange={(e) => updateTeammate(i, 'power', Number(e.target.value))}
                                             placeholder={t("page.deckComparator.powerPlaceholder")}
-                                            className="dc-number-input w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                            className="dc-number-input ios-glass-input w-full px-3 py-1.5 rounded-lg transition-all text-sm"
                                         />
                                         <input
                                             type="number"
                                             value={tm.effectiveness}
                                             onChange={(e) => updateTeammate(i, 'effectiveness', Number(e.target.value))}
                                             placeholder={t("page.deckComparator.effectivenessPlaceholder")}
-                                            className="dc-number-input w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                            className="dc-number-input ios-glass-input w-full px-3 py-1.5 rounded-lg transition-all text-sm"
                                         />
                                     </div>
                                 ))}
@@ -431,8 +431,8 @@ export default function DeckComparatorClient() {
                                 <button
                                     onClick={() => setSkill6Mode(Skill6Mode.TEAM_AVERAGE)}
                                     className={`flex-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ${skill6Mode === Skill6Mode.TEAM_AVERAGE
-                                        ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20"
-                                        : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"
+                                        ? "ios-glass-tab-active text-white shadow-lg shadow-miku/20"
+                                        : "ios-glass-tab text-slate-600 hover:bg-white/60 border border-slate-200/50"
                                         }`}
                                 >
                                     {t("page.deckComparator.skill6Modes.teamAverage")}
@@ -440,8 +440,8 @@ export default function DeckComparatorClient() {
                                 <button
                                     onClick={() => setSkill6Mode(Skill6Mode.HIGHEST_POWER)}
                                     className={`flex-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ${skill6Mode === Skill6Mode.HIGHEST_POWER
-                                        ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20"
-                                        : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"
+                                        ? "ios-glass-tab-active text-white shadow-lg shadow-miku/20"
+                                        : "ios-glass-tab text-slate-600 hover:bg-white/60 border border-slate-200/50"
                                         }`}
                                 >
                                     {t("page.deckComparator.skill6Modes.highestPower")}
@@ -460,8 +460,8 @@ export default function DeckComparatorClient() {
                                         key={s.value}
                                         onClick={() => setSkill15Strategy(s.value)}
                                         className={`flex-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ${skill15Strategy === s.value
-                                            ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20"
-                                            : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"
+                                            ? "ios-glass-tab-active text-white shadow-lg shadow-miku/20"
+                                            : "ios-glass-tab text-slate-600 hover:bg-white/60 border border-slate-200/50"
                                             }`}
                                     >
                                         {t(s.labelKey)}
@@ -484,7 +484,7 @@ export default function DeckComparatorClient() {
                                     min={0}
                                     max={10}
                                     onChange={(e) => setFires(Math.min(10, Math.max(0, Number(e.target.value) || 0)))}
-                                    className="dc-number-input w-24 px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                    className="dc-number-input ios-glass-input w-24 px-3 py-2 rounded-lg transition-all text-sm"
                                 />
                                 <span className="text-sm text-slate-500">
                                     {t("page.deckComparator.currentMultiplier", { rate: getBoostRate(fires) })}
@@ -497,7 +497,7 @@ export default function DeckComparatorClient() {
                     <button
                         onClick={handleCalculate}
                         disabled={!selectedMeta}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold shadow-lg shadow-miku/20 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full px-6 py-3 ios-glass-btn ios-glass-btn-primary rounded-xl font-bold shadow-lg shadow-miku/20 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -508,19 +508,19 @@ export default function DeckComparatorClient() {
 
                 {/* Error Display */}
                 {error && (
-                    <div className="glass-card p-4 rounded-2xl mb-6 bg-red-50/80 border border-red-200/50">
+                    <div className="ios-glass-card p-4 rounded-2xl mb-6 border border-red-500/20 bg-red-500/5 backdrop-blur-md">
                         <div className="flex items-start gap-3">
                             <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <p className="text-sm font-medium text-red-700">{error}</p>
+                            <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
                         </div>
                     </div>
                 )}
 
                 {/* Results */}
                 {result && (
-                    <div className="dc-score-enter glass-card p-5 sm:p-6 rounded-2xl mb-6">
+                    <div className="dc-score-enter ios-glass-card p-5 sm:p-6 rounded-2xl mb-6">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                                 <span className="w-1.5 h-6 bg-miku rounded-full"></span>
@@ -528,7 +528,7 @@ export default function DeckComparatorClient() {
                             </h2>
                             <button
                                 onClick={handleSaveHistory}
-                                className="px-3 py-1.5 bg-miku/10 text-miku text-xs font-bold rounded-lg hover:bg-miku/20 active:scale-95 transition-all flex items-center gap-1.5"
+                                className="px-3 py-1.5 ios-glass-btn text-miku text-xs font-bold rounded-lg hover:bg-miku/10 active:scale-95 transition-all flex items-center gap-1.5"
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
@@ -539,7 +539,7 @@ export default function DeckComparatorClient() {
 
                         {/* Main PT */}
                         {ptResult && (
-                            <div className="text-center mb-6 pb-6 border-b border-slate-100">
+                            <div className="text-center mb-6 pb-6 border-b border-slate-200/20">
                                 <div className="text-xs text-slate-400 uppercase tracking-widest mb-1">{t("page.deckComparator.result.eventPt")}</div>
                                 <div className="text-5xl sm:text-6xl font-black bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent font-mono">
                                     {formatNumber(ptResult.pt)}
@@ -613,7 +613,7 @@ export default function DeckComparatorClient() {
                                 { label: t("page.deckComparator.result.skill6"), value: result.skill6Part, color: breakdownColors.skill6 },
                                 { label: t("page.deckComparator.result.activeBonus"), value: result.activeBonus, color: breakdownColors.active },
                             ].map((item) => (
-                                <div key={item.label} className="dc-result-card rounded-xl p-3 border border-slate-100">
+                                <div key={item.label} className="ios-glass-card rounded-xl p-3 border border-slate-200/10">
                                     <div className="flex items-center gap-1.5 mb-1">
                                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
                                         <span className="text-xs text-slate-500">{item.label}</span>
@@ -627,19 +627,19 @@ export default function DeckComparatorClient() {
 
                         {/* Additional Info */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-                            <div className="dc-result-card rounded-xl p-3 border border-slate-100">
+                            <div className="ios-glass-card rounded-xl p-3 border border-slate-200/10">
                                 <div className="text-xs text-slate-500 mb-1">{t("page.deckComparator.result.totalPower")}</div>
                                 <div className="text-sm font-bold text-primary-text font-mono">
                                     {formatNumber(result.totalPower)}
                                 </div>
                             </div>
-                            <div className="dc-result-card rounded-xl p-3 border border-slate-100">
+                            <div className="ios-glass-card rounded-xl p-3 border border-slate-200/10">
                                 <div className="text-xs text-slate-500 mb-1">{t("page.deckComparator.result.skill6Effectiveness")}</div>
                                 <div className="text-sm font-bold text-primary-text font-mono">
                                     {result.skill6Effectiveness.toFixed(1)}%
                                 </div>
                             </div>
-                            <div className="dc-result-card rounded-xl p-3 border border-slate-100 col-span-2 sm:col-span-1">
+                            <div className="ios-glass-card rounded-xl p-3 border border-slate-200/10 col-span-2 sm:col-span-1">
                                 <div className="text-xs text-slate-500 mb-1">{t("page.deckComparator.result.fluctuationRange")}</div>
                                 <div className="text-sm font-bold text-primary-text font-mono">
                                     ±{formatNumber((result.details.scoreBest - result.details.scoreWorst) / 2)}
@@ -649,15 +649,15 @@ export default function DeckComparatorClient() {
 
                         {/* Best / Worst Reference */}
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="dc-result-card rounded-xl p-3 border border-emerald-100 bg-emerald-50/50">
-                                <div className="text-xs text-emerald-600 mb-1">{t("page.deckComparator.result.bestScore")}</div>
-                                <div className="text-sm font-bold text-emerald-700 font-mono">
+                            <div className="ios-glass-card rounded-xl p-3 border border-emerald-500/15 bg-emerald-500/5">
+                                <div className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">{t("page.deckComparator.result.bestScore")}</div>
+                                <div className="text-sm font-bold text-emerald-700 dark:text-emerald-300 font-mono">
                                     {formatNumber(result.details.scoreBest)}
                                 </div>
                             </div>
-                            <div className="dc-result-card rounded-xl p-3 border border-red-100 bg-red-50/50">
-                                <div className="text-xs text-red-500 mb-1">{t("page.deckComparator.result.worstScore")}</div>
-                                <div className="text-sm font-bold text-red-600 font-mono">
+                            <div className="ios-glass-card rounded-xl p-3 border border-red-500/15 bg-red-500/5">
+                                <div className="text-xs text-red-500 dark:text-red-400 mb-1">{t("page.deckComparator.result.worstScore")}</div>
+                                <div className="text-sm font-bold text-red-600 dark:text-red-300 font-mono">
                                     {formatNumber(result.details.scoreWorst)}
                                 </div>
                             </div>
@@ -667,7 +667,7 @@ export default function DeckComparatorClient() {
 
                 {/* History List */}
                 {history.length > 0 && (
-                    <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6">
+                    <div className="ios-glass-card p-5 sm:p-6 rounded-2xl mb-6">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
                                 <span className="w-1.5 h-6 bg-slate-400 rounded-full"></span>
@@ -680,17 +680,17 @@ export default function DeckComparatorClient() {
 
                         <div className="space-y-3">
                             {history.map((item) => (
-                                <div key={item.id} className="relative group bg-white border border-slate-100 rounded-xl p-3 flex items-center gap-3 hover:shadow-md transition-all">
+                                <div key={item.id} className="relative group ios-glass-panel rounded-xl p-3 flex items-center gap-3 hover:shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all">
                                     {/* Song Info */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-baseline gap-2 mb-1">
-                                            <span className="text-sm font-bold text-slate-700 truncate">
+                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
                                                 {item.musicTitle}
                                             </span>
-                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${item.difficulty === 'master' ? 'bg-purple-100 text-purple-600' :
-                                                    item.difficulty === 'expert' ? 'bg-red-100 text-red-600' :
-                                                        item.difficulty === 'append' ? 'bg-fuchsia-100 text-fuchsia-600' :
-                                                            'bg-slate-100 text-slate-500'
+                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${item.difficulty === 'master' ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400' :
+                                                    item.difficulty === 'expert' ? 'bg-red-500/15 text-red-600 dark:text-red-400' :
+                                                        item.difficulty === 'append' ? 'bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400' :
+                                                            'bg-slate-500/15 text-slate-600 dark:text-slate-400'
                                                 }`}>
                                                 {item.difficulty}
                                             </span>
@@ -719,7 +719,7 @@ export default function DeckComparatorClient() {
                                     {/* Delete Button */}
                                     <button
                                         onClick={() => handleDeleteHistory(item.id)}
-                                        className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all shadow-sm hover:bg-red-200 hover:scale-110"
+                                        className="absolute -top-2 -right-2 bg-red-100 dark:bg-red-950/80 text-red-500 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all shadow-sm hover:bg-red-200 dark:hover:bg-red-900 hover:scale-110"
                                         title={t("page.deckComparator.deleteHistory")}
                                     >
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -498,7 +498,7 @@ export default function StickerMakerContent() {
                         {/* Left Sidebar: Filters & Selection */}
                         <div className="w-full lg:w-96 flex-shrink-0 space-y-6">
                             {/* Unit Filter */}
-                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100">
+                            <div className="ios-glass-card p-5 rounded-2xl">
                                 <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">{t("page.stickerMaker.sections.unitFilter")}</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {UNIT_DATA.map(unit => {
@@ -509,8 +509,8 @@ export default function StickerMakerContent() {
                                                 key={unit.id}
                                                 onClick={() => handleUnitClick(unit.id)}
                                                 className={`p-1.5 rounded-xl transition-all ${selectedUnitIds.includes(unit.id)
-                                                    ? "ring-2 ring-miku shadow-lg bg-white"
-                                                    : "hover:bg-slate-100/50 border border-transparent"
+                                                    ? "ring-2 ring-miku shadow-lg bg-white/20 dark:bg-white/10"
+                                                    : "hover:bg-slate-100/50 dark:hover:bg-slate-800/50 border border-transparent"
                                                     }`}
                                                 title={unitLabel}
                                             >
@@ -530,7 +530,7 @@ export default function StickerMakerContent() {
                             </div>
 
                             {/* Character Filter */}
-                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100">
+                            <div className="ios-glass-card p-5 rounded-2xl">
                                 <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">{t("page.stickerMaker.sections.characterSelect")}</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {availableCharacterIds.map(charId => {
@@ -545,7 +545,7 @@ export default function StickerMakerContent() {
                                                     }`}
                                                 title={characterName}
                                             >
-                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
+                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100/30">
                                                     <NextImage
                                                         src={getCharacterIconUrl(charId)}
                                                         alt={characterName}
@@ -561,70 +561,70 @@ export default function StickerMakerContent() {
                                 </div>
                             </div>
 
-                            {/* Sticker Grid */}
-                            {selectedCharacterId && (
-                                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100">
-                                    <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">
-                                        {t("page.stickerMaker.sections.stickerSelect", { count: formatNumber(filteredStickers.length) })}
-                                    </h3>
-                                    <div className="max-h-[400px] overflow-y-auto pr-1 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {/* Custom Upload Button */}
-                                            <button
-                                                onClick={() => stickerFileInputRef.current?.click()}
-                                                className="relative rounded-lg overflow-hidden transition-all border-2 border-dashed border-slate-300 hover:border-miku hover:bg-white flex flex-col items-center justify-center gap-1 aspect-[296/256] text-slate-400 hover:text-miku"
-                                                title={t("page.stickerMaker.uploadCustomImageTitle")}
-                                            >
-                                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                                </svg>
-                                                <span className="text-xs font-bold">{t("page.stickerMaker.uploadImage")}</span>
-                                            </button>
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                ref={stickerFileInputRef}
-                                                className="hidden"
-                                                onChange={handleStickerUpload}
-                                            />
-
-                                            {filteredStickers.map((sticker) => (
-                                                <button
-                                                    key={sticker.id}
-                                                    onClick={() => handleStickerClick(sticker)}
-                                                    className={`relative rounded-lg overflow-hidden transition-all border-2 ${selectedSticker?.id === sticker.id
-                                                        ? "border-miku shadow-md"
-                                                        : "border-transparent hover:border-slate-200"
-                                                        }`}
-                                                >
-                                                    <img
-                                                        src={`/sticker-maker/img/${sticker.img}`}
-                                                        alt={sticker.name}
-                                                        loading="lazy"
-                                                        className="w-full aspect-[296/256] object-contain bg-slate-50/50"
-                                                    />
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Right Area: Editor */}
-                        <div className="flex-1" ref={editorRef}>
-                            {!selectedSticker ? (
-                                <div className="h-full min-h-[400px] flex flex-col items-center justify-center text-slate-400 bg-white/80 backdrop-blur-sm rounded-3xl border border-slate-100 shadow-sm border-dashed">
-                                    <div className="w-16 h-16 mb-4 opacity-20">
-                                        <svg fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-                                        </svg>
-                                    </div>
-                                    <p className="text-lg font-medium">{t("page.stickerMaker.emptyTitle")}</p>
-                                    <p className="text-sm mt-1">{t("page.stickerMaker.emptyDescription")}</p>
-                                </div>
-                            ) : (
-                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 lg:p-8 shadow-sm border border-slate-100 sticker-editor-container grid grid-cols-1 md:grid-cols-2 gap-6">
+                             {/* Sticker Grid */}
+                             {selectedCharacterId && (
+                                 <div className="ios-glass-card p-5 rounded-2xl">
+                                     <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">
+                                         {t("page.stickerMaker.sections.stickerSelect", { count: formatNumber(filteredStickers.length) })}
+                                     </h3>
+                                     <div className="max-h-[400px] overflow-y-auto pr-1 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+                                         <div className="grid grid-cols-3 gap-2">
+                                             {/* Custom Upload Button */}
+                                             <button
+                                                 onClick={() => stickerFileInputRef.current?.click()}
+                                                 className="relative rounded-lg overflow-hidden transition-all border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-miku hover:bg-white/10 flex flex-col items-center justify-center gap-1 aspect-[296/256] text-slate-400 hover:text-miku"
+                                                 title={t("page.stickerMaker.uploadCustomImageTitle")}
+                                             >
+                                                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                                 </svg>
+                                                 <span className="text-xs font-bold">{t("page.stickerMaker.uploadImage")}</span>
+                                             </button>
+                                             <input
+                                                 type="file"
+                                                 accept="image/*"
+                                                 ref={stickerFileInputRef}
+                                                 className="hidden"
+                                                 onChange={handleStickerUpload}
+                                             />
+ 
+                                             {filteredStickers.map((sticker) => (
+                                                 <button
+                                                     key={sticker.id}
+                                                     onClick={() => handleStickerClick(sticker)}
+                                                     className={`relative rounded-lg overflow-hidden transition-all border-2 ${selectedSticker?.id === sticker.id
+                                                         ? "border-miku shadow-md"
+                                                         : "border-transparent hover:border-slate-200/50"
+                                                         }`}
+                                                 >
+                                                     <img
+                                                         src={`/sticker-maker/img/${sticker.img}`}
+                                                         alt={sticker.name}
+                                                         loading="lazy"
+                                                         className="w-full aspect-[296/256] object-contain bg-slate-50/10"
+                                                     />
+                                                 </button>
+                                             ))}
+                                         </div>
+                                     </div>
+                                 </div>
+                             )}
+                         </div>
+ 
+                         {/* Right Area: Editor */}
+                         <div className="flex-1" ref={editorRef}>
+                             {!selectedSticker ? (
+                                 <div className="h-full min-h-[400px] flex flex-col items-center justify-center text-slate-400 ios-glass-card border-dashed p-8 rounded-3xl">
+                                     <div className="w-16 h-16 mb-4 opacity-20">
+                                         <svg fill="currentColor" viewBox="0 0 24 24">
+                                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                                         </svg>
+                                     </div>
+                                     <p className="text-lg font-medium">{t("page.stickerMaker.emptyTitle")}</p>
+                                     <p className="text-sm mt-1">{t("page.stickerMaker.emptyDescription")}</p>
+                                 </div>
+                             ) : (
+                                 <div className="ios-glass-card rounded-3xl p-6 lg:p-8 sticker-editor-container grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Canvas Area */}
                                     <div className="flex flex-col items-center gap-6 order-2 md:order-1 md:col-span-2 mt-4 md:mt-0 mb-4 md:mb-8">
                                         <div className="relative group">
@@ -642,112 +642,112 @@ export default function StickerMakerContent() {
                                                     />
                                                 </div>
 
-                                                {/* Vertical Y Control */}
-                                                <div className="h-[256px] py-4 bg-slate-50 rounded-full w-8 flex justify-center border border-slate-100">
-                                                    <input
-                                                        type="range"
-                                                        min={0}
-                                                        max={256}
-                                                        step={1}
-                                                        value={curve ? 256 - position.y + fontSize * 3 : 256 - position.y}
-                                                        onChange={(e) =>
-                                                            setPosition({
-                                                                ...position,
-                                                                y: curve
-                                                                    ? 256 + fontSize * 3 - Number(e.target.value)
-                                                                    : 256 - Number(e.target.value),
-                                                            })
-                                                        }
-                                                        onPointerDown={() => {
-                                                            if (document.activeElement instanceof HTMLElement) {
-                                                                document.activeElement.blur();
-                                                            }
-                                                        }}
-                                                        className="h-full accent-miku cursor-pointer w-2"
-                                                        style={{
-                                                            writingMode: "vertical-lr",
-                                                            direction: "rtl",
-                                                            WebkitAppearance: "slider-vertical",
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            {/* Horizontal X Control */}
-                                            <div className="mt-4 w-[296px]">
-                                                <input
-                                                    type="range"
-                                                    min={0}
-                                                    max={296}
-                                                    step={1}
-                                                    value={position.x}
-                                                    onChange={(e) =>
-                                                        setPosition({ ...position, x: Number(e.target.value) })
-                                                    }
-                                                    onPointerDown={() => {
-                                                        if (document.activeElement instanceof HTMLElement) {
-                                                            document.activeElement.blur();
-                                                        }
-                                                    }}
-                                                    className="w-full h-2 bg-slate-200 rounded-full appearance-none cursor-pointer accent-miku"
-                                                />
-                                            </div>
+                                                 {/* Vertical Y Control */}
+                                                 <div className="h-[256px] py-4 ios-glass-panel rounded-full w-8 flex justify-center">
+                                                     <input
+                                                         type="range"
+                                                         min={0}
+                                                         max={256}
+                                                         step={1}
+                                                         value={curve ? 256 - position.y + fontSize * 3 : 256 - position.y}
+                                                         onChange={(e) =>
+                                                             setPosition({
+                                                                 ...position,
+                                                                 y: curve
+                                                                     ? 256 + fontSize * 3 - Number(e.target.value)
+                                                                     : 256 - Number(e.target.value),
+                                                             })
+                                                         }
+                                                         onPointerDown={() => {
+                                                             if (document.activeElement instanceof HTMLElement) {
+                                                                 document.activeElement.blur();
+                                                             }
+                                                         }}
+                                                         className="h-full accent-miku cursor-pointer w-2"
+                                                         style={{
+                                                             writingMode: "vertical-lr",
+                                                             direction: "rtl",
+                                                             WebkitAppearance: "slider-vertical",
+                                                         }}
+                                                     />
+                                                 </div>
+                                             </div>
+ 
+                                             {/* Horizontal X Control */}
+                                             <div className="mt-4 w-[296px]">
+                                                 <input
+                                                     type="range"
+                                                     min={0}
+                                                     max={296}
+                                                     step={1}
+                                                     value={position.x}
+                                                     onChange={(e) =>
+                                                         setPosition({ ...position, x: Number(e.target.value) })
+                                                     }
+                                                     onPointerDown={() => {
+                                                         if (document.activeElement instanceof HTMLElement) {
+                                                             document.activeElement.blur();
+                                                         }
+                                                     }}
+                                                     className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full appearance-none cursor-pointer accent-miku"
+                                                 />
+                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Text & Font Controls */}
                                     <div className="space-y-4 order-1 md:order-2">
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 mb-2">
-                                                {t("page.stickerMaker.textContent")}
-                                            </label>
-                                            <textarea
-                                                value={text}
-                                                onChange={(e) => setText(e.target.value)}
-                                                rows={3}
-                                                className="w-full px-4 py-3 text-base border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-miku/30 focus:border-miku resize-none bg-slate-50"
-                                                placeholder={t("page.stickerMaker.textPlaceholder")}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 mb-2">
-                                                {t("page.stickerMaker.fontSelect")}
-                                            </label>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {allFonts.map(font => (
-                                                    <button
-                                                        key={font.name}
-                                                        onClick={() => setFontFamily(font.name)}
-                                                        className={`px-3 py-2 text-sm rounded-lg border transition-all truncate ${fontFamily === font.name
-                                                            ? "border-miku bg-miku/5 text-miku font-bold"
-                                                            : "border-slate-200 hover:border-slate-300 text-slate-600"
-                                                            }`}
-                                                        title={font.labelKey ? t(font.labelKey) : font.label}
-                                                    >
-                                                        {font.labelKey ? t(font.labelKey) : font.label}
-                                                    </button>
-                                                ))}
-
-                                                {/* Custom Font Upload Button */}
-                                                <button
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                    className="px-3 py-2 text-sm rounded-lg border border-dashed border-slate-300 text-slate-500 hover:border-miku hover:text-miku hover:bg-white transition-all flex items-center justify-center gap-1"
-                                                >
-                                                    <span className="text-lg">+</span> {t("page.stickerMaker.customFont")}
-                                                </button>
-                                                <input
-                                                    type="file"
-                                                    accept=".ttf,.otf,.woff,.woff2"
-                                                    ref={fileInputRef}
-                                                    className="hidden"
-                                                    onChange={handleFontUpload}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Param Sliders */}
-                                    <div className="space-y-5 bg-slate-50 p-5 rounded-xl border border-slate-100 order-3 md:order-3">
+                                         <div>
+                                             <label className="block text-xs font-bold text-slate-500 mb-2">
+                                                 {t("page.stickerMaker.textContent")}
+                                             </label>
+                                             <textarea
+                                                 value={text}
+                                                 onChange={(e) => setText(e.target.value)}
+                                                 rows={3}
+                                                 className="w-full px-4 py-3 text-base ios-glass-input rounded-xl focus:outline-none focus:ring-2 focus:ring-miku/30 resize-none"
+                                                 placeholder={t("page.stickerMaker.textPlaceholder")}
+                                             />
+                                         </div>
+                                         <div>
+                                             <label className="block text-xs font-bold text-slate-500 mb-2">
+                                                 {t("page.stickerMaker.fontSelect")}
+                                             </label>
+                                             <div className="grid grid-cols-2 gap-2">
+                                                 {allFonts.map(font => (
+                                                     <button
+                                                         key={font.name}
+                                                         onClick={() => setFontFamily(font.name)}
+                                                         className={`px-3 py-2 text-sm rounded-lg border transition-all truncate ${fontFamily === font.name
+                                                             ? "ios-glass-tab-active text-miku font-bold"
+                                                             : "ios-glass-tab text-slate-600 hover:bg-white/60"
+                                                             }`}
+                                                         title={font.labelKey ? t(font.labelKey) : font.label}
+                                                     >
+                                                         {font.labelKey ? t(font.labelKey) : font.label}
+                                                     </button>
+                                                 ))}
+ 
+                                                 {/* Custom Font Upload Button */}
+                                                 <button
+                                                     onClick={() => fileInputRef.current?.click()}
+                                                     className="px-3 py-2 text-sm rounded-lg border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-miku hover:text-miku hover:bg-white/10 transition-all flex items-center justify-center gap-1"
+                                                 >
+                                                     <span className="text-lg">+</span> {t("page.stickerMaker.customFont")}
+                                                 </button>
+                                                 <input
+                                                     type="file"
+                                                     accept=".ttf,.otf,.woff,.woff2"
+                                                     ref={fileInputRef}
+                                                     className="hidden"
+                                                     onChange={handleFontUpload}
+                                                 />
+                                             </div>
+                                         </div>
+                                     </div>
+ 
+                                     {/* Param Sliders */}
+                                     <div className="space-y-5 ios-glass-panel p-5 rounded-xl order-3 md:order-3">
                                         <RangeSlider
                                             label={t("page.stickerMaker.sliders.rotate")}
                                             value={rotate}
@@ -823,57 +823,57 @@ export default function StickerMakerContent() {
                                             )}
                                         </div>
 
-                                        <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-                                            <span className="text-xs font-bold text-slate-500">
-                                                {t("page.stickerMaker.backgroundColor")}
-                                            </span>
-                                            <div className="flex bg-slate-200 rounded-lg p-1 gap-1">
-                                                <button
-                                                    onClick={() => setBgColor("transparent")}
-                                                    className={`px-3 py-1 text-xs rounded-md transition-all ${bgColor === "transparent"
-                                                        ? "bg-white text-slate-700 shadow-sm font-bold"
-                                                        : "text-slate-500 hover:text-slate-700"
-                                                        }`}
-                                                >
-                                                    {t("page.stickerMaker.transparent")}
-                                                </button>
-                                                <button
-                                                    onClick={() => setBgColor("white")}
-                                                    className={`px-3 py-1 text-xs rounded-md transition-all ${bgColor === "white"
-                                                        ? "bg-white text-slate-700 shadow-sm font-bold"
-                                                        : "text-slate-500 hover:text-slate-700"
-                                                        }`}
-                                                >
-                                                    {t("page.stickerMaker.white")}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action Buttons */}
-                                    <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-slate-100 order-4 md:order-4 md:col-span-2">
-                                        <button
-                                            onClick={handleCopy}
-                                            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 hover:border-miku hover:text-miku transition-all shadow-sm"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                            </svg>
-                                            {copied ? t("page.stickerMaker.copied") : t("page.stickerMaker.copyImage")}
-                                        </button>
-
-                                        <button
-                                            onClick={handleDownload}
-                                            className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                            </svg>
-                                            {t("page.stickerMaker.downloadImage")}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                                         <div className="flex items-center justify-between pt-2 border-t border-slate-200/20">
+                                             <span className="text-xs font-bold text-slate-500">
+                                                 {t("page.stickerMaker.backgroundColor")}
+                                             </span>
+                                             <div className="flex ios-glass-panel rounded-lg p-1 gap-1">
+                                                 <button
+                                                     onClick={() => setBgColor("transparent")}
+                                                     className={`px-3 py-1 text-xs rounded-md transition-all ${bgColor === "transparent"
+                                                         ? "ios-glass-tab-active text-slate-700 dark:text-white shadow-sm font-bold"
+                                                         : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                                         }`}
+                                                 >
+                                                     {t("page.stickerMaker.transparent")}
+                                                 </button>
+                                                 <button
+                                                     onClick={() => setBgColor("white")}
+                                                     className={`px-3 py-1 text-xs rounded-md transition-all ${bgColor === "white"
+                                                         ? "ios-glass-tab-active text-slate-700 dark:text-white shadow-sm font-bold"
+                                                         : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                                         }`}
+                                                 >
+                                                     {t("page.stickerMaker.white")}
+                                                 </button>
+                                             </div>
+                                         </div>
+                                     </div>
+ 
+                                     {/* Action Buttons */}
+                                     <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-slate-200/20 order-4 md:order-4 md:col-span-2">
+                                         <button
+                                             onClick={handleCopy}
+                                             className="flex items-center gap-2 px-6 py-3 ios-glass-btn rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:text-miku hover:border-miku/50 active:scale-95 transition-all shadow-sm"
+                                         >
+                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                             </svg>
+                                             {copied ? t("page.stickerMaker.copied") : t("page.stickerMaker.copyImage")}
+                                         </button>
+ 
+                                         <button
+                                             onClick={handleDownload}
+                                             className="flex items-center gap-2 px-8 py-3 ios-glass-btn ios-glass-btn-primary text-white rounded-xl font-bold shadow-lg shadow-miku/20 active:scale-95 transition-all"
+                                         >
+                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                             </svg>
+                                             {t("page.stickerMaker.downloadImage")}
+                                         </button>
+                                     </div>
+                                 </div>
+                             )}
                         </div>
                     </div>
 
