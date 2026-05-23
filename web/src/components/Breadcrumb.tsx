@@ -29,7 +29,7 @@ function ExpandButton({ open, onClick, ariaLabel }: { open: boolean; onClick: ()
 // Dropdown panel.
 function DropdownPanel({ children }: { children: React.ReactNode }) {
     return (
-        <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg ring-1 ring-slate-200 py-1 min-w-[10rem] z-[200] animate-breadcrumb-dropdown">
+        <div className="absolute top-full left-0 mt-1 ios-glass-dropdown rounded-xl py-1 min-w-[10rem] z-[200] animate-breadcrumb-dropdown">
             {children}
         </div>
     );
@@ -40,10 +40,10 @@ function DropdownItem({ href, isCurrent, children }: { href: string; isCurrent: 
     return (
         <Link
             href={href}
-            className={`block px-3 py-1.5 text-sm transition-colors whitespace-nowrap ${
+            className={`block px-3 py-1.5 text-sm transition-all duration-200 whitespace-nowrap ${
                 isCurrent
-                    ? "text-miku font-medium bg-miku/5"
-                    : "text-slate-600 hover:bg-miku/10 hover:text-miku"
+                    ? "text-miku font-semibold bg-miku/10 dark:bg-miku/15"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-miku/10 dark:hover:bg-miku/15 hover:text-miku dark:hover:text-miku"
             }`}
         >
             {children}
