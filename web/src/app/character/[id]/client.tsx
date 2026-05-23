@@ -158,24 +158,23 @@ export default function CharacterDetailClient() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Left Column: Character Image */}
                 <div className="lg:col-span-5 xl:col-span-4">
-                    <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden sticky top-24">
-                        {/* Tabs */}
-                        <div className="flex border-b border-slate-100">
+                    <div className="ios-glass-card rounded-2xl overflow-hidden sticky top-24">
+                        <div className="flex p-1 bg-slate-100/30 dark:bg-slate-900/30 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-800/80 gap-1">
                             <button
                                 onClick={() => setActiveTab("trim")}
-                                className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === "trim" ? "text-miku border-b-2 border-miku bg-miku/5" : "text-slate-500 hover:bg-slate-50"}`}
+                                className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${activeTab === "trim" ? "ios-glass-tab-active bg-miku text-white shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/20 dark:hover:bg-slate-800/40"}`}
                             >
                                 {t("page.character.imageTabs.trim")}
                             </button>
                             <button
                                 onClick={() => setActiveTab("label_h")}
-                                className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === "label_h" ? "text-miku border-b-2 border-miku bg-miku/5" : "text-slate-500 hover:bg-slate-50"}`}
+                                className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${activeTab === "label_h" ? "ios-glass-tab-active bg-miku text-white shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/20 dark:hover:bg-slate-800/40"}`}
                             >
                                 {t("page.character.imageTabs.label_h")}
                             </button>
                             <button
                                 onClick={() => setActiveTab("label_v")}
-                                className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === "label_v" ? "text-miku border-b-2 border-miku bg-miku/5" : "text-slate-500 hover:bg-slate-50"}`}
+                                className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${activeTab === "label_v" ? "ios-glass-tab-active bg-miku text-white shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/20 dark:hover:bg-slate-800/40"}`}
                             >
                                 {t("page.character.imageTabs.label_v")}
                             </button>
@@ -227,7 +226,7 @@ export default function CharacterDetailClient() {
                 {/* Right Column: Info & Profile */}
                 <div className="lg:col-span-7 xl:col-span-8 space-y-8">
                     {/* Basic Info */}
-                    <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                    <div className="ios-glass-card rounded-2xl overflow-hidden">
                         <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
                             <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                                 <span className="w-1 h-6 bg-miku rounded-full"></span>
@@ -290,7 +289,7 @@ export default function CharacterDetailClient() {
 
                     {/* Profile */}
                     {profile && (
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                        <div className="ios-glass-card rounded-2xl overflow-hidden">
                             <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
                                 <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                                     <span className="w-1 h-6 bg-miku rounded-full"></span>
@@ -369,7 +368,7 @@ export default function CharacterDetailClient() {
                     )}
 
                     {/* Cards */}
-                    <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                    <div className="ios-glass-card rounded-2xl overflow-hidden">
                         <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center justify-between">
                             <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                                 <span className="w-1 h-6 bg-miku rounded-full"></span>

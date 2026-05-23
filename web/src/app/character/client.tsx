@@ -117,7 +117,7 @@ function CharacterListContent() {
                     const iconName = UNIT_FIELD_ICONS[unitId] || "vs.webp";
 
                     return (
-                        <div key={unitId} className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+                        <div key={unitId} className="ios-glass-card rounded-2xl overflow-hidden">
                             {/* Unit Header */}
                             <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center gap-4">
                                 <div className="w-12 h-12 relative shrink-0">
@@ -163,7 +163,7 @@ function CharacterListContent() {
                                             <Link
                                                 key={chara.id}
                                                 href={`/character/${chara.id}`}
-                                                className="group relative h-[160px] sm:h-[220px] md:h-[280px] lg:h-[320px] rounded-xl overflow-hidden bg-white ring-1 ring-slate-100 hover:ring-2 hover:ring-miku transition-all hover:scale-105 hover:shadow-lg flex items-center justify-center p-1 sm:p-2"
+                                                className="group relative h-[160px] sm:h-[220px] md:h-[280px] lg:h-[320px] rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive flex items-center justify-center p-1 sm:p-2"
                                             >
                                                 <div className="relative w-full h-full">
                                                     <Image
