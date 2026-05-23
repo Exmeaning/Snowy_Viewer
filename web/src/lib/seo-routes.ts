@@ -60,6 +60,14 @@ export function getRobotsDisallowPaths(): string[] {
     ];
 }
 
+export function assertRobotsDisallowPathsAligned(paths: readonly string[] = getRobotsDisallowPaths()): void {
+    for (const path of paths) {
+        const normalized = normalizeSeoPath(path);
+        if (BASE_ROBOTS_DISALLOW_PATHS.includes(normalized as typeof BASE_ROBOTS_DISALLOW_PATHS[number])) continue;
+        assertNoIndexSeoRoute(normalized);
+    }
+}
+
 export function assertNoIndexSeoRoute(path: string): SeoRouteDefinition {
     const route = findSeoRouteByPath(path);
     if (!route) {

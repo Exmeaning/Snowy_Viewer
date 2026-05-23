@@ -1,8 +1,7 @@
 import StoryEventDetailClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { defineStoryEventGroupPage } from "@/lib/seo-story-metadata";
 
-export const generateMetadata = pageMetadata("story_event_group");
+const Page = defineStoryEventGroupPage(() => <StoryEventDetailClient />);
 
-export default function StoryEventDetailPage() {
-    return <StoryEventDetailClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

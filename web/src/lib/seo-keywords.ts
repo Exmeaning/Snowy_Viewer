@@ -1153,6 +1153,204 @@ export const DYNAMIC_SEO_TEMPLATES = {
       "ja-JP": "PROJECT SEKAI コミュニティガイドの詳細を閲覧できます",
     },
   },
+  storyAreaCategory: {
+    title: {
+      "zh-CN": "{category} - 区域对话",
+      "en-US": "{category} - Area Conversations",
+      "ja-JP": "{category} - エリア会話",
+    },
+    description: {
+      "zh-CN": "浏览 Project SEKAI 区域对话分类「{category}」，共 {count} 段对话",
+      "en-US": "Browse {count} Project Sekai area conversations in the {category} category",
+      "ja-JP": "Project SEKAI のエリア会話カテゴリ「{category}」で {count} 件の会話を閲覧できます",
+    },
+    fallbackTitle: {
+      "zh-CN": "区域对话",
+      "en-US": "Area Conversations",
+      "ja-JP": "エリア会話",
+    },
+    fallbackDescription: {
+      "zh-CN": "浏览 Project SEKAI 区域对话分类",
+      "en-US": "Browse Project Sekai area conversation categories",
+      "ja-JP": "Project SEKAI のエリア会話カテゴリを閲覧できます",
+    },
+  },
+  storyAreaReader: {
+    title: {
+      "zh-CN": "{area} - 区域对话",
+      "en-US": "{area} - Area Conversation",
+      "ja-JP": "{area} - エリア会話",
+    },
+    description: {
+      "zh-CN": "阅读 Project SEKAI 区域对话「{area}」，场景 ID：{scenarioId}",
+      "en-US": "Read the Project Sekai area conversation \"{area}\". Scenario ID: {scenarioId}",
+      "ja-JP": "Project SEKAI のエリア会話「{area}」を閲覧できます。シナリオID：{scenarioId}",
+    },
+    fallbackTitle: {
+      "zh-CN": "区域对话阅读",
+      "en-US": "Area Conversation Reader",
+      "ja-JP": "エリア会話リーダー",
+    },
+    fallbackDescription: {
+      "zh-CN": "阅读 Project SEKAI 区域对话内容",
+      "en-US": "Read Project Sekai area conversation content",
+      "ja-JP": "Project SEKAI のエリア会話本文を閲覧できます",
+    },
+  },
+  storyCardReader: {
+    title: {
+      "zh-CN": "{card} - 卡牌剧情",
+      "en-US": "{card} - Card Story",
+      "ja-JP": "{card} - カードストーリー",
+    },
+    description: {
+      "zh-CN": "阅读 Project SEKAI 卡牌「{card}」的前篇与后篇剧情",
+      "en-US": "Read both side-story parts for the Project Sekai card \"{card}\"",
+      "ja-JP": "Project SEKAI カード「{card}」の前編・後編ストーリーを閲覧できます",
+    },
+    fallbackTitle: {
+      "zh-CN": "卡牌剧情阅读",
+      "en-US": "Card Story Reader",
+      "ja-JP": "カードストーリーリーダー",
+    },
+    fallbackDescription: {
+      "zh-CN": "阅读 Project SEKAI 卡牌剧情内容",
+      "en-US": "Read Project Sekai card story content",
+      "ja-JP": "Project SEKAI のカードストーリー本文を閲覧できます",
+    },
+  },
+  storyEventGroup: {
+    title: {
+      "zh-CN": "{event} - 活动剧情",
+      "en-US": "{event} - Event Story",
+      "ja-JP": "{event} - イベントストーリー",
+    },
+    description: {
+      "zh-CN": "浏览 Project SEKAI 活动「{event}」的 {count} 个剧情章节",
+      "en-US": "Browse {count} story episodes for the Project Sekai event \"{event}\"",
+      "ja-JP": "Project SEKAI イベント「{event}」のストーリー {count} 話を閲覧できます",
+    },
+    fallbackTitle: {
+      "zh-CN": "活动剧情",
+      "en-US": "Event Story",
+      "ja-JP": "イベントストーリー",
+    },
+    fallbackDescription: {
+      "zh-CN": "浏览指定 Project SEKAI 活动的剧情章节",
+      "en-US": "Browse story episodes for a selected Project Sekai event",
+      "ja-JP": "選択した Project SEKAI イベントのストーリーエピソードを閲覧できます",
+    },
+  },
+  storyEventReader: {
+    title: {
+      "zh-CN": "{episode} - {event}",
+      "en-US": "{episode} - {event}",
+      "ja-JP": "{episode} - {event}",
+    },
+    description: {
+      "zh-CN": "阅读 Project SEKAI 活动「{event}」第 {episodeNo} 话「{episode}」",
+      "en-US": "Read episode {episodeNo}, \"{episode}\", from the Project Sekai event story \"{event}\"",
+      "ja-JP": "Project SEKAI イベント「{event}」第 {episodeNo} 話「{episode}」を閲覧できます",
+    },
+    fallbackTitle: {
+      "zh-CN": "活动剧情阅读",
+      "en-US": "Event Story Reader",
+      "ja-JP": "イベントストーリーリーダー",
+    },
+    fallbackDescription: {
+      "zh-CN": "阅读 Project SEKAI 活动剧情内容",
+      "en-US": "Read Project Sekai event story content",
+      "ja-JP": "Project SEKAI のイベントストーリー本文を閲覧できます",
+    },
+  },
+  storySelfReader: {
+    title: {
+      "zh-CN": "{character} - 角色介绍",
+      "en-US": "{character} - Character Introduction",
+      "ja-JP": "{character} - 自己紹介",
+    },
+    description: {
+      "zh-CN": "阅读 Project SEKAI 角色「{character}」的自我介绍与语音剧情",
+      "en-US": "Read the Project Sekai character introduction and voiced story for \"{character}\"",
+      "ja-JP": "Project SEKAI キャラクター「{character}」の自己紹介とボイス付きストーリーを閲覧できます",
+    },
+    fallbackTitle: {
+      "zh-CN": "角色介绍阅读",
+      "en-US": "Character Introduction Reader",
+      "ja-JP": "自己紹介リーダー",
+    },
+    fallbackDescription: {
+      "zh-CN": "阅读 Project SEKAI 角色自我介绍内容",
+      "en-US": "Read Project Sekai character introduction content",
+      "ja-JP": "Project SEKAI のキャラクター自己紹介本文を閲覧できます",
+    },
+  },
+  storySpecialReader: {
+    title: {
+      "zh-CN": "{title} - 特殊剧情",
+      "en-US": "{title} - Special Story",
+      "ja-JP": "{title} - スペシャルストーリー",
+    },
+    description: {
+      "zh-CN": "阅读 Project SEKAI 特殊剧情「{title}」，共 {count} 个章节",
+      "en-US": "Read the Project Sekai special story \"{title}\" with {count} episodes",
+      "ja-JP": "Project SEKAI スペシャルストーリー「{title}」全 {count} 話を閲覧できます",
+    },
+    fallbackTitle: {
+      "zh-CN": "特殊剧情阅读",
+      "en-US": "Special Story Reader",
+      "ja-JP": "スペシャルストーリーリーダー",
+    },
+    fallbackDescription: {
+      "zh-CN": "阅读 Project SEKAI 特殊剧情内容",
+      "en-US": "Read Project Sekai special story content",
+      "ja-JP": "Project SEKAI のスペシャルストーリー本文を閲覧できます",
+    },
+  },
+  storyUnitGroup: {
+    title: {
+      "zh-CN": "{unit} - 主线剧情",
+      "en-US": "{unit} - Main Story",
+      "ja-JP": "{unit} - メインストーリー",
+    },
+    description: {
+      "zh-CN": "浏览 Project SEKAI 组合「{unit}」的 {count} 个主线剧情章节",
+      "en-US": "Browse {count} main story episodes for the Project Sekai unit \"{unit}\"",
+      "ja-JP": "Project SEKAI ユニット「{unit}」のメインストーリー {count} 話を閲覧できます",
+    },
+    fallbackTitle: {
+      "zh-CN": "主线剧情",
+      "en-US": "Main Story",
+      "ja-JP": "メインストーリー",
+    },
+    fallbackDescription: {
+      "zh-CN": "浏览指定组合的 Project SEKAI 主线剧情章节",
+      "en-US": "Browse Project Sekai main story episodes for a selected unit",
+      "ja-JP": "選択したユニットの Project SEKAI メインストーリーエピソードを閲覧できます",
+    },
+  },
+  storyUnitReader: {
+    title: {
+      "zh-CN": "{episode} - {unit}",
+      "en-US": "{episode} - {unit}",
+      "ja-JP": "{episode} - {unit}",
+    },
+    description: {
+      "zh-CN": "阅读 Project SEKAI 组合「{unit}」主线剧情「{episode}」",
+      "en-US": "Read the Project Sekai main story episode \"{episode}\" for \"{unit}\"",
+      "ja-JP": "Project SEKAI ユニット「{unit}」のメインストーリー「{episode}」を閲覧できます",
+    },
+    fallbackTitle: {
+      "zh-CN": "主线剧情阅读",
+      "en-US": "Main Story Reader",
+      "ja-JP": "メインストーリーリーダー",
+    },
+    fallbackDescription: {
+      "zh-CN": "阅读 Project SEKAI 主线剧情内容",
+      "en-US": "Read Project Sekai main story content",
+      "ja-JP": "Project SEKAI のメインストーリー本文を閲覧できます",
+    },
+  },
 } as const;
 
 function dynamicText(kind: DynamicSeoKind, field: keyof typeof DYNAMIC_SEO_TEMPLATES[DynamicSeoKind], locale: UiLocale): string {

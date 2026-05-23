@@ -1,8 +1,7 @@
 import StoryUnitReaderClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { defineStoryUnitReaderPage } from "@/lib/seo-story-metadata";
 
-export const generateMetadata = pageMetadata("story_unit_reader");
+const Page = defineStoryUnitReaderPage(() => <StoryUnitReaderClient />);
 
-export default function StoryUnitReaderPage() {
-    return <StoryUnitReaderClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

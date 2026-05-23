@@ -51,9 +51,18 @@ function shortenError(error) {
     return message.length > 500 ? `${message.slice(0, 500)}...` : message;
 }
 
-function existingRoutesByPrefix(existingData, prefix) {
+function existingRoutesByPrefix(existingData, prefix, excludePrefixes = [], matchRoute) {
     return (Array.isArray(existingData?.detailRoutes) ? existingData.detailRoutes : [])
-        .filter(route => typeof route?.path === 'string' && route.path.startsWith(prefix));
+        .filter(route => typeof route?.path === 'string'
+            && route.path.startsWith(prefix)
+            && !excludePrefixes.some(excluded => route.path.startsWith(excluded))
+            && (!matchRoute || matchRoute(route)));
+}
+
+function matchesDepth(route, prefix, segmentCount) {
+    const rest = route.path.slice(prefix.length).replace(/\/$/, '');
+    if (!rest) return segmentCount === 0;
+    return rest.split('/').filter(Boolean).length === segmentCount;
 }
 
 function existingLastmodForPath(existingData, routePath, fallback) {
@@ -66,6 +75,25 @@ function areRoutesChanged(existingData, nextMainRoutes, nextDetailRoutes) {
     if (!existingData) return true;
     return JSON.stringify(existingData.mainRoutes || []) !== JSON.stringify(nextMainRoutes)
         || JSON.stringify(existingData.detailRoutes || []) !== JSON.stringify(nextDetailRoutes);
+}
+
+function eventMapById(events) {
+    return new Map((Array.isArray(events) ? events : []).map(event => [event.id, event]));
+}
+
+function actionCategory(action) {
+    const scenarioId = action?.scenarioId;
+    const releaseConditionId = Number(action?.releaseConditionId);
+    const cond = String(action?.releaseConditionId ?? '');
+
+    if (scenarioId && cond.length === 6 && cond[0] === '1') return `event_${parseInt(cond.slice(1, 4), 10) + 1}`;
+    if (action?.id === 2373) return 'event_145';
+    if (scenarioId && scenarioId.includes('aprilfool')) return scenarioId.split('_')[1] || '';
+    if (scenarioId && action?.actionSetType === 'limited') return `limited_${action.areaId}`;
+    if (scenarioId && action?.actionSetType === 'normal' && action?.isNextGrade === false && releaseConditionId === 1) return 'grade1';
+    if (scenarioId && action?.actionSetType === 'normal' && action?.isNextGrade === true && releaseConditionId === 1) return 'grade2';
+    if (scenarioId && releaseConditionId >= 2000000 && releaseConditionId <= 2000036) return 'theater';
+    return '';
 }
 
 function hasUsefulDetails(detailRoutes) {
@@ -96,6 +124,111 @@ function buildGuideRoutes(guidesRaw) {
         priority: 0.5,
         changefreq: 'monthly',
     }));
+}
+
+function buildStoryEventGroupRoutes(raw) {
+    const events = eventMapById(raw?.events);
+    return (Array.isArray(raw?.eventStories) ? raw.eventStories : []).map(story => {
+        const event = events.get(story.eventId);
+        return {
+            path: `/story/event/${story.eventId}/`,
+            lastmod: formatDate(event?.startAt),
+            priority: 0.5,
+            changefreq: 'monthly',
+        };
+    });
+}
+
+function buildStoryEventEpisodeRoutes(raw) {
+    const events = eventMapById(raw?.events);
+    return (Array.isArray(raw?.eventStories) ? raw.eventStories : []).flatMap(story => {
+        const event = events.get(story.eventId);
+        return (story.eventStoryEpisodes || []).map(episode => ({
+            path: `/story/event/${story.eventId}/${episode.episodeNo}/`,
+            lastmod: formatDate(event?.startAt),
+            priority: 0.4,
+            changefreq: 'monthly',
+        }));
+    });
+}
+
+function buildStoryUnitGroupRoutes(raw) {
+    return (Array.isArray(raw?.unitStories) ? raw.unitStories : []).map(story => ({
+        path: `/story/unit/${story.seq}/`,
+        lastmod: formatDate(null),
+        priority: 0.5,
+        changefreq: 'monthly',
+    }));
+}
+
+function buildStoryUnitEpisodeRoutes(raw) {
+    return (Array.isArray(raw?.unitStories) ? raw.unitStories : []).flatMap(story => (story.chapters || [])
+        .flatMap(chapter => (chapter.episodes || []).map(episode => ({
+            path: `/story/unit/${story.seq}/${encodeURIComponent(episode.scenarioId)}/`,
+            lastmod: formatDate(null),
+            priority: 0.4,
+            changefreq: 'monthly',
+        }))));
+}
+
+function buildStoryCardRoutes(raw) {
+    const cardIds = new Set((Array.isArray(raw?.cardEpisodes) ? raw.cardEpisodes : []).map(episode => episode.cardId));
+    const cards = new Map((Array.isArray(raw?.cards) ? raw.cards : []).map(card => [card.id, card]));
+    return [...cardIds].map(cardId => ({
+        path: `/story/card/${cardId}/`,
+        lastmod: formatDate(cards.get(cardId)?.releaseAt),
+        priority: 0.4,
+        changefreq: 'monthly',
+    }));
+}
+
+function buildStorySelfRoutes(raw) {
+    return (Array.isArray(raw?.characterProfiles) ? raw.characterProfiles : [])
+        .filter(profile => profile.scenarioId)
+        .map(profile => ({
+            path: `/story/self/${profile.characterId}/`,
+            lastmod: formatDate(null),
+            priority: 0.4,
+            changefreq: 'monthly',
+        }));
+}
+
+function buildStorySpecialRoutes(raw) {
+    return (Array.isArray(raw?.specialStories) ? raw.specialStories : [])
+        .filter(story => story.id !== 2 && Array.isArray(story.episodes) && story.episodes.length > 0)
+        .map(story => ({
+            path: `/story/special/${story.id}/`,
+            lastmod: formatDate(null),
+            priority: 0.4,
+            changefreq: 'monthly',
+        }));
+}
+
+function buildStoryAreaCategoryRoutes(raw) {
+    const categories = new Set();
+    for (const action of Array.isArray(raw?.actionSets) ? raw.actionSets : []) {
+        const category = actionCategory(action);
+        if (category) categories.add(category);
+    }
+    return [...categories].map(category => ({
+        path: `/story/area/${encodeURIComponent(category)}/`,
+        lastmod: formatDate(null),
+        priority: 0.4,
+        changefreq: 'monthly',
+    }));
+}
+
+function buildStoryAreaReaderRoutes(raw) {
+    return (Array.isArray(raw?.actionSets) ? raw.actionSets : []).flatMap(action => {
+        const category = actionCategory(action);
+        if (!category || !action.scenarioId) return [];
+        return [{
+            path: `/story/area/${encodeURIComponent(category)}/${encodeURIComponent(action.scenarioId)}/`,
+            lastmod: formatDate(null),
+            priority: 0.3,
+            changefreq: 'monthly',
+        }];
+    });
 }
 
 const routeSources = [
@@ -151,17 +284,6 @@ const routeSources = [
                     path: `/events/${e.id}/`,
                     lastmod: formatDate(e.startAt),
                     priority: 0.7,
-                    changefreq: 'weekly',
-                })),
-            },
-            {
-                key: 'eventStories',
-                logLabel: 'event story pages',
-                prefix: '/story/event/',
-                build: events => (Array.isArray(events) ? events : []).map(e => ({
-                    path: `/story/event/${e.id}/`,
-                    lastmod: formatDate(e.startAt),
-                    priority: 0.5,
                     changefreq: 'weekly',
                 })),
             },
@@ -320,11 +442,141 @@ const routeSources = [
             },
         ],
     },
+    {
+        label: 'storyEvents',
+        filename: 'events.json + eventStories.json',
+        fallback: { events: [], eventStories: [] },
+        validate: data => Array.isArray(data?.events) && Array.isArray(data?.eventStories),
+        fetch: async () => ({
+            events: await fetchMasterJson('events.json', 'story event routes'),
+            eventStories: await fetchMasterJson('eventStories.json', 'story event route episodes'),
+        }),
+        groups: [
+            {
+                key: 'storyEventGroups',
+                logLabel: 'story event group pages',
+                prefix: '/story/event/',
+                excludePrefixes: ['/story/eventstory/'],
+                matchRoute: route => matchesDepth(route, '/story/event/', 1),
+                build: buildStoryEventGroupRoutes,
+            },
+            {
+                key: 'storyEventEpisodes',
+                logLabel: 'story event reader pages',
+                prefix: '/story/event/',
+                excludePrefixes: ['/story/eventstory/'],
+                matchRoute: route => matchesDepth(route, '/story/event/', 2),
+                build: buildStoryEventEpisodeRoutes,
+            },
+        ],
+    },
+    {
+        label: 'storyUnits',
+        filename: 'unitStories.json',
+        fallback: { unitStories: [] },
+        validate: data => Array.isArray(data?.unitStories),
+        fetch: async () => ({
+            unitStories: await fetchMasterJson('unitStories.json', 'story unit route episodes'),
+        }),
+        groups: [
+            {
+                key: 'storyUnitGroups',
+                logLabel: 'story unit group pages',
+                prefix: '/story/unit/',
+                matchRoute: route => matchesDepth(route, '/story/unit/', 1),
+                build: buildStoryUnitGroupRoutes,
+            },
+            {
+                key: 'storyUnitEpisodes',
+                logLabel: 'story unit reader pages',
+                prefix: '/story/unit/',
+                matchRoute: route => matchesDepth(route, '/story/unit/', 2),
+                build: buildStoryUnitEpisodeRoutes,
+            },
+        ],
+    },
+    {
+        label: 'storyCards',
+        filename: 'cards.json + cardEpisodes.json',
+        fallback: { cards: [], cardEpisodes: [] },
+        validate: data => Array.isArray(data?.cards) && Array.isArray(data?.cardEpisodes),
+        fetch: async () => ({
+            cards: await fetchMasterJson('cards.json', 'story card route cards'),
+            cardEpisodes: await fetchMasterJson('cardEpisodes.json', 'story card route episodes'),
+        }),
+        groups: [
+            {
+                key: 'storyCardReaders',
+                logLabel: 'story card reader pages',
+                prefix: '/story/card/',
+                build: buildStoryCardRoutes,
+            },
+        ],
+    },
+    {
+        label: 'storySelf',
+        filename: 'characterProfiles.json',
+        fallback: { characterProfiles: [] },
+        validate: data => Array.isArray(data?.characterProfiles),
+        fetch: async () => ({
+            characterProfiles: await fetchMasterJson('characterProfiles.json', 'story self route profiles'),
+        }),
+        groups: [
+            {
+                key: 'storySelfReaders',
+                logLabel: 'story self reader pages',
+                prefix: '/story/self/',
+                build: buildStorySelfRoutes,
+            },
+        ],
+    },
+    {
+        label: 'storySpecial',
+        filename: 'specialStories.json',
+        fallback: { specialStories: [] },
+        validate: data => Array.isArray(data?.specialStories),
+        fetch: async () => ({
+            specialStories: await fetchMasterJson('specialStories.json', 'story special routes'),
+        }),
+        groups: [
+            {
+                key: 'storySpecialReaders',
+                logLabel: 'story special reader pages',
+                prefix: '/story/special/',
+                build: buildStorySpecialRoutes,
+            },
+        ],
+    },
+    {
+        label: 'storyAreas',
+        filename: 'actionSets.json',
+        fallback: { actionSets: [] },
+        validate: data => Array.isArray(data?.actionSets),
+        fetch: async () => ({
+            actionSets: await fetchMasterJson('actionSets.json', 'story area routes'),
+        }),
+        groups: [
+            {
+                key: 'storyAreaCategories',
+                logLabel: 'story area category pages',
+                prefix: '/story/area/',
+                matchRoute: route => matchesDepth(route, '/story/area/', 1),
+                build: buildStoryAreaCategoryRoutes,
+            },
+            {
+                key: 'storyAreaReaders',
+                logLabel: 'story area reader pages',
+                prefix: '/story/area/',
+                matchRoute: route => matchesDepth(route, '/story/area/', 2),
+                build: buildStoryAreaReaderRoutes,
+            },
+        ],
+    },
 ];
 
 function buildGroupFromRaw(group, raw, existingData, sourceLabel) {
     const routes = group.build(raw, existingData);
-    const previous = existingRoutesByPrefix(existingData, group.prefix);
+    const previous = existingRoutesByPrefix(existingData, group.prefix, group.excludePrefixes, group.matchRoute);
 
     if (routes.length === 0) {
         if (previous.length > 0 && !REQUIRE_FRESH) {
@@ -358,7 +610,7 @@ async function loadRouteSource(source, existingData) {
         }
 
         return source.groups.map(group => {
-            const previous = existingRoutesByPrefix(existingData, group.prefix);
+            const previous = existingRoutesByPrefix(existingData, group.prefix, group.excludePrefixes, group.matchRoute);
             if (previous.length > 0) {
                 console.warn(`    ⚠ ${group.logLabel} failed: ${shortenError(error)}, keeping existing ${previous.length} routes`);
                 return { key: group.key, logLabel: group.logLabel, routes: previous, source: 'existing' };

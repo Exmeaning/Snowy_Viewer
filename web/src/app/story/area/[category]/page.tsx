@@ -1,8 +1,7 @@
 import StoryAreaDetailClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { defineStoryAreaCategoryPage } from "@/lib/seo-story-metadata";
 
-export const generateMetadata = pageMetadata("story_area_category");
+const Page = defineStoryAreaCategoryPage(() => <StoryAreaDetailClient />);
 
-export default function StoryAreaDetailPage() {
-    return <StoryAreaDetailClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

@@ -78,6 +78,60 @@ export interface GuideMeta {
     authorGroup: string;
 }
 
+export interface StoryEventGroupMeta {
+    name: string;
+    asset: string;
+    episodeCount: number;
+    firstEpisodeTitle: string;
+}
+
+export interface StoryEventEpisodeMeta {
+    eventName: string;
+    episodeTitle: string;
+    episodeNo: number;
+    asset: string;
+}
+
+export interface StoryUnitGroupMeta {
+    unitName: string;
+    unit: string;
+    episodeCount: number;
+}
+
+export interface StoryUnitEpisodeMeta {
+    unitName: string;
+    unit: string;
+    episodeTitle: string;
+    episodeNoLabel: string;
+}
+
+export interface StoryCardReaderMeta {
+    cardPrefix: string;
+    characterName: string;
+    asset: string;
+    characterId: number;
+}
+
+export interface StorySelfReaderMeta {
+    characterName: string;
+    characterId: number;
+}
+
+export interface StorySpecialReaderMeta {
+    title: string;
+    episodeCount: number;
+}
+
+export interface StoryAreaCategoryMeta {
+    label: string;
+    count: number;
+}
+
+export interface StoryAreaReaderMeta {
+    areaName: string;
+    scenarioId: string;
+}
+
 interface MetadataMap {
     cards: Record<string, CardMeta>;
     musics: Record<string, MusicMeta>;
@@ -90,6 +144,15 @@ interface MetadataMap {
     mangas: Record<string, MangaMeta>;
     exchanges: Record<string, ExchangeMeta>;
     guides?: Record<string, GuideMeta>;
+    storyEventGroups?: Record<string, StoryEventGroupMeta>;
+    storyEventEpisodes?: Record<string, StoryEventEpisodeMeta>;
+    storyUnitGroups?: Record<string, StoryUnitGroupMeta>;
+    storyUnitEpisodes?: Record<string, StoryUnitEpisodeMeta>;
+    storyCardReaders?: Record<string, StoryCardReaderMeta>;
+    storySelfReaders?: Record<string, StorySelfReaderMeta>;
+    storySpecialReaders?: Record<string, StorySpecialReaderMeta>;
+    storyAreaCategories?: Record<string, StoryAreaCategoryMeta>;
+    storyAreaReaders?: Record<string, StoryAreaReaderMeta>;
 }
 
 // ==================== Process-level Cache ====================
@@ -153,4 +216,40 @@ export function getExchangeMeta(id: number): ExchangeMeta | null {
 
 export function getGuideMeta(id: string): GuideMeta | null {
     return getMap()?.guides?.[id] ?? null;
+}
+
+export function getStoryEventGroupMeta(id: string | number): StoryEventGroupMeta | null {
+    return getMap()?.storyEventGroups?.[String(id)] ?? null;
+}
+
+export function getStoryEventEpisodeMeta(eventId: string | number, episodeNo: string | number): StoryEventEpisodeMeta | null {
+    return getMap()?.storyEventEpisodes?.[`${eventId}/${episodeNo}`] ?? null;
+}
+
+export function getStoryUnitGroupMeta(unitId: string | number): StoryUnitGroupMeta | null {
+    return getMap()?.storyUnitGroups?.[String(unitId)] ?? null;
+}
+
+export function getStoryUnitEpisodeMeta(unitId: string | number, episodeId: string): StoryUnitEpisodeMeta | null {
+    return getMap()?.storyUnitEpisodes?.[`${unitId}/${episodeId}`] ?? null;
+}
+
+export function getStoryCardReaderMeta(cardId: string | number): StoryCardReaderMeta | null {
+    return getMap()?.storyCardReaders?.[String(cardId)] ?? null;
+}
+
+export function getStorySelfReaderMeta(charaId: string | number): StorySelfReaderMeta | null {
+    return getMap()?.storySelfReaders?.[String(charaId)] ?? null;
+}
+
+export function getStorySpecialReaderMeta(spId: string | number): StorySpecialReaderMeta | null {
+    return getMap()?.storySpecialReaders?.[String(spId)] ?? null;
+}
+
+export function getStoryAreaCategoryMeta(category: string): StoryAreaCategoryMeta | null {
+    return getMap()?.storyAreaCategories?.[category] ?? null;
+}
+
+export function getStoryAreaReaderMeta(category: string, scenarioId: string): StoryAreaReaderMeta | null {
+    return getMap()?.storyAreaReaders?.[`${category}/${scenarioId}`] ?? null;
 }
