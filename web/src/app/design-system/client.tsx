@@ -100,21 +100,30 @@ export default function DesignSystemClient() {
 
     return (
         <MainLayout>
-            <div className="container mx-auto px-6 py-12 max-w-6xl">
-                <div className="mb-12">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-miku to-luka bg-clip-text text-transparent mb-4">
+            <div className="container mx-auto px-6 py-12 max-w-6xl relative">
+                {/* iOS 26 Ambient Colorful Glowing Blobs */}
+                <div className="absolute top-1/4 left-10 w-72 h-72 rounded-full bg-miku/12 blur-[90px] pointer-events-none animate-float-blob-1 z-0"></div>
+                <div className="absolute bottom-1/3 right-10 w-96 h-96 rounded-full bg-luka/12 blur-[100px] pointer-events-none animate-float-blob-2 z-0"></div>
+                <div className="absolute top-2/3 left-1/3 w-80 h-80 rounded-full bg-purple-500/8 blur-[90px] pointer-events-none animate-float-blob-1 z-0"></div>
+
+                <div className="mb-12 relative z-10">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 ios-glass-card border-miku/20 rounded-full mb-3">
+                        <span className="w-2 h-2 rounded-full bg-miku animate-pulse"></span>
+                        <span className="text-[10px] font-bold text-miku uppercase tracking-widest">Aesthetic Upgrade</span>
+                    </div>
+                    <h1 className="text-4xl font-extrabold bg-gradient-to-r from-miku via-miku-dark to-luka bg-clip-text text-transparent mb-4">
                         Design System & Component Library
                     </h1>
-                    <p className="text-slate-500 text-lg">
-                        Reference guide for UI elements, colors, and typography used in Snowy Viewer.
+                    <p className="text-slate-500 dark:text-slate-400 text-lg">
+                        Reference guide for UI elements, colors, and typography, unified under the new **iOS 26 Frosted Glass** standard.
                     </p>
                 </div>
 
                 {/* Colors Section */}
-                <section className="mb-16">
+                <section className="mb-16 relative z-10">
                     <h2 className="text-2xl font-bold text-primary-text mb-6 flex items-center gap-2">
                         <span className="w-1.5 h-8 bg-miku rounded-full"></span>
-                        Color Palette
+                        Color Palette & Glassmorphism
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -122,35 +131,43 @@ export default function DesignSystemClient() {
                         <ColorCard name="Miku Green" variable="--color-miku" className="bg-miku text-white" hex="Dynamic (User Theme)" />
                         <ColorCard name="Miku Dark" variable="--color-miku-dark" className="bg-miku-dark text-white" hex="Dynamic (Dark Variant)" />
                         <ColorCard name="Luka Pink" variable="--color-luka" className="bg-luka text-white" hex="#ff6699" />
-
-                        {/* Text Colors */}
                         <ColorCard name="Primary Text" variable="--color-primary-text" className="bg-primary-text text-white" hex="#334455" />
-                        <ColorCard name="Slate 500" className="bg-slate-500 text-white" hex="#64748b" />
-                        <ColorCard name="Slate 400" className="bg-slate-400 text-white" hex="#94a3b8" />
 
-                        {/* Backgrounds */}
+                        {/* Glassmorphism Classes */}
                         <div className="glass-card p-4 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group">
-                            <span className="font-bold relative z-10">Glass Card</span>
-                            <div className="text-xs opacity-70 relative z-10">.glass-card</div>
-                            <div className="absolute inset-0 bg-white/20"></div>
+                            <span className="font-bold relative z-10 text-primary-text">Legacy Glass Card</span>
+                            <div className="text-xs opacity-70 relative z-10 text-primary-text">.glass-card</div>
+                            <div className="absolute inset-0 bg-white/10 dark:bg-slate-900/10"></div>
                         </div>
 
-                        <div className="rounded-xl p-4 border border-slate-200 bg-slate-50 h-32 flex flex-col justify-between">
-                            <span className="font-bold text-slate-700">Surface / Slate 50</span>
+                        <div className="ios-glass-card p-4 rounded-2xl flex flex-col justify-between h-32 relative overflow-hidden group ios-glass-card-interactive cursor-pointer">
+                            <span className="font-bold relative z-10 text-primary-text">iOS 26 Glass Card</span>
+                            <div className="text-xs opacity-75 relative z-10 text-primary-text">.ios-glass-card</div>
+                            <span className="text-[9px] bg-miku/15 text-miku px-2 py-0.5 rounded-full self-start font-extrabold relative z-10">NEW iOS 26</span>
+                        </div>
+
+                        <div className="ios-glass-panel p-4 rounded-2xl flex flex-col justify-between h-32 relative overflow-hidden group">
+                            <span className="font-bold relative z-10 text-primary-text">iOS 26 Glass Panel</span>
+                            <div className="text-xs opacity-75 relative z-10 text-primary-text">.ios-glass-panel</div>
+                            <span className="text-[9px] bg-purple-500/15 text-purple-500 px-2 py-0.5 rounded-full self-start font-extrabold relative z-10">NEW iOS 26</span>
+                        </div>
+
+                        <div className="rounded-xl p-4 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 h-32 flex flex-col justify-between">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">Surface / Slate 50</span>
                             <div className="text-xs text-slate-500">bg-slate-50</div>
                         </div>
                     </div>
                 </section>
 
                 {/* Typography Section */}
-                <section className="mb-16">
+                <section className="mb-16 relative z-10">
                     <h2 className="text-2xl font-bold text-primary-text mb-6 flex items-center gap-2">
                         <span className="w-1.5 h-8 bg-luka rounded-full"></span>
                         Typography
                     </h2>
 
-                    <div className="glass-card p-8 rounded-2xl space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-slate-200 pb-8">
+                    <div className="ios-glass-card p-8 rounded-2xl space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-slate-200 dark:border-slate-800 pb-8">
                             <div className="text-sm text-slate-400 font-mono">H1 / 4xl / Bold</div>
                             <div className="md:col-span-2">
                                 <h1 className="text-4xl font-bold text-primary-text">The quick brown fox jumps over the lazy dog</h1>
@@ -201,27 +218,27 @@ export default function DesignSystemClient() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                         {/* Buttons */}
-                        <div className="glass-card p-6 rounded-2xl">
-                            <h3 className="text-lg font-bold mb-4 text-slate-600">Buttons</h3>
+                        <div className="ios-glass-card p-6 rounded-2xl">
+                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Buttons</h3>
                             <div className="flex flex-wrap gap-4 items-center">
                                 {/* Primary */}
-                                <button className="px-6 py-2 bg-miku text-white rounded-lg font-bold shadow-lg shadow-miku/20 hover:opacity-90 active:scale-95 transition-all">
+                                <button className="px-6 py-2.5 ios-glass-btn ios-glass-btn-primary rounded-xl font-bold transition-all">
                                     Primary Button
                                 </button>
 
                                 {/* Secondary */}
-                                <button className="px-6 py-2 border-2 border-miku text-miku rounded-lg font-bold hover:bg-miku hover:text-white active:scale-95 transition-all">
+                                <button className="px-6 py-2.5 ios-glass-btn text-miku border-miku/30 rounded-xl font-bold transition-all">
                                     Secondary
                                 </button>
 
                                 {/* Ghost/Nav */}
-                                <button className="px-4 py-2 text-slate-500 font-bold hover:text-miku hover:bg-slate-50 rounded-lg transition-colors">
+                                <button className="px-4 py-2.5 text-slate-500 hover:text-miku ios-glass-btn rounded-xl transition-all">
                                     Ghost / Nav
                                 </button>
 
                                 {/* Icon Layout */}
-                                <button className="p-2 text-slate-400 hover:text-miku hover:bg-slate-50 rounded-lg transition-colors">
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <button className="p-2.5 text-slate-400 hover:text-miku ios-glass-btn rounded-xl transition-all">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
@@ -230,24 +247,24 @@ export default function DesignSystemClient() {
                         </div>
 
                         {/* Inputs */}
-                        <div className="glass-card p-6 rounded-2xl">
-                            <h3 className="text-lg font-bold mb-4 text-slate-600">Inputs</h3>
+                        <div className="ios-glass-card p-6 rounded-2xl">
+                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Inputs</h3>
                             <div className="space-y-4 max-w-sm">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Standard Input</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Standard Input</label>
                                     <input
                                         type="text"
                                         placeholder="Type something..."
-                                        className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all"
+                                        className="w-full ios-glass-input px-4 py-2 rounded-xl text-primary-text"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Input with Error</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Input with Error</label>
                                     <input
                                         type="text"
                                         defaultValue="Invalid input"
-                                        className="w-full px-4 py-2 rounded-lg border border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 text-red-600"
+                                        className="w-full ios-glass-input px-4 py-2 rounded-xl border-red-400 focus:border-red-400 focus:ring-red-200/20 text-red-600 dark:text-red-400"
                                     />
                                     <p className="mt-1 text-xs text-red-500">Please enter a valid value</p>
                                 </div>
@@ -255,30 +272,30 @@ export default function DesignSystemClient() {
                         </div>
 
                         {/* Badges & Tags */}
-                        <div className="glass-card p-6 rounded-2xl">
-                            <h3 className="text-lg font-bold mb-4 text-slate-600">Badges & Tags</h3>
+                        <div className="ios-glass-card p-6 rounded-2xl">
+                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Badges & Tags</h3>
                             <div className="flex flex-wrap gap-3">
-                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-miku text-white">
+                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-miku text-white shadow-sm">
                                     New Feature
                                 </span>
-                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-miku/10 text-miku border border-miku/20">
+                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-miku/10 text-miku border border-miku/20">
                                     Version 1.0
                                 </span>
-                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-white">
+                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-white shadow-sm">
                                     BETA
                                 </span>
-                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">
+                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                                     Draft
                                 </span>
-                                <span className="px-2.5 py-1 rounded-full text-xs font-bold border border-slate-200 text-slate-500">
+                                <span className="px-3 py-1 rounded-full text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
                                     Outline
                                 </span>
                             </div>
                         </div>
 
                         {/* Loaders */}
-                        <div className="glass-card p-6 rounded-2xl flex flex-col justify-center items-center gap-4">
-                            <h3 className="text-lg font-bold mb-2 text-slate-600 self-start">Loaders</h3>
+                        <div className="ios-glass-card p-6 rounded-2xl flex flex-col justify-center items-center gap-4">
+                            <h3 className="text-lg font-bold mb-2 text-slate-600 dark:text-slate-400 self-start">Loaders</h3>
                             <div className="flex items-center gap-8">
                                 <div className="loading-spinner"></div>
                                 <div className="w-8 h-8 border-2 border-miku/30 border-t-miku rounded-full animate-spin"></div>
@@ -286,14 +303,14 @@ export default function DesignSystemClient() {
                         </div>
 
                         {/* Tabs */}
-                        <div className="glass-card p-6 rounded-2xl md:col-span-2">
-                            <h3 className="text-lg font-bold mb-4 text-slate-600">Tabs</h3>
+                        <div className="ios-glass-card p-6 rounded-2xl md:col-span-2">
+                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Tabs</h3>
                             <div className="flex gap-2">
-                                <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-300 bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20">
+                                <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-300 ios-glass-tab ios-glass-tab-active">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                     Active Tab
                                 </button>
-                                <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-300 bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50">
+                                <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-300 ios-glass-tab text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                                     Inactive Tab
                                 </button>
@@ -301,17 +318,17 @@ export default function DesignSystemClient() {
                         </div>
 
                         {/* Dropdowns */}
-                        <div className="glass-card p-6 rounded-2xl md:col-span-2">
-                            <h3 className="text-lg font-bold mb-4 text-slate-600">Dropdowns</h3>
+                        <div className="ios-glass-card p-6 rounded-2xl md:col-span-2">
+                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Dropdowns</h3>
                             <div className="relative inline-block text-left w-64">
-                                <div className="bg-white rounded-lg shadow-lg border border-slate-100 py-2">
-                                    <a href="#" className="block px-4 py-2 text-sm font-medium transition-colors text-miku bg-miku/5">
+                                <div className="ios-glass-dropdown rounded-xl py-2">
+                                    <a href="#" className="block px-4 py-2 text-sm font-medium transition-colors text-miku bg-miku/10">
                                         Active Option
                                     </a>
-                                    <a href="#" className="block px-4 py-2 text-sm font-medium transition-colors text-slate-600 hover:text-miku hover:bg-slate-50">
+                                    <a href="#" className="block px-4 py-2 text-sm font-medium transition-colors text-slate-600 dark:text-slate-300 hover:text-miku hover:bg-white/10 dark:hover:bg-slate-800/40">
                                         Hover Option
                                     </a>
-                                    <a href="#" className="block px-4 py-2 text-sm font-medium transition-colors text-slate-600 hover:text-miku hover:bg-slate-50">
+                                    <a href="#" className="block px-4 py-2 text-sm font-medium transition-colors text-slate-600 dark:text-slate-300 hover:text-miku hover:bg-white/10 dark:hover:bg-slate-800/40">
                                         Standard Option
                                     </a>
                                 </div>
@@ -331,8 +348,8 @@ export default function DesignSystemClient() {
                     <div className="space-y-12">
                         {/* Page Title */}
                         <div>
-                            <h3 className="text-lg font-bold mb-4 text-slate-600">Page Title (Overview Style)</h3>
-                            <div className="border border-dashed border-slate-300 p-8 rounded-2xl bg-white/50">
+                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Page Title (Overview Style)</h3>
+                            <div className="ios-glass-card p-8 rounded-2xl">
                                 <div className="text-center">
                                     <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
                                         <span className="text-miku text-xs font-bold tracking-widest uppercase">PAGE CATEGORY</span>
@@ -340,7 +357,7 @@ export default function DesignSystemClient() {
                                     <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
                                         Page <span className="text-miku">Title</span>
                                     </h1>
-                                    <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                                    <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-2xl mx-auto">
                                         Page subtitle or description text goes here.
                                     </p>
                                 </div>
@@ -351,10 +368,10 @@ export default function DesignSystemClient() {
 
                         {/* Section Card (Related Events) */}
                         <div>
-                            <h3 className="text-lg font-bold mb-4 text-slate-600">Section Card (e.g., Related Event)</h3>
-                            <div className="max-w-md bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Section Card (e.g., Related Event)</h3>
+                            <div className="max-w-md ios-glass-card rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-miku/5 transition-all">
+                                <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-miku/10 to-transparent">
+                                    <h2 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
@@ -363,8 +380,8 @@ export default function DesignSystemClient() {
                                 </div>
                                 <div className="p-0">
                                     <div className="block group cursor-pointer">
-                                        <div className="relative aspect-[2/1] w-full bg-slate-200">
-                                            <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+                                        <div className="relative aspect-[2/1] w-full bg-slate-200 dark:bg-slate-800">
+                                            <div className="absolute inset-0 flex items-center justify-center text-slate-400 dark:text-slate-500">
                                                 Banner Image Placeholder
                                             </div>
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
@@ -396,12 +413,12 @@ export default function DesignSystemClient() {
                         <span className="w-1.5 h-8 bg-sky-400 rounded-full"></span>
                         烤森预览（开发测试）
                     </h2>
-                    <div className="glass-card p-4 sm:p-6 rounded-2xl">
+                    <div className="ios-glass-card p-4 sm:p-6 rounded-2xl">
                         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                             <div>
-                                <h3 className="text-lg font-bold text-slate-600">MySekai 3D 场景预览组件</h3>
+                                <h3 className="text-lg font-bold text-slate-600 dark:text-slate-400">MySekai 3D 场景预览组件</h3>
                                 <p className="mt-1 text-sm text-slate-500">
-                                    使用本地 <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">/data/mysekai-preview/testmysekai.json</code> 验证 OBJ 与纹理资源载入。
+                                    使用本地 <code className="rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-xs">/data/mysekai-preview/testmysekai.json</code> 验证 OBJ 与纹理资源载入。
                                 </p>
                             </div>
                             <span className="text-xs font-medium text-slate-400">
@@ -419,7 +436,7 @@ export default function DesignSystemClient() {
                         Sekai Card Thumbnail
                     </h2>
 
-                    <div className="glass-card p-8 rounded-2xl">
+                    <div className="ios-glass-card p-8 rounded-2xl">
                         <p className="text-slate-500 mb-6">
                             New SVG-based component that reproduces the official in-game thumbnail layering logic.
                         </p>
@@ -667,41 +684,41 @@ export default function DesignSystemClient() {
                         Modal / Dialog
                     </h2>
 
-                    <div className="glass-card p-8 rounded-2xl">
+                    <div className="ios-glass-card p-8 rounded-2xl">
                         <p className="text-slate-500 mb-6">
                             Generic modal component with theme-colored header, backdrop blur, and smooth framer-motion animations.
-                            Rendered via <code className="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-slate-600">createPortal</code> to
+                            Rendered via <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono text-slate-600">createPortal</code> to
                             ensure viewport-centered positioning regardless of sidebar state.
                         </p>
 
                         <div className="flex flex-wrap gap-4 items-center">
                             <button
                                 onClick={() => openModal("sm")}
-                                className="px-5 py-2 border-2 border-miku text-miku rounded-lg font-bold hover:bg-miku hover:text-white active:scale-95 transition-all text-sm"
+                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-xl font-bold text-sm"
                             >
                                 Small
                             </button>
                             <button
                                 onClick={() => openModal("md")}
-                                className="px-6 py-2 bg-miku text-white rounded-lg font-bold shadow-lg shadow-miku/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+                                className="px-6 py-2 ios-glass-btn ios-glass-btn-primary rounded-xl font-bold shadow-lg shadow-miku/20 text-sm"
                             >
                                 Medium (Default)
                             </button>
                             <button
                                 onClick={() => openModal("lg")}
-                                className="px-5 py-2 border-2 border-miku text-miku rounded-lg font-bold hover:bg-miku hover:text-white active:scale-95 transition-all text-sm"
+                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-xl font-bold text-sm"
                             >
                                 Large
                             </button>
                             <button
                                 onClick={() => openModal("xl")}
-                                className="px-5 py-2 border-2 border-miku text-miku rounded-lg font-bold hover:bg-miku hover:text-white active:scale-95 transition-all text-sm"
+                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-xl font-bold text-sm"
                             >
                                 Extra Large
                             </button>
                             <button
                                 onClick={() => setIsImageModalOpen(true)}
-                                className="px-5 py-2 border-2 border-emerald-500 text-emerald-600 rounded-lg font-bold hover:bg-emerald-500 hover:text-white active:scale-95 transition-all text-sm"
+                                className="px-5 py-2 ios-glass-btn text-emerald-600 border-emerald-500/30 hover:border-emerald-500/50 rounded-xl font-bold text-sm"
                             >
                                 Image Preview
                             </button>
@@ -717,12 +734,12 @@ export default function DesignSystemClient() {
 
                     <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="弹出窗口示例" size={modalSize}>
                         <div className="space-y-4">
-                            <p className="text-slate-600">
+                            <p className="text-slate-600 dark:text-slate-350 text-sm leading-relaxed">
                                 这是一个通用弹出窗口组件的演示。它会始终在视口中央显示，不受侧边栏和顶栏的影响。
                             </p>
-                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                <h3 className="text-sm font-bold text-slate-700 mb-2">特性</h3>
-                                <ul className="text-sm text-slate-500 space-y-1.5 list-disc list-inside">
+                            <div className="p-4 ios-glass-panel rounded-2xl">
+                                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">特性</h3>
+                                <ul className="text-sm text-slate-550 dark:text-slate-400 space-y-1.5 list-disc list-inside">
                                     <li>使用 createPortal 渲染，避免 z-index 层级问题</li>
                                     <li>framer-motion 入场/出场动画</li>
                                     <li>ESC 键关闭 / 点击遮罩关闭</li>
@@ -756,10 +773,10 @@ export default function DesignSystemClient() {
                         Quick Filter (快捷筛选器)
                     </h2>
 
-                    <div className="glass-card p-8 rounded-2xl">
+                    <div className="ios-glass-card p-8 rounded-2xl">
                         <p className="text-slate-500 mb-6">
                             全局通用的快捷筛选器组件。页面通过{" "}
-                            <code className="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono text-slate-600">useQuickFilter()</code>{" "}
+                            <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono text-slate-600">useQuickFilter()</code>{" "}
                             注册筛选内容后，页面右下角会出现一个漏斗图标的浮动按钮（位于&quot;回到顶部&quot;按钮上方），
                             点击后弹出 Modal 展示筛选面板。
                         </p>
@@ -773,7 +790,7 @@ export default function DesignSystemClient() {
                             </div>
 
                             {hasActiveFilters && (
-                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-white animate-pulse">
+                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-white animate-pulse shadow-sm">
                                     筛选器已激活
                                 </span>
                             )}
@@ -791,9 +808,9 @@ export default function DesignSystemClient() {
                             {/* Usage guide */}
                             <div>
                                 <h4 className="text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">使用方式</h4>
-                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                    <ul className="text-sm text-slate-500 space-y-2 list-disc list-inside">
-                                        <li>页面组件中调用 <code className="px-1 py-0.5 bg-white rounded text-xs font-mono">useQuickFilter(title, content, deps)</code></li>
+                                <div className="p-4 ios-glass-panel rounded-2xl">
+                                    <ul className="text-sm text-slate-550 dark:text-slate-450 space-y-2 list-disc list-inside">
+                                        <li>页面组件中调用 <code className="px-1 py-0.5 bg-white/20 rounded text-xs font-mono">useQuickFilter(title, content, deps)</code></li>
                                         <li>筛选器内容自动注册到全局 Context</li>
                                         <li>右下角浮动按钮仅在有注册内容时显示</li>
                                         <li>组件卸载时自动取消注册</li>
@@ -801,8 +818,8 @@ export default function DesignSystemClient() {
                                     </ul>
                                 </div>
 
-                                <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                    <h5 className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">当前筛选状态</h5>
+                                <div className="mt-4 p-4 ios-glass-panel rounded-2xl">
+                                    <h5 className="text-xs font-bold text-slate-650 dark:text-slate-350 uppercase tracking-wider mb-2">当前筛选状态</h5>
                                     <div className="text-xs text-slate-500 font-mono space-y-1">
                                         <div>search: &quot;{demoSearch || "(空)"}&quot;</div>
                                         <div>sortBy: &quot;{demoSortBy}&quot; / order: &quot;{demoSortOrder}&quot;</div>
