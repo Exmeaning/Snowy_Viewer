@@ -1,8 +1,7 @@
 import StorySelfReaderClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { defineStorySelfReaderPage } from "@/lib/seo-story-metadata";
 
-export const generateMetadata = pageMetadata("story_self_reader");
+const Page = defineStorySelfReaderPage(() => <StorySelfReaderClient />);
 
-export default function StorySelfReaderPage() {
-    return <StorySelfReaderClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

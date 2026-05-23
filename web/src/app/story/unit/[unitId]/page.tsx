@@ -1,8 +1,7 @@
 import StoryUnitDetailClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { defineStoryUnitGroupPage } from "@/lib/seo-story-metadata";
 
-export const generateMetadata = pageMetadata("story_unit_group");
+const Page = defineStoryUnitGroupPage(() => <StoryUnitDetailClient />);
 
-export default function StoryUnitDetailPage() {
-    return <StoryUnitDetailClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

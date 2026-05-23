@@ -1,8 +1,7 @@
 import StorySpecialReaderClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { defineStorySpecialReaderPage } from "@/lib/seo-story-metadata";
 
-export const generateMetadata = pageMetadata("story_special_reader");
+const Page = defineStorySpecialReaderPage(() => <StorySpecialReaderClient />);
 
-export default function StorySpecialReaderPage() {
-    return <StorySpecialReaderClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

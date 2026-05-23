@@ -126,6 +126,7 @@
 - [x] 逐步减少动态详情页重复 boilerplate：cards / character / costumes / events / exchanges / gacha / live / manga / music / mysekai 已迁到 `dynamicDetailMetadata()`。
 - [x] 新增 `seo-detail-metadata.ts` 集中维护十类动态详情页 metadata presets，并继续升级为 `defineXxxDetailPage()` 工厂；页面文件只保留页面渲染函数、`Page.generateMetadata` 与默认导出，进一步减少详情页 SEO boilerplate。
 - [x] 新增 `dynamicPageMetadata()` 与 `seo-dynamic-metadata.ts`，攻略详情页 `/guides/[id]` 已接入本地 `metadata-map.json`，canonical 直接输出 `/guides/{id}/`，不再复用泛用 `/guides/` metadata。
+- [x] 新增 `defineSeoDynamicPage()` 与 `seo-story-metadata.ts`，story event/unit/card/self/special/area 动态分组与 reader 页已从父级 `pageMetadata()` 迁到本地 metadata-map 驱动的动态 canonical、localized title/description 与 Breadcrumb JSON-LD。
 
 ### P4：结构化数据
 
@@ -136,6 +137,7 @@
 - [x] 为分组页/详情页预留 `BreadcrumbList` / `ItemList` helper。
 - [x] 十类动态详情页通过 `defineSeoDetailPage()` 自动输出详情页 `BreadcrumbList` JSON-LD，父级页面由 detail preset 的 `parentPageKey` 绑定。
 - [x] 新增 `withPageBreadcrumb()`，cards / music / events / gacha / character / costumes / exchanges / manga / mysekai / live / story / guides 等高权重入口页自动输出 registry-aware `BreadcrumbList` JSON-LD。
+- [x] 故事动态分组与 reader 页通过 `defineSeoDynamicPage()` 自动输出 `BreadcrumbList` JSON-LD，canonical 使用真实动态路径，不再落到 `/story/event/`、`/story/unit/` 等父级 canonical。
 
 ### P4.5：ja-JP 页面级 SEO 文案
 
@@ -170,11 +172,32 @@ npm run build:next --prefix web
 
 - `public/data/sitemap-data.json` 中不包含 `/eventstory/`。
 - `mainRoutes` 来自 registry，非索引页不进入 sitemap。
-- `detailRoutes` 覆盖 cards / music / events / gacha / live / character / exchanges / costumes / mysekai / manga / guides。
+- `detailRoutes` 覆盖 cards / music / events / gacha / live / character / exchanges / costumes / mysekai / manga / guides / story event / story unit / story card / story self / story special / story area。
 - `robots.txt` 的 sitemap 地址仍正确。
 - 没有在无 locale URL 的情况下输出 hreflang。
 
 ## 5. 最近验证记录
+
+### 2026-05-23：故事动态 metadata、reader canonical 与 sitemap 覆盖
+
+本轮新增/调整：
+
+- 新增 `defineSeoDynamicPage()`，支持非纯 `[id]` 动态路由自定义 canonical path，并复用动态 metadata preset 自动输出详情型 `BreadcrumbList` JSON-LD。
+- 新增 `src/lib/seo-story-metadata.ts`，story event group / event reader / unit group / unit reader / card reader / self reader / special reader / area category / area reader 统一迁入本地 `metadata-map.json` 驱动的动态 metadata；相关页面文件只保留 `Page.generateMetadata` 与默认导出。
+- `DYNAMIC_SEO_TEMPLATES` 新增 9 类故事动态页 localized title/description/fallback，`ja-JP` 同步覆盖；故事 reader 不再复用父级 `/story/*/` canonical。
+- `generate-metadata-map.mjs` 新增故事最小 SEO 数据：`storyEventGroups: 203`、`storyEventEpisodes: 1665`、`storyUnitGroups: 6`、`storyUnitEpisodes: 125`、`storyCardReaders: 1319`、`storySelfReaders: 26`、`storySpecialReaders: 67`、`storyAreaCategories: 211`、`storyAreaReaders: 2762`。
+- `generate-sitemaps.mjs` 新增 story event/unit/card/self/special/area 动态详情路由，并移除旧 event story group 重复生成源；生成后 detail routes 为 `15897`，唯一 URL 数同为 `15897`，不包含 `/eventstory/`。
+- `robots.txt` route handler 现在在输出前调用 `assertRobotsDisallowPathsAligned()`，确保非基础 disallow 路径均能在 route registry 中找到且为 `indexable: false`。
+- 本轮继续不输出 hreflang / sitemap alternate links；定向搜索未发现 `alternates.languages` / `hreflang` 输出。
+
+本轮验证：
+
+- `npm run lint:i18n --prefix web`：通过，`i18n key structure OK (3028 keys across 3 locales)` / `Hardcoded UI Han scan OK (15 allowlisted file groups)`。
+- `npm run lint:i18n-usage --prefix web`：通过，`Literal i18n usage keys OK`。
+- `npm run lint --prefix web`：通过；仍有既有 warning：`src/app/soundtrack/client.tsx` 的 `react-hooks/exhaustive-deps` missing dependency `handleFilterChange`。
+- `npm run sitemap --prefix web`：通过，详情来源均为 fresh；detail routes 为 15897，其中故事新增来源为 storyEventGroups 203、storyEventEpisodes 1665、storyUnitGroups 6、storyUnitEpisodes 125、storyCardReaders 1319、storySelfReaders 26、storySpecialReaders 67、storyAreaCategories 211、storyAreaReaders 2762。
+- `npm run generate:metadata --prefix web`：通过；新增故事 metadata sections 同上，所有 metadata sources 均为 fresh。
+- `npm run build:next --prefix web`：通过；仍有已知 `turbopack.root should be absolute` warning。
 
 ### 2026-05-23：攻略详情 metadata、noindex registry 守护与核心入口 Breadcrumb
 

@@ -1,8 +1,7 @@
 import StoryEventReaderClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { defineStoryEventReaderPage } from "@/lib/seo-story-metadata";
 
-export const generateMetadata = pageMetadata("story_event_reader");
+const Page = defineStoryEventReaderPage(() => <StoryEventReaderClient />);
 
-export default function StoryEventReaderPage() {
-    return <StoryEventReaderClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

@@ -228,7 +228,7 @@ export function noIndexRouteMetadata(path: string, title: string) {
 }
 
 export interface DynamicMetadataResultOptions {
-    title: string;
+    title?: string;
     descriptionKind: DynamicSeoKind;
     descriptionValues: Parameters<typeof formatDynamicSeoDescription>[1];
     images?: string[];
@@ -242,7 +242,19 @@ export interface CreateDynamicPageMetadataOptions<TData, TParams extends Record<
     routePrefix: string;
     getData: (params: TParams) => TData | null;
     build: (data: TData, context: { params: TParams; locale: UiLocale; path: string }) => DynamicMetadataResultOptions;
+    buildPath?: (params: TParams) => string;
     fallbackTwitterCard?: "summary" | "summary_large_image";
+}
+
+function buildDynamicMetadataPath<TParams extends Record<string, string>>(
+    routePrefix: string,
+    params: TParams,
+    buildPath?: (params: TParams) => string,
+): string {
+    if (buildPath) return normalizeSeoPath(buildPath(params));
+
+    const suffix = Object.values(params).map((part) => encodeURIComponent(part)).join("/");
+    return normalizeSeoPath(`/${routePrefix.replace(/^\/+|\/+$/g, "")}${suffix ? `/${suffix}` : ""}`);
 }
 
 export async function createDynamicPageMetadata<TData, TParams extends Record<string, string>>({
@@ -251,12 +263,12 @@ export async function createDynamicPageMetadata<TData, TParams extends Record<st
     routePrefix,
     getData,
     build,
+    buildPath,
     fallbackTwitterCard,
 }: CreateDynamicPageMetadataOptions<TData, TParams>): Promise<Metadata> {
     const resolvedParams = await params;
     const locale = await getRequestSeoLocale();
-    const suffix = Object.values(resolvedParams).map((part) => encodeURIComponent(part)).join("/");
-    const path = normalizeSeoPath(`/${routePrefix.replace(/^\/+|\/+$/g, "")}${suffix ? `/${suffix}` : ""}`);
+    const path = buildDynamicMetadataPath(routePrefix, resolvedParams, buildPath);
     const data = getData(resolvedParams);
 
     if (!data) {
@@ -284,6 +296,54 @@ export async function createDynamicPageMetadata<TData, TParams extends Record<st
 
 export function dynamicPageMetadata<TData, TParams extends Record<string, string>>(options: Omit<CreateDynamicPageMetadataOptions<TData, TParams>, "params">) {
     return ({ params }: { params: Promise<TParams> }) => createDynamicPageMetadata({ ...options, params });
+}
+
+export interface DynamicPageStructuredDataOptions<TData, TParams extends Record<string, string>> {
+    parentPageKey: SeoPageKey;
+    getName: (data: TData | null, context: { params: TParams; locale: UiLocale; path: string }) => string;
+}
+
+export interface SeoDynamicPageOptions<TData, TParams extends Record<string, string>> extends Omit<CreateDynamicPageMetadataOptions<TData, TParams>, "params"> {
+    render: (props: { params?: Promise<TParams> }) => ReactNode;
+    structuredData?: DynamicPageStructuredDataOptions<TData, TParams>;
+}
+
+export function defineSeoDynamicPage<TData, TParams extends Record<string, string>>({
+    render,
+    structuredData,
+    ...metadataOptions
+}: SeoDynamicPageOptions<TData, TParams>) {
+    const Page = async ({ params }: { params?: Promise<TParams> }) => {
+        if (!structuredData) return render({ params });
+
+        const resolvedParams = params ? await params : ({} as TParams);
+        const locale = await getRequestSeoLocale();
+        const path = buildDynamicMetadataPath(metadataOptions.routePrefix, resolvedParams, metadataOptions.buildPath);
+        const data = metadataOptions.getData(resolvedParams);
+        const detailName = structuredData.getName(data, { params: resolvedParams, locale, path });
+        const breadcrumbJsonLd = generateDetailBreadcrumbJsonLd(
+            SITE_BASE_URL,
+            structuredData.parentPageKey,
+            { name: detailName, path },
+            locale,
+        );
+        const scriptId = `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${path.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "dynamic"}`;
+
+        return createElement(
+            Fragment,
+            null,
+            createElement("script", {
+                id: scriptId,
+                type: "application/ld+json",
+                dangerouslySetInnerHTML: { __html: JSON.stringify(breadcrumbJsonLd) },
+            }),
+            render({ params }),
+        );
+    };
+
+    return Object.assign(Page, {
+        generateMetadata: dynamicPageMetadata(metadataOptions),
+    });
 }
 
 export async function createSimpleMetadata(pageKey: SeoPageKey): Promise<Metadata> {

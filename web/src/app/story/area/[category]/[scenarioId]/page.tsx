@@ -1,8 +1,7 @@
 import StoryAreaTalkClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { defineStoryAreaReaderPage } from "@/lib/seo-story-metadata";
 
-export const generateMetadata = pageMetadata("story_area_reader");
+const Page = defineStoryAreaReaderPage(() => <StoryAreaTalkClient />);
 
-export default function StoryAreaTalkPage() {
-    return <StoryAreaTalkClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;

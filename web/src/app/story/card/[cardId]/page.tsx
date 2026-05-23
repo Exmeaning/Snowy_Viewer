@@ -1,8 +1,7 @@
 import StoryCardReaderClient from "./client";
-import { pageMetadata } from "@/lib/seo-metadata";
+import { defineStoryCardReaderPage } from "@/lib/seo-story-metadata";
 
-export const generateMetadata = pageMetadata("story_card_reader");
+const Page = defineStoryCardReaderPage(() => <StoryCardReaderClient />);
 
-export default function StoryCardReaderPage() {
-    return <StoryCardReaderClient />;
-}
+export const generateMetadata = Page.generateMetadata;
+export default Page;
