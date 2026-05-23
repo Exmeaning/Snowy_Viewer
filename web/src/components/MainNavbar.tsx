@@ -51,7 +51,7 @@ export default function MainNavbar({
                     {/* Menu Toggle Button */}
                     <button
                         onClick={onMenuToggle}
-                        className="flex items-center gap-1.5 p-2 text-slate-600 hover:text-miku transition-colors rounded-lg hover:bg-slate-50 shrink-0"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-600 dark:text-slate-300 hover:text-miku dark:hover:text-miku ios-glass-btn rounded-xl shrink-0"
                         title={`${t("layout.nav.menu")} (${sidebarShortcut})`}
                     >
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,7 +92,7 @@ export default function MainNavbar({
                     {/* Search Button */}
                     <button
                         onClick={onSearchToggle}
-                        className="flex items-center gap-2 p-2 text-slate-400 hover:text-miku transition-colors rounded-lg hover:bg-slate-50"
+                        className="flex items-center gap-2 px-2.5 py-1.5 text-slate-400 hover:text-miku dark:hover:text-miku ios-glass-btn rounded-xl"
                         title={`${t("layout.nav.search")} (${searchShortcut})`}
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,7 +106,7 @@ export default function MainNavbar({
                     {/* Keyboard Shortcuts Help Button */}
                     <button
                         onClick={onShortcutsHelpToggle}
-                        className="hidden sm:flex items-center gap-1.5 p-2 text-slate-400 hover:text-miku transition-colors rounded-lg hover:bg-slate-50"
+                        className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-slate-400 hover:text-miku dark:hover:text-miku ios-glass-btn rounded-xl"
                         title={`${t("layout.nav.shortcutsHelp")} (${helpShortcut})`}
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -123,7 +123,7 @@ export default function MainNavbar({
                         <button
                             id="settings-button"
                             onClick={onSettingsToggle}
-                            className="flex items-center gap-1.5 p-2 text-slate-400 hover:text-miku transition-colors rounded-lg hover:bg-slate-50"
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-400 hover:text-miku dark:hover:text-miku ios-glass-btn rounded-xl"
                             title={`${t("layout.nav.settings")} (${settingsShortcut})`}
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

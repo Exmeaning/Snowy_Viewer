@@ -654,7 +654,7 @@ export default function Sidebar({
 
             {/* Sidebar */}
             <aside
-                className={`fixed ${isHomePage ? "top-[3.5rem] h-[calc(100vh-3.5rem)]" : "top-[5.5rem] h-[calc(100vh-5.5rem)]"} sm:top-[4.5rem] sm:h-[calc(100vh-4.5rem)] left-0 w-64 bg-white/45 dark:bg-slate-900/40 backdrop-blur-2xl border-r border-slate-200/50 dark:border-slate-800/30 shadow-[0_8px_32px_0_rgba(31,38,135,0.04)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.25)] z-[60] ${hasMounted ? 'transition-transform duration-300 ease-out' : ''} overflow-y-auto flex flex-col ${isOpen ? "translate-x-0" : "-translate-x-full"
+                className={`fixed ${isHomePage ? "top-[3.5rem] h-[calc(100vh-3.5rem)]" : "top-[5.5rem] h-[calc(100vh-5.5rem)]"} sm:top-[4.5rem] sm:h-[calc(100vh-4.5rem)] left-0 w-64 ios-glass-panel border-r border-slate-200/50 dark:border-slate-800/30 z-[60] ${hasMounted ? 'transition-transform duration-300 ease-out' : ''} overflow-y-auto flex flex-col ${isOpen ? "translate-x-0" : "-translate-x-full"
                     }`}
             >
 
@@ -666,11 +666,11 @@ export default function Sidebar({
                         href="/"
                         onClick={handleNavClick}
                         data-nav-index={(() => { const i = flatIdx; flatIdx++; return i; })()}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${focusedIndex === 0
-                            ? "bg-miku/15 text-miku ring-2 ring-miku/30 dark:bg-miku/20"
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all border ${focusedIndex === 0
+                            ? "bg-miku/20 text-miku ring-2 ring-miku/30 dark:bg-miku/25 border-miku/30 dark:border-miku/40"
                             : pathname === "/"
-                                ? "bg-miku/10 text-miku dark:bg-miku/15"
-                                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 hover:text-miku dark:hover:text-miku"
+                                ? "bg-miku/15 text-miku font-semibold border-miku/30 dark:border-miku/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] dark:bg-miku/20"
+                                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 hover:text-miku dark:hover:text-miku border-transparent"
                             }`}
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -712,11 +712,11 @@ export default function Sidebar({
                                         const isFocused = focusedIndex === thisIdx;
                                         return (
                                             <div key={item.href}>
-                                                <div className={`flex items-center rounded-lg transition-all ${isFocused
-                                                    ? "bg-miku/15 text-miku ring-2 ring-miku/30 dark:bg-miku/20"
+                                                <div className={`flex items-center rounded-lg transition-all border ${isFocused
+                                                    ? "bg-miku/20 text-miku ring-2 ring-miku/30 dark:bg-miku/25 border-miku/30 dark:border-miku/40"
                                                     : active
-                                                        ? "bg-miku/10 text-miku dark:bg-miku/15"
-                                                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 hover:text-miku dark:hover:text-miku"
+                                                        ? "bg-miku/15 text-miku font-semibold border-miku/30 dark:border-miku/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] dark:bg-miku/20"
+                                                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 hover:text-miku dark:hover:text-miku border-transparent"
                                                     }`}>
                                                     <Link
                                                         href={item.href}
@@ -738,12 +738,12 @@ export default function Sidebar({
                 </nav>
 
                 {/* Bottom section - user info */}
-                <div className="border-t border-slate-200 dark:border-slate-800/40 flex-shrink-0">
+                <div className="border-t border-slate-200/50 dark:border-slate-800/30 flex-shrink-0">
                     {/* User Info Card */}
                     <Link
                         href="/profile"
                         onClick={handleNavClick}
-                        className="flex items-center gap-3 p-4 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors group"
+                        className="flex items-center gap-3 p-4 hover:bg-miku/5 dark:hover:bg-miku/10 transition-all duration-300 group border-t border-transparent"
                     >
                         {/* Avatar */}
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-miku to-blue-400 flex items-center justify-center flex-shrink-0 overflow-hidden">
