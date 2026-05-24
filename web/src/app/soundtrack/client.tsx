@@ -9,7 +9,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { fetchBgmDurationsData, fetchMasterData } from "@/lib/fetch";
 import { getMysekaiRawAssetUrl } from "@/lib/assets";
 import { getMysekaiSoundTrackAudioUrl } from "@/lib/mysekai-preview/assets";
-import { AudioSpectrumVisualizer } from "./components/AudioSpectrumVisualizer";
 
 // Interface definitions based on masterdata schemas
 interface MysekaiMusicSoundTrackCategory {
@@ -919,6 +918,8 @@ function SoundtrackContent() {
                 }
                 .animate-cd-spin {
                     animation: spin-cd 30s linear infinite;
+                }
+                .animate-cd-spin:not(.play-state-paused) {
                     will-change: transform;
                 }
                 .play-state-paused {
@@ -1060,17 +1061,6 @@ function SoundtrackContent() {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* Real-time Audio Spectrum Visualizer */}
-                            <div className="mb-6 max-w-[240px] sm:max-w-[280px] mx-auto">
-                                <AudioSpectrumVisualizer
-                                    audioRef={audioRef}
-                                    themeColors={{ from: currentTheme.from, to: currentTheme.to }}
-                                    isPlaying={isPlaying}
-                                    isDark={isDark}
-                                    height={64}
-                                />
                             </div>
 
                             {/* Song Meta Info */}
