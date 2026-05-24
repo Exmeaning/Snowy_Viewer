@@ -70,8 +70,8 @@ function joinUrl(baseUrl: string, routePath: string): string {
     return `${baseUrl.replace(/\/$/, '')}${routePath.startsWith('/') ? routePath : `/${routePath}`}`;
 }
 
-function buildUrlEntry(baseUrl: string, route: SitemapRoute): string {
-    const lastmod = route.lastmod || new Date().toISOString();
+function buildUrlEntry(baseUrl: string, route: SitemapRoute, fallbackLastmod: string): string {
+    const lastmod = route.lastmod || fallbackLastmod;
     return `  <url>
     <loc>${escapeXml(joinUrl(baseUrl, route.path))}</loc>
     <lastmod>${escapeXml(lastmod)}</lastmod>
@@ -106,6 +106,7 @@ export function buildSitemapIndex(baseUrl: string): string {
 
 export function buildMainSitemap(baseUrl: string): string {
     const data = getData();
+    const fallbackLastmod = data?.generatedAt || '1970-01-01T00:00:00.000Z';
     const mainRoutes = data?.mainRoutes?.length
         ? data.mainRoutes
         : INDEXABLE_SEO_ROUTES.map((route) => ({
@@ -113,13 +114,14 @@ export function buildMainSitemap(baseUrl: string): string {
             priority: route.priority,
             changefreq: route.changefreq,
         }));
-    const entries = mainRoutes.map(r => buildUrlEntry(baseUrl, r));
+    const entries = mainRoutes.map(r => buildUrlEntry(baseUrl, r, fallbackLastmod));
     return wrapUrlset(entries);
 }
 
 export function buildDetailsSitemap(baseUrl: string): string {
     const data = getData();
     if (!data) return wrapUrlset([]);
-    const entries = data.detailRoutes.map(r => buildUrlEntry(baseUrl, r));
+    const fallbackLastmod = data.generatedAt || '1970-01-01T00:00:00.000Z';
+    const entries = data.detailRoutes.map(r => buildUrlEntry(baseUrl, r, fallbackLastmod));
     return wrapUrlset(entries);
 }
