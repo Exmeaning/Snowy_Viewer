@@ -17,7 +17,6 @@
     "@supabase/supabase-js": "^2.95.3",
     "@swc/helpers": "^0.5.15",
     "@types/qrcode": "^1.5.6",
-    "audiomotion-analyzer": "^4.5.4",
     "brotli-dec-wasm": "^2.3.2",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.6",
