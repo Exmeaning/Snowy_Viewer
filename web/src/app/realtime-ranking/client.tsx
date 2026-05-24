@@ -11,6 +11,9 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { fetchEventList } from "@/lib/prediction-api";
 import { fetchRealtimeRanking, fetchRealtimeRankingMasterData, fetchRealtimeRankingEvents, fetchChurnData, fetchWorldLinkChurnData, fetchWorldLinkRanking, getRealtimeRankingErrorMessage } from "@/lib/realtime-ranking-api";
 import ParkingPeriodsModal from "@/components/realtime-ranking/ParkingPeriodsModal";
+import Modal from "@/components/common/Modal";
+import ExternalLink from "@/components/ExternalLink";
+import Link from "next/link";
 import {
     RealtimeRankingBoardMode,
     RealtimeRankingEntryWithDiff,
@@ -224,6 +227,7 @@ function RealtimeRankingContent() {
     const [parkingModalUserId, setParkingModalUserId] = useState<string | null>(null);
     const [trackedUserId, setTrackedUserId] = useState<string | null>(null);
     const [lastTrackedData, setLastTrackedData] = useState<RealtimeRankingEntryWithDiff | null>(null);
+    const [celebrationOpen, setCelebrationOpen] = useState(false);
 
     // Load tracked user ID from localStorage on region change or snapshot event change
     useEffect(() => {
@@ -273,6 +277,7 @@ function RealtimeRankingContent() {
     const churnRequestIdRef = useRef(0);
     const churnRetryTimerRef = useRef<number | null>(null);
     const worldLinkCheckedRef = useRef(false);
+    const observedActiveEventRef = useRef<{ key: string; endAt: number } | null>(null);
 
     /** Hot update: when a user or tier line score changes, update its speed data. */
     const updateChurnForUser = useCallback((key: string, scoreDelta: number, isTierLine?: boolean) => {
@@ -556,9 +561,50 @@ function RealtimeRankingContent() {
     }, [region]);
 
     useEffect(() => {
+        observedActiveEventRef.current = null;
+    }, [region]);
+
+    useEffect(() => {
+        if (!snapshot || snapshot.region !== region) return;
+
+        const now = Date.now();
+        if (snapshot.startAt > now || snapshot.endAt <= now) return;
+
+        observedActiveEventRef.current = {
+            key: `${snapshot.region}:${snapshot.eventId}`,
+            endAt: snapshot.endAt,
+        };
+    }, [region, snapshot]);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("debug_celebration") === "true") {
+                setCelebrationOpen(true);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
         const timer = window.setInterval(() => {
             setCountdown((prev) => (prev <= 1 ? Math.floor(POLL_INTERVAL / 1000) : prev - 1));
             setSecondsSinceUpdate(Math.floor((Date.now() - lastUpdateTimeRef.current) / 1000));
+
+            // Check the cached active event deadline instead of depending on the realtime API still returning data after event end.
+            const observedActiveEvent = observedActiveEventRef.current;
+            if (observedActiveEvent && Date.now() >= observedActiveEvent.endAt) {
+                const celebratedKey = `realtime-ranking:celebrated:${observedActiveEvent.key}`;
+                observedActiveEventRef.current = null;
+
+                try {
+                    if (sessionStorage.getItem(celebratedKey)) return;
+                    sessionStorage.setItem(celebratedKey, "true");
+                } catch {
+                    // Storage can be unavailable in private browsing; still show the celebration once for this in-memory observation.
+                }
+
+                setCelebrationOpen(true);
+            }
         }, 1000);
 
         return () => window.clearInterval(timer);
@@ -1140,6 +1186,112 @@ function RealtimeRankingContent() {
                 churnEntry={parkingModalUserId ? activeChurnData.get(parkingModalUserId) : undefined}
                 onClose={() => setParkingModalUserId(null)}
             />
+
+            {/* Celebration Modal */}
+            
+            <Modal
+                isOpen={celebrationOpen}
+                onClose={() => setCelebrationOpen(false)}
+                title={t("page.realtimeRanking.celebrationTitle")}
+                size="md"
+            >
+                <div className="space-y-6 text-center">
+                    {/* Celebratory header graphic or animation */}
+                    <div className="flex justify-center relative py-4">
+                        <div className="absolute inset-0 bg-gradient-to-r from-miku/20 via-sky-400/20 to-luka/20 blur-xl rounded-full" />
+                        <motion.div
+                            animate={{
+                                scale: [1, 1.15, 1],
+                                rotate: [0, 5, -5, 0]
+                            }}
+                            transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }}
+                            className="relative text-6xl"
+                        >
+                            🎉
+                        </motion.div>
+                    </div>
+
+                    <h3 className="text-2xl font-black bg-gradient-to-r from-miku via-sky-500 to-luka bg-clip-text text-transparent">
+                        {t("page.realtimeRanking.celebrationTitle")}
+                    </h3>
+
+                    <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed text-left px-2">
+                        {t("page.realtimeRanking.celebrationTextPart1")}
+                        <Link
+                            href="/patreon"
+                            target="_blank"
+                            className="text-miku font-black underline decoration-dotted hover:opacity-80 transition-opacity mx-1"
+                        >
+                            {t("page.realtimeRanking.celebrationTextLink")}
+                        </Link>
+                        {t("page.realtimeRanking.celebrationTextPart2")}
+                    </p>
+
+                    {/* QR Code scans displayed directly in the modal per user request! */}
+                    <div className="p-4 ios-glass-panel rounded-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-4">
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                            {t("page.realtimeRanking.celebrationQrScanHint")}
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                            {/* Alipay */}
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="w-32 h-32 rounded-xl overflow-hidden shadow-md border border-slate-200/70 relative bg-white">
+                                    <img
+                                        src="/patreon/alipay.png"
+                                        alt="Alipay QR Code"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-500">{t("page.realtimeRanking.celebrationAlipay")}</span>
+                            </div>
+
+                            {/* WeChat */}
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="w-32 h-32 rounded-xl overflow-hidden shadow-md border border-slate-200/70 relative bg-white">
+                                    <img
+                                        src="/patreon/wechat.png"
+                                        alt="WeChat QR Code"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-500">{t("page.realtimeRanking.celebrationWechat")}</span>
+                            </div>
+                        </div>
+
+                        {/* Ko-fi Link */}
+                        <div className="flex flex-col items-center gap-1.5 pt-3 border-t border-slate-200/40 dark:border-slate-800/40">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                {t("page.realtimeRanking.celebrationKofi")}
+                            </span>
+                            <ExternalLink
+                                href="https://ko-fi.com/moesekai"
+                                className="hover:opacity-80 transition-opacity"
+                            >
+                                <img
+                                    src="https://storage.ko-fi.com/cdn/brandasset/v2/support_me_on_kofi_dark.png"
+                                    alt="Support on Ko-fi"
+                                    className="h-8"
+                                />
+                            </ExternalLink>
+                        </div>
+                    </div>
+
+                    {/* Direct button link to the full Patreon page */}
+                    <div className="pt-2">
+                        <Link
+                            href="/patreon"
+                            target="_blank"
+                            className="block w-full py-3 px-6 text-sm font-extrabold text-white text-center bg-gradient-to-r from-miku via-sky-500 to-luka hover:opacity-90 active:scale-[0.98] shadow-lg shadow-miku/20 rounded-2xl transition-all"
+                        >
+                            {t("page.realtimeRanking.celebrationButton")}
+                        </Link>
+                    </div>
+                </div>
+            </Modal>
         </MainLayout>
     );
 }

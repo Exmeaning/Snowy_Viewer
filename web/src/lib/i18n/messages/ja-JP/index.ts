@@ -2108,7 +2108,16 @@ export const jaJPMessages = {
         churnFetchFailed: 'Failed to fetch churn data (HTTP {status})',
         churnTimeout: 'The churn data request timed out. Please try again later.',
         unknown: 'Failed to load live ranking'
-      }
+      },
+      celebrationTitle: "イベ乙です！",
+      celebrationTextPart1: "moesekaiは小規模な有志グループによって運営・保守されている完全非営利プロジェクトです。もしこの機能が役に立ったなら、ぜひ",
+      celebrationTextLink: "支援ページをクリック",
+      celebrationTextPart2: "してご支援をお願いしますにゃ〜 これによりプロジェクトの長期的な維持・運営が可能になりますにゃ〜",
+      celebrationButton: "支援ページへにゃ",
+      celebrationQrScanHint: "または直接QRコードをスキャンして支援にゃ：",
+      celebrationAlipay: "Alipay / アリペイ",
+      celebrationWechat: "WeChat Pay / ウィーチャットペイ",
+      celebrationKofi: "海外ご支援 / Ko-fi"
     },
     deckRecommend: {
       badge: '編成おすすめ',
