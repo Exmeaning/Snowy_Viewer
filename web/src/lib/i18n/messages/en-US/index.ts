@@ -1003,7 +1003,7 @@ export const enUSMessages = {
             },
             sponsors: {
                 title: "Sponsor Thanks (in no particular order)",
-                list: "cike, Hakuchumu, 性价比, luoxia, 雪莹ちゃん, 蘸色绘糖/晕星奏, tony_all, 沙皮, 轩, 末乐回忆, metamiku, madoka, 垂耳兔kawayi, amia, and three supporters who prefer not to disclose their IDs.",
+                list: "阳子(support server),cike, Hakuchumu, 性价比, luoxia, 雪莹ちゃん, 蘸色绘糖/晕星奏, tony_all, 沙皮, 轩, 末乐回忆, metamiku, madoka, 垂耳兔kawayi, amia,maveriki, and four supporters who prefer not to disclose their IDs.",
             },
             specialThanks: {
                 title: "Supporter Thanks (in no particular order)",

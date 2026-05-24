@@ -36,14 +36,17 @@ const __dirname = path.dirname(__filename);
 const OUT_DIR = path.join(__dirname, '..', 'public', 'data');
 const OUT_FILE = path.join(OUT_DIR, 'sitemap-data.json');
 const REQUIRE_FRESH = requireFreshBuildData();
+const RUN_GENERATED_AT = new Date().toISOString();
 
 /**
- * Format timestamp to ISO date string
+ * Format a real source timestamp to an ISO date string.
+ * Missing/invalid source timestamps intentionally return null so callers can
+ * reuse existing lastmod values instead of refreshing them on every CI run.
  */
 function formatDate(timestamp) {
-    if (!timestamp) return new Date().toISOString();
+    if (!timestamp) return null;
     const date = new Date(timestamp);
-    return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+    return isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 function shortenError(error) {
@@ -65,10 +68,27 @@ function matchesDepth(route, prefix, segmentCount) {
     return rest.split('/').filter(Boolean).length === segmentCount;
 }
 
+function detailRoutesByPath(existingData) {
+    if (!existingData) return new Map();
+    if (existingData.__detailRoutesByPath) return existingData.__detailRoutesByPath;
+
+    const routes = Array.isArray(existingData.detailRoutes) ? existingData.detailRoutes : [];
+    const routesByPath = new Map(routes.map(route => [route?.path, route]));
+    Object.defineProperty(existingData, '__detailRoutesByPath', {
+        value: routesByPath,
+        enumerable: false,
+    });
+    return routesByPath;
+}
+
 function existingLastmodForPath(existingData, routePath, fallback) {
-    const route = (Array.isArray(existingData?.detailRoutes) ? existingData.detailRoutes : [])
-        .find(item => item?.path === routePath);
+    const route = detailRoutesByPath(existingData).get(routePath);
     return route?.lastmod || fallback;
+}
+
+function stableLastmod(existingData, routePath, sourceTimestamp) {
+    return formatDate(sourceTimestamp)
+        || existingLastmodForPath(existingData, routePath, RUN_GENERATED_AT);
 }
 
 function areRoutesChanged(existingData, nextMainRoutes, nextDetailRoutes) {
@@ -145,123 +165,152 @@ const mainRoutes = SEO_ROUTE_DATA
 
 assertMainRoutesAligned(mainRoutes);
 
-function buildMangaRoutes(mangasRaw) {
-    return Object.entries(mangasRaw || {}).map(([id, manga]) => ({
-        path: `/manga/${id}/`,
-        lastmod: formatDate(manga?.publishedAt || manga?.updatedAt),
-        priority: 0.5,
-        changefreq: 'monthly',
-    }));
-}
-
-function buildGuideRoutes(guidesRaw) {
-    return (guidesRaw?.guides || []).map(guide => ({
-        path: `/guides/${guide.id}/`,
-        lastmod: formatDate(guide.date || guidesRaw?.generated_at),
-        priority: 0.5,
-        changefreq: 'monthly',
-    }));
-}
-
-function buildStoryEventGroupRoutes(raw) {
-    const events = eventMapById(raw?.events);
-    return (Array.isArray(raw?.eventStories) ? raw.eventStories : []).map(story => {
-        const event = events.get(story.eventId);
+function buildMangaRoutes(mangasRaw, existingData) {
+    return Object.entries(mangasRaw || {}).map(([id, manga]) => {
+        const routePath = `/manga/${id}/`;
         return {
-            path: `/story/event/${story.eventId}/`,
-            lastmod: formatDate(event?.startAt),
+            path: routePath,
+            lastmod: stableLastmod(existingData, routePath, manga?.publishedAt || manga?.updatedAt),
             priority: 0.5,
             changefreq: 'monthly',
         };
     });
 }
 
-function buildStoryEventEpisodeRoutes(raw) {
-    const events = eventMapById(raw?.events);
-    return (Array.isArray(raw?.eventStories) ? raw.eventStories : []).flatMap(story => {
-        const event = events.get(story.eventId);
-        return (story.eventStoryEpisodes || []).map(episode => ({
-            path: `/story/event/${story.eventId}/${episode.episodeNo}/`,
-            lastmod: formatDate(event?.startAt),
-            priority: 0.4,
+function buildGuideRoutes(guidesRaw, existingData) {
+    return (guidesRaw?.guides || []).map(guide => {
+        const routePath = `/guides/${guide.id}/`;
+        return {
+            path: routePath,
+            lastmod: stableLastmod(existingData, routePath, guide.date || guidesRaw?.generated_at),
+            priority: 0.5,
             changefreq: 'monthly',
-        }));
+        };
     });
 }
 
-function buildStoryUnitGroupRoutes(raw) {
-    return (Array.isArray(raw?.unitStories) ? raw.unitStories : []).map(story => ({
-        path: `/story/unit/${story.seq}/`,
-        lastmod: formatDate(null),
-        priority: 0.5,
-        changefreq: 'monthly',
-    }));
-}
-
-function buildStoryUnitEpisodeRoutes(raw) {
-    return (Array.isArray(raw?.unitStories) ? raw.unitStories : []).flatMap(story => (story.chapters || [])
-        .flatMap(chapter => (chapter.episodes || []).map(episode => ({
-            path: `/story/unit/${story.seq}/${encodeURIComponent(episode.scenarioId)}/`,
-            lastmod: formatDate(null),
-            priority: 0.4,
+function buildStoryEventGroupRoutes(raw, existingData) {
+    const events = eventMapById(raw?.events);
+    return (Array.isArray(raw?.eventStories) ? raw.eventStories : []).map(story => {
+        const event = events.get(story.eventId);
+        const routePath = `/story/event/${story.eventId}/`;
+        return {
+            path: routePath,
+            lastmod: stableLastmod(existingData, routePath, event?.startAt),
+            priority: 0.5,
             changefreq: 'monthly',
-        }))));
+        };
+    });
 }
 
-function buildStoryCardRoutes(raw) {
+function buildStoryEventEpisodeRoutes(raw, existingData) {
+    const events = eventMapById(raw?.events);
+    return (Array.isArray(raw?.eventStories) ? raw.eventStories : []).flatMap(story => {
+        const event = events.get(story.eventId);
+        return (story.eventStoryEpisodes || []).map(episode => {
+            const routePath = `/story/event/${story.eventId}/${episode.episodeNo}/`;
+            return {
+                path: routePath,
+                lastmod: stableLastmod(existingData, routePath, event?.startAt),
+                priority: 0.4,
+                changefreq: 'monthly',
+            };
+        });
+    });
+}
+
+function buildStoryUnitGroupRoutes(raw, existingData) {
+    return (Array.isArray(raw?.unitStories) ? raw.unitStories : []).map(story => {
+        const routePath = `/story/unit/${story.seq}/`;
+        return {
+            path: routePath,
+            lastmod: stableLastmod(existingData, routePath, null),
+            priority: 0.5,
+            changefreq: 'monthly',
+        };
+    });
+}
+
+function buildStoryUnitEpisodeRoutes(raw, existingData) {
+    return (Array.isArray(raw?.unitStories) ? raw.unitStories : []).flatMap(story => (story.chapters || [])
+        .flatMap(chapter => (chapter.episodes || []).map(episode => {
+            const routePath = `/story/unit/${story.seq}/${encodeURIComponent(episode.scenarioId)}/`;
+            return {
+                path: routePath,
+                lastmod: stableLastmod(existingData, routePath, null),
+                priority: 0.4,
+                changefreq: 'monthly',
+            };
+        })));
+}
+
+function buildStoryCardRoutes(raw, existingData) {
     const cardIds = new Set((Array.isArray(raw?.cardEpisodes) ? raw.cardEpisodes : []).map(episode => episode.cardId));
     const cards = new Map((Array.isArray(raw?.cards) ? raw.cards : []).map(card => [card.id, card]));
-    return [...cardIds].map(cardId => ({
-        path: `/story/card/${cardId}/`,
-        lastmod: formatDate(cards.get(cardId)?.releaseAt),
-        priority: 0.4,
-        changefreq: 'monthly',
-    }));
+    return [...cardIds].map(cardId => {
+        const routePath = `/story/card/${cardId}/`;
+        return {
+            path: routePath,
+            lastmod: stableLastmod(existingData, routePath, cards.get(cardId)?.releaseAt),
+            priority: 0.4,
+            changefreq: 'monthly',
+        };
+    });
 }
 
-function buildStorySelfRoutes(raw) {
+function buildStorySelfRoutes(raw, existingData) {
     return (Array.isArray(raw?.characterProfiles) ? raw.characterProfiles : [])
         .filter(profile => profile.scenarioId)
-        .map(profile => ({
-            path: `/story/self/${profile.characterId}/`,
-            lastmod: formatDate(null),
-            priority: 0.4,
-            changefreq: 'monthly',
-        }));
+        .map(profile => {
+            const routePath = `/story/self/${profile.characterId}/`;
+            return {
+                path: routePath,
+                lastmod: stableLastmod(existingData, routePath, null),
+                priority: 0.4,
+                changefreq: 'monthly',
+            };
+        });
 }
 
-function buildStorySpecialRoutes(raw) {
+function buildStorySpecialRoutes(raw, existingData) {
     return (Array.isArray(raw?.specialStories) ? raw.specialStories : [])
         .filter(story => story.id !== 2 && Array.isArray(story.episodes) && story.episodes.length > 0)
-        .map(story => ({
-            path: `/story/special/${story.id}/`,
-            lastmod: formatDate(null),
-            priority: 0.4,
-            changefreq: 'monthly',
-        }));
+        .map(story => {
+            const routePath = `/story/special/${story.id}/`;
+            return {
+                path: routePath,
+                lastmod: stableLastmod(existingData, routePath, null),
+                priority: 0.4,
+                changefreq: 'monthly',
+            };
+        });
 }
 
-function buildStoryAreaCategoryRoutes(raw) {
+function buildStoryAreaCategoryRoutes(raw, existingData) {
     const categories = new Set();
     for (const action of Array.isArray(raw?.actionSets) ? raw.actionSets : []) {
         const category = actionCategory(action);
         if (category) categories.add(category);
     }
-    return [...categories].map(category => ({
-        path: `/story/area/${encodeURIComponent(category)}/`,
-        lastmod: formatDate(null),
-        priority: 0.4,
-        changefreq: 'monthly',
-    }));
+    return [...categories].map(category => {
+        const routePath = `/story/area/${encodeURIComponent(category)}/`;
+        return {
+            path: routePath,
+            lastmod: stableLastmod(existingData, routePath, null),
+            priority: 0.4,
+            changefreq: 'monthly',
+        };
+    });
 }
 
-function buildStoryAreaReaderRoutes(raw) {
+function buildStoryAreaReaderRoutes(raw, existingData) {
     return (Array.isArray(raw?.actionSets) ? raw.actionSets : []).flatMap(action => {
         const category = actionCategory(action);
         if (!category || !action.scenarioId) return [];
+        const routePath = `/story/area/${encodeURIComponent(category)}/${encodeURIComponent(action.scenarioId)}/`;
         return [{
-            path: `/story/area/${encodeURIComponent(category)}/${encodeURIComponent(action.scenarioId)}/`,
-            lastmod: formatDate(null),
+            path: routePath,
+            lastmod: stableLastmod(existingData, routePath, null),
             priority: 0.3,
             changefreq: 'monthly',
         }];
@@ -279,12 +328,15 @@ const routeSources = [
                 key: 'cards',
                 logLabel: 'card pages',
                 prefix: '/cards/',
-                build: cards => (Array.isArray(cards) ? cards : []).map(c => ({
-                    path: `/cards/${c.id}/`,
-                    lastmod: formatDate(c.releaseAt),
-                    priority: 0.6,
-                    changefreq: 'weekly',
-                })),
+                build: (cards, existingData) => (Array.isArray(cards) ? cards : []).map(c => {
+                    const routePath = `/cards/${c.id}/`;
+                    return {
+                        path: routePath,
+                        lastmod: stableLastmod(existingData, routePath, c.releaseAt),
+                        priority: 0.6,
+                        changefreq: 'weekly',
+                    };
+                }),
             },
         ],
     },
@@ -298,12 +350,15 @@ const routeSources = [
                 key: 'musics',
                 logLabel: 'music pages',
                 prefix: '/music/',
-                build: musics => (Array.isArray(musics) ? musics : []).map(m => ({
-                    path: `/music/${m.id}/`,
-                    lastmod: formatDate(m.publishedAt),
-                    priority: 0.6,
-                    changefreq: 'weekly',
-                })),
+                build: (musics, existingData) => (Array.isArray(musics) ? musics : []).map(m => {
+                    const routePath = `/music/${m.id}/`;
+                    return {
+                        path: routePath,
+                        lastmod: stableLastmod(existingData, routePath, m.publishedAt),
+                        priority: 0.6,
+                        changefreq: 'weekly',
+                    };
+                }),
             },
         ],
     },
@@ -317,12 +372,15 @@ const routeSources = [
                 key: 'events',
                 logLabel: 'event pages',
                 prefix: '/events/',
-                build: events => (Array.isArray(events) ? events : []).map(e => ({
-                    path: `/events/${e.id}/`,
-                    lastmod: formatDate(e.startAt),
-                    priority: 0.7,
-                    changefreq: 'weekly',
-                })),
+                build: (events, existingData) => (Array.isArray(events) ? events : []).map(e => {
+                    const routePath = `/events/${e.id}/`;
+                    return {
+                        path: routePath,
+                        lastmod: stableLastmod(existingData, routePath, e.startAt),
+                        priority: 0.7,
+                        changefreq: 'weekly',
+                    };
+                }),
             },
         ],
     },
@@ -336,12 +394,15 @@ const routeSources = [
                 key: 'gachas',
                 logLabel: 'gacha pages',
                 prefix: '/gacha/',
-                build: gachas => (Array.isArray(gachas) ? gachas : []).map(g => ({
-                    path: `/gacha/${g.id}/`,
-                    lastmod: formatDate(g.startAt),
-                    priority: 0.6,
-                    changefreq: 'weekly',
-                })),
+                build: (gachas, existingData) => (Array.isArray(gachas) ? gachas : []).map(g => {
+                    const routePath = `/gacha/${g.id}/`;
+                    return {
+                        path: routePath,
+                        lastmod: stableLastmod(existingData, routePath, g.startAt),
+                        priority: 0.6,
+                        changefreq: 'weekly',
+                    };
+                }),
             },
         ],
     },
@@ -355,12 +416,15 @@ const routeSources = [
                 key: 'virtualLives',
                 logLabel: 'virtual live pages',
                 prefix: '/live/',
-                build: virtualLives => (Array.isArray(virtualLives) ? virtualLives : []).map(v => ({
-                    path: `/live/${v.id}/`,
-                    lastmod: formatDate(v.startAt),
-                    priority: 0.5,
-                    changefreq: 'weekly',
-                })),
+                build: (virtualLives, existingData) => (Array.isArray(virtualLives) ? virtualLives : []).map(v => {
+                    const routePath = `/live/${v.id}/`;
+                    return {
+                        path: routePath,
+                        lastmod: stableLastmod(existingData, routePath, v.startAt),
+                        priority: 0.5,
+                        changefreq: 'weekly',
+                    };
+                }),
             },
         ],
     },
@@ -374,18 +438,15 @@ const routeSources = [
                 key: 'characters',
                 logLabel: 'character pages',
                 prefix: '/character/',
-                build: (characters, existingData) => {
-                    const fallbackLastmod = existingData?.generatedAt || formatDate(null);
-                    return (Array.isArray(characters) ? characters : []).map(c => {
-                        const routePath = `/character/${c.id}/`;
-                        return {
-                            path: routePath,
-                            lastmod: existingLastmodForPath(existingData, routePath, fallbackLastmod),
-                            priority: 0.6,
-                            changefreq: 'monthly',
-                        };
-                    });
-                },
+                build: (characters, existingData) => (Array.isArray(characters) ? characters : []).map(c => {
+                    const routePath = `/character/${c.id}/`;
+                    return {
+                        path: routePath,
+                        lastmod: stableLastmod(existingData, routePath, null),
+                        priority: 0.6,
+                        changefreq: 'monthly',
+                    };
+                }),
             },
         ],
     },
@@ -399,17 +460,20 @@ const routeSources = [
                 key: 'exchanges',
                 logLabel: 'exchange pages',
                 prefix: '/exchanges/',
-                build: exchangeSummaries => (Array.isArray(exchangeSummaries) ? exchangeSummaries : [])
+                build: (exchangeSummaries, existingData) => (Array.isArray(exchangeSummaries) ? exchangeSummaries : [])
                     .flatMap(summary => (summary.materialExchanges || []).map(exchange => ({
                         id: exchange.id,
                         lastmod: exchange.startAt || summary.startAt || summary.endAt,
                     })))
-                    .map(exchange => ({
-                        path: `/exchanges/${exchange.id}/`,
-                        lastmod: formatDate(exchange.lastmod),
-                        priority: 0.5,
-                        changefreq: 'weekly',
-                    })),
+                    .map(exchange => {
+                        const routePath = `/exchanges/${exchange.id}/`;
+                        return {
+                            path: routePath,
+                            lastmod: stableLastmod(existingData, routePath, exchange.lastmod),
+                            priority: 0.5,
+                            changefreq: 'weekly',
+                        };
+                    }),
             },
         ],
     },
@@ -423,12 +487,15 @@ const routeSources = [
                 key: 'costumes',
                 logLabel: 'costume pages',
                 prefix: '/costumes/',
-                build: costumesRaw => (costumesRaw?.costumes || []).map(costume => ({
-                    path: `/costumes/${costume.costumeNumber}/`,
-                    lastmod: formatDate(costume.publishedAt || costume.archivePublishedAt),
-                    priority: 0.5,
-                    changefreq: 'monthly',
-                })),
+                build: (costumesRaw, existingData) => (costumesRaw?.costumes || []).map(costume => {
+                    const routePath = `/costumes/${costume.costumeNumber}/`;
+                    return {
+                        path: routePath,
+                        lastmod: stableLastmod(existingData, routePath, costume.publishedAt || costume.archivePublishedAt),
+                        priority: 0.5,
+                        changefreq: 'monthly',
+                    };
+                }),
             },
         ],
     },
@@ -442,12 +509,15 @@ const routeSources = [
                 key: 'mysekaiFixtures',
                 logLabel: 'mysekai fixture pages',
                 prefix: '/mysekai/',
-                build: fixtures => (Array.isArray(fixtures) ? fixtures : []).map(fixture => ({
-                    path: `/mysekai/${fixture.id}/`,
-                    lastmod: formatDate(fixture.publishedAt || fixture.archivePublishedAt || fixture.updatedAt),
-                    priority: 0.5,
-                    changefreq: 'monthly',
-                })),
+                build: (fixtures, existingData) => (Array.isArray(fixtures) ? fixtures : []).map(fixture => {
+                    const routePath = `/mysekai/${fixture.id}/`;
+                    return {
+                        path: routePath,
+                        lastmod: stableLastmod(existingData, routePath, fixture.publishedAt || fixture.archivePublishedAt || fixture.updatedAt),
+                        priority: 0.5,
+                        changefreq: 'monthly',
+                    };
+                }),
             },
         ],
     },
@@ -691,7 +761,7 @@ async function main() {
     // do not create empty hourly commits.
     const routesChanged = areRoutesChanged(existingData, mainRoutes, detailRoutes);
     const data = {
-        generatedAt: routesChanged ? new Date().toISOString() : (existingData?.generatedAt || new Date().toISOString()),
+        generatedAt: routesChanged ? RUN_GENERATED_AT : (existingData?.generatedAt || RUN_GENERATED_AT),
         mainRoutes,
         detailRoutes,
     };
