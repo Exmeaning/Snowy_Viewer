@@ -246,8 +246,10 @@ const DEFAULT_THEME = { from: "#00CCBB", to: "#1E293B", shadow: "shadow-slate-50
 
 function SoundtrackContent() {
     const { t, formatNumber } = useI18n();
-    const { assetSource, resolvedColorScheme, isShowSpoiler } = useTheme();
+    const { assetSource, resolvedColorScheme, isShowSpoiler, backgroundAnimationBudget } = useTheme();
     const isDark = resolvedColorScheme === "dark";
+    const isPerformanceVisuals = backgroundAnimationBudget === "performance";
+    const shouldAnimateIdleUi = isPerformanceVisuals;
     const searchParams = useSearchParams();
 
     // Data states
@@ -263,6 +265,7 @@ function SoundtrackContent() {
 
     // Audio states
     const [isPlaying, setIsPlaying] = useState(false);
+    const [hasActivatedAudio, setHasActivatedAudio] = useState(false);
     const [currentTrack, setCurrentTrack] = useState<MysekaiMusicSoundTrackMaster | null>(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -409,10 +412,11 @@ function SoundtrackContent() {
     }, [searchParams, t, isShowSpoiler]);
 
     // Track audio source URL (correctly resolving Mysekai paths too)
-    const audioUrl = useMemo(() => {
+    const selectedAudioUrl = useMemo(() => {
         if (!currentTrack) return "";
         return getMysekaiSoundTrackAudioUrl(currentTrack.assetbundleName, currentTrack.assetbundleFileName, assetSource) || "";
     }, [currentTrack, assetSource]);
+    const audioUrl = hasActivatedAudio ? selectedAudioUrl : "";
 
     // Sync volume state to audio element
     useEffect(() => {
@@ -431,7 +435,7 @@ function SoundtrackContent() {
     useEffect(() => {
         setDownloadHint(null);
         setShareHint(null);
-    }, [audioUrl]);
+    }, [selectedAudioUrl]);
 
     // Explicitly swap the single audio element source so old tracks are stopped before a new one loads.
     useEffect(() => {
@@ -445,8 +449,10 @@ function SoundtrackContent() {
         setAudioError(null);
 
         if (!audioUrl) {
-            audio.removeAttribute("src");
-            audio.load();
+            if (audio.hasAttribute("src") || audio.currentSrc) {
+                audio.removeAttribute("src");
+                audio.load();
+            }
             setIsPlaying(false);
             return;
         }
@@ -663,7 +669,8 @@ function SoundtrackContent() {
 
     // Audio handlers
     const togglePlay = () => {
-        if (!audioUrl) return;
+        if (!selectedAudioUrl) return;
+        setHasActivatedAudio(true);
         setIsPlaying(prev => !prev);
     };
 
@@ -752,6 +759,7 @@ function SoundtrackContent() {
 
         setCurrentTrack(nextTrack);
         updateTrackUrlParam(nextTrack);
+        setHasActivatedAudio(true);
         setIsPlaying(true);
     };
 
@@ -777,6 +785,7 @@ function SoundtrackContent() {
 
         setCurrentTrack(prevTrack);
         updateTrackUrlParam(prevTrack);
+        setHasActivatedAudio(true);
         setIsPlaying(true);
     };
 
@@ -802,26 +811,28 @@ function SoundtrackContent() {
     const handleTrackSelect = (track: MysekaiMusicSoundTrackMaster) => {
         setCurrentTrack(track);
         updateTrackUrlParam(track);
+        setHasActivatedAudio(true);
         setIsPlaying(true);
     };
 
     const handleDownloadCurrentTrack = async () => {
-        if (!currentTrack || !audioUrl || isDownloading) return;
+        if (!currentTrack || !selectedAudioUrl || isDownloading) return;
 
+        const downloadUrl = selectedAudioUrl;
         const fileName = getTrackDownloadFileName(currentTrack);
         setIsDownloading(true);
         setDownloadHint(null);
         setShareHint(null);
 
         try {
-            const cachedBlob = await readAudioBlobFromCache(audioUrl);
+            const cachedBlob = await readAudioBlobFromCache(downloadUrl);
             if (cachedBlob) {
                 triggerBlobDownload(cachedBlob, fileName);
                 setDownloadHint(t("page.soundtrack.download.cachedHint"));
                 return;
             }
 
-            const response = await fetch(audioUrl, { cache: "force-cache" });
+            const response = await fetch(downloadUrl, { cache: "force-cache" });
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
@@ -831,12 +842,12 @@ function SoundtrackContent() {
                 throw new Error("EMPTY_AUDIO_BLOB");
             }
 
-            await storeAudioBlobInCache(audioUrl, blob);
+            await storeAudioBlobInCache(downloadUrl, blob);
             triggerBlobDownload(blob, fileName);
             setDownloadHint(t("page.soundtrack.download.cachedAndStartedHint"));
         } catch (err) {
             console.warn("Soundtrack download fallback to direct link:", err);
-            triggerDirectDownload(audioUrl, fileName);
+            triggerDirectDownload(downloadUrl, fileName);
             setDownloadHint(t("page.soundtrack.download.directHint"));
         } finally {
             setIsDownloading(false);
@@ -897,6 +908,9 @@ function SoundtrackContent() {
     };
 
     const displayDuration = currentTrack?.durationSeconds ?? duration;
+    const playerCardClassName = `relative overflow-hidden rounded-3xl bg-white/88 dark:bg-slate-900/82 border border-slate-200 dark:border-white/10 p-6 sm:p-8 shadow-xl dark:shadow-2xl transition-colors duration-500 ${isPerformanceVisuals ? "backdrop-blur-sm" : ""}`;
+    const toolbarClassName = `flex flex-col sm:flex-row gap-4 items-center justify-between rounded-2xl border border-slate-200 dark:border-white/5 p-4 ${isPerformanceVisuals ? "bg-white/80 dark:bg-slate-900/75 backdrop-blur-sm" : "bg-white/92 dark:bg-slate-900/88"}`;
+    const volumePopoverCardClassName = `bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-white/10 rounded-2xl p-4 shadow-xl flex flex-col items-center gap-3 ${isPerformanceVisuals ? "backdrop-blur-md" : ""}`;
 
     // Calculate dynamic ambient background colors based on current track category
     const ambientBgGlow = useMemo(() => {
@@ -918,12 +932,7 @@ function SoundtrackContent() {
                 }
                 .animate-cd-spin {
                     animation: spin-cd 30s linear infinite;
-                }
-                .animate-cd-spin:not(.play-state-paused) {
                     will-change: transform;
-                }
-                .play-state-paused {
-                    animation-play-state: paused;
                 }
                 .custom-slider-thumb::-webkit-slider-thumb {
                     appearance: none;
@@ -982,16 +991,20 @@ function SoundtrackContent() {
             />
 
             {/* Ambient Lighting Layers */}
-            <div className={`absolute inset-0 bg-gradient-to-tr ${ambientBgGlow} opacity-45 blur-2xl pointer-events-none transition-colors duration-1000`} />
-            <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-miku/10 blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-purple-500/5 blur-3xl pointer-events-none" />
+            {isPerformanceVisuals && (
+                <>
+                    <div className={`absolute inset-0 bg-gradient-to-tr ${ambientBgGlow} opacity-35 blur-2xl pointer-events-none transition-colors duration-1000`} />
+                    <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-miku/8 blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-purple-500/4 blur-3xl pointer-events-none" />
+                </>
+            )}
 
             <div className="container mx-auto px-4 sm:px-6 py-8 relative z-10 max-w-7xl">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 border-b border-slate-200 dark:border-white/5 pb-6">
                     <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1 border border-miku/30 bg-miku/10 rounded-full mb-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-miku animate-pulse" />
+                            <span className={`w-1.5 h-1.5 rounded-full bg-miku ${shouldAnimateIdleUi ? "animate-pulse" : ""}`} />
                             <span className="text-miku text-[10px] font-bold tracking-widest uppercase">{t("page.soundtrack.badge")}</span>
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-800 dark:text-white">
@@ -1008,7 +1021,7 @@ function SoundtrackContent() {
                     
                     {/* Left Column: Premium Music Player (Glass Card) */}
                     <div className="lg:col-span-5 w-full">
-                        <div className="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-slate-900/75 backdrop-blur-sm border border-slate-200 dark:border-white/10 p-6 sm:p-8 shadow-xl dark:shadow-2xl transition-colors duration-500">
+                        <div className={playerCardClassName}>
                             
                             {/* Accent Glow Overlay */}
                             <div 
@@ -1034,7 +1047,7 @@ function SoundtrackContent() {
                                     <div className="absolute inset-0 rounded-full bg-gradient-to-bl from-white/0 via-white/5 to-white/0 opacity-60 mix-blend-overlay pointer-events-none z-10" />
 
                                     {/* Center spinning core */}
-                                    <div className={`relative w-4/5 h-4/5 rounded-full overflow-hidden bg-neutral-900 flex items-center justify-center animate-cd-spin ${isPlaying ? "" : "play-state-paused"}`}>
+                                    <div className={`relative w-4/5 h-4/5 rounded-full overflow-hidden bg-neutral-900 flex items-center justify-center ${isPlaying ? "animate-cd-spin" : ""}`}>
                                         
                                         {/* Center Jacket Image */}
                                         {currentTrack && (
@@ -1088,7 +1101,7 @@ function SoundtrackContent() {
                                         )}
                                         <button
                                             onClick={handleDownloadCurrentTrack}
-                                            disabled={!currentTrack || !audioUrl || isDownloading}
+                                            disabled={!currentTrack || !selectedAudioUrl || isDownloading}
                                             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-all hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                                             title={isDownloading ? t("page.soundtrack.download.preparingTitle") : t("page.soundtrack.download.currentTitle")}
                                         >
@@ -1298,7 +1311,7 @@ function SoundtrackContent() {
                                     >
                                         {/* Vertical Volume Popover Dropup Card (Actual Styled Content) */}
                                         <div 
-                                            className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-2xl p-4 shadow-xl flex flex-col items-center gap-3"
+                                            className={volumePopoverCardClassName}
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
@@ -1462,15 +1475,17 @@ function SoundtrackContent() {
                                             }}
                                         >
                                             {/* Blurred Image Background */}
-                                            <div className="absolute inset-0 opacity-15 dark:opacity-20 filter blur-xs group-hover:scale-105 transition-transform duration-500">
-                                                <Image
-                                                    src={getMysekaiRawAssetUrl(`music_record_soundtrack/jacket/${cat.assetbundleName}.webp`, assetSource)}
-                                                    alt={cat.name}
-                                                    fill
-                                                    className="object-cover"
-                                                    unoptimized
-                                                />
-                                            </div>
+                                            {isPerformanceVisuals && (
+                                                <div className="absolute inset-0 opacity-15 dark:opacity-20 filter blur-xs group-hover:scale-105 transition-transform duration-500">
+                                                    <Image
+                                                        src={getMysekaiRawAssetUrl(`music_record_soundtrack/jacket/${cat.assetbundleName}.webp`, assetSource)}
+                                                        alt={cat.name}
+                                                        fill
+                                                        className="object-cover"
+                                                        unoptimized
+                                                    />
+                                                </div>
+                                            )}
 
                                             {/* Category Indicator Tag */}
                                             <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">
@@ -1488,7 +1503,7 @@ function SoundtrackContent() {
                         </div>
 
                         {/* Search and Sort Toolbar */}
-                        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/80 dark:bg-slate-900/75 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/5 p-4">
+                        <div className={toolbarClassName}>
                             
                             {/* Fuzzy Search Box */}
                             <div className="relative w-full sm:w-72">

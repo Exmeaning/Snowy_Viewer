@@ -43,8 +43,10 @@ export default function MainLayout({
     immersiveMode = false,
 }: MainLayoutProps) {
     const router = useRouter();
-    const { useTrainedThumbnail, setUseTrainedThumbnail } = useTheme();
+    const { useTrainedThumbnail, setUseTrainedThumbnail, backgroundAnimationBudget } = useTheme();
     const pageContentRef = useRef<HTMLDivElement>(null);
+    const shouldShowAmbientBlobs = backgroundAnimationBudget === "performance";
+    const shouldAnimateAmbientBlobs = shouldShowAmbientBlobs;
 
     // Keep the initial value false to avoid hydration mismatch.
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -249,11 +251,22 @@ export default function MainLayout({
             <BackgroundPattern />
 
             {/* iOS 26 Ambient Colorful Glowing Blobs */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                <div className="absolute top-1/4 left-10 w-72 h-72 rounded-full pointer-events-none animate-float-blob-1 will-change-transform" style={{ backgroundColor: "rgba(var(--color-miku-rgb, 51, 204, 187), 0.12)", filter: "blur(90px)" }} />
-                <div className="absolute bottom-1/3 right-10 w-96 h-96 rounded-full pointer-events-none animate-float-blob-2 will-change-transform" style={{ backgroundColor: "rgba(var(--color-comp-rgb, 255, 117, 168), 0.12)", filter: "blur(100px)" }} />
-                <div className="absolute top-2/3 left-1/3 w-80 h-80 rounded-full pointer-events-none animate-float-blob-1 will-change-transform" style={{ backgroundColor: "rgba(var(--color-mid-rgb, 255, 229, 138), 0.08)", filter: "blur(90px)" }} />
-            </div>
+            {shouldShowAmbientBlobs && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+                    <div
+                        className={`absolute top-1/4 left-10 w-72 h-72 rounded-full pointer-events-none ${shouldAnimateAmbientBlobs ? "animate-float-blob-1 will-change-transform" : ""}`}
+                        style={{ backgroundColor: "rgba(var(--color-miku-rgb, 51, 204, 187), 0.10)", filter: shouldAnimateAmbientBlobs ? "blur(90px)" : "blur(72px)" }}
+                    />
+                    <div
+                        className={`absolute bottom-1/3 right-10 w-96 h-96 rounded-full pointer-events-none ${shouldAnimateAmbientBlobs ? "animate-float-blob-2 will-change-transform" : ""}`}
+                        style={{ backgroundColor: "rgba(var(--color-comp-rgb, 255, 117, 168), 0.10)", filter: shouldAnimateAmbientBlobs ? "blur(100px)" : "blur(76px)" }}
+                    />
+                    <div
+                        className={`absolute top-2/3 left-1/3 w-80 h-80 rounded-full pointer-events-none ${shouldAnimateAmbientBlobs ? "animate-float-blob-1 will-change-transform" : ""}`}
+                        style={{ backgroundColor: "rgba(var(--color-mid-rgb, 255, 229, 138), 0.07)", filter: shouldAnimateAmbientBlobs ? "blur(90px)" : "blur(72px)" }}
+                    />
+                </div>
+            )}
 
             {/* Navbar */}
             {!immersiveMode && (
