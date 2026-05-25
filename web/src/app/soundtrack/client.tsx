@@ -46,6 +46,7 @@ interface BgmDurationsResponse {
 
 type PlaybackMode = "sequential" | "loop-one" | "shuffle";
 type SoundtrackCategoryFilter = number | "spoiler" | null;
+type SoundtrackMediaSessionAction = "play" | "pause" | "stop" | "previoustrack" | "nexttrack" | "seekbackward" | "seekforward" | "seekto";
 
 const PLAYBACK_MODES = ["sequential", "loop-one", "shuffle"] as const satisfies readonly PlaybackMode[];
 
@@ -70,6 +71,8 @@ const SOUNDTRACK_INITIAL_LIST_LIMIT = 80;
 const SOUNDTRACK_LIST_BATCH_SIZE = 80;
 const SOUNDTRACK_LIST_SCROLL_THRESHOLD_PX = 280;
 const SOUNDTRACK_PROGRESS_UPDATE_INTERVAL_MS = 500;
+const SOUNDTRACK_MEDIA_SEEK_OFFSET_SECONDS = 10;
+const SOUNDTRACK_MEDIA_ARTWORK_SIZES = ["96x96", "128x128", "192x192", "256x256", "384x384", "512x512"] as const;
 
 function sanitizeDownloadFileName(value: string) {
     return value
@@ -223,6 +226,95 @@ async function storeAudioBlobInCache(url: string, blob: Blob) {
     }
 }
 
+interface SoundtrackMediaSessionActionDetails {
+    seekOffset?: number;
+    seekTime?: number;
+    fastSeek?: boolean;
+}
+
+type SoundtrackMediaSessionActionHandler = (details?: SoundtrackMediaSessionActionDetails) => void;
+
+interface SoundtrackMediaSessionPositionState {
+    duration: number;
+    playbackRate?: number;
+    position: number;
+}
+
+interface SoundtrackMediaSessionArtwork {
+    src: string;
+    sizes?: string;
+    type?: string;
+}
+
+interface SoundtrackMediaMetadataInit {
+    title?: string;
+    artist?: string;
+    album?: string;
+    artwork?: SoundtrackMediaSessionArtwork[];
+}
+
+interface SoundtrackMediaSessionLike {
+    metadata: unknown | null;
+    playbackState: "none" | "paused" | "playing";
+    setActionHandler?: (action: SoundtrackMediaSessionAction, handler: SoundtrackMediaSessionActionHandler | null) => void;
+    setPositionState?: (state?: SoundtrackMediaSessionPositionState) => void;
+}
+
+interface SoundtrackMediaMetadataConstructor {
+    new(init?: SoundtrackMediaMetadataInit): unknown;
+}
+
+function getSoundtrackMediaSession() {
+    if (typeof navigator === "undefined") return null;
+    return (navigator as Navigator & { mediaSession?: SoundtrackMediaSessionLike }).mediaSession ?? null;
+}
+
+function createSoundtrackMediaMetadata(init: SoundtrackMediaMetadataInit) {
+    if (typeof window === "undefined") return null;
+    const MediaMetadataConstructor = (window as Window & { MediaMetadata?: SoundtrackMediaMetadataConstructor }).MediaMetadata;
+    if (!MediaMetadataConstructor) return null;
+
+    try {
+        return new MediaMetadataConstructor(init);
+    } catch (err) {
+        console.warn("Failed to create soundtrack media metadata:", err);
+        return null;
+    }
+}
+
+function setSoundtrackMediaSessionActionHandler(
+    mediaSession: SoundtrackMediaSessionLike,
+    action: SoundtrackMediaSessionAction,
+    handler: SoundtrackMediaSessionActionHandler | null,
+) {
+    if (!mediaSession.setActionHandler) return;
+
+    try {
+        mediaSession.setActionHandler(action, handler);
+    } catch {
+        // Some platforms intentionally expose only a subset of Media Session actions.
+    }
+}
+
+function setSoundtrackMediaSessionMetadata(mediaSession: SoundtrackMediaSessionLike, metadata: unknown | null) {
+    try {
+        mediaSession.metadata = metadata;
+    } catch (err) {
+        console.warn("Failed to update soundtrack media metadata:", err);
+    }
+}
+
+function setSoundtrackMediaSessionPlaybackState(
+    mediaSession: SoundtrackMediaSessionLike,
+    playbackState: SoundtrackMediaSessionLike["playbackState"],
+) {
+    try {
+        mediaSession.playbackState = playbackState;
+    } catch (err) {
+        console.warn("Failed to update soundtrack media playback state:", err);
+    }
+}
+
 // Color schemes matching each category group
 const CATEGORY_THEMES: Record<number, { from: string; to: string; shadow: string; bgGlow: string; text: string }> = {
     1: { from: "#00E5CF", to: "#007D85", shadow: "shadow-cyan-500/20", bgGlow: "from-cyan-950/20 to-teal-950/20", text: "text-miku" }, // Unit overview
@@ -262,6 +354,7 @@ function SoundtrackContent() {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const playRequestIdRef = useRef(0);
     const lastProgressUpdateRef = useRef(0);
+    const currentTimeRef = useRef(0);
 
     // Audio states
     const [isPlaying, setIsPlaying] = useState(false);
@@ -410,6 +503,10 @@ function SoundtrackContent() {
             cancelled = true;
         };
     }, [searchParams, t, isShowSpoiler]);
+
+    useEffect(() => {
+        currentTimeRef.current = currentTime;
+    }, [currentTime]);
 
     // Track audio source URL (correctly resolving Mysekai paths too)
     const selectedAudioUrl = useMemo(() => {
@@ -653,6 +750,18 @@ function SoundtrackContent() {
     };
 
     // Theme values for currently active track
+    const currentCategory = currentTrack
+        ? categoryMap.get(currentTrack.musicSoundTrackCategoryId) ?? null
+        : null;
+
+    const currentArtworkUrl = useMemo(() => {
+        if (!currentTrack) return "";
+        return getMysekaiRawAssetUrl(
+            `music_record_soundtrack/jacket/${currentCategory?.assetbundleName ?? "jacket_s_soundtrack_1"}.webp`,
+            assetSource,
+        );
+    }, [assetSource, currentCategory, currentTrack]);
+
     const currentTheme = useMemo(() => {
         if (!currentTrack) return DEFAULT_THEME;
         return CATEGORY_THEMES[currentTrack.musicSoundTrackCategoryId] ?? DEFAULT_THEME;
@@ -666,13 +775,6 @@ function SoundtrackContent() {
         if (currentTrack?.musicSoundTrackCategoryId === 6) return "#c2410c"; // Deep sunset orange
         return currentTheme.to;
     }, [isDark, currentTheme, currentTrack]);
-
-    // Audio handlers
-    const togglePlay = () => {
-        if (!selectedAudioUrl) return;
-        setHasActivatedAudio(true);
-        setIsPlaying(prev => !prev);
-    };
 
     const syncCurrentTime = useCallback((force = false) => {
         const audio = audioRef.current;
@@ -689,6 +791,30 @@ function SoundtrackContent() {
         });
     }, []);
 
+    const startPlayback = useCallback(() => {
+        if (!selectedAudioUrl) return;
+        setHasActivatedAudio(true);
+        setIsPlaying(true);
+    }, [selectedAudioUrl]);
+
+    const pausePlayback = useCallback(() => {
+        setIsPlaying(false);
+    }, []);
+
+    const stopPlayback = useCallback(() => {
+        setIsPlaying(false);
+        syncCurrentTime(true);
+    }, [syncCurrentTime]);
+
+    // Audio handlers
+    const togglePlay = () => {
+        if (isPlaying) {
+            pausePlayback();
+            return;
+        }
+        startPlayback();
+    };
+
     const handleTimeUpdate = () => {
         syncCurrentTime();
     };
@@ -700,12 +826,42 @@ function SoundtrackContent() {
         }
     };
 
+    const getSeekableDuration = useCallback(() => {
+        const audioDuration = audioRef.current?.duration;
+        if (typeof audioDuration === "number" && Number.isFinite(audioDuration) && audioDuration > 0) {
+            return audioDuration;
+        }
+        const trackDuration = currentTrack?.durationSeconds ?? duration;
+        return Number.isFinite(trackDuration) && trackDuration > 0 ? trackDuration : 0;
+    }, [currentTrack, duration]);
+
+    const seekToTime = useCallback((time: number, fastSeek = false) => {
+        if (!Number.isFinite(time)) return;
+
+        const audio = audioRef.current;
+        const seekableDuration = getSeekableDuration();
+        const nextTime = seekableDuration > 0
+            ? Math.min(seekableDuration, Math.max(0, time))
+            : Math.max(0, time);
+
+        if (audio) {
+            if (fastSeek && typeof audio.fastSeek === "function") {
+                try {
+                    audio.fastSeek(nextTime);
+                } catch {
+                    audio.currentTime = nextTime;
+                }
+            } else {
+                audio.currentTime = nextTime;
+            }
+        }
+        currentTimeRef.current = nextTime;
+        setCurrentTime(nextTime);
+    }, [getSeekableDuration]);
+
     const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = parseFloat(e.target.value);
-        if (audioRef.current && Number.isFinite(val)) {
-            audioRef.current.currentTime = val;
-            setCurrentTime(val);
-        }
+        seekToTime(val);
     };
 
     const handleVerticalVolumePointer = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -727,17 +883,21 @@ function SoundtrackContent() {
         localStorage.setItem("soundtrack-playback-mode", nextMode);
     };
 
-    const getPlaybackList = () => filteredTracks.length > 0 ? filteredTracks : tracks.filter(track => isShowSpoiler || !track.isSpoiler);
+    const getPlaybackList = useCallback(() => (
+        filteredTracks.length > 0
+            ? filteredTracks
+            : tracks.filter(track => isShowSpoiler || !track.isSpoiler)
+    ), [filteredTracks, tracks, isShowSpoiler]);
 
-    const pickRandomTrack = (activeList: MysekaiMusicSoundTrackMaster[]) => {
+    const pickRandomTrack = useCallback((activeList: MysekaiMusicSoundTrackMaster[]) => {
         if (activeList.length <= 1 || !currentTrack) return activeList[0];
 
         const candidates = activeList.filter(track => track.id !== currentTrack.id);
         return candidates[Math.floor(Math.random() * candidates.length)] ?? activeList[0];
-    };
+    }, [currentTrack]);
 
     // Audio navigation methods
-    const playNext = () => {
+    const playNext = useCallback(() => {
         if (tracks.length === 0 || !currentTrack) return;
 
         const activeList = getPlaybackList();
@@ -761,9 +921,9 @@ function SoundtrackContent() {
         updateTrackUrlParam(nextTrack);
         setHasActivatedAudio(true);
         setIsPlaying(true);
-    };
+    }, [currentTrack, getPlaybackList, pickRandomTrack, playbackMode, tracks.length, updateTrackUrlParam]);
 
-    const playPrevious = () => {
+    const playPrevious = useCallback(() => {
         if (tracks.length === 0 || !currentTrack) return;
 
         const activeList = getPlaybackList();
@@ -787,9 +947,116 @@ function SoundtrackContent() {
         updateTrackUrlParam(prevTrack);
         setHasActivatedAudio(true);
         setIsPlaying(true);
-    };
+    }, [currentTrack, getPlaybackList, pickRandomTrack, playbackMode, tracks.length, updateTrackUrlParam]);
 
-    const handleEnded = () => {
+    useEffect(() => {
+        const mediaSession = getSoundtrackMediaSession();
+        if (!mediaSession) return;
+
+        if (!currentTrack) {
+            setSoundtrackMediaSessionMetadata(mediaSession, null);
+            return;
+        }
+
+        const title = getDisplayTrackTitle(currentTrack, t);
+        const categoryName = currentCategory?.name || "Soundtrack";
+        const artist = currentTrack.pronunciation || categoryName;
+        const metadata = createSoundtrackMediaMetadata({
+            title,
+            artist,
+            album: categoryName,
+            artwork: currentArtworkUrl
+                ? SOUNDTRACK_MEDIA_ARTWORK_SIZES.map(size => ({
+                    src: currentArtworkUrl,
+                    sizes: size,
+                    type: "image/webp",
+                }))
+                : undefined,
+        });
+
+        if (metadata) {
+            setSoundtrackMediaSessionMetadata(mediaSession, metadata);
+        }
+    }, [currentArtworkUrl, currentCategory, currentTrack, t]);
+
+    useEffect(() => {
+        const mediaSession = getSoundtrackMediaSession();
+        if (!mediaSession) return;
+
+        setSoundtrackMediaSessionPlaybackState(
+            mediaSession,
+            audioUrl ? isPlaying ? "playing" : "paused" : "none",
+        );
+    }, [audioUrl, isPlaying]);
+
+    useEffect(() => {
+        const mediaSession = getSoundtrackMediaSession();
+        if (!mediaSession?.setPositionState) return;
+
+        const positionDuration = getSeekableDuration();
+        if (!audioUrl || positionDuration <= 0) {
+            try {
+                mediaSession.setPositionState();
+            } catch {
+                // Some browsers require a full position state or do not support clearing.
+            }
+            return;
+        }
+
+        try {
+            mediaSession.setPositionState({
+                duration: positionDuration,
+                playbackRate: audioRef.current?.playbackRate || 1,
+                position: Math.min(positionDuration, Math.max(0, currentTime)),
+            });
+        } catch (err) {
+            console.warn("Failed to update soundtrack media position:", err);
+        }
+    }, [audioUrl, currentTime, duration, getSeekableDuration]);
+
+    useEffect(() => {
+        const mediaSession = getSoundtrackMediaSession();
+        if (!mediaSession) return;
+
+        setSoundtrackMediaSessionActionHandler(mediaSession, "play", startPlayback);
+        setSoundtrackMediaSessionActionHandler(mediaSession, "pause", pausePlayback);
+        setSoundtrackMediaSessionActionHandler(mediaSession, "stop", stopPlayback);
+        setSoundtrackMediaSessionActionHandler(mediaSession, "previoustrack", playPrevious);
+        setSoundtrackMediaSessionActionHandler(mediaSession, "nexttrack", playNext);
+        setSoundtrackMediaSessionActionHandler(mediaSession, "seekbackward", (details) => {
+            const offset = details?.seekOffset ?? SOUNDTRACK_MEDIA_SEEK_OFFSET_SECONDS;
+            const audioTime = audioRef.current?.currentTime;
+            const baseTime = typeof audioTime === "number" && Number.isFinite(audioTime) ? audioTime : currentTimeRef.current;
+            seekToTime(baseTime - offset);
+        });
+        setSoundtrackMediaSessionActionHandler(mediaSession, "seekforward", (details) => {
+            const offset = details?.seekOffset ?? SOUNDTRACK_MEDIA_SEEK_OFFSET_SECONDS;
+            const audioTime = audioRef.current?.currentTime;
+            const baseTime = typeof audioTime === "number" && Number.isFinite(audioTime) ? audioTime : currentTimeRef.current;
+            seekToTime(baseTime + offset);
+        });
+        setSoundtrackMediaSessionActionHandler(mediaSession, "seekto", (details) => {
+            if (typeof details?.seekTime !== "number") return;
+            seekToTime(details.seekTime, Boolean(details.fastSeek));
+        });
+
+        return () => {
+            (["play", "pause", "stop", "previoustrack", "nexttrack", "seekbackward", "seekforward", "seekto"] as const).forEach((action) => {
+                setSoundtrackMediaSessionActionHandler(mediaSession, action, null);
+            });
+        };
+    }, [pausePlayback, playNext, playPrevious, seekToTime, startPlayback, stopPlayback]);
+
+    useEffect(() => {
+        const mediaSession = getSoundtrackMediaSession();
+        return () => {
+            if (!mediaSession) return;
+            setSoundtrackMediaSessionMetadata(mediaSession, null);
+            setSoundtrackMediaSessionPlaybackState(mediaSession, "none");
+        };
+    }, []);
+
+    const handleEnded = useCallback(() => {
         if (playbackMode === "loop-one") {
             const audio = audioRef.current;
             if (!audio) return;
@@ -806,7 +1073,7 @@ function SoundtrackContent() {
         } else {
             playNext();
         }
-    };
+    }, [playNext, playbackMode, t]);
 
     const handleTrackSelect = (track: MysekaiMusicSoundTrackMaster) => {
         setCurrentTrack(track);
