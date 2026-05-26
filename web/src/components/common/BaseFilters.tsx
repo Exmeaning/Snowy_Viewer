@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/contexts/I18nContext";
 
@@ -110,11 +110,20 @@ export default function BaseFilters({
     const pathname = usePathname();
     const STORAGE_KEY = `filters_collapsed:${pathname}`;
     const [rootElement, setRootElement] = useState<HTMLDivElement | null>(null);
-    const [mobileCollapsed, setMobileCollapsed] = useState(() => {
-        if (typeof window === "undefined") return true;
-        const saved = localStorage.getItem(STORAGE_KEY);
-        return saved === null ? true : saved === "true";
-    });
+    const [mobileCollapsed, setMobileCollapsed] = useState(true);
+
+    useEffect(() => {
+        const frameId = window.requestAnimationFrame(() => {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                setMobileCollapsed(saved === null ? true : saved === "true");
+            } catch {
+                setMobileCollapsed(true);
+            }
+        });
+
+        return () => window.cancelAnimationFrame(frameId);
+    }, [STORAGE_KEY]);
 
     const rootRef = useCallback((node: HTMLDivElement | null) => {
         setRootElement((current) => (current === node ? current : node));

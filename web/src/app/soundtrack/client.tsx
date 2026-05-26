@@ -355,10 +355,12 @@ function SoundtrackContent() {
     const playRequestIdRef = useRef(0);
     const lastProgressUpdateRef = useRef(0);
     const currentTimeRef = useRef(0);
+    const playNextRef = useRef<() => void>(() => {});
 
     // Audio states
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasActivatedAudio, setHasActivatedAudio] = useState(false);
+    const [playbackRestartNonce, setPlaybackRestartNonce] = useState(0);
     const [currentTrack, setCurrentTrack] = useState<MysekaiMusicSoundTrackMaster | null>(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -534,7 +536,7 @@ function SoundtrackContent() {
         setShareHint(null);
     }, [selectedAudioUrl]);
 
-    // Explicitly swap the single audio element source so old tracks are stopped before a new one loads.
+    // Explicitly swap/restart the single audio element source so old tracks are stopped before a new one loads.
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio) return;
@@ -556,15 +558,15 @@ function SoundtrackContent() {
 
         if (audio.src !== audioUrl) {
             audio.src = audioUrl;
+            audio.load();
         }
         audio.currentTime = 0;
-        audio.load();
 
         return () => {
             playRequestIdRef.current += 1;
             audio.pause();
         };
-    }, [audioUrl]);
+    }, [audioUrl, playbackRestartNonce]);
 
     // Declaratively control audio playback and ignore stale play() promises from rapid track switches.
     useEffect(() => {
@@ -577,26 +579,45 @@ function SoundtrackContent() {
             return;
         }
 
+        let retryTimer: number | null = null;
         const requestId = playRequestIdRef.current + 1;
         playRequestIdRef.current = requestId;
 
-        audio.play()
-            .then(() => {
-                if (playRequestIdRef.current === requestId) {
-                    setAudioError(null);
-                }
-            })
-            .catch(err => {
-                if (playRequestIdRef.current !== requestId) return;
+        const tryPlay = (allowAbortRetry: boolean) => {
+            audio.play()
+                .then(() => {
+                    if (playRequestIdRef.current === requestId) {
+                        setAudioError(null);
+                    }
+                })
+                .catch(err => {
+                    if (playRequestIdRef.current !== requestId) return;
 
-                const isAbort = err instanceof DOMException && err.name === "AbortError";
-                if (isAbort) return;
+                    const isAbort = err instanceof DOMException && err.name === "AbortError";
+                    if (isAbort && allowAbortRetry) {
+                        retryTimer = window.setTimeout(() => {
+                            if (playRequestIdRef.current === requestId && isPlaying && audioUrl) {
+                                tryPlay(false);
+                            }
+                        }, 80);
+                        return;
+                    }
+                    if (isAbort) return;
 
-                console.warn("Audio play prevented or errored:", err);
-                setIsPlaying(false);
-                setAudioError(t("page.soundtrack.errors.audioPlayFailed"));
-            });
-    }, [isPlaying, audioUrl, t]);
+                    console.warn("Audio play prevented or errored:", err);
+                    setIsPlaying(false);
+                    setAudioError(t("page.soundtrack.errors.audioPlayFailed"));
+                });
+        };
+
+        tryPlay(true);
+
+        return () => {
+            if (retryTimer !== null) {
+                window.clearTimeout(retryTimer);
+            }
+        };
+    }, [isPlaying, audioUrl, playbackRestartNonce, t]);
 
     // Stop playback when leaving the route/component to avoid orphaned audio.
     useEffect(() => {
@@ -917,11 +938,19 @@ function SoundtrackContent() {
             }
         }
 
+        const isRestartingSameTrack = nextTrack.id === currentTrack.id;
         setCurrentTrack(nextTrack);
         updateTrackUrlParam(nextTrack);
         setHasActivatedAudio(true);
         setIsPlaying(true);
+        if (isRestartingSameTrack) {
+            setPlaybackRestartNonce(nonce => nonce + 1);
+        }
     }, [currentTrack, getPlaybackList, pickRandomTrack, playbackMode, tracks.length, updateTrackUrlParam]);
+
+    useEffect(() => {
+        playNextRef.current = playNext;
+    }, [playNext]);
 
     const playPrevious = useCallback(() => {
         if (tracks.length === 0 || !currentTrack) return;
@@ -943,10 +972,14 @@ function SoundtrackContent() {
             }
         }
 
+        const isRestartingSameTrack = prevTrack.id === currentTrack.id;
         setCurrentTrack(prevTrack);
         updateTrackUrlParam(prevTrack);
         setHasActivatedAudio(true);
         setIsPlaying(true);
+        if (isRestartingSameTrack) {
+            setPlaybackRestartNonce(nonce => nonce + 1);
+        }
     }, [currentTrack, getPlaybackList, pickRandomTrack, playbackMode, tracks.length, updateTrackUrlParam]);
 
     useEffect(() => {
@@ -1071,9 +1104,9 @@ function SoundtrackContent() {
                 setAudioError(t("page.soundtrack.errors.loopReplayFailed"));
             });
         } else {
-            playNext();
+            playNextRef.current();
         }
-    }, [playNext, playbackMode, t]);
+    }, [playbackMode, t]);
 
     const handleTrackSelect = (track: MysekaiMusicSoundTrackMaster) => {
         setCurrentTrack(track);

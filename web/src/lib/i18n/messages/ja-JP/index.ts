@@ -577,6 +577,7 @@ export const jaJPMessages = {
         materials: '素材',
         exchanges: '交換所',
         events: 'イベント一覧',
+        information: 'お知らせ',
         gacha: 'ガチャ',
         live: 'バーチャルライブ',
         prediction: 'イベント予測',
@@ -637,6 +638,7 @@ export const jaJPMessages = {
       materials: 'Browse materials catalog',
       exchanges: 'Browse exchange items and rewards',
       events: 'View event list and details',
+      information: 'ゲーム内のお知らせと最新情報を見る',
       gacha: 'View gacha banner information',
       live: 'View virtual live information',
       storyEvent: 'Read event stories',
@@ -768,7 +770,7 @@ export const jaJPMessages = {
       refreshing: '更新中...'
     },
     footer: {
-      version: 'Moesekai · 1.2-preview-beta3'
+      version: 'Moesekai · 1.2-preview-beta4'
     },
     sidebar: {
       notLoggedIn: '未ログイン',
@@ -1623,6 +1625,59 @@ export const jaJPMessages = {
       themeSongLabel: 'Event Theme Song',
       downloadAudio: 'Download Audio',
       none: 'なし'
+    },
+    information: {
+      badge: 'ゲームお知らせ',
+      title: 'イベント',
+      titleHighlight: 'お知らせ',
+      description: 'Project SEKAI の日本版・簡体字版のお知らせ、イベント予告、ガチャ情報、楽曲追加情報を確認できます。',
+      latestAnnouncements: '最新のお知らせ',
+      totalSummary: '{count} 件のお知らせ',
+      servers: {
+        jp: '日本版',
+        cn: '簡体字版'
+      },
+      filterTitle: 'お知らせフィルター',
+      countUnit: '件',
+      searchPlaceholder: 'タイトル、ID、タグ、プラットフォームで検索...',
+      statusFilter: '表示状態',
+      tagFilter: 'お知らせタグ',
+      typeFilter: 'お知らせタイプ',
+      sort: {
+        displayOrder: '表示順'
+      },
+      status: {
+        upcoming: '開催予定',
+        ongoing: '開催中',
+        ended: '終了',
+        permanent: '常設'
+      },
+      tags: {
+        information: 'お知らせ',
+        event: 'イベント',
+        gacha: 'ガチャ',
+        music: '楽曲',
+        campaign: 'キャンペーン',
+        bug: '不具合',
+        update: 'アップデート'
+      },
+      types: {
+        normal: '通常',
+        content: 'コンテンツ',
+        bug: '不具合'
+      },
+      browseTypes: {
+        internal: 'アプリ内コンテンツ',
+        external: '外部リンク'
+      },
+      platformAll: '全プラットフォーム',
+      noEndAt: '期限なし',
+      openAnnouncement: 'お知らせを開く',
+      loadingAnnouncement: 'お知らせを読み込み中...',
+      emptyAnnouncementUrl: 'このお知らせには表示できるページURLがまだありません。',
+      emptyTitle: 'お知らせが見つかりません',
+      emptyDescription: 'サーバーを切り替えるか、キーワードやフィルター条件を調整してください。',
+      loadFailedTitle: 'お知らせの読み込みに失敗しました'
     },
     gacha: {
       badge: 'ガチャデータベース',

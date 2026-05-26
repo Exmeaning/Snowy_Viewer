@@ -253,6 +253,20 @@ export const SEO_PAGE_METADATA = {
       "ja-JP": ["イベント", "イベント図鑑", "イベントランキング"],
     },
   ),
+  information: definePage(
+    "/information",
+    { "zh-CN": "游戏公告", "en-US": "Game Announcements", "ja-JP": "ゲームお知らせ" },
+    {
+      "zh-CN": "查看 Project SEKAI 日服与国服游戏公告、活动预告、招募资讯与歌曲追加情报。",
+      "en-US": "View Project SEKAI JP and CN game announcements, event previews, gacha news, and song updates.",
+      "ja-JP": "Project SEKAI の日本版・簡体字版のお知らせ、イベント予告、ガチャ情報、楽曲追加情報を確認できます。",
+    },
+    {
+      "zh-CN": ["公告", "游戏公告", "活动预告", "最新资讯"],
+      "en-US": ["announcements", "game news", "event preview", "notice"],
+      "ja-JP": ["お知らせ", "ゲームお知らせ", "イベント予告", "最新情報"],
+    },
+  ),
   gacha: definePage(
     "/gacha",
     { "zh-CN": "扭蛋数据库", "en-US": "Gacha Database", "ja-JP": "ガチャデータベース" },

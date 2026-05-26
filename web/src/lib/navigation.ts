@@ -32,6 +32,7 @@ export const navigationGroups: NavGroupData[] = [
         href: "/breadcrumb-activity",
         items: [
             { href: "/events" },
+            { href: "/information" },
             { href: "/gacha" },
             { href: "/live" },
             { href: "/prediction" },
@@ -146,6 +147,7 @@ export const searchableNavItems: SearchableNavItem[] = [
     { href: "/exchanges", group: "database", keywords: ["exchange", "exchanges", "material exchange", "shop"] },
 
     { href: "/events", group: "activity", keywords: ["events", "event"] },
+    { href: "/information", group: "activity", keywords: ["information", "announcement", "announcements", "news", "notice"] },
     { href: "/gacha", group: "activity", keywords: ["gacha", "banner", "pull"] },
     { href: "/live", group: "activity", keywords: ["live", "concert", "virtual live"] },
     { href: "/story/event", group: "activity", keywords: ["event story", "story", "scenario"] },
@@ -223,6 +225,7 @@ export const NAV_ITEM_LABEL_KEYS: Record<string, string> = {
     "/materials": "layout.nav.items.materials",
     "/exchanges": "layout.nav.items.exchanges",
     "/events": "layout.nav.items.events",
+    "/information": "layout.nav.items.information",
     "/gacha": "layout.nav.items.gacha",
     "/live": "layout.nav.items.live",
     "/prediction": "layout.nav.items.prediction",
@@ -267,6 +270,7 @@ export const NAV_ITEM_DESCRIPTION_KEYS: Record<string, string> = {
     "/materials": "layout.groupPages.materials",
     "/exchanges": "layout.groupPages.exchanges",
     "/events": "layout.groupPages.events",
+    "/information": "layout.groupPages.information",
     "/gacha": "layout.groupPages.gacha",
     "/live": "layout.groupPages.live",
     "/story/event": "layout.groupPages.storyEvent",
