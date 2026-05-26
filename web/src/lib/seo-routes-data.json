@@ -6,6 +6,7 @@
   { "path": "/music/meta/", "pageKey": "music_meta", "priority": 0.7, "changefreq": "weekly", "indexable": true },
   { "path": "/soundtrack/", "pageKey": "soundtrack", "priority": 0.7, "changefreq": "weekly", "indexable": true },
   { "path": "/events/", "pageKey": "events", "priority": 0.9, "changefreq": "daily", "indexable": true },
+  { "path": "/information/", "pageKey": "information", "priority": 0.7, "changefreq": "daily", "indexable": true },
   { "path": "/gacha/", "pageKey": "gacha", "priority": 0.8, "changefreq": "daily", "indexable": true },
   { "path": "/sticker/", "pageKey": "sticker", "priority": 0.7, "changefreq": "weekly", "indexable": true },
   { "path": "/comic/", "pageKey": "comic", "priority": 0.7, "changefreq": "weekly", "indexable": true },
