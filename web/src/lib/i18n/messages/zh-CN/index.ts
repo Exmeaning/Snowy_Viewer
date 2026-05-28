@@ -1004,7 +1004,7 @@ export const zhCNMessages = {
             },
             sponsors: {
                 title: "赞助者致谢（不分先后）",
-                list: "阳子（赞助服务器） cike Hakuchumu 性价比 luoxia 雪莹ちゃん 蘸色绘糖/晕星奏 tony_all 沙皮 轩 末乐回忆 metamiku madoka 垂耳兔kawayi amia maveriki 以及 四位不愿意透露具体ID的支持者",
+                list: "阳子（赞助服务器） cike 晓月 Hakuchumu 性价比 luoxia 雪莹ちゃん 蘸色绘糖/晕星奏 tony_all 沙皮 轩 末乐回忆 metamiku madoka 垂耳兔kawayi amia maveriki 以及 四位不愿意透露具体ID的支持者",
             },
             specialThanks: {
                 title: "感谢支持 Moesekai 的名单（不分先后）",

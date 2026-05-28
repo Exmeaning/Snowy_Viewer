@@ -1008,7 +1008,7 @@ export const jaJPMessages = {
       },
       specialThanks: {
         title: 'Supporter Thanks (in no particular order)',
-        list: '深海, Luna茶, cike, Kazuhira, 灵潜, 咖啡不甜, 郁郁葱葱, luoxia, 惜花, TONY_ALL#, M氏, 大梦, metamiku, tf, 四宫爱, 芒果冰, Hakuchumu, 葡萄柚, Amia, 不解, 旭光, 阳子, 弥佑瑶, サクラかぜ, 陈睿ガチ恋势, 猫尾草, 笨牛奶, 霞綾, 木口, 沧溟, Aya, Belos, 兔兔, 明日天気に, シラ, 偶像大师希罗酱, 性价比... This is only a partial list; thank you to everyone who quietly supports Moesekai.'
+        list: '深海, Luna茶, cike, 晓月, Kazuhira, 灵潜, 咖啡不甜, 郁郁葱葱, luoxia, 惜花, TONY_ALL#, M氏, 大梦, metamiku, tf, 四宫爱, 芒果冰, Hakuchumu, 葡萄柚, Amia, 不解, 旭光, 阳子, 弥佑瑶, サクラかぜ, 陈睿ガチ恋势, 猫尾草, 笨牛奶, 霞綾, 木口, 沧溟, Aya, Belos, 兔兔, 明日天気に, シラ, 偶像大师希罗酱, 性价比... This is only a partial list; thank you to everyone who quietly supports Moesekai.'
       },
       teams: {
         title: 'Team Members',
