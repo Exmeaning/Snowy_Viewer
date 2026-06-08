@@ -5,9 +5,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Modal from "@/components/common/Modal";
 
 import BaseFilters, { FilterButton, FilterSection } from "@/components/common/BaseFilters";
+import { TranslatedText } from "@/components/common/TranslatedText";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "@/contexts/TranslationContext";
 import {
     type InformationItem,
     type InformationServer,
@@ -185,8 +187,14 @@ function InformationCard({
                         )}
                     </div>
 
-                    <h3 className="line-clamp-2 min-h-[2.75rem] text-sm font-black leading-snug text-primary-text transition group-hover:text-miku sm:text-base">
-                        {item.title}
+                    <h3 className="min-h-[3.5rem] text-sm font-black leading-snug text-primary-text transition group-hover:text-miku sm:text-base">
+                        <TranslatedText
+                            original={item.title}
+                            category="information"
+                            field="title"
+                            originalClassName="line-clamp-2"
+                            translationClassName="line-clamp-1 text-xs font-bold text-slate-400 dark:text-slate-500 mt-0.5"
+                        />
                     </h3>
 
                     <div className="mt-3 space-y-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
@@ -219,15 +227,20 @@ function AnnouncementModal({
     onClose: () => void;
 }) {
     const { t } = useI18n();
+    const { t: translateGameData } = useTranslation();
     const [loadedFrameUrl, setLoadedFrameUrl] = useState<string | null>(null);
     const frameUrl = item ? resolveInformationPath(server, item) : "";
     const isFrameLoaded = frameUrl !== "" && loadedFrameUrl === frameUrl;
+    const translatedTitle = item ? translateGameData("information", "title", item.title) : null;
+    const modalTitle = item
+        ? translatedTitle ? `${item.title} / ${translatedTitle}` : item.title
+        : t("page.information.latestAnnouncements");
 
     return (
         <Modal
             isOpen={!!item}
             onClose={onClose}
-            title={item?.title || t("page.information.latestAnnouncements")}
+            title={modalTitle}
             size="xl"
         >
             {frameUrl ? (
@@ -241,7 +254,7 @@ function AnnouncementModal({
                     <iframe
                         key={frameUrl}
                         src={frameUrl}
-                        title={item?.title || t("page.information.latestAnnouncements")}
+                        title={modalTitle}
                         className="h-full w-full bg-white"
                         loading="lazy"
                         referrerPolicy="no-referrer"
@@ -260,6 +273,7 @@ function AnnouncementModal({
 export default function InformationClient() {
     const { t } = useI18n();
     const { serverSource } = useTheme();
+    const { translations } = useTranslation();
     const server: InformationServer = serverSource;
     const [items, setItems] = useState<InformationItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -322,6 +336,7 @@ export default function InformationClient() {
     const filteredItems = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
         const normalizedSortOrder = sortOrder === "asc" ? 1 : -1;
+        const titleTranslations = translations?.information?.title;
 
         return items
             .filter((item) => {
@@ -334,6 +349,7 @@ export default function InformationClient() {
                 const haystack = [
                     item.id,
                     item.title,
+                    titleTranslations?.[item.title],
                     item.informationTag,
                     item.informationType,
                     item.platform,
@@ -350,7 +366,7 @@ export default function InformationClient() {
                 if (primary !== 0) return primary;
                 return (Number(a.startAt || 0) - Number(b.startAt || 0)) * -1;
             });
-    }, [items, now, searchQuery, sortBy, sortOrder, statusFilter, tagFilter, typeFilter]);
+    }, [items, now, searchQuery, sortBy, sortOrder, statusFilter, tagFilter, translations, typeFilter]);
 
     const hasActiveFilters = searchQuery.trim() !== "" || tagFilter !== ALL_FILTER || typeFilter !== ALL_FILTER || statusFilter !== ALL_FILTER || sortBy !== "displayOrder" || sortOrder !== "desc";
 

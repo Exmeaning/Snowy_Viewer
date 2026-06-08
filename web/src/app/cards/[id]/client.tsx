@@ -64,6 +64,7 @@ export default function CardDetailPage() {
     const cardId = Number(params.id);
     const isScreenshotMode = searchParams.get('mode') === 'screenshot';
     const { assetSource } = useTheme();
+    const { t: translateGameData } = useTranslation();
     const { setDetailName } = useBreadcrumb();
 
     const [card, setCard] = useState<ICardInfo | null>(null);
@@ -252,16 +253,24 @@ export default function CardDetailPage() {
     // Dynamic skill description (normal skill)
     useEffect(() => {
         if (skillData && card) {
-            setSkillDescription(formatSkillDescription(skillData, skillLevel, card));
+            const translatedDescription = translateGameData("skills", "description", skillData.description);
+            const displaySkillData = translatedDescription
+                ? { ...skillData, description: translatedDescription }
+                : skillData;
+            setSkillDescription(formatSkillDescription(displaySkillData, skillLevel, card));
         }
-    }, [skillData, skillLevel, card]);
+    }, [skillData, skillLevel, card, translateGameData]);
 
     // Dynamic skill description (trained skill after blooming)
     useEffect(() => {
         if (trainedSkillData && card) {
-            setTrainedSkillDescription(formatSkillDescription(trainedSkillData, skillLevel, card));
+            const translatedDescription = translateGameData("skills", "description", trainedSkillData.description);
+            const displaySkillData = translatedDescription
+                ? { ...trainedSkillData, description: translatedDescription }
+                : trainedSkillData;
+            setTrainedSkillDescription(formatSkillDescription(displaySkillData, skillLevel, card));
         }
-    }, [trainedSkillData, skillLevel, card]);
+    }, [trainedSkillData, skillLevel, card, translateGameData]);
 
     // Fetch related event and gachas
     useEffect(() => {
