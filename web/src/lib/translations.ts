@@ -22,8 +22,14 @@ export interface TranslationData {
         prefix: TranslationMap;      // Card prefix/title translations
         skillName: TranslationMap;   // Skill name translations
     };
+    skills: {
+        description: TranslationMap; // Skill description template translations
+    };
     events: {
         name: TranslationMap;        // Event name translations
+    };
+    information: {
+        title: TranslationMap;       // Announcement title translations
     };
     music: {
         title: TranslationMap;       // Song title translations
@@ -72,7 +78,9 @@ export interface TranslationData {
 // Default empty translation data
 const emptyTranslationData: TranslationData = {
     cards: { prefix: {}, skillName: {} },
+    skills: { description: {} },
     events: { name: {} },
+    information: { title: {} },
     music: { title: {}, artist: {}, vocalCaption: {} },
     virtualLive: { name: {} },
     mysekai: { fixtureName: {}, flavorText: {}, genre: {}, subGenre: {}, tag: {}, material: {} },
@@ -136,9 +144,11 @@ async function fetchAllTranslations(): Promise<TranslationData> {
     const version = getTranslationDataVersion();
     const query = version ? `?v=${encodeURIComponent(version)}` : "";
 
-    const [cards, events, music, virtualLive, mysekai, gacha, sticker, comic, characters, units, costumes] = await Promise.all([
+    const [cards, skills, events, information, music, virtualLive, mysekai, gacha, sticker, comic, characters, units, costumes] = await Promise.all([
         fetchTranslationFile<TranslationData["cards"]>(`${baseUrl}/cards.json${query}`),
+        fetchTranslationFile<TranslationData["skills"]>(`${baseUrl}/skills.json${query}`),
         fetchTranslationFile<TranslationData["events"]>(`${baseUrl}/events.json${query}`),
+        fetchTranslationFile<TranslationData["information"]>(`${baseUrl}/information.json${query}`),
         fetchTranslationFile<TranslationData["music"]>(`${baseUrl}/music.json${query}`),
         fetchTranslationFile<TranslationData["virtualLive"]>(`${baseUrl}/virtualLive.json${query}`),
         fetchTranslationFile<TranslationData["mysekai"]>(`${baseUrl}/mysekai.json${query}`),
@@ -152,7 +162,9 @@ async function fetchAllTranslations(): Promise<TranslationData> {
 
     return {
         cards: cards ?? emptyTranslationData.cards,
+        skills: skills ?? emptyTranslationData.skills,
         events: events ?? emptyTranslationData.events,
+        information: information ?? emptyTranslationData.information,
         music: music ?? emptyTranslationData.music,
         virtualLive: virtualLive ?? emptyTranslationData.virtualLive,
         mysekai: mysekai ?? emptyTranslationData.mysekai,
