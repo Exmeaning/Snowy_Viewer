@@ -27,6 +27,7 @@ import { TranslatedText } from "@/components/common/TranslatedText";
 import ColorPreview from "@/components/helpers/ColorPreview";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
+import { formatCharacterDisplayName } from "@/lib/character-name";
 
 // Derive unit field → icon filename from centralized maps
 const UNIT_FIELD_ICONS: Record<string, string> = Object.fromEntries(
@@ -77,7 +78,7 @@ export default function CharacterDetailClient() {
                 setCharacter(chara);
 
                 // Set page title
-                document.title = `Moesekai - ${chara.firstName}${chara.givenName}`;
+                document.title = `Moesekai - ${formatCharacterDisplayName(chara)}`;
 
                 // Find related data
                 setProfile(profileData.find(p => p.characterId === id) || null);
@@ -104,7 +105,7 @@ export default function CharacterDetailClient() {
 
     // Compute display name before any conditional returns (React hooks rule)
     const characterDisplayName = character
-        ? `${character.firstName}${character.givenName}`
+        ? formatCharacterDisplayName(character)
         : null;
 
     // Set breadcrumb detail name — must be called before conditional returns
@@ -240,7 +241,7 @@ export default function CharacterDetailClient() {
                                     label={t("page.character.nameLabel")}
                                     value={
                                         <div className="flex flex-col items-end">
-                                            <span className="text-lg font-bold">{`${character.firstName}${character.givenName}`}</span>
+                                            <span className="text-lg font-bold">{characterDisplayName}</span>
                                             <span className="text-xs text-slate-500">{character.firstNameRuby} {character.givenNameRuby}</span>
                                         </div>
                                     }
