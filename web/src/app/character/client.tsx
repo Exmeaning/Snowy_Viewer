@@ -9,6 +9,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useI18n } from "@/contexts/I18nContext";
+import { formatCharacterDisplayName } from "@/lib/character-name";
 
 // Derive unit field → icon filename from centralized maps
 const UNIT_FIELD_ICONS: Record<string, string> = Object.fromEntries(
@@ -152,37 +153,41 @@ function CharacterListContent() {
                             {/* Characters Grid */}
                             <div className="p-4 sm:p-6">
                                 <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-                                    {unitCharacters.map((chara) => (
-                                        <div
-                                            key={chara.id}
-                                            className={`${unitId === "piapro"
-                                                ? "w-[calc(16.666%-10px)] sm:w-[calc(16.666%-14px)]"
-                                                : "w-[calc(25%-9px)] sm:w-[calc(25%-12px)]"
-                                                }`}
-                                        >
-                                            <Link
+                                    {unitCharacters.map((chara) => {
+                                        const characterName = formatCharacterDisplayName(chara);
+
+                                        return (
+                                            <div
                                                 key={chara.id}
-                                                href={`/character/${chara.id}`}
-                                                className="group relative h-[160px] sm:h-[220px] md:h-[280px] lg:h-[320px] rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive flex items-center justify-center p-1 sm:p-2"
+                                                className={`${unitId === "piapro"
+                                                    ? "w-[calc(16.666%-10px)] sm:w-[calc(16.666%-14px)]"
+                                                    : "w-[calc(25%-9px)] sm:w-[calc(25%-12px)]"
+                                                    }`}
                                             >
-                                                <div className="relative w-full h-full">
-                                                    <Image
-                                                        src={getCharacterSelectUrl(chara.id, assetSource)}
-                                                        alt={`${chara.firstName}${chara.givenName}`}
-                                                        fill
-                                                        className="object-contain"
-                                                        unoptimized
-                                                    />
-                                                </div>
-                                                {/* Character name overlay on hover */}
-                                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <p className="text-white text-xs font-bold text-center truncate">
-                                                        {`${chara.firstName}${chara.givenName}`}
-                                                    </p>
-                                                </div>
-                                            </Link>
-                                        </div>
-                                    ))}
+                                                <Link
+                                                    key={chara.id}
+                                                    href={`/character/${chara.id}`}
+                                                    className="group relative h-[160px] sm:h-[220px] md:h-[280px] lg:h-[320px] rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive flex items-center justify-center p-1 sm:p-2"
+                                                >
+                                                    <div className="relative w-full h-full">
+                                                        <Image
+                                                            src={getCharacterSelectUrl(chara.id, assetSource)}
+                                                            alt={characterName}
+                                                            fill
+                                                            className="object-contain"
+                                                            unoptimized
+                                                        />
+                                                    </div>
+                                                    {/* Character name overlay on hover */}
+                                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <p className="text-white text-xs font-bold text-center truncate">
+                                                            {characterName}
+                                                        </p>
+                                                    </div>
+                                                </Link>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
