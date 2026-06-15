@@ -617,6 +617,20 @@ export const SEO_PAGE_METADATA = {
       "ja-JP": ["リアルタイムランキング", "ランキング確認", "スコア変動"],
     },
   ),
+  realtime_ranking_next: definePage(
+    "/realtime-ranking-next",
+    { "zh-CN": "实时排行榜 Next", "en-US": "Live Ranking Next", "ja-JP": "リアルタイムランキング Next" },
+    {
+      "zh-CN": "全新重构的 Project SEKAI 实时排行榜，提供个人排名详情、分数曲线、48 小时热力图、时速与周回分析。",
+      "en-US": "Rebuilt Project SEKAI live ranking with player detail pages, score curves, 48h heatmaps, speed and lap analysis.",
+      "ja-JP": "刷新された Project SEKAI リアルタイムランキング。個人詳細、スコア曲線、48時間ヒートマップ、時速・周回分析を提供します。",
+    },
+    {
+      "zh-CN": ["实时排行榜", "个人排名详情", "分数曲线", "时速分析"],
+      "en-US": ["live ranking", "player detail", "score curve", "speed analysis"],
+      "ja-JP": ["リアルタイムランキング", "個人詳細", "スコア曲線", "時速分析"],
+    },
+  ),
   guess_jacket: definePage(
     "/guess-jacket",
     { "zh-CN": "猜曲绘", "en-US": "Guess Jacket", "ja-JP": "ジャケットクイズ" },

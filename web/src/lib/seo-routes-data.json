@@ -20,6 +20,7 @@
   { "path": "/honors/", "pageKey": "honors", "priority": 0.6, "changefreq": "weekly", "indexable": true },
   { "path": "/prediction/", "pageKey": "prediction", "priority": 0.6, "changefreq": "daily", "indexable": true },
   { "path": "/realtime-ranking/", "pageKey": "realtime_ranking", "priority": 0.6, "changefreq": "daily", "indexable": true },
+  { "path": "/realtime-ranking-next/", "pageKey": "realtime_ranking_next", "priority": 0.6, "changefreq": "daily", "indexable": true },
   { "path": "/story/", "pageKey": "story", "priority": 0.8, "changefreq": "weekly", "indexable": true },
   { "path": "/story/unit/", "pageKey": "story_unit", "priority": 0.7, "changefreq": "weekly", "indexable": true },
   { "path": "/story/event/", "pageKey": "story_event", "priority": 0.7, "changefreq": "weekly", "indexable": true },

@@ -37,6 +37,7 @@ export const navigationGroups: NavGroupData[] = [
             { href: "/live" },
             { href: "/prediction" },
             { href: "/realtime-ranking" },
+            { href: "/realtime-ranking-next" },
             { href: "/mysekai-preview" },
         ],
     },
@@ -153,6 +154,7 @@ export const searchableNavItems: SearchableNavItem[] = [
     { href: "/story/event", group: "activity", keywords: ["event story", "story", "scenario"] },
     { href: "/prediction", group: "activity", keywords: ["prediction", "ranking", "forecast"] },
     { href: "/realtime-ranking", group: "activity", keywords: ["realtime ranking", "live ranking", "rank", "ranking"] },
+    { href: "/realtime-ranking-next", group: "activity", keywords: ["realtime ranking next", "live ranking next", "player detail", "rank", "ranking"] },
     { href: "/mysekai-preview", group: "activity", keywords: ["baijing", "housing competition", "mysekai", "top"] },
 
     { href: "/deck-recommend", group: "tools", keywords: ["deck recommend", "deck", "team"] },
@@ -230,6 +232,7 @@ export const NAV_ITEM_LABEL_KEYS: Record<string, string> = {
     "/live": "layout.nav.items.live",
     "/prediction": "layout.nav.items.prediction",
     "/realtime-ranking": "layout.nav.items.realtimeRanking",
+    "/realtime-ranking-next": "layout.nav.items.realtimeRankingNext",
     "/mysekai-preview": "layout.nav.items.mysekaiPreview",
     "/story/unit": "layout.nav.items.mainStory",
     "/story/event": "layout.nav.items.eventStory",

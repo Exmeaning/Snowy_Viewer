@@ -240,6 +240,16 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
+                id: "realtimeRankingNext",
+                href: "/realtime-ranking-next",
+                icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 13h4v8H3zm7-10h4v18h-4zm7 6h4v12h-4z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" />
+                    </svg>
+                ),
+            },
+            {
                 id: "mysekaiPreview",
                 href: "/mysekai-preview",
                 icon: (

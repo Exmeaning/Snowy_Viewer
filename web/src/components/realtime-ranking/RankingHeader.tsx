@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useI18n } from "@/contexts/I18nContext";
 import { REALTIME_RANKING_REGION_OPTIONS, RealtimeRankingRegion } from "@/types/realtime-ranking";
 
@@ -36,6 +37,9 @@ export default function RankingHeader({
             <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
                     <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.realtimeRanking.badge")}</span>
+                    <span className="rounded-full bg-slate-400/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {t("page.realtimeRanking.legacyBadge")}
+                    </span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
                     {t("page.realtimeRanking.title")} <span className="text-miku">{t("page.realtimeRanking.titleHighlight")}</span>
@@ -43,6 +47,19 @@ export default function RankingHeader({
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
                     {t("page.realtimeRanking.description")}
                 </p>
+
+                {/* Promote the redesigned (next) version */}
+                <Link
+                    href="/realtime-ranking-next"
+                    className="group mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-miku/30 bg-gradient-to-r from-miku/10 via-sky-400/10 to-luka/10 px-4 py-2 text-sm font-bold text-slate-600 transition-all hover:border-miku/60 hover:shadow-sm hover:shadow-miku/20 dark:text-slate-300"
+                >
+                    <span aria-hidden className="text-base leading-none">✨</span>
+                    <span className="truncate text-xs sm:text-sm">{t("page.realtimeRanking.tryNextText")}</span>
+                    <span className="inline-flex shrink-0 items-center gap-0.5 text-miku">
+                        {t("page.realtimeRanking.tryNextCta")}
+                        <span className="transition-transform group-hover:translate-x-0.5">→</span>
+                    </span>
+                </Link>
             </div>
 
             {/* Controls */}
