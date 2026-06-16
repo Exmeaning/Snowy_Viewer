@@ -14,8 +14,13 @@ import {
     WorldLinkSnapshotV2,
 } from "@/types/realtime-ranking-next";
 import { buildEntriesWithDiff, LastChange } from "../_lib/board-utils";
+import { mergeResilientEntries } from "@/lib/realtime-ranking-resilience";
 
 export const POLL_INTERVAL = 10_000;
+// After this many consecutive degraded polls, accept the incoming payload so a
+// genuine roster shrink is not preserved as stale forever. ~5 min at 10s polls.
+const MAX_DEGRADED_POLLS = 30;
+const EMPTY_STALE_RANKS: Set<number> = new Set();
 
 interface UseRealtimeBoardResult {
     snapshot: BoardSnapshotV2 | null;
@@ -28,6 +33,8 @@ interface UseRealtimeBoardResult {
     isLoading: boolean;
     isRefreshing: boolean;
     error: string | null;
+    /** Ranks whose data was carried over from a previous snapshot (stale/syncing). */
+    staleRanks: Set<number>;
     refresh: () => void;
     setSelectedCharacterId: (id: number | null) => void;
     selectedCharacterId: number | null;
@@ -52,12 +59,14 @@ export function useRealtimeBoard(
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [staleRanks, setStaleRanks] = useState<Set<number>>(new Set());
 
     const requestIdRef = useRef(0);
     const snapshotRef = useRef<BoardSnapshotV2 | null>(null);
     const worldLinkSnapshotRef = useRef<WorldLinkSnapshotV2 | null>(null);
     const worldLinkCheckedRef = useRef(false);
     const lastChangesRef = useRef(new Map<string, LastChange>());
+    const degradedPollCountRef = useRef(0);
 
     const load = useCallback(async (nextRegion: RealtimeRankingRegion, isPoll: boolean) => {
         const id = ++requestIdRef.current;
@@ -74,6 +83,8 @@ export function useRealtimeBoard(
             worldLinkSnapshotRef.current = null;
             worldLinkCheckedRef.current = false;
             lastChangesRef.current.clear();
+            degradedPollCountRef.current = 0;
+            setStaleRanks(new Set());
         }
 
         try {
@@ -92,15 +103,56 @@ export function useRealtimeBoard(
                 return;
             }
 
-            setPreviousSnapshot(snapshotRef.current);
-            snapshotRef.current = latest;
-            setSnapshot(latest);
+            const previousOverall = snapshotRef.current;
+
+            // Resilience: when polling the same event, guard against a transiently
+            // collapsed payload (e.g. only tier lines survive) wiping the TOP rows.
+            let nextOverall = latest;
+            const sameEvent = !!previousOverall && !!latest
+                && previousOverall.eventId === latest.eventId;
+            if (isPoll && sameEvent && degradedPollCountRef.current < MAX_DEGRADED_POLLS) {
+                const merged = mergeResilientEntries(previousOverall!.entries, latest!.entries);
+                if (merged.degraded) {
+                    degradedPollCountRef.current += 1;
+                    nextOverall = { ...latest!, entries: merged.entries };
+                    setStaleRanks(merged.staleRanks);
+                } else {
+                    degradedPollCountRef.current = 0;
+                    setStaleRanks(new Set());
+                }
+            } else {
+                degradedPollCountRef.current = 0;
+                setStaleRanks(new Set());
+            }
+
+            setPreviousSnapshot(previousOverall);
+            snapshotRef.current = nextOverall;
+            setSnapshot(nextOverall);
 
             worldLinkCheckedRef.current = true;
-            const wlMatches = worldLink && latest && worldLink.eventId === latest.eventId && worldLink.groups.length > 0;
-            setPreviousWorldLinkSnapshot(worldLinkSnapshotRef.current);
-            worldLinkSnapshotRef.current = wlMatches ? worldLink : null;
-            setWorldLinkSnapshot(wlMatches ? worldLink : null);
+            const wlMatches = worldLink && nextOverall && worldLink.eventId === nextOverall.eventId && worldLink.groups.length > 0;
+            let nextWorldLink = wlMatches ? worldLink : null;
+
+            // Resilience: merge each WL group against the matching previous group.
+            const previousWorldLink = worldLinkSnapshotRef.current;
+            if (isPoll && nextWorldLink && previousWorldLink
+                && previousWorldLink.eventId === nextWorldLink.eventId
+                && degradedPollCountRef.current < MAX_DEGRADED_POLLS) {
+                const prevGroupByChar = new Map(
+                    previousWorldLink.groups.map((g) => [g.gameCharacterId, g]),
+                );
+                const mergedGroups = nextWorldLink.groups.map((group) => {
+                    const prevGroup = prevGroupByChar.get(group.gameCharacterId);
+                    if (!prevGroup) return group;
+                    const merged = mergeResilientEntries(prevGroup.entries, group.entries);
+                    return merged.degraded ? { ...group, entries: merged.entries } : group;
+                });
+                nextWorldLink = { ...nextWorldLink, groups: mergedGroups };
+            }
+
+            setPreviousWorldLinkSnapshot(previousWorldLink);
+            worldLinkSnapshotRef.current = nextWorldLink;
+            setWorldLinkSnapshot(nextWorldLink);
 
             setError(null);
         } catch (err) {
@@ -185,6 +237,8 @@ export function useRealtimeBoard(
         isLoading,
         isRefreshing,
         error,
+        // staleRanks is computed against the overall board; suppress it in WL mode.
+        staleRanks: isWorldLinkMode ? EMPTY_STALE_RANKS : staleRanks,
         refresh,
         setSelectedCharacterId,
         selectedCharacterId,

@@ -17,6 +17,8 @@ interface RankingListProps {
     showExtendedWarning?: boolean;
     trackedUserId: string | null;
     onTrackToggle: (userId: string) => void;
+    /** Ranks whose data was carried over from a previous snapshot (stale/syncing). */
+    staleRanks?: Set<number>;
 }
 
 export default function RankingList({
@@ -30,6 +32,7 @@ export default function RankingList({
     showExtendedWarning = true,
     trackedUserId,
     onTrackToggle,
+    staleRanks,
 }: RankingListProps) {
     const { t } = useI18n();
 
@@ -78,6 +81,7 @@ export default function RankingList({
                                 onShowParkingPeriods={onShowParkingPeriods}
                                 isTracked={entry.userId === trackedUserId}
                                 onTrackToggle={onTrackToggle}
+                                isStale={staleRanks?.has(entry.rank) ?? false}
                             />
                         </React.Fragment>
                     );

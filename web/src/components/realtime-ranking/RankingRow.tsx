@@ -23,6 +23,8 @@ interface RankingRowProps {
     onShowParkingPeriods: (userId: string) => void;
     isTracked?: boolean;
     onTrackToggle?: (userId: string) => void;
+    /** True when this row's data was carried over from a previous snapshot (syncing). */
+    isStale?: boolean;
 }
 
 type RealtimeRankingTranslationFn = ReturnType<typeof useI18n>["t"];
@@ -59,7 +61,7 @@ function getCurrentHourChurn(churnEntry?: ChurnRankingEntry): number {
     return found?.count ?? 0;
 }
 
-export default function RankingRow({ entry, masterData, assetSource, secondsSinceUpdate, showChurn, churnEntry, churnData, onShowParkingPeriods, isTracked = false, onTrackToggle }: RankingRowProps) {
+export default function RankingRow({ entry, masterData, assetSource, secondsSinceUpdate, showChurn, churnEntry, churnData, onShowParkingPeriods, isTracked = false, onTrackToggle, isStale = false }: RankingRowProps) {
     const { t, formatNumber } = useI18n();
     const leaderCard = entry.leaderCardId
         ? masterData.cards.find((card) => card.id === entry.leaderCardId)
@@ -188,7 +190,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
             initial={entry.isNewEntry ? { opacity: 0, y: 6 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
-            className={`relative overflow-hidden transition-all duration-300 ${rowBg} ${trackedClasses}`}
+            className={`relative overflow-hidden transition-all duration-300 ${rowBg} ${trackedClasses} ${isStale ? "opacity-60" : ""}`}
         >
             {/* Stock-style background flash */}
             <AnimatePresence>
@@ -216,6 +218,12 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                     </span>
                     {isExtendedTier && (
                         <div className="mt-0.5 text-[8px] font-medium text-slate-400 dark:text-slate-500">{t("page.realtimeRanking.list.extended")}</div>
+                    )}
+                    {isStale && (
+                        <div className="mt-0.5 inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1 py-0.5 text-[7px] font-bold text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" title={t("page.realtimeRanking.list.staleTitle")}>
+                            <span className="h-1 w-1 animate-pulse rounded-full bg-amber-500" />
+                            {t("page.realtimeRanking.list.stale")}
+                        </div>
                     )}
                     {/* Expand/collapse button, shown under the rank column on all viewports. */}
                     {(canShowChurnDetails || canShowTierLine) && !showChurn && (

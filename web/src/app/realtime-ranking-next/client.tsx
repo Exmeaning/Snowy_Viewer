@@ -213,6 +213,7 @@ function RealtimeRankingNextContent() {
                         worldLinkCharacterId={worldLinkCharacterId}
                         trackedUserId={trackedUserId}
                         onTrackToggle={handleTrackToggle}
+                        staleRanks={board.staleRanks}
                     />
                 )}
             </div>

@@ -2080,6 +2080,8 @@ export const jaJPMessages = {
       viewDetail: '詳細を見る',
       list: {
         tierLine: 'ボーダー',
+        stale: '同期中',
+        staleTitle: '今回の更新でこの順位のデータを取得できませんでした。前回の結果を表示しています。自動的に更新されます。',
       },
       board: {
         overall: '総合',
@@ -2195,6 +2197,8 @@ export const jaJPMessages = {
         score: 'スコア',
         extendedWarning: 'Ranks after 100 are not collected at high precision by the game, so data may be delayed. What you see is the latest available data.',
         extended: 'Extended',
+        stale: '同期中',
+        staleTitle: '今回の更新でこの順位のデータを取得できませんでした。前回の結果を表示しています。自動的に更新されます。',
         currentHourChurnTitle: 'Latest 1H churn count',
         collapseChurn: 'Collapse churn',
         expandChurn: 'Expand churn',

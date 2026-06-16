@@ -17,6 +17,8 @@ interface BoardListProps {
     worldLinkCharacterId: number | null;
     trackedUserId: string | null;
     onTrackToggle: (userId: string) => void;
+    /** Ranks whose data was carried over from a previous snapshot (stale/syncing). */
+    staleRanks?: Set<number>;
 }
 
 function buildDetailHref(
@@ -42,6 +44,7 @@ export default function BoardList({
     worldLinkCharacterId,
     trackedUserId,
     onTrackToggle,
+    staleRanks,
 }: BoardListProps) {
     return (
         <motion.div
@@ -64,6 +67,7 @@ export default function BoardList({
                         detailHref={detailHref}
                         isTracked={!entry.isTierLine && trackedUserId === entry.userId}
                         onTrackToggle={onTrackToggle}
+                        isStale={staleRanks?.has(entry.rank) ?? false}
                     />
                 );
             })}

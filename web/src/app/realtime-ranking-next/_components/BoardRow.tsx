@@ -25,6 +25,8 @@ interface BoardRowProps {
     detailHref: string | null;
     isTracked?: boolean;
     onTrackToggle?: (userId: string) => void;
+    /** True when this row's data was carried over from a previous snapshot (syncing). */
+    isStale?: boolean;
 }
 
 const topThreeCardDeco: Record<number, string> = {
@@ -47,6 +49,7 @@ export default function BoardRow({
     detailHref,
     isTracked = false,
     onTrackToggle,
+    isStale = false,
 }: BoardRowProps) {
     const { t, formatNumber } = useI18n();
     const router = useRouter();
@@ -140,7 +143,7 @@ export default function BoardRow({
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
             onClick={handleRowClick}
-            className={`relative overflow-hidden transition-all duration-300 ${rowBg} ${trackedClasses} ${clickable ? "cursor-pointer hover:bg-miku/[0.04] dark:hover:bg-miku/[0.06]" : ""}`}
+            className={`relative overflow-hidden transition-all duration-300 ${rowBg} ${trackedClasses} ${clickable ? "cursor-pointer hover:bg-miku/[0.04] dark:hover:bg-miku/[0.06]" : ""} ${isStale ? "opacity-60" : ""}`}
         >
             <AnimatePresence>
                 {flashType && (
@@ -168,6 +171,12 @@ export default function BoardRow({
                     {isTierLine && (
                         <div className="mt-0.5 text-[8px] font-medium text-slate-400 dark:text-slate-500">
                             {t("page.realtimeRankingNext.list.tierLine")}
+                        </div>
+                    )}
+                    {isStale && (
+                        <div className="mt-0.5 inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1 py-0.5 text-[7px] font-bold text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" title={t("page.realtimeRankingNext.list.staleTitle")}>
+                            <span className="h-1 w-1 animate-pulse rounded-full bg-amber-500" />
+                            {t("page.realtimeRankingNext.list.stale")}
                         </div>
                     )}
                 </div>

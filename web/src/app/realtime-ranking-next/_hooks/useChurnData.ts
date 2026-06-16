@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchChurnV2 } from "@/lib/realtime-ranking-next-api";
 import { ChurnEntryV2, RealtimeRankingRegion } from "@/types/realtime-ranking-next";
 import { entryKey } from "../_lib/board-utils";
+import { shouldKeepPreviousChurn } from "@/lib/realtime-ranking-resilience";
 
 const CHURN_POLL_INTERVAL = 15_000;
 const CHURN_RETRY_DELAYS = [8_000, 20_000, 45_000, 60_000] as const;
@@ -18,10 +19,14 @@ export function useChurnData(region: RealtimeRankingRegion, enabled: boolean) {
     const requestIdRef = useRef(0);
     const retryTimerRef = useRef<number | null>(null);
     const pollTimerRef = useRef<number | null>(null);
+    const churnSizeRef = useRef(0);
 
     const load = useCallback(async (nextRegion: RealtimeRankingRegion, reset: boolean): Promise<boolean> => {
         const id = ++requestIdRef.current;
-        if (reset) setChurnData(new Map());
+        if (reset) {
+            setChurnData(new Map());
+            churnSizeRef.current = 0;
+        }
         try {
             const rankings = await fetchChurnV2(nextRegion, { top: CHURN_TOP });
             if (id !== requestIdRef.current) return true;
@@ -32,7 +37,15 @@ export function useChurnData(region: RealtimeRankingRegion, enabled: boolean) {
                 const key = entryKey(entry.rank, String(entry.userId ?? ""), isTierLine);
                 map.set(key, { ...entry, isTierLine: isTierLine || undefined });
             }
+
+            // Resilience: a transiently collapsed churn payload should not wipe
+            // the detailed per-row stats that are already displayed.
+            if (shouldKeepPreviousChurn(churnSizeRef.current, map.size)) {
+                return true;
+            }
+
             setChurnData(map);
+            churnSizeRef.current = map.size;
             return true;
         } catch {
             if (id !== requestIdRef.current) return true;

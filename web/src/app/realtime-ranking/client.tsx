@@ -10,6 +10,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchEventList } from "@/lib/prediction-api";
 import { fetchRealtimeRanking, fetchRealtimeRankingMasterData, fetchRealtimeRankingEvents, fetchChurnData, fetchWorldLinkChurnData, fetchWorldLinkRanking, getRealtimeRankingErrorMessage } from "@/lib/realtime-ranking-api";
+import { mergeResilientEntries, shouldKeepPreviousChurn } from "@/lib/realtime-ranking-resilience";
 import ParkingPeriodsModal from "@/components/realtime-ranking/ParkingPeriodsModal";
 import Modal from "@/components/common/Modal";
 import ExternalLink from "@/components/ExternalLink";
@@ -36,6 +37,10 @@ const QUICK_JUMP_RANKS = [1, 20, 50, 100] as const;
 const NAV_OFFSET = 90; // px — navbar height + breathing room
 const SHOW_CHURN_STORAGE_KEY = "realtime-ranking:showChurn";
 const CHURN_RETRY_DELAYS = [8_000, 20_000, 45_000, 60_000] as const;
+// After this many consecutive degraded polls we stop trying to preserve the old
+// board and accept the incoming payload, so a genuine roster shrink is not held
+// stale forever. 30 polls ≈ 5 minutes at the 10s poll interval.
+const MAX_DEGRADED_POLLS = 30;
 
 function scrollToRank(rank: number) {
     const el = document.querySelector<HTMLElement>(`[data-rank="${rank}"]`);
@@ -228,6 +233,9 @@ function RealtimeRankingContent() {
     const [trackedUserId, setTrackedUserId] = useState<string | null>(null);
     const [lastTrackedData, setLastTrackedData] = useState<RealtimeRankingEntryWithDiff | null>(null);
     const [celebrationOpen, setCelebrationOpen] = useState(false);
+    // Ranks whose data was carried over from a previous snapshot because the
+    // latest poll returned a collapsed payload (used for the "syncing" hint).
+    const [staleRanks, setStaleRanks] = useState<Set<number>>(new Set());
 
     // Load tracked user ID from localStorage on region change or snapshot event change
     useEffect(() => {
@@ -278,6 +286,9 @@ function RealtimeRankingContent() {
     const churnRetryTimerRef = useRef<number | null>(null);
     const worldLinkCheckedRef = useRef(false);
     const observedActiveEventRef = useRef<{ key: string; endAt: number } | null>(null);
+    // Count of consecutive degraded polls per board scope, so a sustained roster
+    // shrink eventually overrides the stale-preservation behaviour.
+    const degradedPollCountRef = useRef(0);
 
     /** Hot update: when a user or tier line score changes, update its speed data. */
     const updateChurnForUser = useCallback((key: string, scoreDelta: number, isTierLine?: boolean) => {
@@ -404,7 +415,35 @@ function RealtimeRankingContent() {
                 if (snapshotResult.status !== "fulfilled") {
                     throw snapshotResult.reason;
                 }
-                nextOverallSnapshot = snapshotResult.value;
+                const incomingOverall = snapshotResult.value;
+
+                // Resilience: when polling the same event, guard against a
+                // transiently collapsed payload wiping the visible board. Only
+                // applies once we already have a healthy reference for this event.
+                const sameEvent = !!previousOverall && !!incomingOverall
+                    && previousOverall.eventId === incomingOverall.eventId;
+                if (asRefresh && sameEvent && degradedPollCountRef.current < MAX_DEGRADED_POLLS) {
+                    const merged = mergeResilientEntries(
+                        previousOverall!.entries,
+                        incomingOverall.entries,
+                    );
+                    if (merged.degraded) {
+                        degradedPollCountRef.current += 1;
+                        nextOverallSnapshot = { ...incomingOverall, entries: merged.entries };
+                        setStaleRanks(merged.staleRanks);
+                    } else {
+                        degradedPollCountRef.current = 0;
+                        nextOverallSnapshot = incomingOverall;
+                        setStaleRanks(new Set());
+                    }
+                } else {
+                    // Fresh load, event change, or degraded-budget exhausted:
+                    // accept the incoming payload verbatim.
+                    degradedPollCountRef.current = 0;
+                    nextOverallSnapshot = incomingOverall;
+                    setStaleRanks(new Set());
+                }
+
                 if (asRefresh && previousOverall) {
                     setPreviousSnapshot(previousOverall);
                 }
@@ -431,6 +470,40 @@ function RealtimeRankingContent() {
                 nextWorldLinkSnapshot = candidate && candidate.eventId === currentEventId ? candidate : null;
 
                 if (nextWorldLinkSnapshot) {
+                    // Resilience: merge each incoming WL group against the matching
+                    // previous group so a collapsed poll does not wipe the board.
+                    const sameWlEvent = !!previousWorldLink
+                        && previousWorldLink.eventId === nextWorldLinkSnapshot.eventId;
+                    if (asRefresh && sameWlEvent && degradedPollCountRef.current < MAX_DEGRADED_POLLS) {
+                        const prevGroupByChar = new Map(
+                            previousWorldLink!.groups.map((g) => [g.gameCharacterId, g]),
+                        );
+                        const activeCharId = selectedWorldLinkCharacterIdRef.current;
+                        let activeDegraded = false;
+                        let activeStaleRanks = new Set<number>();
+                        const mergedGroups = nextWorldLinkSnapshot.groups.map((group) => {
+                            const prevGroup = prevGroupByChar.get(group.gameCharacterId);
+                            if (!prevGroup) return group;
+                            const merged = mergeResilientEntries(prevGroup.entries, group.entries);
+                            if (group.gameCharacterId === activeCharId) {
+                                activeDegraded = merged.degraded;
+                                activeStaleRanks = merged.staleRanks;
+                            }
+                            return merged.degraded ? { ...group, entries: merged.entries } : group;
+                        });
+                        nextWorldLinkSnapshot = { ...nextWorldLinkSnapshot, groups: mergedGroups };
+                        if (activeDegraded) {
+                            degradedPollCountRef.current += 1;
+                            setStaleRanks(activeStaleRanks);
+                        } else {
+                            degradedPollCountRef.current = 0;
+                            setStaleRanks(new Set());
+                        }
+                    } else {
+                        degradedPollCountRef.current = 0;
+                        setStaleRanks(new Set());
+                    }
+
                     if (asRefresh && previousWorldLink) {
                         setPreviousWorldLinkSnapshot(previousWorldLink);
                     }
@@ -529,6 +602,13 @@ function RealtimeRankingContent() {
                         changedAt,
                     });
                 }
+            }
+
+            // Resilience: a transiently collapsed churn payload should not wipe
+            // the detailed per-row stats that are already displayed. Keep the
+            // previous map when the incoming one lost most of its rows.
+            if (shouldKeepPreviousChurn(churnDataRef.current.size, map.size)) {
+                return true;
             }
 
             setChurnData(map);
@@ -969,6 +1049,7 @@ function RealtimeRankingContent() {
                         showExtendedWarning={true}
                         trackedUserId={trackedUserId}
                         onTrackToggle={handleTrackToggle}
+                        staleRanks={staleRanks}
                     />
                 )}
             </div>

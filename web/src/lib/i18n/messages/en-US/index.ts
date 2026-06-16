@@ -2057,6 +2057,8 @@ export const enUSMessages = {
             viewDetail: "View detail",
             list: {
                 tierLine: "Tier",
+                stale: "Syncing",
+                staleTitle: "This refresh did not return data for this rank; showing the previous result. It will update automatically.",
             },
             board: {
                 overall: "Overall",
@@ -2172,6 +2174,8 @@ export const enUSMessages = {
                 score: "Score",
                 extendedWarning: "Ranks after 100 are not collected at high precision by the game, so data may be delayed. What you see is the latest available data.",
                 extended: "Extended",
+                stale: "Syncing",
+                staleTitle: "This refresh did not return data for this rank; showing the previous result. It will update automatically.",
                 currentHourChurnTitle: "Latest 1H churn count",
                 collapseChurn: "Collapse churn",
                 expandChurn: "Expand churn",

@@ -2056,6 +2056,8 @@ export const zhCNMessages = {
             viewDetail: "查看详情",
             list: {
                 tierLine: "榜线",
+                stale: "同步中",
+                staleTitle: "本次刷新未取到该名次数据，正在显示上一次的结果，稍后会自动更新。",
             },
             board: {
                 overall: "总榜",
@@ -2171,6 +2173,8 @@ export const zhCNMessages = {
                 score: "分数",
                 extendedWarning: "100 名以后的排名，游戏不支持高精度采集，数据可能存在延迟。你所看到的就是最新的数据。",
                 extended: "扩展",
+                stale: "同步中",
+                staleTitle: "本次刷新未取到该名次数据，正在显示上一次的结果，稍后会自动更新。",
                 currentHourChurnTitle: "近 1H 周回数",
                 collapseChurn: "收起周回",
                 expandChurn: "展开周回",
