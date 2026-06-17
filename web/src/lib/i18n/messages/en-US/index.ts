@@ -772,7 +772,7 @@ export const enUSMessages = {
             refreshing: "Refreshing...",
         },
         footer: {
-            version: "Moesekai · 1.2-preview-beta4",
+            version: "Moesekai · 1.2-preview-beta7",
         },
         sidebar: {
             notLoggedIn: "Not signed in",
@@ -2045,6 +2045,11 @@ export const enUSMessages = {
             title: "Live Ranking",
             subtitle: "Rebuilt · tap a player for personal detail, score curve and speed analysis.",
             backToClassic: "Back to classic",
+            line: {
+                label: "Data line",
+                main: "Main",
+                global: "Global",
+            },
             eventId: "Event",
             totalEntries: "On board",
             updatedAt: "Updated",
@@ -2119,6 +2124,11 @@ export const enUSMessages = {
             title: "Live",
             titleHighlight: "Ranking",
             description: "Auto-refreshes every 10 seconds with rank and score change hints.",
+            line: {
+                label: "Data line",
+                main: "Main",
+                global: "Global",
+            },
             showChurn: "Show churn and speed",
             trackPlayer: "Track",
             untrackPlayer: "Untrack",

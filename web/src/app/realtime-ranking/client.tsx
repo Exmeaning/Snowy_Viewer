@@ -30,6 +30,7 @@ import {
 import { IEventInfo } from "@/types/events";
 import { EventListItem } from "@/types/prediction";
 import { getCharacterName } from "@/lib/i18n";
+import { setRealtimeRankingLine, useRealtimeRankingLine } from "@/lib/realtime-ranking-line";
 
 const DEFAULT_REGION: RealtimeRankingRegion = "cn";
 const POLL_INTERVAL = 10_000;
@@ -212,6 +213,7 @@ function RealtimeRankingContent() {
 
     const [hasInitializedQuery, setHasInitializedQuery] = useState(false);
     const [region, setRegion] = useState<RealtimeRankingRegion>(DEFAULT_REGION);
+    const line = useRealtimeRankingLine();
     const [boardMode, setBoardMode] = useState<RealtimeRankingBoardMode>("overall");
     const [selectedWorldLinkCharacterId, setSelectedWorldLinkCharacterId] = useState<number | null>(null);
     const [snapshot, setSnapshot] = useState<RealtimeRankingSnapshot | null>(null);
@@ -818,7 +820,8 @@ function RealtimeRankingContent() {
         return () => {
             window.clearInterval(timer);
         };
-    }, [hasInitializedQuery, region, loadSnapshot]);
+        // `line` switches the API host, so a fresh reload is required on change.
+    }, [hasInitializedQuery, region, loadSnapshot, line]);
 
     const worldLinkAvailable = !!worldLinkSnapshot
         && !!snapshot
@@ -906,7 +909,8 @@ function RealtimeRankingContent() {
                 churnRetryTimerRef.current = null;
             }
         };
-    }, [activeChurnBoardMode, activeChurnTargetId, hasInitializedQuery, loadChurnData, region]);
+        // `line` switches the API host, so churn data must be reloaded on change.
+    }, [activeChurnBoardMode, activeChurnTargetId, hasInitializedQuery, loadChurnData, region, line]);
 
     const rankingEntries = useMemo(() => {
         if (!activeSnapshot) return [];
@@ -935,6 +939,8 @@ function RealtimeRankingContent() {
                 <RankingHeader
                     region={region}
                     onRegionChange={setRegion}
+                    line={line}
+                    onLineChange={setRealtimeRankingLine}
                     updatedAt={activeSnapshot?.updatedAt}
                     eventId={activeSnapshot?.eventId}
                     scopeLabel={activeScopeLabel}

@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useI18n } from "@/contexts/I18nContext";
 import { REALTIME_RANKING_REGION_OPTIONS, RealtimeRankingRegion } from "@/types/realtime-ranking";
+import { REALTIME_RANKING_LINE_OPTIONS, RealtimeRankingLine } from "@/lib/realtime-ranking-line";
 
 interface RankingHeaderProps {
     region: RealtimeRankingRegion;
     onRegionChange: (region: RealtimeRankingRegion) => void;
+    line: RealtimeRankingLine;
+    onLineChange: (line: RealtimeRankingLine) => void;
     updatedAt?: number;
     eventId?: number;
     scopeLabel?: string;
@@ -20,6 +23,8 @@ interface RankingHeaderProps {
 export default function RankingHeader({
     region,
     onRegionChange,
+    line,
+    onLineChange,
     updatedAt,
     eventId,
     scopeLabel,
@@ -78,6 +83,27 @@ export default function RankingHeader({
                             {t(`page.realtimeRanking.regions.${value}`)}
                         </button>
                     ))}
+                </div>
+
+                {/* Data Line Toggle */}
+                <div className="shrink-0 flex items-center gap-1.5">
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                        {t("page.realtimeRanking.line.label")}
+                    </span>
+                    <div className="flex max-w-full overflow-x-auto ios-glass-card p-1 rounded-xl border border-slate-200/30 dark:border-slate-700/30">
+                        {REALTIME_RANKING_LINE_OPTIONS.map((value) => (
+                            <button
+                                key={value}
+                                onClick={() => onLineChange(value)}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${line === value
+                                    ? "ios-glass-tab-active text-white shadow-sm"
+                                    : "ios-glass-tab text-slate-600 dark:text-slate-300 hover:bg-white/20"
+                                    }`}
+                            >
+                                {t(`page.realtimeRanking.line.${value}`)}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {showChurnToggle && (

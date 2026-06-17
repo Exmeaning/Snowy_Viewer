@@ -19,6 +19,7 @@ import BoardList from "./_components/BoardList";
 import { useRealtimeBoard, POLL_INTERVAL } from "./_hooks/useRealtimeBoard";
 import { useChurnData } from "./_hooks/useChurnData";
 import { useCurrentEvent } from "./_hooks/useCurrentEvent";
+import { setRealtimeRankingLine, useRealtimeRankingLine } from "@/lib/realtime-ranking-line";
 
 const DEFAULT_REGION: RealtimeRankingRegion = "cn";
 
@@ -41,6 +42,7 @@ function RealtimeRankingNextContent() {
         const fromUrl = searchParams.get("region");
         return isRealtimeRankingRegion(fromUrl) ? fromUrl : DEFAULT_REGION;
     });
+    const line = useRealtimeRankingLine();
     const [boardMode, setBoardMode] = useState<RealtimeRankingNextBoardMode>("overall");
     const [masterData, setMasterData] = useState<RealtimeRankingMasterData>(EMPTY_MASTER_DATA);
     const [countdown, setCountdown] = useState(Math.floor(POLL_INTERVAL / 1000));
@@ -129,6 +131,8 @@ function RealtimeRankingNextContent() {
                 <BoardHeader
                     region={region}
                     onRegionChange={setRegion}
+                    line={line}
+                    onLineChange={setRealtimeRankingLine}
                     updatedAt={board.activeGroup ? board.activeGroup.updatedAt : board.snapshot?.updatedAt}
                     eventId={board.snapshot?.eventId}
                     totalEntries={board.entries.length}

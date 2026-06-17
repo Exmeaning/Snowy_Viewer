@@ -16,12 +16,11 @@ import {
 } from "@/types/realtime-ranking";
 import { ICardInfo } from "@/types/types";
 import { IBondsHonor, IBondsHonorWord, IGameCharaUnit, IHonorGroup, IHonorInfo } from "@/types/honor";
+import { getLegacyApiBase } from "@/lib/realtime-ranking-line";
 
-// /realtime-ranking uses the public rks.exmeaning.com live ranking API.
-// Do not route through the local /api/public by default because this repository has no proxy route for it.
-const BASE_URL = (
-    process.env.NEXT_PUBLIC_REALTIME_RANKING_API_BASE || "https://rks.exmeaning.com/api/public"
-).replace(/\/+$/, "");
+// /realtime-ranking uses the public rks.* live ranking API. The host depends on
+// the selected data line (see realtime-ranking-line.ts); the env override, when
+// present, always wins.
 const CHURN_TIMEOUT_MS = 15_000;
 
 type RealtimeRankingErrorValues = Record<string, string | number>;
@@ -83,7 +82,7 @@ function buildRealtimeRankingApiUrl(
     path: string,
     query?: Record<string, string | number | null | undefined>,
 ): string {
-    const pathname = `${BASE_URL}/${path.replace(/^\/+|\/+$/g, "")}/`;
+    const pathname = `${getLegacyApiBase()}/${path.replace(/^\/+|\/+$/g, "")}/`;
     if (!query) return pathname;
 
     const searchParams = new URLSearchParams();

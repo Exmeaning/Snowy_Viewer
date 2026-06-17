@@ -15,6 +15,7 @@ import {
 } from "@/types/realtime-ranking-next";
 import { buildEntriesWithDiff, LastChange } from "../_lib/board-utils";
 import { mergeResilientEntries } from "@/lib/realtime-ranking-resilience";
+import { useRealtimeRankingLine } from "@/lib/realtime-ranking-line";
 
 export const POLL_INTERVAL = 10_000;
 // After this many consecutive degraded polls, accept the incoming payload so a
@@ -51,6 +52,7 @@ export function useRealtimeBoard(
     boardMode: RealtimeRankingNextBoardMode,
     enabled: boolean,
 ): UseRealtimeBoardResult {
+    const line = useRealtimeRankingLine();
     const [snapshot, setSnapshot] = useState<BoardSnapshotV2 | null>(null);
     const [previousSnapshot, setPreviousSnapshot] = useState<BoardSnapshotV2 | null>(null);
     const [worldLinkSnapshot, setWorldLinkSnapshot] = useState<WorldLinkSnapshotV2 | null>(null);
@@ -173,7 +175,8 @@ export function useRealtimeBoard(
         void load(region, false);
         const timer = window.setInterval(() => void load(region, true), POLL_INTERVAL);
         return () => window.clearInterval(timer);
-    }, [enabled, region, load]);
+        // `line` switches the API host, so a fresh reload is required on change.
+    }, [enabled, region, load, line]);
 
     const worldLinkAvailable = !!worldLinkSnapshot
         && !!snapshot

@@ -771,7 +771,7 @@ export const zhCNMessages = {
             refreshing: "刷新中...",
         },
         footer: {
-            version: "Moesekai · 1.2-preview-beta4",
+            version: "Moesekai · 1.2-preview-beta7",
         },
         sidebar: {
             notLoggedIn: "未登录",
@@ -2044,6 +2044,11 @@ export const zhCNMessages = {
             title: "实时排行榜",
             subtitle: "全新重构 · 点击玩家查看个人详情、曲线与时速分析。",
             backToClassic: "返回经典版",
+            line: {
+                label: "数据线路",
+                main: "主线",
+                global: "国际线路",
+            },
             eventId: "活动",
             totalEntries: "在榜",
             updatedAt: "更新于",
@@ -2118,6 +2123,11 @@ export const zhCNMessages = {
             title: "实时",
             titleHighlight: "榜单",
             description: "每 10 秒自动刷新一次，支持查看排名变化与分数变动提示。",
+            line: {
+                label: "数据线路",
+                main: "主线",
+                global: "国际线路",
+            },
             showChurn: "显示周回与时速",
             trackPlayer: "追踪",
             untrackPlayer: "取消追踪",

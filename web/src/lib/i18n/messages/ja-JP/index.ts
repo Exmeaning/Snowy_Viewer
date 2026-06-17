@@ -771,7 +771,7 @@ export const jaJPMessages = {
       refreshing: '更新中...'
     },
     footer: {
-      version: 'Moesekai · 1.2-preview-beta4'
+      version: 'Moesekai · 1.2-preview-beta7'
     },
     sidebar: {
       notLoggedIn: '未ログイン',
@@ -2068,6 +2068,11 @@ export const jaJPMessages = {
       title: 'リアルタイムランキング',
       subtitle: 'リニューアル版 · プレイヤーをタップして個人詳細・スコア曲線・時速分析を表示。',
       backToClassic: 'クラシック版へ戻る',
+      line: {
+        label: 'データ回線',
+        main: 'メイン',
+        global: '国際',
+      },
       eventId: 'イベント',
       totalEntries: 'ランクイン',
       updatedAt: '更新',
@@ -2142,6 +2147,11 @@ export const jaJPMessages = {
       title: 'リアルタイム',
       titleHighlight: 'ランキング',
       description: 'Auto-refreshes every 10 seconds with rank and score change hints.',
+      line: {
+        label: 'データ回線',
+        main: 'メイン',
+        global: '国際',
+      },
       showChurn: 'Show churn and speed',
       trackPlayer: '追跡',
       untrackPlayer: '追跡解除',

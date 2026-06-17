@@ -28,10 +28,7 @@ import {
     WorldLinkSnapshotV2,
 } from "@/types/realtime-ranking-next";
 import { NormalizedPlayerHonor } from "@/types/realtime-ranking";
-
-const BASE_V2 = (
-    process.env.NEXT_PUBLIC_REALTIME_RANKING_V2_API_BASE || "https://rks-n.exmeaning.com/api/public/v2"
-).replace(/\/+$/, "");
+import { getNextApiBase } from "@/lib/realtime-ranking-line";
 
 const LATEST_TIMEOUT_MS = 10_000;
 const WORLDLINK_TIMEOUT_MS = 30_000;
@@ -64,7 +61,7 @@ export class RealtimeRankingNextApiError extends Error {
 type QueryValue = string | number | null | undefined;
 
 function buildUrl(region: RealtimeRankingRegion, path: string, query?: Record<string, QueryValue>): string {
-    const pathname = `${BASE_V2}/${region}/${path.replace(/^\/+|\/+$/g, "")}`;
+    const pathname = `${getNextApiBase()}/${region}/${path.replace(/^\/+|\/+$/g, "")}`;
     if (!query) return pathname;
 
     const params = new URLSearchParams();

@@ -21,6 +21,7 @@ import {
     SeriesPoint,
 } from "@/types/realtime-ranking-next";
 import { entryKey, getTierRanks } from "../_lib/board-utils";
+import { useRealtimeRankingLine } from "@/lib/realtime-ranking-line";
 
 const DETAIL_POLL_INTERVAL = 10_000;
 const NEARBY_RANGE = 5; // ±5 rows around the target player.
@@ -80,6 +81,7 @@ interface UseUserDetailOptions {
 }
 
 export function useUserDetail({ region, userId, worldLinkCharacterId }: UseUserDetailOptions) {
+    const line = useRealtimeRankingLine();
     const [data, setData] = useState<UserDetailData>(EMPTY);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -278,7 +280,9 @@ export function useUserDetail({ region, userId, worldLinkCharacterId }: UseUserD
             }
             setIsRefreshing(false);
         }
-    }, [region, userId, worldLinkCharacterId]);
+        // `line` switches the API host, so recreate the loader (and thus reload) on change.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [region, userId, worldLinkCharacterId, line]);
 
     useEffect(() => {
         freshRetryCountRef.current = 0;

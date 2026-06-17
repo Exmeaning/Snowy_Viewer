@@ -5,6 +5,7 @@ import { fetchChurnV2 } from "@/lib/realtime-ranking-next-api";
 import { ChurnEntryV2, RealtimeRankingRegion } from "@/types/realtime-ranking-next";
 import { entryKey } from "../_lib/board-utils";
 import { shouldKeepPreviousChurn } from "@/lib/realtime-ranking-resilience";
+import { useRealtimeRankingLine } from "@/lib/realtime-ranking-line";
 
 const CHURN_POLL_INTERVAL = 15_000;
 const CHURN_RETRY_DELAYS = [8_000, 20_000, 45_000, 60_000] as const;
@@ -15,6 +16,7 @@ const CHURN_TOP = 200;
  * (userId for players, `tier:{rank}` for tier lines).
  */
 export function useChurnData(region: RealtimeRankingRegion, enabled: boolean) {
+    const line = useRealtimeRankingLine();
     const [churnData, setChurnData] = useState<Map<string, ChurnEntryV2>>(new Map());
     const requestIdRef = useRef(0);
     const retryTimerRef = useRef<number | null>(null);
@@ -95,7 +97,8 @@ export function useChurnData(region: RealtimeRankingRegion, enabled: boolean) {
             requestIdRef.current += 1;
             clearTimers();
         };
-    }, [enabled, region, load]);
+        // `line` switches the API host, so churn data must be reloaded on change.
+    }, [enabled, region, load, line]);
 
     return churnData;
 }
