@@ -194,7 +194,7 @@ export default function CharacterFilter({
                             <button
                                 key={unit.id}
                                 onClick={() => handleUnitClick(unit.id)}
-                                className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(selectedUnitIds.includes(unit.id))}`}
+                                className={`p-1.5 transition-all ${getFilterIconStateClasses(selectedUnitIds.includes(unit.id))}`}
                                 title={unitLabel}
                             >
                                 <div className="w-8 h-8 relative">

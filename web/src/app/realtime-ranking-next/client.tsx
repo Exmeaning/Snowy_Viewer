@@ -49,7 +49,8 @@ function RealtimeRankingNextContent() {
     const [trackedUserId, setTrackedUserId] = useState<string | null>(null);
 
     const board = useRealtimeBoard(region, boardMode, true);
-    const churnData = useChurnData(region, true);
+    const worldLinkCharacterId = board.isWorldLinkMode && board.activeGroup ? board.activeGroup.gameCharacterId : null;
+    const churnData = useChurnData(region, worldLinkCharacterId, true);
     const currentEvent = useCurrentEvent(
         region,
         board.snapshot
@@ -122,8 +123,6 @@ function RealtimeRankingNextContent() {
             return next;
         });
     }, [region]);
-
-    const worldLinkCharacterId = board.isWorldLinkMode && board.activeGroup ? board.activeGroup.gameCharacterId : null;
 
     return (
         <MainLayout>

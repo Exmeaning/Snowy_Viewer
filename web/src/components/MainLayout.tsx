@@ -284,7 +284,7 @@ export default function MainLayout({
             )}
 
             {/* Layout with Sidebar */}
-            <div className={`flex flex-grow relative ${immersiveMode ? "" : "pt-[4.5rem]"}`}>
+            <div className={`flex flex-grow relative ${immersiveMode ? "" : "pt-[5.5rem]"}`}>
                 {/* Sidebar */}
                 {!immersiveMode && (
                     <Sidebar
@@ -296,7 +296,7 @@ export default function MainLayout({
                 )}
 
                 {/* Main content area */}
-                <div ref={pageContentRef} data-shortcut-page-root="true" className={`flex-grow relative z-10 w-full min-w-0 ${hasMounted ? 'transition-all duration-300' : ''} ${effectiveSidebarOpen ? 'md:ml-64' : 'md:ml-0'
+                <div ref={pageContentRef} data-shortcut-page-root="true" className={`flex-grow relative z-10 w-full min-w-0 ${hasMounted ? 'transition-all duration-300' : ''} ${effectiveSidebarOpen ? 'md:ml-[18rem]' : 'md:ml-0'
                     }`}>
                     {children}
                 </div>
@@ -305,7 +305,7 @@ export default function MainLayout({
             {!immersiveMode && (
                 <>
                     {/* Footer */}
-                    <div className={`relative z-[5] ${hasMounted ? 'transition-all duration-300' : ''} ${effectiveSidebarOpen ? 'md:ml-64' : 'md:ml-0'
+                    <div className={`relative z-[5] ${hasMounted ? 'transition-all duration-300' : ''} ${effectiveSidebarOpen ? 'md:ml-[18rem]' : 'md:ml-0'
                         }`}>
                         <MainFooter />
                     </div>

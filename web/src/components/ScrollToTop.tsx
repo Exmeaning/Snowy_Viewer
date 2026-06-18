@@ -111,7 +111,7 @@ export default function ScrollToTop() {
             onPointerUp={handlePressEnd}
             onPointerLeave={handlePressEnd}
             onPointerCancel={handlePressEnd}
-            className={`fixed bottom-10 right-8 p-3 rounded-2xl backdrop-blur-md border border-miku/20 shadow-lg transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) z-[100] active:scale-95 transform group ${isVisible
+            className={`fixed bottom-10 right-8 p-3 rounded-full backdrop-blur-md border border-miku/20 shadow-lg transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) z-[100] active:scale-95 transform group ${isVisible
                 ? "opacity-100 translate-y-0 scale-100"
                 : "opacity-0 translate-y-10 scale-90 pointer-events-none"
                 } ${isInteracting

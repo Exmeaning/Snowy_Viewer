@@ -261,11 +261,34 @@ function MusicContent() {
 
         // Apply tag filter
         if (selectedTag !== "all") {
-            const musicIdsWithTag = new Set(
-                musicTags
-                    .filter((mt) => mt.musicTag === selectedTag)
-                    .map((mt) => mt.musicId)
-            );
+            let musicIdsWithTag: Set<number>;
+            if (selectedTag === "vocaloid") {
+                // "Virtual Singer Only": has vocaloid tag but no unit (cover) tag
+                const unitTagIds = new Set<MusicTagType>([
+                    "light_music_club",
+                    "idol",
+                    "street",
+                    "theme_park",
+                    "school_refusal",
+                ]);
+                const idsWithUnitTag = new Set(
+                    musicTags
+                        .filter((mt) => unitTagIds.has(mt.musicTag))
+                        .map((mt) => mt.musicId)
+                );
+                musicIdsWithTag = new Set(
+                    musicTags
+                        .filter((mt) => mt.musicTag === "vocaloid")
+                        .map((mt) => mt.musicId)
+                        .filter((id) => !idsWithUnitTag.has(id))
+                );
+            } else {
+                musicIdsWithTag = new Set(
+                    musicTags
+                        .filter((mt) => mt.musicTag === selectedTag)
+                        .map((mt) => mt.musicId)
+                );
+            }
             result = result.filter((m) => musicIdsWithTag.has(m.id));
         }
 

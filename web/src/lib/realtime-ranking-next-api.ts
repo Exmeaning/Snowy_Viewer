@@ -256,7 +256,27 @@ export async function fetchChurnV2(
     return Array.isArray(data.rankings) ? data.rankings : [];
 }
 
-// ----------------------------------------------------------------------------
+/**
+ * World Link chapter churn (per-character dashboard). Mirrors fetchChurnV2 but
+ * pulls the WL-scoped series so WL-only players (not in the overall board) get
+ * their churn data too.
+ */
+export async function fetchWorldLinkChurnV2(
+    region: RealtimeRankingRegion,
+    options: { gameCharacterId: number; top?: number },
+): Promise<ChurnEntryV2[]> {
+    if (!options.gameCharacterId) {
+        throw new RealtimeRankingNextApiError("missingWorldLinkCharacter");
+    }
+    const data = await fetchJson<ChurnApiResponseV2>(
+        buildUrl(region, "worldlink-churn", {
+            gameCharacterId: options.gameCharacterId,
+            top: options.top,
+        }),
+        CHURN_TIMEOUT_MS,
+    );
+    return Array.isArray(data.rankings) ? data.rankings : [];
+}
 // World Link series variants (require gameCharacterId)
 // ----------------------------------------------------------------------------
 

@@ -1545,7 +1545,7 @@ export default function ChartPreviewPlayer({
     const controlsClassName = isFullscreen
         ? "absolute bottom-0 left-0 right-0 z-30 flex flex-col gap-2.5 border-t border-slate-800 bg-slate-950/92 px-4 pt-3 backdrop-blur-md transition-all duration-300"
         : "flex flex-col gap-3 rounded-xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm";
-    const timeClassName = `${isCompactControls ? "text-[11px]" : "text-xs"} ml-auto font-mono whitespace-nowrap ${isFullscreen ? "text-slate-400" : "text-slate-500"}`;
+    const timeClassName = `${isCompactControls ? "text-[11px]" : "text-xs"} ml-auto font-mono shrink min-w-0 truncate text-right ${isFullscreen ? "text-slate-400" : "text-slate-500"}`;
     const secondaryButtonClassName = `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} rounded-lg font-medium transition-colors ${isFullscreen ? "bg-slate-700 text-slate-200 hover:bg-slate-600" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`;
     const chipClassName = isFullscreen
         ? "border-slate-700 bg-slate-800/80 hover:bg-slate-700/80"
@@ -1732,7 +1732,7 @@ export default function ChartPreviewPlayer({
                         }
                         : undefined}
                 >
-                    <div className={isFullscreen ? "flex items-center justify-between" : "flex items-center gap-2"}>
+                    <div className={isFullscreen ? "flex items-center justify-between" : "flex min-w-0 items-center gap-2"}>
                         {/* Left buttons */}
                         <div className={isFullscreen ? "flex items-center gap-2" : "contents"}>
                         <button

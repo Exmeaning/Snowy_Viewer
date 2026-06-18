@@ -7,6 +7,7 @@ import {
     fetchParkingLiveV2,
     fetchTierSeriesV2,
     fetchUserSeriesV2,
+    fetchWorldLinkChurnV2,
     fetchWorldLinkLatestV2,
     fetchWorldLinkTierSeriesV2,
     fetchWorldLinkUserSeriesV2,
@@ -152,7 +153,10 @@ export function useUserDetail({ region, userId, worldLinkCharacterId }: UseUserD
             const [userSeries, tierSeries, churnList, parkingList] = await Promise.all([
                 userSeriesPromise.catch(() => ({} as Record<string, SeriesPoint[]>)),
                 tierSeriesPromise.catch(() => ({} as Record<string, SeriesPoint[]>)),
-                fetchChurnV2(region, { top: 200 }).catch(() => [] as ChurnEntryV2[]),
+                (worldLinkCharacterId != null
+                    ? fetchWorldLinkChurnV2(region, { gameCharacterId: worldLinkCharacterId, top: 200 })
+                    : fetchChurnV2(region, { top: 200 })
+                ).catch(() => [] as ChurnEntryV2[]),
                 worldLinkCharacterId != null
                     ? Promise.resolve([] as ParkingLiveUserV2[])
                     : fetchParkingLiveV2(region).catch(() => [] as ParkingLiveUserV2[]),

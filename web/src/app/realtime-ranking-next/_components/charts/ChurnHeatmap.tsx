@@ -57,7 +57,7 @@ export default function ChurnHeatmap({ hourlyChurn, churn48h }: ChurnHeatmapProp
     const total = churn48h ?? grid.reduce((acc, c) => acc + c.count, 0);
 
     return (
-        <div>
+        <div className="min-w-0">
             <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
                     {t("page.realtimeRankingNext.detail.heatmapTitle")}
@@ -68,12 +68,12 @@ export default function ChurnHeatmap({ hourlyChurn, churn48h }: ChurnHeatmapProp
             </div>
             <div className="space-y-1">
                 {[row1, row2].map((row, ri) => (
-                    <div key={ri} className="flex gap-px">
+                    <div key={ri} className="flex w-full min-w-0 gap-px">
                         {row.map((cell, i) => (
                             <div
                                 key={`${ri}-${i}`}
                                 title={`${cell.localLabel} · ${cell.count}`}
-                                className={`flex-1 min-w-[14px] rounded-sm py-1 text-center text-[8px] font-bold ${cellColor(cell.count, cell.isCurrentHour)}`}
+                                className={`flex-1 min-w-0 rounded-sm py-1 text-center text-[8px] font-bold ${cellColor(cell.count, cell.isCurrentHour)}`}
                             >
                                 {cell.count > 0 ? `${cell.count}${cell.isCurrentHour ? "*" : ""}` : ""}
                             </div>

@@ -356,7 +356,7 @@ export const jaJPMessages = {
     },
     musicTags: {
       all: 'すべて',
-      vocaloid: 'バーチャル・シンガー',
+      vocaloid: 'バーチャル・シンガーのみ',
       light_music_club: 'Leo/need',
       idol: 'MORE MORE JUMP!',
       street: 'Vivid BAD SQUAD',
@@ -771,7 +771,7 @@ export const jaJPMessages = {
       refreshing: '更新中...'
     },
     footer: {
-      version: 'Moesekai · 1.2-preview-beta7'
+      version: 'Moesekai · 1.3-preview-beta1'
     },
     sidebar: {
       notLoggedIn: '未ログイン',

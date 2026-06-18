@@ -110,7 +110,7 @@ export default function ImagePreviewModal({
             <button
                 onClick={handleCopy}
                 disabled={isCopying || isSaving}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 island-pill-hover rounded-full transition-colors disabled:opacity-50"
                 aria-label={t("common.imageActions.copyImage")}
                 title={isCopying ? t("common.imageActions.copying") : copySuccess ? t("common.imageActions.copySuccess") : t("common.imageActions.copyImage")}
             >
@@ -145,7 +145,7 @@ export default function ImagePreviewModal({
             <button
                 onClick={handleSave}
                 disabled={isSaving || isCopying}
-                className="p-1.5 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                className="p-1.5 text-slate-400 hover:text-miku island-pill-hover rounded-full transition-colors disabled:opacity-50"
                 aria-label={t("common.imageActions.saveImage")}
                 title={isSaving ? t("common.imageActions.saving") : saveSuccess ? t("common.imageActions.saveSuccess") : t("common.imageActions.saveImage")}
             >
@@ -190,7 +190,7 @@ export default function ImagePreviewModal({
         >
             <div className="space-y-3">
                 {saveClickCount >= 2 && (
-                    <div className="rounded-xl bg-gradient-to-r from-miku/5 to-luka/5 border border-miku/15 px-4 py-2.5 animate-in fade-in duration-300">
+                    <div className="rounded-2xl bg-gradient-to-r from-miku/5 to-luka/5 border border-miku/15 px-4 py-2.5 animate-in fade-in duration-300">
                         <p className="text-xs text-slate-600 leading-relaxed">
                             {t("common.imageActions.downloadHintPrefix")}<strong className="text-slate-700">{t("common.imageActions.downloadHintAction")}</strong>{t("common.imageActions.downloadHintSuffix")}
                             <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer" className="text-miku font-medium hover:underline ml-1">Chrome</a>
@@ -202,7 +202,7 @@ export default function ImagePreviewModal({
 
                 {errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 p-3 sm:p-4">
                     <div className="max-h-[65vh] overflow-auto flex items-center justify-center">
                         <img
                             src={imageUrl}

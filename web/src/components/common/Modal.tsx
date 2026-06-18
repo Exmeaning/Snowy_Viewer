@@ -122,15 +122,15 @@ export default function Modal({
 
                     {/* Dialog */}
                     <motion.div
-                        className={`relative w-full ${sizeClasses[size]} transform-gpu will-change-transform liquid-glass-modal rounded-2xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[85vh]`}
+                        className={`relative w-full ${sizeClasses[size]} transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[85vh]`}
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-gradient-to-r from-miku/5 to-transparent flex-shrink-0">
-                            <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-dashed border-slate-200/60 dark:border-slate-700/40 bg-gradient-to-r from-miku/5 to-transparent flex-shrink-0">
+                            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                                 <span className="w-1.5 h-6 bg-miku rounded-full" />
                                 {title}
                             </h2>
@@ -138,7 +138,7 @@ export default function Modal({
                                 {headerActions}
                                 <button
                                     onClick={onClose}
-                                    className="p-1.5 -mr-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                    className="p-1.5 -mr-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 island-pill-hover rounded-full transition-colors"
                                     aria-label={t("common.action.close")}
                                 >
                                     <svg

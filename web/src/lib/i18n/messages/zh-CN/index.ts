@@ -356,7 +356,7 @@ export const zhCNMessages = {
         },
         musicTags: {
             all: "全部",
-            vocaloid: "虚拟歌手",
+            vocaloid: "仅虚拟歌手",
             light_music_club: "Leo/need",
             idol: "MORE MORE JUMP！",
             street: "Vivid BAD SQUAD",
@@ -771,7 +771,7 @@ export const zhCNMessages = {
             refreshing: "刷新中...",
         },
         footer: {
-            version: "Moesekai · 1.2-preview-beta7",
+            version: "Moesekai · 1.3-preview-beta1",
         },
         sidebar: {
             notLoggedIn: "未登录",

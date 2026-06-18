@@ -503,6 +503,10 @@ export default function Sidebar({
     const router = useRouter();
     const { assetSource } = useTheme();
     const { t } = useI18n();
+    // On the home page, the mobile navbar stays single-row (~64px tall); on
+    // other pages it grows by a breadcrumb row (~32px + border). The sidebar
+    // needs a matching top offset so it never collides with the navbar.
+    const isHome = pathname === "/";
     // Expand all groups by default.
     const [expandedGroups, setExpandedGroups] = useState<string[]>(
         navigationGroups.map(group => group.id)
@@ -660,7 +664,6 @@ export default function Sidebar({
 
     // Flat index counter for visible items.
     let flatIdx = 0;
-    const isHomePage = pathname === "/";
 
     return (
         <>
@@ -672,34 +675,35 @@ export default function Sidebar({
                 />
             )}
 
-            {/* Sidebar */}
+            {/* Sidebar — Floating Island */}
             <aside
-                className={`fixed ${isHomePage ? "top-[3.5rem] h-[calc(100vh-3.5rem)]" : "top-[5.5rem] h-[calc(100vh-5.5rem)]"} sm:top-[4.5rem] sm:h-[calc(100vh-4.5rem)] left-0 w-64 ios-glass-panel border-r border-slate-200/50 dark:border-slate-800/30 z-[60] ${hasMounted ? 'transition-transform duration-300 ease-out' : ''} overflow-y-auto flex flex-col ${isOpen ? "translate-x-0" : "-translate-x-full"
-                    }`}
+                className={`fixed left-3 sm:left-4 ${isHome ? "top-[5rem]" : "top-[7rem]"} sm:top-[5.5rem] z-[60] w-64 island-panel rounded-3xl ${hasMounted ? 'transition-transform duration-300 ease-out' : ''} overflow-hidden flex flex-col ${isOpen ? "translate-x-0" : "-translate-x-[18rem]"}
+                    ${isHome ? "h-[calc(100vh-6rem)]" : "h-[calc(100vh-8rem)]"} sm:h-[calc(100vh-6.5rem)]`}
             >
+                {isOpen && <div className="absolute inset-0 pointer-events-none animate-island-in-left" aria-hidden="true" />}
 
 
                 {/* Navigation groups - scrollable area */}
-                <nav ref={navRef} className="p-4 space-y-4 flex-grow overflow-y-auto">
+                <nav ref={navRef} className="p-3 space-y-3 flex-grow overflow-y-auto">
                     {/* Home shortcut */}
                     <Link
                         href="/"
                         onClick={handleNavClick}
                         data-nav-index={(() => { const i = flatIdx; flatIdx++; return i; })()}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all border ${focusedIndex === 0
-                            ? "bg-miku/20 text-miku ring-2 ring-miku/30 dark:bg-miku/25 border-miku/30 dark:border-miku/40"
+                        className={`flex items-center gap-3 px-4 py-2 rounded-full text-sm transition-all ${focusedIndex === 0
+                            ? "island-pill-active ring-2 ring-miku/30"
                             : pathname === "/"
-                                ? "bg-miku/15 text-miku font-semibold border-miku/30 dark:border-miku/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] dark:bg-miku/20"
-                                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 hover:text-miku dark:hover:text-miku border-transparent"
+                                ? "island-pill-active"
+                                : "island-pill-hover text-slate-600 dark:text-slate-300 hover:text-miku dark:hover:text-miku"
                             }`}
                     >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
-                        <span>{t("layout.nav.home")}</span>
+                        <span className="font-black">{t("layout.nav.home")}</span>
                     </Link>
 
-                    <div className="border-t border-slate-100 dark:border-slate-800/30" />
+                    <div className="border-t border-dashed border-slate-200/60 dark:border-slate-700/40 opacity-60" />
 
                     {/* Navigation groups */}
                     {navigationGroups.map((group) => {
@@ -708,21 +712,21 @@ export default function Sidebar({
                             <div key={group.id}>
                                 <button
                                     onClick={() => toggleGroup(group.id)}
-                                    className="w-full flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 hover:text-miku transition-colors"
+                                    className="w-full flex items-center justify-between px-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider hover:text-miku dark:hover:text-miku transition-colors"
                                 >
                                     {getGroupLabel(group.id)}
                                     <svg
-                                        className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""
+                                        className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""
                                             }`}
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         stroke="currentColor"
                                     >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </button>
                                 <div
-                                    className={`space-y-1 overflow-hidden transition-all duration-200 ${isExpanded ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
+                                    className={`space-y-0.5 overflow-hidden transition-all duration-200 ${isExpanded ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
                                         }`}
                                 >
                                     {group.items.map((item) => {
@@ -732,20 +736,20 @@ export default function Sidebar({
                                         const isFocused = focusedIndex === thisIdx;
                                         return (
                                             <div key={item.href}>
-                                                <div className={`flex items-center rounded-lg transition-all border ${isFocused
-                                                    ? "bg-miku/20 text-miku ring-2 ring-miku/30 dark:bg-miku/25 border-miku/30 dark:border-miku/40"
+                                                <div className={`flex items-center rounded-full transition-all ${isFocused
+                                                    ? "island-pill-active ring-2 ring-miku/30"
                                                     : active
-                                                        ? "bg-miku/15 text-miku font-semibold border-miku/30 dark:border-miku/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] dark:bg-miku/20"
-                                                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 hover:text-miku dark:hover:text-miku border-transparent"
+                                                        ? "island-pill-active"
+                                                        : "island-pill-hover text-slate-600 dark:text-slate-300 hover:text-miku dark:hover:text-miku"
                                                     }`}>
                                                     <Link
                                                         href={item.href}
                                                         onClick={handleNavClick}
                                                         data-nav-index={thisIdx}
-                                                        className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium flex-1 min-w-0"
+                                                        className="flex items-center gap-3 px-4 py-2 text-sm font-medium flex-1 min-w-0"
                                                     >
                                                         {item.icon}
-                                                        <span>{getItemLabel(item.href, item.id)}</span>
+                                                        <span className="truncate">{getItemLabel(item.href, item.id)}</span>
                                                     </Link>
                                                 </div>
                                             </div>
@@ -758,15 +762,15 @@ export default function Sidebar({
                 </nav>
 
                 {/* Bottom section - user info */}
-                <div className="border-t border-slate-200/50 dark:border-slate-800/30 flex-shrink-0">
+                <div className="border-t border-slate-200/50 dark:border-slate-700/40 flex-shrink-0 p-2">
                     {/* User Info Card */}
                     <Link
                         href="/profile"
                         onClick={handleNavClick}
-                        className="flex items-center gap-3 p-4 hover:bg-miku/5 dark:hover:bg-miku/10 transition-all duration-300 group border-t border-transparent"
+                        className="flex items-center gap-3 p-2 rounded-2xl hover:bg-miku/8 dark:hover:bg-miku/12 transition-all duration-300 group"
                     >
                         {/* Avatar */}
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-miku to-blue-400 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-miku to-blue-400 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/40 dark:ring-white/10">
                             {activeAccount ? (
                                 <Image
                                     src={
@@ -784,7 +788,7 @@ export default function Sidebar({
                                     unoptimized
                                 />
                             ) : (
-                                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                             )}
@@ -792,10 +796,10 @@ export default function Sidebar({
 
                         {/* User Info */}
                         <div className="flex-grow min-w-0">
-                            <div className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate group-hover:text-miku transition-colors">
+                            <div className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate group-hover:text-miku transition-colors">
                                 {activeAccount?.userGamedata?.name || activeAccount?.nickname || t("settings.sidebar.notLoggedIn")}
                             </div>
-                            <div className="text-xs text-slate-400 dark:text-slate-500">
+                            <div className="text-xs text-slate-400 dark:text-slate-500 truncate">
                                 {activeAccount ? t("settings.sidebar.manageAccount") : t("settings.sidebar.bindAccount")}
                             </div>
                         </div>

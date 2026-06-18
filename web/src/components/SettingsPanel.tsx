@@ -178,7 +178,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     <motion.div
                         id="settings-panel-content"
                         ref={panelRef}
-                        className="relative w-full max-w-md transform-gpu will-change-transform liquid-glass-modal rounded-2xl overflow-hidden flex flex-col max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] sm:max-h-[80vh] shadow-2xl"
+                        className="relative w-full max-w-md transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] sm:max-h-[80vh] shadow-2xl"
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -263,7 +263,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         </button>
 
                         <div
-                            className={`absolute top-full left-0 w-full mt-2 liquid-glass-modal rounded-xl overflow-hidden z-[1100] transition-all duration-200 origin-top transform ${expandedDropdown === "language"
+                            className={`absolute top-full left-0 w-full mt-2 liquid-glass-modal rounded-2xl overflow-hidden z-[1100] transition-all duration-200 origin-top transform ${expandedDropdown === "language"
                                 ? "opacity-100 scale-100 visible"
                                 : "opacity-0 scale-95 invisible pointer-events-none"
                                 }`}
@@ -348,7 +348,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
                     {/* Dropdown Menu */}
                     <div
-                        className={`absolute top-full left-0 w-full mt-2 liquid-glass-modal rounded-xl overflow-hidden z-[1100] transition-all duration-200 origin-top transform ${expandedDropdown === "theme"
+                        className={`absolute top-full left-0 w-full mt-2 liquid-glass-modal rounded-2xl overflow-hidden z-[1100] transition-all duration-200 origin-top transform ${expandedDropdown === "theme"
                             ? "opacity-100 scale-100 visible"
                             : "opacity-0 scale-95 invisible pointer-events-none"
                             }`}
@@ -555,7 +555,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
                         {/* Asset Dropdown Menu */}
                         <div
-                            className={`absolute top-full left-0 w-full mt-2 liquid-glass-modal rounded-xl overflow-hidden z-[1100] transition-all duration-200 origin-top transform ${expandedDropdown === "asset"
+                            className={`absolute top-full left-0 w-full mt-2 liquid-glass-modal rounded-2xl overflow-hidden z-[1100] transition-all duration-200 origin-top transform ${expandedDropdown === "asset"
                                 ? "opacity-100 scale-100 visible"
                                 : "opacity-0 scale-95 invisible pointer-events-none"
                                 }`}

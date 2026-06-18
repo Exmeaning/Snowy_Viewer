@@ -24,6 +24,21 @@
   --color-miku-dark: #2da89b;
   --color-luka: #ff6699;
   --color-primary-text: #334455;
+
+  /* ── Floating Island (浮岛悬浮式) design tokens ── */
+  --accent-soft: color-mix(in srgb, var(--color-miku) 14%, white);
+  --accent-soft-hover: color-mix(in srgb, var(--color-miku) 20%, white);
+  --accent-deep: var(--color-miku-dark);
+  --cream-deep: #f1f5f9;
+  --island-glass: rgba(255, 255, 255, 0.62);
+  --island-glass-border: rgba(255, 255, 255, 0.55);
+  --island-blur: 32px;
+  --island-saturate: 190%;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --island-shadow:
+    0 12px 40px 0 rgba(31, 38, 135, 0.10),
+    0 4px 12px 0 rgba(31, 38, 135, 0.05),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.65);
 }
 
 :root[data-theme="dark"] {
@@ -42,6 +57,18 @@
   --border-soft: rgba(148, 163, 184, 0.16);
   --border-strong: rgba(148, 163, 184, 0.28);
   --ring-soft: rgba(148, 163, 184, 0.28);
+
+  /* ── Floating Island dark mode tokens ── */
+  --accent-soft: color-mix(in srgb, var(--color-miku) 22%, rgba(15, 23, 42, 0.55));
+  --accent-soft-hover: color-mix(in srgb, var(--color-miku) 30%, rgba(15, 23, 42, 0.6));
+  --accent-deep: var(--color-miku);
+  --cream-deep: rgba(30, 41, 59, 0.5);
+  --island-glass: rgba(15, 23, 42, 0.55);
+  --island-glass-border: rgba(148, 163, 184, 0.22);
+  --island-shadow:
+    0 12px 40px 0 rgba(0, 0, 0, 0.45),
+    0 4px 12px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
 @theme {
@@ -363,6 +390,110 @@ body {
   box-shadow:
     0 20px 45px rgba(0, 0, 0, 0.55),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ==========================================
+   Floating Island (浮岛悬浮式) Styles
+   ========================================== */
+
+.island-panel {
+  background: var(--island-glass);
+  backdrop-filter: blur(var(--island-blur)) saturate(var(--island-saturate));
+  -webkit-backdrop-filter: blur(var(--island-blur)) saturate(var(--island-saturate));
+  border: 1px solid var(--island-glass-border);
+  box-shadow: var(--island-shadow);
+}
+
+/* 激活胶囊：淡 accent 填充 + 深色 accent 文字 */
+.island-pill-active {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+.island-pill-active:hover {
+  background: var(--accent-soft-hover);
+}
+
+/* 普通 hover：浅灰胶囊 */
+.island-pill-hover {
+  transition: background-color 0.2s var(--ease-spring), color 0.2s ease;
+}
+
+.island-pill-hover:hover {
+  background: var(--cream-deep);
+}
+
+/* 通用胶囊 chip 基类（筛选/标签等） */
+.island-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  transition: background-color 0.2s var(--ease-spring), color 0.2s ease, transform 0.2s var(--ease-spring), box-shadow 0.2s var(--ease-spring);
+}
+
+.island-chip-active {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.island-chip-active:hover {
+  background: var(--accent-soft-hover);
+}
+
+.island-chip-hover {
+  color: var(--text-body, #334155);
+}
+
+.island-chip-hover:hover {
+  background: var(--cream-deep);
+}
+
+:root[data-theme="dark"] .island-chip-hover {
+  color: var(--text-muted, #94a3b8);
+}
+
+/* 浮岛入场动画 */
+@keyframes island-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-island-in {
+  animation: island-slide-in 0.4s var(--ease-spring) both;
+}
+
+@keyframes island-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-island-in-left {
+  animation: island-slide-in-left 0.4s var(--ease-spring) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-island-in,
+  .animate-island-in-left {
+    animation: none;
+  }
 }
 
 /* Background Animated Blobs */

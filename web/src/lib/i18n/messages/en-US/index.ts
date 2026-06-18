@@ -357,7 +357,7 @@ export const enUSMessages = {
         },
         musicTags: {
             all: "All",
-            vocaloid: "Virtual Singer",
+            vocaloid: "Virtual Singer Only",
             light_music_club: "Leo/need",
             idol: "MORE MORE JUMP!",
             street: "Vivid BAD SQUAD",
@@ -772,7 +772,7 @@ export const enUSMessages = {
             refreshing: "Refreshing...",
         },
         footer: {
-            version: "Moesekai · 1.2-preview-beta7",
+            version: "Moesekai · 1.3-preview-beta1",
         },
         sidebar: {
             notLoggedIn: "Not signed in",

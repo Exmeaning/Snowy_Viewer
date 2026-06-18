@@ -107,15 +107,15 @@ export default function DesignSystemClient() {
                 <div className="absolute top-2/3 left-1/3 w-80 h-80 rounded-full bg-purple-500/8 blur-[90px] pointer-events-none animate-float-blob-1 z-0"></div>
 
                 <div className="mb-12 relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 ios-glass-card border-miku/20 rounded-full mb-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 island-pill-active rounded-full mb-3">
                         <span className="w-2 h-2 rounded-full bg-miku animate-pulse"></span>
-                        <span className="text-[10px] font-bold text-miku uppercase tracking-widest">Aesthetic Upgrade</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Floating Island</span>
                     </div>
                     <h1 className="text-4xl font-extrabold bg-gradient-to-r from-miku via-miku-dark to-luka bg-clip-text text-transparent mb-4">
                         Design System & Component Library
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 text-lg">
-                        Reference guide for UI elements, colors, and typography, unified under the new **iOS 26 Frosted Glass** standard.
+                        Reference guide for UI elements, colors, and typography, unified under the new **Floating Island (浮岛悬浮式)** standard — detached glass panels, pill-shaped active states, and accent-soft fills.
                     </p>
                 </div>
 
@@ -133,26 +133,70 @@ export default function DesignSystemClient() {
                         <ColorCard name="Luka Pink" variable="--color-luka" className="bg-luka text-white" hex="#ff6699" />
                         <ColorCard name="Primary Text" variable="--color-primary-text" className="bg-primary-text text-white" hex="#334455" />
 
+                        {/* Floating Island Tokens */}
+                        <div className="rounded-2xl border border-slate-200/60 dark:border-slate-700/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-32 flex flex-col">
+                            <div className="flex-grow flex items-center justify-center" style={{ background: "var(--accent-soft)" }}>
+                                <span className="font-mono opacity-80 text-[var(--accent-deep)]">accent-soft</span>
+                            </div>
+                            <div className="p-3 bg-white dark:bg-slate-900/60">
+                                <div className="font-bold text-sm text-slate-800 dark:text-slate-200">Accent Soft</div>
+                                <div className="text-xs text-slate-400 font-mono mt-0.5">--accent-soft</div>
+                            </div>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200/60 dark:border-slate-700/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-32 flex flex-col">
+                            <div className="flex-grow flex items-center justify-center bg-[var(--accent-deep)] text-white">
+                                <span className="font-mono opacity-90">accent-deep</span>
+                            </div>
+                            <div className="p-3 bg-white dark:bg-slate-900/60">
+                                <div className="font-bold text-sm text-slate-800 dark:text-slate-200">Accent Deep</div>
+                                <div className="text-xs text-slate-400 font-mono mt-0.5">--accent-deep</div>
+                            </div>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200/60 dark:border-slate-700/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-32 flex flex-col">
+                            <div className="flex-grow flex items-center justify-center bg-[var(--cream-deep)]">
+                                <span className="font-mono opacity-70 text-slate-600 dark:text-slate-300">cream-deep</span>
+                            </div>
+                            <div className="p-3 bg-white dark:bg-slate-900/60">
+                                <div className="font-bold text-sm text-slate-800 dark:text-slate-200">Cream Deep</div>
+                                <div className="text-xs text-slate-400 font-mono mt-0.5">--cream-deep</div>
+                            </div>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200/60 dark:border-slate-700/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-32 flex flex-col">
+                            <div className="flex-grow flex items-center justify-center" style={{ background: "var(--island-glass)", backdropFilter: "blur(8px)" }}>
+                                <span className="font-mono opacity-70 text-slate-600 dark:text-slate-300">island-glass</span>
+                            </div>
+                            <div className="p-3 bg-white dark:bg-slate-900/60">
+                                <div className="font-bold text-sm text-slate-800 dark:text-slate-200">Island Glass</div>
+                                <div className="text-xs text-slate-400 font-mono mt-0.5">--island-glass</div>
+                            </div>
+                        </div>
+
                         {/* Glassmorphism Classes */}
-                        <div className="glass-card p-4 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group">
+                        <div className="glass-card p-4 rounded-2xl flex flex-col justify-between h-32 relative overflow-hidden group">
                             <span className="font-bold relative z-10 text-primary-text">Legacy Glass Card</span>
                             <div className="text-xs opacity-70 relative z-10 text-primary-text">.glass-card</div>
                             <div className="absolute inset-0 bg-white/10 dark:bg-slate-900/10"></div>
                         </div>
 
-                        <div className="ios-glass-card p-4 rounded-2xl flex flex-col justify-between h-32 relative overflow-hidden group ios-glass-card-interactive cursor-pointer">
+                        <div className="island-panel p-4 rounded-3xl flex flex-col justify-between h-32 relative overflow-hidden group cursor-pointer transition-transform hover:-translate-y-0.5">
+                            <span className="font-bold relative z-10 text-primary-text">Floating Island Panel</span>
+                            <div className="text-xs opacity-75 relative z-10 text-primary-text">.island-panel</div>
+                            <span className="text-[9px] bg-miku/15 text-miku px-2 py-0.5 rounded-full self-start font-extrabold relative z-10">NEW · 浮岛</span>
+                        </div>
+
+                        <div className="ios-glass-card p-4 rounded-3xl flex flex-col justify-between h-32 relative overflow-hidden group ios-glass-card-interactive cursor-pointer">
                             <span className="font-bold relative z-10 text-primary-text">iOS 26 Glass Card</span>
                             <div className="text-xs opacity-75 relative z-10 text-primary-text">.ios-glass-card</div>
-                            <span className="text-[9px] bg-miku/15 text-miku px-2 py-0.5 rounded-full self-start font-extrabold relative z-10">NEW iOS 26</span>
+                            <span className="text-[9px] bg-purple-500/15 text-purple-500 px-2 py-0.5 rounded-full self-start font-extrabold relative z-10">.ios-glass-card</span>
                         </div>
 
-                        <div className="ios-glass-panel p-4 rounded-2xl flex flex-col justify-between h-32 relative overflow-hidden group">
+                        <div className="ios-glass-panel p-4 rounded-3xl flex flex-col justify-between h-32 relative overflow-hidden group">
                             <span className="font-bold relative z-10 text-primary-text">iOS 26 Glass Panel</span>
                             <div className="text-xs opacity-75 relative z-10 text-primary-text">.ios-glass-panel</div>
-                            <span className="text-[9px] bg-purple-500/15 text-purple-500 px-2 py-0.5 rounded-full self-start font-extrabold relative z-10">NEW iOS 26</span>
+                            <span className="text-[9px] bg-sky-500/15 text-sky-500 px-2 py-0.5 rounded-full self-start font-extrabold relative z-10">.ios-glass-panel</span>
                         </div>
 
-                        <div className="rounded-xl p-4 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 h-32 flex flex-col justify-between">
+                        <div className="rounded-2xl p-4 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 h-32 flex flex-col justify-between">
                             <span className="font-bold text-slate-700 dark:text-slate-300">Surface / Slate 50</span>
                             <div className="text-xs text-slate-500">bg-slate-50</div>
                         </div>
@@ -166,29 +210,29 @@ export default function DesignSystemClient() {
                         Typography
                     </h2>
 
-                    <div className="ios-glass-card p-8 rounded-2xl space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-slate-200 dark:border-slate-800 pb-8">
+                    <div className="ios-glass-card p-8 rounded-3xl space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
                             <div className="text-sm text-slate-400 font-mono">H1 / 4xl / Bold</div>
                             <div className="md:col-span-2">
                                 <h1 className="text-4xl font-bold text-primary-text">The quick brown fox jumps over the lazy dog</h1>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-slate-200 pb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
                             <div className="text-sm text-slate-400 font-mono">H2 / 2xl / Bold</div>
                             <div className="md:col-span-2">
                                 <h2 className="text-2xl font-bold text-primary-text">The quick brown fox jumps over the lazy dog</h2>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-slate-200 pb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
                             <div className="text-sm text-slate-400 font-mono">H3 / xl / Bold</div>
                             <div className="md:col-span-2">
                                 <h3 className="text-xl font-bold text-primary-text">The quick brown fox jumps over the lazy dog</h3>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-slate-200 pb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
                             <div className="text-sm text-slate-400 font-mono">Body / Base / Normal</div>
                             <div className="md:col-span-2">
                                 <p className="text-base text-primary-text">
@@ -218,26 +262,31 @@ export default function DesignSystemClient() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                         {/* Buttons */}
-                        <div className="ios-glass-card p-6 rounded-2xl">
+                        <div className="ios-glass-card p-6 rounded-3xl">
                             <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Buttons</h3>
                             <div className="flex flex-wrap gap-4 items-center">
                                 {/* Primary */}
-                                <button className="px-6 py-2.5 ios-glass-btn ios-glass-btn-primary rounded-xl font-bold transition-all">
+                                <button className="px-6 py-2.5 ios-glass-btn ios-glass-btn-primary rounded-full font-bold transition-all">
                                     Primary Button
                                 </button>
 
                                 {/* Secondary */}
-                                <button className="px-6 py-2.5 ios-glass-btn text-miku border-miku/30 rounded-xl font-bold transition-all">
+                                <button className="px-6 py-2.5 ios-glass-btn text-miku border-miku/30 rounded-full font-bold transition-all">
                                     Secondary
                                 </button>
 
                                 {/* Ghost/Nav */}
-                                <button className="px-4 py-2.5 text-slate-500 hover:text-miku ios-glass-btn rounded-xl transition-all">
+                                <button className="px-4 py-2.5 text-slate-500 hover:text-miku ios-glass-btn rounded-full transition-all">
                                     Ghost / Nav
                                 </button>
 
+                                {/* Island Pill Active (new) */}
+                                <button className="px-6 py-2.5 island-pill-active rounded-full font-bold transition-all">
+                                    Island Pill Active
+                                </button>
+
                                 {/* Icon Layout */}
-                                <button className="p-2.5 text-slate-400 hover:text-miku ios-glass-btn rounded-xl transition-all">
+                                <button className="p-2.5 text-slate-400 hover:text-miku ios-glass-btn rounded-full transition-all">
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -247,7 +296,7 @@ export default function DesignSystemClient() {
                         </div>
 
                         {/* Inputs */}
-                        <div className="ios-glass-card p-6 rounded-2xl">
+                        <div className="ios-glass-card p-6 rounded-3xl">
                             <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Inputs</h3>
                             <div className="space-y-4 max-w-sm">
                                 <div>
@@ -272,7 +321,7 @@ export default function DesignSystemClient() {
                         </div>
 
                         {/* Badges & Tags */}
-                        <div className="ios-glass-card p-6 rounded-2xl">
+                        <div className="ios-glass-card p-6 rounded-3xl">
                             <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Badges & Tags</h3>
                             <div className="flex flex-wrap gap-3">
                                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-miku text-white shadow-sm">
@@ -280,6 +329,9 @@ export default function DesignSystemClient() {
                                 </span>
                                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-miku/10 text-miku border border-miku/20">
                                     Version 1.0
+                                </span>
+                                <span className="px-3 py-1 rounded-full text-xs font-bold island-pill-active">
+                                    Accent Soft Badge
                                 </span>
                                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-white shadow-sm">
                                     BETA
@@ -294,7 +346,7 @@ export default function DesignSystemClient() {
                         </div>
 
                         {/* Loaders */}
-                        <div className="ios-glass-card p-6 rounded-2xl flex flex-col justify-center items-center gap-4">
+                        <div className="ios-glass-card p-6 rounded-3xl flex flex-col justify-center items-center gap-4">
                             <h3 className="text-lg font-bold mb-2 text-slate-600 dark:text-slate-400 self-start">Loaders</h3>
                             <div className="flex items-center gap-8">
                                 <div className="loading-spinner"></div>
@@ -303,14 +355,14 @@ export default function DesignSystemClient() {
                         </div>
 
                         {/* Tabs */}
-                        <div className="ios-glass-card p-6 rounded-2xl md:col-span-2">
+                        <div className="ios-glass-card p-6 rounded-3xl md:col-span-2">
                             <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Tabs</h3>
                             <div className="flex gap-2">
-                                <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-300 ios-glass-tab ios-glass-tab-active">
+                                <button className="flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm whitespace-nowrap transition-all duration-300 island-pill-active">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                     Active Tab
                                 </button>
-                                <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-300 ios-glass-tab text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
+                                <button className="flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm whitespace-nowrap transition-all duration-300 island-pill-hover text-slate-600 dark:text-slate-400 hover:text-miku">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                                     Inactive Tab
                                 </button>
@@ -318,17 +370,17 @@ export default function DesignSystemClient() {
                         </div>
 
                         {/* Dropdowns */}
-                        <div className="ios-glass-card p-6 rounded-2xl md:col-span-2">
+                        <div className="ios-glass-card p-6 rounded-3xl md:col-span-2">
                             <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Dropdowns</h3>
                             <div className="relative inline-block text-left w-64">
-                                <div className="ios-glass-dropdown rounded-xl py-2">
-                                    <a href="#" className="block px-4 py-2 text-sm font-medium transition-colors text-miku bg-miku/10">
+                                <div className="ios-glass-dropdown rounded-2xl py-1.5">
+                                    <a href="#" className="block px-3 py-1.5 mx-1 text-sm font-medium transition-all rounded-lg island-pill-active">
                                         Active Option
                                     </a>
-                                    <a href="#" className="block px-4 py-2 text-sm font-medium transition-colors text-slate-600 dark:text-slate-300 hover:text-miku hover:bg-white/10 dark:hover:bg-slate-800/40">
+                                    <a href="#" className="block px-3 py-1.5 mx-1 text-sm font-medium transition-all rounded-lg text-slate-600 dark:text-slate-300 hover:bg-miku/10 dark:hover:bg-miku/15 hover:text-miku">
                                         Hover Option
                                     </a>
-                                    <a href="#" className="block px-4 py-2 text-sm font-medium transition-colors text-slate-600 dark:text-slate-300 hover:text-miku hover:bg-white/10 dark:hover:bg-slate-800/40">
+                                    <a href="#" className="block px-3 py-1.5 mx-1 text-sm font-medium transition-all rounded-lg text-slate-600 dark:text-slate-300 hover:bg-miku/10 dark:hover:bg-miku/15 hover:text-miku">
                                         Standard Option
                                     </a>
                                 </div>
@@ -349,10 +401,10 @@ export default function DesignSystemClient() {
                         {/* Page Title */}
                         <div>
                             <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Page Title (Overview Style)</h3>
-                            <div className="ios-glass-card p-8 rounded-2xl">
+                            <div className="ios-glass-card p-8 rounded-3xl">
                                 <div className="text-center">
-                                    <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                                        <span className="text-miku text-xs font-bold tracking-widest uppercase">PAGE CATEGORY</span>
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 island-pill-active rounded-full mb-4">
+                                        <span className="text-xs font-bold tracking-widest uppercase">PAGE CATEGORY</span>
                                     </div>
                                     <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
                                         Page <span className="text-miku">Title</span>
@@ -369,8 +421,8 @@ export default function DesignSystemClient() {
                         {/* Section Card (Related Events) */}
                         <div>
                             <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Section Card (e.g., Related Event)</h3>
-                            <div className="max-w-md ios-glass-card rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-miku/5 transition-all">
-                                <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-miku/10 to-transparent">
+                            <div className="max-w-md ios-glass-card rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-miku/5 transition-all">
+                                <div className="px-5 py-4 border-b border-dashed border-slate-200/60 dark:border-slate-700/40 bg-gradient-to-r from-miku/10 to-transparent">
                                     <h2 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -413,7 +465,7 @@ export default function DesignSystemClient() {
                         <span className="w-1.5 h-8 bg-sky-400 rounded-full"></span>
                         烤森预览（开发测试）
                     </h2>
-                    <div className="ios-glass-card p-4 sm:p-6 rounded-2xl">
+                    <div className="ios-glass-card p-4 sm:p-6 rounded-3xl">
                         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                             <div>
                                 <h3 className="text-lg font-bold text-slate-600 dark:text-slate-400">MySekai 3D 场景预览组件</h3>
@@ -436,7 +488,7 @@ export default function DesignSystemClient() {
                         Sekai Card Thumbnail
                     </h2>
 
-                    <div className="ios-glass-card p-8 rounded-2xl">
+                    <div className="ios-glass-card p-8 rounded-3xl">
                         <p className="text-slate-500 mb-6">
                             New SVG-based component that reproduces the official in-game thumbnail layering logic.
                         </p>
@@ -684,7 +736,7 @@ export default function DesignSystemClient() {
                         Modal / Dialog
                     </h2>
 
-                    <div className="ios-glass-card p-8 rounded-2xl">
+                    <div className="ios-glass-card p-8 rounded-3xl">
                         <p className="text-slate-500 mb-6">
                             Generic modal component with theme-colored header, backdrop blur, and smooth framer-motion animations.
                             Rendered via <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono text-slate-600">createPortal</code> to
@@ -694,31 +746,31 @@ export default function DesignSystemClient() {
                         <div className="flex flex-wrap gap-4 items-center">
                             <button
                                 onClick={() => openModal("sm")}
-                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-xl font-bold text-sm"
+                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-full font-bold text-sm"
                             >
                                 Small
                             </button>
                             <button
                                 onClick={() => openModal("md")}
-                                className="px-6 py-2 ios-glass-btn ios-glass-btn-primary rounded-xl font-bold shadow-lg shadow-miku/20 text-sm"
+                                className="px-6 py-2 ios-glass-btn ios-glass-btn-primary rounded-full font-bold shadow-lg shadow-miku/20 text-sm"
                             >
                                 Medium (Default)
                             </button>
                             <button
                                 onClick={() => openModal("lg")}
-                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-xl font-bold text-sm"
+                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-full font-bold text-sm"
                             >
                                 Large
                             </button>
                             <button
                                 onClick={() => openModal("xl")}
-                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-xl font-bold text-sm"
+                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-full font-bold text-sm"
                             >
                                 Extra Large
                             </button>
                             <button
                                 onClick={() => setIsImageModalOpen(true)}
-                                className="px-5 py-2 ios-glass-btn text-emerald-600 border-emerald-500/30 hover:border-emerald-500/50 rounded-xl font-bold text-sm"
+                                className="px-5 py-2 ios-glass-btn text-emerald-600 border-emerald-500/30 hover:border-emerald-500/50 rounded-full font-bold text-sm"
                             >
                                 Image Preview
                             </button>
@@ -773,7 +825,7 @@ export default function DesignSystemClient() {
                         Quick Filter (快捷筛选器)
                     </h2>
 
-                    <div className="ios-glass-card p-8 rounded-2xl">
+                    <div className="ios-glass-card p-8 rounded-3xl">
                         <p className="text-slate-500 mb-6">
                             全局通用的快捷筛选器组件。页面通过{" "}
                             <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono text-slate-600">useQuickFilter()</code>{" "}
@@ -782,7 +834,7 @@ export default function DesignSystemClient() {
                         </p>
 
                         <div className="flex flex-wrap gap-4 items-center mb-6">
-                            <div className="flex items-center gap-3 px-4 py-2 bg-miku/5 border border-miku/20 rounded-xl">
+                            <div className="flex items-center gap-3 px-4 py-2 bg-miku/5 border border-miku/20 rounded-2xl">
                                 <svg className="w-5 h-5 text-miku" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                                 </svg>
@@ -843,12 +895,12 @@ export default function DesignSystemClient() {
 
 function ColorCard({ name, variable, className, hex }: { name: string, variable?: string, className: string, hex?: string }) {
     return (
-        <div className="flex flex-col h-32 rounded-xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex flex-col h-32 rounded-2xl border border-slate-200/60 dark:border-slate-700/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             <div className={`flex-grow ${className} flex items-center justify-center`}>
                 {hex && <span className="font-mono opacity-80">{hex}</span>}
             </div>
-            <div className="p-3 bg-white">
-                <div className="font-bold text-sm text-slate-800">{name}</div>
+            <div className="p-3 bg-white dark:bg-slate-900/60">
+                <div className="font-bold text-sm text-slate-800 dark:text-slate-200">{name}</div>
                 {variable && <div className="text-xs text-slate-400 font-mono mt-0.5">{variable}</div>}
             </div>
         </div>

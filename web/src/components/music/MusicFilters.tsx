@@ -130,33 +130,46 @@ export default function MusicFilters({
         >
             {/* Tag Filter */}
             <FilterSection label={t("common.filter.musicTag")}>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     {MUSIC_TAG_IDS.map((tag) => {
                         const isSelected = selectedTag === tag;
-                        const hasIcon = TAG_ICONS[tag];
+                        const icon = TAG_ICONS[tag];
                         const label = t(MUSIC_TAG_LABEL_KEYS[tag]);
 
-                        return (
-                            <button
-                                key={tag}
-                                onClick={() => onTagChange(tag)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${getFilterIconStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white border border-transparent dark:bg-miku/12 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50/50 border border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
-                                title={label}
-                            >
-                                {hasIcon && (
-                                    <div className="w-5 h-5 relative">
+                        // Unit tags: icon-only button (like card filters), no redundant text
+                        if (icon) {
+                            return (
+                                <button
+                                    key={tag}
+                                    onClick={() => onTagChange(tag)}
+                                    className={`p-1.5 transition-all ${getFilterIconStateClasses(isSelected)}`}
+                                    title={label}
+                                    aria-label={label}
+                                    aria-pressed={isSelected}
+                                >
+                                    <div className="w-7 h-7 relative">
                                         <Image
-                                            src={TAG_ICONS[tag]!}
-                                            alt=""
+                                            src={icon}
+                                            alt={label}
                                             fill
                                             className="object-contain"
                                             unoptimized
                                         />
                                     </div>
-                                )}
-                                <span className={`text-xs font-medium ${isSelected ? "text-slate-800 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}`}>
-                                    {label}
-                                </span>
+                                </button>
+                            );
+                        }
+
+                        // Text-only tags (all, other, ...)
+                        return (
+                            <button
+                                key={tag}
+                                onClick={() => onTagChange(tag)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${getFilterChipStateClasses(isSelected)}`}
+                                title={label}
+                                aria-pressed={isSelected}
+                            >
+                                {label}
                             </button>
                         );
                     })}

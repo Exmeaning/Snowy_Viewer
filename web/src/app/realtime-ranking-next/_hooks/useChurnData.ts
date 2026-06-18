@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { fetchChurnV2 } from "@/lib/realtime-ranking-next-api";
+import { fetchChurnV2, fetchWorldLinkChurnV2 } from "@/lib/realtime-ranking-next-api";
 import { ChurnEntryV2, RealtimeRankingRegion } from "@/types/realtime-ranking-next";
 import { entryKey } from "../_lib/board-utils";
 import { shouldKeepPreviousChurn } from "@/lib/realtime-ranking-resilience";
@@ -12,10 +12,18 @@ const CHURN_RETRY_DELAYS = [8_000, 20_000, 45_000, 60_000] as const;
 const CHURN_TOP = 200;
 
 /**
- * Polls the v2 churn endpoint and exposes a Map keyed by entryKey
+ * Polls the churn endpoint and exposes a Map keyed by entryKey
  * (userId for players, `tier:{rank}` for tier lines).
+ *
+ * When `worldLinkCharacterId` is set, it pulls the WL chapter churn instead of
+ * the overall churn, so WL-only players (not in the overall board) still get
+ * churn data. Pass `null` for the overall board.
  */
-export function useChurnData(region: RealtimeRankingRegion, enabled: boolean) {
+export function useChurnData(
+    region: RealtimeRankingRegion,
+    worldLinkCharacterId: number | null,
+    enabled: boolean,
+) {
     const line = useRealtimeRankingLine();
     const [churnData, setChurnData] = useState<Map<string, ChurnEntryV2>>(new Map());
     const requestIdRef = useRef(0);
@@ -23,14 +31,20 @@ export function useChurnData(region: RealtimeRankingRegion, enabled: boolean) {
     const pollTimerRef = useRef<number | null>(null);
     const churnSizeRef = useRef(0);
 
-    const load = useCallback(async (nextRegion: RealtimeRankingRegion, reset: boolean): Promise<boolean> => {
+    const load = useCallback(async (
+        nextRegion: RealtimeRankingRegion,
+        nextCharId: number | null,
+        reset: boolean,
+    ): Promise<boolean> => {
         const id = ++requestIdRef.current;
         if (reset) {
             setChurnData(new Map());
             churnSizeRef.current = 0;
         }
         try {
-            const rankings = await fetchChurnV2(nextRegion, { top: CHURN_TOP });
+            const rankings = nextCharId != null
+                ? await fetchWorldLinkChurnV2(nextRegion, { gameCharacterId: nextCharId, top: CHURN_TOP })
+                : await fetchChurnV2(nextRegion, { top: CHURN_TOP });
             if (id !== requestIdRef.current) return true;
 
             const map = new Map<string, ChurnEntryV2>();
@@ -74,12 +88,15 @@ export function useChurnData(region: RealtimeRankingRegion, enabled: boolean) {
 
         const startPolling = () => {
             if (disposed || pollTimerRef.current != null) return;
-            pollTimerRef.current = window.setInterval(() => void load(region, false), CHURN_POLL_INTERVAL);
+            pollTimerRef.current = window.setInterval(
+                () => void load(region, worldLinkCharacterId, false),
+                CHURN_POLL_INTERVAL,
+            );
         };
 
         const tryLoad = (attempt: number) => {
             if (disposed) return;
-            void load(region, attempt === 0).then((ok) => {
+            void load(region, worldLinkCharacterId, attempt === 0).then((ok) => {
                 if (disposed) return;
                 if (ok) {
                     startPolling();
@@ -98,7 +115,7 @@ export function useChurnData(region: RealtimeRankingRegion, enabled: boolean) {
             clearTimers();
         };
         // `line` switches the API host, so churn data must be reloaded on change.
-    }, [enabled, region, load, line]);
+    }, [enabled, region, worldLinkCharacterId, load, line]);
 
     return churnData;
 }

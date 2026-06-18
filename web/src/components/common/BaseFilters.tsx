@@ -60,8 +60,8 @@ export function getFilterChipStateClasses(
     selectedClassName?: string,
     unselectedClassName?: string
 ) {
-    const selectedState = selectedClassName ?? "ios-glass-tab ios-glass-tab-active font-extrabold";
-    const unselectedState = unselectedClassName ?? "ios-glass-tab text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200";
+    const selectedState = selectedClassName ?? "island-chip island-chip-active";
+    const unselectedState = unselectedClassName ?? "island-chip island-chip-hover hover:text-miku";
 
     return selected ? selectedState : unselectedState;
 }
@@ -71,16 +71,16 @@ export function getFilterIconStateClasses(
     selectedClassName?: string,
     unselectedClassName?: string
 ) {
-    const selectedState = selectedClassName ?? "ios-glass-tab ios-glass-tab-active font-extrabold scale-[1.03]";
-    const unselectedState = unselectedClassName ?? "ios-glass-tab text-slate-600 dark:text-slate-400";
+    const selectedState = selectedClassName ?? "island-chip island-chip-active ring-2 ring-miku/30 scale-[1.03]";
+    const unselectedState = unselectedClassName ?? "island-chip island-chip-hover";
 
     return selected ? selectedState : unselectedState;
 }
 
 export function getFilterToggleStateClasses(selected: boolean) {
     return selected
-        ? "ios-glass-tab ios-glass-tab-active font-extrabold"
-        : "ios-glass-tab text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200";
+        ? "island-pill-active"
+        : "island-pill-hover text-slate-600 dark:text-slate-400 hover:text-miku";
 }
 
 // ============================================================================
@@ -147,10 +147,10 @@ export default function BaseFilters({
     };
 
     return (
-        <div ref={rootRef} data-shortcut-filters="true" className="ios-glass-card rounded-2xl overflow-hidden">
+        <div ref={rootRef} data-shortcut-filters="true" className="ios-glass-card rounded-3xl overflow-hidden">
             {/* Header — clickable on mobile to toggle collapse */}
             <div
-                className="px-5 py-4 border-b border-slate-200/50 dark:border-slate-800 bg-gradient-to-r from-miku/10 to-transparent dark:from-miku/15 dark:to-slate-900/10 flex items-center justify-between lg:cursor-default cursor-pointer select-none"
+                className="px-5 py-4 border-b border-dashed border-slate-200/60 dark:border-slate-700/40 bg-gradient-to-r from-miku/10 to-transparent dark:from-miku/15 dark:to-slate-900/10 flex items-center justify-between lg:cursor-default cursor-pointer select-none"
                 onClick={toggleCollapsed}
             >
                 <h2 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -217,7 +217,7 @@ export default function BaseFilters({
                                     <button
                                         key={opt.id}
                                         onClick={() => handleSortClick(opt.id)}
-                                        className={`px-2 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${getFilterChipStateClasses(sortBy === opt.id)}`}
+                                        className={`px-2 py-2 transition-all flex items-center justify-center gap-1 ${getFilterChipStateClasses(sortBy === opt.id)}`}
                                     >
                                         {opt.label}
                                         {sortBy === opt.id && (
@@ -238,7 +238,7 @@ export default function BaseFilters({
                     {hasActiveFilters && onReset && (
                         <button
                             onClick={onReset}
-                            className="w-full py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-600 dark:text-slate-300 font-medium bg-white/70 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-2.5 border border-slate-200 dark:border-slate-700 rounded-full text-sm text-slate-600 dark:text-slate-300 font-medium bg-white/70 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -312,7 +312,7 @@ export function FilterButton({ selected, onClick, children, className = "", styl
     return (
         <button
             onClick={onClick}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${getFilterChipStateClasses(selected)} ${className}`}
+            className={`transition-all ${getFilterChipStateClasses(selected)} ${className}`}
             style={style}
         >
             {children}
@@ -330,9 +330,9 @@ export function FilterToggle({ selected, onClick, label }: FilterToggleProps) {
     return (
         <button
             onClick={onClick}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all border ${getFilterToggleStateClasses(selected)}`}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all border border-transparent ${getFilterToggleStateClasses(selected)}`}
         >
-            <span className={`text-sm font-bold ${selected ? "text-slate-800 dark:text-slate-105" : "text-slate-600 dark:text-slate-300"}`}>
+            <span className={`text-sm font-bold ${selected ? "text-[var(--accent-deep)]" : "text-slate-600 dark:text-slate-300"}`}>
                 {label}
             </span>
             <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selected ? "bg-miku border-miku shadow-sm shadow-miku/20" : "border-slate-200/60 bg-white/20 dark:border-slate-700 dark:bg-slate-800/40"}`}>
