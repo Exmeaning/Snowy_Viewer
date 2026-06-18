@@ -715,13 +715,11 @@ export const jaJPMessages = {
       sectionTitle: 'テーマカラー'
     },
     backgroundAnimationBudget: {
-      sectionTitle: '背景アニメーション設定',
-      performance: 'パフォーマンス',
-      powerSave: '省電力',
+      sectionTitle: '背景アニメーション',
+      on: 'オン',
       off: 'オフ',
-      performanceDescription: '完全な背景演出：浮遊する破片、Canvas パーティクル、ポインター反応を維持します。デスクトップや高性能端末向けです。',
-      powerSaveDescription: '低コストモード：Canvas の連続再描画を止め、静的レイヤーとスクロール視差のみで GPU とバッテリー消費を抑えます。',
-      offDescription: 'アニメーションオフ：静的なテーマグラデーションマスクのみを残し、アニメーションやスクロール視差は行いません。'
+      onDescription: '背景アニメーションを有効化：浮遊する破片とスクロール視差。軽量で省電力です。',
+      offDescription: '背景アニメーションを無効化：静的なグラデーション背景のみで、アニメーションや視差はありません。'
     },
     contentDisplay: {
       sectionTitle: 'コンテンツ表示'
@@ -771,7 +769,7 @@ export const jaJPMessages = {
       refreshing: '更新中...'
     },
     footer: {
-      version: 'Moesekai · 1.3-preview-beta1'
+      version: 'Moesekai · 1.3-preview-beta2'
     },
     sidebar: {
       notLoggedIn: '未ログイン',

@@ -840,3 +840,35 @@ button[data-shortcut-load-more="true"]::after {
   background: linear-gradient(to right, var(--color-miku) 33%, var(--color-miku-dark) 33%, rgba(255,255,255,0.15) 66%, var(--color-miku) 66%);
   background-size: 300% 100%;
 }
+
+/* ==========================================
+   Overlay open: mobile performance guard
+   ==========================================
+   When a top-level overlay (settings / search / shortcuts help) is open we tag
+   <html> with data-overlay-open="true". While that tag is present we:
+
+   1. Freeze the continuously-animating background layers (floating blobs and
+      background shards). A blurred backdrop (liquid-glass-modal) sitting on top
+      of moving content forces the compositor to re-run the blur every frame,
+      which is the primary cause of the "laggy" feeling when opening the
+      settings panel on phones. Pausing these animations removes that per-frame
+      cost entirely.
+
+   2. On touch/mobile devices only, dial down the backdrop blur from 28px to a
+      much cheaper 12px. Desktop keeps the full 28px glass effect.
+
+   Desktop is intentionally untouched (other than freezing background animation)
+   so the visual quality on large screens is preserved.
+*/
+:root[data-overlay-open="true"] .animate-float-blob-1,
+:root[data-overlay-open="true"] .animate-float-blob-2 {
+  animation-play-state: paused;
+}
+
+/* Mobile / coarse-pointer: cheaper glass while overlay is up. */
+@media (hover: none) and (pointer: coarse) {
+  :root[data-overlay-open="true"] .liquid-glass-modal {
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+  }
+}

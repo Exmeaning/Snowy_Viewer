@@ -45,7 +45,7 @@ export default function MainLayout({
     const router = useRouter();
     const { useTrainedThumbnail, setUseTrainedThumbnail, backgroundAnimationBudget } = useTheme();
     const pageContentRef = useRef<HTMLDivElement>(null);
-    const shouldShowAmbientBlobs = backgroundAnimationBudget === "performance";
+    const shouldShowAmbientBlobs = backgroundAnimationBudget === "on";
     const shouldAnimateAmbientBlobs = shouldShowAmbientBlobs;
 
     // Keep the initial value false to avoid hydration mismatch.
@@ -66,6 +66,24 @@ export default function MainLayout({
     const skipNextOverlayHistoryCleanupRef = useRef(false);
 
     const anyOverlayOpen = isSearchOpen || isSettingsOpen || isShortcutsHelpOpen;
+
+    // Mark overlays on <html> so CSS can pause heavy background animations and
+    // tone down backdrop blur on mobile while an overlay is present. This is the
+    // main lever for keeping the "open settings panel" interaction smooth on phones:
+    // a live blurred backdrop (liquid-glass-modal, 28px blur) sitting on top of a
+    // continuously animating background forces the compositor to re-run the blur
+    // every frame. Freezing the background while an overlay is up removes that
+    // per-frame cost entirely.
+    useEffect(() => {
+        if (typeof document === "undefined") return;
+        document.documentElement.dataset.overlayOpen = anyOverlayOpen ? "true" : "false";
+        return () => {
+            // Only clear when we were the ones to set it.
+            if (document.documentElement.dataset.overlayOpen === "true") {
+                document.documentElement.dataset.overlayOpen = "false";
+            }
+        };
+    }, [anyOverlayOpen]);
 
     const cancelOverlayHistoryArm = useCallback(() => {
         if (overlayHistoryArmRafRef.current !== null) {

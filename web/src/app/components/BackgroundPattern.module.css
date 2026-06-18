@@ -13,9 +13,9 @@
     overflow: hidden;
     pointer-events: none;
     background:
-        linear-gradient(115deg, 
-            var(--theme-bg-light-start, rgba(182, 255, 252, 0.65)) 0%, 
-            var(--theme-bg-light-middle, rgba(220, 238, 255, 0.6)) 45%, 
+        linear-gradient(115deg,
+            var(--theme-bg-light-start, rgba(182, 255, 252, 0.65)) 0%,
+            var(--theme-bg-light-middle, rgba(220, 238, 255, 0.6)) 45%,
             var(--theme-bg-light-end, rgba(254, 226, 245, 0.65)) 100%),
         radial-gradient(circle at 24% 15%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.25), transparent 22%),
         radial-gradient(circle at 82% 20%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.18), transparent 25%),
@@ -34,9 +34,7 @@
 
 .bgPatternContainer::before,
 .bgPatternContainer::after,
-.parallaxLayer,
-.bgPatternCanvas,
-.lowCostLayer {
+.parallaxLayer {
     pointer-events: none;
 }
 
@@ -45,7 +43,7 @@
     content: "";
     position: absolute;
     inset: -30%;
-    background-image: 
+    background-image:
         radial-gradient(rgba(var(--color-miku-rgb, 51, 204, 187), 0.1) 1.5px, transparent 1.5px);
     background-size: 50px 50px;
     opacity: 0.72;
@@ -71,7 +69,8 @@
 
 .parallaxLayer {
     position: absolute;
-    inset: -30% 0 -60%;
+    /* Generous overdraw so dense shard fields never reveal empty edges while parallaxing. */
+    inset: -40% 0 -60%;
     z-index: 0;
     pointer-events: none;
     will-change: transform;
@@ -89,69 +88,97 @@
     transform: translate3d(0, var(--bg-layer-3-y), 0);
 }
 
-/* Base style for all dynamic floating shards */
-.shape {
+/*
+ * Two-layer shard architecture (official-site inspired):
+ *   .shapeFloat  -> wrapper handling POSITION + float animation (transform: translate3d only).
+ *   .shape       -> inner handling VISUALS (clip-path + skew/scale/rotate via inline transform).
+ * Splitting transforms across two elements means the float keyframes can no longer
+ * overwrite each shard's bespoke skew/scale/rotate, so every shard keeps its sharp
+ * non-equilateral silhouette AND floats smoothly on the GPU compositor.
+ */
+.shapeFloat {
     position: absolute;
     display: block;
-    backface-visibility: hidden;
-    transform-style: preserve-3d;
+    /* NOTE: intentionally NO `will-change: transform` and NO `contain`.
+     * - `will-change` would force one compositor layer per shard (~120) and blow past
+     *   mobile GPUs' layer budget -> scroll jank + dropped clip-path (quadrilaterals).
+     * - `contain: layout paint` conflicts with clip-path on some mobile webviews and
+     *   makes triangular shards degenerate into squares after fast scrolling.
+     * Letting shards live in the parent parallax layer's texture is the stable path. */
 }
 
-/* Gorgeous Crisp Solid Star Shard Triangles */
-.shapeTriangle {
-    background: currentColor;
-    /* PJSK triangular shards are beautifully sharp, elongated scalene triangles! */
-    clip-path: polygon(10% 0%, 0% 100%, 100% 85%);
-    filter: drop-shadow(0 15px 30px rgba(80, 92, 130, 0.08));
-}
-
-/* Transparent Hollow Crystal Outsides - Perfectly mimic official site */
-.shapeOutlineTriangle {
-    position: absolute;
-}
-
-.shapeOutlineTriangle::before {
-    content: "";
+.shape {
     position: absolute;
     inset: 0;
-    background: currentColor;
-    /* An elongated hollow polygon shell mimicking non-equilateral shards of start dust */
-    clip-path: polygon(
-        10% 0%, 100% 85%, 0% 100%, 
-        10% 0%, 
-        12.4% 6.4%, 3.4% 96.5%, 93.5% 82.9%, 
-        12.4% 6.4%
-    );
+    display: block;
+    transform-origin: center;
+    /* NOTE: do NOT add `transform-style: preserve-3d` / `backface-visibility: hidden`
+     * here. They push the element into a 3D compositing context which can destabilize
+     * rendering on some mobile webviews. */
 }
 
-/* Circular glowing orbs */
+/*
+ * Triangular shards are drawn with inline SVG <polygon>, NOT clip-path.
+ * clip-path proved unreliable on older Chromium-based mobile webviews (WeChat/QQ/UC):
+ * during fast scroll the clip is silently dropped and the filled box shows as a square.
+ * SVG polygons are vector-drawn content (not a box clip), so they render correctly
+ * everywhere regardless of compositor layer behavior. This is the robust fix.
+ */
+.shapeSvg {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* allow the non-scaling stroke / soft shadow to extend past the viewBox edges */
+    overflow: visible;
+    transform-origin: center;
+}
+
+/* desktop-only soft shadow for a touch of depth (cheap on desktop GPUs) */
+@media (min-width: 1025px) {
+    .shapeSvg {
+        filter: drop-shadow(0 12px 24px rgba(80, 92, 130, 0.08));
+    }
+}
+
+/* Circular glowing orbs (border-radius is rock solid on every platform) */
 .shapeCircle {
     border-radius: 999px;
     background: currentColor;
-    filter: blur(0.5px);
 }
 
-/* Sparkle & Breathing Animations with smooth sine offsets */
+/* The blur filter is desktop-only. On mobile, each blurred node forces its own
+ * rasterization layer, compounding the layer-budget pressure. */
+@media (min-width: 1025px) {
+    .shapeCircle {
+        filter: blur(0.5px);
+    }
+}
+
+/* Sparkle & Breathing Animations with smooth sine offsets.
+ * All keyframes only touch `transform` (translate3d + rotate + scale) so the
+ * browser compositor can run them on the GPU with near-zero main-thread cost. */
 @keyframes floatSlow1 {
-    0% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-24px) rotate(4deg); }
-    100% { transform: translateY(24px) rotate(-4deg); }
+    0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+    50%  { transform: translate3d(8px, -30px, 0) rotate(6deg) scale(1.04); }
+    100% { transform: translate3d(-8px, 30px, 0) rotate(-6deg) scale(0.97); }
 }
 
 @keyframes floatSlow2 {
-    0% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(18px) rotate(-5deg); }
-    100% { transform: translateY(-18px) rotate(5deg); }
+    0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+    50%  { transform: translate3d(-7px, 22px, 0) rotate(-5deg) scale(1.05); }
+    100% { transform: translate3d(7px, -22px, 0) rotate(5deg) scale(0.96); }
 }
 
 @keyframes floatSlow3 {
-    0% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-12px) rotate(3deg); }
-    100% { transform: translateY(12px) rotate(-3deg); }
+    0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+    50%  { transform: translate3d(5px, -16px, 0) rotate(4deg) scale(1.06); }
+    100% { transform: translate3d(-5px, 16px, 0) rotate(-4deg) scale(0.95); }
 }
 
 .shapeFloat1 {
-    animation: floatSlow1 10s ease-in-out infinite alternate;
+    animation: floatSlow1 11s ease-in-out infinite alternate;
 }
 
 .shapeFloat2 {
@@ -162,31 +189,17 @@
     animation: floatSlow3 18s ease-in-out infinite alternate;
 }
 
-.bgPatternCanvas {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    display: block;
-    opacity: 0.58;
-}
-
-.bgPatternContainer[data-budget="power-save"] .parallaxLayer {
-    /* Remove transition to prevent scroll lag from high-frequency transition interruptions */
-}
-
-.bgPatternContainer[data-budget="power-save"] .shape {
-    animation: none !important;
-}
-
-.bgPatternContainer[data-budget="power-save"]::before {
-    opacity: 0.52;
+/* "on" budget: the full shard field + compositor animations. Opacities are nudged
+ * up so the dense shard field reads clearly. (The old "power-save" tier is gone --
+ * this CSS/SVG field IS the low-cost path now.) */
+.bgPatternContainer[data-budget="on"]::before {
+    opacity: 0.62;
     transform: translate3d(0, var(--bg-base-y), 0);
     will-change: transform;
 }
 
-.bgPatternContainer[data-budget="power-save"]::after {
-    opacity: 0.32;
+.bgPatternContainer[data-budget="on"]::after {
+    opacity: 0.48;
     transform: translate3d(0, var(--bg-layer-3-y), 0);
     will-change: transform;
 }
@@ -217,9 +230,9 @@
 /* Beautiful dark mode adaptions */
 :global([data-theme="dark"]) .bgPatternContainer {
     background:
-        linear-gradient(115deg, 
-            var(--theme-bg-dark-start, rgba(28, 48, 54, 0.8)) 0%, 
-            var(--theme-bg-dark-middle, rgba(32, 34, 52, 0.75)) 45%, 
+        linear-gradient(115deg,
+            var(--theme-bg-dark-start, rgba(28, 48, 54, 0.8)) 0%,
+            var(--theme-bg-dark-middle, rgba(32, 34, 52, 0.75)) 45%,
             var(--theme-bg-dark-end, rgba(56, 32, 60, 0.78)) 100%),
         radial-gradient(circle at 24% 15%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.18), transparent 22%),
         radial-gradient(circle at 82% 20%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.12), transparent 25%),
@@ -228,7 +241,7 @@
 
 :global([data-theme="dark"]) .bgPatternContainer::before {
     opacity: 0.28;
-    background-image: 
+    background-image:
         radial-gradient(rgba(var(--color-miku-rgb, 51, 204, 187), 0.08) 1.5px, transparent 1.5px);
 }
 
@@ -236,15 +249,13 @@
     opacity: 0.28;
 }
 
-:global([data-theme="dark"]) .bgPatternContainer[data-budget="power-save"]::before {
-    opacity: 0.24;
+:global([data-theme="dark"]) .bgPatternContainer[data-budget="on"]::before {
+    opacity: 0.30;
 }
 
-:global([data-theme="dark"]) .bgPatternContainer[data-budget="power-save"]::after {
-    opacity: 0.20;
+:global([data-theme="dark"]) .bgPatternContainer[data-budget="on"]::after {
+    opacity: 0.26;
 }
-
-
 
 :global([data-theme="dark"]) .bgPatternContainer[data-budget="off"] {
     background:
@@ -278,3 +289,64 @@
         transition: none;
     }
 }
+
+/*
+ * Mobile density control.
+ * The desktop shard field is ~120 elements; on small screens that is visually noisy
+ * and wasteful. Each layer renders shards in a stable deterministic order, so we can
+ * keep only the first N per layer via nth-child. display:none drops them from the
+ * compositor entirely (zero paint cost). Edge-biased horizontal distribution means
+ * the surviving shards still cover the viewport without piling up in the center.
+ */
+/* Tablet: ~80 shards visible. */
+@media (max-width: 1024px) {
+    .parallaxLayer1 .shapeFloat:nth-child(n + 33),
+    .parallaxLayer2 .shapeFloat:nth-child(n + 29),
+    .parallaxLayer3 .shapeFloat:nth-child(n + 21) {
+        display: none;
+    }
+}
+
+/* Phone: ~42 shards visible. */
+@media (max-width: 640px) {
+    .parallaxLayer1 .shapeFloat:nth-child(n + 19),
+    .parallaxLayer2 .shapeFloat:nth-child(n + 15),
+    .parallaxLayer3 .shapeFloat:nth-child(n + 11) {
+        display: none;
+    }
+}
+
+/*
+ * Scroll-aware animation pausing (fixes the mobile "triangles turn to squares
+ * after fast scroll" bug AND scroll jank).
+ *
+ * Root cause: running many concurrent transform animations while the user scrolls
+ * competes with the compositor for GPU layers. When layers are lost mid-scroll,
+ * clip-path is silently dropped and triangular shards degenerate into full squares.
+ *
+ * Fix: while scrolling, pause every shard's float animation via `animation-play-state`.
+ * `paused` (not `animation: none`) keeps each shard at its current keyframe position,
+ * so when scrolling stops and animations resume there is no visible jump. The parallax
+ * scroll itself still moves the whole field via CSS variables, so the background never
+ * feels frozen. The data-scrolling attribute is toggled from BackgroundPattern.tsx.
+ */
+.bgPatternContainer[data-scrolling="true"] .shapeFloat1,
+.bgPatternContainer[data-scrolling="true"] .shapeFloat2,
+.bgPatternContainer[data-scrolling="true"] .shapeFloat3 {
+    animation-play-state: paused;
+}
+
+/*
+ * Same idea as data-scrolling, but driven from <html data-overlay-open="true">:
+ * while a top-level overlay (settings panel, search, shortcuts help) is open we
+ * freeze the shard float animations. The overlay's blurred backdrop otherwise
+ * re-runs its blur every frame against this moving content, which is the main
+ * source of jank when opening the settings panel on mobile.
+ */
+:global([data-overlay-open="true"]) .bgPatternContainer .shapeFloat1,
+:global([data-overlay-open="true"]) .bgPatternContainer .shapeFloat2,
+:global([data-overlay-open="true"]) .bgPatternContainer .shapeFloat3 {
+    animation-play-state: paused;
+}
+
+

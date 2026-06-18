@@ -39,14 +39,9 @@ const appearanceOptions = [
 
 const backgroundAnimationBudgetOptions: { id: BackgroundAnimationBudget; labelKey: string; descriptionKey: string }[] = [
     {
-        id: "performance",
-        labelKey: "settings.backgroundAnimationBudget.performance",
-        descriptionKey: "settings.backgroundAnimationBudget.performanceDescription",
-    },
-    {
-        id: "power-save",
-        labelKey: "settings.backgroundAnimationBudget.powerSave",
-        descriptionKey: "settings.backgroundAnimationBudget.powerSaveDescription",
+        id: "on",
+        labelKey: "settings.backgroundAnimationBudget.on",
+        descriptionKey: "settings.backgroundAnimationBudget.onDescription",
     },
     {
         id: "off",
@@ -405,7 +400,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                             {t("settings.backgroundAnimationBudget.sectionTitle")}
                         </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-2 gap-1.5">
                         {backgroundAnimationBudgetOptions.map((option) => {
                             const isSelected = backgroundAnimationBudget === option.id;
 
@@ -425,7 +420,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         })}
                     </div>
                     <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
-                        {t(backgroundAnimationBudgetOptions.find((option) => option.id === backgroundAnimationBudget)?.descriptionKey ?? "settings.backgroundAnimationBudget.powerSaveDescription")}
+                        {t(backgroundAnimationBudgetOptions.find((option) => option.id === backgroundAnimationBudget)?.descriptionKey ?? "settings.backgroundAnimationBudget.onDescription")}
                     </p>
                 </div>
 

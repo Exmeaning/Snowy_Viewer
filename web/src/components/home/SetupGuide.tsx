@@ -27,14 +27,9 @@ const SELECTED_THEME_CHARACTERS = [
 
 const BACKGROUND_ANIMATION_BUDGET_OPTIONS: { id: BackgroundAnimationBudget; labelKey: string; descriptionKey: string }[] = [
   {
-    id: "performance",
-    labelKey: "settings.backgroundAnimationBudget.performance",
-    descriptionKey: "settings.backgroundAnimationBudget.performanceDescription",
-  },
-  {
-    id: "power-save",
-    labelKey: "settings.backgroundAnimationBudget.powerSave",
-    descriptionKey: "settings.backgroundAnimationBudget.powerSaveDescription",
+    id: "on",
+    labelKey: "settings.backgroundAnimationBudget.on",
+    descriptionKey: "settings.backgroundAnimationBudget.onDescription",
   },
   {
     id: "off",
@@ -628,7 +623,7 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                   <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                     {t("page.setup.backgroundAnimationTitle")}
                   </h3>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {BACKGROUND_ANIMATION_BUDGET_OPTIONS.map((option) => {
                       const isSelected = backgroundAnimationBudget === option.id;
                       return (

@@ -23,17 +23,24 @@ import { UI_LOCALE_STORAGE_KEY, detectBrowserUiLocale, normalizeUiLocale } from 
 const DEFAULT_THEME_CHAR = "21";
 const DEFAULT_COLOR = "#33ccbb";
 const DEFAULT_COLOR_SCHEME_PREFERENCE: ColorSchemePreference = "system";
-export type BackgroundAnimationBudget = "performance" | "power-save" | "off";
-const DEFAULT_BACKGROUND_ANIMATION_BUDGET: BackgroundAnimationBudget = "power-save";
+// Background animation is now a simple on/off toggle. The old "performance"
+// (canvas + rAF particle) tier was removed because the CSS shard field is both
+// cheaper and better-looking, so the previous 3-tier budget collapsed to two.
+export type BackgroundAnimationBudget = "on" | "off";
+const DEFAULT_BACKGROUND_ANIMATION_BUDGET: BackgroundAnimationBudget = "on";
 const BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY = "background-animation-budget";
-const VALID_BACKGROUND_ANIMATION_BUDGETS: BackgroundAnimationBudget[] = ["performance", "power-save", "off"];
+const VALID_BACKGROUND_ANIMATION_BUDGETS: BackgroundAnimationBudget[] = ["on", "off"];
 const THEME_SWITCHING_CLASS = "theme-switching";
 const THEME_SWITCHING_DURATION_MS = 180;
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-function isValidBackgroundAnimationBudget(value: string | null): value is BackgroundAnimationBudget {
-    return VALID_BACKGROUND_ANIMATION_BUDGETS.includes(value as BackgroundAnimationBudget);
+// Migrate legacy stored values: the old "performance" / "power-save" tiers both
+// map to "on"; "off" stays "off". Returns null for unknown values.
+function normalizeBackgroundAnimationBudget(value: string | null): BackgroundAnimationBudget | null {
+    if (value === "off") return "off";
+    if (value === "on" || value === "performance" || value === "power-save") return "on";
+    return null;
 }
 
 // Asset source type (4 lines × 2 regions)
@@ -201,9 +208,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
                 setShowAdsState(false);
                 localStorage.setItem(SHOW_ADS_STORAGE_KEY, "false");
             }
-            // Load background animation budget setting
-            const savedBackgroundAnimationBudget = localStorage.getItem(BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY);
-            if (isValidBackgroundAnimationBudget(savedBackgroundAnimationBudget)) {
+            // Load background animation budget setting (migrating legacy values).
+            const savedBackgroundAnimationBudget = normalizeBackgroundAnimationBudget(
+                localStorage.getItem(BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY)
+            );
+            if (savedBackgroundAnimationBudget) {
                 setBackgroundAnimationBudgetState(savedBackgroundAnimationBudget);
             }
             // Load server source setting

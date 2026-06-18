@@ -716,13 +716,11 @@ export const enUSMessages = {
             sectionTitle: "Theme color",
         },
         backgroundAnimationBudget: {
-            sectionTitle: "Background animation budget",
-            performance: "Performance",
-            powerSave: "Power saving",
+            sectionTitle: "Background animation",
+            on: "On",
             off: "Off",
-            performanceDescription: "Full background effects: keeps floating shards, Canvas particles, and pointer response for desktops or faster devices.",
-            powerSaveDescription: "Low-cost mode: disables continuous Canvas repainting and uses static layers with scroll parallax to reduce GPU and battery usage.",
-            offDescription: "Animation off: keeps only a static themed gradient mask with no animation or scroll parallax."
+            onDescription: "Enable background animation: floating shards with scroll parallax. Lightweight and battery-friendly.",
+            offDescription: "Disable background animation: keeps only a static gradient background, with no shards, animation, or parallax."
         },
         contentDisplay: {
             sectionTitle: "Content display",
@@ -772,7 +770,7 @@ export const enUSMessages = {
             refreshing: "Refreshing...",
         },
         footer: {
-            version: "Moesekai · 1.3-preview-beta1",
+            version: "Moesekai · 1.3-preview-beta2",
         },
         sidebar: {
             notLoggedIn: "Not signed in",

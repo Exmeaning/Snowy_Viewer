@@ -340,7 +340,7 @@ function SoundtrackContent() {
     const { t, formatNumber } = useI18n();
     const { assetSource, resolvedColorScheme, isShowSpoiler, backgroundAnimationBudget } = useTheme();
     const isDark = resolvedColorScheme === "dark";
-    const isPerformanceVisuals = backgroundAnimationBudget === "performance";
+    const isPerformanceVisuals = backgroundAnimationBudget === "on";
     const shouldAnimateIdleUi = isPerformanceVisuals;
     const searchParams = useSearchParams();
 
