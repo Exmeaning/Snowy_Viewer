@@ -223,17 +223,22 @@ function renderParallaxShapes(layer: ParallaxShape["layer"], shapes: ParallaxSha
                 key={`${layer}-${index}`}
                 className={`${styles.shapeFloat} ${shapeFloatClassName(layer)}`}
                 style={{
-                    left: `${shape.leftPct}%`,
-                    top: `${shape.topPct}%`,
-                    width: shape.size,
-                    height: shape.size,
+                    // Format to fixed precision so SSR and client serialize identical
+                    // strings. Raw numbers (e.g. width: 31.42343393340707) get truncated
+                    // differently when SSR HTML is parsed vs when React holds the value
+                    // in memory, causing hydration mismatches on every shard. Strings
+                    // with fixed precision are emitted verbatim on both sides.
+                    left: `${shape.leftPct.toFixed(4)}%`,
+                    top: `${shape.topPct.toFixed(4)}%`,
+                    width: `${shape.size.toFixed(2)}px`,
+                    height: `${shape.size.toFixed(2)}px`,
                 }}
             >
                 {isCircle ? (
                     // Circles stay perfect circles via border-radius (never deformed).
                     <span
                         className={`${styles.shape} ${styles.shapeCircle}`}
-                        style={{ color, opacity: shape.opacity }}
+                        style={{ color, opacity: Number(shape.opacity.toFixed(4)) }}
                     />
                 ) : (
                     // Triangles are drawn with an SVG <polygon>. This is robust on every
@@ -245,7 +250,7 @@ function renderParallaxShapes(layer: ParallaxShape["layer"], shapes: ParallaxSha
                         viewBox="0 0 100 100"
                         preserveAspectRatio="none"
                         aria-hidden="true"
-                        style={{ color, opacity: shape.opacity }}
+                        style={{ color, opacity: Number(shape.opacity.toFixed(4)) }}
                     >
                         <g transform={`translate(50 50) ${shape.svgTransform} translate(-50 -50)`}>
                             {shape.kind === "outlineTriangle" ? (
