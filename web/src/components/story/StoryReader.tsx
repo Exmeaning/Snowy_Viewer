@@ -1,9 +1,12 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { StorySnippet } from "@/components/story/StorySnippet";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { IProcessedScenarioData, SnippetAction } from "@/types/story";
+
+// How many actions ahead of the active line we preload assets for in autoplay mode.
+const PRELOAD_AHEAD = 6;
 
 interface StoryReaderProps {
     scenarioData: IProcessedScenarioData | null;
@@ -35,11 +38,21 @@ export function StoryReader({
     const [playbackProgress, setPlaybackProgress] = useState(0);
     const [speed, setSpeed] = useState(1);
     const [isScrollLocked, setIsScrollLocked] = useState(true);
-    const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+
+    // Refs to avoid self-triggering the engine effect.
+    // The current <audio> for voiced dialogue is held in a ref (not state) so that
+    // creating/destroying it does not re-run the playback engine effect.
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // Background Immersion States
     const [activeBgUrl, setActiveBgUrl] = useState<string | null>(null);
     const [immersionMode, setImmersionMode] = useState(true);
+    // Mirror of activeBgUrl for the background-sync effect to compare without
+    // adding activeBgUrl to its dependency array (which would cause a loop).
+    const activeBgUrlRef = useRef<string | null>(null);
+
+    // Tracks asset URLs already preloaded during autoplay, to avoid duplicate fetches.
+    const preloadedUrlsRef = useRef<Set<string>>(new Set());
 
     // Extract all backgrounds and their indices
     const bgList = useMemo(() => {
@@ -55,27 +68,22 @@ export function StoryReader({
     }, [scenarioData]);
 
     // Autoplay Core engine
+    // NOTE: dependency array intentionally omits `audio`/`activeBgUrl`/`bgList`/
+    // `immersionMode`. Those are managed via refs / separate effects so this engine
+    // never re-runs because of its own state writes (which previously caused
+    // activeIndex to spin to the end of the story).
     useEffect(() => {
         if (!isPlaying || activeIndex < 0 || !scenarioData || activeIndex >= scenarioData.actions.length) {
-            if (audio) {
-                audio.pause();
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
             }
             return;
         }
 
         const action = scenarioData.actions[activeIndex];
 
-        // 1. Dynamic background sync in autoplay mode
-        if (immersionMode) {
-            const closestBg = [...bgList].reverse().find(bg => bg.index <= activeIndex);
-            if (closestBg && activeBgUrl !== closestBg.url) {
-                Promise.resolve().then(() => {
-                    setActiveBgUrl(closestBg.url);
-                });
-            }
-        }
-
-        // 2. Smoothly scroll active dialogue card into viewport center
+        // 1. Smoothly scroll active dialogue card into viewport center
         if (isScrollLocked) {
             const activeEl = document.getElementById(`snippet-${activeIndex}`);
             if (activeEl) {
@@ -83,10 +91,25 @@ export function StoryReader({
             }
         }
 
-        // 3. Dialogue player trigger
+        // Helper to advance to the next line with a hard stop at the end.
+        const advance = () => {
+            setActiveIndex(prev => {
+                if (!scenarioData) return prev;
+                if (prev >= scenarioData.actions.length - 1) {
+                    setIsPlaying(false);
+                    setPlaybackProgress(0);
+                    return prev;
+                }
+                setPlaybackProgress(0);
+                return prev + 1;
+            });
+        };
+
+        // 2. Dialogue player trigger
         if (action.type === SnippetAction.Talk) {
             if (action.voice) {
-                // Voiced dialogue
+                // Voiced dialogue — hold the Audio in a ref, NOT state, so this
+                // effect doesn't re-run when the audio is created.
                 const newAudio = new Audio(action.voice);
                 newAudio.playbackRate = speed;
 
@@ -99,14 +122,14 @@ export function StoryReader({
                 const handleEnded = () => {
                     setPlaybackProgress(100);
                     setTimeout(() => {
-                        setActiveIndex(prev => prev + 1);
+                        advance();
                     }, 350 / speed);
                 };
 
                 const handleError = () => {
                     setPlaybackProgress(100);
                     setTimeout(() => {
-                        setActiveIndex(prev => prev + 1);
+                        advance();
                     }, 500 / speed);
                 };
 
@@ -114,13 +137,11 @@ export function StoryReader({
                 newAudio.addEventListener("ended", handleEnded);
                 newAudio.addEventListener("error", handleError);
 
-                Promise.resolve().then(() => {
-                    setAudio(newAudio);
-                });
+                audioRef.current = newAudio;
                 newAudio.play().catch(() => {
                     // Blocked autoplay browser safety fallback
                     setTimeout(() => {
-                        setActiveIndex(prev => prev + 1);
+                        advance();
                     }, 1200 / speed);
                 });
 
@@ -129,6 +150,9 @@ export function StoryReader({
                     newAudio.removeEventListener("ended", handleEnded);
                     newAudio.removeEventListener("error", handleError);
                     newAudio.pause();
+                    if (audioRef.current === newAudio) {
+                        audioRef.current = null;
+                    }
                 };
             } else {
                 // Non-voiced dialogue (monologues / narration)
@@ -145,7 +169,7 @@ export function StoryReader({
                     setPlaybackProgress(pct);
                     if (pct >= 100) {
                         clearInterval(timer);
-                        setActiveIndex(prev => prev + 1);
+                        advance();
                     }
                 }, 50);
 
@@ -169,7 +193,7 @@ export function StoryReader({
                 setPlaybackProgress(pct);
                 if (pct >= 100) {
                     clearInterval(timer);
-                    setActiveIndex(prev => prev + 1);
+                    advance();
                 }
             }, 50);
 
@@ -177,11 +201,52 @@ export function StoryReader({
         } else {
             // Skip other BGM change/sound effects immediately
             const timer = setTimeout(() => {
-                setActiveIndex(prev => prev + 1);
+                advance();
             }, 50);
             return () => clearTimeout(timer);
         }
-    }, [isPlaying, activeIndex, speed, scenarioData, bgList, isScrollLocked, audio, activeBgUrl, immersionMode]);
+    }, [isPlaying, activeIndex, speed, scenarioData, isScrollLocked]);
+
+    // Dynamic background sync during autoplay. Kept separate from the engine effect
+    // so background changes never interrupt/restart the current line's playback.
+    useEffect(() => {
+        if (!isPlaying || !immersionMode || bgList.length === 0) return;
+        const closestBg = [...bgList].reverse().find(bg => bg.index <= activeIndex);
+        if (closestBg && activeBgUrlRef.current !== closestBg.url) {
+            activeBgUrlRef.current = closestBg.url;
+            setActiveBgUrl(closestBg.url);
+        }
+    }, [isPlaying, activeIndex, immersionMode, bgList]);
+
+    // Preload assets for upcoming lines while autoplay is active, so that voiced
+    // dialogue and background changes start without a download stall.
+    useEffect(() => {
+        if (!isPlaying || !scenarioData || activeIndex < 0) return;
+        const actions = scenarioData.actions;
+        const end = Math.min(actions.length, activeIndex + 1 + PRELOAD_AHEAD);
+        const preloaded = preloadedUrlsRef.current;
+        for (let i = activeIndex + 1; i < end; i++) {
+            const act = actions[i];
+            if (!act) continue;
+            if (act.type === SnippetAction.Talk && act.voice && !preloaded.has(act.voice)) {
+                preloaded.add(act.voice);
+                const a = new Audio();
+                a.preload = "auto";
+                a.src = act.voice;
+                // Some browsers won't fetch without load() when not in the DOM.
+                a.load();
+            } else if (
+                act.type === SnippetAction.SpecialEffect &&
+                act.seType === "ChangeBackground" &&
+                act.resource &&
+                !preloaded.has(act.resource)
+            ) {
+                preloaded.add(act.resource);
+                const img = new Image();
+                img.src = act.resource;
+            }
+        }
+    }, [isPlaying, activeIndex, scenarioData]);
 
     // Manual scroll listener to sync background slides
     useEffect(() => {
@@ -201,7 +266,8 @@ export function StoryReader({
                 }
             }
 
-            if (currentBg) {
+            if (currentBg && activeBgUrlRef.current !== currentBg) {
+                activeBgUrlRef.current = currentBg;
                 setActiveBgUrl(currentBg);
             }
         };
@@ -224,7 +290,10 @@ export function StoryReader({
         setIsPlaying(false);
         setActiveIndex(-1);
         setPlaybackProgress(0);
-        if (audio) audio.pause();
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current = null;
+        }
     };
 
     const handlePrev = () => {

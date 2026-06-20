@@ -769,7 +769,7 @@ export const jaJPMessages = {
       refreshing: '更新中...'
     },
     footer: {
-      version: 'Moesekai · 1.3-preview-beta2'
+      version: 'Moesekai · 1.3-preview-beta3'
     },
     sidebar: {
       notLoggedIn: '未ログイン',

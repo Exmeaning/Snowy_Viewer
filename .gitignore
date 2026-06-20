@@ -41,3 +41,9 @@ scripts/translate_secret.py
 
 # python
 __pycache__
+
+.arts/
+.claude/
+.sisyphus/
+screenshot-generator/
+test-results/
