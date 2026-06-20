@@ -177,7 +177,7 @@ export function getComicUrl(assetbundleName: string, source: AssetSourceType = "
 // ==================== Manga Asset URLs ====================
 
 export function getMangaImageUrl(id: number): string {
-    return `${MOE_STATIC_BASE_URL}/mangas/${id}.png`;
+    return `${MOE_STATIC_BASE_URL}/mangas/${id}.webp`;
 }
 
 // ==================== Sticker/Stamp Asset URLs ====================
