@@ -9,7 +9,7 @@ import CurrentEventTab from "@/components/home/CurrentEventTab";
 import LatestCardsTab from "@/components/home/LatestCardsTab";
 import LatestMusicTab from "@/components/home/LatestMusicTab";
 import UpcomingLiveTab from "@/components/home/UpcomingLiveTab";
-import BilibiliDynamicTab from "@/components/home/BilibiliDynamicTab";
+import AnnouncementSection from "@/components/home/AnnouncementSection";
 import BirthdaySection from "@/components/home/BirthdaySection";
 import { MOE_LOGO_URL } from "@/lib/assets";
 import { useI18n } from "@/contexts/I18nContext";
@@ -407,13 +407,24 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ─── Bilibili Dynamics ─── */}
+        {/* ─── Announcements ─── */}
         <div className="w-full max-w-5xl text-left">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="h-6 w-1 rounded-full bg-miku"></div>
-            <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.home.sections.dynamics")}</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-1 rounded-full bg-miku"></div>
+              <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.information.latestAnnouncements")}</h2>
+            </div>
+            <Link
+              href="/information"
+              className="text-xs font-bold text-miku hover:text-miku-dark dark:hover:text-miku-light transition-colors flex items-center gap-1 group/btn"
+            >
+              <span>{t("page.home.announcements.viewAll")}</span>
+              <svg className="w-4 h-4 transform group-hover/btn:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
-          <BilibiliDynamicTab />
+          <AnnouncementSection />
         </div>
 
         {/* ─── Birthdays / Anniversaries ─── */}

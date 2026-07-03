@@ -866,7 +866,7 @@ export const jaJPMessages = {
       sections: {
         latest: '最新',
         shortcuts: 'ショートカット',
-        dynamics: '更新',
+        dynamics: 'お知らせ',
         friends: '友達リンク',
         specialThanks: 'クレジット',
         upcomingBirthdays: '近日の誕生日 / 記念日'
@@ -944,17 +944,10 @@ export const jaJPMessages = {
       birthdays: {
         today: 'TODAY'
       },
-      bilibili: {
-        accounts: {
-          jp: 'JPニュース (Project_SEKAIニュース)',
-          cn: 'CNニュース (初音ミク：カラフルステージ！)'
-        },
-        visitHome: 'Visit profile',
-        loadFailedTitle: 'Failed to load updates',
-        noData: 'No updates yet',
-        disclaimer: "Content is sourced from Bilibili for display only and does not represent SnowyViewer's position.",
-        expand: 'Show more',
-        collapse: 'Show less'
+      announcements: {
+        viewAll: 'すべてのお知らせを見る',
+        noData: 'お知らせはありません',
+        loadFailedTitle: 'お知らせの取得に失敗しました'
       },
       friends: {
         harukiTitle: 'Haruki Toolbox'

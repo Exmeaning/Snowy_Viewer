@@ -867,7 +867,7 @@ export const enUSMessages = {
             sections: {
                 latest: "Latest",
                 shortcuts: "Shortcuts",
-                dynamics: "Updates",
+                dynamics: "Announcements",
                 friends: "Friends",
                 specialThanks: "Credits",
                 upcomingBirthdays: "Upcoming Birthdays / Anniversaries",
@@ -945,17 +945,10 @@ export const enUSMessages = {
             birthdays: {
                 today: "TODAY",
             },
-            bilibili: {
-                accounts: {
-                    jp: "JP News (Project_SEKAI News)",
-                    cn: "CN News (Hatsune Miku: Colorful Stage)",
-                },
-                visitHome: "Visit profile",
-                loadFailedTitle: "Failed to load updates",
-                noData: "No updates yet",
-                disclaimer: "Content is sourced from Bilibili for display only and does not represent SnowyViewer's position.",
-                expand: "Show more",
-                collapse: "Show less",
+            announcements: {
+                viewAll: "View All Announcements",
+                noData: "No announcements available",
+                loadFailedTitle: "Failed to fetch announcements",
             },
             friends: {
                 harukiTitle: "Haruki Toolbox",

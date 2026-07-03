@@ -866,7 +866,7 @@ export const zhCNMessages = {
             sections: {
                 latest: "最新",
                 shortcuts: "捷径",
-                dynamics: "动态",
+                dynamics: "公告",
                 friends: "友链",
                 specialThanks: "鸣谢",
                 upcomingBirthdays: "即将到来的生日/纪念日",
@@ -944,17 +944,10 @@ export const zhCNMessages = {
             birthdays: {
                 today: "TODAY",
             },
-            bilibili: {
-                accounts: {
-                    jp: "日服资讯 (Project_SEKAI资讯站)",
-                    cn: "简中资讯 (初音未来：缤纷舞台)",
-                },
-                visitHome: "访问主页",
-                loadFailedTitle: "获取动态失败",
-                noData: "暂无动态",
-                disclaimer: "内容来源于 Bilibili，仅供展示，不代表 SnowyViewer 立场",
-                expand: "查看全文",
-                collapse: "收起全文",
+            announcements: {
+                viewAll: "查看全部公告",
+                noData: "暂无公告",
+                loadFailedTitle: "获取公告失败",
             },
             friends: {
                 harukiTitle: "Haruki工具箱",
