@@ -8,6 +8,8 @@ import { UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { getCharacterName } from "@/lib/i18n";
 
+const STICKER_MAKER_BASE_URL = "https://moe.exmeaning.com/sticker-maker";
+
 // Types
 interface CharacterData {
     id: string;
@@ -132,7 +134,7 @@ export default function StickerMakerContent() {
 
     // Load characters.json
     useEffect(() => {
-        fetch(`/sticker-maker/characters.json?v=${new Date().getTime()}`)
+        fetch(`${STICKER_MAKER_BASE_URL}/characters.json?v=${new Date().getTime()}`)
             .then((r) => r.json())
             .then((data: CharacterData[]) => {
                 setAllStickers(data);
@@ -143,7 +145,7 @@ export default function StickerMakerContent() {
     useEffect(() => {
         const loadFonts = async () => {
             const fontPromises = DEFAULT_FONTS.filter(f => f.file).map(async (font) => {
-                const f = new FontFace(font.name, `url(/sticker-maker/fonts/${font.file})`);
+                const f = new FontFace(font.name, `url(${STICKER_MAKER_BASE_URL}/fonts/${font.file})`);
                 try {
                     await f.load();
                     document.fonts.add(f);
@@ -312,7 +314,7 @@ export default function StickerMakerContent() {
 
         // Check if img is a data URL (custom upload) or path
         const isDataUrl = sticker.img.startsWith("data:") || sticker.img.startsWith("blob:");
-        img.src = isDataUrl ? sticker.img : `/sticker-maker/img/${sticker.img}`;
+        img.src = isDataUrl ? sticker.img : `${STICKER_MAKER_BASE_URL}/img/${sticker.img}`;
 
         img.onload = () => {
             imgRef.current = img;
@@ -598,7 +600,7 @@ export default function StickerMakerContent() {
                                                          }`}
                                                  >
                                                      <img
-                                                         src={`/sticker-maker/img/${sticker.img}`}
+                                                         src={`${STICKER_MAKER_BASE_URL}/img/${sticker.img}`}
                                                          alt={sticker.name}
                                                          loading="lazy"
                                                          className="w-full aspect-[296/256] object-contain bg-slate-50/10"

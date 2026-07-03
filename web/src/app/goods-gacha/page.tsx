@@ -9,42 +9,29 @@ export const generateMetadata = pageMetadata("goods_gacha");
 export type GachaPools = Record<string, string[]>;
 
 async function getGachaPools(): Promise<GachaPools> {
-    const gachaDir = path.join(process.cwd(), 'public', 'goods_gacha');
-    const pools: GachaPools = {};
+    const jsonPath = path.join(process.cwd(), 'public', 'data', 'goods_gacha_list.json');
+    const baseDomain = "https://moe.exmeaning.com";
 
     try {
-        if (!fs.existsSync(gachaDir)) {
-            console.error('Gacha directory not found:', gachaDir);
+        if (!fs.existsSync(jsonPath)) {
+            console.error('Goods gacha JSON list not found:', jsonPath);
             return {};
         }
 
-        const entries = fs.readdirSync(gachaDir, { withFileTypes: true });
+        const rawData = fs.readFileSync(jsonPath, 'utf8');
+        const relativePools = JSON.parse(rawData) as GachaPools;
 
-        for (const entry of entries) {
-            if (entry.isDirectory()) {
-                const poolName = entry.name;
-                const poolPath = path.join(gachaDir, poolName);
-
-                try {
-                    const files = fs.readdirSync(poolPath);
-                    // Filter for image files
-                    const images = files.filter(file =>
-                        /\.(jpg|jpeg|png|webp|gif)$/i.test(file)
-                    ).map(file => `/goods_gacha/${poolName}/${file}`); // Create public URL path
-
-                    if (images.length > 0) {
-                        pools[poolName] = images;
-                    }
-                } catch (err) {
-                    console.error(`Error reading pool directory ${poolName}:`, err);
-                }
-            }
+        // Map relative paths to absolute URLs on CDN
+        const absolutePools: GachaPools = {};
+        for (const [poolName, files] of Object.entries(relativePools)) {
+            absolutePools[poolName] = files.map(file => `${baseDomain}${file}`);
         }
+        return absolutePools;
     } catch (err) {
-        console.error('Error reading gacha directory:', err);
+        console.error('Error reading gacha JSON list:', err);
     }
 
-    return pools;
+    return {};
 }
 
 export default async function GachaPage() {
