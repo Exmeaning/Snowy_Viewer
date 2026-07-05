@@ -32,6 +32,7 @@ import {
   resolveAcceptLanguageUiLocale,
   resolveUiLocale,
 } from "@/lib/i18n";
+import { BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY } from "@/lib/backgroundAnimation";
 
 const SITE_BASE_URL = getSiteBaseUrl();
 const googleTagScript = buildGoogleTagBootstrapScript();
@@ -79,6 +80,14 @@ export default async function RootLayout({
       }
 
       document.documentElement.dataset.showAds = showAds ? 'true' : 'false';
+
+      try {
+        var savedBackgroundAnimationBudget = localStorage.getItem('${BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY}');
+        var backgroundAnimationBudget = savedBackgroundAnimationBudget === 'off' ? 'off' : 'on';
+        document.documentElement.dataset.backgroundAnimation = backgroundAnimationBudget;
+      } catch (e) {
+        document.documentElement.dataset.backgroundAnimation = 'on';
+      }
 
       if (showAds && !document.getElementById('${ADSENSE_SCRIPT_ID}')) {
         var adsenseScript = document.createElement('script');
