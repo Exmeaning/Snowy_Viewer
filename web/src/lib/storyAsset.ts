@@ -23,6 +23,19 @@ export class StoryAssetMissingError extends Error {
 
 // ── Path builder ──────────────────────────────────────────────────────────────
 
+/** Extract region from AssetSourceType (e.g. "main-en" → "en", "main" → from localStorage) */
+function getRegionFromSource(source: AssetSourceType): string {
+    const hyphenIndex = source.indexOf("-");
+    if (hyphenIndex !== -1) {
+        return source.substring(hyphenIndex + 1);
+    }
+    // For bare "main" / "overseas", fall back to localStorage
+    if (typeof window !== "undefined") {
+        return localStorage.getItem("server-source") || "jp";
+    }
+    return "jp";
+}
+
 function buildPath(type: StoryAssetType, source: AssetSourceType, params: AssetParams): string {
     const base = `${getAssetBaseUrl(source)}/`;
     switch (type) {
@@ -30,8 +43,14 @@ function buildPath(type: StoryAssetType, source: AssetSourceType, params: AssetP
             return `${base}scenario/unitstory/${params.assetbundleName}/${params.scenarioId}.json`;
         case "event":
             return `${base}event_story/${params.assetbundleName}/scenario/${params.scenarioId}.json`;
-        case "card":
+        case "card": {
+            // International server (en) uses a different directory structure
+            const region = getRegionFromSource(source);
+            if (region === "en") {
+                return `${base}character/member_scenario/${params.assetbundleName}/${params.scenarioId}.json`;
+            }
             return `${base}character/member/${params.assetbundleName}/${params.scenarioId}.json`;
+        }
         case "talk":
             return `${base}scenario/actionset/group${params.group}/${params.scenarioId}.json`;
         case "self":
