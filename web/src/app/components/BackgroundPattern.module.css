@@ -204,7 +204,8 @@
     will-change: transform;
 }
 
-.bgPatternContainer[data-budget="off"] {
+.bgPatternContainer[data-budget="off"],
+:global([data-background-animation="off"]) .bgPatternContainer {
     background:
         linear-gradient(115deg,
             var(--theme-bg-light-start, rgba(182, 255, 252, 0.50)) 0%,
@@ -215,16 +216,23 @@
         radial-gradient(circle at 58% 86%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.12), transparent 30%);
 }
 
-.bgPatternContainer[data-budget="off"]::before {
+.bgPatternContainer[data-budget="off"]::before,
+:global([data-background-animation="off"]) .bgPatternContainer::before {
     opacity: 0.26;
     transform: none;
     will-change: auto;
 }
 
-.bgPatternContainer[data-budget="off"]::after {
+.bgPatternContainer[data-budget="off"]::after,
+:global([data-background-animation="off"]) .bgPatternContainer::after {
     opacity: 0;
     transform: none;
     will-change: auto;
+}
+
+.bgPatternContainer[data-budget="off"] .parallaxLayer,
+:global([data-background-animation="off"]) .bgPatternContainer .parallaxLayer {
+    display: none;
 }
 
 /* Beautiful dark mode adaptions */
@@ -257,7 +265,8 @@
     opacity: 0.26;
 }
 
-:global([data-theme="dark"]) .bgPatternContainer[data-budget="off"] {
+:global([data-theme="dark"]) .bgPatternContainer[data-budget="off"],
+:global([data-theme="dark"][data-background-animation="off"]) .bgPatternContainer {
     background:
         linear-gradient(115deg,
             var(--theme-bg-dark-start, rgba(28, 48, 54, 0.66)) 0%,
@@ -268,11 +277,13 @@
         radial-gradient(circle at 58% 86%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.06), transparent 30%);
 }
 
-:global([data-theme="dark"]) .bgPatternContainer[data-budget="off"]::before {
+:global([data-theme="dark"]) .bgPatternContainer[data-budget="off"]::before,
+:global([data-theme="dark"][data-background-animation="off"]) .bgPatternContainer::before {
     opacity: 0.16;
 }
 
-:global([data-theme="dark"]) .bgPatternContainer[data-budget="off"]::after {
+:global([data-theme="dark"]) .bgPatternContainer[data-budget="off"]::after,
+:global([data-theme="dark"][data-background-animation="off"]) .bgPatternContainer::after {
     opacity: 0;
 }
 
@@ -348,5 +359,4 @@
 :global([data-overlay-open="true"]) .bgPatternContainer .shapeFloat3 {
     animation-play-state: paused;
 }
-
 

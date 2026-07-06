@@ -18,30 +18,24 @@ import {
     SHOW_ADS_STORAGE_KEY,
 } from "@/lib/ads";
 import { UI_LOCALE_STORAGE_KEY, detectBrowserUiLocale, normalizeUiLocale } from "@/lib/i18n";
+import {
+    BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY,
+    DEFAULT_BACKGROUND_ANIMATION_BUDGET,
+    VALID_BACKGROUND_ANIMATION_BUDGETS,
+    normalizeBackgroundAnimationBudget,
+    type BackgroundAnimationBudget,
+} from "@/lib/backgroundAnimation";
+
+export type { BackgroundAnimationBudget } from "@/lib/backgroundAnimation";
 
 // Default theme color (Miku)
 const DEFAULT_THEME_CHAR = "21";
 const DEFAULT_COLOR = "#33ccbb";
 const DEFAULT_COLOR_SCHEME_PREFERENCE: ColorSchemePreference = "system";
-// Background animation is now a simple on/off toggle. The old "performance"
-// (canvas + rAF particle) tier was removed because the CSS shard field is both
-// cheaper and better-looking, so the previous 3-tier budget collapsed to two.
-export type BackgroundAnimationBudget = "on" | "off";
-const DEFAULT_BACKGROUND_ANIMATION_BUDGET: BackgroundAnimationBudget = "on";
-const BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY = "background-animation-budget";
-const VALID_BACKGROUND_ANIMATION_BUDGETS: BackgroundAnimationBudget[] = ["on", "off"];
 const THEME_SWITCHING_CLASS = "theme-switching";
 const THEME_SWITCHING_DURATION_MS = 180;
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
-
-// Migrate legacy stored values: the old "performance" / "power-save" tiers both
-// map to "on"; "off" stays "off". Returns null for unknown values.
-function normalizeBackgroundAnimationBudget(value: string | null): BackgroundAnimationBudget | null {
-    if (value === "off") return "off";
-    if (value === "on" || value === "performance" || value === "power-save") return "on";
-    return null;
-}
 
 // Asset source type (Main line / Overseas line, with optional regional suffix for override)
 export type AssetSourceType =
@@ -77,9 +71,14 @@ function getDefaultLLMTranslationSetting(): boolean {
     return uiLocale === "zh-CN";
 }
 
-export function getAssetSourceRegion(source: AssetSourceType): string {
+function setDocumentBackgroundAnimationBudget(budget: BackgroundAnimationBudget) {
+    if (typeof document === "undefined") return;
+    document.documentElement.dataset.backgroundAnimation = budget;
+}
+
+export function getAssetSourceRegion(source: AssetSourceType): ServerSourceType {
     const hyphenIndex = source.indexOf("-");
-    return hyphenIndex !== -1 ? source.substring(hyphenIndex + 1) : "jp";
+    return (hyphenIndex !== -1 ? source.substring(hyphenIndex + 1) : "jp") as ServerSourceType;
 }
 
 export function replaceAssetSourceRegion(source: AssetSourceType, targetRegion: ServerSourceType): AssetSourceType {
@@ -205,6 +204,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             if (savedBackgroundAnimationBudget) {
                 setBackgroundAnimationBudgetState(savedBackgroundAnimationBudget);
             }
+            setDocumentBackgroundAnimationBudget(savedBackgroundAnimationBudget ?? DEFAULT_BACKGROUND_ANIMATION_BUDGET);
             // Load server source setting
             const savedServerSource = localStorage.getItem("server-source");
             const loadedServerSource: ServerSourceType = (
@@ -463,6 +463,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         if (!VALID_BACKGROUND_ANIMATION_BUDGETS.includes(budget)) return;
 
         setBackgroundAnimationBudgetState(budget);
+        setDocumentBackgroundAnimationBudget(budget);
         try {
             localStorage.setItem(BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY, budget);
         } catch (e) {

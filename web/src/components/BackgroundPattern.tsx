@@ -278,6 +278,7 @@ function renderParallaxShapes(layer: ParallaxShape["layer"], shapes: ParallaxSha
 
 export default function BackgroundPattern() {
     const { backgroundAnimationBudget } = useTheme();
+    const isAnimationEnabled = backgroundAnimationBudget === "on";
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollRef = useRef({
         targetY: 0,
@@ -298,7 +299,7 @@ export default function BackgroundPattern() {
      */
     useEffect(() => {
         const container = containerRef.current;
-        if (!container || backgroundAnimationBudget === "off") return;
+        if (!container || !isAnimationEnabled) return;
 
         let readFrameId = 0;       // coalesces scroll events into one rAF read
         let inertiaRafId = 0;      // rAF-driven inertia loop
@@ -387,13 +388,23 @@ export default function BackgroundPattern() {
             if (inertiaRafId) cancelAnimationFrame(inertiaRafId);
             if (resumeTimer) clearTimeout(resumeTimer);
         };
-    }, [backgroundAnimationBudget]);
+    }, [isAnimationEnabled]);
 
-    // Build the shard field once (deterministic -> SSR/CSR identical).
+    // Build the shard field only while animation is enabled. The "off" path keeps
+    // the static gradient but avoids creating 120 animated SVG/span nodes.
     const parallaxShapes = React.useMemo(() => PARALLAX_SHAPES, []);
-    const layer1Elements = React.useMemo(() => renderParallaxShapes(1, parallaxShapes), [parallaxShapes]);
-    const layer2Elements = React.useMemo(() => renderParallaxShapes(2, parallaxShapes), [parallaxShapes]);
-    const layer3Elements = React.useMemo(() => renderParallaxShapes(3, parallaxShapes), [parallaxShapes]);
+    const layer1Elements = React.useMemo(
+        () => isAnimationEnabled ? renderParallaxShapes(1, parallaxShapes) : null,
+        [isAnimationEnabled, parallaxShapes]
+    );
+    const layer2Elements = React.useMemo(
+        () => isAnimationEnabled ? renderParallaxShapes(2, parallaxShapes) : null,
+        [isAnimationEnabled, parallaxShapes]
+    );
+    const layer3Elements = React.useMemo(
+        () => isAnimationEnabled ? renderParallaxShapes(3, parallaxShapes) : null,
+        [isAnimationEnabled, parallaxShapes]
+    );
 
     return (
         <div
@@ -402,15 +413,19 @@ export default function BackgroundPattern() {
             data-budget={backgroundAnimationBudget}
             aria-hidden="true"
         >
-            <div className={`${styles.parallaxLayer} ${styles.parallaxLayer1}`}>
-                {layer1Elements}
-            </div>
-            <div className={`${styles.parallaxLayer} ${styles.parallaxLayer2}`}>
-                {layer2Elements}
-            </div>
-            <div className={`${styles.parallaxLayer} ${styles.parallaxLayer3}`}>
-                {layer3Elements}
-            </div>
+            {isAnimationEnabled && (
+                <>
+                    <div className={`${styles.parallaxLayer} ${styles.parallaxLayer1}`}>
+                        {layer1Elements}
+                    </div>
+                    <div className={`${styles.parallaxLayer} ${styles.parallaxLayer2}`}>
+                        {layer2Elements}
+                    </div>
+                    <div className={`${styles.parallaxLayer} ${styles.parallaxLayer3}`}>
+                        {layer3Elements}
+                    </div>
+                </>
+            )}
         </div>
     );
 }

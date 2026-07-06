@@ -19,6 +19,7 @@ const dynamicKeyPrefixes = [
     "common.cardSupplyTypes.",
     "common.eventTypes.",
     "common.status.",
+    "settings.serverSource.",
 ];
 
 const missing = [];
