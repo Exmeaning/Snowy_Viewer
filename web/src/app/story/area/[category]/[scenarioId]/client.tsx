@@ -54,7 +54,7 @@ export default function StoryAreaTalkClient() {
                 document.title = t("page.story.area.documentTitle", { name });
 
                 const group = Math.floor(action.id / 100);
-                const raw = await fetchStoryAssetFromMirror("talk", lang, {
+                const raw = await fetchStoryAssetFromMirror("talk", assetSource, {
                     scenarioId: action.scenarioId,
                     group,
                 });

@@ -48,7 +48,7 @@ export default function StorySpecialReaderClient() {
                 const epResults: EpResult[] = await Promise.all(
                     s.episodes.map(async (ep): Promise<EpResult> => {
                         try {
-                            const raw = await fetchStoryAssetFromMirror("special", lang, {
+                            const raw = await fetchStoryAssetFromMirror("special", assetSource, {
                                 assetbundleName: ep.assetbundleName,
                                 scenarioId: ep.scenarioId,
                             });

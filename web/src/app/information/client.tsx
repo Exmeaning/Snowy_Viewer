@@ -20,6 +20,7 @@ import {
     getInformationStatusTone,
     getInformationTagTone,
     resolveInformationPath,
+    normalizeInformationServer,
 } from "@/lib/information";
 
 const ALL_FILTER = "all";
@@ -274,7 +275,7 @@ export default function InformationClient() {
     const { t } = useI18n();
     const { serverSource } = useTheme();
     const { translations } = useTranslation();
-    const server: InformationServer = serverSource;
+    const server: InformationServer = normalizeInformationServer(serverSource);
     const [items, setItems] = useState<InformationItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

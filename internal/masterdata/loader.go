@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	EventsURL       = "https://sk.exmeaning.com/master/events.json"
-	EventCardsURL   = "https://sk.exmeaning.com/master/eventCards.json"
-	EventMusicsURL  = "https://sk.exmeaning.com/master/eventMusics.json"
+	EventsURL       = "https://metadata.exmeaning.com/jp/master/events.json"
+	EventCardsURL   = "https://metadata.exmeaning.com/jp/master/eventCards.json"
+	EventMusicsURL  = "https://metadata.exmeaning.com/jp/master/eventMusics.json"
 	VirtualLivesURL = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/virtualLives.json"
 	GachasURL       = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/gachas.json"
 )

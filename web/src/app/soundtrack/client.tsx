@@ -777,8 +777,9 @@ function SoundtrackContent() {
 
     const currentArtworkUrl = useMemo(() => {
         if (!currentTrack) return "";
+        const jacketName = currentCategory?.assetbundleName ?? "jacket_s_soundtrack_1";
         return getMysekaiRawAssetUrl(
-            `music_record_soundtrack/jacket/${currentCategory?.assetbundleName ?? "jacket_s_soundtrack_1"}.webp`,
+            `music_record_soundtrack/jacket/${jacketName}/${jacketName}.webp`,
             assetSource,
         );
     }, [assetSource, currentCategory, currentTrack]);
@@ -1353,10 +1354,13 @@ function SoundtrackContent() {
                                         {currentTrack && (
                                             <div className="relative w-full h-full">
                                                 <Image
-                                                    src={getMysekaiRawAssetUrl(
-                                                        `music_record_soundtrack/jacket/${categoryMap.get(currentTrack.musicSoundTrackCategoryId)?.assetbundleName ?? "jacket_s_soundtrack_1"}.webp`,
-                                                        assetSource
-                                                    )}
+                                                    src={(() => {
+                                                        const jacketName = categoryMap.get(currentTrack.musicSoundTrackCategoryId)?.assetbundleName ?? "jacket_s_soundtrack_1";
+                                                        return getMysekaiRawAssetUrl(
+                                                            `music_record_soundtrack/jacket/${jacketName}/${jacketName}.webp`,
+                                                            assetSource
+                                                        );
+                                                    })()}
                                                     alt={currentTrack.title}
                                                     fill
                                                     className="object-cover"
@@ -1778,7 +1782,7 @@ function SoundtrackContent() {
                                             {isPerformanceVisuals && (
                                                 <div className="absolute inset-0 opacity-15 dark:opacity-20 filter blur-xs group-hover:scale-105 transition-transform duration-500">
                                                     <Image
-                                                        src={getMysekaiRawAssetUrl(`music_record_soundtrack/jacket/${cat.assetbundleName}.webp`, assetSource)}
+                                                        src={getMysekaiRawAssetUrl(`music_record_soundtrack/jacket/${cat.assetbundleName}/${cat.assetbundleName}.webp`, assetSource)}
                                                         alt={cat.name}
                                                         fill
                                                         className="object-cover"
@@ -1949,10 +1953,13 @@ function SoundtrackContent() {
                                                         {/* Cover thumbnail */}
                                                         <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 dark:border-white/5">
                                                             <Image
-                                                                src={getMysekaiRawAssetUrl(
-                                                                    `music_record_soundtrack/jacket/${categoryMap.get(track.musicSoundTrackCategoryId)?.assetbundleName ?? "jacket_s_soundtrack_1"}.webp`,
-                                                                    assetSource
-                                                                )}
+                                                                src={(() => {
+                                                                    const jacketName = categoryMap.get(track.musicSoundTrackCategoryId)?.assetbundleName ?? "jacket_s_soundtrack_1";
+                                                                    return getMysekaiRawAssetUrl(
+                                                                        `music_record_soundtrack/jacket/${jacketName}/${jacketName}.webp`,
+                                                                        assetSource
+                                                                    );
+                                                                })()}
                                                                 alt={track.title}
                                                                 fill
                                                                 className="object-cover"

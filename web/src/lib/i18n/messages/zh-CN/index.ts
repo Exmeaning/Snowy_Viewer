@@ -744,14 +744,15 @@ export const zhCNMessages = {
         assetSource: {
             sectionTitle: "Assets线路",
             main: "主线",
-            backup: "备线",
-            overseas: "海外主线",
-            overseasBackup: "海外备线",
+            overseas: "海外线",
         },
         serverSource: {
             sectionTitle: "数据服务器",
-            jp: "日服",
-            cn: "简体中文",
+            en: "国际服 (EN)",
+            jp: "日服 (JP)",
+            cn: "国服 (CN)",
+            tw: "台服 (TW)",
+            kr: "韩服 (KR)",
         },
         dataVersion: {
             sectionTitle: "数据版本与缓存",
@@ -769,7 +770,7 @@ export const zhCNMessages = {
             refreshing: "刷新中...",
         },
         footer: {
-            version: "Moesekai · 1.3-preview-beta3",
+            version: "Moesekai · 1.4-preview-beta1",
         },
         sidebar: {
             notLoggedIn: "未登录",
@@ -1091,8 +1092,11 @@ export const zhCNMessages = {
             description: "选择剧情类型开始阅读",
             backToStory: "返回剧情",
             serverSource: {
-                cn: "国服",
+                en: "国际服",
                 jp: "日服",
+                cn: "国服",
+                tw: "台服",
+                kr: "韩服",
             },
             navigation: {
                 previousEpisode: "上一话",

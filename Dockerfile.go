@@ -1,0 +1,41 @@
+# Build Stage for Go Backend
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /app
+
+# 安装 ca-certificates 确保 HTTPS 抓取外部数据正常
+RUN apk add --no-cache ca-certificates
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY internal/ ./internal/
+COPY main.go ./
+
+# 编译 Go 后端应用，进行静态链接和体积优化
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o server main.go
+
+# Runtime Stage
+FROM alpine:3.20
+
+WORKDIR /app
+
+# 安装必要证书及系统时区数据（处理活动与卡池时间线时需要精确时区支持）
+RUN apk add --no-cache ca-certificates tzdata
+
+# 从编译阶段拷贝二进制程序
+COPY --from=builder /app/server ./server
+
+# 拷贝本地主数据文件到容器中，作为缓存与加载源（可在运行时挂载覆盖）
+COPY data/ ./data/
+
+# 暴露后端监听端口
+EXPOSE 8080
+
+# 默认禁用前端反代，开启纯 API 模式（避免连接 3000 端口报错）
+ENV FRONTEND_PROXY_URL=""
+
+# 运行服务
+CMD ["./server"]
+
+

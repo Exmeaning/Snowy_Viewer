@@ -43,30 +43,25 @@ function normalizeBackgroundAnimationBudget(value: string | null): BackgroundAni
     return null;
 }
 
-// Asset source type (4 lines × 2 regions)
+// Asset source type (Main line / Overseas line, with optional regional suffix for override)
 export type AssetSourceType =
+    | "main"
+    | "overseas"
+    | "main-en"
     | "main-jp"
-    | "backup-jp"
-    | "overseas-jp"
-    | "overseas-backup-jp"
     | "main-cn"
-    | "backup-cn"
+    | "main-tw"
+    | "main-kr"
+    | "overseas-en"
+    | "overseas-jp"
     | "overseas-cn"
-    | "overseas-backup-cn";
-const DEFAULT_ASSET_SOURCE: AssetSourceType = "main-jp";
-const VALID_ASSET_SOURCES: AssetSourceType[] = [
-    "main-jp",
-    "backup-jp",
-    "overseas-jp",
-    "overseas-backup-jp",
-    "main-cn",
-    "backup-cn",
-    "overseas-cn",
-    "overseas-backup-cn",
-];
+    | "overseas-tw"
+    | "overseas-kr";
+const DEFAULT_ASSET_SOURCE: AssetSourceType = "main";
+const VALID_ASSET_SOURCES: AssetSourceType[] = ["main", "overseas"];
 
 // Server source type
-export type ServerSourceType = "jp" | "cn";
+export type ServerSourceType = "en" | "jp" | "cn" | "tw" | "kr";
 const DEFAULT_SERVER_SOURCE: ServerSourceType = "jp";
 const LLM_TRANSLATION_STORAGE_KEY = "use-llm-translation";
 
@@ -82,13 +77,14 @@ function getDefaultLLMTranslationSetting(): boolean {
     return uiLocale === "zh-CN";
 }
 
-export function getAssetSourceRegion(source: AssetSourceType): ServerSourceType {
-    return source.endsWith("-cn") ? "cn" : "jp";
+export function getAssetSourceRegion(source: AssetSourceType): string {
+    const hyphenIndex = source.indexOf("-");
+    return hyphenIndex !== -1 ? source.substring(hyphenIndex + 1) : "jp";
 }
 
 export function replaceAssetSourceRegion(source: AssetSourceType, targetRegion: ServerSourceType): AssetSourceType {
-    const line = source.replace(/-(jp|cn)$/, "");
-    return `${line}-${targetRegion}` as AssetSourceType;
+    const base = source.startsWith("overseas") ? "overseas" : "main";
+    return `${base}-${targetRegion}` as AssetSourceType;
 }
 
 function migrateLegacyAssetSource(rawSource: string | null): AssetSourceType {
@@ -100,17 +96,11 @@ function migrateLegacyAssetSource(rawSource: string | null): AssetSourceType {
         return rawSource as AssetSourceType;
     }
 
-    switch (rawSource) {
-        case "snowyassets_cn":
-        case "haruki_cn":
-            return "main-cn";
-        case "snowyassets":
-        case "haruki":
-        case "uni":
-            return "main-jp";
-        default:
-            return DEFAULT_ASSET_SOURCE;
+    // Migrate old values containing regional/line suffixes
+    if (rawSource.startsWith("overseas")) {
+        return "overseas";
     }
+    return "main";
 }
 
 interface ThemeContextType {
@@ -193,7 +183,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             }
             // Load asset source setting (with legacy migration)
             const savedAssetSource = localStorage.getItem("asset-source");
-            let loadedAssetSource: AssetSourceType = migrateLegacyAssetSource(savedAssetSource);
+            const loadedAssetSource: AssetSourceType = migrateLegacyAssetSource(savedAssetSource);
             // Load LLM translation setting. Defaults to ON for Chinese UI and OFF for non-Chinese UI.
             setUseLLMTranslationState(getDefaultLLMTranslationSetting());
             // Load ads display setting
@@ -217,12 +207,14 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             }
             // Load server source setting
             const savedServerSource = localStorage.getItem("server-source");
-            const loadedServerSource: ServerSourceType = savedServerSource === "cn" ? "cn" : "jp";
+            const loadedServerSource: ServerSourceType = (
+                savedServerSource === "en" ||
+                savedServerSource === "jp" ||
+                savedServerSource === "cn" ||
+                savedServerSource === "tw" ||
+                savedServerSource === "kr"
+            ) ? savedServerSource : "jp";
             setServerSourceState(loadedServerSource);
-
-            // Ensure asset source region always matches current server source
-            loadedAssetSource = replaceAssetSourceRegion(loadedAssetSource, loadedServerSource);
-            localStorage.setItem("asset-source", loadedAssetSource);
 
             setAssetSourceState(loadedAssetSource);
             setHasHydratedThemeSettings(true);
@@ -484,11 +476,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             localStorage.setItem("server-source", source);
         } catch (e) {
             console.error("Failed to save server source setting to localStorage:", e);
-        }
-
-        const newAssetSource = replaceAssetSourceRegion(assetSourceState, source);
-        if (newAssetSource !== assetSourceState) {
-            setAssetSource(newAssetSource);
         }
     };
 

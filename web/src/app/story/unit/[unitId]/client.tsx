@@ -9,8 +9,9 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { IUnitProfile } from "@/types/types";
 import { useI18n } from "@/contexts/I18nContext";
 
-function getUnitOutlineLogoUrl(unitCode: string, server: "jp" | "cn"): string {
-    return `/images/unit-logos/logo_${unitCode}_${server}.png`;
+function getUnitOutlineLogoUrl(unitCode: string, server: string): string {
+    const s = server === "cn" ? "cn" : "jp";
+    return `/images/unit-logos/logo_${unitCode}_${s}.png`;
 }
 
 function getUnitEpisodeImageUrl(chapterAssetbundleName: string, episodeAssetbundleName: string, assetSource: import("@/contexts/ThemeContext").AssetSourceType): string {

@@ -15,7 +15,7 @@ import {
 } from "@/types/story";
 import { fetchMasterData } from "./fetch";
 import { getBackgroundImageUrl, getStoryVoiceUrl, getCardStoryVoiceUrl, getAreaTalkVoiceUrl, getSpecialStoryVoiceUrl, getStoryBgmUrl, getStorySoundEffectUrl } from "./assets";
-import type { AssetSourceType } from "@/contexts/ThemeContext";
+import type { AssetSourceType, ServerSourceType } from "@/contexts/ThemeContext";
 import { CHAR_NAMES } from "@/types/types";
 import { IGameChara, IUnitProfile } from "@/types/types";
 import { getPartVoiceUrl, getStandardVoiceUrl } from "./voiceUrlFinder";
@@ -95,7 +95,7 @@ export async function processScenarioForDisplay(
     data: IScenarioData,
     storyType: "card" | "talk" | "special" | "scenario" = "scenario",
     source: AssetSourceType = "main-jp",
-    serverSource: "jp" | "cn" = "jp"
+    serverSource: ServerSourceType = "jp"
 ): Promise<IProcessedScenarioData> {
     // Fetch required master data
     const [character2ds, mobCharacters, _gameCharacters, unitProfiles] = await Promise.all([

@@ -159,7 +159,7 @@ function RankingCard({
 export default function MysekaiPreviewClient() {
     const { t, formatNumber, formatDate } = useI18n();
     const { serverSource, setServerSource } = useTheme();
-    const [server, setServer] = useState<BaijingServer>(serverSource);
+    const [server, setServer] = useState<BaijingServer>(serverSource === "cn" ? "cn" : "jp");
     const [rankings, setRankings] = useState<BaijingRankingSnapshot[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -186,7 +186,7 @@ export default function MysekaiPreviewClient() {
     }, []);
 
     useEffect(() => {
-        setServer(serverSource);
+        setServer(serverSource === "cn" ? "cn" : "jp");
     }, [serverSource]);
 
     useEffect(() => {

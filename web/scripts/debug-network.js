@@ -1,6 +1,6 @@
 
 const urls = [
-    "https://sk.exmeaning.com/master/events.json",
+    "https://metadata.exmeaning.com/jp/master/events.json",
     "https://raw.githubusercontent.com/Exmeaning/haruki-sekai-master/main/master/events.json"
 ];
 

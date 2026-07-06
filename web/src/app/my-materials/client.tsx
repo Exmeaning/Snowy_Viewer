@@ -77,7 +77,7 @@ function parseUploadTimeToDate(uploadTime: string | number): Date | null {
 }
 
 function getAssetSourceForServer(server: ServerType, assetSource: AssetSourceType): AssetSourceType {
-    return replaceAssetSourceRegion(assetSource, server === "cn" || server === "tw" ? "cn" : "jp");
+    return replaceAssetSourceRegion(assetSource, server);
 }
 
 function getUserErrorMessageKey(code: AccountDataErrorCode): string {

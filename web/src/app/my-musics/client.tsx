@@ -821,7 +821,7 @@ function MyMusicsContent() {
 
     const getMusicThumbnailUrl = useCallback((music: Music): string => {
         const finalAssetSource = activeAccount
-            ? replaceAssetSourceRegion(assetSource, activeAccount.server === "cn" || activeAccount.server === "tw" ? "cn" : "jp")
+            ? replaceAssetSourceRegion(assetSource, activeAccount.server)
             : assetSource;
 
         return getMusicJacketUrl(music.assetbundleName, finalAssetSource);

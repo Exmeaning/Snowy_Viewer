@@ -50,7 +50,7 @@ jobs:
       - name: Generate Sitemap Data
         run: |
           GITHUB_BASE="https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master"
-          MASTER_DATA_URLS="$GITHUB_BASE,https://sekaimaster.exmeaning.com/master,https://sk.exmeaning.com/master" \
+          MASTER_DATA_URLS="$GITHUB_BASE,https://metadata.exmeaning.com/jp/master,https://metadata.pjsk.moe/jp/master" \
           REQUIRE_FRESH_BUILD_DATA=1 \
           npm run sitemap --prefix web
 

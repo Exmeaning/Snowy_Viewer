@@ -12,7 +12,7 @@ ENV NEXT_PUBLIC_API_URL=
 # OAuth2 client ID (baked into client JS at build time)
 ENV NEXT_PUBLIC_OAUTH2_CLIENT_ID=snowy-viewer-public
 # Build-time data sources. Multiple URLs allow Docker builds to survive flaky DNS/proxy/CDN paths.
-ARG MASTER_DATA_URLS=https://sekaimaster.exmeaning.com/master,https://sk.exmeaning.com/master
+ARG MASTER_DATA_URLS=https://metadata.exmeaning.com/jp/master,https://metadata.pjsk.moe/jp/master
 ARG MANGA_DATA_URLS=https://moe.exmeaning.com/mangas/mangas.json
 ARG REQUIRE_FRESH_BUILD_DATA=0
 ENV MASTER_DATA_URLS=$MASTER_DATA_URLS

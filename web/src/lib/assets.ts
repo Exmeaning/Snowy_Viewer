@@ -1,5 +1,4 @@
 import {
-    getAssetSourceRegion,
     type AssetSourceType,
 } from "@/contexts/ThemeContext";
 
@@ -11,27 +10,30 @@ export const MOE_RANKINGS_URL = `${MOE_STATIC_BASE_URL}/data/music_meta/rankings
 export const MOE_BGM_DURATIONS_URL = `${MOE_STATIC_BASE_URL}/data/bgm_duration/bgm_durations.json`;
 
 export const ASSET_DOMAIN_MAIN = "https://storage.exmeaning.com";
-export const ASSET_DOMAIN_BACKUP = "https://storage2.exmeaning.com";
 export const ASSET_DOMAIN_OVERSEAS = "https://storage.pjsk.moe";
-export const ASSET_DOMAIN_OVERSEAS_BACKUP = "https://storage2.pjsk.moe";
 
-export const ASSET_BASE_URL_MAP: Record<AssetSourceType, string> = {
-    "main-jp": `${ASSET_DOMAIN_MAIN}/sekai-jp-assets`,
-    "backup-jp": `${ASSET_DOMAIN_BACKUP}/sekai-jp-assets`,
-    "overseas-jp": `${ASSET_DOMAIN_OVERSEAS}/sekai-jp-assets`,
-    "overseas-backup-jp": `${ASSET_DOMAIN_OVERSEAS_BACKUP}/sekai-jp-assets`,
-    "main-cn": `${ASSET_DOMAIN_MAIN}/sekai-cn-assets`,
-    "backup-cn": `${ASSET_DOMAIN_BACKUP}/sekai-cn-assets`,
-    "overseas-cn": `${ASSET_DOMAIN_OVERSEAS}/sekai-cn-assets`,
-    "overseas-backup-cn": `${ASSET_DOMAIN_OVERSEAS_BACKUP}/sekai-cn-assets`,
-};
-
-export function getAssetBaseUrl(source: AssetSourceType): string {
-    return ASSET_BASE_URL_MAP[source] ?? ASSET_BASE_URL_MAP["main-jp"];
+function getCurrentRegion(): string {
+    if (typeof window === "undefined") return "jp";
+    return localStorage.getItem("server-source") || "jp";
 }
 
-export function isCnAssetSource(source: AssetSourceType): boolean {
-    return getAssetSourceRegion(source) === "cn";
+export function getAssetBaseUrl(source: AssetSourceType): string {
+    let line: "main" | "overseas" = "main";
+    let region: string = "";
+
+    if (source.startsWith("overseas")) {
+        line = "overseas";
+    }
+
+    const hyphenIndex = source.indexOf("-");
+    if (hyphenIndex !== -1) {
+        region = source.substring(hyphenIndex + 1);
+    } else {
+        region = getCurrentRegion();
+    }
+
+    const domain = line === "main" ? ASSET_DOMAIN_MAIN : ASSET_DOMAIN_OVERSEAS;
+    return `${domain}/sekai-${region}-assets`;
 }
 
 function buildImageAssetUrl(source: AssetSourceType, assetPath: string): string {
@@ -55,12 +57,16 @@ export function buildRawAssetUrl(source: AssetSourceType, assetPath: string): st
 }
 
 export function getAssetSourceFallbackOrder(source: AssetSourceType): AssetSourceType[] {
-    const region = getAssetSourceRegion(source);
-    const candidates: AssetSourceType[] = region === "cn"
-        ? ["main-cn", "backup-cn", "overseas-cn", "overseas-backup-cn"]
-        : ["main-jp", "backup-jp", "overseas-jp", "overseas-backup-jp"];
+    const base = source.startsWith("overseas") ? "overseas" : "main";
+    const fallback = base === "main" ? "overseas" : "main";
 
-    return [source, ...candidates.filter((candidate) => candidate !== source)];
+    const hyphenIndex = source.indexOf("-");
+    if (hyphenIndex !== -1) {
+        const region = source.substring(hyphenIndex + 1);
+        return [source, `${fallback}-${region}` as AssetSourceType];
+    }
+
+    return [source, fallback];
 }
 
 export function getMysekaiRawAssetUrl(assetPath: string, source: AssetSourceType = "main-jp"): string {
@@ -161,7 +167,7 @@ export function getGachaBannerUrl(gachaId: number, source: AssetSourceType = "ma
 }
 
 export function getGachaScreenUrl(assetbundleName: string, gachaId: number, source: AssetSourceType = "main-jp"): string {
-    return buildImageAssetUrl(source, `gacha/${assetbundleName}/screen/texture/bg_gacha${gachaId}_1`);
+    return buildImageAssetUrl(source, `gacha/${assetbundleName}/screen/bg_gacha${gachaId}_1`);
 }
 
 export function getCardGachaVoiceUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {

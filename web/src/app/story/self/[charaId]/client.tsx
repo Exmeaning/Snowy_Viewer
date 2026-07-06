@@ -50,7 +50,7 @@ export default function StorySelfReaderClient() {
 
                 const loadPart = async (scenarioId: string, setData: typeof setYear1, setMissing: typeof setMissing1, setErr: typeof setError1) => {
                     try {
-                        const raw = await fetchStoryAssetFromMirror("self", lang, { scenarioId });
+                        const raw = await fetchStoryAssetFromMirror("self", assetSource, { scenarioId });
                         setData(await processScenarioForDisplay(raw, "scenario", assetSource, serverSource));
                     } catch (err) {
                         if (err instanceof StoryAssetMissingError) setMissing(err.missingPaths);

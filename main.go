@@ -36,21 +36,29 @@ func main() {
 	handler := handlers.New(store, biliClient)
 	handler.RegisterRoutes(mux)
 
-	// Reverse proxy to Next.js standalone server for frontend
-	nextjsURL, _ := url.Parse("http://localhost:3000")
-	nextjsProxy := httputil.NewSingleHostReverseProxy(nextjsURL)
-	nextjsProxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-		fmt.Printf("Next.js proxy error for %s: %v\n", r.URL.Path, err)
-		http.Error(w, "frontend upstream unavailable", http.StatusBadGateway)
-	}
-
 	// Prevent unknown /api/* paths from bouncing between Go and Next.js.
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	})
 
-	fmt.Println("Proxying frontend requests to Next.js standalone server on :3000")
-	mux.Handle("/", nextjsProxy)
+	// Set up frontend proxy or default to API-only mode
+	if cfg.FrontendProxyURL != "" && cfg.FrontendProxyURL != "none" {
+		nextjsURL, err := url.Parse(cfg.FrontendProxyURL)
+		if err != nil {
+			fmt.Printf("Invalid FRONTEND_PROXY_URL %q: %v\n", cfg.FrontendProxyURL, err)
+			setupAPIOnlyMode(mux)
+		} else {
+			nextjsProxy := httputil.NewSingleHostReverseProxy(nextjsURL)
+			nextjsProxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+				fmt.Printf("Next.js proxy error for %s: %v\n", r.URL.Path, err)
+				http.Error(w, "frontend upstream unavailable", http.StatusBadGateway)
+			}
+			fmt.Printf("Proxying frontend requests to Next.js server on %s\n", cfg.FrontendProxyURL)
+			mux.Handle("/", nextjsProxy)
+		}
+	} else {
+		setupAPIOnlyMode(mux)
+	}
 
 	// Apply middlewares and start server
 	finalHandler := middleware.Chain(mux, middleware.CORS, middleware.Gzip)
@@ -60,3 +68,17 @@ func main() {
 		fmt.Printf("Error starting server: %s\n", err)
 	}
 }
+
+func setupAPIOnlyMode(mux *http.ServeMux) {
+	fmt.Println("Frontend proxy is disabled. API-only mode active.")
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"status":"ok","message":"PJSK Moe API Server"}`))
+			return
+		}
+		http.NotFound(w, r)
+	})
+}
+

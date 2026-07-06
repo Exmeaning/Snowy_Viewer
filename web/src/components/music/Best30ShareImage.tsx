@@ -100,9 +100,12 @@ const DIFFICULTY_SHORT: Record<string, string> = {
     append: "APD",
 };
 
-const JACKET_FALLBACK_SOURCES_BY_REGION: Record<"jp" | "cn", AssetSourceType[]> = {
-    jp: ["main-jp", "backup-jp", "overseas-jp", "overseas-backup-jp"],
-    cn: ["main-cn", "backup-cn", "overseas-cn", "overseas-backup-cn"],
+const JACKET_FALLBACK_SOURCES_BY_REGION: Record<string, AssetSourceType[]> = {
+    en: ["main-en", "overseas-en"],
+    jp: ["main-jp", "overseas-jp"],
+    cn: ["main-cn", "overseas-cn"],
+    tw: ["main-tw", "overseas-tw"],
+    kr: ["main-kr", "overseas-kr"],
 };
 
 // ==================== Helpers ====================
@@ -134,8 +137,10 @@ function buildJacketCandidateUrls(
     getMusicThumbnailUrl: (entry: { assetbundleName: string }) => string,
 ): string[] {
     const primaryUrl = getMusicThumbnailUrl({ assetbundleName });
-    const region: "jp" | "cn" = primaryUrl.includes("/cn-assets/") ? "cn" : "jp";
-    const fallbackUrls = JACKET_FALLBACK_SOURCES_BY_REGION[region].map((source) =>
+    const match = primaryUrl.match(/\/sekai-([a-z0-9\-]+)-assets/);
+    const region = match ? match[1] : "jp";
+    const fallbackSources = JACKET_FALLBACK_SOURCES_BY_REGION[region] || JACKET_FALLBACK_SOURCES_BY_REGION.jp;
+    const fallbackUrls = fallbackSources.map((source) =>
         getMusicJacketUrl(assetbundleName, source)
     );
     return [primaryUrl, ...fallbackUrls];

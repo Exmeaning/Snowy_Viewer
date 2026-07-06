@@ -12,19 +12,7 @@ import { MOE_BGM_DURATIONS_URL } from "./assets";
 import { getMasterDataCache, setMasterDataCache, isIndexedDBAvailable } from "./masterdata-cache";
 
 // Server source type
-export type ServerSourceType = "jp" | "cn";
-
-// Server domain configurations (primary)
-const SERVER_DOMAINS: Record<ServerSourceType, string> = {
-    jp: "sekaimaster.exmeaning.com",
-    cn: "sekaimaster-cn.exmeaning.com",
-};
-
-// Fallback server domains (used when primary fails, e.g., ISP blocking)
-const FALLBACK_DOMAINS: Record<ServerSourceType, string> = {
-    jp: "sk.exmeaning.com",
-    cn: "sk-cn.exmeaning.com",
-};
+export type ServerSourceType = "en" | "jp" | "cn" | "tw" | "kr";
 
 /**
  * Get current server from localStorage (client-side only)
@@ -32,7 +20,7 @@ const FALLBACK_DOMAINS: Record<ServerSourceType, string> = {
 function getCurrentServer(): ServerSourceType {
     if (typeof window === "undefined") return "jp";
     const saved = localStorage.getItem("server-source");
-    if (saved === "jp" || saved === "cn") return saved;
+    if (saved === "en" || saved === "jp" || saved === "cn" || saved === "tw" || saved === "kr") return saved;
 
     return "jp";
 }
@@ -49,8 +37,24 @@ function getLocalVersion(): string | null {
 /**
  * Get master base URL for runtime (respects server selection)
  */
+/**
+ * Get current asset source from localStorage (client-side only)
+ */
+function getCurrentAssetSource(): "main" | "overseas" {
+    if (typeof window === "undefined") return "main";
+    const saved = localStorage.getItem("asset-source");
+    if (saved === "overseas" || saved?.startsWith("overseas")) {
+        return "overseas";
+    }
+    return "main";
+}
+
+/**
+ * Get master base URL for runtime (respects server selection)
+ */
 function getMasterBaseUrl(): string {
-    return `https://${SERVER_DOMAINS[getCurrentServer()]}/master`;
+    const domain = getCurrentAssetSource() === "overseas" ? "metadata.pjsk.moe" : "metadata.exmeaning.com";
+    return `https://${domain}/${getCurrentServer()}/master`;
 }
 
 /**
@@ -58,14 +62,16 @@ function getMasterBaseUrl(): string {
  * Used when primary server fails (e.g., ISP blocking)
  */
 function getFallbackMasterBaseUrl(): string {
-    return `https://${FALLBACK_DOMAINS[getCurrentServer()]}/master`;
+    const domain = getCurrentAssetSource() === "overseas" ? "metadata.exmeaning.com" : "metadata.pjsk.moe";
+    return `https://${domain}/${getCurrentServer()}/master`;
 }
 
 /**
  * Get version URL for runtime (respects server selection)
  */
 function getVersionUrl(): string {
-    return `https://${SERVER_DOMAINS[getCurrentServer()]}/versions/current_version.json`;
+    const domain = getCurrentAssetSource() === "overseas" ? "metadata.pjsk.moe" : "metadata.exmeaning.com";
+    return `https://${domain}/${getCurrentServer()}/versions/current_version.json`;
 }
 
 /**
@@ -73,7 +79,8 @@ function getVersionUrl(): string {
  * Used when primary server fails (e.g., ISP blocking)
  */
 function getFallbackVersionUrl(): string {
-    return `https://${FALLBACK_DOMAINS[getCurrentServer()]}/versions/current_version.json`;
+    const domain = getCurrentAssetSource() === "overseas" ? "metadata.exmeaning.com" : "metadata.pjsk.moe";
+    return `https://${domain}/${getCurrentServer()}/versions/current_version.json`;
 }
 
 
@@ -294,21 +301,17 @@ export const MASTERDATA_VERSION_KEY = "masterdata-version";
  * independent of the global version, so the version-keyed cache would be incorrect.
  */
 export async function fetchMasterDataForServer<T>(server: "cn" | "jp" | "tw" | "kr" | "en", path: string): Promise<T> {
-    const masterServer: "cn" | "jp" = (server === "cn" || server === "tw" || server === "kr" || server === "en") ? "cn" : "jp";
-    const domain = SERVER_DOMAINS[masterServer];
-    const fallbackDomain = FALLBACK_DOMAINS[masterServer];
-
     // Add version param to avoid stale browser/CDN cache
     const localVersion = getLocalVersion();
     const query = localVersion ? `?v=${encodeURIComponent(localVersion)}` : "";
 
-    const primaryUrl = `https://${domain}/master/${path}${query}`;
+    const primaryUrl = `https://metadata.exmeaning.com/${server}/master/${path}${query}`;
     try {
         const response = await fetchWithCompression(primaryUrl);
         if (response.ok) return response.json();
     } catch { /* fall through */ }
 
-    const fallbackUrl = `https://${fallbackDomain}/master/${path}${query}`;
+    const fallbackUrl = `https://metadata.pjsk.moe/${server}/master/${path}${query}`;
     const fallbackResponse = await fetchWithCompression(fallbackUrl);
     if (!fallbackResponse.ok) {
         throw new Error(`Failed to fetch ${path} for server ${server}`);

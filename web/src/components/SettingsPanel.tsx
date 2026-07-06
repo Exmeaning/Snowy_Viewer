@@ -54,26 +54,12 @@ const assetLineOptions = [
     {
         key: "main",
         labelKey: "settings.assetSource.main",
-        jp: "main-jp",
-        cn: "main-cn",
-    },
-    {
-        key: "backup",
-        labelKey: "settings.assetSource.backup",
-        jp: "backup-jp",
-        cn: "backup-cn",
+        value: "main",
     },
     {
         key: "overseas",
         labelKey: "settings.assetSource.overseas",
-        jp: "overseas-jp",
-        cn: "overseas-cn",
-    },
-    {
-        key: "overseas-backup",
-        labelKey: "settings.assetSource.overseasBackup",
-        jp: "overseas-backup-jp",
-        cn: "overseas-backup-cn",
+        value: "overseas",
     },
 ] as const;
 
@@ -148,10 +134,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     }, [isOpen, onClose]);
 
     // Get current asset line label
-    const currentAssetLabel = assetLineOptions.find((opt) => {
-        const val = serverSource === "cn" ? opt.cn : opt.jp;
-        return val === assetSource;
-    })?.labelKey ?? "settings.assetSource.main";
+    const currentAssetLabel = assetLineOptions.find((opt) => opt.value === assetSource)?.labelKey ?? "settings.assetSource.main";
 
     if (!mounted) return null;
 
@@ -557,15 +540,22 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         >
                             <div className="p-2 space-y-1">
                                 {assetLineOptions.map((option) => {
-                                    const optionValue = serverSource === "cn" ? option.cn : option.jp;
+                                    const optionValue = option.value;
                                     const isSelected = assetSource === optionValue;
 
                                     return (
                                         <button
-                                            key={`${option.key}-${serverSource}`}
+                                            key={option.key}
                                             onClick={() => {
-                                                setAssetSource(optionValue);
                                                 setExpandedDropdown(null);
+                                                if (assetSource !== optionValue) {
+                                                    setAssetSource(optionValue);
+                                                    setTimeout(() => {
+                                                        const url = new URL(window.location.href);
+                                                        url.searchParams.set('_refresh', Date.now().toString());
+                                                        window.location.href = url.toString();
+                                                    }, 100);
+                                                }
                                             }}
                                             className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${isSelected
                                                 ? "bg-miku/10 text-miku"
@@ -589,51 +579,78 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </div>
                 </div>
 
-                {/* Server Source */}
+                {/* Server Source / Region Select */}
                 <div className="border-t border-slate-200/50 dark:border-slate-800/30 mt-4 pt-4">
                     <div className="mb-3">
                         <span className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">{t("settings.serverSource.sectionTitle")}</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
                         <button
-                            onClick={() => {
-                                if (serverSource !== "jp") {
-                                    setServerSource("jp");
-                                    // Trigger page refresh to reload data from new server
-                                    setTimeout(() => {
-                                        const url = new URL(window.location.href);
-                                        url.searchParams.set('_refresh', Date.now().toString());
-                                        window.location.href = url.toString();
-                                    }, 100);
-                                }
-                            }}
-                            className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${serverSource === "jp"
-                                ? "bg-rose-500 text-white shadow-md ring-2 ring-rose-300"
-                                : "bg-slate-100/80 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                            onClick={() => setExpandedDropdown(expandedDropdown === "serverSource" ? null : "serverSource")}
+                            className="w-full px-3 py-2 bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/40 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className="w-4 h-4 rounded-full bg-rose-500/20 flex items-center justify-center">
+                                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                                </span>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{t(`settings.serverSource.${serverSource}`)}</span>
+                            </div>
+                            <svg
+                                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "serverSource" ? "rotate-180" : ""}`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        {/* Server Source Dropdown Menu */}
+                        <div
+                            className={`absolute top-full left-0 w-full mt-2 liquid-glass-modal rounded-2xl overflow-hidden z-[1100] transition-all duration-200 origin-top transform ${expandedDropdown === "serverSource"
+                                ? "opacity-100 scale-100 visible"
+                                : "opacity-0 scale-95 invisible pointer-events-none"
                                 }`}
                         >
-                            {t("settings.serverSource.jp")}
-                        </button>
-                        <button
-                            onClick={() => {
-                                if (serverSource !== "cn") {
-                                    setServerSource("cn");
-                                    // Trigger page refresh to reload data from new server
-                                    setTimeout(() => {
-                                        const url = new URL(window.location.href);
-                                        url.searchParams.set('_refresh', Date.now().toString());
-                                        window.location.href = url.toString();
-                                    }, 100);
-                                }
-                            }}
-                            className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${serverSource === "cn"
-                                ? "bg-red-600 text-white shadow-md ring-2 ring-red-400"
-                                : "bg-slate-100/80 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
-                                }`}
-                        >
-                            {t("settings.serverSource.cn")}
-                        </button>
+                            <div className="p-2 space-y-1">
+                                {(["en", "jp", "cn", "tw", "kr"] as const).map((region) => {
+                                    const isSelected = serverSource === region;
+
+                                    return (
+                                        <button
+                                            key={region}
+                                            onClick={() => {
+                                                setExpandedDropdown(null);
+                                                if (serverSource !== region) {
+                                                    setServerSource(region);
+                                                    // Trigger page refresh to reload data from new server
+                                                    setTimeout(() => {
+                                                        const url = new URL(window.location.href);
+                                                        url.searchParams.set('_refresh', Date.now().toString());
+                                                        window.location.href = url.toString();
+                                                    }, 100);
+                                                }
+                                            }}
+                                            className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${isSelected
+                                                ? "bg-rose-500/10 text-rose-500"
+                                                : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30"
+                                                }`}
+                                        >
+                                            <span
+                                                className={`w-3 h-3 rounded-full shrink-0 ${isSelected ? "bg-rose-500" : "bg-slate-300"}`}
+                                            />
+                                            <span>{t(`settings.serverSource.${region}`)}</span>
+                                            {isSelected && (
+                                                <svg className="w-3.5 h-3.5 ml-auto text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                 </div>
 

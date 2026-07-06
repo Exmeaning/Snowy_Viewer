@@ -745,14 +745,15 @@ export const enUSMessages = {
         assetSource: {
             sectionTitle: "Asset line",
             main: "Main",
-            backup: "Backup",
-            overseas: "Overseas Main",
-            overseasBackup: "Overseas Backup",
+            overseas: "Overseas",
         },
         serverSource: {
             sectionTitle: "Data server",
-            jp: "JP",
-            cn: "Simplified Chinese",
+            en: "Global (EN)",
+            jp: "Japan (JP)",
+            cn: "China (CN)",
+            tw: "Taiwan (TW)",
+            kr: "Korea (KR)",
         },
         dataVersion: {
             sectionTitle: "Data version & cache",
@@ -770,7 +771,7 @@ export const enUSMessages = {
             refreshing: "Refreshing...",
         },
         footer: {
-            version: "Moesekai · 1.3-preview-beta3",
+            version: "Moesekai · 1.4-preview-beta1",
         },
         sidebar: {
             notLoggedIn: "Not signed in",
@@ -1092,8 +1093,11 @@ export const enUSMessages = {
             description: "Choose a story type to start reading",
             backToStory: "Back to Stories",
             serverSource: {
-                cn: "CN",
+                en: "Global",
                 jp: "JP",
+                cn: "CN",
+                tw: "TW",
+                kr: "KR",
             },
             navigation: {
                 previousEpisode: "Previous Episode",

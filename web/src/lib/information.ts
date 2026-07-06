@@ -1,6 +1,5 @@
-import type { ServerSourceType } from "@/contexts/ThemeContext";
 
-export type InformationServer = ServerSourceType;
+export type InformationServer = "jp" | "cn";
 export type InformationBrowseType = "internal" | "external" | string;
 export type InformationStatus = "upcoming" | "ongoing" | "ended" | "permanent";
 

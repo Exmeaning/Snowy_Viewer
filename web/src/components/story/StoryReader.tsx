@@ -214,6 +214,7 @@ export function StoryReader({
         const closestBg = [...bgList].reverse().find(bg => bg.index <= activeIndex);
         if (closestBg && activeBgUrlRef.current !== closestBg.url) {
             activeBgUrlRef.current = closestBg.url;
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setActiveBgUrl(closestBg.url);
         }
     }, [isPlaying, activeIndex, immersionMode, bgList]);

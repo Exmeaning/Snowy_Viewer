@@ -1,16 +1,6 @@
-/**
- * Story Asset Loader
- * Fetches story scenario JSON from the storage mirror.
- *
- * Base URLs:
- *   https://storage.exmeaning.com/sekai-jp-assets/  (JP)
- *   https://storage.exmeaning.com/sekai-cn-assets/  (CN)
- *
- * Files are direct JSON, no decompression needed.
- */
-
 import { IScenarioData } from "@/types/story";
-import { ASSET_DOMAIN_MAIN } from "./assets";
+import { type AssetSourceType } from "@/contexts/ThemeContext";
+import { getAssetBaseUrl } from "./assets";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -33,8 +23,8 @@ export class StoryAssetMissingError extends Error {
 
 // ── Path builder ──────────────────────────────────────────────────────────────
 
-function buildPath(type: StoryAssetType, lang: "jp" | "cn", params: AssetParams): string {
-    const base = `${ASSET_DOMAIN_MAIN}/sekai-${lang}-assets/`;
+function buildPath(type: StoryAssetType, source: AssetSourceType, params: AssetParams): string {
+    const base = `${getAssetBaseUrl(source)}/`;
     switch (type) {
         case "unit":
             return `${base}scenario/unitstory/${params.assetbundleName}/${params.scenarioId}.json`;
@@ -55,10 +45,10 @@ function buildPath(type: StoryAssetType, lang: "jp" | "cn", params: AssetParams)
 
 export async function fetchStoryAssetFromMirror(
     type: StoryAssetType,
-    lang: "jp" | "cn",
+    source: AssetSourceType,
     params: AssetParams
 ): Promise<IScenarioData> {
-    const url = buildPath(type, lang, params);
+    const url = buildPath(type, source, params);
     try {
         const res = await fetch(url);
         if (res.ok) {
@@ -68,7 +58,7 @@ export async function fetchStoryAssetFromMirror(
         // network error
     }
 
-    // Strip ASSET_DOMAIN_MAIN prefix for display
-    const displayPath = url.replace(ASSET_DOMAIN_MAIN + "/", "");
+    // Strip domain and assets prefix for display
+    const displayPath = url.replace(/^https?:\/\/[^\/]+\/(sekai-[a-z]+-assets\/)?/, "");
     throw new StoryAssetMissingError([displayPath]);
 }

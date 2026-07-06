@@ -66,7 +66,7 @@ export default function StoryCardReaderClient() {
                 // Load both parts
                 const loadPart = async (scenarioId: string, setData: typeof setPart1, setMissing: typeof setMissing1, setErr: typeof setError1) => {
                     try {
-                        const raw = await fetchStoryAssetFromMirror("card", lang, { assetbundleName: c.assetbundleName, scenarioId });
+                        const raw = await fetchStoryAssetFromMirror("card", assetSource, { assetbundleName: c.assetbundleName, scenarioId });
                         setData(await processScenarioForDisplay(raw, "card", assetSource, serverSource));
                     } catch (err) {
                         if (err instanceof StoryAssetMissingError) setMissing(err.missingPaths);

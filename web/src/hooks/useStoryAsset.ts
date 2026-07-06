@@ -67,7 +67,7 @@ export function useStoryAsset({
             setTranslationSource(undefined);
 
             try {
-                const rawData = await fetchStoryAssetFromMirror(type, lang, params!);
+                const rawData = await fetchStoryAssetFromMirror(type, assetSource, params!);
                 if (cancelled) return;
 
                 const processed = await processScenarioForDisplay(rawData, "scenario", assetSource, serverSource);

@@ -1,8 +1,8 @@
 import fs from 'fs';
 
 const DEFAULT_MASTER_DATA_URLS = [
-    'https://sekaimaster.exmeaning.com/master',
-    'https://sk.exmeaning.com/master',
+    'https://metadata.exmeaning.com/jp/master',
+    'https://metadata.pjsk.moe/jp/master',
 ];
 
 const DEFAULT_MANGA_DATA_URLS = [

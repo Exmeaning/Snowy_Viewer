@@ -12,6 +12,7 @@ import {
     getInformationStatusTone,
     getInformationTagTone,
     resolveInformationPath,
+    normalizeInformationServer,
 } from "@/lib/information";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import Modal from "@/components/common/Modal";
@@ -102,7 +103,7 @@ function AnnouncementModal({
 export default function AnnouncementSection() {
     const { t, formatDate } = useI18n();
     const { serverSource } = useTheme();
-    const [activeServer, setActiveServer] = useState<InformationServer>(serverSource);
+    const [activeServer, setActiveServer] = useState<InformationServer>(normalizeInformationServer(serverSource));
     const [announcements, setAnnouncements] = useState<InformationItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -111,7 +112,7 @@ export default function AnnouncementSection() {
 
     // Sync activeServer with serverSource on mount or when serverSource changes
     useEffect(() => {
-        setActiveServer(serverSource);
+        setActiveServer(normalizeInformationServer(serverSource));
     }, [serverSource]);
 
     useEffect(() => {

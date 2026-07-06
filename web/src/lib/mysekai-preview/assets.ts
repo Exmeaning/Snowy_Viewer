@@ -1,13 +1,8 @@
-import type { AssetSourceType } from "@/contexts/ThemeContext";
+import { type AssetSourceType, getAssetSourceRegion } from "@/contexts/ThemeContext";
 import { buildRawAssetUrl, getAssetBaseUrl, getMysekaiRawAssetUrl, getStoryBgmUrl, getMusicVocalAudioUrl } from "@/lib/assets";
 
 export const MYSEKAI_PREVIEW_STORAGE_KEY = "mysekai_scene_preview_options_v2";
 export const LOCAL_TEST_LAYOUT_URL = "/data/mysekai-preview/testmysekai.json";
-
-const MASTER_DATA_BASE_URL_BY_REGION: Record<"jp" | "cn", string> = {
-    jp: "https://sk.exmeaning.com/master",
-    cn: "https://sk-cn.exmeaning.com/master",
-};
 
 export function getMysekaiCandidateRawUrls(assetPath: string, source: AssetSourceType): string[] {
     if (/^https?:\/\//i.test(assetPath)) return [assetPath];
@@ -15,9 +10,12 @@ export function getMysekaiCandidateRawUrls(assetPath: string, source: AssetSourc
 }
 
 export function getMysekaiMasterDataUrls(path: string, source: AssetSourceType): string[] {
-    const region = source.endsWith("-cn") ? "cn" : "jp";
+    const region = getAssetSourceRegion(source);
     const normalizedPath = path.replace(/^\/+/, "");
-    return [`${MASTER_DATA_BASE_URL_BY_REGION[region]}/${normalizedPath}`];
+    return [
+        `https://metadata.exmeaning.com/${region}/master/${normalizedPath}`,
+        `https://metadata.pjsk.moe/${region}/master/${normalizedPath}`,
+    ];
 }
 
 function withoutMdlPrefix(assetName: string): string {
@@ -34,7 +32,7 @@ function customBasePreviewTexturePath(assetName: string, textureId: number): str
     const shortName = withoutMdlPrefix(assetName);
     const customPart = shortName.match(/^cst\d+_custom_(.+)$/)?.[1] || "";
     const suffix = /^collection\d+board\d+$/.test(customPart) ? `_preview_${textureId}` : "_preview";
-    return `fixture/${assetName}/texture/tex_${shortName}${suffix}.webp`;
+    return `fixture/${assetName}/tex_${shortName}${suffix}.webp`;
 }
 
 function customAttachTextureName(assetName: string): string {
@@ -128,7 +126,7 @@ function getFixtureAliasObjectFile(assetName: string): string | null {
 }
 
 function customAttachTexturePath(assetName: string, fileName: string): string {
-    return `custom_fixture_attach/${assetName}/texture/${fileName}.webp`;
+    return `custom_fixture_attach/${assetName}/${fileName}.webp`;
 }
 
 function customAttachKnownTextureIdPaths(assetName: string, baseName: string, textureId: number, validTextureIds: number[] = [1]): string[] {
@@ -142,7 +140,7 @@ function getRootAssetCandidateUrls(assetPath: string, source: AssetSourceType): 
 
 export function getFixtureObjectPaths(assetName: string, handleType?: string, fixtureType?: string): string[] {
     if (fixtureType === "canvas" || isCanvasFixtureAsset(assetName)) {
-        return [`fixture/${assetName}/model/${assetName}.obj`];
+        return [`fixture/${assetName}/${assetName}.obj`];
     }
     if (handleType === "road" || /^mdl_non200[13]_road_/.test(assetName)) {
         return [`fixture/${assetName}/mdl_non1002_way_basemodel1.obj`];
@@ -164,7 +162,7 @@ export function getFixtureObjectPaths(assetName: string, handleType?: string, fi
 
 export function getCustomFixtureAttachObjectPaths(assetName: string): string[] {
     const modelObjectFile = CUSTOM_ATTACH_MODEL_OBJECT_FILE_BY_ASSET[assetName];
-    if (modelObjectFile) return [`custom_fixture_attach/${assetName}/model/${modelObjectFile}`];
+    if (modelObjectFile) return [`custom_fixture_attach/${assetName}/${modelObjectFile}`];
     const objectFile = CUSTOM_ATTACH_OBJECT_FILE_BY_ASSET[assetName] || `${assetName}.obj`;
     return [`custom_fixture_attach/${assetName}/${objectFile}`];
 }
@@ -181,13 +179,13 @@ export function getFixtureTexturePaths(assetName: string, textureId: number, han
     }
     if (handleType === "idle_timeline" || /^mdl_clb1102_fixture_egg\d+$/.test(assetName)) {
         return uniquePaths([
-            `fixture/${assetName}/texture/tex_${shortName}_body_${textureId}.webp`,
-            `fixture/${assetName}/texture/tex_${shortName}_body_1.webp`,
+            `fixture/${assetName}/tex_${shortName}_body_${textureId}.webp`,
+            `fixture/${assetName}/tex_${shortName}_body_1.webp`,
         ]);
     }
     return uniquePaths([
-        `fixture/${assetName}/texture/tex_${shortName}_${textureId}.webp`,
-        `fixture/${assetName}/texture/tex_${shortName}_1.webp`,
+        `fixture/${assetName}/tex_${shortName}_${textureId}.webp`,
+        `fixture/${assetName}/tex_${shortName}_1.webp`,
     ]);
 }
 
@@ -232,7 +230,7 @@ function buildRoomSkinUvsetTexturePaths(assetName: string, textureId: number, pr
     const out: string[] = [];
     for (const texId of uniquePaths([String(textureId), "1"])) {
         for (let uv = 1; uv <= 4; uv++) {
-            out.push(`site/field/my_room_asset/skin/${assetName}/texture/tex_${assetName}_${prefix}_uvset${uv}_${texId}.webp`);
+            out.push(`site/field/my_room_asset/skin/${assetName}/tex_${assetName}_${prefix}_uvset${uv}_${texId}.webp`);
         }
     }
     return uniquePaths(out);
@@ -248,8 +246,8 @@ export function getRoomSkinWallTexturePaths(assetName: string, textureId: number
 
 export function getRoomSkinDoorTexturePaths(assetName: string, textureId: number): string[] {
     return uniquePaths([
-        `site/field/my_room_asset/skin/${assetName}/texture/tex_${assetName}_door_door1_${textureId}.webp`,
-        `site/field/my_room_asset/skin/${assetName}/texture/tex_${assetName}_door_door1_1.webp`,
+        `site/field/my_room_asset/skin/${assetName}/tex_${assetName}_door_door1_${textureId}.webp`,
+        `site/field/my_room_asset/skin/${assetName}/tex_${assetName}_door_door1_1.webp`,
     ]);
 }
 
@@ -261,7 +259,7 @@ export function getRoomSkinDoorObjectPaths(assetName: string): string[] {
 }
 
 export function getOutdoorGrassTexturePath(): string {
-    return "site/field/grasslands/texture/tex_site_base_grasslands_grass01.webp";
+    return "site/field/grasslands/tex_site_base_grasslands_grass01.webp";
 }
 
 export function getMysekaiCanvasCardTextureUrls(assetbundleName: string, trained: boolean, fixtureId: number, source: AssetSourceType): string[] {

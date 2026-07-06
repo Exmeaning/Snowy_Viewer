@@ -744,14 +744,15 @@ export const jaJPMessages = {
     assetSource: {
       sectionTitle: 'アセット回線',
       main: 'メイン',
-      backup: 'バックアップ',
-      overseas: '海外メイン',
-      overseasBackup: '海外バックアップ'
+      overseas: '海外回線'
     },
     serverSource: {
       sectionTitle: 'データサーバー',
-      jp: '日本版',
-      cn: '簡体字'
+      en: 'グローバル版 (EN)',
+      jp: '日本版 (JP)',
+      cn: '簡体字版 (CN)',
+      tw: '繁体字版 (TW)',
+      kr: '韓国版 (KR)'
     },
     dataVersion: {
       sectionTitle: 'データバージョンとキャッシュ',
@@ -769,7 +770,7 @@ export const jaJPMessages = {
       refreshing: '更新中...'
     },
     footer: {
-      version: 'Moesekai · 1.3-preview-beta3'
+      version: 'Moesekai · 1.4-preview-beta1'
     },
     sidebar: {
       notLoggedIn: '未ログイン',
@@ -1091,8 +1092,11 @@ export const jaJPMessages = {
       description: 'Choose a story type to start reading',
       backToStory: 'ストーリーへ戻る',
       serverSource: {
-        cn: '簡体字 (CN)',
-        jp: '日本版 (JP)'
+        en: 'グローバル版',
+        jp: '日本版',
+        cn: '簡体字版',
+        tw: '繁体字版',
+        kr: '韓国版'
       },
       navigation: {
         previousEpisode: '前の話',

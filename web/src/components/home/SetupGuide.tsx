@@ -178,12 +178,12 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
       setIsPinging(false);
 
       // Auto select the route with the lower latency
-      const preferredType = mainPing <= overseasPing ? `main-${serverSource}` : `overseas-${serverSource}`;
+      const preferredType = mainPing <= overseasPing ? "main" : "overseas";
       setAssetSource(preferredType as AssetSourceType);
     };
 
     runPingTest();
-  }, [currentStep, serverSource, pings, isPinging, setAssetSource]);
+  }, [currentStep, pings, isPinging, setAssetSource]);
 
   if (!mounted || isExiting) return null;
 
@@ -434,9 +434,16 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                   </p>
                 </div>
 
-                <div className="flex flex-col gap-3 pt-2">
-                  {(["jp", "cn"] as ServerSourceType[]).map((srv) => {
+                <div className="flex flex-col gap-3 pt-2 max-h-[360px] overflow-y-auto pr-1">
+                  {(["jp", "cn", "en", "tw", "kr"] as ServerSourceType[]).map((srv) => {
                     const isSelected = serverSource === srv;
+                    const serverDescriptions: Record<ServerSourceType, string> = {
+                      en: "Global Event Schedule & Masterdata",
+                      jp: "JP Event Schedule & Masterdata",
+                      cn: "CN Event Schedule & Masterdata",
+                      tw: "TW Event Schedule & Masterdata",
+                      kr: "KR Event Schedule & Masterdata"
+                    };
                     return (
                       <button
                         key={srv}
@@ -444,7 +451,7 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                           setServerSource(srv);
                           handleStepChange(3);
                         }}
-                        className={`w-full p-4 rounded-2xl flex items-center justify-between border text-left font-bold transition-all duration-300 ${
+                        className={`w-full p-4 rounded-2xl flex items-center justify-between border text-left font-bold transition-all duration-300 shrink-0 ${
                           isSelected
                             ? "bg-white dark:bg-slate-800 shadow-md scale-[1.01]"
                             : "bg-white/40 dark:bg-slate-900/30 hover:bg-white/60 dark:hover:bg-slate-900/50 border-slate-200/50 dark:border-slate-800/40"
@@ -455,10 +462,10 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                       >
                         <div className="flex flex-col">
                           <span className="text-base text-slate-800 dark:text-slate-100">
-                            {srv === "jp" ? t("page.setup.serverJp") : t("page.setup.serverCn")}
+                            {t("settings.serverSource." + srv)}
                           </span>
                           <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
-                            {srv === "jp" ? "JP Event Schedule & Masterdata" : "CN Event Schedule & Masterdata"}
+                            {serverDescriptions[srv]}
                           </span>
                         </div>
                         {isSelected && (
@@ -494,8 +501,8 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
 
                 <div className="flex flex-col gap-3 pt-2">
                   {[
-                    { type: `main-${serverSource}` as AssetSourceType, label: t("page.setup.assetMain"), desc: "Primary CDN optimized for loading speeds" },
-                    { type: `overseas-${serverSource}` as AssetSourceType, label: t("page.setup.assetOverseas"), desc: "Global CDN fallback for overseas connections" }
+                    { type: "main" as AssetSourceType, label: t("page.setup.assetMain"), desc: "Primary CDN optimized for loading speeds" },
+                    { type: "overseas" as AssetSourceType, label: t("page.setup.assetOverseas"), desc: "Global CDN fallback for overseas connections" }
                   ].map((assetOpt) => {
                     const isSelected = assetSource === assetOpt.type;
                     return (
