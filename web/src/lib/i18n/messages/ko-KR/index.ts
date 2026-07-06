@@ -1,6 +1,6 @@
 import type { MessageTree } from "../types";
 
-export const enUSMessages = {
+export const koKRMessages = {
     common: {
         action: {
             close: "Close",
@@ -15,7 +15,7 @@ export const enUSMessages = {
             reset: "Reset",
             copy: "Copy",
             download: "Download",
-            share: "Share",
+            share: "Share"
         },
         imageActions: {
             previewNotReady: "The preview image is not ready yet. Please try again later.",
@@ -35,12 +35,12 @@ export const enUSMessages = {
             downloadSuccess: "Downloaded",
             downloadHintPrefix: "If the download did not start, try",
             downloadHintAction: "right-clicking the image (long-press on mobile) → Save Image",
-            downloadHintSuffix: ". Or install the latest browser:",
+            downloadHintSuffix: ". Or install the latest browser:"
         },
         errorBoundary: {
             title: "Something went wrong while loading this page",
             description: "This may be caused by a network issue or a page update. Please try refreshing the page.",
-            refreshPage: "Refresh Page",
+            refreshPage: "Refresh Page"
         },
         state: {
             loading: "Loading...",
@@ -50,44 +50,44 @@ export const enUSMessages = {
             noResult: "No matching results found",
             noCache: "Not cached",
             refreshing: "Refreshing...",
-            unavailable: "Unavailable",
+            unavailable: "Unavailable"
         },
         separator: {
             or: "or",
-            then: "then",
+            then: "then"
         },
         shortcut: {
             enter: "Enter",
-            escape: "Esc",
+            escape: "Esc"
         },
         form: {
             uid: "UID",
             gameUid: "Game UID",
-            server: "Server",
+            server: "Server"
         },
         server: {
             cn: "CN",
             jp: "JP",
-            tw: "TW",
+            tw: "TW"
         },
         relayServers: {
             tokyo1: {
-                name: "Tokyo 1",
+                name: "Tokyo 1"
             },
             tokyo2: {
-                name: "Tokyo 2",
+                name: "Tokyo 2"
             },
             seoul1: {
-                name: "Seoul 1",
+                name: "Seoul 1"
             },
             singapore1: {
-                name: "Singapore 1",
+                name: "Singapore 1"
             },
             regions: {
                 japan: "Japan",
                 korea: "Korea",
-                singapore: "Singapore",
-            },
+                singapore: "Singapore"
+            }
         },
         account: {
             selectAccount: "Select Account",
@@ -121,14 +121,14 @@ export const enUSMessages = {
             oauthAuthorizeBind: "Bind with OAuth2",
             manualBindHintStart: "Manual UID binding requires uploading data and enabling Public API in",
             manualBindHintHaruki: "Haruki Toolbox",
-            manualBindHintEnd: "first. OAuth2 binding does not require Public API to be enabled.",
+            manualBindHintEnd: "first. OAuth2 binding does not require Public API to be enabled."
         },
         accountDataErrors: {
             apiNotPublic: "This account's Public API is not enabled, and OAuth2 data access is unavailable. Please enable Public API in Haruki or authorize with OAuth2 again.",
             notFound: "User data was not found. Please check the UID/server and make sure the data has been uploaded to Haruki.",
             oauthReauthRequired: "The current OAuth2 authorization has expired. Please authorize again; if Public API is enabled for this account, refresh the page and try again.",
             oauthAccessFailed: "OAuth2 data access failed and cannot fall back to Public API. Please authorize again or try later.",
-            networkError: "Network error. Please try again later.",
+            networkError: "Network error. Please try again later."
         },
         data: {
             uploadTimeTitle: "Data upload time",
@@ -136,7 +136,7 @@ export const enUSMessages = {
             twMasterdataWarning: "TW uses CN masterdata, so data may be inaccurate",
             twMasterdataFallbackWarning: "TW uses CN masterdata; some cards not yet implemented on CN have been supplemented with JP data, so data may be inaccurate",
             twMusicFallbackWarning: "TW uses CN data; some songs not yet implemented on CN have been supplemented with JP data and may have compatibility issues",
-            suiteUploadHint: "Please make sure Suite data has been uploaded to Haruki",
+            suiteUploadHint: "Please make sure Suite data has been uploaded to Haruki"
         },
         harukiErrors: {
             apiNotPublic: "This user's public API is not enabled. Please open Haruki Toolbox and enable \"Public API Access\" first.",
@@ -146,7 +146,7 @@ export const enUSMessages = {
             oauthRefreshFailed: "Failed to refresh the OAuth2 account. Please try again later or check the console logs.",
             apiNotPublicShort: "Public API disabled",
             userNotFoundShort: "User not found",
-            networkErrorShort: "Network error",
+            networkErrorShort: "Network error"
         },
         oauthErrors: {
             accessDenied: "You canceled authorization, so no account was linked.",
@@ -168,9 +168,8 @@ export const enUSMessages = {
             clientIdMissing: "NEXT_PUBLIC_OAUTH2_CLIENT_ID is not configured.",
             redirectUriMissing: "OAuth2 redirect URI is not configured.",
             noBindings: "This authorization returned no usable bindings. Please confirm the Haruki account has linked and verified a game account.",
-            bindingParseFailed: "Could not parse the server or UID from the OAuth2 binding.",
+            bindingParseFailed: "Could not parse the server or UID from the OAuth2 binding."
         },
-
         filter: {
             title: "Filters",
             search: "Search",
@@ -232,7 +231,7 @@ export const enUSMessages = {
             character1: "Character 1",
             character2: "Character 2",
             unlimited: "Any",
-            sourceArea: "Source Area",
+            sourceArea: "Source Area"
         },
         progress: {
             collectionProgress: "Collection Progress",
@@ -243,17 +242,17 @@ export const enUSMessages = {
             notOwned: "Not Owned",
             noFc: "No FC",
             noAp: "No AP",
-            totalMaterialsSummary: "{count} material types, {total} total items",
+            totalMaterialsSummary: "{count} material types, {total} total items"
         },
         badge: {
             spoiler: "Spoiler",
             ongoing: "Ongoing",
-            mixed: "Mixed",
+            mixed: "Mixed"
         },
         status: {
             upcoming: "Upcoming",
             ongoing: "Ongoing",
-            ended: "Ended",
+            ended: "Ended"
         },
         cardSupplyTypes: {
             normal: "Permanent",
@@ -262,7 +261,7 @@ export const enUSMessages = {
             colorful_festival_limited: "Colorful Festival Limited",
             bloom_festival_limited: "Bloom Festival Limited",
             unit_event_limited: "World Link Limited",
-            collaboration_limited: "Collaboration Limited",
+            collaboration_limited: "Collaboration Limited"
         },
         skillTypes: {
             score_up: "Score",
@@ -274,10 +273,10 @@ export const enUSMessages = {
             score_up_character_rank: "Character Rank Score",
             other_member_score_up_reference_rate: "Reference Score",
             judgment_up: "Accuracy",
-            life_recovery: "Healer",
+            life_recovery: "Healer"
         },
         supportUnits: {
-            none: "Original",
+            none: "Original"
         },
         characters: {
             full: {
@@ -306,7 +305,7 @@ export const enUSMessages = {
                 "23": "Kagamine Len",
                 "24": "Megurine Luka",
                 "25": "MEIKO",
-                "26": "KAITO",
+                "26": "KAITO"
             },
             short: {
                 "1": "Ichika",
@@ -334,15 +333,15 @@ export const enUSMessages = {
                 "23": "Len",
                 "24": "Luka",
                 "25": "MEIKO",
-                "26": "KAITO",
-            },
+                "26": "KAITO"
+            }
         },
         gachaTypes: {
             ceil: "Ceiling Gacha",
             normal: "Normal Gacha",
             limited: "Limited Gacha",
             birthday: "Birthday Gacha",
-            colorful_festival: "Colorful Festival",
+            colorful_festival: "Colorful Festival"
         },
         units: {
             ln: "Leo/need",
@@ -353,7 +352,7 @@ export const enUSMessages = {
             vs: "Virtual Singer",
             mixed: "Mixed",
             other: "Other",
-            none: "None",
+            none: "None"
         },
         musicTags: {
             all: "All",
@@ -363,23 +362,23 @@ export const enUSMessages = {
             street: "Vivid BAD SQUAD",
             theme_park: "Wonderlands×Showtime",
             school_refusal: "Nightcord at 25:00",
-            other: "Other",
+            other: "Other"
         },
         musicCategories: {
             mv: "3D MV",
             mv_2d: "2D MV",
             original: "Original MV",
-            image: "Static Image",
+            image: "Static Image"
         },
         eventTypes: {
             marathon: "Marathon",
             cheerful_carnival: "Cheerful Carnival",
-            world_bloom: "World Bloom",
+            world_bloom: "World Bloom"
         },
         gachaCategories: {
             all: "All",
             wish_pick: "Wish Pick",
-            normal_pickup: "Pickup",
+            normal_pickup: "Pickup"
         },
         virtualLiveTypes: {
             normal: "Normal",
@@ -387,7 +386,7 @@ export const enUSMessages = {
             archive: "Archive",
             cheerful_carnival: "Cheerful Carnival",
             connect_live: "Connect Live",
-            streaming: "Streaming",
+            streaming: "Streaming"
         },
         field: {
             name: "Name",
@@ -404,7 +403,7 @@ export const enUSMessages = {
             exchangeRelations: "Exchange Relations",
             asExchangeCost: "As exchange cost ({count})",
             asExchangeReward: "As exchange reward ({count})",
-            remainingItems: "{count} more...",
+            remainingItems: "{count} more..."
         },
         materialTypes: {
             common: "Common",
@@ -418,7 +417,7 @@ export const enUSMessages = {
             character_rank_exp_ticket: "Wish Droplet",
             card_episode_release_ticket: "Story Unlock Ticket",
             auto_exchange_music_vocal_ticket: "Connect Live Vocal Ticket",
-            birthday_party_delivery: "Birthday Party Dew",
+            birthday_party_delivery: "Birthday Party Dew"
         },
         mysekaiMaterialTypes: {
             wood: "Wood",
@@ -427,34 +426,34 @@ export const enUSMessages = {
             plant: "Plant",
             tone: "Tone",
             game_character: "Character Memory",
-            birthday_party: "Birthday Party",
+            birthday_party: "Birthday Party"
         },
         mysekaiSites: {
-            5: "Starting Plaza",
-            6: "Wish Beach",
-            7: "Romantic Field",
-            8: "Forgotten Place",
-            areaFallback: "Area {id}",
+            "5": "Starting Plaza",
+            "6": "Wish Beach",
+            "7": "Romantic Field",
+            "8": "Forgotten Place",
+            areaFallback: "Area {id}"
         },
         costume: {
             partTypes: {
                 head: "Hair Accessory",
                 hair: "Hair",
-                body: "Outfit",
+                body: "Outfit"
             },
             sources: {
                 card: "Card Costume",
                 shop: "Shop Purchase",
-                other: "Other",
+                other: "Other"
             },
             rarities: {
                 rare: "Rare",
-                normal: "Normal",
+                normal: "Normal"
             },
             genders: {
                 female: "Female",
-                male: "Male",
-            },
+                male: "Male"
+            }
         },
         exchange: {
             categories: {
@@ -466,21 +465,21 @@ export const enUSMessages = {
                 common_ticket: "Common Exchange Ticket",
                 consume_material: "Consumable Material",
                 home_exchange: "MySekai Exchange",
-                mysekai_material_game_character: "Character Memory Exchange",
+                mysekai_material_game_character: "Character Memory Exchange"
             },
             types: {
                 normal: "Permanent",
-                beginner: "Beginner",
+                beginner: "Beginner"
             },
             refreshCycles: {
                 none: "No time limit",
-                monthly: "Monthly refresh",
+                monthly: "Monthly refresh"
             },
             statuses: {
                 active: "Active",
                 upcoming: "Upcoming",
                 ended: "Ended",
-                permanent: "Permanent",
+                permanent: "Permanent"
             },
             rewardTypes: {
                 card: "Card",
@@ -500,7 +499,7 @@ export const enUSMessages = {
                 character_rank_exp: "Character Rank EXP",
                 coin: "Coin",
                 jewel: "Crystal",
-                virtual_coin: "Virtual Coin",
+                virtual_coin: "Virtual Coin"
             },
             limitTimes: "Limit {count}",
             resourceFallbacks: {
@@ -519,15 +518,15 @@ export const enUSMessages = {
                 avatarCoordinate: "Avatar Coordinate #{id}",
                 mysekaiItem: "MySekai Item #{id}",
                 mysekaiTool: "MySekai Tool #{id}",
-                character: "Character #{id}",
-            },
+                character: "Character #{id}"
+            }
         },
         honor: {
             rarities: {
                 low: "Normal",
                 middle: "Wing",
                 high: "Flower",
-                highest: "Star",
+                highest: "Star"
             },
             types: {
                 achievement: "Achievement",
@@ -542,10 +541,10 @@ export const enUSMessages = {
                 world_bloom: "World Bloom",
                 main_story: "Main Story",
                 challenge_live: "Challenge Live",
-                virtual_live: "Virtual Live",
-            },
+                virtual_live: "Virtual Live"
+            }
         },
-        virtualSingerWithUnit: "Virtual Singer ({unit})",
+        virtualSingerWithUnit: "Virtual Singer ({unit})"
     },
     layout: {
         nav: {
@@ -561,7 +560,7 @@ export const enUSMessages = {
                 story: "Story",
                 community: "Community",
                 tools: "Tools",
-                personal: "Profile",
+                personal: "Profile"
             },
             items: {
                 cards: "Cards",
@@ -606,8 +605,8 @@ export const enUSMessages = {
                 myMusics: "My Musics",
                 myMaterials: "My Materials",
                 support: "Support",
-                about: "About",
-            },
+                about: "About"
+            }
         },
         breadcrumb: {
             expandNavigation: "Expand navigation",
@@ -615,7 +614,7 @@ export const enUSMessages = {
             expandItems: "Expand sibling navigation",
             groupLabel: "Group",
             itemLabel: "Item",
-            detailLabel: "Detail",
+            detailLabel: "Detail"
         },
         footer: {
             nonProfit: "Non-Profit Organization",
@@ -623,7 +622,7 @@ export const enUSMessages = {
             termsOfService: "Terms of Service",
             copyrightNotice: "This site only displays materials; all game rights belong to SEGA / Colorful Palette.",
             fanNotice: "This is a fan-made site and a non-commercial database for research purposes only.",
-            generatedBy: "Generated by",
+            generatedBy: "Generated by"
         },
         groupPages: {
             cards: "Browse all card data",
@@ -667,8 +666,8 @@ export const enUSMessages = {
             myMusics: "Track your song progress",
             myMaterials: "Check your resource inventory",
             patreon: "Support ongoing development",
-            about: "About the Moesekai project",
-        },
+            about: "About the Moesekai project"
+        }
     },
     search: {
         commandPalette: {
@@ -680,7 +679,7 @@ export const enUSMessages = {
             footer: {
                 navigate: "Navigate",
                 open: "Open",
-                close: "Close",
+                close: "Close"
             },
             dynamicGroups: {
                 events: "Events",
@@ -689,96 +688,96 @@ export const enUSMessages = {
                 gacha: "Gacha",
                 mysekai: "Furniture",
                 costumes: "Costumes",
-                live: "Lives",
-            },
-        },
+                live: "Lives"
+            }
+        }
     },
     settings: {
-        title: "Settings",
+        title: "설정",
         appearance: {
-            sectionTitle: "Appearance",
-            system: "System",
-            light: "Light",
-            dark: "Dark",
+            sectionTitle: "화면 모드",
+            system: "시스템 설정",
+            light: "라이트 모드",
+            dark: "다크 모드"
         },
         uiLanguage: {
-            sectionTitle: "Interface language",
-            label: "Interface language",
-            description: "Change the display language of the site UI",
-            machineTranslationNotice: "Some text uses machine translation and may be inaccurate.",
+            sectionTitle: "언어 설정",
+            label: "언어",
+            description: "인터페이스 언어 변경",
+            machineTranslationNotice: "일부 텍스트는 기계 번역을 사용하므로 부정확할 수 있습니다.",
             options: {
-                zhCN: "Chinese (Simplified)",
+                zhCN: "简体中文",
                 enUS: "English",
-                jaJP: "Japanese",
-                koKR: "Korean",
-            },
+                jaJP: "日本語",
+                koKR: "한국어"
+            }
         },
         themeColor: {
-            sectionTitle: "Theme color",
+            sectionTitle: "테마 색상"
         },
         backgroundAnimationBudget: {
-            sectionTitle: "Background animation",
-            on: "On",
-            off: "Off",
-            onDescription: "Enable background animation: floating shards with scroll parallax. Lightweight and battery-friendly.",
-            offDescription: "Disable background animation: keeps only a static gradient background, with no shards, animation, or parallax."
+            sectionTitle: "배경 애니메이션",
+            on: "켜기",
+            off: "끄기",
+            onDescription: "배경 애니메이션 켜기: 떠다니는 조각들과 스크롤 효과 활성화",
+            offDescription: "배경 애니메이션 끄기: 정적 테마 그라데이션 배경만 유지"
         },
         contentDisplay: {
-            sectionTitle: "Content display",
+            sectionTitle: "콘텐츠 표시"
         },
         showSpoiler: {
-            label: "Show spoiler content",
-            description: "When enabled, unreleased cards, events, and songs will be shown",
+            label: "스포일러 콘텐츠 표시",
+            description: "활성화 시 아직 정식 출시되지 않은 카드, 이벤트, 음악을 표시합니다."
         },
         trainedThumbnail: {
-            label: "Use trained thumbnails by default for 3★/4★",
-            description: "When enabled, list pages will show trained thumbnails by default for 3★+ cards",
+            label: "3★/4★ 기본 일러스트를 특훈 후로 설정",
+            description: "활성화 시 목록 페이지에서 3★ 이상 카드의 특훈 후 일러스트가 기본으로 표시됩니다."
         },
         translation: {
-            label: "Use Chinese translations (Moe Translation)",
-            description: "When enabled, Japanese content will show Chinese translations",
+            label: "중국어 번역 사용 (Moe 번역)",
+            description: "활성화 시 일본어 콘텐츠에 중국어 번역이 표시됩니다."
         },
         ads: {
-            title: "Advertisement",
-            label: "Show ads",
-            description: "This helps support the project",
+            title: "광고",
+            label: "광고 표시",
+            description: "이것은 프로젝트 운영을 지원하는 방법 중 하나입니다."
         },
         assetSource: {
-            sectionTitle: "Asset line",
-            main: "Main",
-            overseas: "Overseas",
+            sectionTitle: "리소스 서버 회선",
+            main: "기본 회선",
+            overseas: "해외 회선"
         },
         serverSource: {
-            sectionTitle: "Data server",
-            en: "Global (EN)",
-            jp: "Japan (JP)",
-            cn: "China (CN)",
-            tw: "Taiwan (TW)",
-            kr: "Korea (KR)",
+            sectionTitle: "데이터 서버",
+            en: "글로벌 서버 (EN)",
+            jp: "일본 서버 (JP)",
+            cn: "중국 서버 (CN)",
+            tw: "대만 서버 (TW)",
+            kr: "한국 서버 (KR)"
         },
         dataVersion: {
-            sectionTitle: "Data version & cache",
-            cloudVersion: "Cloud version",
-            localCacheVersion: "Local cache version",
-            checking: "Checking...",
-            loadFailed: "Failed to load",
-            noCache: "Not cached",
-            cached: "Data is cached locally and future visits will load from the browser database",
-            stale: "A new version was detected and the data will update automatically on the next load",
-            firstVisit: "First visit: data will be loaded from the server and cached locally",
+            sectionTitle: "데이터 버전 및 캐시",
+            cloudVersion: "클라우드 버전",
+            localCacheVersion: "로컬 캐시 버전",
+            checking: "확인 중...",
+            loadFailed: "로드 실패",
+            noCache: "캐시 없음",
+            cached: "데이터가 로컬에 캐시되었습니다. 다음 접속부터 빠르게 로드됩니다.",
+            stale: "새 버전이 감지되었습니다. 다음 로드 시 데이터가 자동으로 업데이트됩니다.",
+            firstVisit: "First visit: data will be loaded from the server and cached locally"
         },
         refresh: {
             idle: "Force refresh all data",
-            refreshing: "Refreshing...",
+            refreshing: "Refreshing..."
         },
         footer: {
-            version: "Moesekai · 1.4-preview-beta1",
+            version: "Moesekai · 1.4-preview-beta1"
         },
         sidebar: {
             notLoggedIn: "Not signed in",
             manageAccount: "Manage account",
-            bindAccount: "Connect account",
-        },
+            bindAccount: "Connect account"
+        }
     },
     shortcuts: {
         title: "Keyboard Shortcuts",
@@ -787,7 +786,7 @@ export const enUSMessages = {
             navigation: "Navigation",
             interface: "Interface",
             search: "Search",
-            other: "Other",
+            other: "Other"
         },
         entries: {
             "sidebar-focus-prev": "Move sidebar up",
@@ -813,57 +812,57 @@ export const enUSMessages = {
             "toggle-search-wildcard": "Toggle wildcard search",
             "toggle-shortcuts-help": "Keyboard shortcuts",
             "close-overlay": "Close dialog",
-            "list-clear-focus": "Clear list focus",
-        },
+            "list-clear-focus": "Clear list focus"
+        }
     },
     page: {
         setup: {
-            hello: "Hello",
+            hello: "안녕하세요",
             welcome: "Welcome to Moesekai",
             welcomeDesc: "Configure your preferences to begin your musical journey.",
             welcomeBilingual: "Welcome to Moesekai / 欢迎使用 Moesekai",
             welcomeBilingualDesc: "Configure your preferences to begin your musical journey.\n设定您的个性化偏好，开启音乐世界之旅。",
             getStarted: "Get Started",
             getStartedBilingual: "Get Started / 开始设置",
-            languageTitle: "Select Language",
-            languageDesc: "Choose your preferred interface language. You can change this anytime in settings.",
-            languageBilingualTitle: "Select Language / 选择语言",
-            languageBilingualDesc: "Choose your interface language. 之后也可以在设置中随时修改。",
+            languageTitle: "언어 선택",
+            languageDesc: "선호하는 인터페이스 언어를 선택해 주세요. 언제든지 설정에서 변경할 수 있습니다.",
+            languageBilingualTitle: "언어 선택 / Select Language",
+            languageBilingualDesc: "선호하는 인터페이스 언어를 선택해 주세요. You can change this anytime in settings.",
             languageOptionSubtitles: {
                 "zh-CN": "简体中文 / Simplified Chinese",
-                "en-US": "English / 英语",
+                "en-US": "English / 영어",
                 "ja-JP": "日本語 / Japanese",
-                "ko-KR": "한국어 / Korean",
+                "ko-KR": "한국어 / Korean"
             },
-            serverTitle: "Select Data Server",
-            serverDesc: "Choose the default data server to load events, songs, and cards.",
-            serverJp: "Japan Server (JP)",
-            serverCn: "Simplified Chinese Server (CN)",
-            assetTitle: "Select Assets Route",
-            assetDesc: "Choose a CDN route to load game assets (images, music, etc.).",
-            assetMain: "Main Route",
-            assetOverseas: "Overseas Main Route",
-            themeTitle: "Appearance & Theme",
-            themeDesc: "Choose a character-inspired theme color and appearance preference.",
-            appearanceTitle: "Appearance",
-            backgroundAnimationTitle: "Background animation budget",
-            themeColorTitle: "Theme Color (Character Signature)",
-            contentTitle: "Content Preferences",
-            contentDesc: "Configure how content and card graphics are loaded and displayed.",
-            finishTitle: "All Set!",
-            finishDesc: "Your preferences have been successfully configured. Welcome to Moesekai!",
-            startExploring: "Start Exploring",
-            stepIndicator: "Step {current} of {total}",
-            next: "Next",
-            back: "Back",
-            appearanceMockLight: "Light Style",
-            appearanceMockDark: "Dark Style",
-            appearanceMockSystem: "Sync System",
-            testingPing: "Testing ping...",
-            timeout: "Timeout",
+            serverTitle: "데이터 서버 선택",
+            serverDesc: "기본으로 로드할 데이터 서버를 선택해 주세요. 이벤트, 악곡, 카드 버전을 결정합니다.",
+            serverJp: "일본 서버 (JP)",
+            serverCn: "중국 서버 (CN)",
+            assetTitle: "리소스 회선 선택",
+            assetDesc: "게임 리소스(이미지, 음악 등)를 로드할 CDN 회선을 선택해 주세요.",
+            assetMain: "기본 회선",
+            assetOverseas: "해외 기본 회선",
+            themeTitle: "테마 및 디자인",
+            themeDesc: "캐릭터 테마 색상과 테마 스타일을 선택해 주세요.",
+            appearanceTitle: "테마 스타일",
+            backgroundAnimationTitle: "배경 애니메이션 설정",
+            themeColorTitle: "테마 색상 (캐릭터 고유 색상)",
+            contentTitle: "콘텐츠 표시 설정",
+            contentDesc: "카드 이미지와 스토리 번역 등의 표시 방식을 설정해 주세요.",
+            finishTitle: "설정 완료!",
+            finishDesc: "설정이 성공적으로 저장되었습니다. Moesekai에 오신 것을 환영합니다!",
+            startExploring: "시작하기",
+            stepIndicator: "{current}단계 / 총 {total}단계",
+            next: "다음",
+            back: "이전",
+            appearanceMockLight: "라이트 테마",
+            appearanceMockDark: "다크 테마",
+            appearanceMockSystem: "시스템 설정 동기화",
+            testingPing: "속도 측정 중...",
+            timeout: "시간 초과",
             skip: "Skip",
             skipBilingual: "Skip / 跳过",
-            settingsHint: "Tip: You can modify these configurations at any time in the settings icon (⚙️) at the top-right.",
+            settingsHint: "Tip: You can modify these configurations at any time in the settings icon (⚙️) at the top-right."
         },
         home: {
             formerName: "(formerly Snowy SekaiViewer)",
@@ -873,13 +872,13 @@ export const enUSMessages = {
                 dynamics: "Announcements",
                 friends: "Friends",
                 specialThanks: "Credits",
-                upcomingBirthdays: "Upcoming Birthdays / Anniversaries",
+                upcomingBirthdays: "Upcoming Birthdays / Anniversaries"
             },
             tabs: {
                 event: "Current Event",
                 cards: "Latest Cards",
                 music: "Latest Songs",
-                live: "Virtual Lives",
+                live: "Virtual Lives"
             },
             shortcuts: {
                 cards: "Cards",
@@ -897,7 +896,7 @@ export const enUSMessages = {
                 deckRecommend: "Decks",
                 prediction: "Predict",
                 guessWho: "Guess Who",
-                chartPreview: "Charts",
+                chartPreview: "Charts"
             },
             hero: {
                 noContent: "No latest content yet",
@@ -911,7 +910,7 @@ export const enUSMessages = {
                 currentGacha: "Current Gacha",
                 gachaStartsAt: "Starts {date}",
                 birthdayGreeting: "Happy Birthday, {name}!",
-                anniversaryGreeting: "Happy Anniversary, {name}!",
+                anniversaryGreeting: "Happy Anniversary, {name}!"
             },
             stamina: {
                 bakerShort: "Spend excess stamina",
@@ -922,42 +921,42 @@ export const enUSMessages = {
                 reserveLong: "Reserve {count} stamina",
                 reservePassLong: "Reserve {count} stamina (pass)",
                 detailBoth: "Normal: reserve {normal} stamina | Pass: reserve {pass} stamina — refills exactly at event start",
-                detailPass: "Pass: reserve {pass} stamina — refills exactly at event start",
+                detailPass: "Pass: reserve {pass} stamina — refills exactly at event start"
             },
             currentEvent: {
                 loadFailedTitle: "Failed to load event",
-                noActiveEvent: "No active event right now",
+                noActiveEvent: "No active event right now"
             },
             latestCards: {
                 loadFailedTitle: "Failed to load cards",
                 noData: "No card data yet",
-                viewAll: "View all cards",
+                viewAll: "View all cards"
             },
             latestMusic: {
                 loadFailedTitle: "Failed to load songs",
                 noData: "No song data yet",
                 newBadge: "New",
-                viewAll: "View all songs",
+                viewAll: "View all songs"
             },
             upcomingLive: {
                 loadFailedTitle: "Failed to load virtual lives",
                 noData: "No upcoming virtual lives",
                 nextSchedule: "Next: {date}",
-                viewAll: "View all virtual lives",
+                viewAll: "View all virtual lives"
             },
             birthdays: {
-                today: "TODAY",
+                today: "TODAY"
             },
             announcements: {
                 viewAll: "View All Announcements",
                 noData: "No announcements available",
-                loadFailedTitle: "Failed to fetch announcements",
+                loadFailedTitle: "Failed to fetch announcements"
             },
             friends: {
-                harukiTitle: "Haruki Toolbox",
+                harukiTitle: "Haruki Toolbox"
             },
             specialThanksPrefix: "Special Thanks:",
-            specialThanksHaruki: "Haruki (Kinagi)",
+            specialThanksHaruki: "Haruki (Kinagi)"
         },
         about: {
             title: "About Moesekai",
@@ -968,16 +967,16 @@ export const enUSMessages = {
                 description: "Moesekai is a non-profit project maintained entirely by a small organization.",
                 supportPrefix: "If you enjoy this project, please consider",
                 supportLink: "contributing or sponsoring us",
-                supportSuffix: ". It is the greatest support for the developers.",
+                supportSuffix: ". It is the greatest support for the developers."
             },
             organization: {
                 label: "Organization",
                 avatarAlt: "Moesekai organization avatar",
-                description: "A small developer group",
+                description: "A small developer group"
             },
             techStack: {
                 title: "Tech Stack",
-                description: "Built on a modern microservice architecture to handle massive traffic at very low cost.",
+                description: "Built on a modern microservice architecture to handle massive traffic at very low cost."
             },
             credits: {
                 title: "Credits & Copyright",
@@ -988,7 +987,7 @@ export const enUSMessages = {
                 copyrightMiddle: "and",
                 copyrightSuffix: ".",
                 openSourcePrefix: "This project is open source on GitHub under the",
-                openSourceSuffix: "license.",
+                openSourceSuffix: "license."
             },
             policies: {
                 title: "Site Policies and Ads",
@@ -996,15 +995,15 @@ export const enUSMessages = {
                 privacy: "Privacy Policy",
                 terms: "Terms of Service",
                 googleAds: "Google Ad Settings",
-                adSettingsHint: "You can manage personalized ad preferences through Google Ad Settings; these links are also available in the footer for quick access.",
+                adSettingsHint: "You can manage personalized ad preferences through Google Ad Settings; these links are also available in the footer for quick access."
             },
             sponsors: {
                 title: "Sponsor Thanks (in no particular order)",
-                list: "阳子(support server),cike, 晓月, Hakuchumu, 性价比, luoxia, 雪莹ちゃん, 蘸色绘糖/晕星奏, tony_all, 沙皮, 轩, 末乐回忆, metamiku, madoka, 垂耳兔kawayi, amia,maveriki, and four supporters who prefer not to disclose their IDs.",
+                list: "阳子(support server),cike, 晓月, Hakuchumu, 性价比, luoxia, 雪莹ちゃん, 蘸色绘糖/晕星奏, tony_all, 沙皮, 轩, 末乐回忆, metamiku, madoka, 垂耳兔kawayi, amia,maveriki, and four supporters who prefer not to disclose their IDs."
             },
             specialThanks: {
                 title: "Supporter Thanks (in no particular order)",
-                list: "深海, Luna茶, cike, Kazuhira, 灵潜, 咖啡不甜, 郁郁葱葱, luoxia, 惜花, TONY_ALL#, M氏, 大梦, metamiku, tf, 四宫爱, 芒果冰, Hakuchumu, 葡萄柚, Amia, 不解, 旭光, 阳子, 弥佑瑶, サクラかぜ, 陈睿ガチ恋势, 猫尾草, 笨牛奶, 霞綾, 木口, 沧溟, Aya, Belos, 兔兔, 明日天気に, シラ, 偶像大师希罗酱, 性价比... This is only a partial list; thank you to everyone who quietly supports Moesekai.",
+                list: "深海, Luna茶, cike, Kazuhira, 灵潜, 咖啡不甜, 郁郁葱葱, luoxia, 惜花, TONY_ALL#, M氏, 大梦, metamiku, tf, 四宫爱, 芒果冰, Hakuchumu, 葡萄柚, Amia, 不解, 旭光, 阳子, 弥佑瑶, サクラかぜ, 陈睿ガチ恋势, 猫尾草, 笨牛奶, 霞綾, 木口, 沧溟, Aya, Belos, 兔兔, 明日天気に, シラ, 偶像大师希罗酱, 性价比... This is only a partial list; thank you to everyone who quietly supports Moesekai."
             },
             teams: {
                 title: "Team Members",
@@ -1015,8 +1014,8 @@ export const enUSMessages = {
                 joinPrefix: "If you want to help us, join",
                 joinMiddle: "and ask for ",
                 joinGroup: "Moesekai Literature Team",
-                joinSuffix: ".",
-            },
+                joinSuffix: "."
+            }
         },
         leave: {
             badge: "Redirect Notice",
@@ -1028,7 +1027,7 @@ export const enUSMessages = {
             closePage: "Close Page",
             backHome: "Back Home",
             missingTitle: "Invalid Parameters",
-            missingDescription: "No target URL was specified.",
+            missingDescription: "No target URL was specified."
         },
         guides: {
             badge: "Community",
@@ -1050,7 +1049,7 @@ export const enUSMessages = {
             backToList: "Back to Guide List",
             supervisor: " · Supervisor: {name}",
             viewOriginal: "View Original",
-            machineTranslationNotice: "Some content is machine-translated",
+            machineTranslationNotice: "일부 콘텐츠는 기계 번역되었습니다"
         },
         oauth2: {
             connect: {
@@ -1060,7 +1059,7 @@ export const enUSMessages = {
                 errorTitle: "Authorization Initialization Failed",
                 loading: "Redirecting…",
                 retry: "Try Again",
-                backHome: "Back Home",
+                backHome: "Back Home"
             },
             callback: {
                 badge: "OAuth2 Callback",
@@ -1073,7 +1072,7 @@ export const enUSMessages = {
                     loadingInitialData: "Syncing base game data…",
                     savingAccount: "Saving authorized account…",
                     redirecting: "Redirecting back to the source page…",
-                    selectingBinding: "Multiple usable bindings were detected. Choose the account to connect.",
+                    selectingBinding: "Multiple usable bindings were detected. Choose the account to connect."
                 },
                 defaultPhase: "Completing authorization and account sync…",
                 currentPhase: "Current phase: {phase}",
@@ -1086,8 +1085,8 @@ export const enUSMessages = {
                 unknownUid: "Unknown UID",
                 selectAction: "Connect →",
                 retry: "Start Authorization Again",
-                backHome: "Back Home",
-            },
+                backHome: "Back Home"
+            }
         },
         story: {
             badge: "Story Reader",
@@ -1100,37 +1099,37 @@ export const enUSMessages = {
                 jp: "JP",
                 cn: "CN",
                 tw: "TW",
-                kr: "KR",
+                kr: "KR"
             },
             navigation: {
                 previousEpisode: "Previous Episode",
-                nextEpisode: "Next Episode",
+                nextEpisode: "Next Episode"
             },
             types: {
                 unit: {
                     name: "Main Stories",
-                    desc: "Main stories for each unit",
+                    desc: "Main stories for each unit"
                 },
                 event: {
                     name: "Event Stories",
-                    desc: "Stories for each event",
+                    desc: "Stories for each event"
                 },
                 card: {
                     name: "Card Stories",
-                    desc: "Story parts attached to each card",
+                    desc: "Story parts attached to each card"
                 },
                 area: {
                     name: "Area Conversations",
-                    desc: "Everyday character conversations in each area",
+                    desc: "Everyday character conversations in each area"
                 },
                 self: {
                     name: "Introductions",
-                    desc: "Character introductions before and after school advancement",
+                    desc: "Character introductions before and after school advancement"
                 },
                 special: {
                     name: "Special Stories",
-                    desc: "Anniversary and other special occasion stories",
-                },
+                    desc: "Anniversary and other special occasion stories"
+                }
             },
             unit: {
                 episodeCount: "{count} episodes",
@@ -1141,7 +1140,7 @@ export const enUSMessages = {
                 backToUnitList: "Back to Main Stories",
                 backToChapters: "Back to Chapters",
                 fallbackUnitName: "Unit {id}",
-                currentEpisode: "Current Episode",
+                currentEpisode: "Current Episode"
             },
             card: {
                 filterTitle: "Card Filters",
@@ -1151,7 +1150,7 @@ export const enUSMessages = {
                 documentTitle: "{name} - Card Story - Moesekai",
                 tableOfContents: "Contents",
                 part1: "Part 1",
-                part2: "Part 2",
+                part2: "Part 2"
             },
             event: {
                 filterTitle: "Event Story Filters",
@@ -1173,7 +1172,7 @@ export const enUSMessages = {
                 summaryCredit: "Story summaries and chapter translations are sourced from moesekai (@雪莹ちゃん). Please credit the source when reposting.",
                 chapterListTitle: "Chapter List",
                 chapterCount: "{count} chapters",
-                noChapters: "No chapter information yet",
+                noChapters: "No chapter information yet"
             },
             area: {
                 searchPlaceholder: "Search category name...",
@@ -1203,8 +1202,8 @@ export const enUSMessages = {
                     event: "Event",
                     wl: "WL",
                     monthly: "Monthly",
-                    additional: "Additional",
-                },
+                    additional: "Additional"
+                }
             },
             self: {
                 documentTitle: "{name} - Introduction - Moesekai",
@@ -1214,7 +1213,7 @@ export const enUSMessages = {
                 loading: "Loading...",
                 tableOfContents: "Contents",
                 year1: "Year 1",
-                year2: "Year 2",
+                year2: "Year 2"
             },
             special: {
                 documentTitle: "{name} - Special Story - Moesekai",
@@ -1222,7 +1221,7 @@ export const enUSMessages = {
                 episodeCount: "{count} episodes",
                 backToList: "Back to Special Stories",
                 loading: "Loading story...",
-                episodeLabel: "Episode {episode}",
+                episodeLabel: "Episode {episode}"
             },
             reader: {
                 loading: "Loading story...",
@@ -1236,7 +1235,7 @@ export const enUSMessages = {
                     aiPolished: "AI translation with human review",
                     aiPolishedShort: "AI + human review",
                     human: "human translation",
-                    ai: "AI translation",
+                    ai: "AI translation"
                 },
                 autoplay: "Autoplay",
                 pause: "Pause",
@@ -1260,7 +1259,7 @@ export const enUSMessages = {
                 mangaEssayTitle: "Translator Commentary & Notes",
                 mangaEssay1: "This four-frame comic continues the funny and casual interactions among characters in Project Sekai. The translation carefully preserves character-specific speech particles and emotional quirks.",
                 mangaEssay2: "As an official Project Sekai web comic release, this episode serves not only as a fun side story for in-game events, but also as great material for discovering hidden traits of the characters.",
-                mangaEssayFooter: "* The translated version is provided by MoeSekai, please do not use for commercial purposes without authorization.",
+                mangaEssayFooter: "* The translated version is provided by MoeSekai, please do not use for commercial purposes without authorization."
             },
             snippet: {
                 fullScreenText: "Full-screen Text",
@@ -1281,8 +1280,8 @@ export const enUSMessages = {
                 soundEffect: "Sound Effect",
                 silent: "Silent",
                 stopAudio: "Stop",
-                playAudio: "Play",
-            },
+                playAudio: "Play"
+            }
         },
         character: {
             badge: "Character Database",
@@ -1301,7 +1300,7 @@ export const enUSMessages = {
             imageTabs: {
                 trim: "Full Art",
                 label_h: "Horizontal Nameplate",
-                label_v: "Vertical Nameplate",
+                label_v: "Vertical Nameplate"
             },
             imageDetailTitle: "{name} {tab} Image",
             imageDetailAlt: "{name} {tab}",
@@ -1326,8 +1325,8 @@ export const enUSMessages = {
             relatedCardsCount: "{count} cards",
             genders: {
                 female: "Female",
-                male: "Male",
-            },
+                male: "Male"
+            }
         },
         costumes: {
             badge: "Costume Database",
@@ -1345,13 +1344,13 @@ export const enUSMessages = {
             spoilerBadge: "Spoiler",
             sortOptions: {
                 id: "ID",
-                publishedAt: "Release Date",
+                publishedAt: "Release Date"
             },
             sectionLabel: {
                 partType: "Part",
                 source: "Source",
                 rarity: "Rarity",
-                gender: "Gender",
+                gender: "Gender"
             },
             onlyRelatedCardCostumes: "Show only costumes linked to the selected character's cards",
             detailTitle: "Costume Details",
@@ -1377,8 +1376,8 @@ export const enUSMessages = {
                 rarity: "Rarity",
                 gender: "Gender",
                 designer: "Designer",
-                publishedAt: "Release Date",
-            },
+                publishedAt: "Release Date"
+            }
         },
         cards: {
             badge: "Card Database",
@@ -1422,7 +1421,7 @@ export const enUSMessages = {
             costumeColorSchemes: "Color Variants",
             costumeDetailLink: "Details →",
             gachaPhraseLabel: "Gacha Phrase",
-            supportUnitLabel: "Unit Affiliation",
+            supportUnitLabel: "Unit Affiliation"
         },
         music: {
             badge: "Music Database",
@@ -1465,29 +1464,53 @@ export const enUSMessages = {
                 releaseCondition: "Unlock Condition",
                 assetName: "Internal Asset Name",
                 noteCount: "Notes",
-                constant: "Constant",
+                constant: "Constant"
             },
             releaseConditions: {
                 initial: "Unlocked by default",
                 musicShop: "Purchased from Music Shop",
                 none: "None",
-                gift: "Claimed from gifts",
+                gift: "Claimed from gifts"
             },
             rankingCategories: {
                 groups: {
                     ptPerHour: "PT/hour",
                     ptMax: "Single-run PT",
-                    score: "Score",
+                    score: "Score"
                 },
-                ptPerHourMulti: { label: "Co-op PT/hour Ranking", shortLabel: "Co-op PT/h" },
-                ptPerHourAuto: { label: "Auto PT/hour Ranking", shortLabel: "Auto PT/h" },
-                multiPtMax: { label: "Co-op Single-run PT Ranking", shortLabel: "Co-op PT" },
-                soloPtMax: { label: "Solo Single-run PT Ranking", shortLabel: "Solo PT" },
-                autoPtMax: { label: "Auto Single-run PT Ranking", shortLabel: "Auto PT" },
-                multiScore: { label: "Co-op Score Ranking", shortLabel: "Co-op Score" },
-                soloScore: { label: "Solo Score Ranking", shortLabel: "Solo Score" },
-                autoScore: { label: "Auto Score Ranking", shortLabel: "Auto Score" },
-            },
+                ptPerHourMulti: {
+                    label: "Co-op PT/hour Ranking",
+                    shortLabel: "Co-op PT/h"
+                },
+                ptPerHourAuto: {
+                    label: "Auto PT/hour Ranking",
+                    shortLabel: "Auto PT/h"
+                },
+                multiPtMax: {
+                    label: "Co-op Single-run PT Ranking",
+                    shortLabel: "Co-op PT"
+                },
+                soloPtMax: {
+                    label: "Solo Single-run PT Ranking",
+                    shortLabel: "Solo PT"
+                },
+                autoPtMax: {
+                    label: "Auto Single-run PT Ranking",
+                    shortLabel: "Auto PT"
+                },
+                multiScore: {
+                    label: "Co-op Score Ranking",
+                    shortLabel: "Co-op Score"
+                },
+                soloScore: {
+                    label: "Solo Score Ranking",
+                    shortLabel: "Solo Score"
+                },
+                autoScore: {
+                    label: "Auto Score Ranking",
+                    shortLabel: "Auto Score"
+                }
+            }
         },
         musicMeta: {
             badge: "Song Metadata",
@@ -1504,22 +1527,22 @@ export const enUSMessages = {
             liveModes: {
                 multi: "Co-op LIVE",
                 solo: "Solo LIVE",
-                auto: "Auto LIVE",
+                auto: "Auto LIVE"
             },
             viewModes: {
                 overview: "Overview",
-                detailed: "Detailed",
+                detailed: "Detailed"
             },
             rankings: {
                 hourly: "PT/hour Ranking",
                 score: "Score Ranking",
                 pt: "Single-run PT Ranking",
-                cycles: "Cycles Ranking",
+                cycles: "Cycles Ranking"
             },
             units: {
                 pspi: "PSPI",
                 timesPerHour: "times/hour",
-                seconds: "sec",
+                seconds: "sec"
             },
             pagination: {
                 perPagePrefix: "Per page",
@@ -1528,7 +1551,7 @@ export const enUSMessages = {
                 first: "First",
                 previous: "Prev",
                 next: "Next",
-                last: "Last",
+                last: "Last"
             },
             pspi: {
                 title: "About PSPI baseline score",
@@ -1539,7 +1562,7 @@ export const enUSMessages = {
                 multiTeam: "Co-op: 250,000 power, 200% leader bonus, 200% teammate bonus",
                 cyclesTitle: "Cycle calculation",
                 autoCycle: "Auto cycle interval: 35 seconds",
-                multiCycle: "Multiplayer cycle interval: 45 seconds",
+                multiCycle: "Multiplayer cycle interval: 45 seconds"
             },
             table: {
                 difficulty: "Difficulty",
@@ -1551,8 +1574,8 @@ export const enUSMessages = {
                 baseCycles: "Baseline Cycles",
                 score: "Score",
                 eventPt: "Event PT",
-                hourly: "PT/hour",
-            },
+                hourly: "PT/hour"
+            }
         },
         events: {
             badge: "Event Database",
@@ -1575,7 +1598,7 @@ export const enUSMessages = {
                 event_story_banner: "Logo",
                 logo: "Title",
                 banner: "Background",
-                character: "Character",
+                character: "Character"
             },
             imageDetailTitle: "{name} {tab} Image",
             imageDetailAlt: "{name} {tab}",
@@ -1600,7 +1623,7 @@ export const enUSMessages = {
             cardsTitle: "Event Cards ({count})",
             themeSongLabel: "Event Theme Song",
             downloadAudio: "Download Audio",
-            none: "None",
+            none: "None"
         },
         information: {
             badge: "Game News",
@@ -1611,7 +1634,7 @@ export const enUSMessages = {
             totalSummary: "{count} announcements",
             servers: {
                 jp: "JP",
-                cn: "CN",
+                cn: "CN"
             },
             filterTitle: "Announcement Filters",
             countUnit: "items",
@@ -1620,13 +1643,13 @@ export const enUSMessages = {
             tagFilter: "Announcement Tag",
             typeFilter: "Announcement Type",
             sort: {
-                displayOrder: "Display Order",
+                displayOrder: "Display Order"
             },
             status: {
                 upcoming: "Upcoming",
                 ongoing: "Ongoing",
                 ended: "Ended",
-                permanent: "Permanent",
+                permanent: "Permanent"
             },
             tags: {
                 information: "Info",
@@ -1635,16 +1658,16 @@ export const enUSMessages = {
                 music: "Music",
                 campaign: "Campaign",
                 bug: "Issue",
-                update: "Update",
+                update: "Update"
             },
             types: {
                 normal: "Normal",
                 content: "Content",
-                bug: "Issue",
+                bug: "Issue"
             },
             browseTypes: {
                 internal: "In-app Content",
-                external: "External Link",
+                external: "External Link"
             },
             platformAll: "All Platforms",
             noEndAt: "No end date",
@@ -1653,7 +1676,7 @@ export const enUSMessages = {
             emptyAnnouncementUrl: "This announcement does not have a displayable page URL yet.",
             emptyTitle: "No announcements found",
             emptyDescription: "Try switching servers, changing keywords, or adjusting filters.",
-            loadFailedTitle: "Failed to load announcements",
+            loadFailedTitle: "Failed to load announcements"
         },
         gacha: {
             badge: "Gacha Database",
@@ -1674,7 +1697,7 @@ export const enUSMessages = {
             backToList: "Back to Gacha List",
             imageTabs: {
                 logo: "Logo",
-                bg: "Background",
+                bg: "Background"
             },
             imageDetailTitle: "{name} {tab} Large Image",
             imageDetailAlt: "{name} {tab}",
@@ -1718,7 +1741,7 @@ export const enUSMessages = {
             states: {
                 notStarted: "Not Started",
                 ongoing: "Ongoing",
-                ended: "Ended",
+                ended: "Ended"
             }
         },
         live: {
@@ -1757,7 +1780,7 @@ export const enUSMessages = {
             setlistMcLabel: "MC Segment",
             backToList: "Back to Live List",
             notFoundTitle: "Virtual Live Not Found (404)",
-            notFoundDesc: "Please verify if the virtual live ID is correct. If this live was recently released, try going to Settings to switch or refresh the data server.",
+            notFoundDesc: "Please verify if the virtual live ID is correct. If this live was recently released, try going to Settings to switch or refresh the data server."
         },
         materials: {
             badge: "Materials Database",
@@ -1766,19 +1789,19 @@ export const enUSMessages = {
             description: "Browse Project SEKAI regular materials and MySekai materials",
             tabs: {
                 materials: "Regular Materials",
-                mysekaiMaterials: "MySekai Materials",
+                mysekaiMaterials: "MySekai Materials"
             },
             filterTitle: {
                 materials: "Material Filters",
-                mysekaiMaterials: "MySekai Material Filters",
+                mysekaiMaterials: "MySekai Material Filters"
             },
             filterPanelTitle: {
                 materials: "Filter Materials",
-                mysekaiMaterials: "Filter MySekai Materials",
+                mysekaiMaterials: "Filter MySekai Materials"
             },
             searchPlaceholder: {
                 materials: "Search material name, description, or ID...",
-                mysekaiMaterials: "Search MySekai material name, description, or ID...",
+                mysekaiMaterials: "Search MySekai material name, description, or ID..."
             },
             countUnit: "types",
             usableOnly: "Usable items only",
@@ -1795,12 +1818,12 @@ export const enUSMessages = {
             noResult: "No materials match the current filters",
             noData: {
                 materials: "No regular material masterdata entries are available",
-                mysekaiMaterials: "No MySekai material masterdata entries are available",
+                mysekaiMaterials: "No MySekai material masterdata entries are available"
             },
             resetHint: "Try resetting the filters and checking again",
             loadMore: "Load More",
             allLoaded: "Showing all {count} {tab}",
-            loadingFallback: "Loading material data...",
+            loadingFallback: "Loading material data..."
         },
         exchanges: {
             badge: "Exchange Database",
@@ -1874,8 +1897,8 @@ export const enUSMessages = {
                 exchangeShopName: "Exchange Shop Name",
                 exchangeShopStart: "Shop Start",
                 exchangeShopEnd: "Shop End",
-                displayResourceGroupId: "Display Resource Group ID",
-            },
+                displayResourceGroupId: "Display Resource Group ID"
+            }
         },
         honors: {
             badge: "Honors",
@@ -1884,27 +1907,27 @@ export const enUSMessages = {
             description: "Browse all in-game honors and achievements",
             tabs: {
                 normal: "Regular Honors",
-                bonds: "Bonds Honors",
+                bonds: "Bonds Honors"
             },
             filterTitle: {
                 normal: "Honor Filters",
-                bonds: "Bonds Honor Filters",
+                bonds: "Bonds Honor Filters"
             },
             searchPlaceholder: {
                 normal: "Search honor name...",
-                bonds: "Search bonds honor name...",
+                bonds: "Search bonds honor name..."
             },
             countUnit: "honors",
             loadFailed: "Failed to load",
             loadMore: "Load More",
             noResult: {
                 normal: "No honors match the current filters",
-                bonds: "No bonds honors match the current filters",
+                bonds: "No bonds honors match the current filters"
             },
             normalDetailTitle: "Honor Details",
             bondsDetailTitle: "Bonds Honor Details",
             bondsBadge: "Bonds",
-            loadingFallback: "Loading honor data...",
+            loadingFallback: "Loading honor data..."
         },
         soundtrack: {
             badge: "OST PLAYER",
@@ -1919,7 +1942,7 @@ export const enUSMessages = {
                 fetchFailed: "Failed to load soundtrack data.",
                 audioPlayFailed: "Playback failed. Click play again or check the audio resource connection.",
                 loopReplayFailed: "Loop replay failed. Please click play again.",
-                audioLoadFailed: "Failed to load the audio resource. Try switching asset sources or try again later.",
+                audioLoadFailed: "Failed to load the audio resource. Try switching asset sources or try again later."
             },
             download: {
                 preparingTitle: "Preparing download...",
@@ -1928,7 +1951,7 @@ export const enUSMessages = {
                 button: "Download",
                 cachedHint: "Downloaded from cached audio",
                 cachedAndStartedHint: "Cached and started downloading",
-                directHint: "Switched to direct-link download",
+                directHint: "Switched to direct-link download"
             },
             share: {
                 currentTitle: "Share current track",
@@ -1936,18 +1959,18 @@ export const enUSMessages = {
                 nativeText: "Listen to this soundtrack: {title}",
                 sharedHint: "Opened the system share sheet",
                 copiedHint: "Share link copied",
-                failedHint: "Could not share the link. Please try again later.",
+                failedHint: "Could not share the link. Please try again later."
             },
             spoiler: {
                 categoryName: "Spoiler",
                 unlistedTitle: "Unlisted BGM: {name}",
-                durationLoadFailed: "Failed to load extra spoiler BGM durations. Showing masterdata tracks only.",
+                durationLoadFailed: "Failed to load extra spoiler BGM durations. Showing masterdata tracks only."
             },
             durationLabel: "Track duration",
             playbackModes: {
                 sequential: "List loop (click to switch)",
                 loopOne: "Single-track loop (click to switch)",
-                shuffle: "Shuffle (click to switch)",
+                shuffle: "Shuffle (click to switch)"
             },
             controls: {
                 previous: "Previous track",
@@ -1955,22 +1978,22 @@ export const enUSMessages = {
                 play: "Play",
                 pause: "Pause",
                 volume: "Volume",
-                volumeAdjust: "Adjust volume",
+                volumeAdjust: "Adjust volume"
             },
             filters: {
                 categoryTitle: "Choose a soundtrack section",
                 searchPlaceholder: "Search soundtrack titles or kana...",
                 sortBySeq: "Sort by No.",
-                sortByTitle: "Sort by Title",
+                sortByTitle: "Sort by Title"
             },
             states: {
                 loading: "Tuning the player, back in a moment...",
                 loadFailedTitle: "Failed to load soundtrack data",
                 noResultsTitle: "No matching tracks found",
                 noResultsDescription: "Try changing the category or search keywords.",
-                suspenseLoading: "Loading soundtrack module...",
+                suspenseLoading: "Loading soundtrack module..."
             },
-            footer: "Showing {shown} / {total} tracks • {category}",
+            footer: "Showing {shown} / {total} tracks • {category}"
         },
         prediction: {
             badge: "Tier Prediction",
@@ -1979,25 +2002,25 @@ export const enUSMessages = {
             description: "Real-time tier prediction and the PGAI global activity index.",
             servers: {
                 cn: "CN",
-                jp: "JP",
+                jp: "JP"
             },
             errors: {
                 eventsFetchFailed: "Failed to load the event list.",
-                predictionFetchFailed: "Failed to load prediction data. This event may not have data yet.",
+                predictionFetchFailed: "Failed to load prediction data. This event may not have data yet."
             },
             relativeTime: {
                 secondsAgo: "{seconds}s ago",
-                minutesAgo: "{minutes}m ago",
+                minutesAgo: "{minutes}m ago"
             },
             events: {
                 loading: "Loading event list...",
-                empty: "No event data available",
+                empty: "No event data available"
             },
             dataUpdate: "Data Update: {time}",
             wl: {
                 noticeButton: "WL Notice",
                 title: "World Link Prediction Notice",
-                description: "World Link events are almost impossible to predict, so this data is just for fun.",
+                description: "World Link events are almost impossible to predict, so this data is just for fun."
             },
             stopPredictionNotice: "Snowy stops prediction a few hours before the event ends",
             loading: "Loading prediction data...",
@@ -2011,13 +2034,13 @@ export const enUSMessages = {
                 predictedScore: "Predicted Score",
                 gap: "Gap",
                 speed: "Speed",
-                trend: "Trend",
+                trend: "Trend"
             },
             chart: {
                 detailTitle: "T{rank} Detailed Trend Prediction",
                 noTierData: "No T{rank} tier data available",
                 actualScore: "Actual Score",
-                predictedScore: "Predicted Score",
+                predictedScore: "Predicted Score"
             },
             pgai: {
                 noKlineData: "No K-line data available",
@@ -2026,18 +2049,18 @@ export const enUSMessages = {
                 tooltipOpen: "Open",
                 tooltipClose: "Close",
                 tooltipHigh: "High",
-                tooltipLow: "Low",
+                tooltipLow: "Low"
             },
             activityStats: {
                 mostActive: "Most Active",
                 mostSlacking: "Most Slacking",
-                rank: "Rank {rank}",
+                rank: "Rank {rank}"
             },
             sources: {
                 tier: "Tier source: Moe-API",
-                prediction: "Prediction source: AkiYome v1.2.0-Uta",
+                prediction: "Prediction source: AkiYome v1.2.0-Uta"
             },
-            empty: "Select an event to view prediction data",
+            empty: "Select an event to view prediction data"
         },
         realtimeRankingNext: {
             title: "Live Ranking",
@@ -2046,7 +2069,7 @@ export const enUSMessages = {
             line: {
                 label: "Data line",
                 main: "Main",
-                global: "Global",
+                global: "Global"
             },
             eventId: "Event",
             totalEntries: "On board",
@@ -2061,11 +2084,11 @@ export const enUSMessages = {
             list: {
                 tierLine: "Tier",
                 stale: "Syncing",
-                staleTitle: "This refresh did not return data for this rank; showing the previous result. It will update automatically.",
+                staleTitle: "This refresh did not return data for this rank; showing the previous result. It will update automatically."
             },
             board: {
                 overall: "Overall",
-                worldlink: "World Link",
+                worldlink: "World Link"
             },
             event: {
                 title: "Event #{id}",
@@ -2073,7 +2096,7 @@ export const enUSMessages = {
                 ended: "Ended",
                 remainingDH: "{days}d {hours}h left",
                 remainingHM: "{hours}h {minutes}m left",
-                remainingM: "{minutes}m left",
+                remainingM: "{minutes}m left"
             },
             detail: {
                 back: "Back to board",
@@ -2108,9 +2131,9 @@ export const enUSMessages = {
                     justNow: "just now",
                     secondsAgo: "{seconds}s ago",
                     minutesAgo: "{minutes}m ago",
-                    hoursAgo: "{hours}h ago",
-                },
-            },
+                    hoursAgo: "{hours}h ago"
+                }
+            }
         },
         realtimeRanking: {
             metadataTitle: "Live Ranking",
@@ -2125,7 +2148,7 @@ export const enUSMessages = {
             line: {
                 label: "Data line",
                 main: "Main",
-                global: "Global",
+                global: "Global"
             },
             showChurn: "Show churn and speed",
             trackPlayer: "Track",
@@ -2150,19 +2173,19 @@ export const enUSMessages = {
             eventStatus: {
                 upcoming: "Upcoming",
                 ongoing: "Ongoing",
-                ended: "Ended",
+                ended: "Ended"
             },
             eventTypes: {
                 marathon: "Marathon",
                 cheerful_carnival: "Cheerful Carnival",
-                world_bloom: "World Bloom",
+                world_bloom: "World Bloom"
             },
             regions: {
                 cn: "CN",
                 jp: "JP",
                 tw: "TW",
                 kr: "KR",
-                en: "EN",
+                en: "EN"
             },
             board: {
                 overall: "Overall",
@@ -2173,7 +2196,7 @@ export const enUSMessages = {
                 worldlinkPendingNotice: "This is a World Link event, but WL solo board data has not finished syncing yet. It will appear automatically later.",
                 scopeOverall: "Overall",
                 scopeWorldLink: "WL Board · {character}",
-                characterFallback: "Character {id}",
+                characterFallback: "Character {id}"
             },
             list: {
                 empty: "No ranking data is available right now.",
@@ -2188,7 +2211,7 @@ export const enUSMessages = {
                 collapseChurn: "Collapse churn",
                 expandChurn: "Expand churn",
                 characterAvatarAlt: "Character avatar",
-                noHonors: "No displayable honors",
+                noHonors: "No displayable honors"
             },
             churn: {
                 tierLineSpeed: "Tier speed",
@@ -2212,7 +2235,7 @@ export const enUSMessages = {
                 elapsedHoursMinutes: "{hours}h{minutes}m ago",
                 durationHoursMinutes: "{hours}h {minutes}m",
                 durationMinutesSeconds: "{minutes}m {seconds}s",
-                durationSeconds: "{seconds}s",
+                durationSeconds: "{seconds}s"
             },
             errors: {
                 rankingFetchFailed: "Failed to fetch live ranking: {status}",
@@ -2221,7 +2244,7 @@ export const enUSMessages = {
                 missingWorldLinkCharacter: "Missing WL board character ID",
                 churnFetchFailed: "Failed to fetch churn data (HTTP {status})",
                 churnTimeout: "The churn data request timed out. Please try again later.",
-                unknown: "Failed to load live ranking",
+                unknown: "Failed to load live ranking"
             },
             celebrationTitle: "Happy Event Ending!",
             celebrationTextPart1: "moesekai is a non-profit project completely maintained by a small team. If you find this feature useful, please ",
@@ -2231,7 +2254,7 @@ export const enUSMessages = {
             celebrationQrScanHint: "Or support us directly by scanning: ",
             celebrationAlipay: "Alipay",
             celebrationWechat: "WeChat Pay",
-            celebrationKofi: "Ko-fi Support / International",
+            celebrationKofi: "Ko-fi Support / International"
         },
         deckRecommend: {
             badge: "Deck Recommender",
@@ -2254,11 +2277,11 @@ export const enUSMessages = {
             optimizationTarget: "Optimization Target",
             strongestTargets: {
                 power: "Highest Power",
-                skill: "Best Skill Value",
+                skill: "Best Skill Value"
             },
             strongestTargetDescriptions: {
                 power: "Optimize for total deck power without event bonuses",
-                skill: "Optimize mainly for multi-live skill value, with power as a secondary factor",
+                skill: "Optimize mainly for multi-live skill value, with power as a secondary factor"
             },
             fixedCharacter: "Fixed Character",
             fixedCharacterDescription: "Require one specific character in the deck",
@@ -2270,7 +2293,7 @@ export const enUSMessages = {
             customBonus: "Custom Bonus",
             customModes: {
                 unit: "Unit Event",
-                character: "Mixed Event",
+                character: "Mixed Event"
             },
             bonusUnit: "Bonus Unit",
             bonusCharacters: "Bonus Characters ({count}/{max})",
@@ -2280,7 +2303,7 @@ export const enUSMessages = {
             customBonusEmptyHint: "Select at least one bonus {target} or attribute",
             customBonusTargets: {
                 unit: "unit",
-                character: "character",
+                character: "character"
             },
             difficulty: "Difficulty",
             cardTrainingConfig: "Card Training Config",
@@ -2290,7 +2313,7 @@ export const enUSMessages = {
                 maxLevel: "Max Lv.",
                 episodes: "Episodes",
                 maxMaster: "Max Mastery",
-                maxSkill: "Max Skill",
+                maxSkill: "Max Skill"
             },
             calculating: "Calculating...",
             startCalculate: "Start Calculation",
@@ -2308,41 +2331,41 @@ export const enUSMessages = {
             modes: {
                 event: {
                     label: "Event",
-                    desc: "Highest Event PT",
+                    desc: "Highest Event PT"
                 },
                 wl3: {
                     label: "WL3 Sim",
-                    desc: "World Bloom 3 simulated decks",
+                    desc: "World Bloom 3 simulated decks"
                 },
                 challenge: {
                     label: "Challenge Live",
-                    desc: "Highest score",
+                    desc: "Highest score"
                 },
                 mysekai: {
                     label: "MySekai",
-                    desc: "Highest MySekai PT",
+                    desc: "Highest MySekai PT"
                 },
                 strongest: {
                     label: "Strongest",
-                    desc: "Highest power / effective skill",
+                    desc: "Highest power / effective skill"
                 },
                 custom: {
                     label: "Custom",
-                    desc: "Custom unit / attribute bonuses",
-                },
+                    desc: "Custom unit / attribute bonuses"
+                }
             },
             liveTypes: {
                 multi: "Multi",
                 solo: "Solo",
                 auto: "Auto",
-                cheerful: "Cheerful",
+                cheerful: "Cheerful"
             },
             scoreLabels: {
                 mysekai: "MySekai PT",
                 challenge: "Score",
                 effectiveSkill: "Skill Value",
                 power: "Power",
-                pt: "PT",
+                pt: "PT"
             },
             errors: {
                 userRequired: "Please enter a user ID",
@@ -2356,7 +2379,7 @@ export const enUSMessages = {
                 invalidUserDataPayload: "The user data payload is invalid. Please sync Haruki/OAuth data again and retry.",
                 userNotFound404: "User data not found (404)",
                 apiNotPublic403: "Public API not enabled (403)",
-                workerError: "Worker error: {message}",
+                workerError: "Worker error: {message}"
             },
             progress: {
                 fetchingUserData: "Fetching user data...",
@@ -2371,7 +2394,7 @@ export const enUSMessages = {
                 strongestDeck: "Calculating strongest decks...",
                 strongestSkill: "Optimizing effective skill...",
                 strongestPower: "Optimizing power...",
-                calculationComplete: "Calculation complete",
+                calculationComplete: "Calculation complete"
             },
             selector: {
                 eventId: "Event ID",
@@ -2388,7 +2411,7 @@ export const enUSMessages = {
                 efficiency: "Efficiency",
                 score: "Score",
                 sortByPublishedAt: "Release Date",
-                sortById: "ID",
+                sortById: "ID"
             },
             result: {
                 totalBonusLabelCustom: "Custom Bonus",
@@ -2404,8 +2427,8 @@ export const enUSMessages = {
                 customBonus: "Custom Bonus",
                 eventBonus: "Event Bonus",
                 preTrainingTitle: "This card uses its pre-training skill effect",
-                preTrainingBadge: "Pre",
-            },
+                preTrainingBadge: "Pre"
+            }
         },
         deckComparator: {
             badge: "Deck Comparator",
@@ -2450,16 +2473,16 @@ export const enUSMessages = {
                 hard: "Hard",
                 expert: "Expert",
                 master: "Master",
-                append: "Append",
+                append: "Append"
             },
             skill6Modes: {
                 teamAverage: "Team Average Skill Value",
-                highestPower: "Highest Power Skill Value",
+                highestPower: "Highest Power Skill Value"
             },
             skill15Strategies: {
                 expected: "Expected",
                 best: "Best",
-                worst: "Worst",
+                worst: "Worst"
             },
             result: {
                 eventPt: "Event PT",
@@ -2477,7 +2500,7 @@ export const enUSMessages = {
                 skill6Effectiveness: "Skill6 Skill Value",
                 fluctuationRange: "Variance Range",
                 bestScore: "Best Arrangement Score",
-                worstScore: "Worst Arrangement Score",
+                worstScore: "Worst Arrangement Score"
             },
             errors: {
                 musicMetaRequired: "Please select a song and make sure Meta data exists for the selected difficulty",
@@ -2485,8 +2508,8 @@ export const enUSMessages = {
                 calculationFailed: "Calculation failed: {message}",
                 calculationFailedUnknown: "Calculation failed",
                 invalidTeammateIndex: "Teammate index must be 0-3. Current: {index}",
-                invalidSkillWeights: "skill_score_multi requires at least 6 weights. Current: {count}",
-            },
+                invalidSkillWeights: "skill_score_multi requires at least 6 weights. Current: {count}"
+            }
         },
         scoreControl: {
             badge: "Score Control",
@@ -2600,7 +2623,7 @@ export const enUSMessages = {
                 scoreMax: "Score Max",
                 scoreWindow: "Score Window",
                 afk: "AFK",
-                afkAvailable: "AFK available",
+                afkAvailable: "AFK available"
             },
             cardConfigHeaders: {
                 rarity: "Rarity",
@@ -2608,7 +2631,7 @@ export const enUSMessages = {
                 maxLevel: "Max Lv.",
                 episodes: "Episodes",
                 maxMaster: "Max Mastery",
-                maxSkill: "Max Skill",
+                maxSkill: "Max Skill"
             },
             errors: {
                 userNotFound: "User data was not found. Please check the user ID/server and make sure the data has been uploaded to Haruki.",
@@ -2623,8 +2646,8 @@ export const enUSMessages = {
                 calculationFailedUnknown: "Calculation failed",
                 userRequired: "Please enter a user ID",
                 eventRequired: "Please select an event",
-                workerError: "Worker error: {message}",
-            },
+                workerError: "Worker error: {message}"
+            }
         },
         profile: {
             metadataTitle: "My Profile",
@@ -2640,16 +2663,16 @@ export const enUSMessages = {
             tools: {
                 deckRecommend: {
                     title: "Deck Recommender",
-                    description: "Automatically calculate the best deck",
+                    description: "Automatically calculate the best deck"
                 },
                 scoreControl: {
                     title: "Score Control Calculator",
-                    description: "Plan AFK routes intelligently",
+                    description: "Plan AFK routes intelligently"
                 },
                 myCards: {
                     title: "Card Progress",
-                    description: "View card collection progress",
-                },
+                    description: "View card collection progress"
+                }
             },
             dangerZone: "Danger Zone",
             dangerDescription: "Clearing all accounts will delete all locally saved data. This action cannot be undone.",
@@ -2711,8 +2734,8 @@ export const enUSMessages = {
                 viewLevelDetails: "View Level Details",
                 collapseLevelDetails: "Collapse Level Details",
                 requiredThisLevel: "This level needs {count}",
-                ownedCumulative: "Owned/Cumulative {have}/{total}",
-            },
+                ownedCumulative: "Owned/Cumulative {have}/{total}"
+            }
         },
         myCards: {
             metadataTitle: "Card Progress",
@@ -2726,7 +2749,7 @@ export const enUSMessages = {
             loadDataFailed: "Failed to load card data",
             noResult: "No cards match the current filters",
             loadMore: "Load More",
-            allLoaded: "Showing all {count} cards",
+            allLoaded: "Showing all {count} cards"
         },
         myMusics: {
             metadataTitle: "Music Progress",
@@ -2742,7 +2765,7 @@ export const enUSMessages = {
             loadMore: "Load More",
             allLoaded: "Showing all {count} songs",
             communityConstantHint: "Community constants · For reference only",
-            best30: "Best30",
+            best30: "Best30"
         },
         myMaterials: {
             metadataTitle: "Resource Inventory",
@@ -2757,7 +2780,7 @@ export const enUSMessages = {
             countUnit: "types",
             tabs: {
                 materials: "Regular Materials",
-                mysekaiMaterials: "MySekai Materials",
+                mysekaiMaterials: "MySekai Materials"
             },
             loadDataFailed: "Failed to load material data",
             noResult: "No materials match the current filters",
@@ -2765,7 +2788,7 @@ export const enUSMessages = {
             loadMore: "Load More",
             allLoaded: "Showing all {count} material types",
             fallbackMaterialName: "Material {id}",
-            fallbackMysekaiMaterialName: "MySekai Material {id}",
+            fallbackMysekaiMaterialName: "MySekai Material {id}"
         },
         mysekai: {
             badge: "MySEKAI Database",
@@ -2784,7 +2807,7 @@ export const enUSMessages = {
             sectionLabel: {
                 mainGenre: "Main Genre",
                 subGenre: "Sub Genre",
-                tag: "Tag",
+                tag: "Tag"
             },
             allOption: "All",
             loadFailed: "Failed to load",
@@ -2813,8 +2836,8 @@ export const enUSMessages = {
                     assetBundleName: "Internal Asset Name",
                     canAssemble: "Can Assemble",
                     canDisassemble: "Can Disassemble",
-                    seq: "Seq",
-                },
+                    seq: "Seq"
+                }
             },
             genreNames: {
                 "すべて": "All",
@@ -2848,7 +2871,7 @@ export const enUSMessages = {
                 "ぬいぐるみ": "Plush",
                 "その他": "Other",
                 "カラータイル": "Color Tile",
-                "ブロック": "Block",
+                "ブロック": "Block"
             },
             tagNames: {
                 "公園": "Park",
@@ -2953,7 +2976,7 @@ export const enUSMessages = {
                 "道": "Road",
                 "地面": "Ground",
                 "屋根": "Roof",
-                "外壁": "Exterior Wall",
+                "外壁": "Exterior Wall"
             },
             tagNameFragments: {
                 table: "Table",
@@ -2962,8 +2985,8 @@ export const enUSMessages = {
                 bed: "Bed",
                 light: "Light",
                 kitchen: "Kitchen",
-                room: "Room",
-            },
+                room: "Room"
+            }
         },
         stickerMaker: {
             badge: "Creativity Tool",
@@ -2978,7 +3001,7 @@ export const enUSMessages = {
             sections: {
                 unitFilter: "Filter Units",
                 characterSelect: "Choose Character",
-                stickerSelect: "Choose Base Image ({count})",
+                stickerSelect: "Choose Base Image ({count})"
             },
             uploadCustomImageTitle: "Upload custom image",
             uploadImage: "Upload Image",
@@ -2992,7 +3015,7 @@ export const enUSMessages = {
                 rotate: "Rotate",
                 fontSize: "Font Size",
                 lineSpacing: "Line Spacing",
-                charSpacing: "Character Spacing",
+                charSpacing: "Character Spacing"
             },
             curveText: "Curved Text (Beta)",
             textColor: "Text Color:",
@@ -3009,13 +3032,13 @@ export const enUSMessages = {
                 sourcePrefix: "Sticker maker source code references",
                 fontLicensePrefix: "Maoken Assorted Sans is licensed under",
                 fontLicenseSuffix: "",
-                localNotice: "The sticker maker runs entirely locally. Users are responsible for any consequences of loading fonts themselves and using generated images for commercial purposes.",
+                localNotice: "The sticker maker runs entirely locally. Users are responsible for any consequences of loading fonts themselves and using generated images for commercial purposes."
             },
             errors: {
                 fontLoadFailed: "Failed to load font. Please try again.",
                 clipboardUnsupported: "This browser does not support copying images to the clipboard. Please use download instead.",
-                copyFailed: "Failed to copy. Please try downloading instead.",
-            },
+                copyFailed: "Failed to copy. Please try downloading instead."
+            }
         },
         goodsGacha: {
             badge: "Entertainment Tool",
@@ -3043,8 +3066,8 @@ export const enUSMessages = {
                 unofficial: "This tool is for entertainment only and is not affiliated with SEGA / Colorful Palette / PJSK official teams.",
                 reference: "Simulation results are for reference only and do not represent actual goods lottery outcomes.",
                 noRealTrade: "This page does not involve real-money transactions or physical rewards. Please do not associate it with reality.",
-                sourcePrefix: "Resources modified from",
-            },
+                sourcePrefix: "Resources modified from"
+            }
         },
         guessWho: {
             badge: "Creativity Game",
@@ -3074,11 +3097,11 @@ export const enUSMessages = {
                     easy: "Easy",
                     normal: "Normal",
                     hard: "Hard",
-                    extreme: "Extreme",
+                    extreme: "Extreme"
                 },
                 serverLabels: {
                     jp: "JP",
-                    cn: "CN",
+                    cn: "CN"
                 },
                 distortions: {
                     none: "None",
@@ -3088,12 +3111,12 @@ export const enUSMessages = {
                     grayscale: "Grayscale",
                     invert: "Invert",
                     rgbShuffle: "RGB Shuffle",
-                    extremeSummary: "(Includes hue rotation, mirroring, RGB shuffle, and more)",
+                    extremeSummary: "(Includes hue rotation, mirroring, RGB shuffle, and more)"
                 },
                 errors: {
                     cardLoadFailed: "Failed to load card data. Please check your network and retry.",
-                    deckInsufficient: "Not enough cards in the pool ({count}). Please expand the filters.",
-                },
+                    deckInsufficient: "Not enough cards in the pool ({count}). Please expand the filters."
+                }
             },
             single: {
                 multiplayerMode: "Multiplayer Battle beta",
@@ -3123,7 +3146,7 @@ export const enUSMessages = {
                 roundLabel: "Round {round}",
                 comboLabel: "COMBO x{multiplier}",
                 streakLabel: "(Streak: {combo})",
-                loadingImage: "Loading...",
+                loadingImage: "Loading..."
             },
             multiplayer: {
                 backTitle: "Back",
@@ -3151,7 +3174,7 @@ export const enUSMessages = {
                     killBlockTitle: "Kill / Block:",
                     killBlockDesc: "First-try correct guesses can trigger kills / blocks",
                     lastStandTitle: "Last chance:",
-                    lastStandDesc: "Recover from Last Stand with a first-try correct guess",
+                    lastStandDesc: "Recover from Last Stand with a first-try correct guess"
                 },
                 gameSettings: "Game Settings",
                 hostConfig: "(host settings)",
@@ -3177,7 +3200,7 @@ export const enUSMessages = {
                     lastStandBody1: "When your HP drops below 0, you are not eliminated immediately and instead enter Last Stand.",
                     lastStandBody2: "On the next round, if you guess correctly on the first try, you revive immediately and recover 20% HP!",
                     lastStandBody3: "Otherwise, you are eliminated completely.",
-                    understood: "Got it",
+                    understood: "Got it"
                 },
                 roomCode: "Room Code",
                 copyRoomCode: "📋 Copy Room Code",
@@ -3192,7 +3215,7 @@ export const enUSMessages = {
                     difficulty: "Difficulty",
                     timeLimit: "Time Limit",
                     rarity: "Rarity",
-                    character: "Characters",
+                    character: "Characters"
                 },
                 characterCount: "{count}",
                 waitingMorePlayers: "Waiting for more players...",
@@ -3228,9 +3251,9 @@ export const enUSMessages = {
                     characterTaken: "This character has already been chosen. Please pick another one.",
                     joinRoomFailed: "Failed to join room. Please retry.",
                     joinRoomException: "An error occurred while joining the room",
-                    deckInsufficient: "Not enough cards in the pool ({count}). Please expand the filters.",
-                },
-            },
+                    deckInsufficient: "Not enough cards in the pool ({count}). Please expand the filters."
+                }
+            }
         },
         mysekaiPreview: {
             metadata: {
@@ -3239,11 +3262,11 @@ export const enUSMessages = {
                 rankingTitle: "MySekai Housing Entry Preview",
                 rankingDescription: "View a 3D layout preview for a ranked Project Sekai MySekai housing competition entry",
                 sceneTitle: "MySekai 3D Previewer",
-                sceneDescription: "Preview MySekai room layouts by JP / CN UID, local JSON files, or public JSON URLs",
+                sceneDescription: "Preview MySekai room layouts by JP / CN UID, local JSON files, or public JSON URLs"
             },
             badges: {
                 top: "MySekai Housing Competition",
-                scene: "MySekai Scene Preview",
+                scene: "MySekai Scene Preview"
             },
             common: {
                 topRanking: "TOP Ranking",
@@ -3268,13 +3291,13 @@ export const enUSMessages = {
                 topCount: "TOP",
                 submittedAt: "Submitted at {time}",
                 activityCount: "{count} competitions",
-                loading: "Loading…",
+                loading: "Loading…"
             },
             tabTypes: {
                 popular: "Popular",
                 trend: "Trending",
                 recommend: "Recommended",
-                top: "TOP",
+                top: "TOP"
             },
             top: {
                 title: "MySekai",
@@ -3286,7 +3309,7 @@ export const enUSMessages = {
                 loadFailedTitle: "Failed to load housing ranking data",
                 reload: "Reload",
                 refresh: "Refresh",
-                enterPreview: "Open 3D Preview",
+                enterPreview: "Open 3D Preview"
             },
             ranking: {
                 missingParamsTitle: "Missing preview parameters",
@@ -3303,7 +3326,7 @@ export const enUSMessages = {
                 thumbnailAlt: "Entry thumbnail",
                 loadingThumbnail: "Loading thumbnail…",
                 layoutFallback: "Housing Layout",
-                suspenseLoading: "Loading preview…",
+                suspenseLoading: "Loading preview…"
             },
             scene: {
                 title: "MySekai",
@@ -3313,20 +3336,20 @@ export const enUSMessages = {
                     uidLabel: "UID Lookup",
                     uidDesc: "Enter a JP / CN UID to load a MySekai layout automatically",
                     jsonLabel: "Layout JSON",
-                    jsonDesc: "Choose a local file or load a JSON URL directly",
+                    jsonDesc: "Choose a local file or load a JSON URL directly"
                 },
                 jsonSources: {
                     fileLabel: "Choose File",
                     fileDesc: "Select a local layout JSON file",
                     urlLabel: "Enter URL",
-                    urlDesc: "Enter a layout JSON URL",
+                    urlDesc: "Enter a layout JSON URL"
                 },
                 turnstile: {
                     loading: "Loading Cloudflare verification…",
                     scriptFailed: "Failed to load the Cloudflare verification script. Check your network and refresh the page.",
                     completed: "Verification complete. You can query the UID now.",
                     expired: "Verification expired. Please complete the challenge again.",
-                    failed: "Verification failed. Please try again.",
+                    failed: "Verification failed. Please try again."
                 },
                 errors: {
                     urlCors: "The browser cannot read this URL directly, possibly due to CORS or network restrictions. Please download the JSON and use file mode instead.",
@@ -3340,7 +3363,7 @@ export const enUSMessages = {
                     turnstileRequired: "Please complete Cloudflare verification first",
                     noRoomData: "The API did not return usable room layout data",
                     fileRequired: "Please choose a layout JSON file",
-                    invalidLayoutData: "No usable room / layout data was found in the JSON",
+                    invalidLayoutData: "No usable room / layout data was found in the JSON"
                 },
                 preview: {
                     customTitle: "Custom Layout",
@@ -3348,7 +3371,7 @@ export const enUSMessages = {
                     urlBadge: "JSON URL",
                     uidHeaderNote: "The layout was loaded via UID lookup, and asset paths are matched to the selected server automatically.",
                     jsonHeaderNote: "Custom layout JSON preview.",
-                    backToEntry: "Back to Lookup",
+                    backToEntry: "Back to Lookup"
                 },
                 uidForm: {
                     title: "UID Lookup",
@@ -3356,7 +3379,7 @@ export const enUSMessages = {
                     uidPlaceholder: "Enter game UID",
                     server: "Server",
                     loading: "Querying layout…",
-                    submit: "Query and Open Preview",
+                    submit: "Query and Open Preview"
                 },
                 jsonForm: {
                     title: "Layout JSON",
@@ -3366,8 +3389,8 @@ export const enUSMessages = {
                     urlLabel: "Layout JSON URL",
                     urlHint: "If reading the URL fails, download the JSON and use file mode instead.",
                     loading: "Reading layout…",
-                    submit: "Read and Open Preview",
-                },
+                    submit: "Read and Open Preview"
+                }
             },
             preview: {
                 assetRuleNote: "Asset paths are inferred from assetbundleName / handleType rules; no bucket listing or polling is used.",
@@ -3392,7 +3415,7 @@ export const enUSMessages = {
                 completed: "Completed",
                 ignored: "Ignored",
                 failed: "Failed",
-                credit: "Original work / Lunacha　Powered by Moe Dev Team　Please credit the original author when reposting",
+                credit: "Original work / Lunacha　Powered by Moe Dev Team　Please credit the original author when reposting"
             },
             runtime: {
                 initializing: "Initializing...",
@@ -3449,8 +3472,8 @@ export const enUSMessages = {
                 mobileUp: "Move Up",
                 mobileDown: "Move Down",
                 bgmInfo: "BGM: {text}",
-                noBgmInfo: "BGM: none for the current scene",
-            },
+                noBgmInfo: "BGM: none for the current scene"
+            }
         },
         chartPreview: {
             badge: "Chart Preview",
@@ -3481,7 +3504,7 @@ export const enUSMessages = {
                 hard: "Hard",
                 expert: "Expert",
                 master: "Master",
-                append: "Append",
+                append: "Append"
             },
             player: {
                 initializingTitle: "Initializing preview",
@@ -3527,8 +3550,8 @@ export const enUSMessages = {
                 creditMikuMikuWorldSuffix: "by Crash5b, licensed under MIT.",
                 creditSourcePrefix: "Some code is from",
                 creditSourceMiddle: "'s",
-                creditSourceSuffix: "project.",
-            },
+                creditSourceSuffix: "project."
+            }
         },
         guessJacket: {
             badge: "Creativity Game",
@@ -3563,13 +3586,13 @@ export const enUSMessages = {
                     jp: "JP",
                     cn: "CN",
                     jpShort: "JP",
-                    cnShort: "CN",
+                    cnShort: "CN"
                 },
                 difficultyLabels: {
                     easy: "Easy",
                     normal: "Normal",
                     hard: "Hard",
-                    extreme: "Extreme",
+                    extreme: "Extreme"
                 },
                 distortions: {
                     none: "None",
@@ -3578,13 +3601,13 @@ export const enUSMessages = {
                     flipH: "Mirror",
                     grayscale: "Grayscale",
                     invert: "Invert",
-                    rgbShuffle: "RGB Shuffle",
+                    rgbShuffle: "RGB Shuffle"
                 },
                 errors: {
                     musicLoadFailed: "Failed to load music data. Please check your network and retry.",
                     deckInsufficient: "Not enough songs in the pool ({count}). Please retry later.",
-                    jacketLoadFailed: "Failed to load jacket art. This round is counted as timed out.",
-                },
+                    jacketLoadFailed: "Failed to load jacket art. This round is counted as timed out."
+                }
             },
             single: {
                 multiplayerMode: "Multiplayer Battle beta",
@@ -3612,8 +3635,8 @@ export const enUSMessages = {
                     roundCount: "Each game has {rounds} rounds with {options} options per round.",
                     strikes: "Each round has {strikes} HP. Wrong answers cost HP and halve the remaining time.",
                     combo: "Consecutive no-miss answers trigger a Combo multiplier.",
-                    seed: "The same seed generates the same questions and options for fair play.",
-                },
+                    seed: "The same seed generates the same questions and options for fair play."
+                }
             },
             multiplayer: {
                 backTitle: "Back",
@@ -3641,7 +3664,7 @@ export const enUSMessages = {
                     killBlockTitle: "Kill / Block:",
                     killBlockDesc: "First-try correct guesses can trigger kills / blocks",
                     lastStandTitle: "Last chance:",
-                    lastStandDesc: "Recover from Last Stand with a first-try correct guess",
+                    lastStandDesc: "Recover from Last Stand with a first-try correct guess"
                 },
                 gameSettings: "Game Settings",
                 hostConfig: "(host settings)",
@@ -3664,7 +3687,7 @@ export const enUSMessages = {
                     lastStandBody1: "When your HP drops below 0, you are not eliminated immediately and instead enter Last Stand.",
                     lastStandBody2: "On the next round, if you guess correctly on the first try, you revive immediately and recover 20% HP!",
                     lastStandBody3: "Otherwise, you are eliminated completely.",
-                    understood: "Got it",
+                    understood: "Got it"
                 },
                 roomCode: "Room Code",
                 copyRoomCode: "📋 Copy Room Code",
@@ -3679,7 +3702,7 @@ export const enUSMessages = {
                     server: "Server",
                     difficulty: "Difficulty",
                     timeLimit: "Time Limit",
-                    optionsCount: "Options",
+                    optionsCount: "Options"
                 },
                 waitingMorePlayers: "Waiting for more players...",
                 startGame: "Start Game",
@@ -3714,9 +3737,9 @@ export const enUSMessages = {
                     characterTaken: "This character has already been chosen. Please pick another one.",
                     joinRoomFailed: "Failed to join room. Please retry.",
                     joinRoomException: "An error occurred while joining the room",
-                    deckInsufficient: "Not enough songs in the pool ({count}). Please retry later.",
-                },
-            },
+                    deckInsufficient: "Not enough songs in the pool ({count}). Please retry later."
+                }
+            }
         },
         sticker: {
             badge: "Sticker Database",
@@ -3734,7 +3757,7 @@ export const enUSMessages = {
             sectionLabel: {
                 character1: "Character 1",
                 character2: "Character 2",
-                stampType: "Sticker Type",
+                stampType: "Sticker Type"
             },
             anyCharacter: "Any",
             otherCharacter: "Other",
@@ -3745,8 +3768,8 @@ export const enUSMessages = {
             previewAltFallback: "Sticker",
             stampTypes: {
                 text: "Text",
-                illustration: "Illustration",
-            },
+                illustration: "Illustration"
+            }
         },
         comic: {
             badge: "Comic Database",
@@ -3764,7 +3787,7 @@ export const enUSMessages = {
             allLoaded: "Showing all {count} comics",
             previewTitle: "{title} Full View",
             previewTitleFallback: "Comic Preview",
-            previewAltFallback: "Comic",
+            previewAltFallback: "Comic"
         },
         manga: {
             badge: "Official 4-Koma",
@@ -3798,7 +3821,7 @@ export const enUSMessages = {
             source: "Source",
             viewOriginalPost: "View Original Post",
             imageAlt: "Episode {id} {title}",
-            unknownError: "Unknown error",
+            unknownError: "Unknown error"
         },
         best30Share: {
             title: "Best30 Share Image",
@@ -3820,7 +3843,7 @@ export const enUSMessages = {
             saveImage: "Save image",
             saved: "Saved",
             generatingTitle: "Generating Best30 share image",
-            regenerate: "Regenerate",
-        },
-    },
-} as const satisfies MessageTree;
+            regenerate: "Regenerate"
+        }
+    }
+} satisfies MessageTree;

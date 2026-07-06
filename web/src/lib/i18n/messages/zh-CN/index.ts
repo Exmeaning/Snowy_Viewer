@@ -709,6 +709,7 @@ export const zhCNMessages = {
                 zhCN: "简体中文",
                 enUS: "English",
                 jaJP: "日本語",
+                koKR: "한국어",
             },
         },
         themeColor: {
@@ -831,6 +832,7 @@ export const zhCNMessages = {
                 "zh-CN": "简体中文 / Simplified Chinese",
                 "en-US": "English / 英语",
                 "ja-JP": "日本語 / Japanese",
+                "ko-KR": "한국어 / Korean",
             },
             serverTitle: "选择数据服务器",
             serverDesc: "选择默认载入的数据源。这会决定首选的活动、歌曲和卡牌版本。",
@@ -1047,6 +1049,7 @@ export const zhCNMessages = {
             backToList: "返回攻略列表",
             supervisor: " · 监修 {name}",
             viewOriginal: "查看原文",
+            machineTranslationNotice: "部分内容使用机器翻译",
         },
         oauth2: {
             connect: {

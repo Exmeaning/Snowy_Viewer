@@ -186,6 +186,10 @@ function GuidesContent() {
                 <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
                     {t("page.guides.description")}
                 </p>
+                <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-500 bg-amber-500/5 border border-amber-500/10 dark:border-amber-500/20 rounded-xl px-3 py-1.5 mx-auto">
+                    <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-550/10 dark:bg-amber-500/10 text-[9px] font-bold">!</span>
+                    <span>{t("page.guides.machineTranslationNotice")}</span>
+                </div>
             </div>
 
             {/* Tool Site Card */}

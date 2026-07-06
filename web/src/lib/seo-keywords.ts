@@ -52,7 +52,7 @@ export const SEO_LOCALE_CONFIG = {
   "zh-CN": {
     htmlLang: "zh-CN",
     openGraphLocale: "zh_CN",
-    alternateOpenGraphLocales: ["en_US", "ja_JP"],
+    alternateOpenGraphLocales: ["en_US", "ja_JP", "ko_KR"],
     titleTemplate: "%s | Moesekai",
     suffix: " — 新一代PJSK WIKI",
     detailSuffix: " | PJSK WIKI",
@@ -80,7 +80,7 @@ export const SEO_LOCALE_CONFIG = {
   "en-US": {
     htmlLang: "en-US",
     openGraphLocale: "en_US",
-    alternateOpenGraphLocales: ["zh_CN", "ja_JP"],
+    alternateOpenGraphLocales: ["zh_CN", "ja_JP", "ko_KR"],
     titleTemplate: "%s | Moesekai",
     suffix: " — Next-generation PJSK Wiki",
     detailSuffix: " | PJSK Wiki",
@@ -108,7 +108,7 @@ export const SEO_LOCALE_CONFIG = {
   "ja-JP": {
     htmlLang: "ja-JP",
     openGraphLocale: "ja_JP",
-    alternateOpenGraphLocales: ["zh_CN", "en_US"],
+    alternateOpenGraphLocales: ["zh_CN", "en_US", "ko_KR"],
     titleTemplate: "%s | Moesekai",
     suffix: " — 次世代PJSK Wiki",
     detailSuffix: " | PJSK Wiki",
@@ -132,6 +132,32 @@ export const SEO_LOCALE_CONFIG = {
         "Project SEKAI のカード、楽曲、イベント、ガチャ、ストーリー、MySekai、便利ツールを扱うデータビューアです。",
     },
   },
+  "ko-KR": {
+    htmlLang: "ko-KR",
+    openGraphLocale: "ko_KR",
+    alternateOpenGraphLocales: ["zh_CN", "en_US", "ja_JP"],
+    titleTemplate: "%s | Moesekai",
+    suffix: " — 차세대 PJSK Wiki",
+    detailSuffix: " | PJSK Wiki",
+    root: {
+      title: "Moesekai - 차세대 PJSK Wiki",
+      description:
+        "Moesekai(구 Snowy SekaiViewer)는 카드, 악곡, 이벤트, 가샤, 스토리, MySekai 및 다양한 도구를 제공하는 차세대 PJSK Wiki이자 Project SEKAI 데이터 뷰어입니다.",
+      keywords: [
+        "프로젝트 세카이 wiki",
+        "PJSK wiki",
+        "프로세카 wiki",
+        "프로세카 카드",
+        "프로세카 곡",
+        "프로세카 이벤트",
+        "Moesekai",
+        "Snowy SekaiViewer",
+      ],
+      jsonLdAlternateName: ["Snowy SekaiViewer", "PJSK Wiki", "Project SEKAI Database"],
+      jsonLdDescription:
+        "Project SEKAI의 카드, 악곡, 이벤트, 가샤, 스토리, MySekai 및 다양한 도구를 제공하는 데이터 뷰어입니다.",
+    },
+  },
 } as const satisfies Record<UiLocale, SeoLocaleConfig>;
 
 export function getSeoLocaleConfig(locale: UiLocale = DEFAULT_UI_LOCALE): SeoLocaleConfig {
@@ -144,6 +170,7 @@ const COMMON_BRAND_KEYWORDS = {
   "zh-CN": ["Project Sekai", "PJSK", "世界计划", "Moesekai"],
   "en-US": ["Project Sekai", "PJSK", "Moesekai", "Project SEKAI database"],
   "ja-JP": ["Project Sekai", "PJSK", "プロジェクトセカイ", "Moesekai"],
+  "ko-KR": ["Project Sekai", "PJSK", "프로젝트 세카이", "Moesekai"],
 } as const satisfies Record<UiLocale, readonly string[]>;
 
 function localizedText(value: LocalizedText, locale: UiLocale): string {
@@ -801,16 +828,18 @@ export const SEO_PAGE_METADATA = {
   ),
   guides: definePage(
     "/guides",
-    { "zh-CN": "社区攻略", "en-US": "Guides", "ja-JP": "コミュニティガイド" },
+    { "zh-CN": "社区攻略", "en-US": "Guides", "ja-JP": "コミュニティガイド", "ko-KR": "커뮤니티 가이드" },
     {
       "zh-CN": "浏览 PROJECT SEKAI 社区攻略、教程与实用指南集合。",
       "en-US": "Browse PROJECT SEKAI community guides, tutorials, and helpful reference articles.",
       "ja-JP": "PROJECT SEKAI のコミュニティ攻略、チュートリアル、実用ガイドを閲覧できます。",
+      "ko-KR": "PROJECT SEKAI 커뮤니티 가이드, 튜토리얼 및 실용적인 가이드 모음을 찾아보세요.",
     },
     {
       "zh-CN": ["攻略", "社区攻略", "Guide"],
       "en-US": ["guides", "community guides", "tutorials"],
       "ja-JP": ["攻略", "コミュニティガイド", "チュートリアル"],
+      "ko-KR": ["가이드", "커뮤니티 가이드", "튜토리얼"],
     },
   ),
   patreon: definePage(

@@ -9,12 +9,14 @@ export const MESSAGE_FILES = {
     "zh-CN": path.join(SRC_ROOT, "lib/i18n/messages/zh-CN/index.ts"),
     "en-US": path.join(SRC_ROOT, "lib/i18n/messages/en-US/index.ts"),
     "ja-JP": path.join(SRC_ROOT, "lib/i18n/messages/ja-JP/index.ts"),
+    "ko-KR": path.join(SRC_ROOT, "lib/i18n/messages/ko-KR/index.ts"),
 };
 
 export const MESSAGE_EXPORTS = {
     "zh-CN": "zhCNMessages",
     "en-US": "enUSMessages",
     "ja-JP": "jaJPMessages",
+    "ko-KR": "koKRMessages",
 };
 
 export const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);

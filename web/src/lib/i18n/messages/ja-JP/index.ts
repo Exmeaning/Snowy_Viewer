@@ -708,7 +708,8 @@ export const jaJPMessages = {
       options: {
         zhCN: '簡体字中国語',
         enUS: 'English',
-        jaJP: '日本語'
+        jaJP: '日本語',
+        koKR: '韓国語'
       }
     },
     themeColor: {
@@ -831,6 +832,7 @@ export const jaJPMessages = {
         "zh-CN": "简体中文 / Simplified Chinese",
         "en-US": "English / 英语",
         "ja-JP": "日本語 / Japanese",
+        "ko-KR": "한국어 / Korean",
       },
       serverTitle: "データサーバーを選択",
       serverDesc: "デフォルトで読み込むゲームデータソースを選択します。",
@@ -1046,7 +1048,8 @@ export const jaJPMessages = {
       unknownError: '不明なエラー',
       backToList: 'Back to Guide List',
       supervisor: ' · Supervisor: {name}',
-      viewOriginal: '原文を見る'
+      viewOriginal: '原文を見る',
+      machineTranslationNotice: '一部のコンテンツは機械翻訳されています'
     },
     oauth2: {
       connect: {
