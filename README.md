@@ -53,7 +53,7 @@ AGPL-3.0
 
 - **PORT**: 后端监听端口（默认 `8080`）
 - **REDIS_URL**: Redis 地址（默认 `localhost:6379`）
-- **MASTER_DATA_PATH**: 本地 masterdata 路径（默认 `./data/master`）
+- **MASTER_DATA_PATH**: 可选本地 masterdata 缓存路径（默认 `./data/master`）。仓库不再提交完整 masterdata；本地文件缺失时 Go API 会从远端数据源加载。
 
 ### 前端配置 (Next.js Web - 静态导出 Pages 部署)
 

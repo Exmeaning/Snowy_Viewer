@@ -44,9 +44,6 @@ COPY --from=builder-web /app/web/.next/standalone ./nextjs/
 COPY --from=builder-web /app/web/.next/static ./nextjs/web/.next/static
 COPY --from=builder-web /app/web/public ./nextjs/web/public
 
-# Copy Master Data
-COPY data/ ./data/
-
 # Install certs for external API calls from backend
 RUN apk add --no-cache ca-certificates wget
 

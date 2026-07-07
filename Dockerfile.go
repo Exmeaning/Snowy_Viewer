@@ -26,9 +26,6 @@ RUN apk add --no-cache ca-certificates tzdata
 # 从编译阶段拷贝二进制程序
 COPY --from=builder /app/server ./server
 
-# 拷贝本地主数据文件到容器中，作为缓存与加载源（可在运行时挂载覆盖）
-COPY data/ ./data/
-
 # 暴露后端监听端口
 EXPOSE 8080
 
@@ -37,5 +34,4 @@ ENV FRONTEND_PROXY_URL=""
 
 # 运行服务
 CMD ["./server"]
-
 
