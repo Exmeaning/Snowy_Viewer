@@ -69,6 +69,13 @@ const CUSTOM_ATTACH_MODEL_OBJECT_FILE_BY_ASSET: Record<string, string> = {
     mdl_viewer_photo_stand1small: "mdl_cst0006_photo_type1stand1.obj",
 };
 
+const CUSTOM_ATTACH_OBJECT_PATHS_BY_ASSET: Record<string, string[]> = {
+    mdl_cst0002_attach_penlight1stage1: [
+        "custom_fixture_attach/mdl_cst0002_attach_penlight1stage1/mdl_cst0002_attach_penlight1stage1.obj",
+        "custom_fixture_attach/mdl_cst0002_attach_penlight1stand1/mdl_cst0002_attach_penlight1stand1.obj",
+    ],
+};
+
 const CUSTOM_ATTACH_OBJECT_FILE_BY_ASSET: Record<string, string> = {
     mdl_viewer_canvas_board1large1: "mdl_cst0005_canvas_large1board1.obj",
     mdl_viewer_canvas_board1medium1: "mdl_cst0005_canvas_medium1board1.obj",
@@ -107,9 +114,6 @@ function getFixtureAliasObjectFile(assetName: string): string | null {
     const crystalMatch = assetName.match(/^(mdl_crs\d+_fixture_crystal1)(medium|small)$/);
     if (crystalMatch) return `${crystalMatch[1]}large.obj`;
 
-    const pasDollMatch = assetName.match(/^(mdl_pas\d+_fixture_doll[34])(medium|small)$/);
-    if (pasDollMatch) return `${pasDollMatch[1]}large.obj`;
-
     if (assetName === "mdl_cst0001_custom_middle3mount1") return "mdl_cst0001_custom_top3mount1.obj";
 
     const triblockMatch = assetName.match(/^mdl_non3002_triblock_([a-z]+)([12])$/);
@@ -143,17 +147,13 @@ export function getFixtureObjectPaths(assetName: string, handleType?: string, fi
         return [`fixture/${assetName}/${assetName}.obj`];
     }
     if (handleType === "road" || /^mdl_non200[13]_road_/.test(assetName)) {
-        return [`fixture/${assetName}/mdl_non1002_way_basemodel1.obj`];
+        return [`fixture/${assetName}/${assetName}.obj`];
     }
     if (handleType === "fence" || assetName.startsWith("mdl_non2002_fence_")) {
-        return [
-            `fixture/${assetName}/mdl_pole_center.obj`,
-            `fixture/${assetName}/mdl_wing_short.obj`,
-            `fixture/${assetName}/mdl_wing_long.obj`,
-        ];
+        return [`fixture/${assetName}/${assetName}.obj`];
     }
     if (assetName.startsWith("mdl_cst0001_custom_") && customBaseUsesPreview(assetName)) {
-        return [`fixture/${assetName}/preview.obj`];
+        return [`fixture/${assetName}/${assetName}.obj`];
     }
     const aliasObjectFile = getFixtureAliasObjectFile(assetName);
     if (aliasObjectFile) return [`fixture/${assetName}/${aliasObjectFile}`];
@@ -161,6 +161,8 @@ export function getFixtureObjectPaths(assetName: string, handleType?: string, fi
 }
 
 export function getCustomFixtureAttachObjectPaths(assetName: string): string[] {
+    const objectPaths = CUSTOM_ATTACH_OBJECT_PATHS_BY_ASSET[assetName];
+    if (objectPaths) return objectPaths;
     const modelObjectFile = CUSTOM_ATTACH_MODEL_OBJECT_FILE_BY_ASSET[assetName];
     if (modelObjectFile) return [`custom_fixture_attach/${assetName}/${modelObjectFile}`];
     const objectFile = CUSTOM_ATTACH_OBJECT_FILE_BY_ASSET[assetName] || `${assetName}.obj`;
@@ -215,6 +217,13 @@ export function getCustomFixtureAttachTexturePaths(assetName: string, textureId:
         return uniquePaths([
             ...customAttachKnownTextureIdPaths(assetName, "tex_cst0003_record_common_type1board1", textureId),
             customAttachTexturePath(assetName, "jacket_customdefault_s"),
+        ]);
+    }
+
+    if (assetName === "mdl_cst0002_attach_penlight1stage1") {
+        return uniquePaths([
+            ...customAttachKnownTextureIdPaths(assetName, "tex_cst0002_attach_common_penlight1stage1", textureId),
+            ...customAttachKnownTextureIdPaths("mdl_cst0002_attach_penlight1stand1", "tex_cst0002_attach_common_penlight1stand1", textureId),
         ]);
     }
 

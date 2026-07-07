@@ -1916,7 +1916,9 @@ export class MysekaiScenePreviewRuntime {
                     useCustomAttachRoot: assetInfo.useCustomAttachRoot,
                     handleType: assetInfo.handleType,
                     fixtureType: assetInfo.fixtureType,
-                    isFence: assetInfo.handleType === "fence" && !assetInfo.useCustomAttachRoot,
+                    isFence: assetInfo.handleType === "fence"
+                        && !assetInfo.useCustomAttachRoot
+                        && getFixtureObjectPaths(assetInfo.asset, assetInfo.handleType, assetInfo.fixtureType).length > 1,
                 });
             }
         }
@@ -2369,7 +2371,7 @@ export class MysekaiScenePreviewRuntime {
             });
 
             let object: THREE.Object3D;
-            if (!isCustom && assetInfo.handleType === "fence") {
+            if (!isCustom && assetInfo.handleType === "fence" && preparedAsset.fenceParts) {
                 const fenceParts = preparedAsset.fenceParts;
                 if (!fenceParts) throw new Error(interpolateRuntimeMessage(this.options.messages.fenceModelNotPreloaded, { asset: assetInfo.asset }));
                 object = this.cloneWithMaterial(fenceParts.post, makeMaterial);
