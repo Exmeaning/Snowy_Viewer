@@ -55,6 +55,7 @@
   { "path": "/breadcrumb-community/", "pageKey": "breadcrumb_community", "priority": 0.3, "changefreq": "monthly", "indexable": true },
   { "path": "/breadcrumb-tools/", "pageKey": "breadcrumb_tools", "priority": 0.3, "changefreq": "monthly", "indexable": true },
   { "path": "/breadcrumb-personal/", "pageKey": "breadcrumb_personal", "priority": 0.3, "changefreq": "monthly", "indexable": true },
+  { "path": "/asset-viewer/", "pageKey": "asset_viewer", "priority": 0.6, "changefreq": "weekly", "indexable": true },
   { "path": "/blank/", "pageKey": "blank", "priority": 0.0, "changefreq": "never", "indexable": false, "excludeReason": "Decorative blank asset page" },
   { "path": "/design-system/", "priority": 0.0, "changefreq": "never", "indexable": false, "excludeReason": "Development-only design system route" },
   { "path": "/leave/", "priority": 0.0, "changefreq": "never", "indexable": false, "excludeReason": "External-link interstitial route" },

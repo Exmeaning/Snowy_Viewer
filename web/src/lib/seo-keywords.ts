@@ -968,6 +968,20 @@ export const SEO_PAGE_METADATA = {
       "ja-JP": ["ツール入口", "便利ツール"],
     },
   ),
+  asset_viewer: definePage(
+    "/asset-viewer",
+    { "zh-CN": "资产浏览器", "en-US": "Asset Browser", "ja-JP": "アセットブラウザ" },
+    {
+      "zh-CN": "浏览 Project SEKAI 各区服的静态资源目录，支持查找、预览图片及音频等文件。",
+      "en-US": "Browse Project Sekai static asset directories across regions, search, and preview image/audio files.",
+      "ja-JP": "Project SEKAI 各サーバーの静的アセットディレクトリを閲覧し、ファイルの検索やプレビューができます。",
+    },
+    {
+      "zh-CN": ["资产浏览器", "静态资源", "资源下载", "音源预览"],
+      "en-US": ["asset browser", "static assets", "asset explorer", "download"],
+      "ja-JP": ["アセットブラウザ", "アセット", "ファイルプレビュー", "ダウンロード"],
+    },
+  ),
   blank: definePage(
     "/blank",
     { "zh-CN": "空白素材页", "en-US": "Blank Asset Page", "ja-JP": "空白アセットページ" },
