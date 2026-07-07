@@ -106,39 +106,6 @@ func (c *Cache) Delete(key string) error {
 	return nil
 }
 
-// Bilibili Dynamic Cache helpers
-const (
-	DynamicCacheTTL = 10 * time.Minute
-	ImageCacheTTL   = 1 * time.Hour
-)
-
-func (c *Cache) GetDynamic(uid string) ([]byte, bool) {
-	return c.Get("dynamic:" + uid)
-}
-
-func (c *Cache) SetDynamic(uid string, data []byte) error {
-	return c.Set("dynamic:"+uid, data, DynamicCacheTTL)
-}
-
-func (c *Cache) GetImage(url string) ([]byte, string, bool) {
-	data, ok := c.Get("img:" + url)
-	if !ok {
-		return nil, "", false
-	}
-	contentType, ok := c.Get("img_ct:" + url)
-	if !ok {
-		return nil, "", false
-	}
-	return data, string(contentType), true
-}
-
-func (c *Cache) SetImage(url string, data []byte, contentType string) error {
-	if err := c.Set("img:"+url, data, ImageCacheTTL); err != nil {
-		return err
-	}
-	return c.Set("img_ct:"+url, []byte(contentType), ImageCacheTTL)
-}
-
 // IsRedisEnabled returns whether Redis is being used
 func (c *Cache) IsRedisEnabled() bool {
 	return c.useRedis

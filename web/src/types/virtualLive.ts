@@ -34,6 +34,45 @@ export interface IVirtualLiveSetlist {
     character3dId5?: number;
 }
 
+export interface IVirtualLiveReward {
+    id?: number;
+    virtualLiveType: string;
+    virtualLiveId?: number;
+    resourceBoxId: number;
+}
+
+export interface IResourceBoxDetail {
+    resourceBoxPurpose: string;
+    resourceBoxId: number;
+    seq: number;
+    resourceType: string;
+    resourceId?: number;
+    resourceLevel?: number;
+    resourceQuantity?: number;
+}
+
+export interface IResourceBoxInfo {
+    resourceBoxPurpose: string;
+    id: number;
+    resourceBoxType?: string;
+    description?: string;
+    details?: IResourceBoxDetail[];
+}
+
+export interface ICompactResourceBoxDetails {
+    __ENUM__?: {
+        resourceBoxPurpose?: string[];
+        resourceType?: string[];
+        [key: string]: string[] | undefined;
+    };
+    resourceBoxId: number[];
+    resourceBoxPurpose: Array<number | string>;
+    resourceType: Array<number | string>;
+    resourceId?: Array<number | undefined>;
+    resourceLevel?: Array<number | undefined>;
+    resourceQuantity?: Array<number | undefined>;
+}
+
 export interface IVirtualLiveInfo {
     id: number;
     virtualLiveType: VirtualLiveType;
@@ -48,6 +87,8 @@ export interface IVirtualLiveInfo {
     virtualLiveSetlists?: IVirtualLiveSetlist[];
     virtualLiveBeginnerSchedules?: IVirtualLiveSchedule[];
     virtualLiveSchedules?: IVirtualLiveSchedule[];
+    virtualLiveReward?: IVirtualLiveReward;
+    virtualLiveRewards?: IVirtualLiveReward[];
 }
 
 export const VIRTUAL_LIVE_TYPE_IDS = ["normal", "beginner", "archive", "cheerful_carnival", "connect_live", "streaming"] as const;

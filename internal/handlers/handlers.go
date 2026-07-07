@@ -7,22 +7,19 @@ import (
 	"strconv"
 	"strings"
 
-	"snowy_viewer/internal/bilibili"
 	"snowy_viewer/internal/masterdata"
 	"snowy_viewer/internal/models"
 )
 
 // Handler holds dependencies for HTTP handlers
 type Handler struct {
-	store    *masterdata.Store
-	bilibili *bilibili.Client
+	store *masterdata.Store
 }
 
 // New creates a new Handler instance
-func New(store *masterdata.Store, biliClient *bilibili.Client) *Handler {
+func New(store *masterdata.Store) *Handler {
 	return &Handler{
-		store:    store,
-		bilibili: biliClient,
+		store: store,
 	}
 }
 
@@ -35,9 +32,6 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/virtuallive-event-map", h.handleVirtualLiveEventMap)
 	mux.HandleFunc("/api/gachas", h.handleGachaList)
 	mux.HandleFunc("/api/gachas/", h.handleGachaDetail)
-
-	mux.HandleFunc("/api/bilibili/dynamic/", h.handleBilibiliDynamic)
-	mux.HandleFunc("/api/bilibili/image", h.handleBilibiliImage)
 }
 
 func (h *Handler) handleCardEventMap(w http.ResponseWriter, r *http.Request) {
@@ -219,54 +213,4 @@ func (h *Handler) handleGachaDetail(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
-}
-
-func (h *Handler) handleBilibiliDynamic(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) < 5 {
-		http.Error(w, "Invalid UID", http.StatusBadRequest)
-		return
-	}
-	uid := parts[4]
-	if uid == "" {
-		http.Error(w, "Empty UID", http.StatusBadRequest)
-		return
-	}
-
-	data, statusCode, err := h.bilibili.FetchDynamic(uid)
-	if err != nil {
-		http.Error(w, err.Error(), statusCode)
-		return
-	}
-
-	w.WriteHeader(statusCode)
-	w.Write(data)
-}
-
-func (h *Handler) handleBilibiliImage(w http.ResponseWriter, r *http.Request) {
-	imageUrl := r.URL.Query().Get("url")
-	if imageUrl == "" {
-		http.Error(w, "Missing url parameter", http.StatusBadRequest)
-		return
-	}
-
-	data, contentType, statusCode, err := h.bilibili.FetchImage(imageUrl)
-	if err != nil {
-		http.Error(w, err.Error(), statusCode)
-		return
-	}
-
-	if statusCode == http.StatusOK {
-		if contentType != "" {
-			w.Header().Set("Content-Type", contentType)
-		}
-		w.Header().Set("Cache-Control", "public, max-age=31536000")
-		w.Header().Set("X-Cache", "MISS") // Will be HIT on subsequent requests from cache
-	} else {
-		w.Header().Set("Cache-Control", "no-store")
-	}
-	w.WriteHeader(statusCode)
-	w.Write(data)
 }

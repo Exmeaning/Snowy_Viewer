@@ -6,7 +6,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"snowy_viewer/internal/bilibili"
 	"snowy_viewer/internal/cache"
 	"snowy_viewer/internal/config"
 	"snowy_viewer/internal/handlers"
@@ -22,9 +21,6 @@ func main() {
 	appCache := cache.New(cfg.RedisURL)
 	defer appCache.Close()
 
-	// Initialize Bilibili client
-	biliClient := bilibili.NewClient(appCache, cfg.BilibiliSessData, cfg.BilibiliCookie)
-
 	// Initialize and load master data
 	store := masterdata.NewStore(cfg.MasterDataPath)
 	if err := store.Fetch(); err != nil {
@@ -33,7 +29,7 @@ func main() {
 
 	// Create router and register handlers
 	mux := http.NewServeMux()
-	handler := handlers.New(store, biliClient)
+	handler := handlers.New(store)
 	handler.RegisterRoutes(mux)
 
 	// Prevent unknown /api/* paths from bouncing between Go and Next.js.
@@ -81,4 +77,3 @@ func setupAPIOnlyMode(mux *http.ServeMux) {
 		http.NotFound(w, r)
 	})
 }
-

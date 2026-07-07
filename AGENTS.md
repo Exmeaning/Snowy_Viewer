@@ -107,7 +107,7 @@ const updateURL = (params: Record<string, string>) => {
 - 新增动态详情页类型时必须补 `DETAIL_SEO_TEMPLATES` / `DETAIL_FALLBACK_TITLES`，并用 `buildDetailMetadata()` 输出 OpenGraph/Twitter/canonical。
 - 不要写死 `zh-CN` / `en-US` 二分逻辑；应优先复用 `SUPPORTED_UI_LOCALES`、`UiLocale`、`normalizeUiLocale()`、`SEO_LOCALE_CONFIG`。语言选择器不使用国旗；涉及 `tw` / `TW` 的显示使用中性服务器/区域缩写（如 `繁中 (TW)` / `TW`），避免政治敏感或国别化表述。
 - 当前没有 locale-specific URL，不要擅自输出 hreflang / sitemap alternate links；等 `/zh-CN`、`/en-US`、未来 `/ja-JP` 等 URL 策略确定后再做。
-- 完成 i18n/SEO 相关改动后至少运行：`npm run lint:i18n --prefix web`、`npm run lint:i18n-usage --prefix web`、`npm run lint --prefix web`；影响 metadata/路由较多时运行 `npm run build:next --prefix web`。
+- 完成 i18n/SEO 相关改动后至少运行：`bun run --cwd web lint:i18n`、`bun run --cwd web lint:i18n-usage`、`bun run --cwd web lint`；影响 metadata/路由较多时运行 `bun run --cwd web build:next`。
 
 ## 关键规则
 

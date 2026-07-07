@@ -7,18 +7,32 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
 import {
+    ICompactResourceBoxDetails,
+    IResourceBoxDetail,
+    IResourceBoxInfo,
     IVirtualLiveInfo,
+    IVirtualLiveReward,
     VIRTUAL_LIVE_TYPE_COLORS,
     getVirtualLiveStatus,
     VIRTUAL_LIVE_STATUS_DISPLAY,
     VirtualLiveType
 } from "@/types/virtualLive";
-import { getVirtualLiveBannerUrl, getMusicJacketUrl, getEventBannerUrl } from "@/lib/assets";
+import {
+    getCommonMaterialThumbnailUrl,
+    getEventBannerUrl,
+    getMaterialThumbnailUrl,
+    getMusicJacketUrl,
+    getStampUrl,
+    getVirtualLiveBannerUrl,
+} from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import { useI18n } from "@/contexts/I18nContext";
+import type { IMaterialInfo } from "@/types/material";
+import type { IHonorGroup, IHonorInfo } from "@/types/honor";
+import DegreeImage from "@/components/honor/DegreeImage";
 
 interface IMusic {
     id: number;
@@ -39,24 +53,405 @@ interface IEventInfo {
     assetbundleName: string;
 }
 
+interface IStampInfo {
+    id: number;
+    name: string;
+    assetbundleName: string;
+}
+
+interface IGenericRewardItem {
+    id: number;
+    name?: string;
+    title?: string;
+    description?: string;
+    assetbundleName?: string;
+    assetBundleName?: string;
+}
+
+interface IRewardLookupData {
+    materials: IMaterialInfo[];
+    stamps: IStampInfo[];
+    honors: IHonorInfo[];
+    honorGroups: IHonorGroup[];
+    boostItems: IGenericRewardItem[];
+    virtualLiveTransitionItems: IGenericRewardItem[];
+}
+
+interface IRewardLookupMaps {
+    materialMap: Map<number, IMaterialInfo>;
+    stampMap: Map<number, IStampInfo>;
+    honorMap: Map<number, IHonorInfo>;
+    honorGroupMap: Map<number, IHonorGroup>;
+    boostItemMap: Map<number, IGenericRewardItem>;
+    virtualLiveTransitionItemMap: Map<number, IGenericRewardItem>;
+}
+
+interface IResolvedVirtualLiveReward {
+    key: string;
+    resourceType: string;
+    resourceId?: number;
+    resourceLevel?: number;
+    quantity: number;
+    typeLabel: string;
+    name: string;
+    subtitle?: string;
+    imageUrl?: string;
+    linkHref?: string;
+    honor?: IHonorInfo;
+    honorGroup?: IHonorGroup;
+}
+
+interface IResolvedVirtualLiveRewardBox {
+    reward: IVirtualLiveReward;
+    box?: IResourceBoxInfo;
+    details: IResolvedVirtualLiveReward[];
+}
+
 // API URL for virtual live-event mapping
 const VIRTUAL_LIVE_EVENT_MAP_URL = (process.env.NEXT_PUBLIC_API_URL || "") + "/api/virtuallive-event-map";
+const VIRTUAL_LIVE_REWARD_PURPOSE = "virtual_live_reward";
+
+const EMPTY_REWARD_LOOKUPS: IRewardLookupData = {
+    materials: [],
+    stamps: [],
+    honors: [],
+    honorGroups: [],
+    boostItems: [],
+    virtualLiveTransitionItems: [],
+};
+
+function isCompactResourceBoxServer(): boolean {
+    if (typeof window === "undefined") return false;
+    const server = localStorage.getItem("server-source") || "jp";
+    return server === "cn" || server === "tw" || server === "kr";
+}
+
+function getVirtualLiveRewards(virtualLive: IVirtualLiveInfo | null): IVirtualLiveReward[] {
+    if (!virtualLive) return [];
+
+    const rewards = [
+        ...(virtualLive.virtualLiveReward ? [virtualLive.virtualLiveReward] : []),
+        ...(virtualLive.virtualLiveRewards || []),
+    ];
+    const seen = new Set<string>();
+
+    return rewards.filter((reward) => {
+        if (!reward || !Number.isFinite(reward.resourceBoxId)) return false;
+        const key = `${reward.virtualLiveType}:${reward.resourceBoxId}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
+function getRelevantRewardBoxes(
+    virtualLive: IVirtualLiveInfo,
+    resourceBoxes: IResourceBoxInfo[]
+): IResourceBoxInfo[] {
+    const rewardBoxIds = new Set(getVirtualLiveRewards(virtualLive).map((reward) => reward.resourceBoxId));
+    return resourceBoxes.filter((box) => box.resourceBoxPurpose === VIRTUAL_LIVE_REWARD_PURPOSE && rewardBoxIds.has(box.id));
+}
+
+function resolveCompactEnumValue(enumValues: string[] | undefined, value: number | string | undefined): string | undefined {
+    if (typeof value === "string") return value;
+    if (typeof value === "number") return enumValues?.[value];
+    return undefined;
+}
+
+function getRelevantRewardBoxesFromCompact(
+    virtualLive: IVirtualLiveInfo,
+    compactDetails: ICompactResourceBoxDetails | null
+): IResourceBoxInfo[] {
+    if (!compactDetails?.resourceBoxId?.length) return [];
+
+    const rewardBoxIds = new Set(getVirtualLiveRewards(virtualLive).map((reward) => reward.resourceBoxId));
+    const purposeEnum = compactDetails.__ENUM__?.resourceBoxPurpose;
+    const typeEnum = compactDetails.__ENUM__?.resourceType;
+    const boxes = new Map<number, IResourceBoxInfo>();
+
+    for (let index = 0; index < compactDetails.resourceBoxId.length; index++) {
+        const resourceBoxId = compactDetails.resourceBoxId[index];
+        if (!rewardBoxIds.has(resourceBoxId)) continue;
+
+        const resourceBoxPurpose = resolveCompactEnumValue(purposeEnum, compactDetails.resourceBoxPurpose[index]);
+        if (resourceBoxPurpose !== VIRTUAL_LIVE_REWARD_PURPOSE) continue;
+
+        const resourceType = resolveCompactEnumValue(typeEnum, compactDetails.resourceType[index]);
+        if (!resourceType) continue;
+
+        let box = boxes.get(resourceBoxId);
+        if (!box) {
+            box = {
+                resourceBoxPurpose,
+                id: resourceBoxId,
+                resourceBoxType: "expand",
+                details: [],
+            };
+            boxes.set(resourceBoxId, box);
+        }
+
+        box.details?.push({
+            resourceBoxPurpose,
+            resourceBoxId,
+            seq: (box.details.length || 0) + 1,
+            resourceType,
+            resourceId: compactDetails.resourceId?.[index],
+            resourceLevel: compactDetails.resourceLevel?.[index],
+            resourceQuantity: compactDetails.resourceQuantity?.[index],
+        });
+    }
+
+    return getVirtualLiveRewards(virtualLive)
+        .map((reward) => boxes.get(reward.resourceBoxId))
+        .filter((box): box is IResourceBoxInfo => Boolean(box));
+}
+
+function mergeRewardBoxes(primary: IResourceBoxInfo[], fallback: IResourceBoxInfo[]): IResourceBoxInfo[] {
+    const merged = new Map(primary.map((box) => [box.id, box]));
+
+    fallback.forEach((box) => {
+        const current = merged.get(box.id);
+        if (!current || (current.details || []).length === 0) {
+            merged.set(box.id, box);
+        }
+    });
+
+    return Array.from(merged.values());
+}
+
+function hasRewardDetailsForEveryBox(rewards: IVirtualLiveReward[], resourceBoxes: IResourceBoxInfo[]): boolean {
+    const boxesWithDetails = new Set(
+        resourceBoxes
+            .filter((box) => (box.details || []).length > 0)
+            .map((box) => box.id)
+    );
+
+    return rewards.every((reward) => boxesWithDetails.has(reward.resourceBoxId));
+}
+
+function collectRewardResourceTypes(resourceBoxes: IResourceBoxInfo[]): Set<string> {
+    const types = new Set<string>();
+    resourceBoxes.forEach((box) => {
+        (box.details || []).forEach((detail) => {
+            if (detail.resourceType) types.add(detail.resourceType);
+        });
+    });
+    return types;
+}
+
+function buildMapById<T extends { id: number }>(items: T[]): Map<number, T> {
+    return new Map(items.map((item) => [item.id, item]));
+}
+
+async function fetchOptionalMasterData<T>(shouldFetch: boolean, path: string, fallback: T): Promise<T> {
+    if (!shouldFetch) return fallback;
+    try {
+        return await fetchMasterData<T>(path);
+    } catch (error) {
+        console.warn(`[VirtualLiveReward] Failed to fetch ${path}`, error);
+        return fallback;
+    }
+}
+
+async function fetchOptionalMasterRows<T>(shouldFetch: boolean, path: string): Promise<T[]> {
+    return fetchOptionalMasterData<T[]>(shouldFetch, path, []);
+}
+
+function getTranslatedOrFallback(key: string, fallback: string, t: (key: string, values?: Record<string, string | number>) => string): string {
+    const translated = t(key);
+    return translated === key ? fallback : translated;
+}
+
+function formatResourceType(resourceType: string): string {
+    return resourceType
+        .split("_")
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
+}
+
+function getRewardTypeLabel(resourceType: string, t: (key: string, values?: Record<string, string | number>) => string): string {
+    return getTranslatedOrFallback(`common.exchange.rewardTypes.${resourceType}`, formatResourceType(resourceType), t);
+}
+
+function getRewardConditionLabel(virtualLiveType: string, t: (key: string, values?: Record<string, string | number>) => string): string {
+    const pageLabel = getTranslatedOrFallback(`page.live.rewardTypes.${virtualLiveType}`, "", t);
+    if (pageLabel) return pageLabel;
+    return getTranslatedOrFallback(`common.virtualLiveTypes.${virtualLiveType}`, formatResourceType(virtualLiveType), t);
+}
+
+function extractGenericName(item: IGenericRewardItem | undefined, fallback: string): string {
+    const name = item?.name || item?.title || item?.description;
+    return typeof name === "string" && name.trim() ? name : fallback;
+}
+
+function resolveVirtualLiveRewardDetail(
+    detail: IResourceBoxDetail,
+    lookupMaps: IRewardLookupMaps,
+    assetSource: ReturnType<typeof useTheme>["assetSource"],
+    t: (key: string, values?: Record<string, string | number>) => string
+): IResolvedVirtualLiveReward {
+    const resourceId = detail.resourceId;
+    const quantity = detail.resourceQuantity ?? 1;
+    const typeLabel = getRewardTypeLabel(detail.resourceType, t);
+    const fallbackName = typeof resourceId === "number"
+        ? t("page.live.rewardFallbackName", { type: typeLabel, id: resourceId })
+        : typeLabel;
+
+    switch (detail.resourceType) {
+        case "material": {
+            const material = typeof resourceId === "number" ? lookupMaps.materialMap.get(resourceId) : undefined;
+            return {
+                key: `${detail.seq}-${detail.resourceType}-${resourceId ?? "none"}`,
+                resourceType: detail.resourceType,
+                resourceId,
+                resourceLevel: detail.resourceLevel,
+                quantity,
+                typeLabel,
+                name: material?.name || fallbackName,
+                subtitle: material?.materialType || typeLabel,
+                imageUrl: typeof resourceId === "number" ? getMaterialThumbnailUrl(resourceId, assetSource) : undefined,
+                linkHref: typeof resourceId === "number" ? `/materials?search=${encodeURIComponent(String(resourceId))}` : undefined,
+            };
+        }
+        case "stamp": {
+            const stamp = typeof resourceId === "number" ? lookupMaps.stampMap.get(resourceId) : undefined;
+            return {
+                key: `${detail.seq}-${detail.resourceType}-${resourceId ?? "none"}`,
+                resourceType: detail.resourceType,
+                resourceId,
+                resourceLevel: detail.resourceLevel,
+                quantity,
+                typeLabel,
+                name: stamp?.name || fallbackName,
+                subtitle: typeLabel,
+                imageUrl: stamp?.assetbundleName ? getStampUrl(stamp.assetbundleName, assetSource) : undefined,
+                linkHref: typeof resourceId === "number" ? `/sticker?search=${encodeURIComponent(String(resourceId))}` : undefined,
+            };
+        }
+        case "honor": {
+            const honor = typeof resourceId === "number" ? lookupMaps.honorMap.get(resourceId) : undefined;
+            const honorGroup = honor ? lookupMaps.honorGroupMap.get(honor.groupId) : undefined;
+            return {
+                key: `${detail.seq}-${detail.resourceType}-${resourceId ?? "none"}-${detail.resourceLevel ?? "level"}`,
+                resourceType: detail.resourceType,
+                resourceId,
+                resourceLevel: detail.resourceLevel,
+                quantity,
+                typeLabel,
+                name: honor?.name || fallbackName,
+                subtitle: honorGroup?.name || typeLabel,
+                honor,
+                honorGroup,
+            };
+        }
+        case "boost_item": {
+            const item = typeof resourceId === "number" ? lookupMaps.boostItemMap.get(resourceId) : undefined;
+            return {
+                key: `${detail.seq}-${detail.resourceType}-${resourceId ?? "none"}`,
+                resourceType: detail.resourceType,
+                resourceId,
+                resourceLevel: detail.resourceLevel,
+                quantity,
+                typeLabel,
+                name: extractGenericName(item, fallbackName),
+                subtitle: typeLabel,
+            };
+        }
+        case "virtual_live_transition_item": {
+            const item = typeof resourceId === "number" ? lookupMaps.virtualLiveTransitionItemMap.get(resourceId) : undefined;
+            return {
+                key: `${detail.seq}-${detail.resourceType}-${resourceId ?? "none"}`,
+                resourceType: detail.resourceType,
+                resourceId,
+                resourceLevel: detail.resourceLevel,
+                quantity,
+                typeLabel,
+                name: extractGenericName(item, fallbackName),
+                subtitle: typeLabel,
+            };
+        }
+        case "coin":
+        case "jewel":
+        case "virtual_coin":
+            return {
+                key: `${detail.seq}-${detail.resourceType}-${resourceId ?? "currency"}`,
+                resourceType: detail.resourceType,
+                resourceId,
+                resourceLevel: detail.resourceLevel,
+                quantity,
+                typeLabel,
+                name: typeLabel,
+                imageUrl: getCommonMaterialThumbnailUrl(detail.resourceType, assetSource),
+            };
+        default:
+            return {
+                key: `${detail.seq}-${detail.resourceType}-${resourceId ?? "none"}`,
+                resourceType: detail.resourceType,
+                resourceId,
+                resourceLevel: detail.resourceLevel,
+                quantity,
+                typeLabel,
+                name: fallbackName,
+                subtitle: typeof resourceId === "number" ? `ID #${resourceId}` : undefined,
+            };
+    }
+}
+
+function resolveVirtualLiveRewardBoxes(
+    virtualLive: IVirtualLiveInfo | null,
+    resourceBoxes: IResourceBoxInfo[],
+    lookupMaps: IRewardLookupMaps,
+    assetSource: ReturnType<typeof useTheme>["assetSource"],
+    t: (key: string, values?: Record<string, string | number>) => string
+): IResolvedVirtualLiveRewardBox[] {
+    if (!virtualLive) return [];
+    const boxMap = new Map(resourceBoxes.map((box) => [box.id, box]));
+
+    return getVirtualLiveRewards(virtualLive).map((reward) => {
+        const box = boxMap.get(reward.resourceBoxId);
+        return {
+            reward,
+            box,
+            details: (box?.details || [])
+                .slice()
+                .sort((a, b) => a.seq - b.seq)
+                .map((detail) => resolveVirtualLiveRewardDetail(detail, lookupMaps, assetSource, t)),
+        };
+    });
+}
 
 export default function VirtualLiveDetailClient() {
     const params = useParams();
     const virtualLiveId = Number(params.id);
     const { assetSource } = useTheme();
     const { setDetailName } = useBreadcrumb();
-    const { t, formatDate: formatLocaleDate } = useI18n();
+    const { t, formatDate: formatLocaleDate, formatNumber } = useI18n();
 
     const [virtualLive, setVirtualLive] = useState<IVirtualLiveInfo | null>(null);
     const [allMusics, setAllMusics] = useState<IMusic[]>([]);
     const [allMusicVocals, setAllMusicVocals] = useState<IMusicVocal[]>([]);
+    const [rewardResourceBoxes, setRewardResourceBoxes] = useState<IResourceBoxInfo[]>([]);
+    const [rewardLookups, setRewardLookups] = useState<IRewardLookupData>(EMPTY_REWARD_LOOKUPS);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
     const [relatedEvent, setRelatedEvent] = useState<IEventInfo | null>(null);
     const [imageViewerOpen, setImageViewerOpen] = useState(false);
+
+    const rewardLookupMaps = useMemo<IRewardLookupMaps>(() => ({
+        materialMap: buildMapById(rewardLookups.materials),
+        stampMap: buildMapById(rewardLookups.stamps),
+        honorMap: buildMapById(rewardLookups.honors),
+        honorGroupMap: buildMapById(rewardLookups.honorGroups),
+        boostItemMap: buildMapById(rewardLookups.boostItems),
+        virtualLiveTransitionItemMap: buildMapById(rewardLookups.virtualLiveTransitionItems),
+    }), [rewardLookups]);
+
+    const resolvedRewardBoxes = useMemo(
+        () => resolveVirtualLiveRewardBoxes(virtualLive, rewardResourceBoxes, rewardLookupMaps, assetSource, t),
+        [virtualLive, rewardResourceBoxes, rewardLookupMaps, assetSource, t]
+    );
 
     // Set mounted state
     useEffect(() => {
@@ -73,10 +468,11 @@ export default function VirtualLiveDetailClient() {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [virtualLivesData, musicsData, musicVocalsData] = await Promise.all([
+                const [virtualLivesData, musicsData, musicVocalsData, resourceBoxesData] = await Promise.all([
                     fetchMasterData<IVirtualLiveInfo[]>("virtualLives.json"),
                     fetchMasterData<IMusic[]>("musics.json"),
                     fetchMasterData<IMusicVocal[]>("musicVocals.json"),
+                    fetchOptionalMasterRows<IResourceBoxInfo>(true, "resourceBoxes.json"),
                 ]);
 
                 const foundVL = virtualLivesData.find(vl => vl.id === virtualLiveId);
@@ -84,10 +480,53 @@ export default function VirtualLiveDetailClient() {
                     throw new Error(`Virtual Live ${virtualLiveId} not found`);
                 }
 
+                const resourceBoxRewards = getVirtualLiveRewards(foundVL);
+                const relevantRewardBoxesFromResourceBoxes = getRelevantRewardBoxes(foundVL, resourceBoxesData);
+                const shouldUseCompactFallback =
+                    isCompactResourceBoxServer() ||
+                    !hasRewardDetailsForEveryBox(resourceBoxRewards, relevantRewardBoxesFromResourceBoxes);
+                const compactResourceBoxDetails = await fetchOptionalMasterData<ICompactResourceBoxDetails | null>(
+                    shouldUseCompactFallback,
+                    "compactResourceBoxDetails.json",
+                    null
+                );
+                const relevantRewardBoxes = mergeRewardBoxes(
+                    relevantRewardBoxesFromResourceBoxes,
+                    getRelevantRewardBoxesFromCompact(foundVL, compactResourceBoxDetails)
+                );
+                const rewardResourceTypes = collectRewardResourceTypes(relevantRewardBoxes);
+                const [
+                    materialsData,
+                    stampsData,
+                    honorsData,
+                    honorGroupsData,
+                    boostItemsData,
+                    virtualLiveTransitionItemsData,
+                ] = await Promise.all([
+                    fetchOptionalMasterRows<IMaterialInfo>(rewardResourceTypes.has("material"), "materials.json"),
+                    fetchOptionalMasterRows<IStampInfo>(rewardResourceTypes.has("stamp"), "stamps.json"),
+                    fetchOptionalMasterRows<IHonorInfo>(rewardResourceTypes.has("honor"), "honors.json"),
+                    fetchOptionalMasterRows<IHonorGroup>(rewardResourceTypes.has("honor"), "honorGroups.json"),
+                    fetchOptionalMasterRows<IGenericRewardItem>(rewardResourceTypes.has("boost_item"), "boostItems.json"),
+                    fetchOptionalMasterRows<IGenericRewardItem>(
+                        rewardResourceTypes.has("virtual_live_transition_item"),
+                        "virtualLiveTransitionItems.json"
+                    ),
+                ]);
+
                 setVirtualLive(foundVL);
                 document.title = `Moesekai - ${foundVL.name}`;
                 setAllMusics(musicsData);
                 setAllMusicVocals(musicVocalsData);
+                setRewardResourceBoxes(relevantRewardBoxes);
+                setRewardLookups({
+                    materials: materialsData,
+                    stamps: stampsData,
+                    honors: honorsData,
+                    honorGroups: honorGroupsData,
+                    boostItems: boostItemsData,
+                    virtualLiveTransitionItems: virtualLiveTransitionItemsData,
+                });
                 setError(null);
             } catch (err) {
                 console.error("Error fetching virtual live:", err);
@@ -317,6 +756,16 @@ export default function VirtualLiveDetailClient() {
                             </div>
                         </div>
 
+                        {/* Rewards Card */}
+                        {resolvedRewardBoxes.length > 0 && (
+                            <VirtualLiveRewardsCard
+                                rewardBoxes={resolvedRewardBoxes}
+                                formatNumber={formatNumber}
+                                getConditionLabel={(virtualLiveType) => getRewardConditionLabel(virtualLiveType, t)}
+                                assetSource={assetSource}
+                            />
+                        )}
+
                         {/* Schedules Card */}
                         {virtualLive.virtualLiveSchedules && virtualLive.virtualLiveSchedules.length > 0 && (
                             <SchedulesCard
@@ -459,6 +908,157 @@ export default function VirtualLiveDetailClient() {
                 </div>
             </div>
         </MainLayout>
+    );
+}
+
+function VirtualLiveRewardsCard({
+    rewardBoxes,
+    formatNumber,
+    getConditionLabel,
+    assetSource,
+}: {
+    rewardBoxes: IResolvedVirtualLiveRewardBox[];
+    formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
+    getConditionLabel: (virtualLiveType: string) => string;
+    assetSource: ReturnType<typeof useTheme>["assetSource"];
+}) {
+    const { t } = useI18n();
+    const totalRewards = rewardBoxes.reduce((total, box) => total + box.details.length, 0);
+
+    return (
+        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
+                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12v10H4V12m16 0H4m16 0h1V8h-5.5M4 12H3V8h5.5m7 0H12m3.5 0C17 6.5 17 4 15 4s-3 2-3 4m3.5 0H12m-3.5 0H12m-3.5 0C7 6.5 7 4 9 4s3 2 3 4" />
+                    </svg>
+                    {t("page.live.rewardsTitle", { count: totalRewards })}
+                </h2>
+            </div>
+            <div className="divide-y divide-slate-100">
+                {rewardBoxes.map((box) => (
+                    <div key={`${box.reward.virtualLiveType}-${box.reward.resourceBoxId}`} className="p-4">
+                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                            <span className="inline-flex items-center rounded-full bg-miku/10 px-2.5 py-1 text-xs font-bold text-miku">
+                                {getConditionLabel(box.reward.virtualLiveType)}
+                            </span>
+                            <span className="font-mono text-xs text-slate-400">
+                                {t("page.live.rewardBoxLabel", { id: box.reward.resourceBoxId })}
+                            </span>
+                        </div>
+
+                        {box.details.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {box.details.map((detail) => (
+                                    <VirtualLiveRewardItem
+                                        key={detail.key}
+                                        detail={detail}
+                                        formatNumber={formatNumber}
+                                        assetSource={assetSource}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                                {t("page.live.rewardEmpty")}
+                            </p>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function VirtualLiveRewardItem({
+    detail,
+    formatNumber,
+    assetSource,
+}: {
+    detail: IResolvedVirtualLiveReward;
+    formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
+    assetSource: ReturnType<typeof useTheme>["assetSource"];
+}) {
+    const { t } = useI18n();
+    const showQuantity = detail.quantity > 1 || detail.resourceType === "coin" || detail.resourceType === "jewel" || detail.resourceType === "virtual_coin";
+    const content = (
+        <>
+            <VirtualLiveRewardThumbnail detail={detail} assetSource={assetSource} />
+            <div className="min-w-0 flex-1">
+                <p className="line-clamp-2 text-sm font-bold text-slate-800 group-hover:text-miku transition-colors">
+                    {detail.name}
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    {detail.subtitle && (
+                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+                            {detail.subtitle}
+                        </span>
+                    )}
+                    {typeof detail.resourceId === "number" && (
+                        <span className="font-mono text-[10px] text-slate-400">ID: {detail.resourceId}</span>
+                    )}
+                    {showQuantity && (
+                        <span className="rounded bg-miku/10 px-1.5 py-0.5 text-[10px] font-bold text-miku">
+                            {t("page.live.rewardQuantity", { count: formatNumber(detail.quantity) })}
+                        </span>
+                    )}
+                </div>
+            </div>
+        </>
+    );
+
+    const className = "group flex min-h-[84px] items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3 transition-all hover:border-miku/40 hover:bg-white hover:shadow-sm";
+
+    return detail.linkHref ? (
+        <Link href={detail.linkHref} className={className}>
+            {content}
+        </Link>
+    ) : (
+        <div className={className}>
+            {content}
+        </div>
+    );
+}
+
+function VirtualLiveRewardThumbnail({
+    detail,
+    assetSource,
+}: {
+    detail: IResolvedVirtualLiveReward;
+    assetSource: ReturnType<typeof useTheme>["assetSource"];
+}) {
+    if (detail.honor) {
+        return (
+            <div className="w-32 shrink-0">
+                <DegreeImage
+                    honor={detail.honor}
+                    honorGroup={detail.honorGroup}
+                    honorLevel={detail.resourceLevel || detail.honor.levels[0]?.level}
+                    source={assetSource}
+                />
+            </div>
+        );
+    }
+
+    if (detail.imageUrl) {
+        return (
+            <div className="relative h-14 w-14 shrink-0 rounded-xl bg-white shadow-sm ring-1 ring-slate-200 overflow-hidden">
+                <Image
+                    src={detail.imageUrl}
+                    alt={detail.name}
+                    fill
+                    sizes="56px"
+                    className="object-contain p-1.5"
+                    unoptimized
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white text-xs font-black text-slate-400 shadow-sm ring-1 ring-slate-200">
+            {detail.typeLabel.slice(0, 2).toUpperCase()}
+        </div>
     );
 }
 
