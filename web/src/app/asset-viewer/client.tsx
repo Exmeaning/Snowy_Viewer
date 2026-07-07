@@ -82,7 +82,14 @@ function AssetViewerContent() {
     const [server, setServer] = useState<string>(() => {
         if (typeof window !== "undefined") {
             const params = new URLSearchParams(window.location.search);
-            return params.get("server") || "jp";
+            const queryServer = params.get("server");
+            if (queryServer) return queryServer;
+
+            const savedServer = localStorage.getItem("server-source");
+            if (savedServer === "en" || savedServer === "jp" || savedServer === "cn" || savedServer === "tw" || savedServer === "kr") {
+                return savedServer;
+            }
+            return "jp";
         }
         return "jp";
     });
