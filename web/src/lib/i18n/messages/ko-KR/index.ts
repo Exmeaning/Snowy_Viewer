@@ -625,7 +625,13 @@ export const koKRMessages = {
             termsOfService: "서비스 약관",
             copyrightNotice: "본 사이트는 소재 표시만을 제공하며, 게임 저작권은 SEGA/Colorful Palette에 있습니다.",
             fanNotice: "이것은 팬 사이트이며 연구 목적으로만 사용되는 팬 데이터베이스입니다.",
-            generatedBy: "생성자"
+            generatedBy: "생성자",
+            explore: "탐색",
+            sisterSites: "자매 사이트",
+            contact: "문의 및 피드백",
+            brandDescription: "프로젝트 세카이의 차세대 뷰어.",
+            feedback: "피드백 / 기여 제출",
+            bugReport: "오류 보고"
         },
         groupPages: {
             cards: "모든 카드 데이터 찾아보기",
