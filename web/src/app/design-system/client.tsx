@@ -474,7 +474,7 @@ export default function DesignSystemClient() {
                                 </p>
                             </div>
                             <span className="text-xs font-medium text-slate-400">
-                                原作 / ルナ茶　部署 / Moe Dev Team　转载请标明原作者
+                                原作 / ルナ茶　部署 / StarMoe　转载请标明原作者
                             </span>
                         </div>
                         <MysekaiScenePreview heightClassName="h-[560px] min-h-[480px]" compact />

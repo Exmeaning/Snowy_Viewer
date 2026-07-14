@@ -33,9 +33,9 @@ export default function PatreonPage() {
 
                     <section className="space-y-4 pt-4 border-t border-slate-100">
                         <p>
-                            I&apos;m Exmeaning, the lead developer of the moesekai dev team. I hope moesekai will be your fastest, most beautiful, and ultimate hub for everything Project SEKAI!
+                            I&apos;m Exmeaning, the lead developer of <ExternalLink href="https://star.moe" className="font-bold underline hover:text-miku">StarMoe</ExternalLink>. I hope moesekai will be your fastest, most beautiful, and ultimate hub for everything Project SEKAI!
                             <br />
-                            <span className="text-slate-500">我是 東雪 (Exmeaning)，moesekai dev team 的主要开发者。我希望 moesekai 能够成为你探索《世界计划 (PJSK)》最快、最美、也是最棒的数字枢纽！</span>
+                            <span className="text-slate-500">我是 東雪 (Exmeaning)，<ExternalLink href="https://star.moe" className="font-bold underline hover:text-miku">StarMoe</ExternalLink> 的主要开发者。我希望 moesekai 能够成为你探索《世界计划 (PJSK)》最快、最美、也是最棒的数字枢纽！</span>
                         </p>
                     </section>
 

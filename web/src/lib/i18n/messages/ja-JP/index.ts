@@ -981,7 +981,7 @@ export const jaJPMessages = {
       },
       organization: {
         label: 'Organization',
-        avatarAlt: 'Moesekai organization avatar',
+        avatarAlt: 'StarMoe organization avatar',
         description: 'A small developer group'
       },
       techStack: {
@@ -2047,7 +2047,7 @@ export const jaJPMessages = {
         title: 'World Link Prediction Notice',
         description: 'World Link events are almost impossible to predict, so this data is just for fun.'
       },
-      stopPredictionNotice: 'Snowy stops prediction a few hours before the event ends',
+      stopPredictionNotice: 'Moesekai stops prediction a few hours before the event ends',
       loading: 'Loading prediction data...',
       table: {
         activeTitle: 'Tier Prediction Overview',
@@ -3231,7 +3231,7 @@ export const jaJPMessages = {
         copyRoomCode: '📋 Copy Room Code',
         shareLink: '🔗 Share Link',
         shareCopied: 'Share link copied!',
-        shareText: 'I am playing SnowyViewer Guess Master on {difficulty} difficulty. Room code: {roomCode}. Server: {serverName}. Join here: {shareUrl}',
+        shareText: 'I am playing Moesekai Guess Master on {difficulty} difficulty. Room code: {roomCode}. Server: {serverName}. Join here: {shareUrl}',
         players: 'Players ({count}/{max})',
         hostBadge: '· Host',
         youBadge: '· You',
@@ -3440,7 +3440,7 @@ export const jaJPMessages = {
         completed: 'Completed',
         ignored: 'Ignored',
         failed: 'Failed',
-        credit: 'Original work / Lunacha　Powered by Moe Dev Team　Please credit the original author when reposting'
+        credit: 'Original work / Lunacha　Powered by StarMoe　Please credit the original author when reposting'
       },
       runtime: {
         initializing: 'Initializing...',
@@ -3720,7 +3720,7 @@ export const jaJPMessages = {
         copyRoomCode: '📋 Copy Room Code',
         shareLink: '🔗 Share Link',
         shareCopied: 'Share link copied!',
-        shareText: 'I am playing SnowyViewer Guess Jacket Master on {server} · {difficulty}. Room code: {roomCode}. Server: {serverName}. Join here: {shareUrl}',
+        shareText: 'I am playing Moesekai Guess Jacket Master on {server} · {difficulty}. Room code: {roomCode}. Server: {serverName}. Join here: {shareUrl}',
         players: 'Players ({count}/{max})',
         hostBadge: '· Host',
         youBadge: '· You',

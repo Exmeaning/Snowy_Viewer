@@ -981,7 +981,7 @@ export const koKRMessages = {
             },
             organization: {
                 label: "조직",
-                avatarAlt: "Moesekai 조직 아바타",
+                avatarAlt: "StarMoe 조직 아바타",
                 description: "소규모 개발자 그룹"
             },
             techStack: {
@@ -2047,7 +2047,7 @@ export const koKRMessages = {
                 title: "WL 활동 예측 지침",
                 description: "WL 활동은 예측하기가 거의 불가능하며 데이터는 완전히 그래픽입니다."
             },
-            stopPredictionNotice: "Snowy는 이벤트가 끝나기 몇 시간 전에 예측을 중단합니다.",
+            stopPredictionNotice: "Moesekai는 이벤트가 끝나기 몇 시간 전에 예측을 중단합니다.",
             loading: "예측 데이터 로드...",
             table: {
                 activeTitle: "각 순위선에 대한 예측 목록",
@@ -3231,7 +3231,7 @@ export const koKRMessages = {
                 copyRoomCode: "📋 방 번호 복사",
                 shareLink: "🔗 링크 공유",
                 shareCopied: "공유 링크가 복사되었습니다!",
-                shareText: "SnowyViewer에서 [{difficulty}] 난이도로 Card Guessing Master를 플레이하고 있습니다. 방 번호 [{roomCode}] 서버 [{serverName}] 방에 참여하려면 링크를 클릭하세요 {shareUrl}",
+                shareText: "Moesekai에서 [{difficulty}] 난이도로 Card Guessing Master를 플레이하고 있습니다. 방 번호 [{roomCode}] 서버 [{serverName}] 방에 참여하려면 링크를 클릭하세요 {shareUrl}",
                 players: "플레이어({count}/{max})",
                 hostBadge: "· 주택 소유자",
                 youBadge: "· 당신",
@@ -3440,7 +3440,7 @@ export const koKRMessages = {
                 completed: "완료됨",
                 ignored: "일반적으로 무시됨",
                 failed: "실패했다",
-                credit: "원작/르나차 Powered by Moe Dev Team 재인쇄 시 원작자를 표시해 주세요."
+                credit: "원작/르나차 Powered by StarMoe 재인쇄 시 원작자를 표시해 주세요."
             },
             runtime: {
                 initializing: "초기화 중...",
@@ -3718,7 +3718,7 @@ export const koKRMessages = {
                 copyRoomCode: "📋 방 번호 복사",
                 shareLink: "🔗 링크 공유",
                 shareCopied: "공유 링크가 복사되었습니다!",
-                shareText: "SnowyViewer에서 음악 추측 마스터를 재생 중입니다. [{server}·{difficulty}] 난이도 방 번호 [{roomCode}] 서버 [{serverName}] 방에 참여하려면 링크를 클릭하세요 {shareUrl}",
+                shareText: "Moesekai에서 음악 추측 마스터를 재생 중입니다. [{server}·{difficulty}] 난이도 방 번호 [{roomCode}] 서버 [{serverName}] 방에 참여하려면 링크를 클릭하세요 {shareUrl}",
                 players: "플레이어({count}/{max})",
                 hostBadge: "· 주택 소유자",
                 youBadge: "· 당신",

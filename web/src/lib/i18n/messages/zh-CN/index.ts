@@ -981,7 +981,7 @@ export const zhCNMessages = {
             },
             organization: {
                 label: "Organization",
-                avatarAlt: "Moesekai 组织头像",
+                avatarAlt: "StarMoe 组织头像",
                 description: "A small developer group",
             },
             techStack: {
@@ -2023,7 +2023,7 @@ export const zhCNMessages = {
                 title: "WL 活动预测说明",
                 description: "WL 活动几乎无法预测，数据完全图一乐。",
             },
-            stopPredictionNotice: "活动结束前数小时 Snowy 停止预测",
+            stopPredictionNotice: "活动结束前数小时 Moesekai 停止预测",
             loading: "加载预测数据...",
             table: {
                 activeTitle: "各榜线预测一览",
@@ -3207,7 +3207,7 @@ export const zhCNMessages = {
                 copyRoomCode: "📋 复制房间号",
                 shareLink: "🔗 分享链接",
                 shareCopied: "分享链接已复制！",
-                shareText: "我正在 SnowyViewer 游玩【{difficulty}】难度的猜卡大师 房间号【{roomCode}】服务器【{serverName}】 点击链接加入房间 {shareUrl}",
+                shareText: "我正在 Moesekai 游玩【{difficulty}】难度的猜卡大师 房间号【{roomCode}】服务器【{serverName}】 点击链接加入房间 {shareUrl}",
                 players: "玩家 ({count}/{max})",
                 hostBadge: "· 房主",
                 youBadge: "· 你",
@@ -3416,7 +3416,7 @@ export const zhCNMessages = {
                 completed: "已完成",
                 ignored: "正常忽略",
                 failed: "失败",
-                credit: "原作 / ルナ茶　Powered by Moe Dev Team　转载请标明原作者",
+                credit: "原作 / ルナ茶　Powered by StarMoe　转载请标明原作者",
             },
             runtime: {
                 initializing: "初始化中...",
@@ -3694,7 +3694,7 @@ export const zhCNMessages = {
                 copyRoomCode: "📋 复制房间号",
                 shareLink: "🔗 分享链接",
                 shareCopied: "分享链接已复制！",
-                shareText: "我正在 SnowyViewer 游玩【{server}·{difficulty}】难度的猜曲绘大师 房间号【{roomCode}】服务器【{serverName}】 点击链接加入房间 {shareUrl}",
+                shareText: "我正在 Moesekai 游玩【{server}·{difficulty}】难度的猜曲绘大师 房间号【{roomCode}】服务器【{serverName}】 点击链接加入房间 {shareUrl}",
                 players: "玩家 ({count}/{max})",
                 hostBadge: "· 房主",
                 youBadge: "· 你",

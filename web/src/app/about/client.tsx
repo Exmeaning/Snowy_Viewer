@@ -63,7 +63,22 @@ export default function AboutClient() {
                                 className="object-cover"
                             />
                         </div>
-                        <h3 className="text-2xl font-bold">Moesekai</h3>
+                        <div className="w-36 h-10 relative flex items-center justify-center mb-1 group/logo select-none">
+                            <div
+                                className="h-8 w-full bg-gradient-to-r from-miku to-luka transition-all duration-300 group-hover/logo:scale-105"
+                                style={{
+                                    maskImage: "url(/starmoe.svg)",
+                                    maskSize: "contain",
+                                    maskPosition: "center",
+                                    maskRepeat: "no-repeat",
+                                    WebkitMaskImage: "url(/starmoe.svg)",
+                                    WebkitMaskSize: "contain",
+                                    WebkitMaskPosition: "center",
+                                    WebkitMaskRepeat: "no-repeat",
+                                }}
+                            />
+                        </div>
+                        <h3 className="text-2xl font-bold">StarMoe</h3>
                         <p className="text-miku text-sm font-bold mt-1">{t("page.about.organization.description")}</p>
                         <div className="mt-6 flex flex-col items-center gap-1 opacity-50 text-xs text-white">
                             <span>&quot;Soul by HelloWorld&quot;</span>

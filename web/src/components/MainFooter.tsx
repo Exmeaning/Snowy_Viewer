@@ -130,7 +130,23 @@ export default function MainFooter() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs text-slate-400 dark:text-slate-500">
                     <div className="space-y-1">
                         <p>
-                            © {new Date().getFullYear()} MoeSekai. {t("layout.footer.generatedBy")} <span className="font-bold text-slate-500 dark:text-slate-400">Moesekai Dev Team</span>.
+                            © {new Date().getFullYear()} MoeSekai. {t("layout.footer.generatedBy")}{" "}
+                            <ExternalLink href="https://star.moe" className="inline-flex items-center gap-1 font-bold text-slate-500 dark:text-slate-400 hover:text-[var(--theme-color,#39C5BB)] transition-colors duration-300">
+                                <span
+                                    className="h-3.5 w-12 bg-current transition-colors duration-300"
+                                    style={{
+                                        maskImage: "url(/starmoe.svg)",
+                                        maskSize: "contain",
+                                        maskPosition: "center",
+                                        maskRepeat: "no-repeat",
+                                        WebkitMaskImage: "url(/starmoe.svg)",
+                                        WebkitMaskSize: "contain",
+                                        WebkitMaskPosition: "center",
+                                        WebkitMaskRepeat: "no-repeat",
+                                    }}
+                                />
+                                StarMoe
+                            </ExternalLink>.
                         </p>
                         <p className="text-[10px] text-slate-400/80 font-bold uppercase tracking-wider">
                             {t("layout.footer.nonProfit")}

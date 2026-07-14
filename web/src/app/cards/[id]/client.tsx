@@ -167,7 +167,7 @@ export default function CardDetailPage() {
                     };
                 }
                 setCard(cardWithRawParams);
-                // document.title = `Snowy SekaiViewer - ${foundCard.prefix}`; // Moved to metadata
+                // document.title = `Moesekai - ${foundCard.prefix}`; // Moved to metadata
 
                 // Set initial level to max
                 const maxLevelInfo = MAX_LEVELS[foundCard.cardRarityType];
