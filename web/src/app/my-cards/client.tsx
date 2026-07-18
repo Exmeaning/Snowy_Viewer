@@ -534,7 +534,7 @@ function MyCardsContent() {
         setActiveAcc(acc);
     }, []);
 
-    // No account state â€” show inline quick bind form
+    // No account state â€?show inline quick bind form
     if (accounts.length === 0) {
         return (
             <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
@@ -702,7 +702,7 @@ function MyCardsContent() {
                             <button
                                 onClick={loadMore}
                                 data-shortcut-load-more="true"
-                                className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                                className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
                             >
                                 {t("page.myCards.loadMore")}
                                 <span className="ml-2 text-sm opacity-80">

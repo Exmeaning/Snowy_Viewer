@@ -43,9 +43,9 @@ export default function MainNavbar({
 
     return (
         <nav className="fixed inset-x-3 top-3 sm:inset-x-4 sm:top-4 z-[100] pointer-events-none">
-            {/* Floating Island Header */}
+            {/* Floating Island Header — structural chrome material */}
             <div
-                className={`island-panel pointer-events-auto animate-island-in px-3 sm:px-5 transition-all duration-300 ${isHome ? "rounded-full" : "rounded-[24px] md:rounded-[28px]"}`}
+                className={`island-panel material-chrome pointer-events-auto animate-island-in px-3 sm:px-5 transition-[border-radius,box-shadow] duration-[var(--duration-base)] ease-[var(--ease-out-soft)] ${isHome ? "rounded-full" : "rounded-[24px] md:rounded-[28px]"}`}
             >
                 {/* Row 1: Logo + buttons */}
                 <div className="h-[3.25rem] sm:h-[3.75rem] flex items-center justify-between gap-2">
@@ -54,7 +54,7 @@ export default function MainNavbar({
                         {/* Menu Toggle Button */}
                         <button
                             onClick={onMenuToggle}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-600 dark:text-slate-300 hover:text-miku dark:hover:text-miku ios-glass-btn rounded-full shrink-0"
+                            className="pressable flex items-center gap-1.5 px-2.5 py-1.5 text-slate-600 dark:text-slate-300 hover:text-miku dark:hover:text-miku ios-glass-btn type-on-glass rounded-full shrink-0"
                             title={`${t("layout.nav.menu")} (${sidebarShortcut})`}
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,9 +66,9 @@ export default function MainNavbar({
                         </button>
 
                         {/* Logo */}
-                        <Link href="/" className="flex items-center gap-1.5 hover:opacity-80 transition-all shrink-0 group" title="Moesekai">
+                        <Link href="/" className="pressable flex items-center gap-1.5 hover:opacity-80 shrink-0 group" title="Moesekai">
                             <div
-                                className="h-7 w-[4.5rem] sm:h-8 sm:w-[5.5rem] bg-miku transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_8px_rgba(51,204,187,0.45)]"
+                                className="h-7 w-[4.5rem] sm:h-8 sm:w-[5.5rem] bg-miku transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] group-hover:scale-105 group-hover:drop-shadow-[0_0_8px_rgba(51,204,187,0.45)]"
                                 style={{
                                     maskImage: `url(${MOE_LOGO_URL})`,
                                     maskSize: "contain",
@@ -93,7 +93,7 @@ export default function MainNavbar({
                         {/* Search Button */}
                         <button
                             onClick={onSearchToggle}
-                            className="flex items-center gap-2 px-2.5 py-1.5 text-slate-500 dark:text-slate-400 hover:text-miku dark:hover:text-miku ios-glass-btn rounded-full"
+                            className="pressable flex items-center gap-2 px-2.5 py-1.5 text-slate-500 dark:text-slate-400 hover:text-miku dark:hover:text-miku ios-glass-btn type-on-glass rounded-full"
                             title={`${t("layout.nav.search")} (${searchShortcut})`}
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -107,7 +107,7 @@ export default function MainNavbar({
                         {/* Keyboard Shortcuts Help Button */}
                         <button
                             onClick={onShortcutsHelpToggle}
-                            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-slate-500 dark:text-slate-400 hover:text-miku dark:hover:text-miku ios-glass-btn rounded-full"
+                            className="pressable hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-slate-500 dark:text-slate-400 hover:text-miku dark:hover:text-miku ios-glass-btn type-on-glass rounded-full"
                             title={`${t("layout.nav.shortcutsHelp")} (${helpShortcut})`}
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -124,7 +124,7 @@ export default function MainNavbar({
                             <button
                                 id="settings-button"
                                 onClick={onSettingsToggle}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-500 dark:text-slate-400 hover:text-miku dark:hover:text-miku ios-glass-btn rounded-full"
+                                className="pressable flex items-center gap-1.5 px-2.5 py-1.5 text-slate-500 dark:text-slate-400 hover:text-miku dark:hover:text-miku ios-glass-btn type-on-glass rounded-full"
                                 title={`${t("layout.nav.settings")} (${settingsShortcut})`}
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

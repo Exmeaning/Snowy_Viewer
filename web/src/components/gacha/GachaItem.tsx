@@ -27,7 +27,7 @@ export default function GachaItem({ gacha }: GachaItemProps) {
     });
 
     return (
-        <Link href={`/gacha/${gacha.id}`} className="group block" data-shortcut-item="true">
+        <Link href={`/gacha/${gacha.id}`} className="group pressable block" data-shortcut-item="true">
             <div className="relative rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive">
                 {/* Logo Image */}
                 <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100">

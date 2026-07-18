@@ -676,7 +676,7 @@ export default function Sidebar({
 
     return (
         <>
-            {/* Overlay for mobile */}
+            {/* Overlay for mobile — dim to focus */}
             {isOpen && (
                 <div
                     className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[55] md:hidden"
@@ -684,9 +684,9 @@ export default function Sidebar({
                 />
             )}
 
-            {/* Sidebar — Floating Island */}
+            {/* Sidebar — heavier structural material than chips */}
             <aside
-                className={`fixed left-3 sm:left-4 ${isHome ? "top-[5rem]" : "top-[7rem]"} sm:top-[5.5rem] z-[60] w-64 island-panel rounded-3xl ${hasMounted ? 'transition-transform duration-300 ease-out' : ''} overflow-hidden flex flex-col ${isOpen ? "translate-x-0" : "-translate-x-[18rem]"}
+                className={`fixed left-3 sm:left-4 ${isHome ? "top-[5rem]" : "top-[7rem]"} sm:top-[5.5rem] z-[60] w-64 island-panel material-thick rounded-3xl ${hasMounted ? "transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)]" : ""} overflow-hidden flex flex-col ${isOpen ? "translate-x-0" : "-translate-x-[18rem]"}
                     ${isHome ? "h-[calc(100vh-6rem)]" : "h-[calc(100vh-8rem)]"} sm:h-[calc(100vh-6.5rem)]`}
             >
                 {isOpen && <div className="absolute inset-0 pointer-events-none animate-island-in-left" aria-hidden="true" />}
@@ -699,7 +699,7 @@ export default function Sidebar({
                         href="/"
                         onClick={handleNavClick}
                         data-nav-index={(() => { const i = flatIdx; flatIdx++; return i; })()}
-                        className={`flex items-center gap-3 px-4 py-2 rounded-full text-sm transition-all ${focusedIndex === 0
+                        className={`pressable flex items-center gap-3 px-4 py-2 rounded-full text-sm type-on-glass ${focusedIndex === 0
                             ? "island-pill-active ring-2 ring-miku/30"
                             : pathname === "/"
                                 ? "island-pill-active"
@@ -721,11 +721,11 @@ export default function Sidebar({
                             <div key={group.id}>
                                 <button
                                     onClick={() => toggleGroup(group.id)}
-                                    className="w-full flex items-center justify-between px-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider hover:text-miku dark:hover:text-miku transition-colors"
+                                    className="pressable w-full flex items-center justify-between px-4 text-xs font-bold type-caption text-slate-400 dark:text-slate-500 uppercase tracking-wider hover:text-miku dark:hover:text-miku"
                                 >
                                     {getGroupLabel(group.id)}
                                     <svg
-                                        className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""
+                                        className={`w-3.5 h-3.5 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${isExpanded ? "rotate-180" : ""
                                             }`}
                                         fill="none"
                                         viewBox="0 0 24 24"
@@ -735,7 +735,7 @@ export default function Sidebar({
                                     </svg>
                                 </button>
                                 <div
-                                    className={`space-y-0.5 overflow-hidden transition-all duration-200 ${isExpanded ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
+                                    className={`space-y-0.5 overflow-hidden transition-[max-height,opacity] duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${isExpanded ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
                                         }`}
                                 >
                                     {group.items.map((item) => {
@@ -745,7 +745,7 @@ export default function Sidebar({
                                         const isFocused = focusedIndex === thisIdx;
                                         return (
                                             <div key={item.href}>
-                                                <div className={`flex items-center rounded-full transition-all ${isFocused
+                                                <div className={`pressable flex items-center rounded-full ${isFocused
                                                     ? "island-pill-active ring-2 ring-miku/30"
                                                     : active
                                                         ? "island-pill-active"
@@ -755,7 +755,7 @@ export default function Sidebar({
                                                         href={item.href}
                                                         onClick={handleNavClick}
                                                         data-nav-index={thisIdx}
-                                                        className="flex items-center gap-3 px-4 py-2 text-sm font-medium flex-1 min-w-0"
+                                                        className="flex items-center gap-3 px-4 py-2 text-sm font-medium type-on-glass flex-1 min-w-0"
                                                     >
                                                         {item.icon}
                                                         <span className="truncate">{getItemLabel(item.href, item.id)}</span>
@@ -776,7 +776,7 @@ export default function Sidebar({
                     <Link
                         href="/profile"
                         onClick={handleNavClick}
-                        className="flex items-center gap-3 p-2 rounded-2xl hover:bg-miku/8 dark:hover:bg-miku/12 transition-all duration-300 group"
+                        className="pressable flex items-center gap-3 p-2 rounded-2xl hover:bg-miku/8 dark:hover:bg-miku/12 group"
                     >
                         {/* Avatar */}
                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-miku to-blue-400 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/40 dark:ring-white/10">

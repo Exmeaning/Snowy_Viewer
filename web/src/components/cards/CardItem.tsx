@@ -27,8 +27,8 @@ export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: Car
     const showTrainedThumbnail = isTrainedOnlyCard || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
 
     return (
-        <Link href={`${hrefPrefix}/${card.id}`} className="group block" data-shortcut-item="true">
-            <div className="relative cursor-pointer rounded-xl overflow-hidden transition-all ios-glass-card ios-glass-card-interactive">
+        <Link href={`${hrefPrefix}/${card.id}`} className="group pressable block" data-shortcut-item="true">
+            <div className="relative cursor-pointer rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive">
                 {/* Card Image Container */}
                 <div className="w-full relative">
                     <SekaiCardThumbnail
@@ -53,12 +53,12 @@ export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: Car
                             original={card.prefix}
                             category="cards"
                             field="prefix"
-                            originalClassName="text-slate-800 dark:text-slate-200 text-[10px] font-bold truncate leading-tight group-hover:text-miku transition-colors block"
-                            translationClassName="text-slate-400 dark:text-slate-500 text-[9px] truncate leading-tight block"
+                            originalClassName="text-slate-800 dark:text-slate-200 text-[10px] type-on-glass font-bold truncate leading-tight group-hover:text-miku block"
+                            translationClassName="text-slate-400 dark:text-slate-500 text-[9px] type-caption truncate leading-tight block"
                         />
                     </div>
                     <div className="flex items-center justify-between gap-1">
-                        <p className="text-slate-400 dark:text-slate-500 text-[9px] truncate leading-tight flex-1">{characterName}</p>
+                        <p className="text-slate-400 dark:text-slate-500 text-[9px] type-caption truncate leading-tight flex-1">{characterName}</p>
                         <span className="flex-shrink-0 text-[8px] text-slate-400 bg-slate-100/50 dark:bg-slate-800/50 ios-glass-tab px-1 py-0.5 rounded leading-none font-mono">
                             ID:{card.id}
                         </span>

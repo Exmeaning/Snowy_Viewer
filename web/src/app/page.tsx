@@ -13,7 +13,8 @@ import AnnouncementSection from "@/components/home/AnnouncementSection";
 import BirthdaySection from "@/components/home/BirthdaySection";
 import { MOE_LOGO_URL } from "@/lib/assets";
 import { useI18n } from "@/contexts/I18nContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { getMotionTransition } from "@/lib/motion";
 
 type TabType = "event" | "cards" | "music" | "live";
 
@@ -255,6 +256,10 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("event");
   const [showSetup, setShowSetup] = useState(false);
   const [showSettingsHint, setShowSettingsHint] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
+  const hintTransition = getMotionTransition("soft", {
+    reducedMotion: !!prefersReducedMotion,
+  });
 
   useEffect(() => {
     const handle = requestAnimationFrame(() => {
@@ -290,23 +295,23 @@ export default function Home() {
       <AnimatePresence>
         {showSettingsHint && (
           <motion.div
-            initial={{ opacity: 0, y: -50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 350, damping: 25 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-[999] w-[90%] max-w-md bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border border-white/20 dark:border-slate-800/40 p-4 rounded-2xl shadow-xl flex items-center gap-3 text-left"
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -24, scale: 0.98 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -12, scale: 0.98 }}
+            transition={hintTransition}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-[999] w-[90%] max-w-md material-thick island-panel p-4 rounded-2xl flex items-center gap-3 text-left"
           >
             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-miku/15 dark:bg-miku/20 flex items-center justify-center text-xl">
               ⚙️
             </div>
             <div className="flex-1 pr-2">
-              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">
+              <p className="text-xs sm:text-sm type-title font-bold text-slate-800 dark:text-slate-100">
                 {t("page.setup.settingsHint")}
               </p>
             </div>
             <button
               onClick={() => setShowSettingsHint(false)}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 cursor-pointer shrink-0"
+              className="pressable text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer shrink-0"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -350,7 +355,7 @@ export default function Home() {
         <div className="w-full max-w-5xl">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-6 w-1 rounded-full bg-miku"></div>
-            <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.home.sections.latest")}</h2>
+            <h2 className="text-xl type-title font-bold text-primary-text opacity-80">{t("page.home.sections.latest")}</h2>
           </div>
 
           {/* Tab Navigation */}
@@ -360,10 +365,10 @@ export default function Home() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-300
+                  pressable flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm whitespace-nowrap type-on-glass
                   ${activeTab === tab.id
-                    ? 'bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20'
-                    : 'bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50'
+                    ? "island-pill-active shadow-sm shadow-miku/15"
+                    : "material-thin text-slate-600 dark:text-slate-300 hover:text-miku"
                   }
                 `}
               >
@@ -388,18 +393,18 @@ export default function Home() {
         <div className="w-full max-w-5xl">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-6 w-1 rounded-full bg-miku"></div>
-            <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.home.sections.shortcuts")}</h2>
+            <h2 className="text-xl type-title font-bold text-primary-text opacity-80">{t("page.home.sections.shortcuts")}</h2>
           </div>
           <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
             {SHORTCUTS.map((shortcut, index) => (
-              <Link key={index} href={shortcut.href} className="group">
-                <div className="p-3 rounded-xl glass-card hover:bg-white/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg border border-white/40 flex flex-col items-center gap-1.5 text-center">
-                  <div className="transition-transform duration-300 group-hover:scale-110">
+              <Link key={index} href={shortcut.href} className="group pressable">
+                <div className="p-3 rounded-2xl island-panel material-regular flex flex-col items-center gap-1.5 text-center transition-[transform,box-shadow] duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] group-hover:-translate-y-0.5">
+                  <div className="transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] group-hover:scale-110">
                     {shortcut.icon}
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-primary-text group-hover:text-miku transition-colors leading-tight">{t(shortcut.labelKey)}</h3>
-                    <p className="text-[8px] text-slate-400 font-bold tracking-wider uppercase hidden sm:block">{shortcut.subLabel}</p>
+                    <h3 className="text-xs type-on-glass font-bold text-primary-text group-hover:text-miku leading-tight">{t(shortcut.labelKey)}</h3>
+                    <p className="text-[8px] type-caption text-slate-400 font-bold tracking-wider uppercase hidden sm:block">{shortcut.subLabel}</p>
                   </div>
                 </div>
               </Link>
@@ -412,11 +417,11 @@ export default function Home() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="h-6 w-1 rounded-full bg-miku"></div>
-              <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.information.latestAnnouncements")}</h2>
+              <h2 className="text-xl type-title font-bold text-primary-text opacity-80">{t("page.information.latestAnnouncements")}</h2>
             </div>
             <Link
               href="/information"
-              className="text-xs font-bold text-miku hover:text-miku-dark dark:hover:text-miku-light transition-colors flex items-center gap-1 group/btn"
+              className="pressable text-xs font-bold text-miku hover:text-miku-dark dark:hover:text-miku-light flex items-center gap-1 group/btn"
             >
               <span>{t("page.home.announcements.viewAll")}</span>
               <svg className="w-4 h-4 transform group-hover/btn:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -434,36 +439,36 @@ export default function Home() {
         <div className="w-full max-w-5xl">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-6 w-1 rounded-full bg-miku"></div>
-            <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.home.sections.friends")}</h2>
+            <h2 className="text-xl type-title font-bold text-primary-text opacity-80">{t("page.home.sections.friends")}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <ExternalLink href="https://haruki.seiunx.com" target="_blank" className="relative group overflow-hidden rounded-xl h-16 shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100">
+            <ExternalLink href="https://haruki.seiunx.com" target="_blank" className="pressable relative group overflow-hidden rounded-2xl h-16 island-panel material-regular">
               <div className="relative z-10 h-full flex items-center justify-between px-5">
                 <div className="text-left">
-                  <h3 className="text-sm font-bold text-primary-text">{t("page.home.friends.harukiTitle")}</h3>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Haruki Toolbox</p>
+                  <h3 className="text-sm type-title font-bold text-primary-text">{t("page.home.friends.harukiTitle")}</h3>
+                  <p className="text-[9px] type-caption text-slate-400 font-bold uppercase tracking-wider">Haruki Toolbox</p>
                 </div>
-                <svg className="w-4 h-4 text-slate-300 group-hover:text-miku transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                <svg className="w-4 h-4 text-slate-300 group-hover:text-miku" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </div>
             </ExternalLink>
 
-            <ExternalLink href="https://viewer.unipjsk.com" target="_blank" className="relative group overflow-hidden rounded-xl h-16 shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100">
+            <ExternalLink href="https://viewer.unipjsk.com" target="_blank" className="pressable relative group overflow-hidden rounded-2xl h-16 island-panel material-regular">
               <div className="relative z-10 h-full flex items-center justify-between px-5">
                 <div className="text-left">
-                  <h3 className="text-sm font-bold text-primary-text">Uni Viewer</h3>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Uni PJSK</p>
+                  <h3 className="text-sm type-title font-bold text-primary-text">Uni Viewer</h3>
+                  <p className="text-[9px] type-caption text-slate-400 font-bold uppercase tracking-wider">Uni PJSK</p>
                 </div>
-                <svg className="w-4 h-4 text-slate-300 group-hover:text-miku transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                <svg className="w-4 h-4 text-slate-300 group-hover:text-miku" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </div>
             </ExternalLink>
 
-            <ExternalLink href="https://3-3.dev" target="_blank" className="relative group overflow-hidden rounded-xl h-16 shadow-sm hover:shadow-lg transition-shadow bg-white border border-slate-100">
+            <ExternalLink href="https://3-3.dev" target="_blank" className="pressable relative group overflow-hidden rounded-2xl h-16 island-panel material-regular">
               <div className="relative z-10 h-full flex items-center justify-between px-5">
                 <div className="text-left">
-                  <h3 className="text-sm font-bold text-primary-text">33kit</h3>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">3-3.dev</p>
+                  <h3 className="text-sm type-title font-bold text-primary-text">33kit</h3>
+                  <p className="text-[9px] type-caption text-slate-400 font-bold uppercase tracking-wider">3-3.dev</p>
                 </div>
-                <svg className="w-4 h-4 text-slate-300 group-hover:text-miku transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                <svg className="w-4 h-4 text-slate-300 group-hover:text-miku" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </div>
             </ExternalLink>
           </div>

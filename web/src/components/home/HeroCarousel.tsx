@@ -235,16 +235,16 @@ export default function HeroCarousel() {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >
-            {/* Slides */}
+            {/* Slides — soft critical settle; reduced-motion falls back via CSS tokens */}
             {slides.map((slide, index) => (
                 <div
                     key={`${slide.type}-${index}`}
-                    className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                    className={`absolute inset-0 transition-[opacity,transform] duration-[var(--duration-slow)] ease-[var(--ease-out-soft)] ${
                         index === currentIndex
                             ? "opacity-100 translate-x-0 z-10"
                             : index < currentIndex
-                            ? "opacity-0 -translate-x-4 z-0"
-                            : "opacity-0 translate-x-4 z-0"
+                            ? "opacity-0 -translate-x-3 z-0"
+                            : "opacity-0 translate-x-3 z-0"
                     }`}
                     aria-hidden={index !== currentIndex}
                 >
@@ -286,7 +286,7 @@ export default function HeroCarousel() {
                 <>
                     <button
                         onClick={(e) => { e.preventDefault(); goPrev(); }}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/50"
+                        className="pressable absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/50"
                         aria-label={t("page.home.hero.previousSlide")}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,7 +295,7 @@ export default function HeroCarousel() {
                     </button>
                     <button
                         onClick={(e) => { e.preventDefault(); goNext(); }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/50"
+                        className="pressable absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/50"
                         aria-label={t("page.home.hero.nextSlide")}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -312,7 +312,7 @@ export default function HeroCarousel() {
                         <button
                             key={index}
                             onClick={() => goTo(index)}
-                            className={`rounded-full transition-all duration-300 ${
+                            className={`pressable rounded-full transition-[width,background-color] duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${
                                 index === currentIndex
                                     ? "w-6 h-2 bg-white shadow-sm"
                                     : "w-2 h-2 bg-white/50 hover:bg-white/70"

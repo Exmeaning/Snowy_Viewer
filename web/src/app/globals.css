@@ -34,7 +34,33 @@
   --island-glass-border: rgba(255, 255, 255, 0.55);
   --island-blur: 32px;
   --island-saturate: 190%;
+  /* Spring-like CSS easing (overshoot OK for non-gesture UI flourishes) */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Critically damped feel — default UI (no bounce) */
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-instant: 100ms;
+  --duration-fast: 200ms;
+  --duration-base: 320ms;
+  --duration-slow: 420ms;
+  /* Material hierarchy (heavier = structural chrome) */
+  --material-thin-bg: rgba(255, 255, 255, 0.35);
+  --material-regular-bg: rgba(255, 255, 255, 0.55);
+  --material-thick-bg: rgba(255, 255, 255, 0.72);
+  --material-chrome-bg: rgba(255, 255, 255, 0.62);
+  --material-thin-blur: 12px;
+  --material-regular-blur: 24px;
+  --material-thick-blur: 32px;
+  --material-saturate: 180%;
+  --press-scale: 0.97;
+  --type-tracking-display: -0.022em;
+  --type-tracking-title: -0.014em;
+  --type-tracking-body: 0em;
+  --type-tracking-caption: 0.01em;
+  --type-leading-display: 1.05;
+  --type-leading-title: 1.15;
+  --type-leading-body: 1.5;
+  --type-leading-caption: 1.35;
   --island-shadow:
     0 12px 40px 0 rgba(31, 38, 135, 0.10),
     0 4px 12px 0 rgba(31, 38, 135, 0.05),
@@ -65,6 +91,11 @@
   --cream-deep: rgba(30, 41, 59, 0.5);
   --island-glass: rgba(15, 23, 42, 0.55);
   --island-glass-border: rgba(148, 163, 184, 0.22);
+  --material-thin-bg: rgba(30, 41, 59, 0.45);
+  --material-regular-bg: rgba(15, 23, 42, 0.55);
+  --material-thick-bg: rgba(15, 23, 42, 0.78);
+  --material-chrome-bg: rgba(15, 23, 42, 0.62);
+  --material-saturate: 200%;
   --island-shadow:
     0 12px 40px 0 rgba(0, 0, 0, 0.45),
     0 4px 12px 0 rgba(0, 0, 0, 0.25),
@@ -82,6 +113,12 @@
   --animate-shimmer: shimmer 2s linear infinite;
 }
 
+html {
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   overflow-x: hidden;
   color: var(--color-primary-text);
@@ -91,6 +128,8 @@ body {
   font-synthesis-weight: none;
   font-synthesis-style: none;
   text-rendering: optimizeLegibility;
+  letter-spacing: var(--type-tracking-body);
+  line-height: var(--type-leading-body);
 }
 
 :root.theme-switching,
@@ -493,6 +532,242 @@ body {
   .animate-island-in,
   .animate-island-in-left {
     animation: none;
+  }
+}
+
+/* ==========================================
+   Apple foundation utilities
+   Response · Materials · Type · A11y
+   ========================================== */
+
+/* Instant press feedback on pointer-down (not click) */
+.pressable {
+  transition:
+    transform var(--duration-instant) var(--ease-out-snappy),
+    opacity var(--duration-fast) ease,
+    background-color var(--duration-fast) var(--ease-out-soft),
+    box-shadow var(--duration-fast) var(--ease-out-soft),
+    border-color var(--duration-fast) ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pressable:active {
+  transform: scale(var(--press-scale));
+}
+
+.pressable:disabled,
+.pressable[aria-disabled="true"] {
+  transform: none;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Material layers — weight encodes hierarchy */
+.material-thin {
+  background: var(--material-thin-bg);
+  backdrop-filter: blur(var(--material-thin-blur)) saturate(var(--material-saturate));
+  -webkit-backdrop-filter: blur(var(--material-thin-blur)) saturate(var(--material-saturate));
+  border: 1px solid color-mix(in srgb, var(--island-glass-border) 80%, transparent);
+}
+
+.material-regular {
+  background: var(--material-regular-bg);
+  backdrop-filter: blur(var(--material-regular-blur)) saturate(var(--material-saturate));
+  -webkit-backdrop-filter: blur(var(--material-regular-blur)) saturate(var(--material-saturate));
+  border: 1px solid var(--island-glass-border);
+  box-shadow:
+    0 8px 28px 0 rgba(31, 38, 135, 0.08),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.55);
+}
+
+.material-thick {
+  background: var(--material-thick-bg);
+  backdrop-filter: blur(var(--material-thick-blur)) saturate(var(--material-saturate));
+  -webkit-backdrop-filter: blur(var(--material-thick-blur)) saturate(var(--material-saturate));
+  border: 1px solid var(--island-glass-border);
+  box-shadow: var(--island-shadow);
+}
+
+.material-chrome {
+  background: var(--material-chrome-bg);
+  backdrop-filter: blur(var(--island-blur)) saturate(var(--island-saturate));
+  -webkit-backdrop-filter: blur(var(--island-blur)) saturate(var(--island-saturate));
+  border: 1px solid var(--island-glass-border);
+  box-shadow: var(--island-shadow);
+}
+
+:root[data-theme="dark"] .material-regular {
+  box-shadow:
+    0 8px 28px 0 rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Scroll-edge fade under floating chrome (prefer over hard 1px dividers) */
+.scroll-edge-fade {
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+}
+
+/* Type scale helpers — size-specific tracking + leading */
+.type-display {
+  font-weight: 700;
+  line-height: var(--type-leading-display);
+  letter-spacing: var(--type-tracking-display);
+  font-optical-sizing: auto;
+}
+
+.type-title {
+  font-weight: 600;
+  line-height: var(--type-leading-title);
+  letter-spacing: var(--type-tracking-title);
+  font-optical-sizing: auto;
+}
+
+.type-body {
+  font-weight: 400;
+  line-height: var(--type-leading-body);
+  letter-spacing: var(--type-tracking-body);
+}
+
+.type-caption {
+  font-weight: 500;
+  line-height: var(--type-leading-caption);
+  letter-spacing: var(--type-tracking-caption);
+}
+
+/* Vibrancy-ish text on glass: slightly heavier + tracking bump */
+.type-on-glass {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Wire press feedback into existing interactive glass/island controls */
+.ios-glass-btn,
+.ios-glass-btn-primary,
+.island-chip,
+button.island-pill-active,
+button.island-pill-hover {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ios-glass-btn:active,
+.ios-glass-btn-primary:active {
+  transform: scale(var(--press-scale)) translateY(0);
+  transition: transform var(--duration-instant) var(--ease-out-snappy),
+    background-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
+}
+
+.island-chip:active {
+  transform: scale(var(--press-scale));
+}
+
+/* Accessibility: reduced motion / transparency / contrast */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ease-spring: ease-out;
+    --ease-out-soft: ease-out;
+    --ease-out-snappy: ease-out;
+    --duration-instant: 1ms;
+    --duration-fast: 120ms;
+    --duration-base: 160ms;
+    --duration-slow: 200ms;
+    --press-scale: 1;
+  }
+
+  .pressable:active,
+  .ios-glass-btn:active,
+  .ios-glass-btn-primary:active,
+  .island-chip:active,
+  .ios-glass-card-interactive:hover,
+  .ios-glass-card-interactive:active {
+    transform: none !important;
+  }
+
+  .animate-float-blob-1,
+  .animate-float-blob-2,
+  .animate-fade-in,
+  .animate-shimmer,
+  .animate-pulse-fast {
+    animation: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --island-glass: rgba(255, 255, 255, 0.94);
+    --island-glass-border: rgba(226, 232, 240, 0.95);
+    --island-blur: 0px;
+    --material-thin-bg: rgba(255, 255, 255, 0.96);
+    --material-regular-bg: rgba(255, 255, 255, 0.97);
+    --material-thick-bg: rgba(255, 255, 255, 0.98);
+    --material-chrome-bg: rgba(255, 255, 255, 0.97);
+    --glass-bg: rgba(255, 255, 255, 0.96);
+  }
+
+  :root[data-theme="dark"] {
+    --island-glass: rgba(15, 23, 42, 0.96);
+    --island-glass-border: rgba(148, 163, 184, 0.35);
+    --material-thin-bg: rgba(15, 23, 42, 0.96);
+    --material-regular-bg: rgba(15, 23, 42, 0.97);
+    --material-thick-bg: rgba(15, 23, 42, 0.98);
+    --material-chrome-bg: rgba(15, 23, 42, 0.97);
+    --glass-bg: rgba(15, 23, 42, 0.96);
+  }
+
+  .island-panel,
+  .ios-glass-card,
+  .ios-glass-panel,
+  .ios-glass-btn,
+  .ios-glass-input,
+  .ios-glass-tab,
+  .ios-glass-dropdown,
+  .liquid-glass-modal,
+  .glass-card,
+  .material-thin,
+  .material-regular,
+  .material-thick,
+  .material-chrome {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --island-glass: #ffffff;
+    --island-glass-border: #94a3b8;
+    --border-soft: #94a3b8;
+    --border-strong: #64748b;
+    --text-muted: #475569;
+    --accent-soft: color-mix(in srgb, var(--color-miku) 22%, white);
+  }
+
+  :root[data-theme="dark"] {
+    --island-glass: #0f172a;
+    --island-glass-border: #94a3b8;
+    --border-soft: #64748b;
+    --border-strong: #94a3b8;
+    --text-muted: #cbd5e1;
+  }
+
+  .island-panel,
+  .ios-glass-card,
+  .ios-glass-panel,
+  .material-regular,
+  .material-thick,
+  .material-chrome {
+    border-width: 1.5px;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }
 

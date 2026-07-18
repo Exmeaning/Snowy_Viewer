@@ -1,9 +1,10 @@
 "use client";
 import React, { useRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTheme, CHAR_COLORS, type BackgroundAnimationBudget } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
+import { getMotionTransition } from "@/lib/motion";
 import { UNIT_DATA, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { useMasterData } from "@/contexts/MasterDataContext";
 import { ADS_SETTINGS_VISIBLE } from "@/lib/ads";
@@ -92,6 +93,13 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     const panelRef = useRef<HTMLDivElement>(null);
 
     const [mounted, setMounted] = useState(false);
+    const prefersReducedMotion = useReducedMotion();
+    const overlayTransition = getMotionTransition("snappy", {
+        reducedMotion: !!prefersReducedMotion,
+    });
+    const panelTransition = getMotionTransition("soft", {
+        reducedMotion: !!prefersReducedMotion,
+    });
     useEffect(() => {
         const raf = requestAnimationFrame(() => {
             setMounted(true);
@@ -148,7 +156,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
+                        transition={overlayTransition}
                         onClick={onClose}
                     />
 
@@ -157,14 +165,26 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         id="settings-panel-content"
                         ref={panelRef}
                         className="relative w-full max-w-md transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] sm:max-h-[80vh] shadow-2xl"
-                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        initial={
+                            prefersReducedMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, scale: 0.96, y: 12 }
+                        }
+                        animate={
+                            prefersReducedMotion
+                                ? { opacity: 1 }
+                                : { opacity: 1, scale: 1, y: 0 }
+                        }
+                        exit={
+                            prefersReducedMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, scale: 0.96, y: 12 }
+                        }
+                        transition={panelTransition}
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200/50 dark:border-slate-800/30 bg-gradient-to-r from-miku/10 to-transparent shrink-0">
-                            <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 text-sm sm:text-base">
+                            <h3 className="type-title font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 text-sm sm:text-base">
                                 <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -173,7 +193,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                             </h3>
                             <button
                                 onClick={onClose}
-                                className="p-1.5 text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-lg transition-colors"
+                                className="pressable p-1.5 text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-lg"
                                 aria-label={t("common.action.close")}
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -198,7 +218,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                 <button
                                     key={option.id}
                                     onClick={() => setColorSchemePreference(option.id)}
-                                    className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${isSelected
+                                    className={`pressable flex-1 px-3 py-2 rounded-lg text-xs font-bold ${isSelected
                                         ? "bg-miku text-white shadow-sm"
                                         : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                                         }`}

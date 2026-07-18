@@ -25,7 +25,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
     const translatedTitle = translateMasterText("music", "title", music.title) ?? (useLLMTranslation ? cnTitle : undefined);
 
     return (
-        <Link href={`/music/${music.id}`} className="group block" data-shortcut-item="true">
+        <Link href={`/music/${music.id}`} className="group pressable block" data-shortcut-item="true">
             <div className="relative rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive">
                 {/* Jacket Image */}
                 <div className="relative aspect-square overflow-hidden">
@@ -34,7 +34,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                         alt={music.title}
                         fill
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="object-cover group-hover:scale-105 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)]"
                         unoptimized
                     />
 
@@ -73,15 +73,15 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
 
                 {/* Info */}
                 <div className="p-3">
-                    <h3 className="text-sm font-bold text-primary-text group-hover:text-miku transition-colors">
+                    <h3 className="text-sm type-title font-bold text-primary-text group-hover:text-miku">
                         <span className="flex flex-col">
                             <span className="block">{music.title}</span>
                             {translatedTitle && (
-                                <span className="text-xs font-medium text-slate-400 block">{translatedTitle}</span>
+                                <span className="text-xs type-caption font-medium text-slate-400 block">{translatedTitle}</span>
                             )}
                         </span>
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-xs type-caption text-slate-500 dark:text-slate-400 mt-1">
                         {music.composer}
                         {music.composer !== music.arranger && music.arranger !== "-" && ` / ${music.arranger}`}
                     </p>

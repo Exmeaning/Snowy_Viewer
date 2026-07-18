@@ -111,7 +111,7 @@ export default function ScrollToTop() {
             onPointerUp={handlePressEnd}
             onPointerLeave={handlePressEnd}
             onPointerCancel={handlePressEnd}
-            className={`fixed bottom-10 right-8 p-3 rounded-full backdrop-blur-md border border-miku/20 shadow-lg transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) z-[100] active:scale-95 transform group ${isVisible
+            className={`pressable fixed bottom-10 right-8 p-3 rounded-full material-regular border border-miku/20 shadow-lg transition-[opacity,transform,background-color,box-shadow,color] duration-[var(--duration-base)] ease-[var(--ease-out-soft)] z-[100] transform group ${isVisible
                 ? "opacity-100 translate-y-0 scale-100"
                 : "opacity-0 translate-y-10 scale-90 pointer-events-none"
                 } ${isInteracting
@@ -121,7 +121,7 @@ export default function ScrollToTop() {
             aria-label="Scroll to top"
         >
             <svg
-                className={`w-6 h-6 transition-transform duration-500 group-hover:-translate-y-1 ${isInteracting ? "-translate-y-1" : ""} ${isTapAnimating ? "scroll-top-icon-tap" : ""}`}
+                className={`w-6 h-6 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)] group-hover:-translate-y-1 ${isInteracting ? "-translate-y-1" : ""} ${isTapAnimating ? "scroll-top-icon-tap" : ""}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

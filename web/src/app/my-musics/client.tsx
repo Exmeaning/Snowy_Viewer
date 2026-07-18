@@ -744,7 +744,7 @@ function MyMusicsContent() {
                 if (playResult === "AP") {
                     userConstant = constant;
                 } else {
-                    // FC: â‰¥33 â†’ -1, <33 â†’ -1.5
+                    // FC: â‰?3 â†?-1, <33 â†?-1.5
                     userConstant = constant >= 33 ? constant - 1 : constant - 1.5;
                 }
 
@@ -1130,7 +1130,7 @@ function MyMusicsContent() {
                             <button
                                 onClick={loadMore}
                                 data-shortcut-load-more="true"
-                                className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                                className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
                             >
                                 {t("page.myMusics.loadMore")}
                                 <span className="ml-2 text-sm opacity-80">

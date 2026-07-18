@@ -1,8 +1,9 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
+import { getMotionTransition } from "@/lib/motion";
 
 interface ModalProps {
     isOpen: boolean;
@@ -35,6 +36,13 @@ export default function Modal({
 }: ModalProps) {
     const { t } = useI18n();
     const [mounted, setMounted] = useState(false);
+    const prefersReducedMotion = useReducedMotion();
+    const overlayTransition = getMotionTransition("snappy", {
+        reducedMotion: !!prefersReducedMotion,
+    });
+    const dialogTransition = getMotionTransition("soft", {
+        reducedMotion: !!prefersReducedMotion,
+    });
 
     // Keep a stable ref to onClose so the history effect doesn't re-run
     // when the parent passes a new inline callback on every render.
@@ -110,27 +118,39 @@ export default function Modal({
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-[200] isolate flex items-center justify-center p-4 sm:p-6">
-                    {/* Backdrop */}
+                    {/* Backdrop — dim to focus; materialize with blur when motion allowed */}
                     <motion.div
                         className="absolute inset-0 transform-gpu bg-black/35 backdrop-blur-[8px]"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
+                        transition={overlayTransition}
                         onClick={onClose}
                     />
 
-                    {/* Dialog */}
+                    {/* Dialog — enter/exit same path; critical spring by default */}
                     <motion.div
                         className={`relative w-full ${sizeClasses[size]} transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[85vh]`}
-                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        initial={
+                            prefersReducedMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, scale: 0.96, y: 12 }
+                        }
+                        animate={
+                            prefersReducedMotion
+                                ? { opacity: 1 }
+                                : { opacity: 1, scale: 1, y: 0 }
+                        }
+                        exit={
+                            prefersReducedMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, scale: 0.96, y: 12 }
+                        }
+                        transition={dialogTransition}
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between px-5 py-3.5 border-b border-dashed border-slate-200/60 dark:border-slate-700/40 bg-gradient-to-r from-miku/5 to-transparent flex-shrink-0">
-                            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            <h2 className="text-base type-title font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                                 <span className="w-1.5 h-6 bg-miku rounded-full" />
                                 {title}
                             </h2>
@@ -138,7 +158,7 @@ export default function Modal({
                                 {headerActions}
                                 <button
                                     onClick={onClose}
-                                    className="p-1.5 -mr-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 island-pill-hover rounded-full transition-colors"
+                                    className="pressable p-1.5 -mr-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 island-pill-hover rounded-full"
                                     aria-label={t("common.action.close")}
                                 >
                                     <svg

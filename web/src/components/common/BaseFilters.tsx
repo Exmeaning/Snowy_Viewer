@@ -147,13 +147,13 @@ export default function BaseFilters({
     };
 
     return (
-        <div ref={rootRef} data-shortcut-filters="true" className="ios-glass-card rounded-3xl overflow-hidden">
+        <div ref={rootRef} data-shortcut-filters="true" className="ios-glass-card material-regular rounded-3xl overflow-hidden">
             {/* Header — clickable on mobile to toggle collapse */}
             <div
                 className="px-5 py-4 border-b border-dashed border-slate-200/60 dark:border-slate-700/40 bg-gradient-to-r from-miku/10 to-transparent dark:from-miku/15 dark:to-slate-900/10 flex items-center justify-between lg:cursor-default cursor-pointer select-none"
                 onClick={toggleCollapsed}
             >
-                <h2 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <h2 className="type-title font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
@@ -164,14 +164,14 @@ export default function BaseFilters({
                     )}
                 </h2>
                 <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-xs type-caption text-slate-500 dark:text-slate-400">
                         {filteredCount === totalCount
                             ? `${totalCount}${countUnit ? ` ${countUnit}` : ""}`
                             : `${filteredCount} / ${totalCount}`}
                     </span>
                     {/* Collapse chevron — mobile only */}
                     <svg
-                        className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 lg:hidden ${mobileCollapsed ? "" : "rotate-180"}`}
+                        className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] lg:hidden ${mobileCollapsed ? "" : "rotate-180"}`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -184,7 +184,7 @@ export default function BaseFilters({
             {/* Search — always visible */}
             {showSearch && onSearchChange && (
                 <div className="px-5 pt-5">
-                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-350 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-bold type-caption text-slate-600 dark:text-slate-350 uppercase tracking-wider mb-2">
                         {t("common.filter.search")}
                     </label>
                     <div className="relative">
@@ -194,7 +194,7 @@ export default function BaseFilters({
                             placeholder={resolvedSearchPlaceholder}
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full ios-glass-input px-4 py-2.5 pr-10 rounded-xl text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                            className="w-full ios-glass-input material-thin px-4 py-2.5 pr-10 rounded-xl text-sm type-body text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                         />
                         <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -209,7 +209,7 @@ export default function BaseFilters({
                     {/* Sort Options */}
                     {sortOptions && sortOptions.length > 0 && onSortChange && (
                         <div>
-                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-bold type-caption text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
                                 {t("common.filter.sort")}
                             </label>
                             <div className={`grid gap-2 ${sortOptions.length <= 2 ? "grid-cols-2" : sortOptions.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
@@ -217,11 +217,11 @@ export default function BaseFilters({
                                     <button
                                         key={opt.id}
                                         onClick={() => handleSortClick(opt.id)}
-                                        className={`px-2 py-2 transition-all flex items-center justify-center gap-1 ${getFilterChipStateClasses(sortBy === opt.id)}`}
+                                        className={`pressable px-2 py-2 flex items-center justify-center gap-1 ${getFilterChipStateClasses(sortBy === opt.id)}`}
                                     >
                                         {opt.label}
                                         {sortBy === opt.id && (
-                                            <svg className={`w-3 h-3 transition-transform ${sortOrder === "asc" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg className={`w-3 h-3 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${sortOrder === "asc" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                             </svg>
                                         )}
@@ -238,7 +238,7 @@ export default function BaseFilters({
                     {hasActiveFilters && onReset && (
                         <button
                             onClick={onReset}
-                            className="w-full py-2.5 border border-slate-200 dark:border-slate-700 rounded-full text-sm text-slate-600 dark:text-slate-300 font-medium bg-white/70 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                            className="pressable w-full py-2.5 border border-slate-200 dark:border-slate-700 rounded-full text-sm text-slate-600 dark:text-slate-300 font-medium material-thin hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-2"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -292,7 +292,7 @@ interface FilterSectionProps {
 export function FilterSection({ label, children }: FilterSectionProps) {
     return (
         <div>
-            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold type-caption text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
                 {label}
             </label>
             {children}
@@ -312,7 +312,7 @@ export function FilterButton({ selected, onClick, children, className = "", styl
     return (
         <button
             onClick={onClick}
-            className={`transition-all ${getFilterChipStateClasses(selected)} ${className}`}
+            className={`pressable ${getFilterChipStateClasses(selected)} ${className}`}
             style={style}
         >
             {children}
@@ -330,12 +330,12 @@ export function FilterToggle({ selected, onClick, label }: FilterToggleProps) {
     return (
         <button
             onClick={onClick}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all border border-transparent ${getFilterToggleStateClasses(selected)}`}
+            className={`pressable w-full flex items-center justify-between px-4 py-3 rounded-2xl border border-transparent ${getFilterToggleStateClasses(selected)}`}
         >
-            <span className={`text-sm font-bold ${selected ? "text-[var(--accent-deep)]" : "text-slate-600 dark:text-slate-300"}`}>
+            <span className={`text-sm font-bold type-on-glass ${selected ? "text-[var(--accent-deep)]" : "text-slate-600 dark:text-slate-300"}`}>
                 {label}
             </span>
-            <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selected ? "bg-miku border-miku shadow-sm shadow-miku/20" : "border-slate-200/60 bg-white/20 dark:border-slate-700 dark:bg-slate-800/40"}`}>
+            <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors duration-[var(--duration-fast)] ${selected ? "bg-miku border-miku shadow-sm shadow-miku/20" : "border-slate-200/60 bg-white/20 dark:border-slate-700 dark:bg-slate-800/40"}`}>
                 {selected && (
                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />

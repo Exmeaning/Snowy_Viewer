@@ -111,10 +111,10 @@ const MYSEKAI_TYPE_KEYS = [
 ] as const;
 
 const MYSEKAI_RARITY_LABELS: Record<string, string> = {
-    rarity_1: "â˜…1",
-    rarity_2: "â˜…2",
-    rarity_3: "â˜…3",
-    rarity_4: "â˜…4",
+    rarity_1: "â˜?",
+    rarity_2: "â˜?",
+    rarity_3: "â˜?",
+    rarity_4: "â˜?",
 };
 
 const MYSEKAI_SITE_LABEL_KEYS: Record<number, string> = {
@@ -1327,7 +1327,7 @@ function MaterialsContent() {
                                     <button
                                         onClick={loadMore}
                                         data-shortcut-load-more="true"
-                                        className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                                        className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
                                     >
                                         {t("page.materials.loadMore")}
                                         <span className="ml-2 text-sm opacity-80">

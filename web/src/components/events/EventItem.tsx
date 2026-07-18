@@ -40,7 +40,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
     });
 
     return (
-        <Link href={`${basePath}/${event.id}`} className="group block" data-shortcut-item="true">
+        <Link href={`${basePath}/${event.id}`} className="group pressable block" data-shortcut-item="true">
             <div className="ios-glass-card ios-glass-card-interactive rounded-2xl overflow-hidden cursor-pointer">
                 {/* Event Logo */}
                 <div className="relative aspect-[16/9] bg-slate-100/50 dark:bg-slate-800/40 overflow-hidden">
@@ -48,7 +48,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                         src={thumbnailUrl}
                         alt={event.name}
                         fill
-                        className={`object-contain transition-transform duration-300 group-hover:scale-105 ${hasEventStoryBanner ? "" : "p-4"}`}
+                        className={`object-contain transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)] group-hover:scale-105 ${hasEventStoryBanner ? "" : "p-4"}`}
                         unoptimized
                     />
 
@@ -114,18 +114,18 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                     </div>
 
                     {/* Event Name */}
-                    <h3 className="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 sm:mb-2 group-hover:text-miku transition-colors">
+                    <h3 className="type-title font-bold text-slate-800 text-xs sm:text-sm mb-1.5 sm:mb-2 group-hover:text-miku">
                         <TranslatedText
                             original={event.name}
                             category="events"
                             field="name"
                             originalClassName=""
-                            translationClassName="text-xs font-medium text-slate-400 mt-0.5"
+                            translationClassName="text-xs type-caption font-medium text-slate-400 mt-0.5"
                         />
                     </h3>
 
                     {/* Date Range */}
-                    <div className="text-[10px] sm:text-xs text-slate-500 space-y-0.5 hidden sm:block">
+                    <div className="text-[10px] sm:text-xs type-caption text-slate-500 space-y-0.5 hidden sm:block">
                         <div className="flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

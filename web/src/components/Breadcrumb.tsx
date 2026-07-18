@@ -11,11 +11,11 @@ function ExpandButton({ open, onClick, ariaLabel }: { open: boolean; onClick: ()
     return (
         <button
             onClick={onClick}
-            className="p-0.5 -mr-0.5 rounded hover:bg-miku/10 transition-colors"
+            className="pressable p-0.5 -mr-0.5 rounded hover:bg-miku/10"
             aria-label={ariaLabel}
         >
             <svg
-                className={`w-3 h-3 transition-transform duration-100 ${open ? "rotate-180" : ""}`}
+                className={`w-3 h-3 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${open ? "rotate-180" : ""}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -29,7 +29,7 @@ function ExpandButton({ open, onClick, ariaLabel }: { open: boolean; onClick: ()
 // Dropdown panel.
 function DropdownPanel({ children }: { children: React.ReactNode }) {
     return (
-        <div className="absolute top-full left-0 mt-1.5 ios-glass-dropdown rounded-2xl py-1.5 min-w-[10rem] z-[200] animate-breadcrumb-dropdown">
+        <div className="absolute top-full left-0 mt-1.5 ios-glass-dropdown material-regular rounded-2xl py-1.5 min-w-[10rem] z-[200] animate-breadcrumb-dropdown">
             {children}
         </div>
     );
@@ -40,7 +40,7 @@ function DropdownItem({ href, isCurrent, children }: { href: string; isCurrent: 
     return (
         <Link
             href={href}
-            className={`block px-3 py-1.5 mx-1 text-sm transition-all duration-200 whitespace-nowrap rounded-lg ${
+            className={`pressable block px-3 py-1.5 mx-1 text-sm type-on-glass whitespace-nowrap rounded-lg ${
                 isCurrent
                     ? "island-pill-active"
                     : "text-slate-600 dark:text-slate-300 hover:bg-miku/10 dark:hover:bg-miku/15 hover:text-miku dark:hover:text-miku"

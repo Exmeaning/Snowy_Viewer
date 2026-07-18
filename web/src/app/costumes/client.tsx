@@ -397,14 +397,14 @@ function CostumesContent() {
                                             href={`/costumes/${costume.costumeNumber}`}
                                             key={costume.costumeNumber}
                                             data-shortcut-item="true"
-                                            className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-3 flex flex-col h-full group"
+                                            className="pressable ios-glass-card ios-glass-card-interactive rounded-xl overflow-hidden p-3 flex flex-col h-full group"
                                         >
-                                            <div className="relative aspect-square mb-2 bg-slate-50 rounded-lg overflow-hidden group-hover:bg-slate-100 transition-colors">
+                                            <div className="relative aspect-square mb-2 bg-slate-50/70 dark:bg-slate-800/40 rounded-lg overflow-hidden">
                                                 <Image
                                                     src={getCostumeThumbnailUrl(assetName, assetSource)}
                                                     alt={costume.name}
                                                     fill
-                                                    className="object-contain p-2"
+                                                    className="object-contain p-2 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)] group-hover:scale-105"
                                                     unoptimized
                                                 />
                                             </div>
@@ -416,7 +416,7 @@ function CostumesContent() {
                                                         </span>
                                                     </div>
                                                 )}
-                                                <h3 className="font-bold text-sm text-slate-800 mb-1 group-hover:text-miku transition-colors" title={costume.name}>
+                                                <h3 className="type-title font-bold text-sm text-slate-800 mb-1 group-hover:text-miku" title={costume.name}>
                                                     <TranslatedText
                                                         original={costume.name}
                                                         category="costumes"
@@ -447,10 +447,10 @@ function CostumesContent() {
                                     <button
                                         onClick={loadMore}
                                         data-shortcut-load-more="true"
-                                        className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                                        className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
                                     >
                                         {tI18n("page.costumes.loadMore")}
-                                        <span className="ml-2 text-sm opacity-80">
+                                        <span className="ml-2 text-sm opacity-80 type-caption">
                                             ({displayedGroups.length} / {filteredCostumes.length})
                                         </span>
                                     </button>

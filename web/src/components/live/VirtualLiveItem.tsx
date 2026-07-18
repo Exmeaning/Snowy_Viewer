@@ -27,15 +27,15 @@ export default function VirtualLiveItem({ virtualLive, isSpoiler }: VirtualLiveI
     });
 
     return (
-        <Link href={`/live/${virtualLive.id}`} className="group block" data-shortcut-item="true">
-            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:ring-miku/30">
+        <Link href={`/live/${virtualLive.id}`} className="group pressable block" data-shortcut-item="true">
+            <div className="ios-glass-card ios-glass-card-interactive rounded-2xl overflow-hidden">
                 {/* Banner Image */}
                 <div className="relative aspect-[16/7] bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
                     <Image
                         src={bannerUrl}
                         alt={virtualLive.name}
                         fill
-                        className="object-contain transition-transform duration-300 group-hover:scale-105"
+                        className="object-contain transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)] group-hover:scale-105"
                         unoptimized
                     />
 
@@ -67,24 +67,24 @@ export default function VirtualLiveItem({ virtualLive, isSpoiler }: VirtualLiveI
                 <div className="p-2.5 sm:p-4">
                     {/* ID Badge */}
                     <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                        <span className="px-1.5 sm:px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] sm:text-xs font-mono rounded-full">
+                        <span className="px-1.5 sm:px-2 py-0.5 ios-glass-tab text-slate-500 text-[10px] sm:text-xs font-mono rounded-full">
                             #{virtualLive.id}
                         </span>
                     </div>
 
                     {/* Name */}
-                    <h3 className="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 sm:mb-2 group-hover:text-miku transition-colors">
+                    <h3 className="type-title font-bold text-slate-800 text-xs sm:text-sm mb-1.5 sm:mb-2 group-hover:text-miku">
                         <TranslatedText
                             original={virtualLive.name}
                             category="virtualLive"
                             field="name"
                             originalClassName=""
-                            translationClassName="text-xs font-medium text-slate-400 mt-0.5"
+                            translationClassName="text-xs type-caption font-medium text-slate-400 mt-0.5"
                         />
                     </h3>
 
                     {/* Date Range */}
-                    <div className="text-[10px] sm:text-xs text-slate-500 space-y-0.5 hidden sm:block">
+                    <div className="text-[10px] sm:text-xs type-caption text-slate-500 space-y-0.5 hidden sm:block">
                         <div className="flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

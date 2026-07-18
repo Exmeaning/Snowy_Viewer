@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { getDisplayCombos, SHORTCUT_GROUP_ORDER, SHORTCUTS } from "@/lib/shortcuts";
 import { useI18n } from "@/contexts/I18nContext";
+import { getMotionTransition } from "@/lib/motion";
 
 interface KeyboardShortcutsHelpProps {
     isOpen: boolean;
@@ -36,6 +37,13 @@ const shortcutGroups = SHORTCUT_GROUP_ORDER
 export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelpProps) {
     const [mounted, setMounted] = useState(false);
     const { t } = useI18n();
+    const prefersReducedMotion = useReducedMotion();
+    const overlayTransition = getMotionTransition("snappy", {
+        reducedMotion: !!prefersReducedMotion,
+    });
+    const panelTransition = getMotionTransition("snappy", {
+        reducedMotion: !!prefersReducedMotion,
+    });
 
     useEffect(() => {
         const raf = requestAnimationFrame(() => {
@@ -76,21 +84,33 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
+                        transition={overlayTransition}
                         onClick={onClose}
                     />
 
-                    {/* Dialog */}
+                    {/* Dialog — source-anchored from top chrome */}
                     <motion.div
                         className="relative w-full max-w-md transform-gpu will-change-transform liquid-glass-modal rounded-2xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[70vh]"
-                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        transition={{ duration: 0.15 }}
+                        initial={
+                            prefersReducedMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, scale: 0.97, y: -12 }
+                        }
+                        animate={
+                            prefersReducedMotion
+                                ? { opacity: 1 }
+                                : { opacity: 1, scale: 1, y: 0 }
+                        }
+                        exit={
+                            prefersReducedMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, scale: 0.97, y: -12 }
+                        }
+                        transition={panelTransition}
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200">
-                            <h2 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-700/40">
+                            <h2 className="text-sm type-title font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                                 <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <rect x="2" y="6" width="20" height="12" rx="2" />
                                     <path d="M6 14h0M10 14h4M18 14h0M8 10h0M12 10h0M16 10h0" strokeLinecap="round" />
@@ -99,7 +119,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                             </h2>
                             <button
                                 onClick={onClose}
-                                className="p-1 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100"
+                                className="pressable p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60"
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -111,7 +131,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                         <div className="overflow-y-auto flex-1 px-5 py-3">
                             {shortcutGroups.map((group) => (
                                 <div key={group.titleKey} className="mb-4 last:mb-0">
-                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                    <h3 className="text-xs type-caption font-bold text-slate-400 uppercase tracking-wider mb-2">
                                         {t(group.titleKey)}
                                     </h3>
                                     <div className="space-y-1.5">
@@ -120,7 +140,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                                                 key={shortcut.id}
                                                 className="flex items-center justify-between py-1.5"
                                             >
-                                                <span className="text-sm text-slate-600">
+                                                <span className="text-sm type-body text-slate-600 dark:text-slate-300">
                                                     {t(`shortcuts.entries.${shortcut.id}`)}
                                                 </span>
                                                 <div className="flex items-center justify-end gap-1 flex-wrap">

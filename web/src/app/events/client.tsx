@@ -102,10 +102,10 @@ function EventsContent() {
                             <button
                                 onClick={data.loadMore}
                                 data-shortcut-load-more="true"
-                                className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                                className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
                             >
                                 {t("page.events.loadMore")}
-                                <span className="ml-2 text-sm opacity-80">
+                                <span className="ml-2 text-sm opacity-80 type-caption">
                                     ({data.displayedEvents.length} / {data.filteredEvents.length})
                                 </span>
                             </button>

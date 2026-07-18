@@ -110,7 +110,7 @@ export default function ImagePreviewModal({
             <button
                 onClick={handleCopy}
                 disabled={isCopying || isSaving}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 island-pill-hover rounded-full transition-colors disabled:opacity-50"
+                className="pressable p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 island-pill-hover rounded-full disabled:opacity-50"
                 aria-label={t("common.imageActions.copyImage")}
                 title={isCopying ? t("common.imageActions.copying") : copySuccess ? t("common.imageActions.copySuccess") : t("common.imageActions.copyImage")}
             >
@@ -145,7 +145,7 @@ export default function ImagePreviewModal({
             <button
                 onClick={handleSave}
                 disabled={isSaving || isCopying}
-                className="p-1.5 text-slate-400 hover:text-miku island-pill-hover rounded-full transition-colors disabled:opacity-50"
+                className="pressable p-1.5 text-slate-400 hover:text-miku island-pill-hover rounded-full disabled:opacity-50"
                 aria-label={t("common.imageActions.saveImage")}
                 title={isSaving ? t("common.imageActions.saving") : saveSuccess ? t("common.imageActions.saveSuccess") : t("common.imageActions.saveImage")}
             >

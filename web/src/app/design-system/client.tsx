@@ -109,15 +109,80 @@ export default function DesignSystemClient() {
                 <div className="mb-12 relative z-10">
                     <div className="inline-flex items-center gap-2 px-3 py-1 island-pill-active rounded-full mb-3">
                         <span className="w-2 h-2 rounded-full bg-miku animate-pulse"></span>
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Floating Island</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Floating Island · Apple Foundations</span>
                     </div>
-                    <h1 className="text-4xl font-extrabold bg-gradient-to-r from-miku via-miku-dark to-luka bg-clip-text text-transparent mb-4">
+                    <h1 className="text-4xl font-extrabold type-display bg-gradient-to-r from-miku via-miku-dark to-luka bg-clip-text text-transparent mb-4">
                         Design System & Component Library
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-lg">
-                        Reference guide for UI elements, colors, and typography, unified under the new **Floating Island (浮岛悬浮式)** standard — detached glass panels, pill-shaped active states, and accent-soft fills.
+                    <p className="text-slate-500 dark:text-slate-400 text-lg type-body max-w-3xl">
+                        Floating Island chrome plus Apple-inspired foundations: critically-damped motion, material hierarchy, size-specific typography, instant press feedback, and reduced-motion / reduced-transparency / contrast support.
                     </p>
                 </div>
+
+                {/* Apple Foundations */}
+                <section className="mb-16 relative z-10">
+                    <h2 className="text-2xl type-title text-primary-text mb-6 flex items-center gap-2">
+                        <span className="w-1.5 h-8 bg-miku rounded-full"></span>
+                        Apple Foundations
+                    </h2>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <div className="island-panel rounded-3xl p-5">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-miku mb-2">Motion</div>
+                            <p className="text-sm text-slate-600 dark:text-slate-300 type-body mb-3">
+                                Default UI springs are critically damped (no bounce). Use momentum bounce only after flicks. Import from <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">@/lib/motion</code>.
+                            </p>
+                            <ul className="text-xs text-slate-500 space-y-1 font-mono">
+                                <li>springSnappy · bounce 0 · 0.32s</li>
+                                <li>springSoft · bounce 0 · 0.42s</li>
+                                <li>springSheet · bounce 0.15 · 0.36s</li>
+                                <li>springMomentum · bounce 0.2 · 0.4s</li>
+                            </ul>
+                        </div>
+
+                        <div className="island-panel rounded-3xl p-5">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-miku mb-2">Materials</div>
+                            <p className="text-sm text-slate-600 dark:text-slate-300 type-body mb-3">
+                                Heavier materials for structural chrome; lighter for interactive chips. Avoid stacking light glass on light glass.
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="material-thin rounded-2xl p-3 text-[11px] font-semibold type-on-glass">thin</div>
+                                <div className="material-regular rounded-2xl p-3 text-[11px] font-semibold type-on-glass">regular</div>
+                                <div className="material-thick rounded-2xl p-3 text-[11px] font-semibold type-on-glass">thick</div>
+                                <div className="material-chrome rounded-2xl p-3 text-[11px] font-semibold type-on-glass">chrome</div>
+                            </div>
+                        </div>
+
+                        <div className="island-panel rounded-3xl p-5">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-miku mb-2">Response & A11y</div>
+                            <p className="text-sm text-slate-600 dark:text-slate-300 type-body mb-3">
+                                Feedback on pointer-down via <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">.pressable</code>. Respects reduced motion, reduced transparency, and more contrast.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                <button type="button" className="pressable px-4 py-2 rounded-full ios-glass-btn text-sm font-semibold">
+                                    Press me
+                                </button>
+                                <button type="button" className="pressable px-4 py-2 rounded-full ios-glass-btn ios-glass-btn-primary text-sm font-semibold">
+                                    Primary
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="ios-glass-panel rounded-3xl p-5">
+                        <div className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">CSS tokens</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono text-slate-500">
+                            <div>--ease-out-soft / --ease-spring</div>
+                            <div>--duration-instant|fast|base|slow</div>
+                            <div>--material-*-bg / blur</div>
+                            <div>--type-tracking-* / --type-leading-*</div>
+                            <div>--press-scale (0.97)</div>
+                            <div>projectMomentum() · rubberband()</div>
+                            <div>prefers-reduced-motion</div>
+                            <div>prefers-reduced-transparency · prefers-contrast</div>
+                        </div>
+                    </div>
+                </section>
 
                 {/* Colors Section */}
                 <section className="mb-16 relative z-10">
@@ -205,47 +270,47 @@ export default function DesignSystemClient() {
 
                 {/* Typography Section */}
                 <section className="mb-16 relative z-10">
-                    <h2 className="text-2xl font-bold text-primary-text mb-6 flex items-center gap-2">
+                    <h2 className="text-2xl type-title text-primary-text mb-6 flex items-center gap-2">
                         <span className="w-1.5 h-8 bg-luka rounded-full"></span>
                         Typography
                     </h2>
 
                     <div className="ios-glass-card p-8 rounded-3xl space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
-                            <div className="text-sm text-slate-400 font-mono">H1 / 4xl / Bold</div>
+                            <div className="text-sm text-slate-400 font-mono">Display / type-display</div>
                             <div className="md:col-span-2">
-                                <h1 className="text-4xl font-bold text-primary-text">The quick brown fox jumps over the lazy dog</h1>
+                                <h1 className="text-4xl type-display text-primary-text">The quick brown fox jumps over the lazy dog</h1>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
-                            <div className="text-sm text-slate-400 font-mono">H2 / 2xl / Bold</div>
+                            <div className="text-sm text-slate-400 font-mono">Title / type-title</div>
                             <div className="md:col-span-2">
-                                <h2 className="text-2xl font-bold text-primary-text">The quick brown fox jumps over the lazy dog</h2>
+                                <h2 className="text-2xl type-title text-primary-text">The quick brown fox jumps over the lazy dog</h2>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
                             <div className="text-sm text-slate-400 font-mono">H3 / xl / Bold</div>
                             <div className="md:col-span-2">
-                                <h3 className="text-xl font-bold text-primary-text">The quick brown fox jumps over the lazy dog</h3>
+                                <h3 className="text-xl type-title text-primary-text">The quick brown fox jumps over the lazy dog</h3>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
-                            <div className="text-sm text-slate-400 font-mono">Body / Base / Normal</div>
+                            <div className="text-sm text-slate-400 font-mono">Body / type-body</div>
                             <div className="md:col-span-2">
-                                <p className="text-base text-primary-text">
+                                <p className="text-base type-body text-primary-text">
                                     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                                 </p>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-                            <div className="text-sm text-slate-400 font-mono">Small / sm / Slate-500</div>
+                            <div className="text-sm text-slate-400 font-mono">Caption / type-caption</div>
                             <div className="md:col-span-2">
-                                <p className="text-sm text-slate-500">
-                                    Used for captions, timestamps, and secondary information.
+                                <p className="text-sm type-caption text-slate-500">
+                                    Used for captions, timestamps, and secondary information. Slightly positive tracking for legibility at small sizes.
                                 </p>
                             </div>
                         </div>
@@ -266,27 +331,27 @@ export default function DesignSystemClient() {
                             <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Buttons</h3>
                             <div className="flex flex-wrap gap-4 items-center">
                                 {/* Primary */}
-                                <button className="px-6 py-2.5 ios-glass-btn ios-glass-btn-primary rounded-full font-bold transition-all">
+                                <button className="pressable px-6 py-2.5 ios-glass-btn ios-glass-btn-primary rounded-full font-bold">
                                     Primary Button
                                 </button>
 
                                 {/* Secondary */}
-                                <button className="px-6 py-2.5 ios-glass-btn text-miku border-miku/30 rounded-full font-bold transition-all">
+                                <button className="pressable px-6 py-2.5 ios-glass-btn text-miku border-miku/30 rounded-full font-bold">
                                     Secondary
                                 </button>
 
                                 {/* Ghost/Nav */}
-                                <button className="px-4 py-2.5 text-slate-500 hover:text-miku ios-glass-btn rounded-full transition-all">
+                                <button className="pressable px-4 py-2.5 text-slate-500 hover:text-miku ios-glass-btn rounded-full">
                                     Ghost / Nav
                                 </button>
 
                                 {/* Island Pill Active (new) */}
-                                <button className="px-6 py-2.5 island-pill-active rounded-full font-bold transition-all">
+                                <button className="pressable px-6 py-2.5 island-pill-active rounded-full font-bold">
                                     Island Pill Active
                                 </button>
 
                                 {/* Icon Layout */}
-                                <button className="p-2.5 text-slate-400 hover:text-miku ios-glass-btn rounded-full transition-all">
+                                <button className="pressable p-2.5 text-slate-400 hover:text-miku ios-glass-btn rounded-full">
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

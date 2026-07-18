@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { searchableNavItems, SEARCH_GROUP_LABEL_KEYS, SEARCH_GROUP_ROUTES, SEARCH_STATIC_GROUP_LABEL_KEYS, NAV_ITEM_LABEL_KEYS } from "@/lib/navigation";
 import { CHARACTER_NAMES } from "@/types/types";
 import { getPrimaryShortcutLabel, isKeyboardEventComposing } from "@/lib/shortcuts";
 import { fetchMusicAliases } from "@/lib/musicAliases";
 import { useI18n } from "@/contexts/I18nContext";
+import { getMotionTransition } from "@/lib/motion";
 
 // Dynamic search index item from search-index.json
 interface SearchIndexItem {
@@ -51,6 +52,14 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
     const indexLoadedRef = useRef(false);
     const wildcardShortcut = getPrimaryShortcutLabel("toggle-search-wildcard");
     const { t } = useI18n();
+    const prefersReducedMotion = useReducedMotion();
+    const overlayTransition = getMotionTransition("snappy", {
+        reducedMotion: !!prefersReducedMotion,
+    });
+    // Anchored from top (search trigger) — same path in/out
+    const panelTransition = getMotionTransition("snappy", {
+        reducedMotion: !!prefersReducedMotion,
+    });
 
     useEffect(() => {
         try {
@@ -335,17 +344,29 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
+                        transition={overlayTransition}
                         onClick={onClose}
                     />
 
-                    {/* Dialog */}
+                    {/* Dialog — enter/exit from top (source-anchored path) */}
                     <motion.div
                         className="relative w-full max-w-lg transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[70vh]"
-                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        transition={{ duration: 0.15 }}
+                        initial={
+                            prefersReducedMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, scale: 0.97, y: -12 }
+                        }
+                        animate={
+                            prefersReducedMotion
+                                ? { opacity: 1 }
+                                : { opacity: 1, scale: 1, y: 0 }
+                        }
+                        exit={
+                            prefersReducedMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, scale: 0.97, y: -12 }
+                        }
+                        transition={panelTransition}
                         onKeyDown={handleKeyDown}
                     >
                         {/* Search input */}
@@ -386,7 +407,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                 </span>
                                 <button
                                     onClick={() => setUseWildcard(!useWildcard)}
-                                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useWildcard ? 'bg-miku' : 'bg-slate-200'}`}
+                                    className={`pressable relative w-11 h-6 rounded-full transition-colors duration-[var(--duration-fast)] ${useWildcard ? 'bg-miku' : 'bg-slate-200'}`}
                                 >
                                     <span
                                         className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${useWildcard ? 'translate-x-5' : 'translate-x-0'}`}

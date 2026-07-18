@@ -86,7 +86,7 @@ export default function QuickFilterButton() {
                 onPointerUp={handlePressEnd}
                 onPointerLeave={handlePressEnd}
                 onPointerCancel={handlePressEnd}
-                className={`fixed bottom-[6.5rem] right-8 p-3 rounded-2xl backdrop-blur-md border border-miku/20 shadow-lg transition-all duration-500 z-[100] active:scale-95 transform group md:hidden ${isInteracting
+                className={`pressable fixed bottom-[6.5rem] right-8 p-3 rounded-2xl material-regular border border-miku/20 shadow-lg transition-[opacity,transform,background-color,box-shadow,color] duration-[var(--duration-base)] ease-[var(--ease-out-soft)] z-[100] transform group md:hidden ${isInteracting
                     ? "bg-miku text-white shadow-miku/30 -translate-y-1 scale-110"
                     : "bg-white/80 text-miku shadow-miku/10 hover:bg-miku hover:text-white hover:shadow-miku/30 hover:-translate-y-1 hover:scale-110"
                     } ${isVisible
@@ -96,7 +96,7 @@ export default function QuickFilterButton() {
                 aria-label={t("common.filter.openQuickFilter")}
             >
                 <svg
-                    className={`w-6 h-6 transition-transform duration-500 group-hover:rotate-12 ${isInteracting ? "rotate-12" : ""} ${isTapAnimating ? "quick-filter-icon-tap" : ""}`}
+                    className={`w-6 h-6 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)] group-hover:rotate-12 ${isInteracting ? "rotate-12" : ""} ${isTapAnimating ? "quick-filter-icon-tap" : ""}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

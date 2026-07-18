@@ -561,10 +561,10 @@ function MusicContent() {
                             <button
                                 onClick={loadMore}
                                 data-shortcut-load-more="true"
-                                className="px-8 py-3 bg-gradient-to-r from-miku to-miku-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                                className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
                             >
                                 {t("page.music.loadMore")}
-                                <span className="ml-2 text-sm opacity-80">
+                                <span className="ml-2 text-sm opacity-80 type-caption">
                                     ({displayedMusicsWithSeparators.filter(item => item.type === 'music').length} / {filteredMusics.length})
                                 </span>
                             </button>
