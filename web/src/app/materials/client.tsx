@@ -111,10 +111,10 @@ const MYSEKAI_TYPE_KEYS = [
 ] as const;
 
 const MYSEKAI_RARITY_LABELS: Record<string, string> = {
-    rarity_1: "â˜?",
-    rarity_2: "â˜?",
-    rarity_3: "â˜?",
-    rarity_4: "â˜?",
+    rarity_1: "â˜…",
+    rarity_2: "â˜…",
+    rarity_3: "â˜…",
+    rarity_4: "â˜…",
 };
 
 const MYSEKAI_SITE_LABEL_KEYS: Record<number, string> = {

@@ -534,7 +534,7 @@ function MyCardsContent() {
         setActiveAcc(acc);
     }, []);
 
-    // No account state â€?show inline quick bind form
+    // No account state â€” show inline quick bind form
     if (accounts.length === 0) {
         return (
             <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">

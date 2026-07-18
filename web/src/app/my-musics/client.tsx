@@ -744,7 +744,7 @@ function MyMusicsContent() {
                 if (playResult === "AP") {
                     userConstant = constant;
                 } else {
-                    // FC: â‰?3 â†?-1, <33 â†?-1.5
+                    // FC: â‰¤3 â†’-1, <33 â†’-1.5
                     userConstant = constant >= 33 ? constant - 1 : constant - 1.5;
                 }
 
