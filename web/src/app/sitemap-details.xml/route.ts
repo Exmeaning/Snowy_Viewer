@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getBaseUrl, buildDetailsSitemap } from '@/lib/sitemap';
+import { getBaseUrl, buildDetailsSitemapIndex } from '@/lib/sitemap';
 
 export async function GET() {
     const baseUrl = await getBaseUrl();
-    const xml = buildDetailsSitemap(baseUrl);
+    const xml = buildDetailsSitemapIndex(baseUrl);
     return new NextResponse(xml, {
         headers: {
             'Content-Type': 'application/xml',

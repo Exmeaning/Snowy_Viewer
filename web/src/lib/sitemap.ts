@@ -127,7 +127,17 @@ ${entries.join('\n')}
 }
 
 export function buildSitemapIndex(baseUrl: string): string {
-    return wrapSitemapIndex(baseUrl, ['sitemap-main.xml', 'sitemap-details.xml']);
+    return wrapSitemapIndex(baseUrl, [
+        'sitemap-main.xml',
+        ...SUPPORTED_ROUTE_LOCALES.map(locale => `sitemap-details/${locale}.xml`),
+    ]);
+}
+
+export function buildDetailsSitemapIndex(baseUrl: string): string {
+    return wrapSitemapIndex(
+        baseUrl,
+        SUPPORTED_ROUTE_LOCALES.map(locale => `sitemap-details/${locale}.xml`),
+    );
 }
 
 export function buildMainSitemap(baseUrl: string): string {
@@ -147,25 +157,23 @@ export function buildMainSitemap(baseUrl: string): string {
     return wrapUrlset(entries);
 }
 
-export function buildDetailsSitemap(baseUrl: string): string {
+export function buildDetailsSitemap(baseUrl: string, locale: RouteLocale): string {
     const routeSets = new Map<RouteLocale, Set<string>>(
         SUPPORTED_ROUTE_LOCALES.map((locale) => {
             const region = getLocaleRouteConfig(locale).defaultServer;
             return [locale, new Set((getData(region)?.detailRoutes ?? []).map((route) => route.path))];
         }),
     );
-    const entries = SUPPORTED_ROUTE_LOCALES.flatMap((locale) => {
-        const region = getLocaleRouteConfig(locale).defaultServer;
-        const data = getData(region);
-        if (!data) return [];
-        const fallbackLastmod = data.generatedAt || '1970-01-01T00:00:00.000Z';
-        return data.detailRoutes.map((route) => buildUrlEntry(
-            baseUrl,
-            route,
-            fallbackLastmod,
-            locale,
-            (alternateLocale, routePath) => routeSets.get(alternateLocale)?.has(routePath) ?? false,
-        ));
-    });
+    const region = getLocaleRouteConfig(locale).defaultServer;
+    const data = getData(region);
+    if (!data) return wrapUrlset([]);
+    const fallbackLastmod = data.generatedAt || '1970-01-01T00:00:00.000Z';
+    const entries = data.detailRoutes.map((route) => buildUrlEntry(
+        baseUrl,
+        route,
+        fallbackLastmod,
+        locale,
+        (alternateLocale, routePath) => routeSets.get(alternateLocale)?.has(routePath) ?? false,
+    ));
     return wrapUrlset(entries);
 }
