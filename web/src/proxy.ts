@@ -15,6 +15,7 @@ import {
 
 export const ROUTE_LOCALE_HEADER = "x-moesekai-route-locale";
 export const PUBLIC_PATH_HEADER = "x-moesekai-public-path";
+const INTERNAL_LOCALE_REWRITE_HEADER = "x-moesekai-internal-locale-rewrite";
 const QUERY_PAGE_ROBOTS_POLICY = "noindex, follow";
 const QUERY_PAGE_CACHE_POLICY = "private, no-store";
 
@@ -34,9 +35,38 @@ function preferredRouteLocale(request: NextRequest) {
     return acceptedLocale ? uiLocaleToRouteLocale(acceptedLocale) : DEFAULT_ROUTE_LOCALE;
 }
 
+function firstForwardedValue(value: string | null): string | null {
+    const first = value?.split(",", 1)[0]?.trim();
+    return first || null;
+}
+
+function publicRedirectUrl(request: NextRequest, pathname: string): URL {
+    const host = firstForwardedValue(request.headers.get("x-forwarded-host"))
+        ?? request.headers.get("host")
+        ?? request.nextUrl.host;
+    const protocol = firstForwardedValue(request.headers.get("x-forwarded-proto"))
+        ?? request.nextUrl.protocol.replace(/:$/, "");
+
+    try {
+        return new URL(`${pathname}${request.nextUrl.search}`, `${protocol}://${host}`);
+    } catch {
+        const fallback = request.nextUrl.clone();
+        fallback.pathname = pathname;
+        return fallback;
+    }
+}
+
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     if (shouldBypass(pathname)) return NextResponse.next();
+
+    // Next.js can run proxy again for the destination of a rewrite. Without
+    // this guard, /zh-cn/cards/123/ rewrites to /cards/123/ and the second
+    // proxy pass redirects it straight back to /zh-cn/cards/123/, creating a
+    // self-redirect loop for every localized page.
+    if (request.headers.get(INTERNAL_LOCALE_REWRITE_HEADER) === "1") {
+        return NextResponse.next();
+    }
 
     const segments = pathname.split("/").filter(Boolean);
     const candidate = segments[0]?.toLowerCase();
@@ -50,6 +80,7 @@ export function proxy(request: NextRequest) {
         const requestHeaders = new Headers(request.headers);
         requestHeaders.set(ROUTE_LOCALE_HEADER, routeLocale);
         requestHeaders.set(PUBLIC_PATH_HEADER, pathname);
+        requestHeaders.set(INTERNAL_LOCALE_REWRITE_HEADER, "1");
 
         const response = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
         const isDocumentRequest = request.method === "GET" || request.method === "HEAD";
@@ -81,9 +112,14 @@ export function proxy(request: NextRequest) {
     if (request.method !== "GET" && request.method !== "HEAD") return NextResponse.next();
 
     const locale = preferredRouteLocale(request);
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = pathname === "/" ? `/${locale}/` : `/${locale}${pathname.startsWith("/") ? pathname : `/${pathname}`}`;
-    const response = NextResponse.redirect(redirectUrl, 307);
+    const localizedPathname = pathname === "/"
+        ? `/${locale}/`
+        : `/${locale}${pathname.startsWith("/") ? pathname : `/${pathname}`}`;
+
+    // Behind the Go reverse proxy, request.nextUrl contains the internal
+    // Next.js host/port. Build the absolute redirect from forwarded/public
+    // request headers so Location never leaks http://localhost:3000.
+    const response = NextResponse.redirect(publicRedirectUrl(request, localizedPathname), 307);
     response.headers.append("Vary", "Cookie, Accept-Language");
     return response;
 }

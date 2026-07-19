@@ -598,7 +598,14 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
         const routePrefix = metadataOptions.routePrefix.replace(/^\/+|\/+$/g, "");
         const path = id ? normalizeSeoPath(`/${routePrefix}/${id}`) : normalizeSeoPath(`/${routePrefix}/`);
         const data = Number.isFinite(numericId) ? metadataOptions.getData(numericId, region) : null;
-        if (!data) notFound();
+        if (!data) {
+            // Detail clients load live masterdata in the browser. The build-time
+            // metadata map can lag behind a newly released item or the user's
+            // selected content server, so it must not turn a valid client route
+            // into a hard Next.js 404. generateMetadata already emits a noindex
+            // fallback until metadata for this item becomes available.
+            return render({ params });
+        }
         if (!structuredData) return render({ params });
         const context = { id, numericId, locale, path };
         const metadataResult = metadataOptions.build(data, context);
