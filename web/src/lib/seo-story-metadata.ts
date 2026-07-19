@@ -28,6 +28,7 @@ function storyFallback(label: string, id: string | number): string {
 }
 
 export const defineStoryEventGroupPage = (render: (props: { params?: Promise<{ eventId: string }> }) => ReactNode) => defineSeoDynamicPage({
+    renderOnMissingData: true,
     kind: "storyEventGroup",
     routePrefix: "story/event",
     buildPath: ({ eventId }) => `/story/event/${encodePathPart(eventId)}/`,
@@ -49,6 +50,7 @@ export const defineStoryEventGroupPage = (render: (props: { params?: Promise<{ e
 });
 
 export const defineStoryEventReaderPage = (render: (props: { params?: Promise<{ eventId: string; episodeNo: string }> }) => ReactNode) => defineSeoDynamicPage({
+    renderOnMissingData: true,
     kind: "storyEventReader",
     routePrefix: "story/event",
     buildPath: ({ eventId, episodeNo }) => `/story/event/${encodePathPart(eventId)}/${encodePathPart(episodeNo)}/`,
@@ -71,6 +73,7 @@ export const defineStoryEventReaderPage = (render: (props: { params?: Promise<{ 
 });
 
 export const defineStoryUnitGroupPage = (render: (props: { params?: Promise<{ unitId: string }> }) => ReactNode) => defineSeoDynamicPage({
+    renderOnMissingData: true,
     kind: "storyUnitGroup",
     routePrefix: "story/unit",
     buildPath: ({ unitId }) => `/story/unit/${encodePathPart(unitId)}/`,
@@ -92,6 +95,7 @@ export const defineStoryUnitGroupPage = (render: (props: { params?: Promise<{ un
 });
 
 export const defineStoryUnitReaderPage = (render: (props: { params?: Promise<{ unitId: string; episodeId: string }> }) => ReactNode) => defineSeoDynamicPage({
+    renderOnMissingData: true,
     kind: "storyUnitReader",
     routePrefix: "story/unit",
     buildPath: ({ unitId, episodeId }) => `/story/unit/${encodePathPart(unitId)}/${encodePathPart(episodeId)}/`,
@@ -113,6 +117,7 @@ export const defineStoryUnitReaderPage = (render: (props: { params?: Promise<{ u
 });
 
 export const defineStoryCardReaderPage = (render: (props: { params?: Promise<{ cardId: string }> }) => ReactNode) => defineSeoDynamicPage({
+    renderOnMissingData: true,
     kind: "storyCardReader",
     routePrefix: "story/card",
     buildPath: ({ cardId }) => `/story/card/${encodePathPart(cardId)}/`,
@@ -133,6 +138,7 @@ export const defineStoryCardReaderPage = (render: (props: { params?: Promise<{ c
 });
 
 export const defineStorySelfReaderPage = (render: (props: { params?: Promise<{ charaId: string }> }) => ReactNode) => defineSeoDynamicPage({
+    renderOnMissingData: true,
     kind: "storySelfReader",
     routePrefix: "story/self",
     buildPath: ({ charaId }) => `/story/self/${encodePathPart(charaId)}/`,
@@ -154,6 +160,7 @@ export const defineStorySelfReaderPage = (render: (props: { params?: Promise<{ c
 });
 
 export const defineStorySpecialReaderPage = (render: (props: { params?: Promise<{ spId: string }> }) => ReactNode) => defineSeoDynamicPage({
+    renderOnMissingData: true,
     kind: "storySpecialReader",
     routePrefix: "story/special",
     buildPath: ({ spId }) => `/story/special/${encodePathPart(spId)}/`,
@@ -175,6 +182,7 @@ export const defineStorySpecialReaderPage = (render: (props: { params?: Promise<
 });
 
 export const defineStoryAreaCategoryPage = (render: (props: { params?: Promise<{ category: string }> }) => ReactNode) => defineSeoDynamicPage({
+    renderOnMissingData: true,
     kind: "storyAreaCategory",
     routePrefix: "story/area",
     buildPath: ({ category }) => `/story/area/${encodePathPart(category)}/`,
@@ -195,6 +203,7 @@ export const defineStoryAreaCategoryPage = (render: (props: { params?: Promise<{
 });
 
 export const defineStoryAreaReaderPage = (render: (props: { params?: Promise<{ category: string; scenarioId: string }> }) => ReactNode) => defineSeoDynamicPage({
+    renderOnMissingData: true,
     kind: "storyAreaReader",
     routePrefix: "story/area",
     buildPath: ({ category, scenarioId }) => `/story/area/${encodePathPart(category)}/${encodePathPart(scenarioId)}/`,

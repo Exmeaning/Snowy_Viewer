@@ -375,11 +375,14 @@ export interface DynamicPageStructuredDataOptions<TData, TParams extends Record<
 export interface SeoDynamicPageOptions<TData, TParams extends Record<string, string>> extends Omit<CreateDynamicPageMetadataOptions<TData, TParams>, "params"> {
     render: (props: { params?: Promise<TParams> }) => ReactNode;
     structuredData?: DynamicPageStructuredDataOptions<TData, TParams>;
+    /** Use when the browser's live data source can be newer than or differ from the SEO metadata map. */
+    renderOnMissingData?: boolean;
 }
 
 export function defineSeoDynamicPage<TData, TParams extends Record<string, string>>({
     render,
     structuredData,
+    renderOnMissingData = false,
     ...metadataOptions
 }: SeoDynamicPageOptions<TData, TParams>) {
     const Page = async ({ params }: { params?: Promise<TParams> }) => {
@@ -388,7 +391,15 @@ export function defineSeoDynamicPage<TData, TParams extends Record<string, strin
         const region = getLocaleRouteConfig(getSeoRouteLocale(locale)).defaultServer;
         const path = buildDynamicMetadataPath(metadataOptions.routePrefix, resolvedParams, metadataOptions.buildPath);
         const data = metadataOptions.getData(resolvedParams, region);
-        if (!data) notFound();
+        if (!data) {
+            if (renderOnMissingData) {
+                // These clients load live masterdata and assets in the browser.
+                // Their pre-generated metadata can lag behind new content or
+                // differ from the user's selected content server.
+                return render({ params });
+            }
+            notFound();
+        }
         if (!structuredData) return render({ params });
         const context = { params: resolvedParams, locale, path };
         const detailName = structuredData.getName(data, context);
