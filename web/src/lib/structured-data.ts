@@ -98,6 +98,34 @@ export function generateDetailBreadcrumbJsonLd(
     };
 }
 
+export type DetailEntityType = "MusicRecording" | "Event" | "CreativeWork" | "Article" | "Thing";
+
+export interface DetailEntityJsonLdOptions {
+    type: DetailEntityType;
+    name: string;
+    url: string;
+    locale: UiLocale;
+    description?: string;
+    images?: readonly string[];
+    datePublished?: string;
+    authorName?: string;
+}
+
+/** Build a conservative entity graph for a detail page from fields the site actually owns. */
+export function generateDetailEntityJsonLd(baseUrl: string, options: DetailEntityJsonLdOptions) {
+    return {
+        "@context": "https://schema.org" as const,
+        "@type": options.type,
+        name: options.name,
+        url: localizedAbsoluteUrl(baseUrl, options.url, options.locale),
+        inLanguage: getSeoLocaleConfig(options.locale).htmlLang,
+        ...(options.description ? { description: options.description } : {}),
+        ...(options.images?.length ? { image: options.images.map((image) => absoluteUrl(baseUrl, image)) } : {}),
+        ...(options.datePublished ? { datePublished: options.datePublished } : {}),
+        ...(options.authorName ? { author: { "@type": "Organization" as const, name: options.authorName } } : {}),
+    };
+}
+
 export interface ItemListEntry {
     name: string;
     url: string;

@@ -20,7 +20,8 @@ import {
     type RouteLocale,
 } from "@/lib/locale-routing";
 import { assertNoIndexSeoRoute, findSeoRouteByPageKey, findSeoRouteByPath, isIndexableSeoPath, normalizeSeoPath } from "@/lib/seo-routes";
-import { generateCollectionItemListJsonLd, generateDetailBreadcrumbJsonLd, generatePageBreadcrumbJsonLd } from "@/lib/structured-data";
+import { DetailSeoSummaryProvider } from "@/contexts/DetailSeoSummaryContext";
+import { generateDetailBreadcrumbJsonLd, generateDetailEntityJsonLd, generatePageBreadcrumbJsonLd, type DetailEntityType } from "@/lib/structured-data";
 import {
     formatDetailSeoDescription,
     formatDynamicSeoDescription,
@@ -361,7 +362,14 @@ export function dynamicPageMetadata<TData, TParams extends Record<string, string
 
 export interface DynamicPageStructuredDataOptions<TData, TParams extends Record<string, string>> {
     parentPageKey: SeoPageKey;
+    /** Set false for noindex or utility details that should not expose a crawlable summary. */
+    summary?: boolean;
     getName: (data: TData | null, context: { params: TParams; locale: UiLocale; path: string }) => string;
+    entity?: {
+        type: DetailEntityType;
+        getDatePublished?: (data: TData) => string | undefined;
+        getAuthorName?: (data: TData) => string | undefined;
+    };
 }
 
 export interface SeoDynamicPageOptions<TData, TParams extends Record<string, string>> extends Omit<CreateDynamicPageMetadataOptions<TData, TParams>, "params"> {
@@ -382,7 +390,10 @@ export function defineSeoDynamicPage<TData, TParams extends Record<string, strin
         const data = metadataOptions.getData(resolvedParams, region);
         if (!data) notFound();
         if (!structuredData) return render({ params });
-        const detailName = structuredData.getName(data, { params: resolvedParams, locale, path });
+        const context = { params: resolvedParams, locale, path };
+        const detailName = structuredData.getName(data, context);
+        const metadataResult = metadataOptions.build(data, context);
+        const description = formatDynamicSeoDescription(metadataResult.descriptionKind, metadataResult.descriptionValues, locale);
         const breadcrumbJsonLd = generateDetailBreadcrumbJsonLd(
             SITE_BASE_URL,
             structuredData.parentPageKey,
@@ -390,6 +401,18 @@ export function defineSeoDynamicPage<TData, TParams extends Record<string, strin
             locale,
         );
         const scriptId = `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${path.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "dynamic"}`;
+        const entityJsonLd = structuredData.entity
+            ? generateDetailEntityJsonLd(SITE_BASE_URL, {
+                type: structuredData.entity.type,
+                name: detailName,
+                url: path,
+                locale,
+                description,
+                images: metadataResult.images,
+                datePublished: structuredData.entity.getDatePublished?.(data),
+                authorName: structuredData.entity.getAuthorName?.(data),
+            })
+            : null;
 
         return createElement(
             Fragment,
@@ -399,7 +422,20 @@ export function defineSeoDynamicPage<TData, TParams extends Record<string, strin
                 type: "application/ld+json",
                 dangerouslySetInnerHTML: { __html: JSON.stringify(breadcrumbJsonLd) },
             }),
-            render({ params }),
+            entityJsonLd ? createElement("script", {
+                id: `${scriptId}-entity`,
+                type: "application/ld+json",
+                dangerouslySetInnerHTML: { __html: JSON.stringify(entityJsonLd) },
+            }) : null,
+            createElement(
+                DetailSeoSummaryProvider,
+                {
+                    summary: structuredData.summary !== false
+                        ? { title: detailName, description }
+                        : null,
+                },
+                render({ params }),
+            ),
         );
     };
 
@@ -434,8 +470,11 @@ export interface DetailMetadataResultOptions {
 
 export interface DetailStructuredDataOptions<T = unknown> {
     parentPageKey: SeoPageKey;
-    itemList?: {
-        getName: (data: T, context: { id: string; numericId: number; locale: UiLocale; path: string }) => string;
+    /** Set false for noindex or utility details that should not expose a crawlable summary. */
+    summary?: boolean;
+    entity?: {
+        type: DetailEntityType;
+        getName?: (data: T, context: { id: string; numericId: number; locale: UiLocale; path: string }) => string;
     };
 }
 
@@ -562,22 +601,24 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
         if (!data) notFound();
         if (!structuredData) return render({ params });
         const context = { id, numericId, locale, path };
-        const detailName = data
-            ? metadataOptions.build(data, context).title
-            : getDetailFallbackTitle(metadataOptions.kind, locale);
+        const metadataResult = metadataOptions.build(data, context);
+        const detailName = metadataResult.title;
+        const description = formatDetailSeoDescription(metadataResult.descriptionKind, metadataResult.descriptionValues, locale);
         const breadcrumbJsonLd = generateDetailBreadcrumbJsonLd(
             SITE_BASE_URL,
             structuredData.parentPageKey,
             { name: detailName, path },
             locale,
         );
-        const itemListJsonLd = data && structuredData.itemList
-            ? generateCollectionItemListJsonLd(
-                SITE_BASE_URL,
-                structuredData.parentPageKey,
-                [{ id, name: structuredData.itemList.getName(data, context) }],
+        const entityJsonLd = structuredData.entity
+            ? generateDetailEntityJsonLd(SITE_BASE_URL, {
+                type: structuredData.entity.type,
+                name: structuredData.entity.getName?.(data, context) ?? detailName,
+                url: path,
                 locale,
-            )
+                description,
+                images: metadataResult.images,
+            })
             : null;
         const scriptId = id ? `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}-${id}` : `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}`;
 
@@ -589,14 +630,22 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
                 type: "application/ld+json",
                 dangerouslySetInnerHTML: { __html: JSON.stringify(breadcrumbJsonLd) },
             }),
-            itemListJsonLd
+            entityJsonLd
                 ? createElement("script", {
-                    id: `${scriptId}-itemlist`,
+                    id: `${scriptId}-entity`,
                     type: "application/ld+json",
-                    dangerouslySetInnerHTML: { __html: JSON.stringify(itemListJsonLd) },
+                    dangerouslySetInnerHTML: { __html: JSON.stringify(entityJsonLd) },
                 })
                 : null,
-            render({ params }),
+            createElement(
+                DetailSeoSummaryProvider,
+                {
+                    summary: structuredData.summary !== false
+                        ? { title: detailName, description }
+                        : null,
+                },
+                render({ params }),
+            ),
         );
     };
 

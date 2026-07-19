@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { findNavMatch, findGroupMatch, navigationGroups, NAV_GROUP_LABEL_KEYS, NAV_ITEM_LABEL_KEYS } from "@/lib/navigation";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useI18n } from "@/contexts/I18nContext";
+import { stripRouteLocale } from "@/lib/localized-path";
 
 // Expand arrow button.
 function ExpandButton({ open, onClick, ariaLabel }: { open: boolean; onClick: () => void; ariaLabel: string }) {
@@ -102,10 +103,13 @@ export default function Breadcrumb() {
         return t(NAV_ITEM_LABEL_KEYS[href] ?? href);
     }, [t]);
 
-    if (pathname === "/") return null;
+    const routePathname = stripRouteLocale(pathname);
+    if (routePathname === "/") return null;
 
     // Normalize pathname for comparisons.
-    const norm = pathname.endsWith("/") && pathname !== "/" ? pathname.slice(0, -1) : pathname;
+    const norm = routePathname.endsWith("/") && routePathname !== "/"
+        ? routePathname.slice(0, -1)
+        : routePathname;
 
     // Summary group page.
     const groupMatch = findGroupMatch(pathname);

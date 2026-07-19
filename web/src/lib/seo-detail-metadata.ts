@@ -73,7 +73,7 @@ const cardDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getCar
     kind: "card",
     routePrefix: "cards",
     getData: getCardMeta,
-    structuredData: { parentPageKey: "cards", itemList: { getName: (card) => card.prefix } },
+    structuredData: { parentPageKey: "cards", entity: { type: "CreativeWork" } },
     build: (card, { locale }) => {
         const characterName = CHARACTER_NAMES[card.characterId] || "";
 
@@ -110,7 +110,7 @@ const costumeDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof get
     kind: "costume",
     routePrefix: "costumes",
     getData: getCostumeMeta,
-    structuredData: { parentPageKey: "costumes" },
+    structuredData: { parentPageKey: "costumes", entity: { type: "Thing" } },
     fallbackTwitterCard: "summary",
     build: (costume) => ({
         title: costume.name,
@@ -127,7 +127,7 @@ const eventDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getEv
     kind: "event",
     routePrefix: "events",
     getData: getEventMeta,
-    structuredData: { parentPageKey: "events", itemList: { getName: (event) => event.name } },
+    structuredData: { parentPageKey: "events", entity: { type: "Event" } },
     build: (event, { locale }) => ({
         title: event.name,
         descriptionKind: "event",
@@ -143,7 +143,7 @@ const exchangeDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof ge
     kind: "exchange",
     routePrefix: "exchanges",
     getData: getExchangeMeta,
-    structuredData: { parentPageKey: "exchanges" },
+    structuredData: { parentPageKey: "exchanges", summary: false },
     fallbackTwitterCard: "summary",
     build: (exchange, { locale }) => ({
         title: exchange.summaryName && exchange.summaryName !== exchange.name
@@ -170,7 +170,7 @@ const gachaDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getGa
     kind: "gacha",
     routePrefix: "gacha",
     getData: getGachaMeta,
-    structuredData: { parentPageKey: "gacha", itemList: { getName: (gacha) => gacha.name } },
+    structuredData: { parentPageKey: "gacha", entity: { type: "CreativeWork" } },
     build: (gacha, { locale }) => ({
         title: gacha.name,
         descriptionKind: "gacha",
@@ -187,7 +187,7 @@ const liveDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getVir
     kind: "live",
     routePrefix: "live",
     getData: getVirtualLiveMeta,
-    structuredData: { parentPageKey: "live", itemList: { getName: (live) => live.name } },
+    structuredData: { parentPageKey: "live", entity: { type: "Event" } },
     build: (live, { locale }) => ({
         title: live.name,
         descriptionKind: "live",
@@ -203,7 +203,7 @@ const mangaDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMa
     kind: "manga",
     routePrefix: "manga",
     getData: getMangaMeta,
-    structuredData: { parentPageKey: "manga" },
+    structuredData: { parentPageKey: "manga", entity: { type: "CreativeWork" } },
     build: (manga, { id }) => ({
         title: manga.title,
         descriptionKind: "manga",
@@ -219,7 +219,7 @@ const musicDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMu
     kind: "music",
     routePrefix: "music",
     getData: getMusicMeta,
-    structuredData: { parentPageKey: "music", itemList: { getName: (music) => music.title } },
+    structuredData: { parentPageKey: "music", entity: { type: "MusicRecording" } },
     build: (music, { locale }) => ({
         title: music.title,
         descriptionKind: "music",
@@ -236,7 +236,7 @@ const mysekaiFixtureDetailPreset = defineDetailPreset<NonNullable<ReturnType<typ
     kind: "mysekai",
     routePrefix: "mysekai",
     getData: getFixtureMeta,
-    structuredData: { parentPageKey: "mysekai" },
+    structuredData: { parentPageKey: "mysekai", entity: { type: "Thing" } },
     build: (fixture, { locale }) => ({
         title: fixture.name,
         descriptionKind: "mysekai",

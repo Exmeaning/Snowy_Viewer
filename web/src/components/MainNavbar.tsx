@@ -8,6 +8,7 @@ import { getPrimaryShortcutLabel } from "@/lib/shortcuts";
 import { MOE_LOGO_URL } from "@/lib/assets";
 import Breadcrumb from "./Breadcrumb";
 import { useI18n } from "@/contexts/I18nContext";
+import { stripRouteLocale } from "@/lib/localized-path";
 
 interface MainNavbarProps {
     onMenuToggle: () => void;
@@ -33,7 +34,7 @@ export default function MainNavbar({
     onShortcutsHelpToggle,
 }: MainNavbarProps) {
     const pathname = usePathname();
-    const isHome = pathname === "/";
+    const isHome = stripRouteLocale(pathname) === "/";
     const { t } = useI18n();
 
     const sidebarShortcut = getPrimaryShortcutLabel("toggle-sidebar");

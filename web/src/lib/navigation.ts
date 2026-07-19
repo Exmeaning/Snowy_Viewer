@@ -1,5 +1,7 @@
 // Breadcrumb navigation data
 
+import { stripRouteLocale } from "@/lib/localized-path";
+
 export interface NavItemData {
     href: string;
 }
@@ -90,13 +92,17 @@ export const navigationGroups: NavGroupData[] = [
  * Finds the best matching navigation item and its group for a pathname.
  */
 export function findNavMatch(pathname: string): { group: NavGroupData; item: NavItemData } | null {
+    const routePathname = stripRouteLocale(pathname);
+    const normalized = routePathname.endsWith("/") && routePathname !== "/"
+        ? routePathname.slice(0, -1)
+        : routePathname;
     let bestMatch: { group: NavGroupData; item: NavItemData } | null = null;
     for (const group of navigationGroups) {
         for (const item of group.items) {
             // Keep the longest prefix match so nested routes choose the most specific item.
-            if (pathname === item.href || pathname.startsWith(item.href + "/")) {
+            if (normalized === item.href || normalized.startsWith(item.href + "/")) {
                 // Prevent /music/meta from matching /music first.
-                if (item.href === "/music" && pathname.startsWith("/music/meta")) {
+                if (item.href === "/music" && normalized.startsWith("/music/meta")) {
                     continue;
                 }
                 if (!bestMatch || item.href.length > bestMatch.item.href.length) {
@@ -112,9 +118,10 @@ export function findNavMatch(pathname: string): { group: NavGroupData; item: Nav
  * Finds a matching summary group page for a pathname.
  */
 export function findGroupMatch(pathname: string): NavGroupData | null {
-    const normalized = pathname.endsWith("/") && pathname !== "/"
-        ? pathname.slice(0, -1)
-        : pathname;
+    const routePathname = stripRouteLocale(pathname);
+    const normalized = routePathname.endsWith("/") && routePathname !== "/"
+        ? routePathname.slice(0, -1)
+        : routePathname;
     for (const group of navigationGroups) {
         if (normalized === group.href) {
             return group;

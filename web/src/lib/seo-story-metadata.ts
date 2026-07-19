@@ -35,6 +35,7 @@ export const defineStoryEventGroupPage = (render: (props: { params?: Promise<{ e
     structuredData: {
         parentPageKey: "story_event",
         getName: (data, { params }) => data?.name ?? storyFallback("Event", params.eventId),
+        entity: { type: "CreativeWork" },
     },
     build: (story, { locale }) => ({
         descriptionKind: "storyEventGroup",
@@ -55,6 +56,7 @@ export const defineStoryEventReaderPage = (render: (props: { params?: Promise<{ 
     structuredData: {
         parentPageKey: "story_event",
         getName: (data, { params }) => data?.episodeTitle ?? storyFallback("Episode", `${params.eventId}-${params.episodeNo}`),
+        entity: { type: "CreativeWork" },
     },
     build: (episode, { locale }) => ({
         descriptionKind: "storyEventReader",
@@ -76,6 +78,7 @@ export const defineStoryUnitGroupPage = (render: (props: { params?: Promise<{ un
     structuredData: {
         parentPageKey: "story_unit",
         getName: (data, { params }) => data?.unitName ?? storyFallback("Unit", params.unitId),
+        entity: { type: "CreativeWork" },
     },
     build: (unit) => ({
         descriptionKind: "storyUnitGroup",
@@ -96,6 +99,7 @@ export const defineStoryUnitReaderPage = (render: (props: { params?: Promise<{ u
     structuredData: {
         parentPageKey: "story_unit",
         getName: (data, { params }) => data?.episodeTitle ?? storyFallback("Episode", params.episodeId),
+        entity: { type: "CreativeWork" },
     },
     build: (episode) => ({
         descriptionKind: "storyUnitReader",
@@ -116,6 +120,7 @@ export const defineStoryCardReaderPage = (render: (props: { params?: Promise<{ c
     structuredData: {
         parentPageKey: "story_card",
         getName: (data, { params }) => data?.cardPrefix ?? storyFallback("Card", params.cardId),
+        entity: { type: "CreativeWork" },
     },
     build: (card, { locale }) => ({
         descriptionKind: "storyCardReader",
@@ -135,6 +140,7 @@ export const defineStorySelfReaderPage = (render: (props: { params?: Promise<{ c
     structuredData: {
         parentPageKey: "story_self",
         getName: (data, { params }) => data?.characterName ?? storyFallback("Character", params.charaId),
+        entity: { type: "CreativeWork" },
     },
     build: (character) => ({
         descriptionKind: "storySelfReader",
@@ -155,6 +161,7 @@ export const defineStorySpecialReaderPage = (render: (props: { params?: Promise<
     structuredData: {
         parentPageKey: "story_special",
         getName: (data, { params }) => data?.title ?? storyFallback("Special", params.spId),
+        entity: { type: "CreativeWork" },
     },
     build: (story) => ({
         descriptionKind: "storySpecialReader",
@@ -195,6 +202,7 @@ export const defineStoryAreaReaderPage = (render: (props: { params?: Promise<{ c
     structuredData: {
         parentPageKey: "story_area",
         getName: (data, { params }) => data?.areaName ?? params.scenarioId,
+        entity: { type: "CreativeWork" },
     },
     build: (talk) => ({
         descriptionKind: "storyAreaReader",

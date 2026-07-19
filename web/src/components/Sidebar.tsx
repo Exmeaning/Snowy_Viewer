@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { usePathname, useRouter } from "next/navigation";
+import { stripRouteLocale } from "@/lib/localized-path";
 import {
     ACCOUNTS_CHANGED_EVENT,
     getActiveAccount,
@@ -515,7 +516,7 @@ export default function Sidebar({
     // On the home page, the mobile navbar stays single-row (~64px tall); on
     // other pages it grows by a breadcrumb row (~32px + border). The sidebar
     // needs a matching top offset so it never collides with the navbar.
-    const isHome = pathname === "/";
+    const isHome = stripRouteLocale(pathname) === "/";
     // Expand all groups by default.
     const [expandedGroups, setExpandedGroups] = useState<string[]>(
         navigationGroups.map(group => group.id)

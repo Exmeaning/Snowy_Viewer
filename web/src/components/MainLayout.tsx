@@ -13,6 +13,8 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { usePageListShortcuts } from "@/hooks/usePageListShortcuts";
 import { useTheme } from "@/contexts/ThemeContext";
 import { localizePathForBrowser } from "@/lib/localized-path";
+import DetailSeoSummary from "@/components/seo/DetailSeoSummary";
+import { useDetailSeoSummary } from "@/contexts/DetailSeoSummaryContext";
 
 function ScreenshotParamsListener({ onChange }: { onChange: (isScreenshot: boolean) => void }) {
     const searchParams = useSearchParams();
@@ -44,6 +46,7 @@ export default function MainLayout({
     immersiveMode = false,
 }: MainLayoutProps) {
     const router = useRouter();
+    const detailSeoSummary = useDetailSeoSummary();
     const { useTrainedThumbnail, setUseTrainedThumbnail, backgroundAnimationBudget } = useTheme();
     const pageContentRef = useRef<HTMLDivElement>(null);
     const shouldShowAmbientBlobs = backgroundAnimationBudget === "on";
@@ -318,6 +321,12 @@ export default function MainLayout({
                 <div ref={pageContentRef} data-shortcut-page-root="true" className={`flex-grow relative z-10 w-full min-w-0 ${hasMounted ? 'transition-all duration-300' : ''} ${effectiveSidebarOpen ? 'md:ml-[18rem]' : 'md:ml-0'
                     }`}>
                     {children}
+                    {detailSeoSummary && (
+                        <DetailSeoSummary
+                            title={detailSeoSummary.title}
+                            description={detailSeoSummary.description}
+                        />
+                    )}
                 </div>
             </div>
 

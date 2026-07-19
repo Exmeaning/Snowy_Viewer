@@ -1270,9 +1270,10 @@ export const DYNAMIC_SEO_TEMPLATES = {
       "ja-JP": "{category} - エリア会話",
     },
     description: {
-      "zh-CN": "浏览 Project SEKAI 区域对话分类「{category}」，共 {count} 段对话",
-      "en-US": "Browse {count} Project Sekai area conversations in the {category} category",
-      "ja-JP": "Project SEKAI のエリア会話カテゴリ「{category}」で {count} 件の会話を閲覧できます",
+      "zh-CN": "浏览 Project SEKAI 区域对话分类「{category}」，按场景查看收录的 {count} 段角色对话与剧情内容。",
+      "en-US": "Browse {count} Project SEKAI area conversations in the \"{category}\" category, organized by scene for reading.",
+      "ja-JP": "Project SEKAI のエリア会話カテゴリ「{category}」に収録された {count} 件のキャラクター会話をシーン別に閲覧できます。",
+      "ko-KR": "Project SEKAI 에어리어 대화 ‘{category}’에 수록된 {count}개의 캐릭터 대화를 장면별로 확인할 수 있습니다.",
     },
     fallbackTitle: {
       "zh-CN": "区域对话",
@@ -1292,9 +1293,10 @@ export const DYNAMIC_SEO_TEMPLATES = {
       "ja-JP": "{area} - エリア会話",
     },
     description: {
-      "zh-CN": "阅读 Project SEKAI 区域对话「{area}」，场景 ID：{scenarioId}",
-      "en-US": "Read the Project Sekai area conversation \"{area}\". Scenario ID: {scenarioId}",
-      "ja-JP": "Project SEKAI のエリア会話「{area}」を閲覧できます。シナリオID：{scenarioId}",
+      "zh-CN": "阅读 Project SEKAI 区域「{area}」的角色对话与完整场景文本；场景 ID：{scenarioId}。",
+      "en-US": "Read the character dialogue and complete scene text for the Project SEKAI area conversation \"{area}\". Scenario ID: {scenarioId}.",
+      "ja-JP": "Project SEKAI のエリア会話「{area}」について、キャラクター会話とシーン本文を閲覧できます。シナリオID：{scenarioId}。",
+      "ko-KR": "Project SEKAI 에어리어 대화 ‘{area}’의 캐릭터 대사와 전체 장면 텍스트를 확인할 수 있습니다. 시나리오 ID: {scenarioId}.",
     },
     fallbackTitle: {
       "zh-CN": "区域对话阅读",
@@ -1314,9 +1316,10 @@ export const DYNAMIC_SEO_TEMPLATES = {
       "ja-JP": "{card} - カードストーリー",
     },
     description: {
-      "zh-CN": "阅读 Project SEKAI 卡牌「{card}」的前篇与后篇剧情",
-      "en-US": "Read both side-story parts for the Project Sekai card \"{card}\"",
-      "ja-JP": "Project SEKAI カード「{card}」の前編・後編ストーリーを閲覧できます",
+      "zh-CN": "阅读 Project SEKAI 卡牌「{card}」的前篇与后篇剧情，查看角色对话和完整故事文本。",
+      "en-US": "Read both side-story parts for the Project SEKAI card \"{card}\", including character dialogue and complete story text.",
+      "ja-JP": "Project SEKAI カード「{card}」の前編・後編ストーリーとキャラクター会話の本文を閲覧できます。",
+      "ko-KR": "Project SEKAI 카드 ‘{card}’의 전편과 후편 사이드 스토리, 캐릭터 대화와 전체 본문을 확인할 수 있습니다.",
     },
     fallbackTitle: {
       "zh-CN": "卡牌剧情阅读",
@@ -1336,9 +1339,10 @@ export const DYNAMIC_SEO_TEMPLATES = {
       "ja-JP": "{event} - イベントストーリー",
     },
     description: {
-      "zh-CN": "浏览 Project SEKAI 活动「{event}」的 {count} 个剧情章节",
-      "en-US": "Browse {count} story episodes for the Project Sekai event \"{event}\"",
-      "ja-JP": "Project SEKAI イベント「{event}」のストーリー {count} 話を閲覧できます",
+      "zh-CN": "浏览 Project SEKAI 活动「{event}」收录的 {count} 个剧情章节，按话数阅读活动故事。",
+      "en-US": "Browse all {count} story episodes from the Project SEKAI event \"{event}\", organized in episode order for reading.",
+      "ja-JP": "Project SEKAI イベント「{event}」に収録された全 {count} 話のストーリーをエピソード順に閲覧できます。",
+      "ko-KR": "Project SEKAI 이벤트 ‘{event}’에 수록된 총 {count}화의 스토리를 에피소드 순서대로 확인할 수 있습니다.",
     },
     fallbackTitle: {
       "zh-CN": "活动剧情",
@@ -1358,9 +1362,10 @@ export const DYNAMIC_SEO_TEMPLATES = {
       "ja-JP": "{episode} - {event}",
     },
     description: {
-      "zh-CN": "阅读 Project SEKAI 活动「{event}」第 {episodeNo} 话「{episode}」",
-      "en-US": "Read episode {episodeNo}, \"{episode}\", from the Project Sekai event story \"{event}\"",
-      "ja-JP": "Project SEKAI イベント「{event}」第 {episodeNo} 話「{episode}」を閲覧できます",
+      "zh-CN": "阅读 Project SEKAI 活动「{event}」第 {episodeNo} 话「{episode}」的角色对话与完整剧情文本。",
+      "en-US": "Read episode {episodeNo}, \"{episode}\", from the Project SEKAI event story \"{event}\", with character dialogue and complete scene text.",
+      "ja-JP": "Project SEKAI イベント「{event}」第 {episodeNo} 話「{episode}」のキャラクター会話とストーリー本文を閲覧できます。",
+      "ko-KR": "Project SEKAI 이벤트 ‘{event}’ 제 {episodeNo}화 ‘{episode}’의 캐릭터 대화와 전체 스토리 본문을 확인할 수 있습니다.",
     },
     fallbackTitle: {
       "zh-CN": "活动剧情阅读",
@@ -1380,9 +1385,10 @@ export const DYNAMIC_SEO_TEMPLATES = {
       "ja-JP": "{character} - 自己紹介",
     },
     description: {
-      "zh-CN": "阅读 Project SEKAI 角色「{character}」的自我介绍与语音剧情",
-      "en-US": "Read the Project Sekai character introduction and voiced story for \"{character}\"",
-      "ja-JP": "Project SEKAI キャラクター「{character}」の自己紹介とボイス付きストーリーを閲覧できます",
+      "zh-CN": "阅读 Project SEKAI 角色「{character}」的自我介绍、语音剧情与完整角色对话文本。",
+      "en-US": "Read the Project SEKAI character introduction and voiced story for \"{character}\", including the complete dialogue text.",
+      "ja-JP": "Project SEKAI キャラクター「{character}」の自己紹介、ボイス付きストーリー、会話本文を閲覧できます。",
+      "ko-KR": "Project SEKAI 캐릭터 ‘{character}’의 자기소개, 음성 스토리와 전체 대화 내용을 확인할 수 있습니다.",
     },
     fallbackTitle: {
       "zh-CN": "角色介绍阅读",
@@ -1402,9 +1408,10 @@ export const DYNAMIC_SEO_TEMPLATES = {
       "ja-JP": "{title} - スペシャルストーリー",
     },
     description: {
-      "zh-CN": "阅读 Project SEKAI 特殊剧情「{title}」，共 {count} 个章节",
-      "en-US": "Read the Project Sekai special story \"{title}\" with {count} episodes",
-      "ja-JP": "Project SEKAI スペシャルストーリー「{title}」全 {count} 話を閲覧できます",
+      "zh-CN": "阅读 Project SEKAI 特殊剧情「{title}」收录的全部 {count} 个章节与角色对话文本。",
+      "en-US": "Read all {count} episodes and character dialogue from the Project SEKAI special story \"{title}\".",
+      "ja-JP": "Project SEKAI スペシャルストーリー「{title}」に収録された全 {count} 話とキャラクター会話を閲覧できます。",
+      "ko-KR": "Project SEKAI 스페셜 스토리 ‘{title}’에 수록된 총 {count}화와 캐릭터 대화를 확인할 수 있습니다.",
     },
     fallbackTitle: {
       "zh-CN": "特殊剧情阅读",
@@ -1424,9 +1431,10 @@ export const DYNAMIC_SEO_TEMPLATES = {
       "ja-JP": "{unit} - メインストーリー",
     },
     description: {
-      "zh-CN": "浏览 Project SEKAI 组合「{unit}」的 {count} 个主线剧情章节",
-      "en-US": "Browse {count} main story episodes for the Project Sekai unit \"{unit}\"",
-      "ja-JP": "Project SEKAI ユニット「{unit}」のメインストーリー {count} 話を閲覧できます",
+      "zh-CN": "浏览 Project SEKAI 组合「{unit}」收录的 {count} 个主线剧情章节，按顺序阅读组合故事。",
+      "en-US": "Browse all {count} main story episodes for the Project SEKAI unit \"{unit}\", organized in story order for reading.",
+      "ja-JP": "Project SEKAI ユニット「{unit}」に収録されたメインストーリー全 {count} 話を順番に閲覧できます。",
+      "ko-KR": "Project SEKAI 유닛 ‘{unit}’의 메인 스토리 총 {count}화를 이야기 순서대로 확인할 수 있습니다.",
     },
     fallbackTitle: {
       "zh-CN": "主线剧情",
@@ -1446,9 +1454,10 @@ export const DYNAMIC_SEO_TEMPLATES = {
       "ja-JP": "{episode} - {unit}",
     },
     description: {
-      "zh-CN": "阅读 Project SEKAI 组合「{unit}」主线剧情「{episode}」",
-      "en-US": "Read the Project Sekai main story episode \"{episode}\" for \"{unit}\"",
-      "ja-JP": "Project SEKAI ユニット「{unit}」のメインストーリー「{episode}」を閲覧できます",
+      "zh-CN": "阅读 Project SEKAI 组合「{unit}」主线剧情「{episode}」的角色对话与完整章节文本。",
+      "en-US": "Read the Project SEKAI main story episode \"{episode}\" for \"{unit}\", including character dialogue and complete chapter text.",
+      "ja-JP": "Project SEKAI ユニット「{unit}」のメインストーリー「{episode}」について、キャラクター会話と章本文を閲覧できます。",
+      "ko-KR": "Project SEKAI 유닛 ‘{unit}’의 메인 스토리 ‘{episode}’에서 캐릭터 대화와 전체 챕터 내용을 확인할 수 있습니다.",
     },
     fallbackTitle: {
       "zh-CN": "主线剧情阅读",
@@ -1564,24 +1573,28 @@ export const DETAIL_FALLBACK_DESCRIPTIONS = {
 
 export const DETAIL_SEO_TEMPLATES = {
   card: {
-    "zh-CN": "Project SEKAI 卡牌「{prefix}」— {character}",
-    "en-US": "Project Sekai card \"{prefix}\" — {character}",
-    "ja-JP": "Project SEKAI カード「{prefix}」— {character}",
+    "zh-CN": "查看 {character} 的 Project SEKAI 卡牌「{prefix}」，包含卡牌稀有度、属性、技能、数值与高清卡面资源。",
+    "en-US": "Explore the Project SEKAI card \"{prefix}\" featuring {character}, including rarity, attribute, skill, stats, and card artwork.",
+    "ja-JP": "{character}の Project SEKAI カード「{prefix}」について、レアリティ、属性、スキル、ステータス、カード画像を確認できます。",
+    "ko-KR": "{character}의 Project SEKAI 카드 ‘{prefix}’에 대한 희귀도, 속성, 스킬, 능력치와 카드 이미지를 확인할 수 있습니다.",
   },
   character: {
-    "zh-CN": "Project SEKAI 角色「{name}」的详细资料、组合与相关信息",
-    "en-US": "Detailed information for Project Sekai character \"{name}\"",
-    "ja-JP": "Project SEKAI キャラクター「{name}」の詳細情報",
+    "zh-CN": "查看 Project SEKAI 角色「{name}」的个人资料、所属组合、相关卡牌、剧情与游戏数据。",
+    "en-US": "View the Project SEKAI character profile for \"{name}\", including their unit, cards, stories, and related game data.",
+    "ja-JP": "Project SEKAI キャラクター「{name}」のプロフィール、所属ユニット、カード、ストーリー、関連ゲームデータを確認できます。",
+    "ko-KR": "Project SEKAI 캐릭터 ‘{name}’의 프로필, 소속 유닛, 카드, 스토리와 관련 게임 데이터를 확인할 수 있습니다.",
   },
   costume: {
-    "zh-CN": "Project SEKAI 服装「{name}」详情",
-    "en-US": "Project SEKAI costume \"{name}\"",
-    "ja-JP": "Project SEKAI 衣装「{name}」詳細",
+    "zh-CN": "查看 Project SEKAI 服装「{name}」的外观、适用角色、配色与获取相关信息。",
+    "en-US": "View the Project SEKAI costume \"{name}\", including its appearance, supported characters, color variants, and acquisition details.",
+    "ja-JP": "Project SEKAI 衣装「{name}」の外観、着用キャラクター、カラーバリエーション、入手情報を確認できます。",
+    "ko-KR": "Project SEKAI 의상 ‘{name}’의 외형, 착용 캐릭터, 색상 변형과 획득 정보를 확인할 수 있습니다.",
   },
   event: {
-    "zh-CN": "Project SEKAI 活动「{name}」详情",
-    "en-US": "Project Sekai event \"{name}\"",
-    "ja-JP": "Project SEKAI イベント「{name}」詳細",
+    "zh-CN": "查看 Project SEKAI 活动「{name}」的举办时间、活动类型、奖励、加成角色与相关剧情数据。",
+    "en-US": "View the Project SEKAI event \"{name}\", including its schedule, event type, rewards, bonus characters, and related story data.",
+    "ja-JP": "Project SEKAI イベント「{name}」の開催期間、形式、報酬、ボーナスキャラクター、関連ストーリーを確認できます。",
+    "ko-KR": "Project SEKAI 이벤트 ‘{name}’의 개최 기간, 이벤트 형식, 보상, 보너스 캐릭터와 관련 스토리를 확인할 수 있습니다.",
   },
   exchange: {
     "zh-CN": "Project SEKAI 兑换条目：{name}{shopSuffix}",
@@ -1594,29 +1607,34 @@ export const DETAIL_SEO_TEMPLATES = {
     "ja-JP": "Project SEKAI 交換アイテム詳細",
   },
   gacha: {
-    "zh-CN": "Project SEKAI 扭蛋「{name}」详情",
-    "en-US": "Project SEKAI gacha: {name}",
-    "ja-JP": "Project SEKAI ガチャ「{name}」詳細",
+    "zh-CN": "查看 Project SEKAI 扭蛋「{name}」的开放时间、招募类型、卡池内容、Pickup 卡牌与提供概率。",
+    "en-US": "View the Project SEKAI gacha \"{name}\", including its availability, banner type, card pool, pickup cards, and rates.",
+    "ja-JP": "Project SEKAI ガチャ「{name}」の開催期間、ガチャ種別、収録カード、ピックアップ、提供割合を確認できます。",
+    "ko-KR": "Project SEKAI 뽑기 ‘{name}’의 개최 기간, 유형, 카드 목록, 픽업 카드와 제공 확률을 확인할 수 있습니다.",
   },
   live: {
-    "zh-CN": "Project SEKAI 虚拟 Live「{name}」详情",
-    "en-US": "Project Sekai virtual live \"{name}\"",
-    "ja-JP": "Project SEKAI バーチャルライブ「{name}」詳細",
+    "zh-CN": "查看 Project SEKAI 虚拟 Live「{name}」的演出时间、出演角色、曲目与参与奖励。",
+    "en-US": "View the Project SEKAI virtual live \"{name}\", including its schedule, performers, setlist, and participation rewards.",
+    "ja-JP": "Project SEKAI バーチャルライブ「{name}」の開催時間、出演者、セットリスト、参加報酬を確認できます。",
+    "ko-KR": "Project SEKAI 버추얼 라이브 ‘{name}’의 개최 시간, 출연 캐릭터, 세트리스트와 참가 보상을 확인할 수 있습니다.",
   },
   manga: {
-    "zh-CN": "Project SEKAI 官方四格漫画：{title}",
-    "en-US": "Project Sekai official four-panel comic — {title}",
-    "ja-JP": "Project SEKAI 公式4コマ：{title}",
+    "zh-CN": "阅读 Project SEKAI 官方四格漫画「{title}」，查看本话标题与完整漫画图片。",
+    "en-US": "Read the Project SEKAI official four-panel comic \"{title}\" and view the complete comic image for this episode.",
+    "ja-JP": "Project SEKAI 公式4コマ「{title}」のエピソード情報と漫画画像を閲覧できます。",
+    "ko-KR": "Project SEKAI 공식 4컷 만화 ‘{title}’의 에피소드 정보와 전체 만화 이미지를 확인할 수 있습니다.",
   },
   music: {
-    "zh-CN": "Project SEKAI 歌曲「{title}」— 作词：{lyricist} / 作曲：{composer}",
-    "en-US": "Project Sekai song \"{title}\" — Lyricist: {lyricist} / Composer: {composer}",
-    "ja-JP": "Project SEKAI 楽曲「{title}」— 作詞：{lyricist} / 作曲：{composer}",
+    "zh-CN": "查看 Project SEKAI 歌曲「{title}」的难度与谱面数据、演唱版本和封面；作词：{lyricist}，作曲：{composer}。",
+    "en-US": "View charts, difficulty data, vocal versions, and jacket artwork for the Project SEKAI song \"{title}\". Lyrics: {lyricist}; music: {composer}.",
+    "ja-JP": "Project SEKAI 楽曲「{title}」の難易度・譜面データ、歌唱バージョン、ジャケットを確認できます。作詞：{lyricist}、作曲：{composer}。",
+    "ko-KR": "Project SEKAI 수록곡 ‘{title}’의 난이도와 채보 데이터, 보컬 버전, 재킷 이미지를 확인할 수 있습니다. 작사: {lyricist}, 작곡: {composer}.",
   },
   mysekai: {
-    "zh-CN": "Project SEKAI MySekai 家具「{name}」{flavorSuffix}",
-    "en-US": "Project SEKAI furniture \"{name}\"{flavorSuffix}",
-    "ja-JP": "Project SEKAI MySekai 家具「{name}」{flavorSuffix}",
+    "zh-CN": "查看 Project SEKAI MySekai 家具「{name}」的外观、制作素材与物品说明。{flavorSuffix}",
+    "en-US": "View the appearance, crafting materials, and item description for the Project SEKAI MySEKAI furniture \"{name}\".{flavorSuffix}",
+    "ja-JP": "Project SEKAI MySekai 家具「{name}」の外観、製作素材、アイテム説明を確認できます。{flavorSuffix}",
+    "ko-KR": "Project SEKAI MySEKAI 가구 ‘{name}’의 외형, 제작 재료와 아이템 설명을 확인할 수 있습니다.{flavorSuffix}",
   },
 } as const satisfies Record<string, LocalizedText>;
 
