@@ -65,12 +65,9 @@ export function isIndexableSeoPage(pageKey: SeoPageKey): boolean {
 }
 
 export function getRobotsDisallowPaths(): string[] {
-    return [
-        ...new Set([
-            ...BASE_ROBOTS_DISALLOW_PATHS,
-            ...NON_INDEXABLE_SEO_ROUTES.map((route) => normalizeSeoPath(route.path)),
-        ]),
-    ];
+    // Search engines must be allowed to crawl ordinary noindex pages so they
+    // can observe the robots metadata. Only non-page endpoints belong here.
+    return [...BASE_ROBOTS_DISALLOW_PATHS];
 }
 
 export function assertRobotsDisallowPathsAligned(paths: readonly string[] = getRobotsDisallowPaths()): void {

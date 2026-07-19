@@ -7,6 +7,7 @@ import {
     uiLocaleToRouteLocale,
 } from "@/lib/locale-routing";
 import { resolveAcceptLanguageUiLocale, resolveUiLocale, UI_LOCALE_STORAGE_KEY } from "@/lib/i18n/locales";
+import { getPublicPageCachePolicy } from "@/lib/page-cache-policy";
 
 export const ROUTE_LOCALE_HEADER = "x-moesekai-route-locale";
 export const PUBLIC_PATH_HEADER = "x-moesekai-public-path";
@@ -45,7 +46,10 @@ export function proxy(request: NextRequest) {
         requestHeaders.set(PUBLIC_PATH_HEADER, pathname);
 
         const response = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
-        response.headers.append("Vary", "Cookie, Accept-Language");
+        const cachePolicy = (request.method === "GET" || request.method === "HEAD") && !request.nextUrl.search
+            ? getPublicPageCachePolicy(internalPath)
+            : null;
+        if (cachePolicy) response.headers.set("Cache-Control", cachePolicy.cacheControl);
         return response;
     }
 

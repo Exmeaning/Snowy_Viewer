@@ -155,6 +155,11 @@ const exchangeDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof ge
             shopSuffix: formatExchangeShopSuffix(exchange.summaryName, locale),
         },
         twitterCard: "summary",
+        robots: {
+            index: false,
+            follow: true,
+            googleBot: { index: false, follow: true },
+        },
     }),
 });
 

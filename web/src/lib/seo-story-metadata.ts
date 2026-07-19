@@ -31,7 +31,7 @@ export const defineStoryEventGroupPage = (render: (props: { params?: Promise<{ e
     kind: "storyEventGroup",
     routePrefix: "story/event",
     buildPath: ({ eventId }) => `/story/event/${encodePathPart(eventId)}/`,
-    getData: ({ eventId }) => getStoryEventGroupMeta(eventId),
+    getData: ({ eventId }, region) => getStoryEventGroupMeta(eventId, region),
     structuredData: {
         parentPageKey: "story_event",
         getName: (data, { params }) => data?.name ?? storyFallback("Event", params.eventId),
@@ -51,7 +51,7 @@ export const defineStoryEventReaderPage = (render: (props: { params?: Promise<{ 
     kind: "storyEventReader",
     routePrefix: "story/event",
     buildPath: ({ eventId, episodeNo }) => `/story/event/${encodePathPart(eventId)}/${encodePathPart(episodeNo)}/`,
-    getData: ({ eventId, episodeNo }) => getStoryEventEpisodeMeta(eventId, episodeNo),
+    getData: ({ eventId, episodeNo }, region) => getStoryEventEpisodeMeta(eventId, episodeNo, region),
     structuredData: {
         parentPageKey: "story_event",
         getName: (data, { params }) => data?.episodeTitle ?? storyFallback("Episode", `${params.eventId}-${params.episodeNo}`),
@@ -72,7 +72,7 @@ export const defineStoryUnitGroupPage = (render: (props: { params?: Promise<{ un
     kind: "storyUnitGroup",
     routePrefix: "story/unit",
     buildPath: ({ unitId }) => `/story/unit/${encodePathPart(unitId)}/`,
-    getData: ({ unitId }) => getStoryUnitGroupMeta(unitId),
+    getData: ({ unitId }, region) => getStoryUnitGroupMeta(unitId, region),
     structuredData: {
         parentPageKey: "story_unit",
         getName: (data, { params }) => data?.unitName ?? storyFallback("Unit", params.unitId),
@@ -92,7 +92,7 @@ export const defineStoryUnitReaderPage = (render: (props: { params?: Promise<{ u
     kind: "storyUnitReader",
     routePrefix: "story/unit",
     buildPath: ({ unitId, episodeId }) => `/story/unit/${encodePathPart(unitId)}/${encodePathPart(episodeId)}/`,
-    getData: ({ unitId, episodeId }) => getStoryUnitEpisodeMeta(unitId, episodeId),
+    getData: ({ unitId, episodeId }, region) => getStoryUnitEpisodeMeta(unitId, episodeId, region),
     structuredData: {
         parentPageKey: "story_unit",
         getName: (data, { params }) => data?.episodeTitle ?? storyFallback("Episode", params.episodeId),
@@ -112,7 +112,7 @@ export const defineStoryCardReaderPage = (render: (props: { params?: Promise<{ c
     kind: "storyCardReader",
     routePrefix: "story/card",
     buildPath: ({ cardId }) => `/story/card/${encodePathPart(cardId)}/`,
-    getData: ({ cardId }) => getStoryCardReaderMeta(cardId),
+    getData: ({ cardId }, region) => getStoryCardReaderMeta(cardId, region),
     structuredData: {
         parentPageKey: "story_card",
         getName: (data, { params }) => data?.cardPrefix ?? storyFallback("Card", params.cardId),
@@ -131,7 +131,7 @@ export const defineStorySelfReaderPage = (render: (props: { params?: Promise<{ c
     kind: "storySelfReader",
     routePrefix: "story/self",
     buildPath: ({ charaId }) => `/story/self/${encodePathPart(charaId)}/`,
-    getData: ({ charaId }) => getStorySelfReaderMeta(charaId),
+    getData: ({ charaId }, region) => getStorySelfReaderMeta(charaId, region),
     structuredData: {
         parentPageKey: "story_self",
         getName: (data, { params }) => data?.characterName ?? storyFallback("Character", params.charaId),
@@ -151,7 +151,7 @@ export const defineStorySpecialReaderPage = (render: (props: { params?: Promise<
     kind: "storySpecialReader",
     routePrefix: "story/special",
     buildPath: ({ spId }) => `/story/special/${encodePathPart(spId)}/`,
-    getData: ({ spId }) => getStorySpecialReaderMeta(spId),
+    getData: ({ spId }, region) => getStorySpecialReaderMeta(spId, region),
     structuredData: {
         parentPageKey: "story_special",
         getName: (data, { params }) => data?.title ?? storyFallback("Special", params.spId),
@@ -171,7 +171,7 @@ export const defineStoryAreaCategoryPage = (render: (props: { params?: Promise<{
     kind: "storyAreaCategory",
     routePrefix: "story/area",
     buildPath: ({ category }) => `/story/area/${encodePathPart(category)}/`,
-    getData: ({ category }) => getStoryAreaCategoryMeta(category),
+    getData: ({ category }, region) => getStoryAreaCategoryMeta(category, region),
     structuredData: {
         parentPageKey: "story_area",
         getName: (data, { params }) => data?.label ?? params.category,
@@ -191,7 +191,7 @@ export const defineStoryAreaReaderPage = (render: (props: { params?: Promise<{ c
     kind: "storyAreaReader",
     routePrefix: "story/area",
     buildPath: ({ category, scenarioId }) => `/story/area/${encodePathPart(category)}/${encodePathPart(scenarioId)}/`,
-    getData: ({ category, scenarioId }) => getStoryAreaReaderMeta(category, scenarioId),
+    getData: ({ category, scenarioId }, region) => getStoryAreaReaderMeta(category, scenarioId, region),
     structuredData: {
         parentPageKey: "story_area",
         getName: (data, { params }) => data?.areaName ?? params.scenarioId,

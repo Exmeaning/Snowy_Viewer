@@ -4,6 +4,7 @@ import { getPageSeo, getRootSeo, getSeoLocaleConfig, type SeoPageKey } from "@/l
 import { uiLocaleToRouteLocale } from "@/lib/locale-routing";
 
 function absoluteUrl(baseUrl: string, path = "/"): string {
+    if (/^https?:\/\//i.test(path)) return path;
     return new URL(path.startsWith("/") ? path : `/${path}`, baseUrl).toString();
 }
 

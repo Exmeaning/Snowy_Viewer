@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createElement, Fragment, type ReactNode } from "react";
 import { cookies, headers } from "next/headers";
+import { notFound } from "next/navigation";
 
 import {
     DEFAULT_UI_LOCALE,
@@ -94,6 +95,7 @@ interface BuildMetadataOptions {
     twitterCard?: "summary" | "summary_large_image";
     type?: "website" | "article";
     robots?: Metadata["robots"];
+    alternateRouteLocales?: readonly RouteLocale[];
 }
 
 export function buildLocalizedMetadata({
@@ -106,6 +108,7 @@ export function buildLocalizedMetadata({
     twitterCard = "summary",
     type = "website",
     robots,
+    alternateRouteLocales,
 }: BuildMetadataOptions): Metadata {
     const localeConfig = getSeoLocaleConfig(locale);
     const titleText = typeof title === "string"
@@ -117,7 +120,7 @@ export function buildLocalizedMetadata({
     const localizedPath = localizeSeoPath(path, routeLocale);
     const canonical = absolutePath(localizedPath);
     const languages = Object.fromEntries([
-        ...SUPPORTED_ROUTE_LOCALES.map((alternateLocale) => {
+        ...(alternateRouteLocales ?? SUPPORTED_ROUTE_LOCALES).map((alternateLocale) => {
             const config = getLocaleRouteConfig(alternateLocale);
             return [config.uiLocale, absolutePath(localizeSeoPath(path, alternateLocale))] as const;
         }),
@@ -183,6 +186,24 @@ export function noIndexRobots(): Metadata["robots"] {
             follow: false,
         },
     };
+}
+
+function missingDetailRobots(): Metadata["robots"] {
+    return {
+        index: false,
+        follow: true,
+        googleBot: {
+            index: false,
+            follow: true,
+        },
+    };
+}
+
+function getAvailableRouteLocales<T>(getData: (region: ContentRegion) => T | null): RouteLocale[] {
+    return SUPPORTED_ROUTE_LOCALES.filter((routeLocale) => {
+        const region = getLocaleRouteConfig(routeLocale).defaultServer;
+        return getData(region) !== null;
+    });
 }
 
 export async function createPageMetadata(pageKey: SeoPageKey): Promise<Metadata> {
@@ -315,6 +336,8 @@ export async function createDynamicPageMetadata<TData, TParams extends Record<st
             description: getDynamicFallbackDescription(kind, locale),
             path,
             twitterCard: fallbackTwitterCard,
+            robots: missingDetailRobots(),
+            alternateRouteLocales: [getSeoRouteLocale(locale)],
         });
     }
 
@@ -328,6 +351,7 @@ export async function createDynamicPageMetadata<TData, TParams extends Record<st
         images: result.images,
         twitterCard: result.twitterCard,
         robots: result.robots,
+        alternateRouteLocales: getAvailableRouteLocales((alternateRegion) => getData(resolvedParams, alternateRegion)),
     });
 }
 
@@ -351,13 +375,13 @@ export function defineSeoDynamicPage<TData, TParams extends Record<string, strin
     ...metadataOptions
 }: SeoDynamicPageOptions<TData, TParams>) {
     const Page = async ({ params }: { params?: Promise<TParams> }) => {
-        if (!structuredData) return render({ params });
-
         const resolvedParams = params ? await params : ({} as TParams);
         const locale = await getRequestSeoLocale();
         const region = getLocaleRouteConfig(getSeoRouteLocale(locale)).defaultServer;
         const path = buildDynamicMetadataPath(metadataOptions.routePrefix, resolvedParams, metadataOptions.buildPath);
         const data = metadataOptions.getData(resolvedParams, region);
+        if (!data) notFound();
+        if (!structuredData) return render({ params });
         const detailName = structuredData.getName(data, { params: resolvedParams, locale, path });
         const breadcrumbJsonLd = generateDetailBreadcrumbJsonLd(
             SITE_BASE_URL,
@@ -396,6 +420,7 @@ interface DetailMetadataOptions {
     images?: string[];
     twitterCard?: "summary" | "summary_large_image";
     robots?: Metadata["robots"];
+    alternateRouteLocales?: readonly RouteLocale[];
 }
 
 export interface DetailMetadataResultOptions {
@@ -432,6 +457,7 @@ export function buildDetailMetadata({
     images,
     twitterCard,
     robots,
+    alternateRouteLocales,
 }: DetailMetadataOptions): Metadata {
     return buildLocalizedMetadata({
         locale,
@@ -442,6 +468,7 @@ export function buildDetailMetadata({
         twitterCard: twitterCard ?? (images?.length ? "summary_large_image" : "summary"),
         type: "article",
         robots,
+        alternateRouteLocales,
     });
 }
 
@@ -463,6 +490,8 @@ export async function createDetailFallbackMetadata(
         description,
         path,
         twitterCard,
+        robots: missingDetailRobots(),
+        alternateRouteLocales: [getSeoRouteLocale(locale)],
     });
 }
 
@@ -490,6 +519,8 @@ export async function createDynamicDetailMetadata<T>({
                 : getDetailFallbackDescription(kind, locale),
             path,
             twitterCard: fallbackTwitterCard,
+            robots: missingDetailRobots(),
+            alternateRouteLocales: [getSeoRouteLocale(locale)],
         });
     }
 
@@ -503,6 +534,7 @@ export async function createDynamicDetailMetadata<T>({
         images: result.images,
         twitterCard: result.twitterCard,
         robots: result.robots,
+        alternateRouteLocales: getAvailableRouteLocales((alternateRegion) => getData(numericId, alternateRegion)),
     });
 }
 
@@ -520,8 +552,6 @@ export interface SeoDetailPageOptions<T> extends Omit<CreateDynamicDetailMetadat
 
 export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOptions }: SeoDetailPageOptions<T>) {
     const Page = async ({ params }: { params?: Promise<{ id: string }> }) => {
-        if (!structuredData) return render({ params });
-
         const { id = "" } = params ? await params : {};
         const locale = await getRequestSeoLocale();
         const region = getLocaleRouteConfig(getSeoRouteLocale(locale)).defaultServer;
@@ -529,6 +559,8 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
         const routePrefix = metadataOptions.routePrefix.replace(/^\/+|\/+$/g, "");
         const path = id ? normalizeSeoPath(`/${routePrefix}/${id}`) : normalizeSeoPath(`/${routePrefix}/`);
         const data = Number.isFinite(numericId) ? metadataOptions.getData(numericId, region) : null;
+        if (!data) notFound();
+        if (!structuredData) return render({ params });
         const context = { id, numericId, locale, path };
         const detailName = data
             ? metadataOptions.build(data, context).title

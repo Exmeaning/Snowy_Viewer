@@ -349,9 +349,10 @@ export const SEO_PAGE_METADATA = {
     "/comic",
     { "zh-CN": "一格漫画", "en-US": "Comic Database", "ja-JP": "1コマ漫画" },
     {
-      "zh-CN": "浏览 Project SEKAI 官方一格漫画与翻译。",
-      "en-US": "Browse Project Sekai official one-panel comics and translations.",
-      "ja-JP": "Project SEKAI 公式1コマ漫画と翻訳を閲覧できます。",
+      "zh-CN": "浏览 Project SEKAI 官方一格漫画，按发布时间查找作品，并阅读站内收录的中文翻译与角色趣味日常。",
+      "en-US": "Browse official Project SEKAI one-panel comics by release date, with available translations and short character-focused stories collected in one place.",
+      "ja-JP": "Project SEKAI 公式1コマ漫画を公開順に閲覧し、収録済みの翻訳やキャラクターの日常を描いた短編を確認できます。",
+      "ko-KR": "Project SEKAI 공식 1컷 만화를 공개 순서대로 살펴보고, 제공되는 번역과 캐릭터의 일상을 담은 짧은 이야기를 확인할 수 있습니다.",
     },
     {
       "zh-CN": ["漫画", "一格漫画", "官方漫画"],
@@ -391,9 +392,10 @@ export const SEO_PAGE_METADATA = {
     "/manga",
     { "zh-CN": "官方四格漫画", "en-US": "Official 4-Koma", "ja-JP": "公式4コマ" },
     {
-      "zh-CN": "浏览 Project SEKAI 官方四格漫画与章节。",
-      "en-US": "Browse Project Sekai official four-panel comics and episodes.",
-      "ja-JP": "Project SEKAI 公式4コマ漫画とエピソードを閲覧できます。",
+      "zh-CN": "浏览 Project SEKAI 官方四格漫画章节，按连载顺序查找各话内容，并查看对应封面与漫画图片。",
+      "en-US": "Browse official Project SEKAI four-panel comic episodes in publication order, with chapter titles, cover information, and available comic images.",
+      "ja-JP": "Project SEKAI 公式4コマ漫画を連載順に閲覧し、各話のタイトル、表紙情報、収録画像を確認できます。",
+      "ko-KR": "Project SEKAI 공식 4컷 만화를 연재 순서대로 살펴보고 각 화의 제목, 표지 정보, 수록 이미지를 확인할 수 있습니다.",
     },
     {
       "zh-CN": ["四格漫画", "官方四格", "漫画"],
@@ -419,9 +421,10 @@ export const SEO_PAGE_METADATA = {
     "/honors",
     { "zh-CN": "称号成就", "en-US": "Honor Achievements", "ja-JP": "称号・実績" },
     {
-      "zh-CN": "浏览 Project SEKAI 称号、成就与羁绊称号信息。",
-      "en-US": "Browse Project Sekai honors, achievements, and bonds honor information.",
-      "ja-JP": "Project SEKAI の称号、実績、キズナ称号の情報を閲覧できます。",
+      "zh-CN": "浏览 Project SEKAI 称号与成就数据库，查看普通称号、活动排名称号及角色羁绊称号的图标和获取条件。",
+      "en-US": "Browse the Project SEKAI honor database, including achievement, event ranking, and character bonds honors with icons and unlock requirements.",
+      "ja-JP": "Project SEKAI の称号データベースで、実績称号、イベントランキング称号、キズナ称号の画像と獲得条件を確認できます。",
+      "ko-KR": "Project SEKAI 칭호 데이터베이스에서 업적, 이벤트 랭킹, 인연 칭호의 이미지와 획득 조건을 확인할 수 있습니다.",
     },
     {
       "zh-CN": ["称号", "成就", "羁绊称号"],
@@ -447,9 +450,10 @@ export const SEO_PAGE_METADATA = {
     "/sticker",
     { "zh-CN": "贴纸表情", "en-US": "Sticker Database", "ja-JP": "スタンプデータベース" },
     {
-      "zh-CN": "浏览 Project SEKAI 贴纸、表情与角色贴图资源。",
-      "en-US": "Browse Project Sekai stickers, emotes, and character stamp assets.",
-      "ja-JP": "Project SEKAI のスタンプ、エモート、キャラクター画像素材を閲覧できます。",
+      "zh-CN": "浏览 Project SEKAI 贴纸与表情数据库，按角色查找游戏内 Stamp，查看名称、台词和高清图片资源。",
+      "en-US": "Browse Project SEKAI stickers and in-game stamps by character, with names, voice lines, and high-quality image assets for each entry.",
+      "ja-JP": "Project SEKAI のゲーム内スタンプをキャラクター別に検索し、名称、セリフ、高画質画像を確認できます。",
+      "ko-KR": "Project SEKAI 게임 내 스탬프를 캐릭터별로 검색하고 이름, 대사, 고화질 이미지 자료를 확인할 수 있습니다.",
     },
     {
       "zh-CN": ["贴纸", "表情", "Stamp"],
@@ -475,9 +479,10 @@ export const SEO_PAGE_METADATA = {
     "/prediction",
     { "zh-CN": "活动预测", "en-US": "Event Prediction", "ja-JP": "イベント予測" },
     {
-      "zh-CN": "查看 Project SEKAI 活动预测、排名走势与数据分析工具。",
-      "en-US": "View Project Sekai event predictions, ranking trends, and data analysis tools.",
-      "ja-JP": "Project SEKAI のイベント予測、ランキング推移、データ分析ツールを確認できます。",
+      "zh-CN": "查看 Project SEKAI 活动预测与排名走势，通过历史数据、分数线变化和图表分析活动竞争趋势。",
+      "en-US": "Review Project SEKAI event forecasts and ranking trends using historical results, border score changes, and charts for analyzing event competition.",
+      "ja-JP": "Project SEKAI のイベント予測とランキング推移を、過去データ、ボーダースコアの変化、分析チャートから確認できます。",
+      "ko-KR": "과거 결과, 보더 점수 변화, 분석 차트를 바탕으로 Project SEKAI 이벤트 예측과 랭킹 추이를 확인할 수 있습니다.",
     },
     {
       "zh-CN": ["活动预测", "排名预测", "预测线"],
@@ -643,9 +648,10 @@ export const SEO_PAGE_METADATA = {
     "/sticker-maker",
     { "zh-CN": "表情包制作", "en-US": "Sticker Maker", "ja-JP": "スタンプメーカー" },
     {
-      "zh-CN": "制作 Project SEKAI 风格自定义贴纸、表情包与角色图片。",
-      "en-US": "Create Project Sekai-style custom sticker images, emotes, and character stamps.",
-      "ja-JP": "Project SEKAI 風のカスタムスタンプ、エモート、キャラクター画像を作成できます。",
+      "zh-CN": "在线制作 Project SEKAI 风格自定义贴纸与表情包，选择角色图片并调整文字、颜色和排版后导出成品。",
+      "en-US": "Create custom Project SEKAI-style stickers online by choosing character art, editing text, colors, and layout, then exporting the finished image.",
+      "ja-JP": "キャラクター画像、文字、色、レイアウトを調整して、Project SEKAI 風のオリジナルスタンプを作成・書き出しできます。",
+      "ko-KR": "캐릭터 이미지, 문구, 색상, 배치를 조정하여 Project SEKAI 스타일의 맞춤 스탬프를 만들고 이미지로 저장할 수 있습니다.",
     },
     {
       "zh-CN": ["表情包制作", "贴纸制作", "自定义贴纸"],
@@ -685,9 +691,10 @@ export const SEO_PAGE_METADATA = {
     "/guess-jacket",
     { "zh-CN": "猜曲绘", "en-US": "Guess Jacket", "ja-JP": "ジャケットクイズ" },
     {
-      "zh-CN": "游玩 Project SEKAI 猜曲绘小游戏，根据歌曲封面猜出对应乐曲。",
-      "en-US": "Play a Project Sekai music jacket guessing game and identify songs by their cover art.",
-      "ja-JP": "Project SEKAI の楽曲ジャケットから曲名を当てるミニゲームを遊べます。",
+      "zh-CN": "游玩 Project SEKAI 猜曲绘小游戏，根据逐步揭示的歌曲封面猜出对应乐曲，挑战你的曲库熟悉度。",
+      "en-US": "Play a Project SEKAI music jacket quiz, identify songs from progressively revealed cover artwork, and test how well you know the game soundtrack.",
+      "ja-JP": "少しずつ表示されるジャケット画像から楽曲名を当てる Project SEKAI クイズで、収録曲の知識を試せます。",
+      "ko-KR": "조금씩 공개되는 재킷 이미지로 곡명을 맞히는 Project SEKAI 퀴즈에서 수록곡에 대한 지식을 시험할 수 있습니다.",
     },
     {
       "zh-CN": ["猜曲绘", "歌曲封面", "小游戏"],
@@ -713,9 +720,10 @@ export const SEO_PAGE_METADATA = {
     "/guess-who",
     { "zh-CN": "猜角色", "en-US": "Guess Who", "ja-JP": "キャラクタークイズ" },
     {
-      "zh-CN": "游玩 Project SEKAI 猜角色小游戏，根据线索猜出角色。",
-      "en-US": "Play a Project Sekai character guessing game and identify characters from clues.",
-      "ja-JP": "Project SEKAI のキャラクターをヒントから当てるミニゲームを遊べます。",
+      "zh-CN": "游玩 Project SEKAI 猜角色小游戏，根据角色资料与逐步给出的线索判断答案，挑战你的角色知识。",
+      "en-US": "Play a Project SEKAI character quiz, identify the answer from progressively revealed profile clues, and test your knowledge of the cast.",
+      "ja-JP": "プロフィール情報や段階的に表示されるヒントから答えを導く Project SEKAI キャラクタークイズを遊べます。",
+      "ko-KR": "프로필 정보와 단계별 힌트로 정답을 찾는 Project SEKAI 캐릭터 퀴즈에서 등장인물에 대한 지식을 시험할 수 있습니다.",
     },
     {
       "zh-CN": ["猜角色", "角色竞猜", "小游戏"],
@@ -741,9 +749,10 @@ export const SEO_PAGE_METADATA = {
     "/goods-gacha",
     { "zh-CN": "谷子盲抽", "en-US": "Goods Gacha Simulator", "ja-JP": "グッズガチャシミュレーター" },
     {
-      "zh-CN": "使用 Project SEKAI 谷子盲抽模拟器规划周边抽取体验。",
-      "en-US": "Use a Project Sekai goods gacha simulator for fan merchandise pull planning.",
-      "ja-JP": "Project SEKAI ファングッズのランダム購入体験をシミュレーションできます。",
+      "zh-CN": "使用 Project SEKAI 周边盲抽模拟器，自定义角色、商品与抽取规则，模拟随机谷子开箱和收藏结果。",
+      "en-US": "Simulate random Project SEKAI merchandise pulls with customizable characters, goods, and draw rules to preview blind-box collection results.",
+      "ja-JP": "キャラクター、グッズ、抽選ルールを設定し、Project SEKAI グッズのランダム購入やコレクション結果をシミュレーションできます。",
+      "ko-KR": "캐릭터, 상품, 추첨 규칙을 설정하여 Project SEKAI 굿즈의 랜덤 구매와 수집 결과를 시뮬레이션할 수 있습니다.",
     },
     {
       "zh-CN": ["谷子盲抽", "周边", "抽卡模拟"],
@@ -853,10 +862,10 @@ export const SEO_PAGE_METADATA = {
     "/guides",
     { "zh-CN": "社区攻略", "en-US": "Guides", "ja-JP": "コミュニティガイド", "ko-KR": "커뮤니티 가이드" },
     {
-      "zh-CN": "浏览 PROJECT SEKAI 社区攻略、教程与实用指南集合。",
-      "en-US": "Browse PROJECT SEKAI community guides, tutorials, and helpful reference articles.",
-      "ja-JP": "PROJECT SEKAI のコミュニティ攻略、チュートリアル、実用ガイドを閲覧できます。",
-      "ko-KR": "PROJECT SEKAI 커뮤니티 가이드, 튜토리얼 및 실용적인 가이드 모음을 찾아보세요.",
+      "zh-CN": "浏览 PROJECT SEKAI 社区攻略与教程，查找玩法机制、活动规划、养成建议和实用工具的专题指南。",
+      "en-US": "Browse PROJECT SEKAI community guides covering game mechanics, event planning, progression advice, practical tools, and other reference topics.",
+      "ja-JP": "PROJECT SEKAI のゲームシステム、イベント計画、育成、便利ツールを扱うコミュニティ攻略やチュートリアルを閲覧できます。",
+      "ko-KR": "PROJECT SEKAI의 게임 시스템, 이벤트 계획, 성장 조언, 실용 도구를 다루는 커뮤니티 공략과 튜토리얼을 찾아볼 수 있습니다.",
     },
     {
       "zh-CN": ["攻略", "社区攻略", "Guide"],

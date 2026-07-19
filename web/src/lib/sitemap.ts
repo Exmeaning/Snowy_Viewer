@@ -141,12 +141,13 @@ export function buildDetailsSitemapIndex(baseUrl: string): string {
 }
 
 export function buildMainSitemap(baseUrl: string): string {
+    const currentIndexablePaths = new Set(INDEXABLE_SEO_ROUTES.map(route => route.path));
     const entries = SUPPORTED_ROUTE_LOCALES.flatMap((locale) => {
         const region = getLocaleRouteConfig(locale).defaultServer;
         const data = getData(region);
         const fallbackLastmod = data?.generatedAt || '1970-01-01T00:00:00.000Z';
         const mainRoutes = data?.mainRoutes?.length
-            ? data.mainRoutes
+            ? data.mainRoutes.filter(route => currentIndexablePaths.has(route.path))
             : INDEXABLE_SEO_ROUTES.map((route) => ({
                 path: route.path,
                 priority: route.priority,
