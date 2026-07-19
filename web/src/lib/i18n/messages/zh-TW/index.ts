@@ -1,33 +1,24 @@
 import type { MessageTree } from "../types";
-import { zhCNMessages } from "../zh-CN";
+import { zhTWCommon } from "./common";
+import { zhTWPagePrimary } from "./page-primary";
+import { zhTWPageSecondaryA } from "./page-secondary-a";
+import { zhTWPageSecondaryB } from "./page-secondary-b";
+import {
+    zhTWLayout,
+    zhTWSearch,
+    zhTWSettings,
+    zhTWShortcuts,
+} from "./shell";
 
 export const zhTWMessages = {
-    ...zhCNMessages,
-    settings: {
-        ...zhCNMessages.settings,
-        uiLanguage: {
-            ...zhCNMessages.settings.uiLanguage,
-            sectionTitle: "介面語言",
-            label: "介面語言",
-            description: "切換網站介面的顯示語言",
-            options: {
-                ...zhCNMessages.settings.uiLanguage.options,
-                zhCN: "簡體中文",
-                zhTW: "繁體中文 (TW)",
-            },
-        },
-    },
+    common: zhTWCommon,
+    layout: zhTWLayout,
+    search: zhTWSearch,
+    settings: zhTWSettings,
+    shortcuts: zhTWShortcuts,
     page: {
-        ...zhCNMessages.page,
-        setup: {
-            ...zhCNMessages.page.setup,
-            languageTitle: "選擇語言",
-            languageDesc: "請選擇介面語言。您隨時可以在設定中變更。",
-            languageOptionSubtitles: {
-                ...zhCNMessages.page.setup.languageOptionSubtitles,
-                "zh-CN": "簡體中文 / Simplified Chinese",
-                "zh-TW": "繁體中文 (TW) / Traditional Chinese",
-            },
-        },
+        ...zhTWPagePrimary,
+        ...zhTWPageSecondaryA,
+        ...zhTWPageSecondaryB,
     },
-} satisfies MessageTree;
+} as const satisfies MessageTree;

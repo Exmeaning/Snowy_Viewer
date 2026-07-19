@@ -1,6 +1,6 @@
 # Moesekai i18n 收尾阶段技术 Plan
 
-> 更新时间：2026-05-23  
+> 更新时间：2026-07-19
 > 适用范围：`web/` Next.js 前端应用  
 > 当前判断：硬编码 UI 中文的主体迁移已初步完成；后续工作应从“继续铺页面”转为“收尾清点、边界决策、自动化守护与质量复核”。
 
@@ -8,7 +8,7 @@
 
 本轮回顾后，i18n 项目已经从大规模迁移阶段进入收尾阶段：
 
-- `zh-CN` / `en-US` / `ja-JP` 三语字典与 `I18nContext` 基础设施已落地。
+- `zh-CN` / `zh-TW` / `en-US` / `ja-JP` / `ko-KR` 五种语言与 `I18nContext` 基础设施已落地。
 - 核心数据库页、动态详情页、首页、布局、个人页、工具页、剧情页等主要用户路径基本接入 `t()`。
 - 账号/服务器共享层、剧情 asset fallback、活动单位筛选、WL3 模拟分组与单位显示 label 等收尾项已完成最近几轮清理：共享常量改为稳定 key/id，显示文案统一由 `common.*` / `page.deckRecommend.*` 字典负责。
 - 当前残留的中文不再主要集中在普通页面 UI，而是集中在以下边界：
@@ -34,15 +34,17 @@ web/src/lib/i18n/
     ├── index.ts               # messagesByLocale / fallbackMessages
     ├── types.ts               # MessageTree 类型
     ├── zh-CN/index.ts         # 简体中文文案
+    ├── zh-TW/                 # 独立繁体中文（TW）文案，按模块拆分
     ├── en-US/index.ts         # 英文文案
-    └── ja-JP/index.ts         # 日文文案
+    ├── ja-JP/index.ts         # 日文文案
+    └── ko-KR/index.ts         # 韩文文案
 
 web/src/contexts/I18nContext.tsx
 ```
 
 ### 2.2 已支持能力
 
-- 支持 locale：`zh-CN`、`en-US`、`ja-JP`。
+- 支持 locale：`zh-CN`、`zh-TW`、`en-US`、`ja-JP`、`ko-KR`。
 - 默认 locale：`zh-CN`。
 - 客户端持久化：`localStorage` + cookie（key：`moesekai_ui_locale`）。
 - 文档语言同步：`document.documentElement.lang` 与 `data-ui-locale`。

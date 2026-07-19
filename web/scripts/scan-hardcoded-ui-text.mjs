@@ -7,12 +7,17 @@ const HAN_RE = /[\p{Script=Han}]/u;
 
 const ALLOWLIST = new Map([
     ["src/lib/i18n/messages/zh-CN/index.ts", "zh-CN dictionary source"],
-    ["src/lib/i18n/messages/zh-TW/index.ts", "zh-TW dictionary overrides"],
+    ["src/lib/i18n/messages/zh-TW/common.ts", "Traditional Chinese (TW) shared message source"],
+    ["src/lib/i18n/messages/zh-TW/shell.ts", "Traditional Chinese (TW) layout and settings message source"],
+    ["src/lib/i18n/messages/zh-TW/page-primary.ts", "Traditional Chinese (TW) primary page message source"],
+    ["src/lib/i18n/messages/zh-TW/page-secondary-a.ts", "Traditional Chinese (TW) personal and tool page message source"],
+    ["src/lib/i18n/messages/zh-TW/page-secondary-b.ts", "Traditional Chinese (TW) preview and media page message source"],
     ["src/lib/i18n/messages/en-US/index.ts", "English dictionary may contain donor names, Japanese source labels, and masterdata translation maps"],
     ["src/lib/i18n/messages/ja-JP/index.ts", "Japanese dictionary source may contain kanji and project names"],
     ["src/lib/i18n/messages/ko-KR/index.ts", "Korean dictionary may contain donor names, Japanese source labels, and masterdata translation maps"],
     ["src/lib/i18n/locales.ts", "Locale native names shown in the language switcher"],
     ["src/lib/seo-keywords.ts", "Localized SEO copy and Chinese keyword strategy"],
+    ["src/lib/seo-zh-tw.ts", "Traditional Chinese (TW) SEO copy"],
     ["src/lib/structured-data.ts", "Localized structured-data aliases for Project SEKAI"],
     ["src/app/privacy/page.tsx", "Legal/content page pending product localization decision"],
     ["src/app/terms/page.tsx", "Legal/content page pending product localization decision"],

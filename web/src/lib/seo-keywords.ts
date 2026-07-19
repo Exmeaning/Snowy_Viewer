@@ -8,6 +8,13 @@
 
 import { DEFAULT_UI_LOCALE, type UiLocale } from "@/lib/i18n/locales";
 import { interpolateMessage, type MessageInterpolationValues } from "@/lib/i18n/format";
+import {
+  ZH_TW_DETAIL_FALLBACK_DESCRIPTIONS,
+  ZH_TW_DETAIL_FALLBACK_TITLES,
+  ZH_TW_DETAIL_SEO_TEMPLATES,
+  ZH_TW_DYNAMIC_SEO_TEMPLATES,
+  ZH_TW_SEO_PAGE_METADATA,
+} from "@/lib/seo-zh-tw";
 
 // ==================== Types ====================
 
@@ -52,7 +59,7 @@ export const SEO_LOCALE_CONFIG = {
   "zh-CN": {
     htmlLang: "zh-CN",
     openGraphLocale: "zh_CN",
-    alternateOpenGraphLocales: ["en_US", "ja_JP", "ko_KR"],
+    alternateOpenGraphLocales: ["zh_TW", "en_US", "ja_JP", "ko_KR"],
     titleTemplate: "%s | Moesekai",
     suffix: " — 新一代PJSK WIKI",
     detailSuffix: " | PJSK WIKI",
@@ -80,7 +87,7 @@ export const SEO_LOCALE_CONFIG = {
   "en-US": {
     htmlLang: "en-US",
     openGraphLocale: "en_US",
-    alternateOpenGraphLocales: ["zh_CN", "ja_JP", "ko_KR"],
+    alternateOpenGraphLocales: ["zh_CN", "zh_TW", "ja_JP", "ko_KR"],
     titleTemplate: "%s | Moesekai",
     suffix: " — Next-generation PJSK Wiki",
     detailSuffix: " | PJSK Wiki",
@@ -108,7 +115,7 @@ export const SEO_LOCALE_CONFIG = {
   "ja-JP": {
     htmlLang: "ja-JP",
     openGraphLocale: "ja_JP",
-    alternateOpenGraphLocales: ["zh_CN", "en_US", "ko_KR"],
+    alternateOpenGraphLocales: ["zh_CN", "zh_TW", "en_US", "ko_KR"],
     titleTemplate: "%s | Moesekai",
     suffix: " — 次世代PJSK Wiki",
     detailSuffix: " | PJSK Wiki",
@@ -135,7 +142,7 @@ export const SEO_LOCALE_CONFIG = {
   "ko-KR": {
     htmlLang: "ko-KR",
     openGraphLocale: "ko_KR",
-    alternateOpenGraphLocales: ["zh_CN", "en_US", "ja_JP"],
+    alternateOpenGraphLocales: ["zh_CN", "zh_TW", "en_US", "ja_JP"],
     titleTemplate: "%s | Moesekai",
     suffix: " — 차세대 PJSK Wiki",
     detailSuffix: " | PJSK Wiki",
@@ -1189,15 +1196,22 @@ export function getRootKeywords(locale: UiLocale = DEFAULT_UI_LOCALE): string[] 
 export function getPageKeywords(pageName: string, locale: UiLocale = DEFAULT_UI_LOCALE): string[] {
   const page = SEO_PAGE_METADATA[pageName as SeoPageKey];
   if (!page) return getRootKeywords(locale).slice(0, 10);
+  if (locale === "zh-TW") {
+    const localized = ZH_TW_SEO_PAGE_METADATA[pageName as keyof typeof ZH_TW_SEO_PAGE_METADATA];
+    if (localized) {
+      return [...new Set([...localized.keywords, ...COMMON_BRAND_KEYWORDS[locale]])];
+    }
+  }
   return [...localizedKeywordsValue(page.keywords, locale)];
 }
 
 export function getPageSeo(pageKey: SeoPageKey, locale: UiLocale = DEFAULT_UI_LOCALE) {
   const page = SEO_PAGE_METADATA[pageKey];
+  const zhTWPage = locale === "zh-TW" ? ZH_TW_SEO_PAGE_METADATA[pageKey] : undefined;
   return {
     path: page.path,
-    title: localizedText(page.title, locale),
-    description: `${localizedText(page.description, locale)}${getSeoLocaleConfig(locale).suffix}`,
+    title: zhTWPage?.title ?? localizedText(page.title, locale),
+    description: `${zhTWPage?.description ?? localizedText(page.description, locale)}${getSeoLocaleConfig(locale).suffix}`,
     keywords: getPageKeywords(pageKey, locale),
   };
 }
@@ -1441,6 +1455,9 @@ export const DYNAMIC_SEO_TEMPLATES = {
 } as const;
 
 function dynamicText(kind: DynamicSeoKind, field: keyof typeof DYNAMIC_SEO_TEMPLATES[DynamicSeoKind], locale: UiLocale): string {
+  if (locale === "zh-TW") {
+    return ZH_TW_DYNAMIC_SEO_TEMPLATES[kind][field];
+  }
   return localizedText(DYNAMIC_SEO_TEMPLATES[kind][field], locale);
 }
 
@@ -1595,11 +1612,15 @@ export const DETAIL_SEO_TEMPLATES = {
 } as const satisfies Record<string, LocalizedText>;
 
 export function getDetailFallbackTitle(kind: DetailFallbackKind, locale: UiLocale = DEFAULT_UI_LOCALE): string {
+  if (locale === "zh-TW") return ZH_TW_DETAIL_FALLBACK_TITLES[kind];
   return localizedText(DETAIL_FALLBACK_TITLES[kind], locale);
 }
 
 export function getDetailFallbackDescription(kind: DetailFallbackKind, locale: UiLocale = DEFAULT_UI_LOCALE): string {
-  return `${localizedText(DETAIL_FALLBACK_DESCRIPTIONS[kind], locale)}${getSeoLocaleConfig(locale).detailSuffix}`;
+  const description = locale === "zh-TW"
+    ? ZH_TW_DETAIL_FALLBACK_DESCRIPTIONS[kind]
+    : localizedText(DETAIL_FALLBACK_DESCRIPTIONS[kind], locale);
+  return `${description}${getSeoLocaleConfig(locale).detailSuffix}`;
 }
 
 export function formatDetailSeoDescription(
@@ -1607,13 +1628,16 @@ export function formatDetailSeoDescription(
   values: MessageInterpolationValues,
   locale: UiLocale = DEFAULT_UI_LOCALE,
 ): string {
-  const template = localizedText(DETAIL_SEO_TEMPLATES[kind], locale);
+  const template = locale === "zh-TW"
+    ? ZH_TW_DETAIL_SEO_TEMPLATES[kind]
+    : localizedText(DETAIL_SEO_TEMPLATES[kind], locale);
   return `${interpolateMessage(template, values)}${getSeoLocaleConfig(locale).detailSuffix}`;
 }
 
 export function formatExchangeShopSuffix(summaryName: string | undefined, locale: UiLocale = DEFAULT_UI_LOCALE): string {
   if (!summaryName) return "";
   if (locale === "zh-CN") return `，兑换所：${summaryName}`;
+  if (locale === "zh-TW") return `，交換所：${summaryName}`;
   if (locale === "ja-JP") return `、交換所：${summaryName}`;
   return `, exchange shop: ${summaryName}`;
 }
@@ -1621,5 +1645,5 @@ export function formatExchangeShopSuffix(summaryName: string | undefined, locale
 export function formatMysekaiFlavorSuffix(flavor: string | undefined, locale: UiLocale = DEFAULT_UI_LOCALE): string {
   if (!flavor) return "";
   const clipped = flavor.slice(0, 100);
-  return locale === "zh-CN" || locale === "ja-JP" ? ` — ${clipped}` : ` - ${clipped}`;
+  return locale === "zh-CN" || locale === "zh-TW" || locale === "ja-JP" ? ` — ${clipped}` : ` - ${clipped}`;
 }

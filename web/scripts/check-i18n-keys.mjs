@@ -38,4 +38,49 @@ if (mismatches.length > 0) {
     process.exit(1);
 }
 
-console.log(`i18n key structure OK (${baseKeys.size} keys across ${Object.keys(localeKeys).length} locales).`);
+function flattenMessages(value, prefix = "", result = new Map()) {
+    if (typeof value === "string") {
+        result.set(prefix, value);
+        return result;
+    }
+
+    for (const [key, child] of Object.entries(value ?? {})) {
+        flattenMessages(child, prefix ? `${prefix}.${key}` : key, result);
+    }
+
+    return result;
+}
+
+function interpolationTokens(message) {
+    return [...message.matchAll(/\{([A-Za-z0-9_]+)\}/g)]
+        .map((match) => match[1])
+        .sort();
+}
+
+const baseMessages = flattenMessages(messages[baseLocale]);
+const tokenMismatches = [];
+
+for (const [locale, messageTree] of Object.entries(messages)) {
+    if (locale === baseLocale) continue;
+
+    const localizedMessages = flattenMessages(messageTree);
+    for (const [key, baseMessage] of baseMessages) {
+        const expected = interpolationTokens(baseMessage);
+        const actual = interpolationTokens(localizedMessages.get(key) ?? "");
+        if (expected.join("\0") !== actual.join("\0")) {
+            tokenMismatches.push({ locale, key, expected, actual });
+        }
+    }
+}
+
+if (tokenMismatches.length > 0) {
+    console.error("i18n interpolation token mismatch detected.");
+    for (const mismatch of tokenMismatches) {
+        console.error(
+            `  - ${mismatch.locale} ${mismatch.key}: expected {${mismatch.expected.join(", ")}}, received {${mismatch.actual.join(", ")}}`
+        );
+    }
+    process.exit(1);
+}
+
+console.log(`i18n key structure and interpolation tokens OK (${baseKeys.size} keys across ${Object.keys(localeKeys).length} locales).`);
