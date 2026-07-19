@@ -7,7 +7,11 @@ import {
     uiLocaleToRouteLocale,
 } from "@/lib/locale-routing";
 import { resolveAcceptLanguageUiLocale, resolveUiLocale, UI_LOCALE_STORAGE_KEY } from "@/lib/i18n/locales";
-import { getPublicPageCachePolicy } from "@/lib/page-cache-policy";
+import {
+    CLIENT_HTML_CACHE_CONTROL,
+    ORIGIN_HTML_CACHE_HEADER,
+    getPublicPageCachePolicy,
+} from "@/lib/page-cache-policy";
 
 export const ROUTE_LOCALE_HEADER = "x-moesekai-route-locale";
 export const PUBLIC_PATH_HEADER = "x-moesekai-public-path";
@@ -50,17 +54,26 @@ export function proxy(request: NextRequest) {
         const response = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
         const isDocumentRequest = request.method === "GET" || request.method === "HEAD";
         const hasQuery = Boolean(request.nextUrl.search);
+        const isRscRequest = request.headers.get("rsc") === "1"
+            || request.headers.has("next-router-state-tree")
+            || request.headers.has("next-router-prefetch");
 
         if (isDocumentRequest && hasQuery) {
             // Filter, sort, search, pagination and share-state URLs can create an
             // unbounded number of equivalent crawl targets. Keep them usable and
             // crawlable, but consolidate indexing on the clean canonical URL that
             // page metadata already emits.
-            response.headers.set("X-Robots-Tag", QUERY_PAGE_ROBOTS_POLICY);
+            if (!isRscRequest) response.headers.set("X-Robots-Tag", QUERY_PAGE_ROBOTS_POLICY);
             response.headers.set("Cache-Control", QUERY_PAGE_CACHE_POLICY);
         } else if (isDocumentRequest) {
             const cachePolicy = getPublicPageCachePolicy(internalPath);
-            if (cachePolicy) response.headers.set("Cache-Control", cachePolicy.cacheControl);
+            if (cachePolicy) {
+                // HTML is cached only inside the current container. CDN/browser
+                // revalidation prevents an old document from referencing chunks
+                // removed by a later Docker deployment.
+                response.headers.set("Cache-Control", CLIENT_HTML_CACHE_CONTROL);
+                response.headers.set(ORIGIN_HTML_CACHE_HEADER, cachePolicy.originCacheControl);
+            }
         }
         return response;
     }

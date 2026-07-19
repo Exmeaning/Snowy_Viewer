@@ -9,6 +9,7 @@ import (
 	"snowy_viewer/internal/cache"
 	"snowy_viewer/internal/config"
 	"snowy_viewer/internal/handlers"
+	"snowy_viewer/internal/htmlcache"
 	"snowy_viewer/internal/masterdata"
 	"snowy_viewer/internal/middleware"
 )
@@ -50,7 +51,12 @@ func main() {
 				http.Error(w, "frontend upstream unavailable", http.StatusBadGateway)
 			}
 			fmt.Printf("Proxying frontend requests to Next.js server on %s\n", cfg.FrontendProxyURL)
-			mux.Handle("/", nextjsProxy)
+			mux.Handle("/", htmlcache.New(nextjsProxy, htmlcache.Config{
+				Dir:           cfg.HTMLCacheDir,
+				MaxBytes:      int64(cfg.HTMLCacheMaxGB) << 30,
+				MaxEntries:    cfg.HTMLCacheEntries,
+				MaxEntryBytes: int64(cfg.HTMLCacheEntryMB) << 20,
+			}))
 		}
 	} else {
 		setupAPIOnlyMode(mux)

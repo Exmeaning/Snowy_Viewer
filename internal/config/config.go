@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 )
 
 type Config struct {
@@ -9,6 +10,10 @@ type Config struct {
 	Port             string
 	MasterDataPath   string
 	FrontendProxyURL string
+	HTMLCacheDir     string
+	HTMLCacheMaxGB   int
+	HTMLCacheEntries int
+	HTMLCacheEntryMB int
 }
 
 func Load() *Config {
@@ -17,8 +22,24 @@ func Load() *Config {
 		Port:             getEnv("PORT", "8080"),
 		MasterDataPath:   getEnv("MASTER_DATA_PATH", "./data/master"),
 		FrontendProxyURL: getEnv("FRONTEND_PROXY_URL", "http://localhost:3000"),
+		HTMLCacheDir:     getEnv("HTML_CACHE_DIR", ""),
+		HTMLCacheMaxGB:   getEnvInt("HTML_CACHE_MAX_GB", 20),
+		HTMLCacheEntries: getEnvInt("HTML_CACHE_MAX_ENTRIES", 100_000),
+		HTMLCacheEntryMB: getEnvInt("HTML_CACHE_MAX_ENTRY_MB", 4),
 	}
 	return cfg
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed <= 0 {
+		return defaultValue
+	}
+	return parsed
 }
 
 func getEnv(key, defaultValue string) string {

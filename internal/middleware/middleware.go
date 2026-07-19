@@ -59,10 +59,22 @@ func (w *gzipGuardWriter) WriteHeader(code int) {
 	}
 
 	// Apply gzip compression
+	appendVary(w.ResponseWriter.Header(), "Accept-Encoding")
 	w.ResponseWriter.Header().Set("Content-Encoding", "gzip")
 	w.ResponseWriter.Header().Del("Content-Length")
 	w.ResponseWriter.WriteHeader(code)
 	w.gzWriter = gzip.NewWriter(w.ResponseWriter)
+}
+
+func appendVary(header http.Header, value string) {
+	for _, existing := range header.Values("Vary") {
+		for _, token := range strings.Split(existing, ",") {
+			if strings.EqualFold(strings.TrimSpace(token), value) {
+				return
+			}
+		}
+	}
+	header.Add("Vary", value)
 }
 
 func (w *gzipGuardWriter) Write(b []byte) (int, error) {

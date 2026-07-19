@@ -37,14 +37,15 @@ const PUBLIC_DETAIL_CACHE_ROOTS = new Set([
     "story",
 ]);
 
-const LIST_MAX_AGE_SECONDS = 300;
-const LIST_SHARED_MAX_AGE_SECONDS = 3600;
-const DETAIL_MAX_AGE_SECONDS = 3600;
-const DETAIL_SHARED_MAX_AGE_SECONDS = 86400;
+const LIST_ORIGIN_MAX_AGE_SECONDS = 3600;
+const DETAIL_ORIGIN_MAX_AGE_SECONDS = 86400;
 const STALE_WHILE_REVALIDATE_SECONDS = 604800;
 
+export const CLIENT_HTML_CACHE_CONTROL = "no-cache, max-age=0, must-revalidate";
+export const ORIGIN_HTML_CACHE_HEADER = "X-Moesekai-Origin-Cache";
+
 export interface PublicPageCachePolicy {
-    cacheControl: string;
+    originCacheControl: string;
     kind: "list" | "detail";
 }
 
@@ -59,7 +60,7 @@ export function getPublicPageCachePolicy(internalPath: string): PublicPageCacheP
     if (segments.length === 0) {
         return {
             kind: "list",
-            cacheControl: formatCacheControl(LIST_MAX_AGE_SECONDS, LIST_SHARED_MAX_AGE_SECONDS),
+            originCacheControl: formatOriginCacheControl(LIST_ORIGIN_MAX_AGE_SECONDS),
         };
     }
 
@@ -68,15 +69,14 @@ export function getPublicPageCachePolicy(internalPath: string): PublicPageCacheP
     if (segments.length > 1 && !PUBLIC_DETAIL_CACHE_ROOTS.has(root)) return null;
 
     const kind = segments.length > 1 ? "detail" : "list";
-    const maxAge = kind === "detail" ? DETAIL_MAX_AGE_SECONDS : LIST_MAX_AGE_SECONDS;
-    const sharedMaxAge = kind === "detail" ? DETAIL_SHARED_MAX_AGE_SECONDS : LIST_SHARED_MAX_AGE_SECONDS;
+    const maxAge = kind === "detail" ? DETAIL_ORIGIN_MAX_AGE_SECONDS : LIST_ORIGIN_MAX_AGE_SECONDS;
 
     return {
         kind,
-        cacheControl: formatCacheControl(maxAge, sharedMaxAge),
+        originCacheControl: formatOriginCacheControl(maxAge),
     };
 }
 
-function formatCacheControl(maxAge: number, sharedMaxAge: number): string {
-    return `public, max-age=${maxAge}, s-maxage=${sharedMaxAge}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_SECONDS}`;
+function formatOriginCacheControl(maxAge: number): string {
+    return `max-age=${maxAge}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_SECONDS}`;
 }
