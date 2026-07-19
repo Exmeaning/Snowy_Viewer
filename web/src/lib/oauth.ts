@@ -1,5 +1,7 @@
 import type { ServerType } from "./account";
 
+import { localizePathForBrowser } from "@/lib/localized-path";
+
 export interface OAuthPendingState {
     state: string;
     codeVerifier: string;
@@ -169,7 +171,7 @@ export async function startOAuthConnect(returnTo = "/profile"): Promise<void> {
     const pending: OAuthPendingState = {
         state,
         codeVerifier,
-        returnTo,
+        returnTo: localizePathForBrowser(returnTo),
         createdAt: Date.now(),
     };
     const nextPendingMap = prunePendingOAuthStates(readPendingOAuthStateMap());

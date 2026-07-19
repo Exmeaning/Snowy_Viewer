@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
@@ -122,9 +123,7 @@ function ChartPreviewInner() {
         if (previewActive) params.set("preview", "true");
         if (urlFrom) params.set("from", urlFrom);
         if (selectedVocalId !== null) params.set("vocalId", String(selectedVocalId));
-
-        const qs = params.toString();
-        router.replace(qs ? `/chart-preview?${qs}` : "/chart-preview", { scroll: false });
+        replaceCurrentUrlSearchParams(params);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mode, selectedMusicId, selectedDifficulty, selectedVocalId, previewActive, paramsInitialized, urlSus, router]);
 

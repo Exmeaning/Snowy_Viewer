@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
 import HonorFilters from "@/components/honor/HonorFilters";
@@ -40,7 +41,6 @@ function getHonorRarityLabel(rarity: string, t: TranslationFn): string {
 }
 
 function HonorsContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
     const { t } = useI18n();
@@ -166,11 +166,8 @@ function HonorsContent() {
         if (sortBy !== "id") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
         if (groupOnce) params.set("groupOnce", "true");
-
-        const queryString = params.toString();
-        const newUrl = queryString ? `/honors?${queryString}` : "/honors";
-        router.replace(newUrl, { scroll: false });
-    }, [selectedTypes, selectedRarities, searchQuery, sortBy, sortOrder, groupOnce, activeTab, router, filtersInitialized]);
+        replaceCurrentUrlSearchParams(params);
+    }, [selectedTypes, selectedRarities, searchQuery, sortBy, sortOrder, groupOnce, activeTab, filtersInitialized]);
 
     // ==================== Normal: Fetch data ====================
     useEffect(() => {

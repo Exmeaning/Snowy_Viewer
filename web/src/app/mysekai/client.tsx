@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import MainLayout from "@/components/MainLayout";
@@ -23,7 +24,6 @@ import { useI18n } from "@/contexts/I18nContext";
 import { getMysekaiGenreDisplayName, getMysekaiTagDisplayName } from "@/lib/mysekai-i18n";
 
 function MysekaiContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
     const { t } = useI18n();
@@ -138,11 +138,8 @@ function MysekaiContent() {
         if (searchQuery) params.set("search", searchQuery);
         if (sortBy !== "id") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
-
-        const queryString = params.toString();
-        const newUrl = queryString ? `/mysekai?${queryString}` : "/mysekai";
-        router.replace(newUrl, { scroll: false });
-    }, [selectedGenre, selectedSubGenre, selectedTag, selectedCharacters, selectedUnitIds, searchQuery, sortBy, sortOrder, router, filtersInitialized]);
+        replaceCurrentUrlSearchParams(params);
+    }, [selectedGenre, selectedSubGenre, selectedTag, selectedCharacters, selectedUnitIds, searchQuery, sortBy, sortOrder, filtersInitialized]);
 
     useEffect(() => {
         async function fetchData() {

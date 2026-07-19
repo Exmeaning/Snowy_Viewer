@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import Link from "@/components/LocalizedLink";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";
 import CardFilters from "@/components/cards/CardFilters";
@@ -102,7 +103,6 @@ function getUserErrorMessageKey(code: AccountDataErrorCode): string {
 
 function MyCardsContent() {
     const { t, formatDate } = useI18n();
-    const router = useRouter();
     const searchParams = useSearchParams();
 
     // Account state
@@ -230,11 +230,8 @@ function MyCardsContent() {
         if (sortBy !== "rarity") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
         if (ownershipFilter !== "all") params.set("ownership", ownershipFilter);
-
-        const queryString = params.toString();
-        const newUrl = queryString ? `/my-cards?${queryString}` : "/my-cards";
-        router.replace(newUrl, { scroll: false });
-    }, [selectedCharacters, selectedUnitIds, selectedAttrs, selectedRarities, selectedSupplyTypes, selectedSupportUnits, searchQuery, sortBy, sortOrder, ownershipFilter, router, filtersInitialized]);
+        replaceCurrentUrlSearchParams(params);
+    }, [selectedCharacters, selectedUnitIds, selectedAttrs, selectedRarities, selectedSupplyTypes, selectedSupportUnits, searchQuery, sortBy, sortOrder, ownershipFilter, filtersInitialized]);
 
     // Load accounts
     useEffect(() => {

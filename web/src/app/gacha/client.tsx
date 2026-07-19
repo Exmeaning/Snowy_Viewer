@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
 import GachaGrid from "@/components/gacha/GachaGrid";
 import GachaFilters from "@/components/gacha/GachaFilters";
@@ -14,7 +15,6 @@ import { useI18n } from "@/contexts/I18nContext";
 
 function GachaContent() {
     const { t } = useI18n();
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { isShowSpoiler } = useTheme();
 
@@ -119,11 +119,8 @@ function GachaContent() {
         if (selectedCategory !== "all") params.set("category", selectedCategory);
         if (selectedCharacters.length > 0) params.set("chars", JSON.stringify(selectedCharacters));
         if (selectedUnitIds.length > 0) params.set("units", JSON.stringify(selectedUnitIds));
-
-        const queryString = params.toString();
-        const newUrl = queryString ? `/gacha?${queryString}` : "/gacha";
-        router.replace(newUrl, { scroll: false });
-    }, [searchQuery, sortBy, sortOrder, selectedCategory, selectedCharacters, selectedUnitIds, router, filtersInitialized]);
+        replaceCurrentUrlSearchParams(params);
+    }, [searchQuery, sortBy, sortOrder, selectedCategory, selectedCharacters, selectedUnitIds, filtersInitialized]);
 
     // Fetch gachas from master data
     useEffect(() => {

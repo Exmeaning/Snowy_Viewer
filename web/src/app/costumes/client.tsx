@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import MainLayout from "@/components/MainLayout";
@@ -26,7 +27,6 @@ import { useQuickFilter } from "@/contexts/QuickFilterContext";
 // CostumeGroup interface and groupCostumes function are removed as ICostumeInfo is now the group itself.
 
 function CostumesContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { assetSource, isShowSpoiler } = useTheme();
     const { t } = useTranslation();
@@ -154,11 +154,8 @@ function CostumesContent() {
         if (sortBy !== "id") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
         if (onlyRelatedCardCostumes) params.set("related", "true");
-
-        const queryString = params.toString();
-        const newUrl = queryString ? `/costumes?${queryString}` : "/costumes";
-        router.replace(newUrl, { scroll: false });
-    }, [selectedPartTypes, selectedSources, selectedRarities, selectedGenders, selectedCharacters, selectedUnitIds, searchQuery, sortBy, sortOrder, onlyRelatedCardCostumes, router, filtersInitialized]);
+        replaceCurrentUrlSearchParams(params);
+    }, [selectedPartTypes, selectedSources, selectedRarities, selectedGenders, selectedCharacters, selectedUnitIds, searchQuery, sortBy, sortOrder, onlyRelatedCardCostumes, filtersInitialized]);
 
     useEffect(() => {
         async function fetchData() {

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
 import MusicFilters from "@/components/music/MusicFilters";
 import MusicItem from "@/components/music/MusicItem";
@@ -64,7 +65,6 @@ function LevelSeparatorCard({ level, difficulty }: { level: number; difficulty: 
 const MUSIC_GRID_CLASS = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 sm:gap-4";
 
 function MusicContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { isShowSpoiler } = useTheme();
     const { t } = useI18n();
@@ -172,11 +172,8 @@ function MusicContent() {
         if (sortBy !== "publishedAt") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
         if (!showDifficulty) params.set("showDifficulty", "false");
-
-        const queryString = params.toString();
-        const newUrl = queryString ? `/music?${queryString}` : "/music";
-        router.replace(newUrl, { scroll: false });
-    }, [selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, showDifficulty, router, filtersInitialized]);
+        replaceCurrentUrlSearchParams(params);
+    }, [selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, showDifficulty, filtersInitialized]);
 
     // Fetch data
     useEffect(() => {

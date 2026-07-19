@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { localizePathForBrowser } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
 import { createOrUpdateOAuthAccount, fetchOAuthBindingInitialData } from "@/lib/account";
@@ -48,7 +49,7 @@ function buildSuccessReturnUrl(returnTo: string, accountId: string): string {
         return `${safeReturnTo}${safeReturnTo.includes("?") ? "&" : "?"}oauth=success&account=${encodeURIComponent(accountId)}`;
     }
 
-    const url = new URL(safeReturnTo, window.location.origin);
+    const url = new URL(localizePathForBrowser(safeReturnTo), window.location.origin);
     url.searchParams.set("oauth", "success");
     url.searchParams.set("account", accountId);
     return url.toString();
@@ -180,7 +181,7 @@ export default function CallbackClient() {
                             <p className="text-xs text-red-500 mt-1 break-all">{errorMessage}</p>
                             <p className="text-[11px] text-red-400 mt-2">{t("page.oauth2.callback.failedPhase", { phase })}</p>
                             <button
-                                onClick={() => router.replace(returnTo)}
+                                onClick={() => router.replace(localizePathForBrowser(returnTo))}
                                 className="mt-4 px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-colors"
                             >
                                 {t("page.oauth2.callback.returnSource")}

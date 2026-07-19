@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
 import VirtualLiveGrid from "@/components/live/VirtualLiveGrid";
 import VirtualLiveFilters from "@/components/live/VirtualLiveFilters";
@@ -14,7 +15,6 @@ import { useI18n } from "@/contexts/I18nContext";
 
 function VirtualLiveContent() {
     const { t } = useI18n();
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { isShowSpoiler } = useTheme();
 
@@ -96,11 +96,8 @@ function VirtualLiveContent() {
         if (searchQuery) params.set("search", searchQuery);
         if (sortBy !== "startAt") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
-
-        const queryString = params.toString();
-        const newUrl = queryString ? `/live?${queryString}` : "/live";
-        router.replace(newUrl, { scroll: false });
-    }, [selectedTypes, searchQuery, sortBy, sortOrder, router, filtersInitialized]);
+        replaceCurrentUrlSearchParams(params);
+    }, [selectedTypes, searchQuery, sortBy, sortOrder, filtersInitialized]);
 
     // Fetch virtual lives data
     useEffect(() => {

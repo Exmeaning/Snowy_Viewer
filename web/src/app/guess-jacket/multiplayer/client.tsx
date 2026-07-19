@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import { localizePathForBrowser } from "@/lib/localized-path";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { UNIT_DATA } from "@/types/types";
 import { getMusicJacketUrl, getCharacterIconUrl, getStampUrl } from "@/lib/assets";
@@ -1513,7 +1514,7 @@ function MultiplayerContent() {
     if (phase === "lobby") {
         return (
             <div className="mp-container">
-                <button className="mp-back-btn" onClick={() => router.push("/guess-jacket/")} title={t("page.guessJacket.multiplayer.backTitle")}>
+                <button className="mp-back-btn" onClick={() => router.push(localizePathForBrowser("/guess-jacket/"))} title={t("page.guessJacket.multiplayer.backTitle")}>
                     ←
                 </button>
                 <div className="mp-lobby">

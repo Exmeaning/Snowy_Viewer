@@ -28,3 +28,12 @@ export function localizePathForBrowser(path: string): string {
     if (typeof window === "undefined") return localizePath(path, DEFAULT_ROUTE_LOCALE);
     return localizePath(path, getRouteLocaleFromPathname(window.location.pathname) ?? DEFAULT_ROUTE_LOCALE);
 }
+
+export function replaceCurrentUrlSearchParams(params: URLSearchParams): void {
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    const query = params.toString();
+    url.search = query ? `?${query}` : "";
+    window.history.replaceState({}, "", url.toString());
+}

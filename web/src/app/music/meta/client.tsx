@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import Link from "@/components/LocalizedLink";
 import ExternalLink from '@/components/ExternalLink';
 import Image from "next/image";
@@ -134,7 +135,6 @@ function useEnableStickyColumns() {
 }
 
 function MusicMetaContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { assetSource } = useTheme();
     const { t, formatNumber } = useI18n();
@@ -258,11 +258,8 @@ function MusicMetaContent() {
         if (searchQuery) params.set("search", searchQuery);
         if (currentPage !== 1) params.set("page", String(currentPage));
         if (pageSize !== 50) params.set("pageSize", String(pageSize));
-
-        const queryString = params.toString();
-        const newUrl = queryString ? `/music/meta?${queryString}` : "/music/meta";
-        router.replace(newUrl, { scroll: false });
-    }, [viewMode, liveMode, expandedRankings, sortField, sortOrder, searchQuery, currentPage, pageSize, router, filtersInitialized]);
+        replaceCurrentUrlSearchParams(params);
+    }, [viewMode, liveMode, expandedRankings, sortField, sortOrder, searchQuery, currentPage, pageSize, filtersInitialized]);
 
     // Fetch data
     useEffect(() => {

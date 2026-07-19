@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";
 import MyMusicFilters from "@/components/music/MyMusicFilters";
@@ -296,7 +297,6 @@ function MyMusicsContent() {
     const { t, formatDate } = useI18n();
     // Theme context for asset source
     const { assetSource } = useTheme();
-    const router = useRouter();
     const searchParams = useSearchParams();
 
     // Account state
@@ -409,11 +409,8 @@ function MyMusicsContent() {
         if (sortBy !== "level") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
         if (completionFilter !== "all") params.set("completion", completionFilter);
-
-        const queryString = params.toString();
-        const newUrl = queryString ? `/my-musics?${queryString}` : "/my-musics";
-        router.replace(newUrl, { scroll: false });
-    }, [selectedTag, selectedCategories, selectedDifficulty, searchQuery, sortBy, sortOrder, completionFilter, filtersInitialized, router]);
+        replaceCurrentUrlSearchParams(params);
+    }, [selectedTag, selectedCategories, selectedDifficulty, searchQuery, sortBy, sortOrder, completionFilter, filtersInitialized]);
 
     // Load accounts
     useEffect(() => {

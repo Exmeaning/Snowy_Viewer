@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { localizePathForBrowser } from "@/lib/localized-path";
 import Link from "@/components/LocalizedLink";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -163,7 +164,7 @@ function GuideDetailContent() {
                 </div>
                 <div>
                     <button
-                        onClick={() => router.push("/guides/")}
+                        onClick={() => router.push(localizePathForBrowser("/guides/"))}
                         className="px-6 py-2 bg-miku text-white rounded-lg font-bold hover:opacity-90 transition-all"
                     >
                         {t("page.guides.backToList")}

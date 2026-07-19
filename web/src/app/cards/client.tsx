@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
 import CardGrid from "@/components/cards/CardGrid";
 import CardFilters from "@/components/cards/CardFilters";
@@ -21,7 +22,6 @@ interface ICardSupply {
 }
 
 function CardsContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { isShowSpoiler } = useTheme();
     const { t } = useI18n();
@@ -151,11 +151,8 @@ function CardsContent() {
 
         if (sortBy !== "id") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
-
-        const queryString = params.toString();
-        const newUrl = queryString ? `/cards?${queryString}` : "/cards";
-        router.replace(newUrl, { scroll: false });
-    }, [selectedCharacters, selectedUnitIds, selectedAttrs, selectedRarities, selectedSupplyTypes, selectedSupportUnits, selectedSkillTypes, searchQuery, sortBy, sortOrder, router, filtersInitialized, isScreenshotMode]);
+        replaceCurrentUrlSearchParams(params);
+    }, [selectedCharacters, selectedUnitIds, selectedAttrs, selectedRarities, selectedSupplyTypes, selectedSupportUnits, selectedSkillTypes, searchQuery, sortBy, sortOrder, filtersInitialized, isScreenshotMode]);
 
     // Fetch cards data
     useEffect(() => {

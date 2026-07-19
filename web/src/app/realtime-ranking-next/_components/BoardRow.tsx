@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { useRouter } from "next/navigation";
+import { localizePathForBrowser } from "@/lib/localized-path";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import PlayerHonorPreview from "@/components/realtime-ranking/PlayerHonorPreview";
 import RankChangeBadge from "@/components/realtime-ranking/RankChangeBadge";
@@ -132,7 +133,7 @@ export default function BoardRow({
     const clickable = !isTierLine && detailHref != null;
 
     const handleRowClick = () => {
-        if (clickable && detailHref) router.push(detailHref);
+        if (clickable && detailHref) router.push(localizePathForBrowser(detailHref));
     };
 
     return (

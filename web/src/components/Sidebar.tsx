@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { usePathname, useRouter } from "next/navigation";
-import { stripRouteLocale } from "@/lib/localized-path";
+import { localizePathForBrowser, stripRouteLocale } from "@/lib/localized-path";
 import {
     ACCOUNTS_CHANGED_EVENT,
     getActiveAccount,
@@ -607,7 +607,7 @@ export default function Sidebar({
                 e.preventDefault();
                 const item = visibleItems[focusedIndex];
                 if (item) {
-                    router.push(item.href);
+                    router.push(localizePathForBrowser(item.href));
                     setFocusedIndex(-1);
                 }
             } else if (focusedIndex >= 0 && matchesShortcutCombo(e, SIDEBAR_CLEAR_FOCUS_COMBO)) {
@@ -641,15 +641,16 @@ export default function Sidebar({
     };
 
     const activeHref = useMemo(() => {
-        if (pathname === "/") return "/";
+        const unlocalizedPathname = stripRouteLocale(pathname);
+        if (unlocalizedPathname === "/") return "/";
 
         let bestMatch = "";
         for (const group of navigationGroups) {
             for (const item of group.items) {
-                if (item.href === "/music" && pathname.startsWith("/music/meta")) {
+                if (item.href === "/music" && unlocalizedPathname.startsWith("/music/meta")) {
                     continue;
                 }
-                if (pathname === item.href || pathname.startsWith(item.href + "/")) {
+                if (unlocalizedPathname === item.href || unlocalizedPathname.startsWith(item.href + "/")) {
                     if (item.href.length > bestMatch.length) {
                         bestMatch = item.href;
                     }

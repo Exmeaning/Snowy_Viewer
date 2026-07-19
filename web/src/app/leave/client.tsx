@@ -2,6 +2,7 @@
 
 import React, { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { localizePathForBrowser } from '@/lib/localized-path';
 import Link from "@/components/LocalizedLink";
 import { useI18n } from '@/contexts/I18nContext';
 import { MOE_LOGO_URL } from '@/lib/assets';
@@ -22,7 +23,7 @@ function LeavePageContent() {
         if (canClose) {
             window.close();
         } else {
-            router.push('/');
+            router.push(localizePathForBrowser('/'));
         }
     };
 

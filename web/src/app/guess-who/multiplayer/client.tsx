@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import { localizePathForBrowser } from "@/lib/localized-path";
 import { fetchMasterData } from "@/lib/fetch";
 import { ICardInfo, UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { getCardFullUrl, getCharacterIconUrl, getStampUrl } from "@/lib/assets";
@@ -1592,7 +1593,7 @@ function MultiplayerContent() {
     if (phase === "lobby") {
         return (
             <div className="mp-container">
-                <button className="mp-back-btn" onClick={() => router.push("/guess-who/")} title={t("page.guessWho.multiplayer.backTitle")}>
+                <button className="mp-back-btn" onClick={() => router.push(localizePathForBrowser("/guess-who/"))} title={t("page.guessWho.multiplayer.backTitle")}>
                     ←
                 </button>
                 <div className="mp-lobby">

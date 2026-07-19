@@ -1,7 +1,8 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -35,7 +36,6 @@ const EMPTY_MASTER_DATA: RealtimeRankingMasterData = {
 function RealtimeRankingNextContent() {
     const { t } = useI18n();
     const { assetSource, themeColor } = useTheme();
-    const router = useRouter();
     const searchParams = useSearchParams();
 
     const [region, setRegion] = useState<RealtimeRankingRegion>(() => {
@@ -72,7 +72,7 @@ function RealtimeRankingNextContent() {
     useEffect(() => {
         const params = new URLSearchParams(Array.from(searchParams.entries()));
         params.set("region", region);
-        router.replace(`/realtime-ranking-next?${params.toString()}`, { scroll: false });
+        replaceCurrentUrlSearchParams(params);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [region]);
 

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { IEventInfo, IEventDeckBonus, EventType } from "@/types/events";
 import { ICharaUnitInfo, CardAttribute } from "@/types/types";
@@ -69,8 +70,7 @@ export interface UseEventListDataReturn {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useEventListData({ storageKey, basePath }: UseEventListDataConfig): UseEventListDataReturn {
-    const router = useRouter();
+export function useEventListData({ storageKey }: UseEventListDataConfig): UseEventListDataReturn {
     const searchParams = useSearchParams();
     const { isShowSpoiler } = useTheme();
 
@@ -188,10 +188,8 @@ export function useEventListData({ storageKey, basePath }: UseEventListDataConfi
         if (searchQuery) params.set("search", searchQuery);
         if (sortBy !== "id") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
-
-        const qs = params.toString();
-        router.replace(qs ? `${basePath}?${qs}` : basePath, { scroll: false });
-    }, [selectedTypes, selectedEventUnits, selectedCharacters, selectedUnitIds, selectedBannerChars, selectedBannerUnitIds, selectedBonusAttr, searchQuery, sortBy, sortOrder, router, filtersInitialized, basePath, STORAGE_KEY]);
+        replaceCurrentUrlSearchParams(params);
+    }, [selectedTypes, selectedEventUnits, selectedCharacters, selectedUnitIds, selectedBannerChars, selectedBannerUnitIds, selectedBonusAttr, searchQuery, sortBy, sortOrder, filtersInitialized, STORAGE_KEY]);
 
     // ---- Fetch data ----
     useEffect(() => {

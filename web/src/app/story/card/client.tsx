@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 
 import MainLayout from "@/components/MainLayout";
 import CardGrid from "@/components/cards/CardGrid";
@@ -22,7 +23,6 @@ interface ICardSupply {
 }
 
 function StoryCardContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { isShowSpoiler } = useTheme();
     const { t } = useI18n();
@@ -118,10 +118,8 @@ function StoryCardContent() {
         if (searchQuery) params.set("search", searchQuery);
         if (sortBy !== "id") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
-
-        const qs = params.toString();
-        router.replace(qs ? `/story/card?${qs}` : "/story/card", { scroll: false });
-    }, [selectedCharacters, selectedUnitIds, selectedAttrs, selectedRarities, selectedSupplyTypes, selectedSupportUnits, searchQuery, sortBy, sortOrder, router, filtersInitialized]);
+        replaceCurrentUrlSearchParams(params);
+    }, [selectedCharacters, selectedUnitIds, selectedAttrs, selectedRarities, selectedSupplyTypes, selectedSupportUnits, searchQuery, sortBy, sortOrder, filtersInitialized]);
 
     useEffect(() => {
         async function fetchCards() {
