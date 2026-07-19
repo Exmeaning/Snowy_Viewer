@@ -12,6 +12,8 @@ import {
 import { fallbackMessages, messagesByLocale } from "@/lib/i18n/messages";
 import { getMessageByPath, interpolateMessage, type MessageInterpolationValues } from "@/lib/i18n/format";
 import type { MessageTree } from "@/lib/i18n/messages/types";
+import { routeLocaleToUiLocale, uiLocaleToRouteLocale, type RouteLocale } from "@/lib/locale-routing";
+import { getRouteLocaleFromPathname, localizePath } from "@/lib/localized-path";
 
 interface I18nContextType {
     locale: UiLocale;
@@ -27,6 +29,7 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined);
 interface I18nProviderProps {
     children: React.ReactNode;
     initialLocale?: UiLocale;
+    routeLocale?: RouteLocale;
 }
 
 function readStoredLocale(initialLocale: UiLocale): UiLocale {
@@ -58,18 +61,21 @@ function persistLocale(locale: UiLocale) {
     }
 }
 
-export function I18nProvider({ children, initialLocale = DEFAULT_UI_LOCALE }: I18nProviderProps) {
-    const [locale, setLocaleState] = useState<UiLocale>(initialLocale);
+export function I18nProvider({ children, initialLocale = DEFAULT_UI_LOCALE, routeLocale }: I18nProviderProps) {
+    const explicitLocale = routeLocale ? routeLocaleToUiLocale(routeLocale) : undefined;
+    const [locale, setLocaleState] = useState<UiLocale>(explicitLocale ?? initialLocale);
     const [hydrated, setHydrated] = useState(false);
 
     useEffect(() => {
-        const resolved = readStoredLocale(initialLocale);
-        setLocaleState(resolved);
+        const resolved = explicitLocale ?? readStoredLocale(initialLocale);
         persistLocale(resolved);
         applyUiLocaleToDocument(resolved);
-        setHydrated(true);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        const frame = requestAnimationFrame(() => {
+            setLocaleState(resolved);
+            setHydrated(true);
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [explicitLocale, initialLocale]);
 
     useEffect(() => {
         if (!hydrated) return;
@@ -78,7 +84,7 @@ export function I18nProvider({ children, initialLocale = DEFAULT_UI_LOCALE }: I1
     }, [hydrated, locale]);
 
     useEffect(() => {
-        if (!hydrated || typeof window === "undefined") return;
+        if (!hydrated || explicitLocale || typeof window === "undefined") return;
 
         const handleStorage = (event: StorageEvent) => {
             if (event.key !== UI_LOCALE_STORAGE_KEY) return;
@@ -88,11 +94,24 @@ export function I18nProvider({ children, initialLocale = DEFAULT_UI_LOCALE }: I1
 
         window.addEventListener("storage", handleStorage);
         return () => window.removeEventListener("storage", handleStorage);
-    }, [hydrated, initialLocale]);
+    }, [explicitLocale, hydrated, initialLocale]);
 
     const setLocale = useCallback<React.Dispatch<React.SetStateAction<UiLocale>>>((nextLocale) => {
-        setLocaleState(nextLocale);
-    }, []);
+        const resolvedLocale = typeof nextLocale === "function" ? nextLocale(locale) : nextLocale;
+        setLocaleState(resolvedLocale);
+        persistLocale(resolvedLocale);
+
+        if (typeof window !== "undefined" && getRouteLocaleFromPathname(window.location.pathname)) {
+            const nextRouteLocale = uiLocaleToRouteLocale(resolvedLocale);
+            const nextUrl = localizePath(
+                `${window.location.pathname}${window.location.search}${window.location.hash}`,
+                nextRouteLocale,
+            );
+            if (nextUrl !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+                window.location.assign(nextUrl);
+            }
+        }
+    }, [locale]);
 
     const t = useCallback((key: string, values?: MessageInterpolationValues) => {
         const currentMessages = messagesByLocale[locale] ?? fallbackMessages;

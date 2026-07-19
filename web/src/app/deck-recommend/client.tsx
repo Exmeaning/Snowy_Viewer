@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useSearchParams } from "next/navigation";
 import ExternalLink from "@/components/ExternalLink";
 import { useI18n } from "@/contexts/I18nContext";

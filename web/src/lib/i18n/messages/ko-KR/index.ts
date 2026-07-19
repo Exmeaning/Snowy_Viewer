@@ -1,5 +1,3 @@
-import type { MessageTree } from "../types";
-
 export const koKRMessages = {
     common: {
         action: {
@@ -717,6 +715,7 @@ export const koKRMessages = {
             machineTranslationNotice: "일부 텍스트는 기계 번역을 사용하므로 부정확할 수 있습니다.",
             options: {
                 zhCN: "중국어 간체",
+                zhTW: "중국어 번체 (TW)",
                 enUS: "영어",
                 jaJP: "일본어",
                 koKR: "한국어"
@@ -840,6 +839,7 @@ export const koKRMessages = {
             languageBilingualDesc: "선호하는 인터페이스 언어를 선택해 주세요. You can change this anytime in settings.",
             languageOptionSubtitles: {
                 "zh-CN": "중국어 간체 / 중국어 간체",
+                "zh-TW": "繁體中文 (TW) / 중국어 번체",
                 "en-US": "English / 영어",
                 "ja-JP": "일본어 / 일본어",
                 "ko-KR": "한국어 / Korean"

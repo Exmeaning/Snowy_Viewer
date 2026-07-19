@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import ExternalLink from '@/components/ExternalLink';
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";

@@ -12,6 +12,7 @@ import KeyboardShortcutsHelp from "./KeyboardShortcutsHelp";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { usePageListShortcuts } from "@/hooks/usePageListShortcuts";
 import { useTheme } from "@/contexts/ThemeContext";
+import { localizePathForBrowser } from "@/lib/localized-path";
 
 function ScreenshotParamsListener({ onChange }: { onChange: (isScreenshot: boolean) => void }) {
     const searchParams = useSearchParams();
@@ -219,7 +220,7 @@ export default function MainLayout({
     const handleSearchNavigate = useCallback((href: string) => {
         skipNextOverlayHistoryCleanupRef.current = true;
         setIsSearchOpen(false);
-        router.replace(href);
+        router.replace(localizePathForBrowser(href));
     }, [router]);
 
     // Keyboard shortcut handlers.
@@ -238,11 +239,11 @@ export default function MainLayout({
         onToggleTrainedThumbnail: () => setUseTrainedThumbnail(!useTrainedThumbnail),
         onNavigateBack: () => router.back(),
         onNavigateForward: () => window.history.forward(),
-        onNavigateHome: () => router.push("/"),
-        onNavigateCards: () => router.push("/cards"),
-        onNavigateMusic: () => router.push("/music"),
-        onNavigateEvents: () => router.push("/events"),
-        onNavigateProfile: () => router.push("/profile"),
+        onNavigateHome: () => router.push(localizePathForBrowser("/")),
+        onNavigateCards: () => router.push(localizePathForBrowser("/cards")),
+        onNavigateMusic: () => router.push(localizePathForBrowser("/music")),
+        onNavigateEvents: () => router.push(localizePathForBrowser("/events")),
+        onNavigateProfile: () => router.push(localizePathForBrowser("/profile")),
     }), [router, useTrainedThumbnail, setUseTrainedThumbnail, immersiveMode, isScreenshotMode]);
 
     const isShortcutScopeLocked = isSearchOpen || isSettingsOpen || isShortcutsHelpOpen || immersiveMode;

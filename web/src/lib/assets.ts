@@ -1,6 +1,7 @@
 import {
     type AssetSourceType,
 } from "@/contexts/ThemeContext";
+import { defaultContentRegionForPathname } from "@/lib/locale-routing";
 
 export const MOE_STATIC_BASE_URL = "https://moe.exmeaning.com";
 export const MOE_ASSETS_BASE_URL = `${MOE_STATIC_BASE_URL}/assets`;
@@ -13,8 +14,8 @@ export const ASSET_DOMAIN_MAIN = "https://storage.exmeaning.com";
 export const ASSET_DOMAIN_OVERSEAS = "https://storage.pjsk.moe";
 
 function getCurrentRegion(): string {
-    if (typeof window === "undefined") return "jp";
-    return localStorage.getItem("server-source") || "jp";
+    if (typeof window === "undefined") return "cn";
+    return localStorage.getItem("server-source") || defaultContentRegionForPathname(window.location.pathname);
 }
 
 export function getAssetBaseUrl(source: AssetSourceType): string {

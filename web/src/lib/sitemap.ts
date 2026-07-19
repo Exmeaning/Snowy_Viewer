@@ -10,6 +10,7 @@ import path from 'path';
 import { headers } from 'next/headers';
 
 import { INDEXABLE_SEO_ROUTES } from '@/lib/seo-routes';
+import { getLocaleRouteConfig, SUPPORTED_ROUTE_LOCALES, type RouteLocale } from '@/lib/locale-routing';
 
 interface SitemapRoute {
     path: string;
@@ -24,17 +25,25 @@ interface SitemapData {
     detailRoutes: SitemapRoute[];
 }
 
-// Process-level cache
-let cached: SitemapData | null = null;
+// Process-level cache, isolated per content region.
+const cached = new Map<string, SitemapData | null>();
 
-function getData(): SitemapData | null {
-    if (cached) return cached;
+function getData(region: string): SitemapData | null {
+    if (cached.has(region)) return cached.get(region) ?? null;
     try {
-        const filePath = path.join(process.cwd(), 'public', 'data', 'sitemap-data.json');
+        const dataDir = path.join(process.cwd(), 'public', 'data');
+        const regionalPath = path.join(dataDir, `sitemap-data.${region}.json`);
+        const filePath = fs.existsSync(regionalPath)
+            ? regionalPath
+            : region === 'jp'
+                ? path.join(dataDir, 'sitemap-data.json')
+                : regionalPath;
         const raw = fs.readFileSync(filePath, 'utf-8');
-        cached = JSON.parse(raw);
-        return cached;
+        const data = JSON.parse(raw) as SitemapData;
+        cached.set(region, data);
+        return data;
     } catch {
+        cached.set(region, null);
         return null;
     }
 }
@@ -70,10 +79,27 @@ function joinUrl(baseUrl: string, routePath: string): string {
     return `${baseUrl.replace(/\/$/, '')}${routePath.startsWith('/') ? routePath : `/${routePath}`}`;
 }
 
-function buildUrlEntry(baseUrl: string, route: SitemapRoute, fallbackLastmod: string): string {
+function localizedRoutePath(routePath: string, locale: RouteLocale): string {
+    const normalized = routePath.startsWith('/') ? routePath : `/${routePath}`;
+    return `/${locale}${normalized === '/' ? '/' : normalized}`;
+}
+
+function buildUrlEntry(
+    baseUrl: string,
+    route: SitemapRoute,
+    fallbackLastmod: string,
+    locale: RouteLocale,
+    hasAlternate: (locale: RouteLocale, path: string) => boolean = () => true,
+): string {
     const lastmod = route.lastmod || fallbackLastmod;
+    const alternates = SUPPORTED_ROUTE_LOCALES.filter((alternateLocale) => hasAlternate(alternateLocale, route.path)).map((alternateLocale) => {
+        const hreflang = getLocaleRouteConfig(alternateLocale).uiLocale;
+        return `    <xhtml:link rel="alternate" hreflang="${hreflang}" href="${escapeXml(joinUrl(baseUrl, localizedRoutePath(route.path, alternateLocale)))}" />`;
+    });
+    alternates.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(joinUrl(baseUrl, '/'))}" />`);
     return `  <url>
-    <loc>${escapeXml(joinUrl(baseUrl, route.path))}</loc>
+    <loc>${escapeXml(joinUrl(baseUrl, localizedRoutePath(route.path, locale)))}</loc>
+${alternates.join('\n')}
     <lastmod>${escapeXml(lastmod)}</lastmod>
     <changefreq>${escapeXml(route.changefreq)}</changefreq>
     <priority>${route.priority}</priority>
@@ -82,7 +108,7 @@ function buildUrlEntry(baseUrl: string, route: SitemapRoute, fallbackLastmod: st
 
 function wrapUrlset(entries: string[]): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${entries.join('\n')}
 </urlset>`;
 }
@@ -105,23 +131,41 @@ export function buildSitemapIndex(baseUrl: string): string {
 }
 
 export function buildMainSitemap(baseUrl: string): string {
-    const data = getData();
-    const fallbackLastmod = data?.generatedAt || '1970-01-01T00:00:00.000Z';
-    const mainRoutes = data?.mainRoutes?.length
-        ? data.mainRoutes
-        : INDEXABLE_SEO_ROUTES.map((route) => ({
-            path: route.path,
-            priority: route.priority,
-            changefreq: route.changefreq,
-        }));
-    const entries = mainRoutes.map(r => buildUrlEntry(baseUrl, r, fallbackLastmod));
+    const entries = SUPPORTED_ROUTE_LOCALES.flatMap((locale) => {
+        const region = getLocaleRouteConfig(locale).defaultServer;
+        const data = getData(region);
+        const fallbackLastmod = data?.generatedAt || '1970-01-01T00:00:00.000Z';
+        const mainRoutes = data?.mainRoutes?.length
+            ? data.mainRoutes
+            : INDEXABLE_SEO_ROUTES.map((route) => ({
+                path: route.path,
+                priority: route.priority,
+                changefreq: route.changefreq,
+            }));
+        return mainRoutes.map((route) => buildUrlEntry(baseUrl, route, fallbackLastmod, locale));
+    });
     return wrapUrlset(entries);
 }
 
 export function buildDetailsSitemap(baseUrl: string): string {
-    const data = getData();
-    if (!data) return wrapUrlset([]);
-    const fallbackLastmod = data.generatedAt || '1970-01-01T00:00:00.000Z';
-    const entries = data.detailRoutes.map(r => buildUrlEntry(baseUrl, r, fallbackLastmod));
+    const routeSets = new Map<RouteLocale, Set<string>>(
+        SUPPORTED_ROUTE_LOCALES.map((locale) => {
+            const region = getLocaleRouteConfig(locale).defaultServer;
+            return [locale, new Set((getData(region)?.detailRoutes ?? []).map((route) => route.path))];
+        }),
+    );
+    const entries = SUPPORTED_ROUTE_LOCALES.flatMap((locale) => {
+        const region = getLocaleRouteConfig(locale).defaultServer;
+        const data = getData(region);
+        if (!data) return [];
+        const fallbackLastmod = data.generatedAt || '1970-01-01T00:00:00.000Z';
+        return data.detailRoutes.map((route) => buildUrlEntry(
+            baseUrl,
+            route,
+            fallbackLastmod,
+            locale,
+            (alternateLocale, routePath) => routeSets.get(alternateLocale)?.has(routePath) ?? false,
+        ));
+    });
     return wrapUrlset(entries);
 }

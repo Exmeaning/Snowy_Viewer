@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useCallback, useEffect, useState } from "react";
 
 import MainLayout from "@/components/MainLayout";

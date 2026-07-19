@@ -3,7 +3,7 @@
 import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
 import { getMusicJacketUrl } from "@/lib/assets";

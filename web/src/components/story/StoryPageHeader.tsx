@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useI18n } from "@/contexts/I18nContext";
 import { getStoryType, StoryTypeKey } from "@/lib/storyTypes";
 

@@ -2,7 +2,7 @@
 
 import React, { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Link from "@/components/LocalizedLink";
 import { useI18n } from '@/contexts/I18nContext';
 import { MOE_LOGO_URL } from '@/lib/assets';
 

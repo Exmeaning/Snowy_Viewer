@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useI18n } from "@/contexts/I18nContext";
 import {
     RealtimeRankingRegion,

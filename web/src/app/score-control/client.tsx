@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { IMusicInfo, IMusicMeta } from "@/types/music";
 import type { ICardInfo } from "@/types/types";
 import { fetchMasterData } from "@/lib/fetch";

@@ -1,6 +1,6 @@
 export const UI_LOCALE_STORAGE_KEY = "moesekai_ui_locale";
 
-export const SUPPORTED_UI_LOCALES = ["zh-CN", "en-US", "ja-JP", "ko-KR"] as const;
+export const SUPPORTED_UI_LOCALES = ["zh-CN", "zh-TW", "en-US", "ja-JP", "ko-KR"] as const;
 
 export type UiLocale = (typeof SUPPORTED_UI_LOCALES)[number];
 
@@ -8,6 +8,7 @@ export const DEFAULT_UI_LOCALE: UiLocale = "zh-CN";
 
 export const UI_LOCALE_LABELS: Record<UiLocale, string> = {
     "zh-CN": "简体中文",
+    "zh-TW": "繁體中文 (TW)",
     "en-US": "English",
     "ja-JP": "日本語",
     "ko-KR": "한국어",
@@ -15,6 +16,7 @@ export const UI_LOCALE_LABELS: Record<UiLocale, string> = {
 
 export const UI_LOCALE_NATIVE_NAMES: Record<UiLocale, string> = {
     "zh-CN": "简体中文",
+    "zh-TW": "繁體中文 (TW)",
     "en-US": "English",
     "ja-JP": "日本語",
     "ko-KR": "한국어",
@@ -22,6 +24,7 @@ export const UI_LOCALE_NATIVE_NAMES: Record<UiLocale, string> = {
 
 export const UI_LOCALE_HTML_LANG: Record<UiLocale, string> = {
     "zh-CN": "zh-CN",
+    "zh-TW": "zh-TW",
     "en-US": "en-US",
     "ja-JP": "ja-JP",
     "ko-KR": "ko-KR",
@@ -39,6 +42,12 @@ export function resolveUiLocale(value: unknown): UiLocale | null {
     if (!normalized) return null;
     if (normalized.startsWith("en")) return "en-US";
     if (normalized.startsWith("ja")) return "ja-JP";
+    if (
+        normalized === "zh-tw"
+        || normalized === "zh-hk"
+        || normalized === "zh-hant"
+        || normalized.startsWith("zh-hant-")
+    ) return "zh-TW";
     if (normalized.startsWith("zh")) return "zh-CN";
     if (normalized.startsWith("ko")) return "ko-KR";
 

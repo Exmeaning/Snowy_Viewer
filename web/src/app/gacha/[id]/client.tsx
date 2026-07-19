@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";

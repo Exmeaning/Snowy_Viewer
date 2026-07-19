@@ -14,7 +14,9 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { spawnSync } from 'child_process';
 import {
+    BUILD_DATA_REGIONS,
     fetchGuidesJson,
     fetchMangaJson,
     fetchMasterJson,
@@ -34,7 +36,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const OUT_DIR = path.join(__dirname, '..', 'public', 'data');
-const OUT_FILE = path.join(OUT_DIR, 'sitemap-data.json');
+const BUILD_REGION = String(process.env.BUILD_DATA_REGION || 'cn').toLowerCase();
+const OUT_FILE = path.join(OUT_DIR, `sitemap-data.${BUILD_REGION}.json`);
 const REQUIRE_FRESH = requireFreshBuildData();
 const RUN_GENERATED_AT = new Date().toISOString();
 
@@ -731,14 +734,18 @@ async function loadRouteSource(source, existingData) {
 }
 
 async function main() {
-    console.log('=== Sitemap Data Generator ===\n');
+    console.log(`=== Sitemap Data Generator (${BUILD_REGION}) ===\n`);
     console.log(`Master APIs: ${getConfiguredMasterDataUrls().join(', ')}`);
     console.log(`Manga APIs: ${getConfiguredMangaDataUrls().join(', ')}`);
     console.log(`Guides APIs: ${getConfiguredGuidesDataUrls().join(', ')}`);
     console.log(`Require fresh build data: ${REQUIRE_FRESH ? 'yes' : 'no'}`);
     console.log(`Output: ${OUT_FILE}\n`);
 
-    const existingData = readJsonIfExists(OUT_FILE, null);
+    const legacyFile = path.join(OUT_DIR, 'sitemap-data.json');
+    const existingData = readJsonIfExists(
+        OUT_FILE,
+        BUILD_REGION === 'jp' ? readJsonIfExists(legacyFile, null) : null
+    );
     if (existingData) {
         console.log(`Existing sitemap data: main ${existingData.mainRoutes?.length || 0}, details ${existingData.detailRoutes?.length || 0}\n`);
     }
@@ -778,7 +785,17 @@ async function main() {
     console.log('\n=== Sitemap data generation complete! ===');
 }
 
-main().catch(error => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-});
+if (!process.env.BUILD_DATA_REGION) {
+    for (const region of BUILD_DATA_REGIONS) {
+        const result = spawnSync(process.execPath, [__filename], {
+            stdio: 'inherit',
+            env: { ...process.env, BUILD_DATA_REGION: region },
+        });
+        if (result.status !== 0) process.exit(result.status || 1);
+    }
+} else {
+    main().catch(error => {
+        console.error('Fatal error:', error);
+        process.exit(1);
+    });
+}

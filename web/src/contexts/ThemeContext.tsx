@@ -25,6 +25,7 @@ import {
     normalizeBackgroundAnimationBudget,
     type BackgroundAnimationBudget,
 } from "@/lib/backgroundAnimation";
+import { defaultContentRegionForPathname } from "@/lib/locale-routing";
 
 export type { BackgroundAnimationBudget } from "@/lib/backgroundAnimation";
 
@@ -56,7 +57,7 @@ const VALID_ASSET_SOURCES: AssetSourceType[] = ["main", "overseas"];
 
 // Server source type
 export type ServerSourceType = "en" | "jp" | "cn" | "tw" | "kr";
-const DEFAULT_SERVER_SOURCE: ServerSourceType = "jp";
+const DEFAULT_SERVER_SOURCE: ServerSourceType = "cn";
 const LLM_TRANSLATION_STORAGE_KEY = "use-llm-translation";
 
 function getDefaultLLMTranslationSetting(): boolean {
@@ -213,7 +214,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
                 savedServerSource === "cn" ||
                 savedServerSource === "tw" ||
                 savedServerSource === "kr"
-            ) ? savedServerSource : "jp";
+            ) ? savedServerSource : defaultContentRegionForPathname(window.location.pathname);
             setServerSourceState(loadedServerSource);
 
             setAssetSourceState(loadedAssetSource);

@@ -14,7 +14,7 @@ import { mergeResilientEntries, shouldKeepPreviousChurn } from "@/lib/realtime-r
 import ParkingPeriodsModal from "@/components/realtime-ranking/ParkingPeriodsModal";
 import Modal from "@/components/common/Modal";
 import ExternalLink from "@/components/ExternalLink";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import {
     RealtimeRankingBoardMode,
     RealtimeRankingEntryWithDiff,

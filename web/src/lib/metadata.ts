@@ -155,101 +155,113 @@ interface MetadataMap {
     storyAreaReaders?: Record<string, StoryAreaReaderMeta>;
 }
 
+export const METADATA_REGIONS = ['cn', 'jp', 'tw', 'en', 'kr'] as const;
+export type MetadataRegion = (typeof METADATA_REGIONS)[number];
+
 // ==================== Process-level Cache ====================
 
-let cached: MetadataMap | null = null;
+const cache = new Map<MetadataRegion, MetadataMap | null>();
 
-function getMap(): MetadataMap | null {
-    if (cached) return cached;
+function getMap(region: MetadataRegion = 'cn'): MetadataMap | null {
+    const normalizedRegion = METADATA_REGIONS.includes(region) ? region : 'cn';
+    if (cache.has(normalizedRegion)) return cache.get(normalizedRegion) ?? null;
     try {
-        const filePath = path.join(process.cwd(), 'public', 'data', 'metadata-map.json');
+        const dataDir = path.join(process.cwd(), 'public', 'data');
+        const regionalPath = path.join(dataDir, `metadata-map.${normalizedRegion}.json`);
+        const filePath = fs.existsSync(regionalPath)
+            ? regionalPath
+            : normalizedRegion === 'jp'
+                ? path.join(dataDir, 'metadata-map.json')
+                : regionalPath;
         const raw = fs.readFileSync(filePath, 'utf-8');
-        cached = JSON.parse(raw);
-        return cached;
+        const parsed = JSON.parse(raw) as MetadataMap;
+        cache.set(normalizedRegion, parsed);
+        return parsed;
     } catch {
         // File not found or parse error — degrade gracefully
+        cache.set(normalizedRegion, null);
         return null;
     }
 }
 
 // ==================== Public Accessors ====================
 
-export function getCardMeta(id: number): CardMeta | null {
-    return getMap()?.cards[String(id)] ?? null;
+export function getCardMeta(id: number, region?: MetadataRegion): CardMeta | null {
+    return getMap(region)?.cards[String(id)] ?? null;
 }
 
-export function getMusicMeta(id: number): MusicMeta | null {
-    return getMap()?.musics[String(id)] ?? null;
+export function getMusicMeta(id: number, region?: MetadataRegion): MusicMeta | null {
+    return getMap(region)?.musics[String(id)] ?? null;
 }
 
-export function getEventMeta(id: number): EventMeta | null {
-    return getMap()?.events[String(id)] ?? null;
+export function getEventMeta(id: number, region?: MetadataRegion): EventMeta | null {
+    return getMap(region)?.events[String(id)] ?? null;
 }
 
-export function getGachaMeta(id: number): GachaMeta | null {
-    return getMap()?.gachas[String(id)] ?? null;
+export function getGachaMeta(id: number, region?: MetadataRegion): GachaMeta | null {
+    return getMap(region)?.gachas[String(id)] ?? null;
 }
 
-export function getCharacterMeta(id: number): CharacterMeta | null {
-    return getMap()?.characters[String(id)] ?? null;
+export function getCharacterMeta(id: number, region?: MetadataRegion): CharacterMeta | null {
+    return getMap(region)?.characters[String(id)] ?? null;
 }
 
-export function getVirtualLiveMeta(id: number): VirtualLiveMeta | null {
-    return getMap()?.virtualLives[String(id)] ?? null;
+export function getVirtualLiveMeta(id: number, region?: MetadataRegion): VirtualLiveMeta | null {
+    return getMap(region)?.virtualLives[String(id)] ?? null;
 }
 
-export function getCostumeMeta(id: number): CostumeMeta | null {
-    return getMap()?.costumes[String(id)] ?? null;
+export function getCostumeMeta(id: number, region?: MetadataRegion): CostumeMeta | null {
+    return getMap(region)?.costumes[String(id)] ?? null;
 }
 
-export function getFixtureMeta(id: number): FixtureMeta | null {
-    return getMap()?.mysekaiFixtures[String(id)] ?? null;
+export function getFixtureMeta(id: number, region?: MetadataRegion): FixtureMeta | null {
+    return getMap(region)?.mysekaiFixtures[String(id)] ?? null;
 }
 
-export function getMangaMeta(id: number): MangaMeta | null {
-    return getMap()?.mangas[String(id)] ?? null;
+export function getMangaMeta(id: number, region?: MetadataRegion): MangaMeta | null {
+    return getMap(region)?.mangas[String(id)] ?? null;
 }
 
-export function getExchangeMeta(id: number): ExchangeMeta | null {
-    return getMap()?.exchanges[String(id)] ?? null;
+export function getExchangeMeta(id: number, region?: MetadataRegion): ExchangeMeta | null {
+    return getMap(region)?.exchanges[String(id)] ?? null;
 }
 
-export function getGuideMeta(id: string): GuideMeta | null {
-    return getMap()?.guides?.[id] ?? null;
+export function getGuideMeta(id: string, region?: MetadataRegion): GuideMeta | null {
+    return getMap(region)?.guides?.[id] ?? null;
 }
 
-export function getStoryEventGroupMeta(id: string | number): StoryEventGroupMeta | null {
-    return getMap()?.storyEventGroups?.[String(id)] ?? null;
+export function getStoryEventGroupMeta(id: string | number, region?: MetadataRegion): StoryEventGroupMeta | null {
+    return getMap(region)?.storyEventGroups?.[String(id)] ?? null;
 }
 
-export function getStoryEventEpisodeMeta(eventId: string | number, episodeNo: string | number): StoryEventEpisodeMeta | null {
-    return getMap()?.storyEventEpisodes?.[`${eventId}/${episodeNo}`] ?? null;
+export function getStoryEventEpisodeMeta(eventId: string | number, episodeNo: string | number, region?: MetadataRegion): StoryEventEpisodeMeta | null {
+    return getMap(region)?.storyEventEpisodes?.[`${eventId}/${episodeNo}`] ?? null;
 }
 
-export function getStoryUnitGroupMeta(unitId: string | number): StoryUnitGroupMeta | null {
-    return getMap()?.storyUnitGroups?.[String(unitId)] ?? null;
+export function getStoryUnitGroupMeta(unitId: string | number, region?: MetadataRegion): StoryUnitGroupMeta | null {
+    return getMap(region)?.storyUnitGroups?.[String(unitId)] ?? null;
 }
 
-export function getStoryUnitEpisodeMeta(unitId: string | number, episodeId: string): StoryUnitEpisodeMeta | null {
-    return getMap()?.storyUnitEpisodes?.[`${unitId}/${episodeId}`] ?? null;
+export function getStoryUnitEpisodeMeta(unitId: string | number, episodeId: string, region?: MetadataRegion): StoryUnitEpisodeMeta | null {
+    return getMap(region)?.storyUnitEpisodes?.[`${unitId}/${episodeId}`] ?? null;
 }
 
-export function getStoryCardReaderMeta(cardId: string | number): StoryCardReaderMeta | null {
-    return getMap()?.storyCardReaders?.[String(cardId)] ?? null;
+export function getStoryCardReaderMeta(cardId: string | number, region?: MetadataRegion): StoryCardReaderMeta | null {
+    return getMap(region)?.storyCardReaders?.[String(cardId)] ?? null;
 }
 
-export function getStorySelfReaderMeta(charaId: string | number): StorySelfReaderMeta | null {
-    return getMap()?.storySelfReaders?.[String(charaId)] ?? null;
+export function getStorySelfReaderMeta(charaId: string | number, region?: MetadataRegion): StorySelfReaderMeta | null {
+    return getMap(region)?.storySelfReaders?.[String(charaId)] ?? null;
 }
 
-export function getStorySpecialReaderMeta(spId: string | number): StorySpecialReaderMeta | null {
-    return getMap()?.storySpecialReaders?.[String(spId)] ?? null;
+export function getStorySpecialReaderMeta(spId: string | number, region?: MetadataRegion): StorySpecialReaderMeta | null {
+    return getMap(region)?.storySpecialReaders?.[String(spId)] ?? null;
 }
 
-export function getStoryAreaCategoryMeta(category: string): StoryAreaCategoryMeta | null {
-    return getMap()?.storyAreaCategories?.[category] ?? null;
+export function getStoryAreaCategoryMeta(category: string, region?: MetadataRegion): StoryAreaCategoryMeta | null {
+    return getMap(region)?.storyAreaCategories?.[category] ?? null;
 }
 
-export function getStoryAreaReaderMeta(category: string, scenarioId: string): StoryAreaReaderMeta | null {
-    return getMap()?.storyAreaReaders?.[`${category}/${scenarioId}`] ?? null;
+export function getStoryAreaReaderMeta(category: string, scenarioId: string, region?: MetadataRegion): StoryAreaReaderMeta | null {
+    return getMap(region)?.storyAreaReaders?.[`${category}/${scenarioId}`] ?? null;
 }

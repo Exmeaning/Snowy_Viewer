@@ -158,6 +158,21 @@ export const SEO_LOCALE_CONFIG = {
         "Project SEKAI의 카드, 악곡, 이벤트, 가샤, 스토리, MySekai 및 다양한 도구를 제공하는 데이터 뷰어입니다.",
     },
   },
+  "zh-TW": {
+    htmlLang: "zh-TW",
+    openGraphLocale: "zh_TW",
+    alternateOpenGraphLocales: ["zh_CN", "en_US", "ja_JP", "ko_KR"],
+    titleTemplate: "%s | Moesekai",
+    suffix: " — 次世代 PJSK Wiki",
+    detailSuffix: " | PJSK Wiki",
+    root: {
+      title: "Moesekai - 次世代 PJSK Wiki",
+      description: "Moesekai（原 Snowy SekaiViewer）是 Project SEKAI 遊戲資料檢視器與 PJSK Wiki，提供卡牌、歌曲、活動、轉蛋、劇情、MySekai 與實用工具。",
+      keywords: ["Project SEKAI Wiki", "PJSK Wiki", "世界計畫 Wiki", "Moesekai", "Snowy SekaiViewer"],
+      jsonLdAlternateName: ["Snowy SekaiViewer", "PJSK Wiki", "世界計畫 Wiki"],
+      jsonLdDescription: "Project SEKAI 的卡牌、歌曲、活動、轉蛋、劇情、MySekai 與實用工具資料庫。",
+    },
+  },
 } as const satisfies Record<UiLocale, SeoLocaleConfig>;
 
 export function getSeoLocaleConfig(locale: UiLocale = DEFAULT_UI_LOCALE): SeoLocaleConfig {
@@ -167,6 +182,7 @@ export function getSeoLocaleConfig(locale: UiLocale = DEFAULT_UI_LOCALE): SeoLoc
 // ==================== Page Metadata ====================
 
 const COMMON_BRAND_KEYWORDS = {
+  "zh-TW": ["Project Sekai", "PJSK", "世界計畫", "Moesekai"],
   "zh-CN": ["Project Sekai", "PJSK", "世界计划", "Moesekai"],
   "en-US": ["Project Sekai", "PJSK", "Moesekai", "Project SEKAI database"],
   "ja-JP": ["Project Sekai", "PJSK", "プロジェクトセカイ", "Moesekai"],
@@ -1607,4 +1623,3 @@ export function formatMysekaiFlavorSuffix(flavor: string | undefined, locale: Ui
   const clipped = flavor.slice(0, 100);
   return locale === "zh-CN" || locale === "ja-JP" ? ` — ${clipped}` : ` - ${clipped}`;
 }
-

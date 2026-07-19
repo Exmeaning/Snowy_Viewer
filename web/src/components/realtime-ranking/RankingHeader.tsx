@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useI18n } from "@/contexts/I18nContext";
 import { REALTIME_RANKING_REGION_OPTIONS, RealtimeRankingRegion } from "@/types/realtime-ranking";
 import { REALTIME_RANKING_LINE_OPTIONS, RealtimeRankingLine } from "@/lib/realtime-ranking-line";

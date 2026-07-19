@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useRouter } from "next/navigation";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import PlayerHonorPreview from "@/components/realtime-ranking/PlayerHonorPreview";

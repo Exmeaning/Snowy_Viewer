@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import { useI18n } from "@/contexts/I18nContext";
 import { IEventInfo, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";

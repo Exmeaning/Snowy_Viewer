@@ -7,6 +7,9 @@ export const WEB_ROOT = path.resolve(fileURLToPath(new URL("..", import.meta.url
 export const SRC_ROOT = path.join(WEB_ROOT, "src");
 export const MESSAGE_FILES = {
     "zh-CN": path.join(SRC_ROOT, "lib/i18n/messages/zh-CN/index.ts"),
+    // zh-TW inherits the complete zh-CN tree at runtime and overrides selected copy.
+    // Use the base tree here so structural checks still cover it without evaluating TS imports in vm.
+    "zh-TW": path.join(SRC_ROOT, "lib/i18n/messages/zh-CN/index.ts"),
     "en-US": path.join(SRC_ROOT, "lib/i18n/messages/en-US/index.ts"),
     "ja-JP": path.join(SRC_ROOT, "lib/i18n/messages/ja-JP/index.ts"),
     "ko-KR": path.join(SRC_ROOT, "lib/i18n/messages/ko-KR/index.ts"),
@@ -14,6 +17,7 @@ export const MESSAGE_FILES = {
 
 export const MESSAGE_EXPORTS = {
     "zh-CN": "zhCNMessages",
+    "zh-TW": "zhCNMessages",
     "en-US": "enUSMessages",
     "ja-JP": "jaJPMessages",
     "ko-KR": "koKRMessages",

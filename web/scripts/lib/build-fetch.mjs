@@ -1,9 +1,21 @@
 import fs from 'fs';
 
-const DEFAULT_MASTER_DATA_URLS = [
-    'https://metadata.exmeaning.com/jp/master',
-    'https://metadata.pjsk.moe/jp/master',
-];
+export const BUILD_DATA_REGIONS = ['cn', 'jp', 'tw', 'en', 'kr'];
+
+function normalizeRegion(region = process.env.BUILD_DATA_REGION) {
+    const normalized = String(region || 'cn').trim().toLowerCase();
+    if (!BUILD_DATA_REGIONS.includes(normalized)) {
+        throw new Error(`Unsupported build data region: ${normalized}`);
+    }
+    return normalized;
+}
+
+function defaultMasterDataUrls(region) {
+    return [
+        `https://metadata.exmeaning.com/${region}/master`,
+        `https://metadata.pjsk.moe/${region}/master`,
+    ];
+}
 
 const DEFAULT_MANGA_DATA_URLS = [
     'https://moe.exmeaning.com/mangas/mangas.json',
@@ -28,14 +40,26 @@ function unique(values) {
     return [...new Set(values.filter(Boolean))];
 }
 
-export function getConfiguredMasterDataUrls() {
-    const explicitList = splitUrlList(process.env.MASTER_DATA_URLS);
+export function getConfiguredMasterDataUrls(region = process.env.BUILD_DATA_REGION) {
+    const normalizedRegion = normalizeRegion(region);
+    const regionSuffix = normalizedRegion.toUpperCase();
+    const legacyList = splitUrlList(process.env.MASTER_DATA_URLS).map(url =>
+        url.includes('{region}') ? url.replaceAll('{region}', normalizedRegion) : (normalizedRegion === 'jp' ? url : '')
+    );
+    const explicitList = splitUrlList(process.env[`MASTER_DATA_URLS_${regionSuffix}`]);
     if (explicitList.length > 0) {
         return unique(explicitList.map(normalizeBaseUrl));
     }
+    if (legacyList.some(Boolean)) {
+        return unique(legacyList.map(normalizeBaseUrl));
+    }
 
-    const singleUrl = process.env.MASTER_DATA_URL ? [process.env.MASTER_DATA_URL] : [];
-    return unique([...singleUrl, ...DEFAULT_MASTER_DATA_URLS].map(normalizeBaseUrl));
+    const legacySingleUrl = process.env.MASTER_DATA_URL?.includes('{region}')
+        ? process.env.MASTER_DATA_URL.replaceAll('{region}', normalizedRegion)
+        : normalizedRegion === 'jp' ? process.env.MASTER_DATA_URL : undefined;
+    const configuredSingleUrl = process.env[`MASTER_DATA_URL_${regionSuffix}`] || legacySingleUrl;
+    const singleUrl = configuredSingleUrl ? [configuredSingleUrl] : [];
+    return unique([...singleUrl, ...defaultMasterDataUrls(normalizedRegion)].map(normalizeBaseUrl));
 }
 
 export function getConfiguredMangaDataUrls() {
@@ -154,7 +178,7 @@ export async function fetchJsonWithFallback(label, urls, options = {}) {
 }
 
 export async function fetchMasterJson(filename, label = filename, options = {}) {
-    const urls = getConfiguredMasterDataUrls().map(baseUrl => joinUrl(baseUrl, filename));
+    const urls = getConfiguredMasterDataUrls(options.region).map(baseUrl => joinUrl(baseUrl, filename));
     return fetchJsonWithFallback(label, urls, options);
 }
 

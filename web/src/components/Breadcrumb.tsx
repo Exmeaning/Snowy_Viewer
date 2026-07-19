@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { usePathname } from "next/navigation";
 import { findNavMatch, findGroupMatch, navigationGroups, NAV_GROUP_LABEL_KEYS, NAV_ITEM_LABEL_KEYS } from "@/lib/navigation";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";

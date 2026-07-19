@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import { IGachaInfo } from "@/types/types";
 import { getGachaLogoUrl } from "@/lib/assets";

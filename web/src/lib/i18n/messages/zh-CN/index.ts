@@ -717,6 +717,7 @@ export const zhCNMessages = {
             machineTranslationNotice: "部分文本使用机器翻译，可能存在不准确之处。",
             options: {
                 zhCN: "简体中文",
+                zhTW: "繁體中文 (TW)",
                 enUS: "English",
                 jaJP: "日本語",
                 koKR: "한국어",
@@ -840,6 +841,7 @@ export const zhCNMessages = {
             languageBilingualDesc: "请选择界面语言。You can change this anytime in settings.",
             languageOptionSubtitles: {
                 "zh-CN": "简体中文 / Simplified Chinese",
+                "zh-TW": "繁體中文 (TW) / Traditional Chinese",
                 "en-US": "English / 英语",
                 "ja-JP": "日本語 / Japanese",
                 "ko-KR": "한국어 / Korean",

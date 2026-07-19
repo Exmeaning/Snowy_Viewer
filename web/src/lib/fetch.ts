@@ -10,6 +10,7 @@
 
 import { MOE_BGM_DURATIONS_URL } from "./assets";
 import { getMasterDataCache, setMasterDataCache, isIndexedDBAvailable } from "./masterdata-cache";
+import { defaultContentRegionForPathname } from "./locale-routing";
 
 // Server source type
 export type ServerSourceType = "en" | "jp" | "cn" | "tw" | "kr";
@@ -18,11 +19,11 @@ export type ServerSourceType = "en" | "jp" | "cn" | "tw" | "kr";
  * Get current server from localStorage (client-side only)
  */
 function getCurrentServer(): ServerSourceType {
-    if (typeof window === "undefined") return "jp";
+    if (typeof window === "undefined") return "cn";
     const saved = localStorage.getItem("server-source");
     if (saved === "en" || saved === "jp" || saved === "cn" || saved === "tw" || saved === "kr") return saved;
 
-    return "jp";
+    return defaultContentRegionForPathname(window.location.pathname);
 }
 
 /**

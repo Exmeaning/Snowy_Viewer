@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";

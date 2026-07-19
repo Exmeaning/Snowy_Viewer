@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import MainLayout from "@/components/MainLayout";
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";

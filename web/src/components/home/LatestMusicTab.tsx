@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import { IMusicInfo } from "@/types/music";
 import { useTheme } from "@/contexts/ThemeContext";

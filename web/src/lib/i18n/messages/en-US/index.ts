@@ -718,6 +718,7 @@ export const enUSMessages = {
             machineTranslationNotice: "Some text uses machine translation and may be inaccurate.",
             options: {
                 zhCN: "Chinese (Simplified)",
+                zhTW: "Chinese (Traditional, TW)",
                 enUS: "English",
                 jaJP: "Japanese",
                 koKR: "Korean",
@@ -841,6 +842,7 @@ export const enUSMessages = {
             languageBilingualDesc: "Choose your interface language. 之后也可以在设置中随时修改。",
             languageOptionSubtitles: {
                 "zh-CN": "简体中文 / Simplified Chinese",
+                "zh-TW": "繁體中文 (TW) / Traditional Chinese",
                 "en-US": "English / 英语",
                 "ja-JP": "日本語 / Japanese",
                 "ko-KR": "한국어 / Korean",

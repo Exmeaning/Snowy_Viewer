@@ -9,6 +9,15 @@ import {
     resolveUiLocale,
     type UiLocale,
 } from "@/lib/i18n/locales";
+import {
+    getLocaleRouteConfig,
+    isRouteLocale,
+    SUPPORTED_ROUTE_LOCALES,
+    uiLocaleToRouteLocale,
+    type LocaleAssetSource,
+    type ContentRegion,
+    type RouteLocale,
+} from "@/lib/locale-routing";
 import { assertNoIndexSeoRoute, findSeoRouteByPageKey, findSeoRouteByPath, isIndexableSeoPath, normalizeSeoPath } from "@/lib/seo-routes";
 import { generateCollectionItemListJsonLd, generateDetailBreadcrumbJsonLd, generatePageBreadcrumbJsonLd } from "@/lib/structured-data";
 import {
@@ -32,6 +41,7 @@ const SITE_BASE_URL = process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe";
 const DETAIL_BREADCRUMB_SCRIPT_PREFIX = "detail-breadcrumb";
 const PAGE_BREADCRUMB_SCRIPT_PREFIX = "page-breadcrumb";
 const DEFAULT_ICON_URL = "/data/icon/icon.jpg";
+export const SEO_ROUTE_LOCALE_HEADER = "x-moesekai-route-locale";
 
 export function getSiteBaseUrl(): string {
     return SITE_BASE_URL;
@@ -39,15 +49,31 @@ export function getSiteBaseUrl(): string {
 
 export async function getRequestSeoLocale(): Promise<UiLocale> {
     try {
+        const requestHeaders = await headers();
+        const routeLocale = requestHeaders.get(SEO_ROUTE_LOCALE_HEADER);
+        if (isRouteLocale(routeLocale)) return getLocaleRouteConfig(routeLocale).uiLocale;
+
         const cookieStore = await cookies();
         const cookieLocale = resolveUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value);
         if (cookieLocale) return cookieLocale;
 
-        const requestHeaders = await headers();
         return resolveAcceptLanguageUiLocale(requestHeaders.get("accept-language"), DEFAULT_UI_LOCALE);
     } catch {
         return DEFAULT_UI_LOCALE;
     }
+}
+
+export function getSeoRouteLocale(locale: UiLocale): RouteLocale {
+    return uiLocaleToRouteLocale(locale);
+}
+
+export function getSeoAssetSource(locale: UiLocale): LocaleAssetSource {
+    return getLocaleRouteConfig(getSeoRouteLocale(locale)).defaultAssetSource;
+}
+
+export function localizeSeoPath(path: string, routeLocale: RouteLocale): string {
+    const normalized = normalizeSeoPath(path);
+    return normalizeSeoPath(`/${routeLocale}${normalized === "/" ? "" : normalized}`);
 }
 
 function absolutePath(path: string): string {
@@ -87,13 +113,23 @@ export function buildLocalizedMetadata({
         : title && typeof title === "object" && "default" in title && typeof title.default === "string"
             ? title.default
             : undefined;
-    const canonical = absolutePath(path);
+    const routeLocale = getSeoRouteLocale(locale);
+    const localizedPath = localizeSeoPath(path, routeLocale);
+    const canonical = absolutePath(localizedPath);
+    const languages = Object.fromEntries([
+        ...SUPPORTED_ROUTE_LOCALES.map((alternateLocale) => {
+            const config = getLocaleRouteConfig(alternateLocale);
+            return [config.uiLocale, absolutePath(localizeSeoPath(path, alternateLocale))] as const;
+        }),
+        ["x-default", absolutePath("/")],
+    ]);
 
     const metadata: Metadata = {
         metadataBase: metadataBase(),
         title,
         alternates: {
             canonical,
+            languages,
         },
         icons: { icon: DEFAULT_ICON_URL },
         openGraph: {
@@ -240,7 +276,7 @@ export interface CreateDynamicPageMetadataOptions<TData, TParams extends Record<
     params: Promise<TParams>;
     kind: DynamicSeoKind;
     routePrefix: string;
-    getData: (params: TParams) => TData | null;
+    getData: (params: TParams, region?: ContentRegion) => TData | null;
     build: (data: TData, context: { params: TParams; locale: UiLocale; path: string }) => DynamicMetadataResultOptions;
     buildPath?: (params: TParams) => string;
     fallbackTwitterCard?: "summary" | "summary_large_image";
@@ -268,8 +304,9 @@ export async function createDynamicPageMetadata<TData, TParams extends Record<st
 }: CreateDynamicPageMetadataOptions<TData, TParams>): Promise<Metadata> {
     const resolvedParams = await params;
     const locale = await getRequestSeoLocale();
+    const region = getLocaleRouteConfig(getSeoRouteLocale(locale)).defaultServer;
     const path = buildDynamicMetadataPath(routePrefix, resolvedParams, buildPath);
-    const data = getData(resolvedParams);
+    const data = getData(resolvedParams, region);
 
     if (!data) {
         return buildDetailMetadata({
@@ -318,8 +355,9 @@ export function defineSeoDynamicPage<TData, TParams extends Record<string, strin
 
         const resolvedParams = params ? await params : ({} as TParams);
         const locale = await getRequestSeoLocale();
+        const region = getLocaleRouteConfig(getSeoRouteLocale(locale)).defaultServer;
         const path = buildDynamicMetadataPath(metadataOptions.routePrefix, resolvedParams, metadataOptions.buildPath);
-        const data = metadataOptions.getData(resolvedParams);
+        const data = metadataOptions.getData(resolvedParams, region);
         const detailName = structuredData.getName(data, { params: resolvedParams, locale, path });
         const breadcrumbJsonLd = generateDetailBreadcrumbJsonLd(
             SITE_BASE_URL,
@@ -380,7 +418,7 @@ export interface CreateDynamicDetailMetadataOptions<T> {
     params: Promise<{ id: string }>;
     kind: DetailFallbackKind;
     routePrefix: string;
-    getData: (id: number) => T | null;
+    getData: (id: number, region?: ContentRegion) => T | null;
     build: (data: T, context: { id: string; numericId: number; locale: UiLocale; path: string }) => DetailMetadataResultOptions;
     fallbackTwitterCard?: "summary" | "summary_large_image";
     structuredData?: DetailStructuredDataOptions<T>;
@@ -438,9 +476,10 @@ export async function createDynamicDetailMetadata<T>({
 }: CreateDynamicDetailMetadataOptions<T>): Promise<Metadata> {
     const { id } = await params;
     const locale = await getRequestSeoLocale();
+    const region = getLocaleRouteConfig(getSeoRouteLocale(locale)).defaultServer;
     const numericId = Number(id);
     const path = normalizeSeoPath(`/${routePrefix.replace(/^\/+|\/+$/g, "")}/${id}`);
-    const data = Number.isFinite(numericId) ? getData(numericId) : null;
+    const data = Number.isFinite(numericId) ? getData(numericId, region) : null;
 
     if (!data) {
         return buildDetailMetadata({
@@ -485,10 +524,11 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
 
         const { id = "" } = params ? await params : {};
         const locale = await getRequestSeoLocale();
+        const region = getLocaleRouteConfig(getSeoRouteLocale(locale)).defaultServer;
         const numericId = Number(id);
         const routePrefix = metadataOptions.routePrefix.replace(/^\/+|\/+$/g, "");
         const path = id ? normalizeSeoPath(`/${routePrefix}/${id}`) : normalizeSeoPath(`/${routePrefix}/`);
-        const data = Number.isFinite(numericId) ? metadataOptions.getData(numericId) : null;
+        const data = Number.isFinite(numericId) ? metadataOptions.getData(numericId, region) : null;
         const context = { id, numericId, locale, path };
         const detailName = data
             ? metadataOptions.build(data, context).title
@@ -504,6 +544,7 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
                 SITE_BASE_URL,
                 structuredData.parentPageKey,
                 [{ id, name: structuredData.itemList.getName(data, context) }],
+                locale,
             )
             : null;
         const scriptId = id ? `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}-${id}` : `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}`;

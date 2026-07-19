@@ -33,6 +33,9 @@ import {
   resolveUiLocale,
 } from "@/lib/i18n";
 import { BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY } from "@/lib/backgroundAnimation";
+import { isRouteLocale, routeLocaleToUiLocale } from "@/lib/locale-routing";
+
+const ROUTE_LOCALE_HEADER = "x-moesekai-route-locale";
 
 const SITE_BASE_URL = getSiteBaseUrl();
 const googleTagScript = buildGoogleTagBootstrapScript();
@@ -57,9 +60,12 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const requestHeaders = await headers();
-  const initialUiLocale =
-    resolveUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value) ??
-    resolveAcceptLanguageUiLocale(requestHeaders.get("accept-language"));
+  const routeLocaleHeader = requestHeaders.get(ROUTE_LOCALE_HEADER);
+  const routeLocale = isRouteLocale(routeLocaleHeader) ? routeLocaleHeader : undefined;
+  const initialUiLocale = routeLocale
+    ? routeLocaleToUiLocale(routeLocale)
+    : resolveUiLocale(cookieStore.get(UI_LOCALE_STORAGE_KEY)?.value) ??
+      resolveAcceptLanguageUiLocale(requestHeaders.get("accept-language"));
   const jsonLd = generateRootJsonLd(SITE_BASE_URL, initialUiLocale);
   const navigationJsonLd = generateSiteNavigationItemListJsonLd(SITE_BASE_URL, initialUiLocale);
   const supportedUiLocales = JSON.stringify(SUPPORTED_UI_LOCALES);
@@ -155,9 +161,10 @@ export default async function RootLayout({
 
       try {
         var supportedUiLocales = ${supportedUiLocales};
-        var savedUiLocale = localStorage.getItem('${UI_LOCALE_STORAGE_KEY}');
+        var routeUiLocale = ${routeLocale ? `'${initialUiLocale}'` : "null"};
+        var savedUiLocale = routeUiLocale ? null : localStorage.getItem('${UI_LOCALE_STORAGE_KEY}');
         var browserUiLocales = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
-        var localeCandidates = savedUiLocale ? [savedUiLocale] : browserUiLocales;
+        var localeCandidates = routeUiLocale ? [routeUiLocale] : (savedUiLocale ? [savedUiLocale] : browserUiLocales);
         var resolvedUiLocale = '${initialUiLocale}';
         for (var i = 0; i < localeCandidates.length; i++) {
           var normalizedUiLocale = String(localeCandidates[i] || '').toLowerCase();
@@ -206,7 +213,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(navigationJsonLd) }}
         />
         <ThemeProvider>
-          <I18nProvider initialLocale={initialUiLocale}>
+          <I18nProvider initialLocale={initialUiLocale} routeLocale={routeLocale}>
             <MasterDataProvider>
               <TranslationProvider>
                 <QuickFilterProvider>

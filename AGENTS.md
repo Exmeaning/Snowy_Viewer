@@ -1,10 +1,10 @@
 ## 项目概况
 
-这是一个PROJECT SEKAI 的查看器项目。前端 Next.js 16 纯 CSR (`web/`)，后端 Go API (`internal/`)，部署域名 `pjsk.moe`。
+这是一个PROJECT SEKAI 的查看器项目。前端 Next.js 16 standalone 应用 (`web/`，页面交互以 CSR 为主并使用服务端 metadata/Route Handlers)，后端 Go API (`internal/`)，部署域名 `pjsk.moe`。
 
 ## 技术栈
 
-- **前端**: Next.js 16 (`output: "export"`, 纯 CSR), React 19, TypeScript, **Tailwind CSS 4**, framer-motion, echarts
+- **前端**: Next.js 16 (`output: "standalone"`, 服务端路由 + CSR 页面交互), React 19, TypeScript, **Tailwind CSS 4**, framer-motion, echarts
 - **后端**: Go (net/http), Redis 缓存 + 内存回退
 
 ## 核心架构
@@ -28,7 +28,7 @@
 web/src/app/<module>/
 ├── page.tsx       # 入口：导出 generateMetadata + 渲染 Client 组件
 ├── client.tsx     # "use client" 主逻辑组件
-├── [id]/          # 动态路由（如适用），纯 CSR
+├── [id]/          # 动态路由（如适用），页面交互逻辑保持 CSR
 └── detail/        # 详情子页（如适用）
 ```
 
@@ -113,7 +113,7 @@ const updateURL = (params: Record<string, string>) => {
 
 1. **外链需过 ExternalLink**: 所有站外链接使用 `<ExternalLink>` 组件
 2. **资源路径大小写敏感**: 生产环境部署区分大小写，资源路径需与实际文件名完全一致
-3. **纯 CSR 模式**: 所有页面逻辑在 `client.tsx` 中实现；`page.tsx` 只做 server-safe metadata 和渲染入口
+3. **CSR 页面约定**: 所有页面交互逻辑在 `client.tsx` 中实现；`page.tsx` 只做 server-safe metadata、结构化数据和渲染入口。项目部署模式为 Next.js standalone，不是静态 export
 4. **新功能必须补 i18n/SEO**: UI 文案补双语字典，页面补 `SEO_PAGE_METADATA`，详情页补 SEO 模板
 
 ## 新模块/重大变更

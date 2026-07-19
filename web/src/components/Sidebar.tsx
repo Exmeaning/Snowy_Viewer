@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { usePathname, useRouter } from "next/navigation";
 import {
     ACCOUNTS_CHANGED_EVENT,

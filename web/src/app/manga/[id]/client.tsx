@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useI18n } from "@/contexts/I18nContext";
 import MainLayout from "@/components/MainLayout";

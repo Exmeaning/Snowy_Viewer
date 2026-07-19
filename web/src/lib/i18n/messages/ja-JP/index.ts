@@ -717,6 +717,7 @@ export const jaJPMessages = {
       machineTranslationNotice: '一部のテキストには機械翻訳が使用されており、不正確な場合があります。',
       options: {
         zhCN: '簡体字中国語',
+        zhTW: '繁体字中国語 (TW)',
         enUS: 'English',
         jaJP: '日本語',
         koKR: '韓国語'
@@ -840,6 +841,7 @@ export const jaJPMessages = {
       languageBilingualDesc: "インターフェース言語を選択してください。You can change this anytime in settings.",
       languageOptionSubtitles: {
         "zh-CN": "简体中文 / Simplified Chinese",
+        "zh-TW": "繁體中文 (TW) / Traditional Chinese",
         "en-US": "English / 英语",
         "ja-JP": "日本語 / Japanese",
         "ko-KR": "한국어 / Korean",

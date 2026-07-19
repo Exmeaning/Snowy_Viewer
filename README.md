@@ -55,9 +55,9 @@ AGPL-3.0
 - **REDIS_URL**: Redis 地址（默认 `localhost:6379`）
 - **MASTER_DATA_PATH**: 可选本地 masterdata 缓存路径（默认 `./data/master`）。仓库不再提交完整 masterdata；本地文件缺失时 Go API 会从远端数据源加载。
 
-### 前端配置 (Next.js Web - 静态导出 Pages 部署)
+### 前端配置 (Next.js Web - standalone 部署)
 
-- **NEXT_PUBLIC_API_URL**: 关联活动/卡池等 API 的后端基准地址（在静态导出 Pages 部署时必填，例如 `https://api.pjsk.moe`；若使用本地开发或内置代理反代则无需配置）。
+- **NEXT_PUBLIC_API_URL**: 关联活动/卡池等 API 的后端基准地址；使用当前 standalone + 内置反向代理部署时通常无需配置，前后端分离部署时可设为例如 `https://api.pjsk.moe`。
 
 ## Docker 部署 (Go 后端独立部署)
 

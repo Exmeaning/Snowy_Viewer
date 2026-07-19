@@ -44,20 +44,21 @@ jobs:
       - name: Generate Sitemap Data
         run: |
           GITHUB_BASE="https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master"
-          MASTER_DATA_URLS="$GITHUB_BASE,https://metadata.exmeaning.com/jp/master,https://metadata.pjsk.moe/jp/master" \
+          BUILD_DATA_REGION=jp \
+          MASTER_DATA_URLS_JP="$GITHUB_BASE,https://metadata.exmeaning.com/jp/master,https://metadata.pjsk.moe/jp/master" \
           REQUIRE_FRESH_BUILD_DATA=1 \
           npm run sitemap --prefix web
 
-          python3 -c "import json; json.load(open('web/public/data/sitemap-data.json'))"
+          python3 -c "import json; json.load(open('web/public/data/sitemap-data.jp.json'))"
 
       - name: Commit Changes
         run: |
-          if [[ -n $(git status --porcelain data/master_version.txt web/public/data/sitemap-data.json) ]]; then
+          if [[ -n $(git status --porcelain data/master_version.txt web/public/data/sitemap-data.jp.json) ]]; then
             echo "Changes detected in master data version or sitemap data."
 
             git config --global user.name 'Snowy Bot'
             git config --global user.email 'bot@snowy.viewer'
-            git add data/master_version.txt web/public/data/sitemap-data.json
+            git add data/master_version.txt web/public/data/sitemap-data.jp.json
             git commit -m "chore: update master data version and sitemap"
             git push
           else

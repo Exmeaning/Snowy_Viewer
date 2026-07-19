@@ -17,6 +17,7 @@ import {
     getStoryUnitGroupMeta,
 } from "@/lib/metadata";
 import { defineSeoDynamicPage } from "@/lib/seo-metadata";
+import { getSeoAssetSource } from "@/lib/seo-metadata";
 
 function encodePathPart(value: string | number): string {
     return encodeURIComponent(String(value));
@@ -35,13 +36,13 @@ export const defineStoryEventGroupPage = (render: (props: { params?: Promise<{ e
         parentPageKey: "story_event",
         getName: (data, { params }) => data?.name ?? storyFallback("Event", params.eventId),
     },
-    build: (story) => ({
+    build: (story, { locale }) => ({
         descriptionKind: "storyEventGroup",
         descriptionValues: {
             event: story.name,
             count: story.episodeCount,
         },
-        images: story.asset ? [getEventBannerUrl(story.asset, "main-jp")] : undefined,
+        images: story.asset ? [getEventBannerUrl(story.asset, getSeoAssetSource(locale))] : undefined,
     }),
     render,
 });
@@ -55,14 +56,14 @@ export const defineStoryEventReaderPage = (render: (props: { params?: Promise<{ 
         parentPageKey: "story_event",
         getName: (data, { params }) => data?.episodeTitle ?? storyFallback("Episode", `${params.eventId}-${params.episodeNo}`),
     },
-    build: (episode) => ({
+    build: (episode, { locale }) => ({
         descriptionKind: "storyEventReader",
         descriptionValues: {
             event: episode.eventName,
             episode: episode.episodeTitle,
             episodeNo: episode.episodeNo,
         },
-        images: episode.asset ? [getEventBannerUrl(episode.asset, "main-jp")] : undefined,
+        images: episode.asset ? [getEventBannerUrl(episode.asset, getSeoAssetSource(locale))] : undefined,
     }),
     render,
 });
@@ -116,12 +117,12 @@ export const defineStoryCardReaderPage = (render: (props: { params?: Promise<{ c
         parentPageKey: "story_card",
         getName: (data, { params }) => data?.cardPrefix ?? storyFallback("Card", params.cardId),
     },
-    build: (card) => ({
+    build: (card, { locale }) => ({
         descriptionKind: "storyCardReader",
         descriptionValues: {
             card: card.cardPrefix,
         },
-        images: card.asset ? [getCardThumbnailUrl(card.characterId, card.asset, false, "main-jp")] : undefined,
+        images: card.asset ? [getCardThumbnailUrl(card.characterId, card.asset, false, getSeoAssetSource(locale))] : undefined,
     }),
     render,
 });

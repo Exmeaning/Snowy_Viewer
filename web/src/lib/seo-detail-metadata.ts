@@ -26,6 +26,7 @@ import {
     type CreateDynamicDetailMetadataOptions,
 } from "@/lib/seo-metadata";
 import { formatExchangeShopSuffix, formatMysekaiFlavorSuffix } from "@/lib/seo-keywords";
+import { getSeoAssetSource } from "@/lib/seo-metadata";
 import { CHARACTER_NAMES } from "@/types/types";
 
 type DetailPreset<T> = Omit<CreateDynamicDetailMetadataOptions<T>, "params">;
@@ -73,14 +74,14 @@ const cardDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getCar
     routePrefix: "cards",
     getData: getCardMeta,
     structuredData: { parentPageKey: "cards", itemList: { getName: (card) => card.prefix } },
-    build: (card) => {
+    build: (card, { locale }) => {
         const characterName = CHARACTER_NAMES[card.characterId] || "";
 
         return {
             title: `${characterName} - ${card.prefix}`,
             descriptionKind: "card",
             descriptionValues: { prefix: card.prefix, character: characterName },
-            images: [getCardThumbnailUrl(card.characterId, card.asset, false, "main-jp")],
+            images: [getCardThumbnailUrl(card.characterId, card.asset, false, getSeoAssetSource(locale))],
         };
     },
 });
@@ -127,11 +128,11 @@ const eventDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getEv
     routePrefix: "events",
     getData: getEventMeta,
     structuredData: { parentPageKey: "events", itemList: { getName: (event) => event.name } },
-    build: (event) => ({
+    build: (event, { locale }) => ({
         title: event.name,
         descriptionKind: "event",
         descriptionValues: { name: event.name },
-        images: [getEventBannerUrl(event.asset, "main-jp")],
+        images: [getEventBannerUrl(event.asset, getSeoAssetSource(locale))],
     }),
 });
 
@@ -165,11 +166,11 @@ const gachaDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getGa
     routePrefix: "gacha",
     getData: getGachaMeta,
     structuredData: { parentPageKey: "gacha", itemList: { getName: (gacha) => gacha.name } },
-    build: (gacha) => ({
+    build: (gacha, { locale }) => ({
         title: gacha.name,
         descriptionKind: "gacha",
         descriptionValues: { name: gacha.name },
-        images: [getGachaLogoUrl(gacha.asset, "main-jp")],
+        images: [getGachaLogoUrl(gacha.asset, getSeoAssetSource(locale))],
         twitterCard: "summary",
     }),
 });
@@ -182,11 +183,11 @@ const liveDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getVir
     routePrefix: "live",
     getData: getVirtualLiveMeta,
     structuredData: { parentPageKey: "live", itemList: { getName: (live) => live.name } },
-    build: (live) => ({
+    build: (live, { locale }) => ({
         title: live.name,
         descriptionKind: "live",
         descriptionValues: { name: live.name },
-        images: [getVirtualLiveBannerUrl(live.asset, "main-jp")],
+        images: [getVirtualLiveBannerUrl(live.asset, getSeoAssetSource(locale))],
     }),
 });
 
@@ -214,11 +215,11 @@ const musicDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMu
     routePrefix: "music",
     getData: getMusicMeta,
     structuredData: { parentPageKey: "music", itemList: { getName: (music) => music.title } },
-    build: (music) => ({
+    build: (music, { locale }) => ({
         title: music.title,
         descriptionKind: "music",
         descriptionValues: { title: music.title, lyricist: music.lyricist, composer: music.composer },
-        images: [getMusicJacketUrl(music.asset, "main-jp")],
+        images: [getMusicJacketUrl(music.asset, getSeoAssetSource(locale))],
         twitterCard: "summary",
     }),
 });
@@ -238,7 +239,7 @@ const mysekaiFixtureDetailPreset = defineDetailPreset<NonNullable<ReturnType<typ
             name: fixture.name,
             flavorSuffix: formatMysekaiFlavorSuffix(fixture.flavor, locale),
         },
-        images: [getMysekaiFixtureThumbnailUrl(fixture.asset, "main-jp")],
+        images: [getMysekaiFixtureThumbnailUrl(fixture.asset, getSeoAssetSource(locale))],
         twitterCard: "summary",
     }),
 });

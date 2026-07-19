@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, Suspense } from "react";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import SetupGuide from "@/components/home/SetupGuide";
 import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";

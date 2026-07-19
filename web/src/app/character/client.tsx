@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense } from "react";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
 import { IGameChara, IUnitProfile, UNIT_FIELD_TO_ID, UNIT_ICON_FILES } from "@/types/types";

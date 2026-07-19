@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import MainLayout from "@/components/MainLayout";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useI18n } from "@/contexts/I18nContext";

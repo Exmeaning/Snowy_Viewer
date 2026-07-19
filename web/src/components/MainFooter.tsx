@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useI18n } from "@/contexts/I18nContext";
 import ExternalLink from "@/components/ExternalLink";
 import { NAV_ITEM_LABEL_KEYS } from "@/lib/navigation";

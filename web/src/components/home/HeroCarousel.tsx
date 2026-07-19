@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import { IEventInfo, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
 import { IGachaInfo, ICardInfo, CHAR_COLORS } from "@/types/types";
