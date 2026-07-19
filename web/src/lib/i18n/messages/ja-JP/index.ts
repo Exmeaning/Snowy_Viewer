@@ -602,6 +602,7 @@ export const jaJPMessages = {
         guessJacket: 'ジャケット当て',
         chartPreview: '譜面プレビュー',
         mysekaiPreviewScene: 'マイセカイプレビュー',
+        profileCard: 'プロフィールカード工房',
         assetViewer: 'アセットブラウザ',
         profile: 'プロフィール',
         myCards: 'カード進捗',
@@ -670,6 +671,7 @@ export const jaJPMessages = {
       mysekaiPreview: 'Browse the top MySekai entries',
       mysekaiPreviewRanking: 'View ranked MySekai preview works',
       mysekaiPreviewScene: 'Preview a 3D MySekai scene via UID or browser JSON',
+      profileCard: 'UID からブラウザでカスタムプロフィールカードを描画・書き出し',
       assetViewer: '各ゲームサーバーの静的アセットディレクトリを閲覧および検索する',
       profile: 'View and manage personal information',
       myCards: 'Track your card collection progress',
@@ -3280,6 +3282,54 @@ export const jaJPMessages = {
           joinRoomException: 'An error occurred while joining the room',
           deckInsufficient: 'Not enough cards in the pool ({count}). Please expand the filters.'
         }
+      }
+    },
+    profileCard: {
+      badge: 'TOOLS · プロフィールカード',
+      title: 'プロフィールカード',
+      titleHighlight: '工房',
+      description: 'EN / TW / KR / CN の UID を入力すると、Project SEKAI のカスタムプロフィールカードをブラウザで忠実に描画し、1830×812 の原寸 PNG として書き出せます。',
+      form: {
+        title: 'UID でカードを読み込む',
+        description: 'サーバーを選択してゲーム内 UID を入力し、Cloudflare 認証を通過すると公開されているカスタムプロフィールデータを読み込みます。',
+        uidPlaceholder: 'ゲーム内 UID を入力',
+        server: 'サーバー',
+        submit: 'カードを読み込む',
+        loading: '読み込み中…'
+      },
+      fonts: {
+        title: 'フォントファイル',
+        description: 'フォントのライセンス上、ゲームで使用されているフォントファイル（.ttf / .otf）はご自身でご用意ください。ファイル名が一致すると論理フォントファミリーへ自動的にマッピングされます。',
+        add: 'フォントを追加'
+      },
+      turnstile: {
+        loading: '認証を読み込み中…',
+        completed: '認証に成功しました',
+        expired: '認証の有効期限が切れました。再認証してください',
+        failed: '認証に失敗しました。再試行してください',
+        scriptFailed: '認証スクリプトの読み込みに失敗しました'
+      },
+      errors: {
+        invalidUid: '有効な数字の UID を入力してください',
+        fontRequired: 'フォントファイルを 1 つ以上追加してください',
+        turnstileRequired: '先に認証を完了してください',
+        noCards: 'このアカウントには公開されているカスタムプロフィールカードがありません'
+      },
+      status: {
+        starting: 'レンダラーを起動中…',
+        masterdata: 'ゲームデータを読み込み中…',
+        scene: 'カードシーンを解決中…'
+      },
+      workshop: {
+        pageTab: '{index} ページ目',
+        play: '再生',
+        pause: '一時停止',
+        exportPng: 'PNG を書き出す',
+        exporting: '書き出し中…',
+        backToEntry: '入力に戻る'
+      },
+      attribution: {
+        prefix: 'レンダリングはオープンソースプロジェクト'
       }
     },
     mysekaiPreview: {

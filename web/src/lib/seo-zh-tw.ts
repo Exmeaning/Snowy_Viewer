@@ -144,6 +144,11 @@ export const ZH_TW_SEO_PAGE_METADATA = {
         "透過 JP／CN UID、本機 JSON 檔案或公開 JSON 網址預覽 MySekai 房間配置。",
         ["MySekai", "UID", "房間配置", "JSON", "3D"],
     ),
+    profile_card: page(
+        "名片工坊",
+        "輸入國際服／繁中服／韓服／國服 UID，在瀏覽器中渲染並匯出 Project SEKAI 自訂名片。",
+        ["名片", "自訂名片", "名片工坊", "UID", "匯出 PNG"],
+    ),
     my_cards: page(
         "卡牌進度",
         "追蹤你的 Project SEKAI 卡牌收集進度、培育狀態與帳號卡牌資料。",

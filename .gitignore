@@ -91,3 +91,6 @@ web/public/globe.svg
 web/public/next.svg
 web/public/vercel.svg
 web/public/window.svg
+
+# vendored renderer artifacts copied at build time (scripts/copy-profile-card-sdk.mjs)
+web/public/profile-card-sdk/

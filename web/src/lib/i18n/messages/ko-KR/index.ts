@@ -600,6 +600,7 @@ export const koKRMessages = {
                 guessJacket: "노래를 맞춰보세요",
                 chartPreview: "비트맵 미리보기",
                 mysekaiPreviewScene: "구운 숲 미리보기",
+                profileCard: "프로필 카드 공방",
                 assetViewer: "자산 브라우저",
                 profile: "개인 홈페이지",
                 myCards: "카드 진행",
@@ -668,6 +669,7 @@ export const koKRMessages = {
             mysekaiPreview: "숲속 100대 명승지 이벤트 TOP 제출 순위를 살펴보세요.",
             mysekaiPreviewRanking: "숲구이 명승 100선 미리보기를 확인해보세요",
             mysekaiPreviewScene: "UID 또는 브라우저 측 JSON을 통해 3D 숲 장면 미리보기",
+            profileCard: "UID로 브라우저에서 커스텀 프로필 카드를 렌더링하고 내보내기",
             assetViewer: "각 서버의 정적 리소스 파일 탐색 및 검색",
             profile: "개인정보 조회 및 관리",
             myCards: "카드 수집 진행 상황 추적",
@@ -3278,6 +3280,54 @@ export const koKRMessages = {
                     joinRoomException: "채팅방에 참여하는 중에 오류가 발생했습니다.",
                     deckInsufficient: "카드 풀({count})이 부족합니다. 필터링 범위를 확장하세요."
                 }
+            }
+        },
+        profileCard: {
+            badge: "TOOLS · 프로필 카드",
+            title: "프로필 카드",
+            titleHighlight: "공방",
+            description: "EN / TW / KR / CN UID를 입력하면 Project SEKAI 커스텀 프로필 카드를 브라우저에서 충실하게 렌더링하고 1830×812 원본 크기 PNG로 내보낼 수 있습니다.",
+            form: {
+                title: "UID로 카드 불러오기",
+                description: "서버를 선택하고 게임 내 UID를 입력한 뒤 Cloudflare 인증을 통과하면 공개된 커스텀 프로필 데이터를 불러옵니다.",
+                uidPlaceholder: "게임 내 UID 입력",
+                server: "서버",
+                submit: "카드 불러오기",
+                loading: "불러오는 중…"
+            },
+            fonts: {
+                title: "폰트 파일",
+                description: "폰트 라이선스 문제로 게임에서 사용하는 폰트 파일(.ttf / .otf)은 직접 준비해 주세요. 파일 이름이 일치하면 논리 폰트 패밀리에 자동으로 매핑됩니다.",
+                add: "폰트 추가"
+            },
+            turnstile: {
+                loading: "인증을 불러오는 중…",
+                completed: "인증 완료",
+                expired: "인증이 만료되었습니다. 다시 인증해 주세요",
+                failed: "인증에 실패했습니다. 다시 시도해 주세요",
+                scriptFailed: "인증 스크립트를 불러오지 못했습니다"
+            },
+            errors: {
+                invalidUid: "유효한 숫자 UID를 입력해 주세요",
+                fontRequired: "폰트 파일을 하나 이상 추가해 주세요",
+                turnstileRequired: "먼저 인증을 완료해 주세요",
+                noCards: "이 계정에는 공개된 커스텀 프로필 카드 데이터가 없습니다"
+            },
+            status: {
+                starting: "렌더러 시작 중…",
+                masterdata: "게임 데이터 불러오는 중…",
+                scene: "카드 장면 해석 중…"
+            },
+            workshop: {
+                pageTab: "{index} 페이지",
+                play: "재생",
+                pause: "일시정지",
+                exportPng: "PNG 내보내기",
+                exporting: "내보내는 중…",
+                backToEntry: "입력으로 돌아가기"
+            },
+            attribution: {
+                prefix: "렌더링은 오픈소스 프로젝트 기반"
             }
         },
         mysekaiPreview: {

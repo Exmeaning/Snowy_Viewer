@@ -1,6 +1,54 @@
 import type { MessageTree } from "../types";
 
 export const zhTWPageSecondaryB = {
+    profileCard: {
+        badge: "TOOLS · 名片工坊",
+        title: "自訂名片",
+        titleHighlight: "工坊",
+        description: "輸入國際服 / 繁中服 / 韓服 / 國服 UID，在瀏覽器中重現 Project SEKAI 自訂名片，並匯出 1830×812 原始尺寸 PNG。",
+        form: {
+            title: "透過 UID 載入名片",
+            description: "選擇伺服器並輸入遊戲內 UID，通過 Cloudflare 人機驗證後載入公開的自訂名片資料。",
+            uidPlaceholder: "請輸入遊戲內 UID",
+            server: "伺服器",
+            submit: "載入名片",
+            loading: "載入中…",
+        },
+        fonts: {
+            title: "字型檔案",
+            description: "受字型版權限制，請自行提供遊戲使用的字型檔案（.ttf / .otf）。同名檔案會自動對應到相應的邏輯字型族。",
+            add: "新增字型",
+        },
+        turnstile: {
+            loading: "正在載入人機驗證…",
+            completed: "驗證通過",
+            expired: "驗證已過期，請重新驗證",
+            failed: "驗證失敗，請重試",
+            scriptFailed: "人機驗證指令碼載入失敗",
+        },
+        errors: {
+            invalidUid: "請輸入有效的數字 UID",
+            fontRequired: "請至少新增一個字型檔案",
+            turnstileRequired: "請先完成人機驗證",
+            noCards: "該帳號沒有公開的自訂名片資料",
+        },
+        status: {
+            starting: "正在啟動渲染器…",
+            masterdata: "正在載入遊戲資料…",
+            scene: "正在解析名片場景…",
+        },
+        workshop: {
+            pageTab: "第 {index} 頁",
+            play: "播放",
+            pause: "暫停",
+            exportPng: "匯出 PNG",
+            exporting: "匯出中…",
+            backToEntry: "返回輸入",
+        },
+        attribution: {
+            prefix: "渲染核心來自開源專案",
+        },
+    },
     mysekaiPreview: {
         metadata: {
             topTitle: "MySekai 居家設計大賽",

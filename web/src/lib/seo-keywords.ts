@@ -574,6 +574,20 @@ export const SEO_PAGE_METADATA = {
       "ja-JP": ["MySekai", "UID", "ルームレイアウト", "JSON", "3D"],
     },
   ),
+  profile_card: definePage(
+    "/profile-card",
+    { "zh-CN": "名片工坊", "en-US": "Profile Card Workshop", "ja-JP": "プロフィールカード工房" },
+    {
+      "zh-CN": "输入国际服/繁中服/韩服/国服 UID，在浏览器中渲染并导出 Project SEKAI 自定义名片。",
+      "en-US": "Render and export Project Sekai custom profile cards in the browser via EN / TW / KR / CN UID.",
+      "ja-JP": "EN / TW / KR / CN の UID から Project SEKAI カスタムプロフィールカードをブラウザで描画・書き出しできます。",
+    },
+    {
+      "zh-CN": ["名片", "自定义名片", "名片工坊", "UID", "导出 PNG"],
+      "en-US": ["profile card", "custom profile", "card workshop", "UID", "PNG export"],
+      "ja-JP": ["プロフィールカード", "カスタムプロフィール", "UID", "PNG 出力"],
+    },
+  ),
   my_cards: definePage(
     "/my-cards",
     { "zh-CN": "卡牌进度", "en-US": "Card Progress", "ja-JP": "カード進捗" },
