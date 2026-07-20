@@ -254,6 +254,11 @@ export const ZH_TW_SEO_PAGE_METADATA = {
         "支持 Moesekai 持續維護、更新資料與開發社群工具。",
         ["支持我們", "贊助", "Patreon"],
     ),
+    asset_versions: page(
+        "版本更新紀錄",
+        "追蹤各伺服器 Project SEKAI 資源版本歷史，點擊版本檢視單一版本更新檔案明細。",
+        ["版本更新", "更新紀錄", "資源版本", "Changelog"],
+    ),
     privacy: page(
         "隱私權政策",
         "閱讀 Moesekai 隱私權政策，瞭解本機儲存、Cookie、廣告與第三方服務說明。",

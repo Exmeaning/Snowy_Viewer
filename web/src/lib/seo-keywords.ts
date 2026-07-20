@@ -1230,7 +1230,7 @@ export function getPageKeywords(pageName: string, locale: UiLocale = DEFAULT_UI_
 
 export function getPageSeo(pageKey: SeoPageKey, locale: UiLocale = DEFAULT_UI_LOCALE) {
   const page = SEO_PAGE_METADATA[pageKey];
-  const zhTWPage = locale === "zh-TW" ? ZH_TW_SEO_PAGE_METADATA[pageKey] : undefined;
+  const zhTWPage = locale === "zh-TW" ? ZH_TW_SEO_PAGE_METADATA[pageKey as keyof typeof ZH_TW_SEO_PAGE_METADATA] : undefined;
   return {
     path: page.path,
     title: zhTWPage?.title ?? localizedText(page.title, locale),

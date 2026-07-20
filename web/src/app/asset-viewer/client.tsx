@@ -75,7 +75,7 @@ function getFileIcon(name: string) {
 
 function AssetViewerContent() {
     const { assetSource } = useTheme();
-    const { t } = useI18n();
+    const { t, formatNumber } = useI18n();
 
 
     // Query states
