@@ -64,6 +64,7 @@ export const navigationGroups: NavGroupData[] = [
         href: "/breadcrumb-tools",
         items: [
             { href: "/asset-viewer" },
+            { href: "/asset-versions" },
             { href: "/deck-recommend" },
             { href: "/deck-comparator" },
             { href: "/score-control" },
@@ -166,6 +167,7 @@ export const searchableNavItems: SearchableNavItem[] = [
     { href: "/mysekai-preview", group: "activity", keywords: ["baijing", "housing competition", "mysekai", "top"] },
 
     { href: "/asset-viewer", group: "tools", keywords: ["asset browser", "assets", "explorer", "files", "static"] },
+    { href: "/asset-versions", group: "tools", keywords: ["asset versions", "changelog", "update history", "diff", "version"] },
     { href: "/deck-recommend", group: "tools", keywords: ["deck recommend", "deck", "team"] },
     { href: "/deck-comparator", group: "tools", keywords: ["deck compare", "comparator"] },
     { href: "/score-control", group: "tools", keywords: ["score control", "score", "calculator"] },
@@ -260,6 +262,7 @@ export const NAV_ITEM_LABEL_KEYS: Record<string, string> = {
     "/chart-preview": "layout.nav.items.chartPreview",
     "/mysekai-preview/scene": "layout.nav.items.mysekaiPreviewScene",
     "/asset-viewer": "layout.nav.items.assetViewer",
+    "/asset-versions": "layout.nav.items.assetVersions",
     "/profile": "layout.nav.items.profile",
     "/my-cards": "layout.nav.items.myCards",
     "/my-musics": "layout.nav.items.myMusics",
@@ -305,6 +308,7 @@ export const NAV_ITEM_DESCRIPTION_KEYS: Record<string, string> = {
     "/mysekai-preview": "layout.groupPages.mysekaiPreview",
     "/mysekai-preview/scene": "layout.groupPages.mysekaiPreviewScene",
     "/asset-viewer": "layout.groupPages.assetViewer",
+    "/asset-versions": "layout.groupPages.assetVersions",
     "/profile": "layout.groupPages.profile",
     "/my-cards": "layout.groupPages.myCards",
     "/my-musics": "layout.groupPages.myMusics",

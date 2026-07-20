@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
-import { createPortal } from "react-dom";
 
 import MainLayout from "@/components/MainLayout";
 import BaseFilters, { FilterSection, FilterButton } from "@/components/common/BaseFilters";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
-import { useScrollRestore } from "@/hooks/useScrollRestore";
 import Modal from "@/components/common/Modal";
 import ExternalLink from "@/components/ExternalLink";
+import AssetTosModal from "@/components/common/AssetTosModal";
+import LocalizedLink from "@/components/LocalizedLink";
 
 // Type definitions matching the server response
 export interface AssetBrowserItem {
@@ -123,50 +123,8 @@ function AssetViewerContent() {
         }
     };
 
-    // TOS States
+    // TOS modal visibility (agreement state lives inside AssetTosModal)
     const [showTos, setShowTos] = useState(false);
-    const [tosCountdown, setTosCountdown] = useState(10);
-    const [hasAgreed, setHasAgreed] = useState(false);
-
-    // Load TOS agreement status from localStorage on mount
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            const agreed = localStorage.getItem("asset-viewer-tos-agreed");
-            if (agreed === "true") {
-                setHasAgreed(true);
-            } else {
-                setShowTos(true);
-            }
-        }
-    }, []);
-
-    // Countdown timer for TOS modal
-    useEffect(() => {
-        if (!showTos) return;
-        if (hasAgreed) {
-            setTosCountdown(0);
-            return;
-        }
-        setTosCountdown(10);
-        const timer = setInterval(() => {
-            setTosCountdown((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-        return () => clearInterval(timer);
-    }, [showTos, hasAgreed]);
-
-    const handleAgreeTos = useCallback(() => {
-        if (typeof window !== "undefined") {
-            localStorage.setItem("asset-viewer-tos-agreed", "true");
-            setHasAgreed(true);
-        }
-        setShowTos(false);
-    }, []);
 
     // API response states
     const [items, setItems] = useState<AssetBrowserItem[]>([]);
@@ -215,19 +173,6 @@ function AssetViewerContent() {
     const gatewayDomain = useMemo(() => {
         return assetSource === "overseas" ? "https://storage.pjsk.moe" : "https://storage.exmeaning.com";
     }, [assetSource]);
-
-    // Local scroll restore hook
-    const { displayCount, loadMore, resetDisplayCount } = useScrollRestore({
-        storageKey: "asset-browser",
-        defaultDisplayCount: 60,
-        increment: 60,
-        isReady: !isLoading,
-    });
-
-    // Reset pagination display when navigating folders or changing filters
-    useEffect(() => {
-        resetDisplayCount();
-    }, [prefix, server, filterType, sortBy, sortOrder, searchQuery, resetDisplayCount]);
 
     // Fetch initial directory structure
     const fetchDirectory = useCallback(async () => {
@@ -351,10 +296,6 @@ function AssetViewerContent() {
 
         return list;
     }, [items, searchQuery, filterType, sortBy, sortOrder]);
-
-    const displayedItems = useMemo(() => {
-        return processedItems.slice(0, displayCount);
-    }, [processedItems, displayCount]);
 
     // Fetch text preview file content
     const handleFetchPreviewText = async (file: AssetBrowserItem) => {
@@ -627,6 +568,16 @@ function AssetViewerContent() {
                                 </button>
                             </div>
 
+                            <LocalizedLink
+                                href={`/asset-versions?server=${server}`}
+                                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
+                                title={t("layout.nav.items.assetVersions")}
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </LocalizedLink>
+
                             <button
                                 onClick={fetchDirectory}
                                 className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
@@ -655,7 +606,7 @@ function AssetViewerContent() {
                                 {t("common.action.retry")}
                             </button>
                         </div>
-                    ) : displayedItems.length === 0 ? (
+                    ) : processedItems.length === 0 ? (
                         <div className="p-12 text-center ios-glass-card rounded-2xl text-slate-400">
                             <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
@@ -667,7 +618,7 @@ function AssetViewerContent() {
                             {/* Folder & Files Display */}
                             {viewMode === "grid" ? (
                                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                                    {displayedItems.map((item, index) => {
+                                    {processedItems.map((item, index) => {
                                         const isDir = item.type === "directory";
                                         return (
                                             <div
@@ -722,7 +673,7 @@ function AssetViewerContent() {
                                         <div className="w-28 text-right hidden sm:block">{t("page.assetViewer.version")}</div>
                                     </div>
                                     {/* Rows */}
-                                    {displayedItems.map((item, index) => {
+                                    {processedItems.map((item, index) => {
                                         const isDir = item.type === "directory";
                                         return (
                                             <div
@@ -765,23 +716,8 @@ function AssetViewerContent() {
                                 </div>
                             )}
 
-                            {/* Load More list items locally */}
-                            {displayedItems.length < processedItems.length && (
-                                <div className="mt-8 flex justify-center">
-                                    <button
-                                        onClick={loadMore}
-                                        className="ios-glass-btn ios-glass-btn-primary px-8 py-3 font-bold rounded-2xl flex items-center gap-2"
-                                    >
-                                        {t("page.assetViewer.loadMore")}
-                                        <span className="text-xs font-semibold opacity-75 bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded-full">
-                                            {displayedItems.length} / {processedItems.length}
-                                        </span>
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Load next cursor from server if locally all shown but nextCursor exists */}
-                            {displayedItems.length >= processedItems.length && nextCursor && (
+                            {/* Load next cursor from server */}
+                            {nextCursor && (
                                 <div className="mt-8 flex justify-center">
                                     <button
                                         onClick={fetchMore}
@@ -791,14 +727,19 @@ function AssetViewerContent() {
                                         {isLoadingMore ? (
                                             <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
                                         ) : (
-                                            t("page.assetViewer.loadMore")
+                                            <>
+                                                {t("page.assetViewer.loadMore")}
+                                                <span className="text-xs font-semibold opacity-75 bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded-full">
+                                                    {formatNumber(items.length)}
+                                                </span>
+                                            </>
                                         )}
                                     </button>
                                 </div>
                             )}
 
                             {/* All loaded message */}
-                            {displayedItems.length > 0 && displayedItems.length >= processedItems.length && !nextCursor && (
+                            {!nextCursor && processedItems.length > 0 && (
                                 <div className="mt-8 text-center text-slate-400 text-sm font-medium">
                                     {t("page.assetViewer.allLoaded", { count: processedItems.length })}
                                 </div>
@@ -931,118 +872,7 @@ function AssetViewerContent() {
             </Modal>
 
             {/* Terms of Service Overlay Modal */}
-            {showTos && createPortal(
-                <div className="fixed inset-0 z-[300] isolate flex items-center justify-center p-4 sm:p-6 select-none">
-                    {/* Backdrop */}
-                    <div
-                        className="absolute inset-0 transform-gpu bg-black/35 backdrop-blur-[8px]"
-                        onClick={() => {
-                            if (hasAgreed) setShowTos(false);
-                        }}
-                    />
-
-                    {/* Dialog Container */}
-                    <div className="relative w-full max-w-lg transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[85vh] shadow-2xl animate-in zoom-in-95 duration-200">
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-dashed border-slate-200/60 dark:border-slate-700/40 bg-gradient-to-r from-miku/5 to-transparent flex-shrink-0">
-                            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-miku rounded-full" />
-                                {t("page.assetViewer.tos.title")}
-                            </h2>
-                            {hasAgreed && (
-                                <button
-                                    onClick={() => setShowTos(false)}
-                                    className="p-1.5 -mr-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 island-pill-hover rounded-full transition-colors"
-                                    aria-label={t("common.action.close")}
-                                >
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            )}
-                        </div>
-                        {/* Body */}
-                        <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed custom-scrollbar">
-                            <p className="font-bold text-slate-700 dark:text-slate-200">
-                                {t("page.assetViewer.tos.welcome")}
-                            </p>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                                        <span className="text-miku">1.</span> {t("page.assetViewer.tos.sec1Title")}
-                                    </h3>
-                                    <p className="pl-4 mt-0.5 text-slate-500 dark:text-slate-400">
-                                        {t("page.assetViewer.tos.sec1Content")}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                                        <span className="text-miku">2.</span> {t("page.assetViewer.tos.sec2Title")}
-                                    </h3>
-                                    <p className="pl-4 mt-0.5 text-slate-500 dark:text-slate-400">
-                                        {t("page.assetViewer.tos.sec2Content")}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                                        <span className="text-miku">3.</span> {t("page.assetViewer.tos.sec3Title")}
-                                    </h3>
-                                    <p className="pl-4 mt-0.5 text-slate-500 dark:text-slate-400">
-                                        {t("page.assetViewer.tos.sec3Content")}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                                        <span className="text-miku">4.</span> {t("page.assetViewer.tos.sec4Title")}
-                                    </h3>
-                                    <p className="pl-4 mt-0.5 text-slate-500 dark:text-slate-400">
-                                        {t("page.assetViewer.tos.sec4Content")}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                                        <span className="text-miku">5.</span> {t("page.assetViewer.tos.sec5Title")}
-                                    </h3>
-                                    <p className="pl-4 mt-0.5 text-slate-500 dark:text-slate-400">
-                                        {t("page.assetViewer.tos.sec5Content")}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        {/* Footer */}
-                        <div className="p-4 border-t border-dashed border-slate-200/60 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end flex-shrink-0">
-                            {hasAgreed ? (
-                                <button
-                                    onClick={() => setShowTos(false)}
-                                    className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 ios-glass-btn"
-                                >
-                                    {t("common.action.close")}
-                                </button>
-                            ) : (
-                                <button
-                                    disabled={tosCountdown > 0}
-                                    onClick={handleAgreeTos}
-                                    className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 ${
-                                        tosCountdown > 0
-                                            ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-                                            : "ios-glass-btn ios-glass-btn-primary"
-                                    }`}
-                                >
-                                    {tosCountdown > 0
-                                        ? `${t("page.assetViewer.tos.agree")} (${tosCountdown}s)`
-                                        : t("page.assetViewer.tos.agree")}
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
+            <AssetTosModal open={showTos} onOpenChange={setShowTos} />
         </div>
     );
 }

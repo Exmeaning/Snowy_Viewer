@@ -1014,6 +1014,20 @@ export const SEO_PAGE_METADATA = {
       "ja-JP": ["アセットブラウザ", "アセット", "ファイルプレビュー", "ダウンロード"],
     },
   ),
+  asset_versions: definePage(
+    "/asset-versions",
+    { "zh-CN": "版本更新记录", "en-US": "Asset Version Changelog", "ja-JP": "バージョン更新履歴" },
+    {
+      "zh-CN": "查看 Project SEKAI 各区服资源版本更新历史，浏览每个版本新增与更新的文件明细并预览变更资源。",
+      "en-US": "Track Project Sekai asset version history across regions and inspect the added/updated file diff of each update.",
+      "ja-JP": "Project SEKAI 各サーバーのアセットバージョン履歴を追跡し、各更新の追加・更新ファイル差分を確認できます。",
+    },
+    {
+      "zh-CN": ["版本更新记录", "资源版本", "更新日志", "版本diff"],
+      "en-US": ["asset changelog", "asset versions", "update history", "version diff"],
+      "ja-JP": ["バージョン履歴", "アセット更新", "更新履歴", "差分"],
+    },
+  ),
   blank: definePage(
     "/blank",
     { "zh-CN": "空白素材页", "en-US": "Blank Asset Page", "ja-JP": "空白アセットページ" },
