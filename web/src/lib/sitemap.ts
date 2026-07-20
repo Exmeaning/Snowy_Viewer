@@ -33,11 +33,14 @@ function getData(region: string): SitemapData | null {
     try {
         const dataDir = path.join(process.cwd(), 'public', 'data');
         const regionalPath = path.join(dataDir, `sitemap-data.${region}.json`);
+        const jpPath = path.join(dataDir, 'sitemap-data.jp.json');
+        const legacyPath = path.join(dataDir, 'sitemap-data.json');
+
         const filePath = fs.existsSync(regionalPath)
             ? regionalPath
-            : region === 'jp'
-                ? path.join(dataDir, 'sitemap-data.json')
-                : regionalPath;
+            : fs.existsSync(jpPath)
+                ? jpPath
+                : legacyPath;
         const raw = fs.readFileSync(filePath, 'utf-8');
         const data = JSON.parse(raw) as SitemapData;
         cached.set(region, data);
