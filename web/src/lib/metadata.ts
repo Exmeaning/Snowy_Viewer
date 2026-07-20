@@ -32,6 +32,8 @@ export interface EventMeta {
     name: string;
     type: string;
     asset: string;
+    startAt?: number | string;
+    endAt?: number | string;
 }
 
 export interface GachaMeta {
@@ -47,6 +49,8 @@ export interface CharacterMeta {
 export interface VirtualLiveMeta {
     name: string;
     asset: string;
+    startAt?: number | string;
+    endAt?: number | string;
 }
 
 export interface CostumeMeta {

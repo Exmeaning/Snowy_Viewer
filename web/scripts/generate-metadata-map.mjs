@@ -310,6 +310,8 @@ const datasets = [
                 name: e.name,
                 type: e.eventType,
                 asset: e.assetbundleName,
+                startAt: e.startAt || null,
+                endAt: e.aggregateAt || e.closedAt || e.endAt || null,
             }])
         ),
     },
@@ -349,6 +351,8 @@ const datasets = [
             (Array.isArray(virtualLives) ? virtualLives : []).map(v => [v.id, {
                 name: v.name,
                 asset: v.assetbundleName,
+                startAt: v.startAt || null,
+                endAt: v.endAt || null,
             }])
         ),
     },

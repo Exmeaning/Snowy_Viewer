@@ -127,7 +127,14 @@ const eventDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getEv
     kind: "event",
     routePrefix: "events",
     getData: getEventMeta,
-    structuredData: { parentPageKey: "events", entity: { type: "Event" } },
+    structuredData: {
+        parentPageKey: "events",
+        entity: {
+            type: "Event",
+            getStartDate: (event) => event.startAt,
+            getEndDate: (event) => event.endAt,
+        },
+    },
     build: (event, { locale }) => ({
         title: event.name,
         descriptionKind: "event",
@@ -187,7 +194,14 @@ const liveDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getVir
     kind: "live",
     routePrefix: "live",
     getData: getVirtualLiveMeta,
-    structuredData: { parentPageKey: "live", entity: { type: "Event" } },
+    structuredData: {
+        parentPageKey: "live",
+        entity: {
+            type: "Event",
+            getStartDate: (live) => live.startAt,
+            getEndDate: (live) => live.endAt,
+        },
+    },
     build: (live, { locale }) => ({
         title: live.name,
         descriptionKind: "live",

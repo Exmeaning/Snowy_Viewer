@@ -486,6 +486,8 @@ export interface DetailStructuredDataOptions<T = unknown> {
     entity?: {
         type: DetailEntityType;
         getName?: (data: T, context: { id: string; numericId: number; locale: UiLocale; path: string }) => string;
+        getStartDate?: (data: T) => string | number | undefined;
+        getEndDate?: (data: T) => string | number | undefined;
     };
 }
 
@@ -636,6 +638,8 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
                 locale,
                 description,
                 images: metadataResult.images,
+                startDate: structuredData.entity.getStartDate?.(data),
+                endDate: structuredData.entity.getEndDate?.(data),
             })
             : null;
         const scriptId = id ? `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}-${id}` : `${DETAIL_BREADCRUMB_SCRIPT_PREFIX}-${routePrefix}`;

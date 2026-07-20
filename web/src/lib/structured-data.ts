@@ -98,6 +98,12 @@ export function generateDetailBreadcrumbJsonLd(
     };
 }
 
+function formatIsoDate(timestamp?: number | string | null): string | undefined {
+    if (!timestamp) return undefined;
+    const date = new Date(timestamp);
+    return isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
 export type DetailEntityType = "MusicRecording" | "Event" | "CreativeWork" | "Article" | "Thing";
 
 export interface DetailEntityJsonLdOptions {
@@ -108,21 +114,54 @@ export interface DetailEntityJsonLdOptions {
     description?: string;
     images?: readonly string[];
     datePublished?: string;
+    startDate?: string | number;
+    endDate?: string | number;
     authorName?: string;
 }
 
 /** Build a conservative entity graph for a detail page from fields the site actually owns. */
 export function generateDetailEntityJsonLd(baseUrl: string, options: DetailEntityJsonLdOptions) {
+    const url = localizedAbsoluteUrl(baseUrl, options.url, options.locale);
+    const startDate = formatIsoDate(options.startDate);
+    const endDate = formatIsoDate(options.endDate);
+    const isEvent = options.type === "Event";
+
     return {
         "@context": "https://schema.org" as const,
         "@type": options.type,
         name: options.name,
-        url: localizedAbsoluteUrl(baseUrl, options.url, options.locale),
+        url,
         inLanguage: getSeoLocaleConfig(options.locale).htmlLang,
         ...(options.description ? { description: options.description } : {}),
         ...(options.images?.length ? { image: options.images.map((image) => absoluteUrl(baseUrl, image)) } : {}),
         ...(options.datePublished ? { datePublished: options.datePublished } : {}),
         ...(options.authorName ? { author: { "@type": "Organization" as const, name: options.authorName } } : {}),
+        ...(isEvent ? {
+            eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode" as const,
+            eventStatus: "https://schema.org/EventScheduled" as const,
+            location: {
+                "@type": "VirtualLocation" as const,
+                url,
+            },
+            ...(startDate ? { startDate } : {}),
+            ...(endDate ? { endDate } : {}),
+            organizer: {
+                "@type": "Organization" as const,
+                name: "SEGA / Colorful Palette",
+                url: "https://pjsekai.sega.jp/",
+            },
+            offers: {
+                "@type": "Offer" as const,
+                price: "0",
+                priceCurrency: "JPY",
+                availability: "https://schema.org/InStock" as const,
+                url,
+            },
+            performer: {
+                "@type": "PerformingGroup" as const,
+                name: "Project SEKAI",
+            },
+        } : {}),
     };
 }
 
