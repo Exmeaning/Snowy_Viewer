@@ -986,6 +986,20 @@ export const SEO_PAGE_METADATA = {
       "ja-JP": ["ストーリー入口", "物語"],
     },
   ),
+  breadcrumb_games: definePage(
+    "/breadcrumb-games",
+    { "zh-CN": "游戏", "en-US": "Games", "ja-JP": "ゲーム" },
+    {
+      "zh-CN": "Moesekai 游戏与小游戏页面入口。",
+      "en-US": "Moesekai games and mini-games page shortcuts.",
+      "ja-JP": "Moesekai のゲーム・ミニゲーム関連ページへのショートカットです。",
+    },
+    {
+      "zh-CN": ["游戏入口", "小游戏", "互动游戏"],
+      "en-US": ["game shortcuts", "mini-games", "interactive games"],
+      "ja-JP": ["ゲーム入口", "ミニゲーム", "ゲーム"],
+    },
+  ),
   breadcrumb_tools: definePage(
     "/breadcrumb-tools",
     { "zh-CN": "工具", "en-US": "Tools", "ja-JP": "ツール" },

@@ -561,6 +561,7 @@ export const jaJPMessages = {
         activity: 'アクティビティ',
         story: 'ストーリー',
         community: 'コミュニティ',
+        games: 'ゲーム',
         tools: 'ツール',
         personal: 'プロフィール'
       },

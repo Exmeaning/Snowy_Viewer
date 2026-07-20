@@ -562,6 +562,7 @@ export const enUSMessages = {
                 activity: "Activity",
                 story: "Story",
                 community: "Community",
+                games: "Games",
                 tools: "Tools",
                 personal: "Profile",
             },

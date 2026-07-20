@@ -61,6 +61,14 @@ export const navigationGroups: NavGroupData[] = [
         ],
     },
     {
+        href: "/breadcrumb-games",
+        items: [
+            { href: "/goods-gacha" },
+            { href: "/guess-who" },
+            { href: "/guess-jacket" },
+        ],
+    },
+    {
         href: "/breadcrumb-tools",
         items: [
             { href: "/asset-viewer" },
@@ -69,9 +77,6 @@ export const navigationGroups: NavGroupData[] = [
             { href: "/deck-comparator" },
             { href: "/score-control" },
             { href: "/sticker-maker" },
-            { href: "/goods-gacha" },
-            { href: "/guess-who" },
-            { href: "/guess-jacket" },
             { href: "/chart-preview" },
             { href: "/mysekai-preview/scene" },
         ],
@@ -131,7 +136,7 @@ export function findGroupMatch(pathname: string): NavGroupData | null {
     return null;
 }
 
-export type SearchableNavGroup = "navigation" | "database" | "activity" | "tools" | "personal";
+export type SearchableNavGroup = "navigation" | "database" | "activity" | "games" | "tools" | "personal";
 
 export interface SearchableNavItem {
     href: string;
@@ -166,6 +171,10 @@ export const searchableNavItems: SearchableNavItem[] = [
     { href: "/realtime-ranking-next", group: "activity", keywords: ["realtime ranking next", "live ranking next", "player detail", "rank", "ranking"] },
     { href: "/mysekai-preview", group: "activity", keywords: ["baijing", "housing competition", "mysekai", "top"] },
 
+    { href: "/goods-gacha", group: "games", keywords: ["goods gacha", "goods", "blind box"] },
+    { href: "/guess-who", group: "games", keywords: ["guess who", "quiz", "game"] },
+    { href: "/guess-jacket", group: "games", keywords: ["guess jacket", "guess music", "music quiz"] },
+
     { href: "/asset-viewer", group: "tools", keywords: ["asset browser", "assets", "explorer", "files", "static"] },
     { href: "/asset-versions", group: "tools", keywords: ["asset versions", "changelog", "update history", "diff", "version"] },
     { href: "/deck-recommend", group: "tools", keywords: ["deck recommend", "deck", "team"] },
@@ -174,9 +183,6 @@ export const searchableNavItems: SearchableNavItem[] = [
     { href: "/chart-preview", group: "tools", keywords: ["chart preview", "chart", "mmw", "preview", "sus"] },
     { href: "/mysekai-preview/scene", group: "tools", keywords: ["mysekai preview", "scene preview", "mysekai", "3d", "obj", "scene"] },
     { href: "/sticker-maker", group: "tools", keywords: ["sticker maker", "meme"] },
-    { href: "/goods-gacha", group: "tools", keywords: ["goods gacha", "goods", "blind box"] },
-    { href: "/guess-who", group: "tools", keywords: ["guess who", "quiz", "game"] },
-    { href: "/guess-jacket", group: "tools", keywords: ["guess jacket", "guess music", "music quiz"] },
 
     { href: "/profile", group: "personal", keywords: ["profile", "user", "account"] },
     { href: "/my-cards", group: "personal", keywords: ["my cards", "card progress"] },
@@ -209,6 +215,7 @@ export const SEARCH_STATIC_GROUP_LABEL_KEYS: Record<SearchableNavGroup, string> 
     navigation: "layout.nav.groups.navigation",
     database: "layout.nav.groups.database",
     activity: "layout.nav.groups.activity",
+    games: "layout.nav.groups.games",
     tools: "layout.nav.groups.tools",
     personal: "layout.nav.groups.personal",
 };
@@ -218,6 +225,7 @@ export const NAV_GROUP_LABEL_KEYS: Record<string, string> = {
     "/breadcrumb-activity": "layout.nav.groups.activity",
     "/breadcrumb-story": "layout.nav.groups.story",
     "/breadcrumb-community": "layout.nav.groups.community",
+    "/breadcrumb-games": "layout.nav.groups.games",
     "/breadcrumb-tools": "layout.nav.groups.tools",
     "/breadcrumb-personal": "layout.nav.groups.personal",
 };

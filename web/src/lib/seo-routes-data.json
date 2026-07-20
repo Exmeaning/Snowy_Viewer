@@ -53,6 +53,7 @@
   { "path": "/breadcrumb-activity/", "pageKey": "breadcrumb_activity", "priority": 0.3, "changefreq": "monthly", "indexable": false, "excludeReason": "Navigation-only shortcut page with no unique searchable content" },
   { "path": "/breadcrumb-story/", "pageKey": "breadcrumb_story", "priority": 0.3, "changefreq": "monthly", "indexable": false, "excludeReason": "Navigation-only shortcut page with no unique searchable content" },
   { "path": "/breadcrumb-community/", "pageKey": "breadcrumb_community", "priority": 0.3, "changefreq": "monthly", "indexable": false, "excludeReason": "Navigation-only shortcut page with no unique searchable content" },
+  { "path": "/breadcrumb-games/", "pageKey": "breadcrumb_games", "priority": 0.3, "changefreq": "monthly", "indexable": false, "excludeReason": "Navigation-only shortcut page with no unique searchable content" },
   { "path": "/breadcrumb-tools/", "pageKey": "breadcrumb_tools", "priority": 0.3, "changefreq": "monthly", "indexable": false, "excludeReason": "Navigation-only shortcut page with no unique searchable content" },
   { "path": "/breadcrumb-personal/", "pageKey": "breadcrumb_personal", "priority": 0.3, "changefreq": "monthly", "indexable": false, "excludeReason": "Navigation-only shortcut page with no unique searchable content" },
   { "path": "/asset-viewer/", "pageKey": "asset_viewer", "priority": 0.6, "changefreq": "weekly", "indexable": true },

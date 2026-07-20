@@ -561,6 +561,7 @@ export const zhCNMessages = {
                 activity: "活动",
                 story: "剧情",
                 community: "社区",
+                games: "游戏",
                 tools: "工具",
                 personal: "个人",
             },

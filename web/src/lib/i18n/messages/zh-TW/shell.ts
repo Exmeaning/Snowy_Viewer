@@ -13,6 +13,7 @@ export const zhTWLayout = {
             activity: "活動",
             story: "劇情",
             community: "社群",
+            games: "遊戲",
             tools: "工具",
             personal: "個人",
         },

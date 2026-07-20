@@ -559,6 +559,7 @@ export const koKRMessages = {
                 activity: "활동",
                 story: "줄거리",
                 community: "커뮤니티",
+                games: "게임",
                 tools: "도구",
                 personal: "개인"
             },

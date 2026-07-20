@@ -294,6 +294,11 @@ export const ZH_TW_SEO_PAGE_METADATA = {
         "Moesekai 劇情相關頁面的入口。",
         ["劇情入口", "故事"],
     ),
+    breadcrumb_games: page(
+        "遊戲",
+        "Moesekai 遊戲與小遊戲頁面的入口。",
+        ["遊戲入口", "小遊戲", "互動遊戲"],
+    ),
     breadcrumb_tools: page(
         "工具",
         "Moesekai 實用工具頁面的入口。",
