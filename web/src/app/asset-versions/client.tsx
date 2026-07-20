@@ -133,14 +133,6 @@ function AssetVersionsContent() {
         return "";
     });
 
-    const [changeTypeFilter, setChangeTypeFilter] = useState<"added" | "updated" | "all">((): "added" | "updated" | "all" => {
-        if (typeof window !== "undefined") {
-            const params = new URLSearchParams(window.location.search);
-            const act = params.get("action");
-            if (act === "added" || act === "updated" || act === "all") return act;
-        }
-        return "added";
-    });
     const [typeFilter, setTypeFilter] = useState<string>(() => {
         if (typeof window !== "undefined") {
             const params = new URLSearchParams(window.location.search);
@@ -158,11 +150,6 @@ function AssetVersionsContent() {
         url.searchParams.set("server", server);
         if (version) {
             url.searchParams.set("version", version);
-            if (changeTypeFilter !== "added") {
-                url.searchParams.set("action", changeTypeFilter);
-            } else {
-                url.searchParams.delete("action");
-            }
             if (typeFilter !== "default") {
                 url.searchParams.set("types", typeFilter);
             } else {
@@ -174,7 +161,7 @@ function AssetVersionsContent() {
             url.searchParams.delete("types");
         }
         window.history.replaceState({}, "", url.toString());
-    }, [server, version, changeTypeFilter, typeFilter]);
+    }, [server, version, typeFilter]);
 
     // Handle back/forward navigation
     useEffect(() => {
@@ -185,12 +172,6 @@ function AssetVersionsContent() {
                 setServer(serverParam);
             }
             setVersion(params.get("version") || "");
-            const act = params.get("action");
-            if (act === "added" || act === "updated" || act === "all") {
-                setChangeTypeFilter(act);
-            } else {
-                setChangeTypeFilter("added");
-            }
             setTypeFilter(params.get("types") || "default");
         };
 
@@ -289,9 +270,6 @@ function AssetVersionsContent() {
             setDiffMeta(null);
 
             let url = `${gatewayDomain}/api/assets/diff?server=${server}&version=${encodeURIComponent(version)}&limit=${DIFF_PAGE_LIMIT}`;
-            if (changeTypeFilter) {
-                url += `&action=${changeTypeFilter}`;
-            }
             if (typeFilter && typeFilter !== "default") {
                 url += `&types=${encodeURIComponent(typeFilter)}`;
             }
@@ -318,7 +296,7 @@ function AssetVersionsContent() {
         } finally {
             setIsDiffLoading(false);
         }
-    }, [server, version, changeTypeFilter, typeFilter, gatewayDomain]);
+    }, [server, version, typeFilter, gatewayDomain]);
 
     useEffect(() => {
         fetchDiff();
@@ -330,9 +308,6 @@ function AssetVersionsContent() {
             setIsDiffLoadingMore(true);
 
             let url = `${gatewayDomain}/api/assets/diff?server=${server}&version=${encodeURIComponent(version)}&limit=${DIFF_PAGE_LIMIT}&cursor=${encodeURIComponent(diffCursor)}`;
-            if (changeTypeFilter) {
-                url += `&action=${changeTypeFilter}`;
-            }
             if (typeFilter && typeFilter !== "default") {
                 url += `&types=${encodeURIComponent(typeFilter)}`;
             }
@@ -349,7 +324,7 @@ function AssetVersionsContent() {
         } finally {
             setIsDiffLoadingMore(false);
         }
-    }, [server, version, changeTypeFilter, typeFilter, gatewayDomain, diffCursor, isDiffLoadingMore]);
+    }, [server, version, typeFilter, gatewayDomain, diffCursor, isDiffLoadingMore]);
 
     // ==================== Diff filtering & pagination ====================
 
@@ -376,11 +351,10 @@ function AssetVersionsContent() {
     }, [diffItems, searchQuery, sortBy, sortOrder]);
 
     const isDiffView = version !== "";
-    const hasActiveDiffFilters = searchQuery !== "" || changeTypeFilter !== "added" || typeFilter !== "default" || sortBy !== "size" || sortOrder !== "desc";
+    const hasActiveDiffFilters = searchQuery !== "" || typeFilter !== "default" || sortBy !== "size" || sortOrder !== "desc";
 
     const resetFilters = useCallback(() => {
         setSearchQuery("");
-        setChangeTypeFilter("added");
         setTypeFilter("default");
         setSortBy("size");
         setSortOrder("desc");
@@ -468,24 +442,6 @@ function AssetVersionsContent() {
             </FilterSection>
 
             {isDiffView && (
-                <FilterSection label={t("page.assetVersions.changeTypeLabel")}>
-                    <div className="grid grid-cols-3 gap-2">
-                        {(["added", "updated", "all"] as const).map(type => (
-                            <FilterButton
-                                key={type}
-                                selected={changeTypeFilter === type}
-                                onClick={() => setChangeTypeFilter(type)}
-                            >
-                                {type === "added" ? t("page.assetVersions.changeAdded") :
-                                 type === "updated" ? t("page.assetVersions.changeUpdated") :
-                                 t("page.assetVersions.filterAll")}
-                            </FilterButton>
-                        ))}
-                    </div>
-                </FilterSection>
-            )}
-
-            {isDiffView && (
                 <FilterSection label={t("page.assetVersions.fileTypeLabel")}>
                     <div className="grid grid-cols-3 gap-2">
                         <FilterButton
@@ -518,7 +474,6 @@ function AssetVersionsContent() {
         server,
         version,
         searchQuery,
-        changeTypeFilter,
         typeFilter,
         sortBy,
         sortOrder,
