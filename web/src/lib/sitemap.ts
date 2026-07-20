@@ -10,7 +10,7 @@ import path from 'path';
 import { headers } from 'next/headers';
 
 import { INDEXABLE_SEO_ROUTES } from '@/lib/seo-routes';
-import { getLocaleRouteConfig, SUPPORTED_ROUTE_LOCALES, type RouteLocale } from '@/lib/locale-routing';
+import { DEFAULT_ROUTE_LOCALE, getLocaleRouteConfig, SUPPORTED_ROUTE_LOCALES, type RouteLocale } from '@/lib/locale-routing';
 
 interface SitemapRoute {
     path: string;
@@ -96,7 +96,7 @@ function buildUrlEntry(
         const hreflang = getLocaleRouteConfig(alternateLocale).uiLocale;
         return `    <xhtml:link rel="alternate" hreflang="${hreflang}" href="${escapeXml(joinUrl(baseUrl, localizedRoutePath(route.path, alternateLocale)))}" />`;
     });
-    alternates.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(joinUrl(baseUrl, '/'))}" />`);
+    alternates.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(joinUrl(baseUrl, localizedRoutePath(route.path, DEFAULT_ROUTE_LOCALE)))}" />`);
     return `  <url>
     <loc>${escapeXml(joinUrl(baseUrl, localizedRoutePath(route.path, locale)))}</loc>
 ${alternates.join('\n')}
