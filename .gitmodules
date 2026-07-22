@@ -1,0 +1,3 @@
+[submodule "sekai-mmw-preview-web"]
+	path = sekai-mmw-preview-web
+	url = https://github.com/watagashi-uni/sekai-mmw-preview-web.git
