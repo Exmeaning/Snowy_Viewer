@@ -785,7 +785,7 @@ export const zhCNMessages = {
             refreshing: "刷新中...",
         },
         footer: {
-            version: "Moesekai · 1.4-preview-beta4",
+            version: "Moesekai · 1.6-preview-beta1",
         },
         sidebar: {
             notLoggedIn: "未登录",
@@ -3847,6 +3847,12 @@ export const zhCNMessages = {
             viewList: "列表",
             typeDirectory: "文件夹",
             typeAsset: "文件",
+            typeBundle: "压缩包",
+            typeBundlePlural: "压缩包",
+            fileCount: "文件数量",
+            totalSize: "总大小",
+            bundleDetails: "压缩包内容",
+            viewBundleFiles: "查看压缩包",
             size: "大小",
             version: "版本",
             source: "来源",

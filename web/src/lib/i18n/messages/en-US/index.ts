@@ -786,7 +786,7 @@ export const enUSMessages = {
             refreshing: "Refreshing...",
         },
         footer: {
-            version: "Moesekai · 1.4-preview-beta4",
+            version: "Moesekai · 1.6-preview-beta1",
         },
         sidebar: {
             notLoggedIn: "Not signed in",
@@ -3848,6 +3848,12 @@ export const enUSMessages = {
             viewList: "List",
             typeDirectory: "Folder",
             typeAsset: "File",
+            typeBundle: "Archive",
+            typeBundlePlural: "Archives",
+            fileCount: "File Count",
+            totalSize: "Total Size",
+            bundleDetails: "Archive Contents",
+            viewBundleFiles: "View Archive",
             size: "Size",
             version: "Version",
             source: "Source",
