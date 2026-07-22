@@ -61,11 +61,11 @@ AGPL-3.0
 
 ## Docker 部署 (Go 后端独立部署)
 
-当您在 Pages (如 Cloudflare Pages) 部署了前端静态文件后，可以使用全新的 `Dockerfile.go` 将 Go 后端作为独立服务构建和部署。
+当您在 Pages (如 Cloudflare Pages) 部署了前端静态文件后，可以使用 `Dockerfile.backend` 将 Go 后端作为独立服务构建和部署。
 
 ### 1. 构建 Docker 镜像
 ```bash
-docker build -t pjsk-go-backend -f Dockerfile.go .
+docker build -t pjsk-go-backend -f Dockerfile.backend .
 ```
 
 ### 2. 启动容器
