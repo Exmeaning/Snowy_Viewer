@@ -47,6 +47,30 @@ test("lyrics loaders consume only the published index and music detail artifact 
   assert.equal(requests.length, 2, "successful artifacts remain in bounded memory caches");
 });
 
+test("simultaneous lyrics index callers share one in-flight request and validated result", async () => {
+  let releaseFetch;
+  const fetchGate = new Promise((resolve) => {
+    releaseFetch = resolve;
+  });
+  let fetchCount = 0;
+  globalThis.fetch = async () => {
+    fetchCount += 1;
+    await fetchGate;
+    return { ok: true, status: 200, json: async () => structuredClone(fixture.index) };
+  };
+  const lyrics = await importLyrics();
+
+  const first = lyrics.fetchLyricsIndex();
+  const concurrent = lyrics.fetchLyricsIndex();
+  assert.equal(fetchCount, 1, "concurrent callers must reuse indexRequest");
+
+  releaseFetch();
+  const [firstIndex, concurrentIndex] = await Promise.all([first, concurrent]);
+  assert.strictEqual(concurrentIndex, firstIndex, "both callers resolve the same validated index object");
+  assert.deepEqual(firstIndex, fixture.index);
+  assert.equal(fetchCount, 1);
+});
+
 test("lyrics publication lookup gates detail routes on the published index", async () => {
   const originalNow = Date.now;
   let now = 100_000;
