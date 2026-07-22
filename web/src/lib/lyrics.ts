@@ -134,6 +134,12 @@ export async function fetchLyricsIndex(signal?: AbortSignal): Promise<ILyricsInd
     return indexRequest;
 }
 
+export async function getPublishedLyricsIndexEntry(musicId: number): Promise<ILyricsIndexEntry | null> {
+    if (!Number.isInteger(musicId) || musicId <= 0) return null;
+    const index = await fetchLyricsIndex();
+    return index.items.find((item) => item.musicId === musicId) ?? null;
+}
+
 export async function fetchLyricsDocument(musicId: number, signal?: AbortSignal): Promise<ILyricsDocument> {
     if (!Number.isInteger(musicId) || musicId <= 0) {
         throw new LyricsLoadError("Invalid lyrics music ID");

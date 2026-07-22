@@ -34,6 +34,11 @@ export const ZH_TW_SEO_PAGE_METADATA = {
         "瀏覽 Project SEKAI 歌曲清單，檢視譜面難度、定數、作詞作曲與 MV 資訊。",
         ["歌曲", "歌曲圖鑑", "譜面", "歌曲 Meta"],
     ),
+    lyrics: page(
+        "歌詞資料庫",
+        "瀏覽 Project SEKAI 已發布的歌曲歌詞，對照日文原文、簡體中文與英文翻譯。",
+        ["歌詞", "歌曲歌詞", "歌詞翻譯"],
+    ),
     soundtrack: page(
         "遊戲原聲帶",
         "收聽並瀏覽 Project SEKAI 遊戲原聲帶、背景音樂與相關音訊資源。",

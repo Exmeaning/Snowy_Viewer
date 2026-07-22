@@ -10,20 +10,21 @@ This inventory is generated as a human-readable companion to `docs/translation-c
 - Dynamic content targets are `zh-CN` and `en-US`.
 - `ja-JP`, `zh-TW`, and `ko-KR` never reuse Chinese or English dynamic overlays; they safely render Japanese source content where no official regional content is already selected.
 - Community aliases, third-party guides/manga, user identity, and nontext values are not counted as translation coverage.
+- `node web/scripts/check-translation-coverage.mjs` derives translation categories, story families, event group fields, and lyrics fields/consumers from source and rejects inventory drift.
 
 ## Counts
 
 | Status | Count |
 | --- | ---: |
 | Covered | 2 |
-| Partial | 20 |
+| Partial | 21 |
 | Required but uncovered | 15 |
 | Official regional source | 3 |
 | Explicitly excluded | 4 |
 | Nontext | 1 |
-| Total | 45 |
+| Total | 46 |
 
-Because 15 required entries remain uncovered and 20 more are partial, this document makes no full-coverage claim.
+Because 15 required entries remain uncovered and 21 more are partial, this document makes no full-coverage claim.
 
 ## Inventory
 
@@ -58,7 +59,8 @@ Because 15 required entries remain uncovered and 20 more are partial, this docum
 | `outside-character-name` | music detail | outsideCharacters; name | outside character ID + field | uncovered | uncovered | required-uncovered |
 | `manga-curated-metadata` | manga views | third-party title and contributors | manga ID / outside artifacts | not claimed | not claimed | excluded; licensing decision |
 | `guide-documents` | guide views | community title, tags, Markdown | guide ID + version / outside artifacts | not claimed | not claimed | excluded; ownership decision |
-| `event-story-metadata` | event story list/reader | eventStories + event artifact; outline/title | event ID + episode + field | title partial | artifact supported | partial; outline split |
+| `event-story-metadata` | event story list/reader | mirror/masterdata + event artifacts; title_jp/title_cn/episode title | event ID + episode + field | mirror/category title partial | artifact title + source fallback | partial |
+| `event-story-summaries` | event story group | eventStories + mirror; outline_jp/outline_cn/event and chapter summary_cn | event ID + chapter + summary field | mirror outline/summaries partial | JP outline fallback; summaries uncovered | partial; CN summaries never leak to non-zh |
 | `event-story-lines` | event reader | scenario + event artifact; body/display name | scenario + TalkData index required; current source string | backward-compatible partial | isolated artifact supported | partial |
 | `unit-story-lines` | unit reader | unit scenarios; title/body/display name | scenario + TalkData index + field | uncovered | uncovered | required-uncovered |
 | `card-story-lines` | card reader | card scenarios; title/body/display name/gachaPhrase | card/scenario + TalkData index + field | uncovered | uncovered | required-uncovered |
@@ -68,7 +70,7 @@ Because 15 required entries remain uncovered and 20 more are partial, this docum
 | `story-special-effects` | all story readers | scenarios + mobs; telop/fullscreen/selectable/mob text | scenario + effect index + field | uncovered | uncovered | required-uncovered; Talk-only merge today |
 | `lyrics-index` | lyrics list | published `lyrics/index.json`; IDs, titles, locale availability | music ID / schema v1 index | published subset | published subset | partial; absent songs not claimed |
 | `lyrics-detail` | lyrics detail | published `lyrics/{musicId}.json`; source, translations, performers, attribution | music ID + line ID / schema v1 document | per-line + JP fallback | per-line + JP fallback | partial; absent lines not claimed |
-| `lyrics-performers` | lyrics detail | performer IDs + CHAR_COLORS + UI names | character ID / performerIds | accessible names | accessible names | covered |
+| `lyrics-performers` | lyrics detail | performer IDs + CHAR_COLORS + visible/UI names | character ID / performerIds | labeled and contrast-safe | labeled and contrast-safe | covered |
 | `search-index` | command palette, music, lyrics | published n/cn/en/g/c plus lyrics titles | group + entity ID / builder must publish en | cn searched | en searched | partial; backend/exhaustiveness external |
 | `seo-copy-and-entity-names` | static/detail routes | compile-time SEO + regional metadata | page/detail key + entity ID | templates covered | templates covered | partial; overlay entity reuse incomplete |
 | `runtime-remote-ui` | all | forbidden fixed UI remote source | i18n key / checked-in artifacts instead | excluded | excluded | excluded by frozen decision |
@@ -77,4 +79,4 @@ Because 15 required entries remain uncovered and 20 more are partial, this docum
 
 ## Required Follow-Up
 
-The blocking content-model gaps are stable ID-based fields for masterdata text, a scenario ID plus action-index contract for every story family, source version/hash invalidation, a shared localized reward/entity resolver, and backend publication of the `en` search field. Lyrics infrastructure is implemented, but coverage remains bounded by the index and detail artifacts actually published.
+The blocking content-model gaps are stable ID-based fields for masterdata text, a scenario ID plus action-index contract for every story family, a locale-aware event/chapter summary artifact, source version/hash invalidation, a shared localized reward/entity resolver, and backend publication of the `en` search field. Lyrics infrastructure is implemented, but coverage remains bounded by the index and detail artifacts actually published.

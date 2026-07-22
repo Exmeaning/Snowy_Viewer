@@ -1542,7 +1542,8 @@ export const koKRMessages = {
             japanese: "일본어 원문",
             chinese: "중국어 간체",
             english: "영어",
-            sourceFallback: "대상 언어 번역이 없어 일본어 원문을 표시합니다."
+            sourceFallback: "대상 언어 번역이 없어 일본어 원문을 표시합니다.",
+            attribution: "출처 및 크레딧"
         },
         musicMeta: {
             badge: "노래 메타데이터",

@@ -263,16 +263,18 @@ export const SEO_PAGE_METADATA = {
   ),
   lyrics: definePage(
     "/lyrics",
-    { "zh-CN": "歌词资料库", "en-US": "Lyrics Library", "ja-JP": "歌詞ライブラリ" },
+    { "zh-CN": "歌词资料库", "en-US": "Lyrics Library", "ja-JP": "歌詞ライブラリ", "ko-KR": "가사 라이브러리" },
     {
       "zh-CN": "浏览 Project SEKAI 已发布歌曲歌词，对照日文原文、简体中文与英文翻译。",
       "en-US": "Browse published Project Sekai song lyrics with Japanese source text, Simplified Chinese, and English translations.",
       "ja-JP": "Project SEKAI の公開済み歌詞を、日本語原文・簡体字中国語・英語翻訳で閲覧できます。",
+      "ko-KR": "Project SEKAI의 공개된 노래 가사를 일본어 원문, 중국어 간체 및 영어 번역과 함께 확인할 수 있습니다.",
     },
     {
       "zh-CN": ["歌词", "歌曲歌词", "歌词翻译"],
       "en-US": ["lyrics", "song lyrics", "lyrics translation"],
       "ja-JP": ["歌詞", "楽曲歌詞", "歌詞翻訳"],
+      "ko-KR": ["가사", "노래 가사", "가사 번역"],
     },
   ),
   soundtrack: definePage(

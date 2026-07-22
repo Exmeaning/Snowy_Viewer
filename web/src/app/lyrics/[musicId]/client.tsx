@@ -97,6 +97,13 @@ export default function LyricsDetailClient() {
                             </div>
                         </header>
 
+                        {lyrics.attribution && (
+                            <aside className="ios-glass-card mb-6 rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                                <span className="font-bold text-primary-text">{t("page.lyrics.attribution")}: </span>
+                                <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{lyrics.attribution}</span>
+                            </aside>
+                        )}
+
                         {lyrics.lines.length === 0 ? (
                             <div className="ios-glass-card rounded-2xl p-10 text-center text-slate-500 dark:text-slate-400">
                                 {t("page.lyrics.emptyDocument")}

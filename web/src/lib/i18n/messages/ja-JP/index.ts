@@ -1544,7 +1544,8 @@ export const jaJPMessages = {
       japanese: '日本語原文',
       chinese: '簡体字中国語',
       english: '英語',
-      sourceFallback: '対象言語の翻訳がないため、日本語原文を表示しています。'
+      sourceFallback: '対象言語の翻訳がないため、日本語原文を表示しています。',
+      attribution: '出典・クレジット'
     },
     musicMeta: {
       badge: 'Song Metadata',

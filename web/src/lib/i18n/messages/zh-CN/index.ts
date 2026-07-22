@@ -1521,6 +1521,7 @@ export const zhCNMessages = {
             chinese: "简体中文",
             english: "English",
             sourceFallback: "暂无目标语言翻译，显示日文原文",
+            attribution: "来源与署名",
         },
         musicMeta: {
             badge: "歌曲元数据",

@@ -19,8 +19,18 @@ type PerformerStyle = CSSProperties & {
 export default function LyricText({ text, performerIds }: LyricTextProps) {
     const { t } = useI18n();
     const performers = performerIds
-        .map((id) => ({ id, colors: getLyricsPerformerColors(id), name: getCharacterName(t, id) }))
-        .filter((performer): performer is { id: number; colors: { base: string; light: string; dark: string }; name: string } => Boolean(performer.colors));
+        .map((id) => ({
+            id,
+            colors: getLyricsPerformerColors(id),
+            name: getCharacterName(t, id),
+            shortName: getCharacterName(t, id, "short"),
+        }))
+        .filter((performer): performer is {
+            id: number;
+            colors: { base: string; light: string; dark: string };
+            name: string;
+            shortName: string;
+        } => Boolean(performer.colors));
     const names = performers.map((performer) => performer.name).join(", ");
     const ariaLabel = names ? `${names}: ${text}` : text;
 
@@ -49,12 +59,21 @@ export default function LyricText({ text, performerIds }: LyricTextProps) {
             {text}
             {performers.length > 1 && (
                 <sup className="ml-1 inline-flex items-center gap-0.5 whitespace-nowrap align-super leading-none" aria-hidden="true">
-                    {performers.map((performer) => (
+                    {performers.map((performer, index) => (
                         <span
-                            key={performer.id}
-                            className="inline-block h-1.5 w-1.5 shrink-0 rounded-full ring-1 ring-black/10 dark:ring-white/20"
-                            style={{ backgroundColor: performer.colors.base }}
-                        />
+                            key={`${performer.id}-${index}`}
+                            title={performer.name}
+                            className="inline-flex items-center gap-0.5 rounded-full bg-slate-100 px-1 py-0.5 text-[9px] font-bold leading-none text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                        >
+                            <span
+                                className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--performer-light)] ring-1 ring-slate-400/50 dark:bg-[var(--performer-dark)]"
+                                style={{
+                                    "--performer-light": performer.colors.light,
+                                    "--performer-dark": performer.colors.dark,
+                                } as PerformerStyle}
+                            />
+                            <span>{performer.shortName}</span>
+                        </span>
                     ))}
                 </sup>
             )}

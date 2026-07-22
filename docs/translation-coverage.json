@@ -7,10 +7,14 @@
     "sourceFallbackLocales": ["ja-JP", "zh-TW", "ko-KR"],
     "coverageClaim": "partial"
   },
+  "sourceValidation": {
+    "command": "node web/scripts/check-translation-coverage.mjs",
+    "derives": ["TranslationData categories", "story route families", "event group source fields", "lyrics artifact fields and publication/UI consumers"]
+  },
   "summary": {
-    "entries": 45,
+    "entries": 46,
     "covered": 2,
-    "partial": 20,
+    "partial": 21,
     "requiredUncovered": 15,
     "officialRegional": 3,
     "excluded": 4,
@@ -429,11 +433,25 @@
       "components": ["event story list and reader"],
       "sourceType": "masterdata-plus-event-artifact",
       "sourceFiles": ["eventStories.json", "translation/eventStory/event_{id}.json", "translation/en-US/eventStory/event_{id}.json"],
-      "fields": ["outline", "episode title"],
+      "fields": ["title_jp", "title_cn", "episode title"],
       "stableId": "event id plus episode number plus field",
-      "backendMapping": "event artifact episode title; outline remains split across sources",
-      "zh": "title partial",
-      "en": "locale artifact supported",
+      "backendMapping": "group title selects title_cn only for zh-CN; en-US may use its event/category artifact; every other locale uses title_jp/source; episode artifacts map by episode number",
+      "zh": "mirror/category and episode title partial",
+      "en": "locale artifact title supported with Japanese/source fallback",
+      "status": "partial",
+      "exclusion": null
+    },
+    {
+      "id": "event-story-summaries",
+      "routes": ["/story/event/{eventId}"],
+      "components": ["StoryEventDetailClient", "ChapterItem"],
+      "sourceType": "japanese-source-plus-zh-only-mirror-summary",
+      "sourceFiles": ["web/src/app/story/event/[eventId]/client.tsx", "eventStories.json", "story detail mirror"],
+      "fields": ["outline_jp", "outline_cn", "event summary_cn", "chapter summary_cn"],
+      "stableId": "event id plus chapter number plus summary field",
+      "backendMapping": "outline_jp is the non-zh source; outline_cn and both summary_cn fields are zh-CN-only mirror content; no en-US event/chapter summary artifact exists",
+      "zh": "mirror outline and summaries partial",
+      "en": "Japanese outline fallback; event and chapter summaries remain uncovered",
       "status": "partial",
       "exclusion": null
     },
@@ -572,8 +590,8 @@
       "fields": ["performerIds"],
       "stableId": "game character id",
       "backendMapping": "line performerIds array",
-      "zh": "accessible names from compile-time UI messages",
-      "en": "accessible names from compile-time UI messages",
+      "zh": "visible short labels, full accessible names, and contrast-adjusted CHAR_COLORS",
+      "en": "visible short labels, full accessible names, and contrast-adjusted CHAR_COLORS",
       "status": "covered",
       "exclusion": null
     },

@@ -1522,6 +1522,7 @@ export const enUSMessages = {
             chinese: "Simplified Chinese",
             english: "English",
             sourceFallback: "No target translation yet; showing the Japanese source.",
+            attribution: "Source / attribution",
         },
         musicMeta: {
             badge: "Song Metadata",

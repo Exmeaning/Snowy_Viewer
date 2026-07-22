@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 
 import {
@@ -44,6 +45,25 @@ test("lyrics loaders consume only the published index and music detail artifact 
   await lyrics.fetchLyricsIndex();
   await lyrics.fetchLyricsDocument(1);
   assert.equal(requests.length, 2, "successful artifacts remain in bounded memory caches");
+});
+
+test("lyrics publication lookup gates detail routes on the published index", async () => {
+  let fetchCount = 0;
+  globalThis.fetch = async () => {
+    fetchCount += 1;
+    return { ok: true, status: 200, json: async () => structuredClone(fixture.index) };
+  };
+  const lyrics = await importLyrics();
+
+  assert.deepEqual(await lyrics.getPublishedLyricsIndexEntry(1), fixture.index.items[0]);
+  assert.equal(await lyrics.getPublishedLyricsIndexEntry(999), null);
+  assert.equal(await lyrics.getPublishedLyricsIndexEntry(Number.NaN), null);
+  assert.equal(fetchCount, 1, "publication checks share the validated index cache");
+
+  const page = readWeb("src/app/lyrics/[musicId]/page.tsx");
+  assert.match(page, /getPublishedLyricsIndexEntry/);
+  assert.match(page, /createDetailFallbackMetadata\("lyrics"/);
+  assert.match(page, /if \(!publication\) notFound\(\)/);
 });
 
 test("lyrics loader rejects missing and malformed artifacts without manufacturing content", async () => {
@@ -102,6 +122,8 @@ test("single-performer colors meet WCAG contrast in light and dark surfaces", as
     assert.equal(adjusted.base, color);
     assert.ok(colors.contrastRatio(adjusted.light, "#ffffff") >= 4.5, `${color} light contrast`);
     assert.ok(colors.contrastRatio(adjusted.dark, "#0f172a") >= 4.5, `${color} dark contrast`);
+    assert.ok(colors.contrastRatio(adjusted.light, "#f1f5f9") >= 3, `${color} light marker contrast`);
+    assert.ok(colors.contrastRatio(adjusted.dark, "#1e293b") >= 3, `${color} dark marker contrast`);
   }
   assert.equal(colors.getLyricsPerformerColors(999), null);
 });
@@ -124,6 +146,11 @@ test("performer rendering uses only CHAR_COLORS and preserves single, multi, and
   assert.match(source, /leading-none/);
   assert.match(source, /whitespace-nowrap/);
   assert.doesNotMatch(source, /flex-wrap/);
+  assert.match(source, /performer\.shortName/);
+  assert.match(source, /title=\{performer\.name\}/);
+  assert.match(source, /bg-\[var\(--performer-light\)\]/);
+  assert.match(source, /dark:bg-\[var\(--performer-dark\)\]/);
+  assert.doesNotMatch(source, /backgroundColor: performer\.colors\.base/);
   assert.match(source, /\[overflow-wrap:anywhere\]/);
   assert.deepEqual(fixture.document.lines.map((line) => line.performerIds.length), [1, 2, 4, 0]);
 });
@@ -146,6 +173,9 @@ test("lyrics list and detail retain loading, empty, error, long-line, mobile, an
   assert.match(detail, /dark:border-slate-700/);
   assert.match(detail, /translated \|\| line\.source/);
   assert.match(detail, /<LyricText/);
+  assert.match(detail, /lyrics\.attribution/);
+  assert.match(detail, /page\.lyrics\.attribution/);
+  assert.ok(fixture.document.attribution);
   assert.match(layout, /grid-cols-2 sm:grid-cols-3 md:grid-cols-4/);
   assert.match(musicItem, /hrefBase = "\/music"/);
   assert.match(musicItem, /const itemHref = href \?\? `\$\{hrefBase\}\/\$\{music\.id\}`/);
@@ -186,6 +216,47 @@ test("lyrics navigation and SEO are registered without changing the music detail
   assert.match(readWeb("src/app/music/[id]/page.tsx"), /defineMusicDetailClientPage/);
 });
 
+test("lyrics static SEO has native zh-TW and ko-KR copy instead of English fallback", async () => {
+  const zhTW = await importWebTypeScript("src/lib/seo-zh-tw.ts");
+  const dependencyKey = "__moesekaiSeoDependencies";
+  globalThis[dependencyKey] = zhTW;
+  const seo = await importWebTypeScript("src/lib/seo-keywords.ts", [
+    [
+      'import { DEFAULT_UI_LOCALE, type UiLocale } from "@/lib/i18n/locales";',
+      'const DEFAULT_UI_LOCALE = "zh-CN";\ntype UiLocale = "zh-CN" | "zh-TW" | "en-US" | "ja-JP" | "ko-KR";',
+    ],
+    [
+      'import { interpolateMessage, type MessageInterpolationValues } from "@/lib/i18n/format";',
+      'const interpolateMessage = (message: string) => message;\ntype MessageInterpolationValues = Record<string, string | number>;',
+    ],
+    [
+      `import {
+  ZH_TW_DETAIL_FALLBACK_DESCRIPTIONS,
+  ZH_TW_DETAIL_FALLBACK_TITLES,
+  ZH_TW_DETAIL_SEO_TEMPLATES,
+  ZH_TW_DYNAMIC_SEO_TEMPLATES,
+  ZH_TW_SEO_PAGE_METADATA,
+} from "@/lib/seo-zh-tw";`,
+      `const {
+  ZH_TW_DETAIL_FALLBACK_DESCRIPTIONS,
+  ZH_TW_DETAIL_FALLBACK_TITLES,
+  ZH_TW_DETAIL_SEO_TEMPLATES,
+  ZH_TW_DYNAMIC_SEO_TEMPLATES,
+  ZH_TW_SEO_PAGE_METADATA,
+} = globalThis.${dependencyKey};`,
+    ],
+  ]);
+
+  const traditional = seo.getPageSeo("lyrics", "zh-TW");
+  const korean = seo.getPageSeo("lyrics", "ko-KR");
+  assert.equal(traditional.title, "歌詞資料庫");
+  assert.match(traditional.description, /已發布的歌曲歌詞/);
+  assert.ok(traditional.keywords.includes("歌詞翻譯"));
+  assert.equal(korean.title, "가사 라이브러리");
+  assert.match(korean.description, /공개된 노래 가사/);
+  assert.ok(korean.keywords.includes("가사 번역"));
+});
+
 test("translation coverage artifacts are exhaustive, internally counted, and retain required gaps", () => {
   const coverage = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "docs/translation-coverage.json"), "utf8"));
   const requiredFields = ["id", "routes", "components", "sourceType", "sourceFiles", "fields", "stableId", "backendMapping", "zh", "en", "status", "exclusion"];
@@ -206,9 +277,16 @@ test("translation coverage artifacts are exhaustive, internally counted, and ret
   assert.ok(counts["required-uncovered"] > 0);
 
   const ids = new Set(coverage.entries.map((entry) => entry.id));
-  for (const id of ["event-story-lines", "unit-story-lines", "card-story-lines", "area-story-lines", "self-story-lines", "special-story-lines", "story-special-effects", "lyrics-index", "lyrics-detail"]) {
+  for (const id of ["event-story-summaries", "event-story-lines", "unit-story-lines", "card-story-lines", "area-story-lines", "self-story-lines", "special-story-lines", "story-special-effects", "lyrics-index", "lyrics-detail"]) {
     assert.ok(ids.has(id), id);
   }
   assert.match(coverage.policy.uiMessages, /checked-in artifacts/);
   assert.match(fs.readFileSync(path.join(REPO_ROOT, "docs/translation-coverage.md"), "utf8"), /no full-coverage claim/i);
+
+  const sourceCheck = spawnSync(process.execPath, ["web/scripts/check-translation-coverage.mjs"], {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+  });
+  assert.equal(sourceCheck.status, 0, sourceCheck.stderr || sourceCheck.stdout);
+  assert.match(sourceCheck.stdout, /13 categories, 6 story families, 46 entries/);
 });

@@ -692,6 +692,7 @@ export const zhTWPagePrimary = {
             chinese: "簡體中文",
             english: "English",
             sourceFallback: "目前沒有目標語言翻譯，顯示日文原文",
+            attribution: "來源與署名",
         },
         musicMeta: {
             badge: "歌曲元資料",
