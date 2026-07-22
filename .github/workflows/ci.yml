@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    name: Go
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check formatting
+        shell: bash
+        run: |
+          unformatted="$(gofmt -l main.go internal)"
+          if [[ -n "$unformatted" ]]; then
+            echo "The following Go files need formatting:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Run tests
+        run: go test ./internal/... -count=1
+
+      - name: Run vet
+        run: |
+          go vet main.go
+          go vet ./internal/...
+
+      - name: Build server
+        run: go build -o "$RUNNER_TEMP/moesekai-server" main.go
+
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check translations and SEO
+        run: |
+          bun run --cwd web lint:i18n
+          bun run --cwd web lint:i18n-usage
+
+      - name: Run ESLint
+        run: bun run --cwd web lint
+
+      - name: Build web app
+        run: bun run --cwd web build:next
+
+      - name: Check localized SSR links
+        run: node web/scripts/check-localized-link-ssr.mjs
