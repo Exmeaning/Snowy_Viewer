@@ -4,6 +4,7 @@ import test from "node:test";
 
 import {
   baseline,
+  importTypeScriptSource,
   importWebTypeScript,
   REPO_ROOT,
   readJson,
@@ -19,6 +20,59 @@ async function importLyrics() {
     'import { TRANSLATION_BASE_URL } from "@/lib/translations";',
     `const TRANSLATION_BASE_URL = ${JSON.stringify(baseline.baseline.translationBaseUrl)};`,
   ]]);
+}
+
+async function importLyricsDetailPage() {
+  let source = readWeb("src/app/lyrics/[musicId]/page.tsx");
+  const substitutions = [
+    [
+      'import { notFound } from "next/navigation";',
+      `const notFound = () => {
+  globalThis.__lyricsDetailSeoTest.calls.push(["notFound"]);
+  throw globalThis.__lyricsDetailSeoTest.notFoundError;
+};`,
+    ],
+    [
+      'import { getPublishedLyricsIndexEntry } from "@/lib/lyrics";',
+      `const getPublishedLyricsIndexEntry = async (musicId) => {
+  globalThis.__lyricsDetailSeoTest.calls.push(["publication", musicId]);
+  return globalThis.__lyricsDetailSeoTest.publication;
+};`,
+    ],
+    [
+      'import { defineLyricsDetailClientPage } from "@/lib/seo-detail-metadata";',
+      `const defineLyricsDetailClientPage = () => {
+  const page = async ({ params }) => {
+    const resolvedParams = await params;
+    globalThis.__lyricsDetailSeoTest.calls.push(["detailPage", resolvedParams]);
+    return "published-detail-page";
+  };
+  page.generateMetadata = async ({ params }) => {
+    const resolvedParams = await params;
+    globalThis.__lyricsDetailSeoTest.calls.push(["detailMetadata", resolvedParams]);
+    return { kind: "published-metadata", resolvedParams };
+  };
+  return page;
+};`,
+    ],
+    [
+      'import { createDetailFallbackMetadata } from "@/lib/seo-metadata";',
+      `const createDetailFallbackMetadata = async (...args) => {
+  globalThis.__lyricsDetailSeoTest.calls.push(["fallbackMetadata", ...args]);
+  return { kind: "fallback-metadata", args };
+};`,
+    ],
+    ['import LyricsDetailClient from "./client";', 'const LyricsDetailClient = () => null;'],
+    [
+      'return <Page params={Promise.resolve({ id: musicId })} />;',
+      'return Page({ params: Promise.resolve({ id: musicId }) });',
+    ],
+  ];
+  for (const [from, to] of substitutions) {
+    assert.ok(source.includes(from), `missing lyrics detail test substitution: ${from}`);
+    source = source.replace(from, to);
+  }
+  return importTypeScriptSource(source, "lyrics-detail-page");
 }
 
 test("lyrics loaders consume only the published index and music detail artifact paths", async () => {
@@ -117,6 +171,59 @@ test("lyrics publication lookup gates detail routes on the published index", asy
   assert.match(page, /getPublishedLyricsIndexEntry/);
   assert.match(page, /createDetailFallbackMetadata\("lyrics"/);
   assert.match(page, /if \(!publication\) notFound\(\)/);
+});
+
+test("lyrics detail SEO renders only after publication and otherwise leaks no detail output", async () => {
+  const notFoundError = new Error("NEXT_NOT_FOUND");
+  const state = {
+    publication: null,
+    notFoundError,
+    calls: [],
+  };
+  globalThis.__lyricsDetailSeoTest = state;
+
+  try {
+    const page = await importLyricsDetailPage();
+
+    assert.deepEqual(await page.generateMetadata({ params: Promise.resolve({ musicId: "999" }) }), {
+      kind: "fallback-metadata",
+      args: ["lyrics", "/lyrics/999", "summary"],
+    });
+    assert.deepEqual(state.calls, [
+      ["publication", 999],
+      ["fallbackMetadata", "lyrics", "/lyrics/999", "summary"],
+    ]);
+    state.calls.length = 0;
+
+    await assert.rejects(
+      page.default({ params: Promise.resolve({ musicId: "999" }) }),
+      (error) => error === notFoundError,
+    );
+    assert.deepEqual(state.calls, [
+      ["publication", 999],
+      ["notFound"],
+    ]);
+
+    state.publication = fixture.index.items[0];
+    state.calls.length = 0;
+    assert.deepEqual(await page.generateMetadata({ params: Promise.resolve({ musicId: "1" }) }), {
+      kind: "published-metadata",
+      resolvedParams: { id: "1" },
+    });
+    assert.deepEqual(await page.default({ params: Promise.resolve({ musicId: "1" }) }), "published-detail-page");
+    assert.deepEqual(state.calls, [
+      ["publication", 1],
+      ["detailMetadata", { id: "1" }],
+      ["publication", 1],
+      ["detailPage", { id: "1" }],
+    ]);
+  } finally {
+    delete globalThis.__lyricsDetailSeoTest;
+  }
+
+  const preset = readWeb("src/lib/seo-detail-metadata.ts");
+  assert.match(preset, /kind: "lyrics",[\s\S]*routePrefix: "lyrics",[\s\S]*parentPageKey: "lyrics", entity: \{ type: "MusicRecording" \}/);
+  assert.match(readWeb("src/app/lyrics/[musicId]/page.tsx"), /defineLyricsDetailClientPage\(LyricsDetailClient\)/);
 });
 
 test("lyrics loader rejects missing and malformed artifacts without manufacturing content", async () => {
@@ -265,7 +372,7 @@ test("lyrics navigation and SEO are registered without changing the music detail
   assert.match(routes, /"path": "\/lyrics\/", "pageKey": "lyrics"/);
   assert.match(keywords, /lyrics: definePage\(\s*"\/lyrics"/);
   assert.match(keywords, /lyrics: \{ "zh-CN": "歌词详情"/);
-  assert.match(readWeb("src/app/lyrics/[musicId]/page.tsx"), /createDynamicDetailMetadata/);
+  assert.match(readWeb("src/app/lyrics/[musicId]/page.tsx"), /defineLyricsDetailClientPage/);
   assert.match(readWeb("src/app/music/[id]/page.tsx"), /defineMusicDetailClientPage/);
 });
 

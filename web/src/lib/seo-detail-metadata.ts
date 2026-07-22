@@ -246,6 +246,23 @@ const musicDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMu
 export const defineMusicDetailPage = detailPageFactory(musicDetailPreset);
 export const defineMusicDetailClientPage = detailClientPageFactory(musicDetailPreset);
 
+const lyricsDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMusicMeta>>>({
+    kind: "lyrics",
+    routePrefix: "lyrics",
+    getData: getMusicMeta,
+    structuredData: { parentPageKey: "lyrics", entity: { type: "MusicRecording" } },
+    build: (music, { locale }) => ({
+        title: music.title,
+        descriptionKind: "lyrics",
+        descriptionValues: { title: music.title },
+        images: [getMusicJacketUrl(music.asset, getSeoAssetSource(locale))],
+        twitterCard: "summary",
+    }),
+});
+
+export const defineLyricsDetailPage = detailPageFactory(lyricsDetailPreset);
+export const defineLyricsDetailClientPage = detailClientPageFactory(lyricsDetailPreset);
+
 const mysekaiFixtureDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getFixtureMeta>>>({
     kind: "mysekai",
     routePrefix: "mysekai",

@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
 
-import { getMusicJacketUrl } from "@/lib/assets";
 import { getPublishedLyricsIndexEntry } from "@/lib/lyrics";
-import { getMusicMeta } from "@/lib/metadata";
-import { createDetailFallbackMetadata, createDynamicDetailMetadata, getSeoAssetSource } from "@/lib/seo-metadata";
+import { defineLyricsDetailClientPage } from "@/lib/seo-detail-metadata";
+import { createDetailFallbackMetadata } from "@/lib/seo-metadata";
 import LyricsDetailClient from "./client";
 
 interface LyricsDetailPageProps {
     params: Promise<{ musicId: string }>;
 }
+
+const Page = defineLyricsDetailClientPage(LyricsDetailClient);
 
 export async function generateMetadata({ params }: LyricsDetailPageProps) {
     const { musicId } = await params;
@@ -18,24 +19,12 @@ export async function generateMetadata({ params }: LyricsDetailPageProps) {
         return createDetailFallbackMetadata("lyrics", `/lyrics/${musicId}`, "summary");
     }
 
-    return createDynamicDetailMetadata({
-        params: Promise.resolve({ id: musicId }),
-        kind: "lyrics",
-        routePrefix: "lyrics",
-        getData: getMusicMeta,
-        build: (music, { locale }) => ({
-            title: music.title,
-            descriptionKind: "lyrics",
-            descriptionValues: { title: music.title },
-            images: [getMusicJacketUrl(music.asset, getSeoAssetSource(locale))],
-            twitterCard: "summary",
-        }),
-    });
+    return Page.generateMetadata({ params: Promise.resolve({ id: musicId }) });
 }
 
 export default async function LyricsDetailPage({ params }: LyricsDetailPageProps) {
     const { musicId } = await params;
     const publication = await getPublishedLyricsIndexEntry(Number(musicId));
     if (!publication) notFound();
-    return <LyricsDetailClient />;
+    return <Page params={Promise.resolve({ id: musicId })} />;
 }
