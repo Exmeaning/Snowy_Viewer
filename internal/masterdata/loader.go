@@ -14,11 +14,12 @@ import (
 )
 
 const (
-	EventsURL       = "https://metadata.exmeaning.com/jp/master/events.json"
-	EventCardsURL   = "https://metadata.exmeaning.com/jp/master/eventCards.json"
-	EventMusicsURL  = "https://metadata.exmeaning.com/jp/master/eventMusics.json"
-	VirtualLivesURL = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/virtualLives.json"
-	GachasURL       = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/gachas.json"
+	EventsURL                = "https://metadata.exmeaning.com/jp/master/events.json"
+	EventCardsURL            = "https://metadata.exmeaning.com/jp/master/eventCards.json"
+	EventMusicsURL           = "https://metadata.exmeaning.com/jp/master/eventMusics.json"
+	VirtualLivesURL          = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/virtualLives.json"
+	GachasURL                = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/gachas.json"
+	maxMasterDataBytes int64 = 64 << 20
 )
 
 // Store holds all master data in memory
@@ -66,26 +67,38 @@ func fetchJSON(url string, target interface{}) error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("bad status: %s", resp.Status)
 	}
-	body, err := io.ReadAll(resp.Body)
+	if resp.ContentLength > maxMasterDataBytes {
+		return fmt.Errorf("masterdata response exceeds %d bytes", maxMasterDataBytes)
+	}
+	return decodeJSONLimited(resp.Body, target)
+}
+
+func decodeJSONLimited(reader io.Reader, target interface{}) error {
+	body, err := io.ReadAll(io.LimitReader(reader, maxMasterDataBytes+1))
 	if err != nil {
 		return err
+	}
+	if int64(len(body)) > maxMasterDataBytes {
+		return fmt.Errorf("masterdata payload exceeds %d bytes", maxMasterDataBytes)
 	}
 	return json.Unmarshal(body, target)
 }
 
 func (s *Store) loadOrFetch(filename string, url string, target interface{}) error {
 	localPath := filepath.Join(s.localDataPath, filename)
-	if _, err := os.Stat(localPath); err == nil {
-		content, err := os.ReadFile(localPath)
-		if err == nil {
-			if err := json.Unmarshal(content, target); err == nil {
+	if info, err := os.Stat(localPath); err == nil {
+		if info.Size() > maxMasterDataBytes {
+			fmt.Printf("Warning: local %s exceeds %d bytes. Falling back to remote.\n", filename, maxMasterDataBytes)
+		} else if file, openErr := os.Open(localPath); openErr == nil {
+			defer file.Close()
+			if err := decodeJSONLimited(file, target); err == nil {
 				fmt.Printf("Loaded %s from local file\n", filename)
 				return nil
 			} else {
 				fmt.Printf("Warning: failed to unmarshal local %s: %v. Falling back to remote.\n", filename, err)
 			}
 		} else {
-			fmt.Printf("Warning: failed to read local %s: %v. Falling back to remote.\n", filename, err)
+			fmt.Printf("Warning: failed to read local %s: %v. Falling back to remote.\n", filename, openErr)
 		}
 	}
 	return fetchJSON(url, target)

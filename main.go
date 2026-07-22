@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"time"
 
 	"snowy_viewer/internal/cache"
 	"snowy_viewer/internal/config"
@@ -12,6 +14,14 @@ import (
 	"snowy_viewer/internal/htmlcache"
 	"snowy_viewer/internal/masterdata"
 	"snowy_viewer/internal/middleware"
+)
+
+const (
+	serverReadHeaderTimeout = 5 * time.Second
+	serverReadTimeout       = 15 * time.Second
+	serverWriteTimeout      = 30 * time.Second
+	serverIdleTimeout       = 60 * time.Second
+	serverMaxHeaderBytes    = 1 << 20
 )
 
 func main() {
@@ -66,8 +76,21 @@ func main() {
 	finalHandler := middleware.Chain(mux, middleware.CORS, middleware.Gzip)
 
 	fmt.Printf("Server starting on :%s...\n", cfg.Port)
-	if err := http.ListenAndServe(":"+cfg.Port, finalHandler); err != nil {
+	server := newHTTPServer(":"+cfg.Port, finalHandler)
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		fmt.Printf("Error starting server: %s\n", err)
+	}
+}
+
+func newHTTPServer(addr string, handler http.Handler) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: serverReadHeaderTimeout,
+		ReadTimeout:       serverReadTimeout,
+		WriteTimeout:      serverWriteTimeout,
+		IdleTimeout:       serverIdleTimeout,
+		MaxHeaderBytes:    serverMaxHeaderBytes,
 	}
 }
 
