@@ -306,7 +306,7 @@ test("translation coverage artifacts are exhaustive, internally counted, and ret
   assert.ok(counts["required-uncovered"] > 0);
 
   const ids = new Set(coverage.entries.map((entry) => entry.id));
-  for (const id of ["event-story-summaries", "event-story-lines", "unit-story-lines", "card-story-lines", "area-story-lines", "self-story-lines", "special-story-lines", "story-special-effects", "lyrics-index", "lyrics-detail"]) {
+  for (const id of ["soundtrack-masterdata-text", "event-story-summaries", "event-story-lines", "unit-story-lines", "card-story-lines", "area-story-lines", "self-story-lines", "special-story-lines", "story-special-effects", "lyrics-index", "lyrics-detail"]) {
     assert.ok(ids.has(id), id);
   }
   assert.match(coverage.policy.uiMessages, /checked-in artifacts/);
@@ -317,5 +317,5 @@ test("translation coverage artifacts are exhaustive, internally counted, and ret
     encoding: "utf8",
   });
   assert.equal(sourceCheck.status, 0, sourceCheck.stderr || sourceCheck.stdout);
-  assert.match(sourceCheck.stdout, /13 categories, 6 story families, 46 entries/);
+  assert.match(sourceCheck.stdout, /13 translation categories, 24 rendered masterdata families, 6 story families, 47 entries/);
 });

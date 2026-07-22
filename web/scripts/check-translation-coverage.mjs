@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import ts from "typescript";
 import { fileURLToPath } from "node:url";
 
 const WEB_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -67,6 +68,155 @@ for (const category of translationCategories) {
     );
 }
 
+const configPath = ts.findConfigFile(WEB_ROOT, ts.sys.fileExists, "tsconfig.json");
+assert.ok(configPath, "tsconfig.json is required for source-derived masterdata coverage");
+const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
+const parsedConfig = ts.parseJsonConfigFileContent(configFile.config, ts.sys, WEB_ROOT);
+const program = ts.createProgram(parsedConfig.fileNames, {
+    ...parsedConfig.options,
+    noEmit: true,
+});
+const checker = program.getTypeChecker();
+
+function typeSymbols(type) {
+    const nonNullable = checker.getNonNullableType(type);
+    if (nonNullable.isUnion()) return nonNullable.types.flatMap(typeSymbols);
+    const symbol = nonNullable.aliasSymbol ?? nonNullable.getSymbol();
+    return symbol ? [symbol] : [];
+}
+
+function isStringLike(type) {
+    const nonNullable = checker.getNonNullableType(type);
+    if (nonNullable.isUnion()) return nonNullable.types.every(isStringLike);
+    return Boolean(nonNullable.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLiteral));
+}
+
+function isRenderedInJsx(node) {
+    for (let current = node.parent; current; current = current.parent) {
+        if (ts.isJsxExpression(current) || ts.isJsxAttribute(current)) return true;
+        if (ts.isStatement(current) || ts.isFunctionLike(current)) return false;
+    }
+    return false;
+}
+
+const masterdataFamilies = new Map();
+const NON_CONTENT_STRING_FIELDS = new Set([
+    "attr",
+    "assetbundleName",
+    "assetbundleFileName",
+    "birthday",
+    "colorCode",
+    "durationSourceKey",
+    "gender",
+    "height",
+    "iconAssetbundleName",
+    "musicDifficulty",
+    "scenarioId",
+    "supportUnit",
+    "unit",
+]);
+function isContentStringField(field) {
+    return !NON_CONTENT_STRING_FIELDS.has(field)
+        && !field.endsWith("Type")
+        && !field.endsWith("Rarity")
+        && !field.endsWith("Platform");
+}
+const projectSources = program.getSourceFiles().filter((sourceFile) =>
+    sourceFile.fileName.startsWith(path.join(WEB_ROOT, "src"))
+    && !sourceFile.isDeclarationFile
+);
+
+for (const sourceFile of projectSources) {
+    function collectFetches(node) {
+        if (
+            ts.isCallExpression(node)
+            && ts.isIdentifier(node.expression)
+            && node.expression.text === "fetchMasterData"
+            && node.typeArguments?.length === 1
+            && node.arguments.length > 0
+            && ts.isStringLiteralLike(node.arguments[0])
+        ) {
+            const requestedType = checker.getTypeFromTypeNode(node.typeArguments[0]);
+            const itemType = checker.getIndexTypeOfType(requestedType, ts.IndexKind.Number) ?? requestedType;
+            const symbols = typeSymbols(itemType);
+            if (symbols.length > 0) {
+                const masterdataFile = node.arguments[0].text;
+                const family = masterdataFamilies.get(masterdataFile) ?? {
+                    sourceFile: masterdataFile,
+                    symbols: new Set(),
+                    stringFields: new Set(),
+                    renderedFields: new Set(),
+                };
+                for (const symbol of symbols) family.symbols.add(symbol);
+                for (const property of checker.getPropertiesOfType(itemType)) {
+                    const propertyType = checker.getTypeOfSymbolAtLocation(property, node);
+                    if (isStringLike(propertyType) && isContentStringField(property.name)) {
+                        family.stringFields.add(property.name);
+                    }
+                }
+                masterdataFamilies.set(masterdataFile, family);
+            }
+        }
+        ts.forEachChild(node, collectFetches);
+    }
+    collectFetches(sourceFile);
+}
+
+for (const sourceFile of projectSources) {
+    function collectRenderedFields(node) {
+        if (ts.isPropertyAccessExpression(node) && isRenderedInJsx(node)) {
+            const objectSymbols = new Set(typeSymbols(checker.getTypeAtLocation(node.expression)));
+            for (const family of masterdataFamilies.values()) {
+                if (
+                    family.stringFields.has(node.name.text)
+                    && [...family.symbols].some((symbol) => objectSymbols.has(symbol))
+                ) {
+                    family.renderedFields.add(node.name.text);
+                }
+            }
+        }
+        ts.forEachChild(node, collectRenderedFields);
+    }
+    collectRenderedFields(sourceFile);
+}
+
+const renderedMasterdataFamilies = [...masterdataFamilies.values()]
+    .filter((family) => family.renderedFields.size > 0)
+    .sort((left, right) => left.sourceFile.localeCompare(right.sourceFile));
+const uncoveredMasterdataFamilies = [];
+for (const family of renderedMasterdataFamilies) {
+    const coveringEntries = coverage.entries.filter((entry) =>
+        entry.sourceFiles.some((sourceFile) => sourceFile.includes(family.sourceFile))
+    );
+    if (coveringEntries.length === 0) {
+        uncoveredMasterdataFamilies.push(`${family.sourceFile}: ${[...family.renderedFields].sort().join(", ")}`);
+        continue;
+    }
+    const documentedFields = coveringEntries.flatMap((entry) => entry.fields).join(" ");
+    const missingFields = [...family.renderedFields]
+        .filter((field) => !new RegExp(`\\b${field}\\b`, "i").test(documentedFields))
+        .sort();
+    if (missingFields.length > 0) {
+        uncoveredMasterdataFamilies.push(`${family.sourceFile}: undocumented fields ${missingFields.join(", ")}`);
+    }
+}
+assert.deepEqual(uncoveredMasterdataFamilies, [], `rendered masterdata families are absent from coverage:\n${uncoveredMasterdataFamilies.join("\n")}`);
+
+const soundtrackCoverage = entriesById.get("soundtrack-masterdata-text");
+assert.ok(soundtrackCoverage, "soundtrack rendered masterdata text requires an explicit coverage entry");
+for (const [sourceFile, fields] of [
+    ["musicSoundTrackCategories.json", ["name"]],
+    ["musicSoundTracks.json", ["title", "pronunciation"]],
+]) {
+    const family = masterdataFamilies.get(sourceFile);
+    assert.ok(family, `${sourceFile} must be discovered from fetchMasterData`);
+    for (const field of fields) {
+        assert.ok(family.renderedFields.has(field), `${sourceFile}.${field} must be discovered from rendered source`);
+        assert.ok(soundtrackCoverage.fields.some((documented) => documented.includes(field)), `${sourceFile}.${field} is undocumented`);
+    }
+    assert.ok(soundtrackCoverage.sourceFiles.some((documented) => documented.includes(sourceFile)), `${sourceFile} is undocumented`);
+}
+
 const storyRoot = path.join(WEB_ROOT, "src/app/story");
 const storyFamilies = fs.readdirSync(storyRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -108,4 +258,4 @@ assert.match(lyricText, /performer\.shortName/);
 assert.match(lyricText, /--performer-light/);
 assert.match(lyricText, /--performer-dark/);
 
-console.log(`Translation coverage source validation OK (${translationCategories.length} categories, ${storyFamilies.length} story families, ${coverage.entries.length} entries).`);
+console.log(`Translation coverage source validation OK (${translationCategories.length} translation categories, ${renderedMasterdataFamilies.length} rendered masterdata families, ${storyFamilies.length} story families, ${coverage.entries.length} entries).`);

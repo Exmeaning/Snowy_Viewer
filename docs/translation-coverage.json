@@ -9,14 +9,14 @@
   },
   "sourceValidation": {
     "command": "node web/scripts/check-translation-coverage.mjs",
-    "derives": ["TranslationData categories", "story route families", "event group source fields", "lyrics artifact fields and publication/UI consumers"]
+    "derives": ["TranslationData categories", "all fetchMasterData types with rendered human-readable string fields", "story route families", "event group source fields", "lyrics artifact fields and publication/UI consumers"]
   },
   "summary": {
-    "entries": 46,
+    "entries": 47,
     "covered": 2,
     "partial": 21,
     "requiredUncovered": 15,
-    "officialRegional": 3,
+    "officialRegional": 4,
     "excluded": 4,
     "nontext": 1
   },
@@ -265,7 +265,7 @@
       "components": ["getCharacterName"],
       "sourceType": "official-regional-masterdata",
       "sourceFiles": ["gameCharacters.json", "compile-time UI name keys"],
-      "fields": ["firstName", "givenName", "ruby"],
+      "fields": ["firstName", "givenName", "firstNameRuby", "givenNameRuby"],
       "stableId": "game character id",
       "backendMapping": "regional masterdata and fixed UI fallback",
       "zh": "official regional or checked-in UI",
@@ -286,6 +286,20 @@
       "en": "official EN data when selected",
       "status": "official-regional",
       "exclusion": "classification and numeric fields are not translated"
+    },
+    {
+      "id": "soundtrack-masterdata-text",
+      "routes": ["/soundtrack"],
+      "components": ["SoundtrackClient"],
+      "sourceType": "official-regional-masterdata",
+      "sourceFiles": ["musicSoundTrackCategories.json", "musicSoundTracks.json"],
+      "fields": ["musicSoundTrackCategories.name", "musicSoundTracks.title", "musicSoundTracks.pronunciation"],
+      "stableId": "soundtrack category id or soundtrack id plus field",
+      "backendMapping": "regional masterdata endpoint; no editorial translation overlay is currently declared",
+      "zh": "official CN data when available for the selected region",
+      "en": "official EN data when available for the selected region",
+      "status": "official-regional",
+      "exclusion": "asset bundle names, file names, durations, IDs, and sequence values are non-content metadata"
     },
     {
       "id": "official-event-core",
@@ -474,8 +488,8 @@
       "routes": ["/story/unit/{unitId}/{episodeNo}"],
       "components": ["unit story reader", "useStoryAsset"],
       "sourceType": "scenario-asset",
-      "sourceFiles": ["unit story scenario assets"],
-      "fields": ["episode title", "TalkData Body", "WindowDisplayName"],
+      "sourceFiles": ["unitStoryEpisodeGroups.json", "unit story scenario assets"],
+      "fields": ["unitStoryEpisodeGroups.name", "unitStoryEpisodeGroups.outline", "episode title", "TalkData Body", "WindowDisplayName"],
       "stableId": "scenario id plus TalkData index plus field",
       "backendMapping": "no event-style published locale artifact",
       "zh": "required but uncovered",

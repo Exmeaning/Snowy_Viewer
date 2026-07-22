@@ -10,7 +10,7 @@ This inventory is generated as a human-readable companion to `docs/translation-c
 - Dynamic content targets are `zh-CN` and `en-US`.
 - `ja-JP`, `zh-TW`, and `ko-KR` never reuse Chinese or English dynamic overlays; they safely render Japanese source content where no official regional content is already selected.
 - Community aliases, third-party guides/manga, user identity, and nontext values are not counted as translation coverage.
-- `node web/scripts/check-translation-coverage.mjs` derives translation categories, story families, event group fields, and lyrics fields/consumers from source and rejects inventory drift.
+- `node web/scripts/check-translation-coverage.mjs` uses the TypeScript program to derive every `fetchMasterData` type whose human-readable string fields reach rendered JSX, plus translation categories, story families, event fields, and lyrics consumers; technical IDs, paths, enums, and color codes are explicitly excluded.
 
 ## Counts
 
@@ -19,10 +19,10 @@ This inventory is generated as a human-readable companion to `docs/translation-c
 | Covered | 2 |
 | Partial | 21 |
 | Required but uncovered | 15 |
-| Official regional source | 3 |
+| Official regional source | 4 |
 | Explicitly excluded | 4 |
 | Nontext | 1 |
-| Total | 46 |
+| Total | 47 |
 
 Because 15 required entries remain uncovered and 21 more are partial, this document makes no full-coverage claim.
 
@@ -47,8 +47,9 @@ Because 15 required entries remain uncovered and 21 more are partial, this docum
 | `character-profile-text` | character views | profiles + overlay; six profile fields plus school fields | character ID + field / six maps | partial | path supported | partial; school fields missing |
 | `unit-profile-text` | character and unit story | unitProfiles + overlay; unitName, profileSentence | unit ID + field / units maps | partial | path supported | partial; consumer variance |
 | `costume-text` | costume/card/reward views | curated costume data + overlay; name, colorName, designer | costume/variant ID + field / costumes maps | partial | path supported | partial |
-| `official-character-names` | all character consumers | regional gameCharacters + UI fallback | character ID / regional masterdata | official | official | official-regional; not editorial coverage |
+| `official-character-names` | all character consumers | regional gameCharacters; firstName/givenName and ruby fields + UI fallback | character ID / regional masterdata | official | official | official-regional; not editorial coverage |
 | `official-music-core` | music and lyrics | regional musics core fields | music ID / regional masterdata | official when selected | official when selected | official-regional; nontext excluded |
+| `soundtrack-masterdata-text` | soundtrack | musicSoundTrackCategories.name; musicSoundTracks.title/pronunciation | category or track ID + field / regional masterdata | official when available | official when available | official-regional; technical audio metadata excluded |
 | `official-event-core` | event views | regional events core fields | event ID / regional masterdata | official when selected | official when selected | official-regional; nontext excluded |
 | `materials-text` | materials, inventory, rewards | materials; name and flavor fields | material ID + field / no content type | uncovered | uncovered | required-uncovered |
 | `mysekai-materials-text` | materials and MySekai | mysekaiMaterials; name, pronunciation, description | material ID + field / declared map unwired | uncovered | uncovered | required-uncovered |
@@ -62,7 +63,7 @@ Because 15 required entries remain uncovered and 21 more are partial, this docum
 | `event-story-metadata` | event story list/reader | mirror/masterdata + event artifacts; title_jp/title_cn/episode title | event ID + episode + field | mirror/category title partial | artifact title + source fallback | partial |
 | `event-story-summaries` | event story group | eventStories + mirror; outline_jp/outline_cn/event and chapter summary_cn | event ID + chapter + summary field | mirror outline/summaries partial | JP outline fallback; summaries uncovered | partial; CN summaries never leak to non-zh |
 | `event-story-lines` | event reader | scenario + event artifact; body/display name | scenario + TalkData index required; current source string | backward-compatible partial | isolated artifact supported | partial |
-| `unit-story-lines` | unit reader | unit scenarios; title/body/display name | scenario + TalkData index + field | uncovered | uncovered | required-uncovered |
+| `unit-story-lines` | unit reader | unitStoryEpisodeGroups + scenarios; group name/outline/title/body/display name | scenario + TalkData index + field | uncovered | uncovered | required-uncovered |
 | `card-story-lines` | card reader | card scenarios; title/body/display name/gachaPhrase | card/scenario + TalkData index + field | uncovered | uncovered | required-uncovered |
 | `area-story-lines` | area reader | area scenarios/masterdata; area/body/display name | scenario + TalkData index + field | uncovered | uncovered | required-uncovered |
 | `self-story-lines` | self reader | self scenarios; body/display name | scenario + TalkData index + field | uncovered | uncovered | required-uncovered |
