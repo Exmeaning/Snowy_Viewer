@@ -59,7 +59,7 @@ function LyricsContent() {
         ])
             .then(([index, musicData, tags, eventMusics]) => {
                 if (cancelled) return;
-                setLyricsByMusicId(new Map(index.items.map((item) => [item.musicId, item])));
+                setLyricsByMusicId(new Map(index.songs.map((item) => [item.musicId, item])));
                 setMusics(musicData.map((music) => ({
                     ...music,
                     categories: (music.categories as unknown as RawMusicCategory[]).map((category) =>
@@ -124,8 +124,8 @@ function LyricsContent() {
                     || music.pronunciation.toLowerCase().includes(query)
                     || music.composer.toLowerCase().includes(query)
                     || music.lyricist.toLowerCase().includes(query)
-                    || Boolean(indexEntry?.titles["zh-CN"]?.toLowerCase().includes(query))
-                    || Boolean(indexEntry?.titles["en-US"]?.toLowerCase().includes(query));
+                    || Boolean(indexEntry?.title["zh-CN"]?.toLowerCase().includes(query))
+                    || Boolean(indexEntry?.title["en-US"]?.toLowerCase().includes(query));
             });
         }
         if (!isShowSpoiler) result = result.filter((music) => music.publishedAt <= now);
@@ -221,8 +221,8 @@ function LyricsContent() {
                                                 key={music.id}
                                                 music={music}
                                                 isSpoiler={music.publishedAt > now}
-                                                cnTitle={lyrics?.titles["zh-CN"]}
-                                                enTitle={lyrics?.titles["en-US"]}
+                                                cnTitle={lyrics?.title["zh-CN"]}
+                                                enTitle={lyrics?.title["en-US"]}
                                                 hrefBase="/lyrics"
                                             />
                                         );

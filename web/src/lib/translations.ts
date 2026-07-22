@@ -1,6 +1,6 @@
 /**
  * Translation utilities for Japanese-source locale overlays.
- * zh-CN uses the legacy root files; en-US uses the locale subdirectory.
+ * zh-CN uses the canonical root files; en-US uses the v2 locale directory.
  * 
  * IndexedDB caching: Translation data is persisted in IndexedDB and keyed by
  * a version hash derived from the masterdata version. On version change,
@@ -10,8 +10,14 @@
 import { getTranslationCache, setTranslationCache, isIndexedDBAvailable } from "./masterdata-cache";
 import { MASTERDATA_VERSION_KEY } from "./fetch";
 
-// Base URL for all translation data
-export const TRANSLATION_BASE_URL = "https://translation.exmeaning.com/translation";
+const TRANSLATION_ORIGIN = "https://translation.exmeaning.com";
+export const TRANSLATION_BASE_URL = `${TRANSLATION_ORIGIN}/files/translation`;
+
+export function getTranslationAssetBaseUrl(locale: TranslationTargetLocale): string {
+    return locale === "zh-CN"
+        ? TRANSLATION_BASE_URL
+        : `${TRANSLATION_ORIGIN}/files/v2/${locale}/translation`;
+}
 export interface TranslationMap {
     [key: string]: string;
 }
@@ -192,7 +198,7 @@ function isTranslationCacheStale(locale: TranslationTargetLocale): boolean {
  * Translation data is served from the MoeSekai-Hub static deployment.
  */
 async function fetchAllTranslations(locale: TranslationTargetLocale): Promise<TranslationData> {
-    const baseUrl = locale === "zh-CN" ? TRANSLATION_BASE_URL : `${TRANSLATION_BASE_URL}/${locale}`;
+    const baseUrl = getTranslationAssetBaseUrl(locale);
     const version = getTranslationDataVersion(locale);
     const query = version ? `?v=${encodeURIComponent(version)}` : "";
 

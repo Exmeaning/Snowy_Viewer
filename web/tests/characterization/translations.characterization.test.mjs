@@ -12,6 +12,8 @@ import {
 
 const MASTERDATA_CACHE_IMPORT = 'import { getTranslationCache, setTranslationCache, isIndexedDBAvailable } from "./masterdata-cache";';
 const MASTERDATA_VERSION_IMPORT = 'import { MASTERDATA_VERSION_KEY } from "./fetch";';
+const TRANSLATION_ROOT_URL = "https://translation.exmeaning.com/files/translation";
+const EN_TRANSLATION_ROOT_URL = "https://translation.exmeaning.com/files/v2/en-US/translation";
 
 let dependencySequence = 0;
 
@@ -47,9 +49,11 @@ function installBrowser(storage = createStorage()) {
   return storage;
 }
 
-test("TranslationData keeps the current source-string categories and known remote schema mismatch", () => {
+test("TranslationData keeps source-string categories and canonical producer asset roots", () => {
   const source = readWeb("src/lib/translations.ts");
   assert.match(source, /const MAX_MEMORY_LOCALES = 2/);
+  assert.match(source, /\/files\/translation/);
+  assert.match(source, /\/files\/v2\/\$\{locale\}\/translation/);
   for (const category of baseline.translationFileOrder) {
     assert.match(source, new RegExp(`/${category}\\.json\\$\\{query\\}`));
   }
@@ -80,7 +84,7 @@ test("translation loading is network -> memory with versioned URLs and an asynch
   const first = await translations.loadTranslations();
   assert.deepEqual(first, baseline.translationFiles);
   assert.equal(fetches.length, baseline.translationFileOrder.length);
-  assert.ok(fetches.every((url) => url.startsWith(`${baseline.baseline.translationBaseUrl}/`)));
+  assert.ok(fetches.every((url) => url.startsWith(`${TRANSLATION_ROOT_URL}/`)));
   assert.ok(fetches.every((url) => url.endsWith("?v=proofread-7")));
   assert.deepEqual(
     writes.map(([key, , hash]) => ({ key, hash })),
@@ -142,7 +146,7 @@ test("en-US uses isolated URLs, memory, IDB identity, timestamp, and version key
 
   await translations.loadTranslations("en-US");
   assert.equal(fetches.length, 13);
-  assert.ok(fetches.every((url) => url.startsWith(`${baseline.baseline.translationBaseUrl}/en-US/`)));
+  assert.ok(fetches.every((url) => url.startsWith(`${EN_TRANSLATION_ROOT_URL}/`)));
   assert.ok(fetches.every((url) => url.endsWith("?v=english-3")));
   assert.deepEqual(reads[0], ["translations-bundle:en-US", "en-US:master-42:english-3"]);
   assert.deepEqual(writes.map(([key, , hash]) => [key, hash]), [["translations-bundle:en-US", "en-US:master-42:english-3"]]);
@@ -194,7 +198,7 @@ test("legacy no-argument call sites resolve the localized route before stored UI
 
   await translations.loadTranslations();
   assert.equal(storage.getItem(baseline.storage.localStorage.uiLocale), "zh-CN", "the loader does not rewrite legacy UI state");
-  assert.ok(fetches.every((url) => url.includes("/en-US/")));
+  assert.ok(fetches.every((url) => url.startsWith(`${EN_TRANSLATION_ROOT_URL}/`)));
 });
 
 test("TranslationContext clears the visible bundle and reloads when UI locale changes", () => {

@@ -13,12 +13,16 @@ import {
 import fs from "node:fs";
 import path from "node:path";
 
-const fixture = readJson("tests/fixtures/lyrics-published.json");
+const TRANSLATION_ROOT_URL = "https://translation.exmeaning.com/files/translation";
+const fixture = {
+  index: readJson("tests/fixtures/next-public-lyrics-v1/index.fixture.json"),
+  document: readJson("tests/fixtures/next-public-lyrics-v1/detail.fixture.json"),
+};
 
 async function importLyrics() {
   return importWebTypeScript("src/lib/lyrics.ts", [[
     'import { TRANSLATION_BASE_URL } from "@/lib/translations";',
-    `const TRANSLATION_BASE_URL = ${JSON.stringify(baseline.baseline.translationBaseUrl)};`,
+    `const TRANSLATION_BASE_URL = ${JSON.stringify(TRANSLATION_ROOT_URL)};`,
   ]]);
 }
 
@@ -89,15 +93,15 @@ test("lyrics loaders consume only the published index and music detail artifact 
   const lyrics = await importLyrics();
 
   assert.deepEqual(await lyrics.fetchLyricsIndex(), fixture.index);
-  assert.deepEqual(await lyrics.fetchLyricsDocument(1), fixture.document);
+  assert.deepEqual(await lyrics.fetchLyricsDocument(10), fixture.document);
   assert.deepEqual(requests.map(({ url }) => url), [
-    `${baseline.baseline.translationBaseUrl}/lyrics/index.json`,
-    `${baseline.baseline.translationBaseUrl}/lyrics/1.json`,
+    `${TRANSLATION_ROOT_URL}/lyrics/index.json`,
+    `${TRANSLATION_ROOT_URL}/lyrics/music_10.json`,
   ]);
   assert.ok(requests.every(({ options }) => options.cache === "no-store"));
 
   await lyrics.fetchLyricsIndex();
-  await lyrics.fetchLyricsDocument(1);
+  await lyrics.fetchLyricsDocument(10);
   assert.equal(requests.length, 2, "successful artifacts remain in bounded memory caches");
 });
 
@@ -142,26 +146,26 @@ test("lyrics publication lookup gates detail routes on the published index", asy
     const lyrics = await importLyrics();
     assert.match(readWeb("src/lib/lyrics.ts"), /const LYRICS_INDEX_CACHE_TTL = 60 \* 1000/);
 
-    assert.deepEqual(await lyrics.getPublishedLyricsIndexEntry(1), fixture.index.items[0]);
+    assert.deepEqual(await lyrics.getPublishedLyricsIndexEntry(10), fixture.index.songs[0]);
     assert.equal(await lyrics.getPublishedLyricsIndexEntry(999), null);
     assert.equal(await lyrics.getPublishedLyricsIndexEntry(Number.NaN), null);
     assert.equal(fetchCount, 1, "publication checks share the fresh validated index cache");
 
-    nextIndex.items = nextIndex.items.filter((item) => item.musicId !== 1);
+    nextIndex.songs = nextIndex.songs.filter((item) => item.musicId !== 10);
     now += 60_001;
-    assert.equal(await lyrics.getPublishedLyricsIndexEntry(1), null, "unpublication is observed after bounded revalidation");
+    assert.equal(await lyrics.getPublishedLyricsIndexEntry(10), null, "unpublication is observed after bounded revalidation");
     assert.equal(fetchCount, 2);
 
     nextIndex = structuredClone(fixture.index);
     now += 60_001;
-    assert.deepEqual(await lyrics.getPublishedLyricsIndexEntry(1), fixture.index.items[0], "publication is observed without a process restart");
+    assert.deepEqual(await lyrics.getPublishedLyricsIndexEntry(10), fixture.index.songs[0], "publication is observed without a process restart");
     assert.equal(fetchCount, 3);
 
     now += 60_001;
     failure = new Error("temporary index failure");
-    await assert.rejects(lyrics.getPublishedLyricsIndexEntry(1), /temporary index failure/);
+    await assert.rejects(lyrics.getPublishedLyricsIndexEntry(10), /temporary index failure/);
     failure = null;
-    assert.deepEqual(await lyrics.getPublishedLyricsIndexEntry(1), fixture.index.items[0], "an expired failure remains retryable instead of becoming a false 404");
+    assert.deepEqual(await lyrics.getPublishedLyricsIndexEntry(10), fixture.index.songs[0], "an expired failure remains retryable instead of becoming a false 404");
     assert.equal(fetchCount, 5);
   } finally {
     Date.now = originalNow;
@@ -204,7 +208,7 @@ test("lyrics detail SEO renders only after publication and otherwise leaks no de
       ["notFound"],
     ]);
 
-    state.publication = fixture.index.items[0];
+    state.publication = fixture.index.songs[0];
     state.calls.length = 0;
     assert.deepEqual(await page.generateMetadata({ params: Promise.resolve({ musicId: "1" }) }), {
       kind: "published-metadata",
@@ -231,24 +235,54 @@ test("lyrics loader rejects missing and malformed artifacts without manufacturin
   const missing = await importLyrics();
   await assert.rejects(missing.fetchLyricsDocument(99), (error) => error.name === "LyricsLoadError" && error.status === 404);
 
-  globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ schemaVersion: 1, items: "invalid" }) });
+  globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ version: 1, songs: "invalid" }) });
   const malformed = await importLyrics();
   await assert.rejects(malformed.fetchLyricsIndex(), /Invalid lyrics index/);
 
   const duplicateLineDocument = structuredClone(fixture.document);
   duplicateLineDocument.lines.push(structuredClone(duplicateLineDocument.lines[0]));
-  globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => duplicateLineDocument });
+  globalThis.fetch = async (url) => ({
+    ok: true,
+    status: 200,
+    json: async () => String(url).endsWith("/index.json") ? structuredClone(fixture.index) : duplicateLineDocument,
+  });
   const duplicateLines = await importLyrics();
-  await assert.rejects(duplicateLines.fetchLyricsDocument(1), /Invalid lyrics document/);
+  await assert.rejects(duplicateLines.fetchLyricsDocument(10), /Invalid lyrics document/);
+
+  const privateFieldDocument = structuredClone(fixture.document);
+  privateFieldDocument.sourceUrl = "https://private.example/source";
+  globalThis.fetch = async (url) => ({
+    ok: true,
+    status: 200,
+    json: async () => String(url).endsWith("/index.json") ? structuredClone(fixture.index) : privateFieldDocument,
+  });
+  const privateFields = await importLyrics();
+  await assert.rejects(privateFields.fetchLyricsDocument(10), /Invalid lyrics document/);
 });
 
 test("lyrics detail cache evicts the least recently used document at its fixed bound", async () => {
   let fetchCount = 0;
   globalThis.fetch = async (url) => {
     fetchCount += 1;
-    const musicId = Number(new URL(String(url)).pathname.match(/\/(\d+)\.json$/)?.[1]);
+    if (String(url).endsWith("/index.json")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          version: 1,
+          songs: Array.from({ length: 25 }, (_, index) => ({
+            musicId: index + 1,
+            revision: 1,
+            updatedAt: fixture.index.songs[0].updatedAt,
+            title: { "ja-JP": `song-${index + 1}` },
+          })),
+        }),
+      };
+    }
+    const musicId = Number(new URL(String(url)).pathname.match(/\/music_(\d+)\.json$/)?.[1]);
     const document = structuredClone(fixture.document);
     document.musicId = musicId;
+    document.revision = 1;
     return { ok: true, status: 200, json: async () => document };
   };
   const lyrics = await importLyrics();
@@ -256,11 +290,57 @@ test("lyrics detail cache evicts the least recently used document at its fixed b
   for (let musicId = 1; musicId <= 25; musicId += 1) {
     await lyrics.fetchLyricsDocument(musicId);
   }
-  assert.equal(fetchCount, 25);
+  assert.equal(fetchCount, 26);
   await lyrics.fetchLyricsDocument(25);
-  assert.equal(fetchCount, 25, "the newest detail remains cached");
+  assert.equal(fetchCount, 26, "the newest detail remains cached");
   await lyrics.fetchLyricsDocument(1);
-  assert.equal(fetchCount, 26, "the oldest detail is fetched again after eviction");
+  assert.equal(fetchCount, 27, "the oldest detail is fetched again after eviction");
+});
+
+test("lyrics detail cache is revision-keyed, TTL-bounded, and rejects unsynchronized detail bytes", async () => {
+  const originalNow = Date.now;
+  let now = 100_000;
+  let revision = 3;
+  let detailRevision = 3;
+  let indexFetches = 0;
+  let detailFetches = 0;
+  Date.now = () => now;
+  globalThis.fetch = async (url) => {
+    if (String(url).endsWith("/index.json")) {
+      indexFetches += 1;
+      const index = structuredClone(fixture.index);
+      index.songs[0].revision = revision;
+      return { ok: true, status: 200, json: async () => index };
+    }
+    detailFetches += 1;
+    const document = structuredClone(fixture.document);
+    document.revision = detailRevision;
+    return { ok: true, status: 200, json: async () => document };
+  };
+
+  try {
+    const lyrics = await importLyrics();
+    assert.match(readWeb("src/lib/lyrics.ts"), /const LYRICS_DETAIL_CACHE_TTL = 60 \* 1000/);
+    assert.equal((await lyrics.fetchLyricsDocument(10)).revision, 3);
+    now += 59_999;
+    assert.equal((await lyrics.fetchLyricsDocument(10)).revision, 3);
+    assert.equal(detailFetches, 1);
+
+    now += 2;
+    assert.equal((await lyrics.fetchLyricsDocument(10)).revision, 3);
+    assert.equal(indexFetches, 2);
+    assert.equal(detailFetches, 2, "same-revision details revalidate after the TTL");
+
+    now += 60_001;
+    revision = 4;
+    detailRevision = 3;
+    await assert.rejects(lyrics.fetchLyricsDocument(10), /Invalid lyrics document/);
+    detailRevision = 4;
+    assert.equal((await lyrics.fetchLyricsDocument(10)).revision, 4);
+    assert.equal(detailFetches, 4, "revision mismatch is not cached and remains retryable");
+  } finally {
+    Date.now = originalNow;
+  }
 });
 
 test("lyrics target locale is limited to zh-CN and en-US with Japanese fallback elsewhere", async () => {
@@ -312,7 +392,7 @@ test("performer rendering uses only CHAR_COLORS and preserves single, multi, and
   assert.match(source, /dark:bg-\[var\(--performer-dark\)\]/);
   assert.doesNotMatch(source, /backgroundColor: performer\.colors\.base/);
   assert.match(source, /\[overflow-wrap:anywhere\]/);
-  assert.deepEqual(fixture.document.lines.map((line) => line.performerIds.length), [1, 2, 4, 0]);
+  assert.deepEqual(fixture.document.lines[0].segments[0].performerIds, [1]);
 });
 
 test("lyrics list and detail retain loading, empty, error, long-line, mobile, and dark contracts", () => {
@@ -331,7 +411,9 @@ test("lyrics list and detail retain loading, empty, error, long-line, mobile, an
   assert.match(detail, /grid grid-cols-1/);
   assert.match(detail, /md:grid-cols-2/);
   assert.match(detail, /dark:border-slate-700/);
-  assert.match(detail, /translated \|\| line\.source/);
+  assert.match(detail, /translated \|\| line\.japanese/);
+  assert.match(detail, /line\.segments\.map/);
+  assert.match(detail, /segment\.performerIds/);
   assert.match(detail, /<LyricText/);
   assert.match(detail, /lyrics\.attribution/);
   assert.match(detail, /page\.lyrics\.attribution/);

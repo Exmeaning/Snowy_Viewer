@@ -239,11 +239,11 @@ const lyricsSource = readWeb("src/lib/lyrics.ts");
 const lyricsDetail = entriesById.get("lyrics-detail");
 const lyricsIndex = entriesById.get("lyrics-index");
 assert.ok(lyricsDetail && lyricsIndex, "lyrics index and detail entries are required");
-for (const field of ["source", "translations", "performerIds", "attribution"]) {
+for (const field of ["japanese", "zh-CN", "en-US", "segments", "performerIds", "attribution", "revision"]) {
     assert.match(lyricsSource, new RegExp(`\\b${field}\\b`));
     assert.ok(lyricsDetail.fields.some((documented) => documented.includes(field)), `lyrics detail omits ${field}`);
 }
-for (const field of ["musicId", "titles", "availableLocales"]) {
+for (const field of ["musicId", "title", "revision", "updatedAt"]) {
     assert.match(lyricsSource, new RegExp(`\\b${field}\\b`));
     assert.ok(lyricsIndex.fields.some((documented) => documented.includes(field)), `lyrics index omits ${field}`);
 }

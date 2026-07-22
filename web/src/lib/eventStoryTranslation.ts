@@ -6,7 +6,7 @@
  * and contain locale-targeted translations for each episode's TalkData.
  */
 
-import { TRANSLATION_BASE_URL } from "./translations";
+import { getTranslationAssetBaseUrl } from "./translations";
 import type { UiLocale } from "./i18n";
 export interface IEpisodeTranslation {
     scenarioId: string;
@@ -24,9 +24,16 @@ export interface IEventStoryTranslation {
 }
 
 const EVENT_TRANSLATION_CACHE_LIMIT = 64;
+const EVENT_TRANSLATION_CACHE_TTL = 60 * 1000;
+
+interface CachedEventStoryTranslation {
+    data: IEventStoryTranslation;
+    cachedAt: number;
+    revision: string;
+}
 
 // Map: locale:eventId -> translation data
-const translationCache = new Map<string, IEventStoryTranslation>();
+const translationCache = new Map<string, CachedEventStoryTranslation>();
 
 // Track in-flight requests to prevent duplicate fetches
 const inflightRequests = new Map<string, Promise<IEventStoryTranslation | null>>();
@@ -51,9 +58,17 @@ function eventCacheKey(eventId: number, locale: "zh-CN" | "en-US"): string {
     return `${locale}:${eventId}`;
 }
 
+function eventTranslationRevision(data: IEventStoryTranslation): string {
+    return `${data.meta?.version ?? "legacy"}:${data.meta?.last_updated ?? 0}`;
+}
+
 function setEventCache(key: string, data: IEventStoryTranslation): void {
     translationCache.delete(key);
-    translationCache.set(key, data);
+    translationCache.set(key, {
+        data,
+        cachedAt: Date.now(),
+        revision: eventTranslationRevision(data),
+    });
     while (translationCache.size > EVENT_TRANSLATION_CACHE_LIMIT) {
         const oldest = translationCache.keys().next().value as string | undefined;
         if (!oldest) break;
@@ -73,12 +88,11 @@ export async function loadEventStoryTranslation(eventId: number, locale: UiLocal
     if (!targetLocale) return null;
     const cacheKey = eventCacheKey(eventId, targetLocale);
 
-    // Return cached data if available
-    if (translationCache.has(cacheKey)) {
-        const cached = translationCache.get(cacheKey)!;
+    const cached = translationCache.get(cacheKey);
+    if (cached && Date.now() - cached.cachedAt < EVENT_TRANSLATION_CACHE_TTL) {
         translationCache.delete(cacheKey);
         translationCache.set(cacheKey, cached);
-        return cached;
+        return cached.data;
     }
 
     // If already loading, wait for that promise
@@ -89,7 +103,7 @@ export async function loadEventStoryTranslation(eventId: number, locale: UiLocal
     // Start loading
     const loadPromise = (async (): Promise<IEventStoryTranslation | null> => {
         try {
-            const localeBase = targetLocale === "zh-CN" ? TRANSLATION_BASE_URL : `${TRANSLATION_BASE_URL}/${targetLocale}`;
+            const localeBase = getTranslationAssetBaseUrl(targetLocale);
             const response = await fetch(`${localeBase}/eventStory/event_${eventId}.json`, { cache: "no-store" });
             if (!response.ok) {
                 // Translation file doesn't exist for this event
@@ -113,6 +127,9 @@ export async function loadEventStoryTranslation(eventId: number, locale: UiLocal
 
             // Only cache if data has episodes (not empty/incomplete)
             if (Object.keys(parsedData.episodes).length > 0) {
+                if (cached && cached.revision !== eventTranslationRevision(parsedData)) {
+                    translationCache.delete(cacheKey);
+                }
                 setEventCache(cacheKey, parsedData);
             }
             return parsedData;

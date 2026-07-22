@@ -115,23 +115,28 @@ export default function LyricsDetailClient() {
                                     {showTargetColumn && <span>{targetLocale === "zh-CN" ? t("page.lyrics.chinese") : t("page.lyrics.english")}</span>}
                                 </div>
                                 {lyrics.lines.map((line) => {
-                                    const translated = targetLocale ? line.translations?.[targetLocale] : undefined;
-                                    const targetText = translated || line.source;
+                                    const translated = targetLocale ? line[targetLocale] : undefined;
+                                    const targetText = translated || line.japanese;
+                                    const performerIds = [...new Set(line.segments.flatMap((segment) => segment.performerIds))];
                                     return (
                                         <article
                                             key={line.id}
-                                            className={`ios-glass-card grid grid-cols-1 gap-3 rounded-2xl p-4 md:gap-6 ${showTargetColumn ? "md:grid-cols-2" : "md:grid-cols-1"}`}
+                                            className={`ios-glass-card grid grid-cols-1 gap-3 rounded-2xl p-4 md:gap-6 ${line.stanzaBreakBefore ? "mt-8" : ""} ${showTargetColumn ? "md:grid-cols-2" : "md:grid-cols-1"}`}
                                         >
                                             <div className="min-w-0">
                                                 <span className="mb-1 block text-[10px] font-bold uppercase text-slate-400 md:hidden">{t("page.lyrics.japanese")}</span>
-                                                <LyricText text={line.source} performerIds={line.performerIds} />
+                                                <div className="space-y-1">
+                                                    {line.segments.map((segment, index) => (
+                                                        <LyricText key={`${line.id}-${index}`} text={segment.text} performerIds={segment.performerIds} />
+                                                    ))}
+                                                </div>
                                             </div>
                                             {showTargetColumn && (
                                                 <div className="min-w-0 border-t border-slate-200/60 pt-3 dark:border-slate-700/60 md:border-l md:border-t-0 md:pl-6 md:pt-0">
                                                     <span className="mb-1 block text-[10px] font-bold uppercase text-slate-400 md:hidden">
                                                         {targetLocale === "zh-CN" ? t("page.lyrics.chinese") : t("page.lyrics.english")}
                                                     </span>
-                                                    <LyricText text={targetText} performerIds={line.performerIds} />
+                                                    <LyricText text={targetText} performerIds={performerIds} />
                                                     {!translated && (
                                                         <span className="mt-1 block text-[10px] text-slate-400">{t("page.lyrics.sourceFallback")}</span>
                                                     )}

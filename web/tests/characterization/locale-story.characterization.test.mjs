@@ -72,8 +72,10 @@ test("localized paths preserve the active locale, query, hash, and bypassed reso
 
 async function importEventStoryTranslation() {
   return importWebTypeScript("src/lib/eventStoryTranslation.ts", [[
-    'import { TRANSLATION_BASE_URL } from "./translations";',
-    `const TRANSLATION_BASE_URL = ${JSON.stringify(baseline.baseline.translationBaseUrl)};`,
+    'import { getTranslationAssetBaseUrl } from "./translations";',
+    `const getTranslationAssetBaseUrl = (locale) => locale === "zh-CN"
+      ? "https://translation.exmeaning.com/files/translation"
+      : \`https://translation.exmeaning.com/files/v2/\${locale}/translation\`;`,
   ]]);
 }
 
@@ -94,7 +96,7 @@ test("event-story loading deduplicates in-flight requests and caches only nonemp
   assert.deepEqual(concurrent, baseline.eventStory);
   assert.equal(requests.length, 1);
   assert.deepEqual(requests[0], {
-    url: `${baseline.baseline.translationBaseUrl}/eventStory/event_1.json`,
+    url: "https://translation.exmeaning.com/files/translation/eventStory/event_1.json",
     options: { cache: "no-store" },
   });
 
@@ -209,7 +211,7 @@ test("event story locale isolation fetches en-US only and never fetches ja-JP, z
   const events = await importEventStoryTranslation();
 
   assert.deepEqual(await events.loadEventStoryTranslation(8, "en-US"), baseline.eventStory);
-  assert.equal(requests[0], `${baseline.baseline.translationBaseUrl}/en-US/eventStory/event_8.json`);
+  assert.equal(requests[0], "https://translation.exmeaning.com/files/v2/en-US/translation/eventStory/event_8.json");
   for (const locale of ["ja-JP", "zh-TW", "ko-KR"]) {
     assert.equal(await events.loadEventStoryTranslation(8, locale), null);
   }
@@ -252,6 +254,35 @@ test("event story cache evicts the least recently used entry at its fixed bound"
   assert.equal(fetchCount, 65, "the newest event remains cached");
   await events.loadEventStoryTranslation(1, "zh-CN");
   assert.equal(fetchCount, 66, "the oldest event is fetched again after eviction");
+});
+
+test("event story cache revalidates on a bounded TTL and replaces changed revisions", async () => {
+  const originalNow = Date.now;
+  let now = 10_000;
+  let version = "1.0";
+  let fetchCount = 0;
+  Date.now = () => now;
+  globalThis.fetch = async () => {
+    fetchCount += 1;
+    const data = structuredClone(baseline.eventStory);
+    data.meta.version = version;
+    return { ok: true, json: async () => data };
+  };
+
+  try {
+    const events = await importEventStoryTranslation();
+    assert.match(readWeb("src/lib/eventStoryTranslation.ts"), /const EVENT_TRANSLATION_CACHE_TTL = 60 \* 1000/);
+    assert.equal((await events.loadEventStoryTranslation(9, "en-US")).meta.version, "1.0");
+    now += 59_999;
+    version = "2.0";
+    assert.equal((await events.loadEventStoryTranslation(9, "en-US")).meta.version, "1.0");
+    assert.equal(fetchCount, 1);
+    now += 2;
+    assert.equal((await events.loadEventStoryTranslation(9, "en-US")).meta.version, "2.0");
+    assert.equal(fetchCount, 2);
+  } finally {
+    Date.now = originalNow;
+  }
 });
 
 test("event reader keys translated state by locale and cancels obsolete locale loads", () => {
