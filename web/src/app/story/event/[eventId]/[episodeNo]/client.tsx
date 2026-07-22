@@ -18,7 +18,7 @@ import { useI18n } from "@/contexts/I18nContext";
 export default function StoryEventReaderClient() {
     const params = useParams();
     const { assetSource, serverSource, useLLMTranslation } = useTheme();
-    const { t } = useI18n();
+    const { locale, t } = useI18n();
     const eventId = parseInt(params.eventId as string);
     const episodeNo = parseInt(params.episodeNo as string);
 
@@ -37,8 +37,8 @@ export default function StoryEventReaderClient() {
                 const [storiesData, eventsData, translationsData, trans] = await Promise.all([
                     fetchMasterData<IEventStory[]>("eventStories.json"),
                     fetchMasterData<IEventInfo[]>("events.json"),
-                    loadTranslations(),
-                    serverSource === "jp" ? loadEventStoryTranslation(eventId) : Promise.resolve(null),
+                    loadTranslations(locale),
+                    serverSource !== "cn" ? loadEventStoryTranslation(eventId, locale) : Promise.resolve(null),
                 ]);
                 const story = storiesData.find(s => s.eventId === eventId) ?? null;
                 setEventStory(story);
@@ -60,7 +60,7 @@ export default function StoryEventReaderClient() {
             }
         }
         load();
-    }, [eventId, episodeNo, serverSource, t]);
+    }, [eventId, episodeNo, locale, serverSource, t]);
 
     const episode = eventStory?.eventStoryEpisodes.find(ep => ep.episodeNo === episodeNo);
     const prevEpisode = eventStory?.eventStoryEpisodes.find(ep => ep.episodeNo === episodeNo - 1);
@@ -74,6 +74,7 @@ export default function StoryEventReaderClient() {
         } : null,
         translation: useLLMTranslation ? translation : null,
         episodeNo,
+        translationLocale: locale,
         fallbackErrorMessage: t("common.state.loadingFailed"),
     });
 

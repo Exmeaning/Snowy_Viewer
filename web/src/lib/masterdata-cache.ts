@@ -87,6 +87,17 @@ async function idbPut<T>(storeName: string, value: T): Promise<void> {
     });
 }
 
+async function idbDelete(storeName: string, key: string): Promise<void> {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, "readwrite");
+        const store = tx.objectStore(storeName);
+        const req = store.delete(key);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
 /**
  * Clear all entries in a store
  */
@@ -180,6 +191,14 @@ export async function setTranslationCache<T>(path: string, data: T, hash: string
         await idbPut(STORE_TRANSLATIONS, entry);
     } catch (e) {
         console.warn("[Cache] Failed to write translation cache:", path, e);
+    }
+}
+
+export async function deleteTranslationCache(path: string): Promise<void> {
+    try {
+        await idbDelete(STORE_TRANSLATIONS, path);
+    } catch (e) {
+        console.warn("[Cache] Failed to delete translation cache:", path, e);
     }
 }
 

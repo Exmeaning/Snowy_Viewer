@@ -163,6 +163,8 @@ test("event story merge attaches cnBody/cnDisplayName by original source text wi
   assert.notStrictEqual(merged, actions);
   assert.deepEqual(merged[0], {
     ...actions[0],
+    translatedBody: "唔……\n……咦？",
+    translatedDisplayName: "初音未来",
     cnBody: "唔……\n……咦？",
     cnDisplayName: "初音未来",
     translationSource: "official_cn",
@@ -171,12 +173,16 @@ test("event story merge attaches cnBody/cnDisplayName by original source text wi
   assert.strictEqual(merged[2], actions[2], "non-talk actions are not translated");
   assert.deepEqual(merged[3], {
     ...actions[3],
+    translatedBody: "唔……\n……咦？",
+    translatedDisplayName: "一歌",
     cnBody: "唔……\n……咦？",
     cnDisplayName: "一歌",
     translationSource: "official_cn",
   }, "a body-only hit fills cnDisplayName with the original name, which the UI later hides");
   assert.deepEqual(merged[4], {
     ...actions[4],
+    translatedBody: undefined,
+    translatedDisplayName: "初音未来",
     cnBody: undefined,
     cnDisplayName: "初音未来",
     translationSource: "official_cn",
@@ -184,6 +190,29 @@ test("event story merge attaches cnBody/cnDisplayName by original source text wi
   assert.deepEqual(actions[0], { type: 1, body: "ん……。\n……あれ？", chara: { id: 21, name: "ミク" } });
   assert.equal(story.mergeStoryTitle("Original", baseline.eventStory, 1), "孤独的雨");
   assert.equal(story.mergeStoryTitle("Original", baseline.eventStory, 99), "Original");
+
+  assert.deepEqual(story.mergeTranslations([actions[0]], baseline.eventStory, 1, "en-US")[0], {
+    ...actions[0],
+    translatedBody: "唔……\n……咦？",
+    translatedDisplayName: "初音未来",
+    translationSource: "official_cn",
+  }, "non-CN targets never populate the legacy cn aliases");
+});
+
+test("event story locale isolation fetches en-US only and never fetches ja-JP, zh-TW, or ko-KR", async () => {
+  const requests = [];
+  globalThis.fetch = async (url) => {
+    requests.push(String(url));
+    return { ok: true, json: async () => structuredClone(baseline.eventStory) };
+  };
+  const events = await importEventStoryTranslation();
+
+  assert.deepEqual(await events.loadEventStoryTranslation(8, "en-US"), baseline.eventStory);
+  assert.equal(requests[0], `${baseline.baseline.translationBaseUrl}/en-US/eventStory/event_8.json`);
+  for (const locale of ["ja-JP", "zh-TW", "ko-KR"]) {
+    assert.equal(await events.loadEventStoryTranslation(8, locale), null);
+  }
+  assert.equal(requests.length, 1);
 });
 
 test("story display gates both CN fields on useLLMTranslation and trimmed inequality", () => {

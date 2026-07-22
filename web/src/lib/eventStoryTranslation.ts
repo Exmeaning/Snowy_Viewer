@@ -7,6 +7,7 @@
  */
 
 import { TRANSLATION_BASE_URL } from "./translations";
+import type { UiLocale } from "./i18n";
 export interface IEpisodeTranslation {
     scenarioId: string;
     title?: string;
@@ -22,11 +23,32 @@ export interface IEventStoryTranslation {
     episodes: Record<string, IEpisodeTranslation>;
 }
 
-// Map: eventId -> translation data
-const translationCache = new Map<number, IEventStoryTranslation | null>();
+const EVENT_TRANSLATION_CACHE_LIMIT = 64;
+
+// Map: locale:eventId -> translation data
+const translationCache = new Map<string, IEventStoryTranslation>();
 
 // Track in-flight requests to prevent duplicate fetches
-const inflightRequests = new Map<number, Promise<IEventStoryTranslation | null>>();
+const inflightRequests = new Map<string, Promise<IEventStoryTranslation | null>>();
+
+function eventTranslationTarget(locale: UiLocale): "zh-CN" | "en-US" | null {
+    if (locale === "zh-CN" || locale === "en-US") return locale;
+    return null;
+}
+
+function eventCacheKey(eventId: number, locale: "zh-CN" | "en-US"): string {
+    return `${locale}:${eventId}`;
+}
+
+function setEventCache(key: string, data: IEventStoryTranslation): void {
+    translationCache.delete(key);
+    translationCache.set(key, data);
+    while (translationCache.size > EVENT_TRANSLATION_CACHE_LIMIT) {
+        const oldest = translationCache.keys().next().value as string | undefined;
+        if (!oldest) break;
+        translationCache.delete(oldest);
+    }
+}
 
 /**
  * Load event story translation for a specific event
@@ -35,21 +57,29 @@ const inflightRequests = new Map<number, Promise<IEventStoryTranslation | null>>
  * @param eventId - The event ID
  * @returns Translation data or null if not available
  */
-export async function loadEventStoryTranslation(eventId: number): Promise<IEventStoryTranslation | null> {
+export async function loadEventStoryTranslation(eventId: number, locale: UiLocale = "zh-CN"): Promise<IEventStoryTranslation | null> {
+    const targetLocale = eventTranslationTarget(locale);
+    if (!targetLocale) return null;
+    const cacheKey = eventCacheKey(eventId, targetLocale);
+
     // Return cached data if available
-    if (translationCache.has(eventId)) {
-        return translationCache.get(eventId)!;
+    if (translationCache.has(cacheKey)) {
+        const cached = translationCache.get(cacheKey)!;
+        translationCache.delete(cacheKey);
+        translationCache.set(cacheKey, cached);
+        return cached;
     }
 
     // If already loading, wait for that promise
-    if (inflightRequests.has(eventId)) {
-        return inflightRequests.get(eventId)!;
+    if (inflightRequests.has(cacheKey)) {
+        return inflightRequests.get(cacheKey)!;
     }
 
     // Start loading
     const loadPromise = (async (): Promise<IEventStoryTranslation | null> => {
         try {
-            const response = await fetch(`${TRANSLATION_BASE_URL}/eventStory/event_${eventId}.json`, { cache: "no-store" });
+            const localeBase = targetLocale === "zh-CN" ? TRANSLATION_BASE_URL : `${TRANSLATION_BASE_URL}/${targetLocale}`;
+            const response = await fetch(`${localeBase}/eventStory/event_${eventId}.json`, { cache: "no-store" });
             if (!response.ok) {
                 // Translation file doesn't exist for this event
                 // Don't cache — file may be added later
@@ -72,7 +102,7 @@ export async function loadEventStoryTranslation(eventId: number): Promise<IEvent
 
             // Only cache if data has episodes (not empty/incomplete)
             if (Object.keys(parsedData.episodes).length > 0) {
-                translationCache.set(eventId, parsedData);
+                setEventCache(cacheKey, parsedData);
             }
             return parsedData;
         } catch (error) {
@@ -80,11 +110,11 @@ export async function loadEventStoryTranslation(eventId: number): Promise<IEvent
             // Don't cache failures — allow retry on next visit
             return null;
         } finally {
-            inflightRequests.delete(eventId);
+            inflightRequests.delete(cacheKey);
         }
     })();
 
-    inflightRequests.set(eventId, loadPromise);
+    inflightRequests.set(cacheKey, loadPromise);
     return loadPromise;
 }
 
@@ -106,7 +136,19 @@ export function getStoryTranslation(
 /**
  * Clear the translation cache (useful for testing or forced refresh)
  */
-export function clearEventStoryTranslationCache(): void {
-    translationCache.clear();
-    inflightRequests.clear();
+export function clearEventStoryTranslationCache(locale?: UiLocale): void {
+    const targetLocale = locale ? eventTranslationTarget(locale) : null;
+    if (locale && !targetLocale) return;
+    if (!targetLocale) {
+        translationCache.clear();
+        inflightRequests.clear();
+        return;
+    }
+    const prefix = `${targetLocale}:`;
+    for (const key of translationCache.keys()) {
+        if (key.startsWith(prefix)) translationCache.delete(key);
+    }
+    for (const key of inflightRequests.keys()) {
+        if (key.startsWith(prefix)) inflightRequests.delete(key);
+    }
 }

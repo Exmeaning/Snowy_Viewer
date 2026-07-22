@@ -12,6 +12,7 @@ import { fetchStoryAssetFromMirror, StoryAssetMissingError, StoryAssetType, Asse
 import { processScenarioForDisplay, mergeTranslations } from "@/lib/storyLoader";
 import { IProcessedScenarioData } from "@/types/story";
 import { IEventStoryTranslation } from "@/lib/eventStoryTranslation";
+import type { UiLocale } from "@/lib/i18n";
 
 export interface UseStoryAssetOptions {
     type: StoryAssetType;
@@ -20,6 +21,8 @@ export interface UseStoryAssetOptions {
     translation?: IEventStoryTranslation | null;
     /** Episode number for translation lookup */
     episodeNo?: number;
+    /** Target locale for locale-neutral translated fields. */
+    translationLocale?: UiLocale;
     /** Localized fallback used when a thrown value is not an Error instance. */
     fallbackErrorMessage?: string;
 }
@@ -38,6 +41,7 @@ export function useStoryAsset({
     params,
     translation,
     episodeNo,
+    translationLocale = "zh-CN",
     fallbackErrorMessage = "Failed to load",
 }: UseStoryAssetOptions): UseStoryAssetResult {
     const { serverSource, assetSource } = useTheme();
@@ -75,7 +79,7 @@ export function useStoryAsset({
 
                 // Merge JP translation if available
                 if (lang === "jp" && translation && episodeNo !== undefined) {
-                    const merged = mergeTranslations(processed.actions, translation, episodeNo);
+                    const merged = mergeTranslations(processed.actions, translation, episodeNo, translationLocale);
                     setScenarioData({ ...processed, actions: merged });
                     setTranslationSource(translation.meta?.source);
                 } else {
@@ -96,7 +100,7 @@ export function useStoryAsset({
         load();
         return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [paramsKey, translation, episodeNo, fallbackErrorMessage]);
+    }, [paramsKey, translation, episodeNo, translationLocale, fallbackErrorMessage]);
 
     return { scenarioData, isLoading, error, missingPaths, lang, translationSource };
 }

@@ -121,6 +121,60 @@ test("an IDB bundle wins over network only when the version hash matches", async
   assert.equal(fetchCount, 0);
 });
 
+test("en-US uses isolated URLs, memory, IDB identity, timestamp, and version keys", async () => {
+  const storage = installBrowser(createStorage({
+    [baseline.storage.localStorage.masterdataVersion]: "master-42",
+    [`${baseline.storage.localStorage.translationDataVersion}:en-US`]: "english-3",
+  }));
+  const fetches = [];
+  const reads = [];
+  const writes = [];
+  globalThis.fetch = async (url) => {
+    fetches.push(String(url));
+    return fixtureResponseFor(String(url));
+  };
+  const translations = await importTranslations({
+    isIndexedDBAvailable: () => true,
+    getTranslationCache: async (...args) => { reads.push(args); return null; },
+    setTranslationCache: async (...args) => { writes.push(args); },
+  });
+
+  await translations.loadTranslations("en-US");
+  assert.equal(fetches.length, 13);
+  assert.ok(fetches.every((url) => url.startsWith(`${baseline.baseline.translationBaseUrl}/en-US/`)));
+  assert.ok(fetches.every((url) => url.endsWith("?v=english-3")));
+  assert.deepEqual(reads[0], ["translations-bundle:en-US", "en-US:master-42:english-3"]);
+  assert.deepEqual(writes.map(([key, , hash]) => [key, hash]), [["translations-bundle:en-US", "en-US:master-42:english-3"]]);
+  assert.match(storage.getItem(`${baseline.storage.localStorage.translationCacheTime}:en-US`), /^\d+$/);
+  assert.equal(storage.getItem(baseline.storage.localStorage.translationCacheTime), null);
+
+  await translations.loadTranslations("zh-CN");
+  assert.equal(fetches.length, 26, "zh-CN does not reuse the en-US memory bundle");
+  assert.ok(fetches.slice(13).every((url) => !url.includes("/en-US/")));
+  await translations.loadTranslations("en-US");
+  assert.equal(fetches.length, 26, "the en-US memory entry remains available independently");
+});
+
+test("ja-JP, zh-TW, and ko-KR return source fallbacks without any target request", async () => {
+  installBrowser();
+  let fetchCount = 0;
+  globalThis.fetch = async () => {
+    fetchCount += 1;
+    throw new Error("unsupported target locale must not fetch");
+  };
+  const translations = await importTranslations({
+    isIndexedDBAvailable: () => true,
+    getTranslationCache: async () => assert.fail("unsupported target locale must not read IDB"),
+    setTranslationCache: async () => assert.fail("unsupported target locale must not write IDB"),
+  });
+
+  for (const locale of ["ja-JP", "zh-TW", "ko-KR"]) {
+    const result = await translations.loadTranslations(locale);
+    assert.deepEqual(result.music, { title: {}, artist: {}, vocalCaption: {} });
+  }
+  assert.equal(fetchCount, 0);
+});
+
 test("stale memory is returned immediately and revalidated in the background", async () => {
   const storage = installBrowser(createStorage({
     [baseline.storage.localStorage.masterdataVersion]: "master-42",

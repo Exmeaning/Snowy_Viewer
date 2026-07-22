@@ -14,6 +14,8 @@ interface TalkSnippetProps {
     voiceUrl?: string;
     cnText?: string;
     cnDisplayName?: string;
+    translatedText?: string;
+    translatedDisplayName?: string;
     translationSource?: 'official_cn' | 'llm' | 'human';
     unitName?: string; // Legacy unit name for virtual singers
     unitField?: string; // Unit field for virtual singers (e.g., 'light_sound', 'school_refusal')
@@ -28,6 +30,8 @@ export function TalkSnippet({
     voiceUrl, 
     cnText, 
     cnDisplayName, 
+    translatedText,
+    translatedDisplayName,
     translationSource: _translationSource, 
     unitName: _unitName, 
     unitField,
@@ -43,6 +47,14 @@ export function TalkSnippet({
     const showCnText = useLLMTranslation && !!cnText && cnText.trim() !== text.trim();
     // Show CN display name when translation is enabled, available, and different from original (after trimming)
     const showCnDisplayName = useLLMTranslation && !!cnDisplayName && cnDisplayName.trim() !== characterName.trim();
+    const displayTranslation = translatedText ?? cnText;
+    const displayNameTranslation = translatedDisplayName ?? cnDisplayName;
+    const showTranslatedText = translatedText !== undefined
+        ? useLLMTranslation && !!translatedText && translatedText.trim() !== text.trim()
+        : showCnText;
+    const showTranslatedDisplayName = translatedDisplayName !== undefined
+        ? useLLMTranslation && !!translatedDisplayName && translatedDisplayName.trim() !== characterName.trim()
+        : showCnDisplayName;
 
     // Determine badge unit icon for virtual singers (21-26)
     const isVirtualSinger = characterId >= 21 && characterId <= 26;
@@ -107,9 +119,9 @@ export function TalkSnippet({
                         <span className="inline-block px-2.5 py-0.5 bg-miku/10 text-miku text-sm font-medium rounded-full border border-miku/20">
                             {characterName}
                         </span>
-                        {showCnDisplayName && (
+                        {showTranslatedDisplayName && (
                             <span className="inline-block px-2.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-full border border-slate-200 dark:border-slate-600">
-                                {cnDisplayName}
+                                {displayNameTranslation}
                             </span>
                         )}
                     </div>
@@ -120,9 +132,9 @@ export function TalkSnippet({
                     </p>
 
                     {/* CN Translation */}
-                    {showCnText && (
+                    {showTranslatedText && (
                         <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed whitespace-pre-wrap mt-1.5 pt-1.5 border-t border-slate-200/50 dark:border-slate-700/50">
-                            {cnText}
+                            {displayTranslation}
                         </p>
                     )}
                 </div>
@@ -439,6 +451,8 @@ export function StorySnippet({ action, index, activeIndex, playbackProgress }: S
                     voiceUrl={action.voice}
                     cnText={action.cnBody}
                     cnDisplayName={action.cnDisplayName}
+                    translatedText={action.translatedBody}
+                    translatedDisplayName={action.translatedDisplayName}
                     translationSource={action.translationSource}
                     unitName={action.chara?.unitName}
                     unitField={action.chara?.unitField}

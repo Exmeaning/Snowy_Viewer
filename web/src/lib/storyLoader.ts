@@ -332,7 +332,8 @@ import { IEventStoryTranslation, getStoryTranslation } from "./eventStoryTransla
 export function mergeTranslations(
     actions: IProcessedAction[],
     translation: IEventStoryTranslation | null,
-    episodeNo: number
+    episodeNo: number,
+    targetLocale: string = "zh-CN",
 ): IProcessedAction[] {
     if (!translation) return actions;
 
@@ -350,10 +351,15 @@ export function mergeTranslations(
                 : undefined;
 
             if (cnBody || cnDisplayName) {
+                const translatedDisplayName = cnDisplayName || action.chara?.name;
                 return {
                     ...action,
-                    cnBody,
-                    cnDisplayName: cnDisplayName || action.chara?.name,
+                    translatedBody: cnBody,
+                    translatedDisplayName,
+                    ...(targetLocale === "zh-CN" ? {
+                        cnBody,
+                        cnDisplayName: translatedDisplayName,
+                    } : {}),
                     translationSource: translation.meta?.source
                 };
             }
