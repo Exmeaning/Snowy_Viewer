@@ -216,6 +216,26 @@ test("event story locale isolation fetches en-US only and never fetches ja-JP, z
   assert.equal(requests.length, 1);
 });
 
+test("event story group text never selects CN mirror fields outside zh-CN", async () => {
+  const events = await importEventStoryTranslation();
+  const source = "Japanese source";
+  const chinese = "Chinese mirror";
+  const english = "English artifact";
+
+  assert.equal(events.selectEventStoryLocalizedText("zh-CN", source, chinese, english), chinese);
+  assert.equal(events.selectEventStoryLocalizedText("en-US", source, chinese, english), english);
+  assert.equal(events.selectEventStoryLocalizedText("en-US", source, chinese), source);
+  for (const locale of ["ja-JP", "zh-TW", "ko-KR"]) {
+    assert.equal(events.selectEventStoryLocalizedText(locale, source, chinese, english), source);
+    assert.equal(events.selectEventStoryLocalizedText(locale, undefined, chinese, english), "");
+  }
+
+  const group = readWeb("src/app/story/event/[eventId]/client.tsx");
+  assert.match(group, /loadEventStoryTranslation\(eventId, locale\)/);
+  assert.match(group, /selectEventStoryLocalizedText\(/);
+  assert.match(group, /adminData\?\.outline_jp \|\| eventStory\?\.outline/);
+});
+
 test("event story cache evicts the least recently used entry at its fixed bound", async () => {
   let fetchCount = 0;
   globalThis.fetch = async () => {

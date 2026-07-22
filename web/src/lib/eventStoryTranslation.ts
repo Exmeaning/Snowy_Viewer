@@ -36,6 +36,17 @@ function eventTranslationTarget(locale: UiLocale): "zh-CN" | "en-US" | null {
     return null;
 }
 
+export function selectEventStoryLocalizedText(
+    locale: UiLocale,
+    sourceText?: string,
+    zhCNText?: string,
+    targetText?: string,
+): string {
+    if (locale === "zh-CN") return zhCNText || targetText || sourceText || "";
+    if (locale === "en-US") return targetText || sourceText || "";
+    return sourceText || "";
+}
+
 function eventCacheKey(eventId: number, locale: "zh-CN" | "en-US"): string {
     return `${locale}:${eventId}`;
 }
