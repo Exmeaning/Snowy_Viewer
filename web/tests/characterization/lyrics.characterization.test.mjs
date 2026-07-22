@@ -48,17 +48,46 @@ test("lyrics loaders consume only the published index and music detail artifact 
 });
 
 test("lyrics publication lookup gates detail routes on the published index", async () => {
+  const originalNow = Date.now;
+  let now = 100_000;
+  let nextIndex = structuredClone(fixture.index);
+  let failure = null;
   let fetchCount = 0;
+  Date.now = () => now;
   globalThis.fetch = async () => {
     fetchCount += 1;
-    return { ok: true, status: 200, json: async () => structuredClone(fixture.index) };
+    if (failure) throw failure;
+    return { ok: true, status: 200, json: async () => structuredClone(nextIndex) };
   };
-  const lyrics = await importLyrics();
 
-  assert.deepEqual(await lyrics.getPublishedLyricsIndexEntry(1), fixture.index.items[0]);
-  assert.equal(await lyrics.getPublishedLyricsIndexEntry(999), null);
-  assert.equal(await lyrics.getPublishedLyricsIndexEntry(Number.NaN), null);
-  assert.equal(fetchCount, 1, "publication checks share the validated index cache");
+  try {
+    const lyrics = await importLyrics();
+    assert.match(readWeb("src/lib/lyrics.ts"), /const LYRICS_INDEX_CACHE_TTL = 60 \* 1000/);
+
+    assert.deepEqual(await lyrics.getPublishedLyricsIndexEntry(1), fixture.index.items[0]);
+    assert.equal(await lyrics.getPublishedLyricsIndexEntry(999), null);
+    assert.equal(await lyrics.getPublishedLyricsIndexEntry(Number.NaN), null);
+    assert.equal(fetchCount, 1, "publication checks share the fresh validated index cache");
+
+    nextIndex.items = nextIndex.items.filter((item) => item.musicId !== 1);
+    now += 60_001;
+    assert.equal(await lyrics.getPublishedLyricsIndexEntry(1), null, "unpublication is observed after bounded revalidation");
+    assert.equal(fetchCount, 2);
+
+    nextIndex = structuredClone(fixture.index);
+    now += 60_001;
+    assert.deepEqual(await lyrics.getPublishedLyricsIndexEntry(1), fixture.index.items[0], "publication is observed without a process restart");
+    assert.equal(fetchCount, 3);
+
+    now += 60_001;
+    failure = new Error("temporary index failure");
+    await assert.rejects(lyrics.getPublishedLyricsIndexEntry(1), /temporary index failure/);
+    failure = null;
+    assert.deepEqual(await lyrics.getPublishedLyricsIndexEntry(1), fixture.index.items[0], "an expired failure remains retryable instead of becoming a false 404");
+    assert.equal(fetchCount, 5);
+  } finally {
+    Date.now = originalNow;
+  }
 
   const page = readWeb("src/app/lyrics/[musicId]/page.tsx");
   assert.match(page, /getPublishedLyricsIndexEntry/);

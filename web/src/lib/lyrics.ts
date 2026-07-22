@@ -43,9 +43,11 @@ export class LyricsLoadError extends Error {
 }
 
 const LYRICS_DETAIL_CACHE_LIMIT = 24;
+const LYRICS_INDEX_CACHE_TTL = 60 * 1000;
 const detailCache = new Map<number, ILyricsDocument>();
 const detailRequests = new Map<number, Promise<ILyricsDocument>>();
 let indexCache: ILyricsIndex | null = null;
+let indexCachedAt = 0;
 let indexRequest: Promise<ILyricsIndex> | null = null;
 
 function isLyricsTargetLocale(value: unknown): value is LyricsTargetLocale {
@@ -119,13 +121,15 @@ async function fetchPublishedJson(url: string, signal?: AbortSignal): Promise<un
 }
 
 export async function fetchLyricsIndex(signal?: AbortSignal): Promise<ILyricsIndex> {
-    if (indexCache) return indexCache;
+    const cacheAge = Date.now() - indexCachedAt;
+    if (indexCache && cacheAge >= 0 && cacheAge < LYRICS_INDEX_CACHE_TTL) return indexCache;
     if (indexRequest) return indexRequest;
 
     indexRequest = fetchPublishedJson(`${TRANSLATION_BASE_URL}/lyrics/index.json`, signal)
         .then(validateIndex)
         .then((index) => {
             indexCache = index;
+            indexCachedAt = Date.now();
             return index;
         })
         .finally(() => {
@@ -174,6 +178,7 @@ export async function fetchLyricsDocument(musicId: number, signal?: AbortSignal)
 
 export function clearLyricsCache(): void {
     indexCache = null;
+    indexCachedAt = 0;
     indexRequest = null;
     detailCache.clear();
     detailRequests.clear();
