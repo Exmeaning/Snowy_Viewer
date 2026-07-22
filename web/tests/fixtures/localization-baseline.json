@@ -1,0 +1,165 @@
+{
+  "baseline": {
+    "capturedAt": "2026-07-22",
+    "sourceCommit": "fdadfb9",
+    "purpose": "Immutable representative fixture for the pre-locale, pre-lyrics Moesekai behavior",
+    "translationBaseUrl": "https://translation.exmeaning.com/translation",
+    "searchIndexUrl": "https://translation.exmeaning.com/data/search-index.json"
+  },
+  "translationFileOrder": [
+    "cards",
+    "skills",
+    "events",
+    "information",
+    "music",
+    "virtualLive",
+    "mysekai",
+    "gacha",
+    "sticker",
+    "comic",
+    "characters",
+    "units",
+    "costumes"
+  ],
+  "translationFiles": {
+    "cards": {
+      "prefix": { "雨上がりの一番星": "雨后的第一颗星" },
+      "skillName": { "みんなと一緒に": "和大家一起" },
+      "gachaPhrase": { "見つけたよ、私の星": "我找到属于自己的星星了" }
+    },
+    "skills": {
+      "description": { "スコアが{0}%UPする": "得分提高{0}%" }
+    },
+    "events": {
+      "name": { "雨上がりの一番星": "雨后的第一颗星" }
+    },
+    "information": {
+      "title": { "お知らせ": "公告" }
+    },
+    "music": {
+      "title": { "ロキ": "ROKI" },
+      "artist": { "晴いちばん": "晴Ichiba" },
+      "vocalCaption": { "バーチャル・シンガーver.": "虚拟歌手 ver." }
+    },
+    "virtualLive": {
+      "name": { "バーチャルライブ": "虚拟演唱会" }
+    },
+    "mysekai": {
+      "fixtureName": { "ミクのぬいぐるみ": "未来的玩偶" },
+      "flavorText": { "思い出の品": "充满回忆的物品" },
+      "genre": { "自然": "自然" },
+      "subGenre": { "花": "花卉" },
+      "tag": { "かわいい": "可爱" },
+      "material": { "木材": "木材" }
+    },
+    "gacha": {
+      "name": { "イベントメンバーガチャ": "活动成员招募" }
+    },
+    "sticker": {
+      "name": { "よろしく": "请多关照" }
+    },
+    "comic": {
+      "title": { "セカイへようこそ": "欢迎来到世界" }
+    },
+    "characters": {
+      "hobby": { "星を見ること": "观星" },
+      "specialSkill": { "ピアノ": "钢琴" },
+      "favoriteFood": { "アップルパイ": "苹果派" },
+      "hatedFood": { "チーズ": "奶酪" },
+      "weak": { "ひとりぼっち": "孤独" },
+      "introduction": { "よろしくね": "请多关照" }
+    },
+    "units": {
+      "unitName": { "Leo/need": "Leo/need" },
+      "profileSentence": { "星を目指すバンド": "追逐星光的乐队" }
+    },
+    "costumes": {
+      "name": { "ステラクローバー": "Stella Clover" },
+      "colorName": { "オリジナル": "原色" },
+      "designer": { "村上ゆいち": "村上由一" }
+    }
+  },
+  "eventStory": {
+    "meta": {
+      "source": "official_cn",
+      "version": "1.0",
+      "last_updated": 1771555511
+    },
+    "episodes": {
+      "1": {
+        "scenarioId": "event_01_01",
+        "title": "孤独的雨",
+        "talkData": {
+          "ん……。\n……あれ？": "唔……\n……咦？",
+          "ミク": "初音未来"
+        }
+      }
+    }
+  },
+  "legacyEventStory": {
+    "1": {
+      "scenarioId": "event_legacy_01",
+      "title": "旧格式标题",
+      "talkData": { "原文": "译文" }
+    }
+  },
+  "searchIndex": [
+    { "id": 1, "n": "ロキ", "cn": "ROKI", "g": "music" },
+    { "id": 2, "n": "雨上がりの一番星", "cn": "雨后的第一颗星", "g": "events" },
+    { "id": 3, "n": "カード名", "cn": "卡牌名", "g": "cards", "c": 1 }
+  ],
+  "storage": {
+    "localStorage": {
+      "masterdataVersion": "masterdata-version",
+      "translationCacheTime": "translation-cache-time",
+      "translationDataVersion": "translation-data-version",
+      "llmTranslation": "use-llm-translation",
+      "uiLocale": "moesekai_ui_locale",
+      "serverSource": "server-source",
+      "assetSource": "asset-source"
+    },
+    "sessionStorage": {
+      "musicFilters": "music_filters",
+      "musicScroll": "music_scroll",
+      "musicDisplayCount": "music_displayCount"
+    },
+    "indexedDB": {
+      "database": "snowy-cache",
+      "version": 1,
+      "translationStore": "translations",
+      "bundleKey": "translations-bundle",
+      "hashFormat": "{masterdata-version}:{translation-data-version}",
+      "ttlMs": 1800000
+    }
+  },
+  "localeRouting": [
+    { "route": "zh-cn", "uiLocale": "zh-CN", "server": "cn", "assetSource": "main-cn" },
+    { "route": "zh-tw", "uiLocale": "zh-TW", "server": "tw", "assetSource": "main-tw" },
+    { "route": "ja-jp", "uiLocale": "ja-JP", "server": "jp", "assetSource": "main-jp" },
+    { "route": "en-us", "uiLocale": "en-US", "server": "en", "assetSource": "main-en" },
+    { "route": "ko-kr", "uiLocale": "ko-KR", "server": "kr", "assetSource": "main-kr" }
+  ],
+  "charColors": {
+    "1": "#33aaee", "2": "#ffdd44", "3": "#ee6666", "4": "#BBDD22",
+    "5": "#FFCCAA", "6": "#99CCFF", "7": "#ffaacc", "8": "#99EEDD",
+    "9": "#ff6699", "10": "#00BBDD", "11": "#ff7722", "12": "#0077DD",
+    "13": "#FFBB00", "14": "#FF66BB", "15": "#33DD99", "16": "#BB88EE",
+    "17": "#bb6688", "18": "#8888CC", "19": "#CCAA88", "20": "#DDAACC",
+    "21": "#33ccbb", "22": "#ffcc11", "23": "#FFEE11", "24": "#FFBBCC",
+    "25": "#DD4444", "26": "#3366CC"
+  },
+  "validation": {
+    "uiLocales": ["zh-CN", "zh-TW", "en-US", "ja-JP", "ko-KR"],
+    "i18nKeyCount": 3306,
+    "seoIndexableRoutes": 46,
+    "seoNoindexRoutes": 18,
+    "hardcodedAllowlistedGroups": 24
+  },
+  "musicUi": {
+    "gridClass": "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 sm:gap-4",
+    "detailGridClass": "grid grid-cols-1 lg:grid-cols-2 gap-8",
+    "detailStickyClass": "lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar",
+    "itemHrefTemplate": "/music/${music.id}",
+    "itemComposerClass": "text-xs type-caption text-slate-500 dark:text-slate-400 mt-1"
+  }
+}
