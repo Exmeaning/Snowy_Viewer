@@ -34,4 +34,3 @@ ENV FRONTEND_PROXY_URL=""
 
 # 运行服务
 CMD ["./server"]
-
