@@ -251,7 +251,8 @@ for (const field of ["musicId", "title", "revision", "updatedAt"]) {
 const lyricsPage = readWeb("src/app/lyrics/[musicId]/page.tsx");
 const lyricsClient = readWeb("src/app/lyrics/[musicId]/client.tsx");
 const lyricText = readWeb("src/components/lyrics/LyricText.tsx");
-assert.match(lyricsPage, /getPublishedLyricsIndexEntry/);
+assert.match(lyricsPage, /fetchLyricsDocument/);
+assert.match(lyricsPage, /isLyricsUnavailableError/);
 assert.match(lyricsPage, /notFound\(\)/);
 assert.match(lyricsClient, /lyrics\.attribution/);
 assert.match(lyricText, /performer\.shortName/);

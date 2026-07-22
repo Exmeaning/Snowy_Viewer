@@ -50,6 +50,10 @@ export class LyricsLoadError extends Error {
     }
 }
 
+export function isLyricsUnavailableError(error: unknown): error is LyricsLoadError {
+    return error instanceof LyricsLoadError && error.status === 404;
+}
+
 interface CachedLyricsDocument {
     document: ILyricsDocument;
     cachedAt: number;

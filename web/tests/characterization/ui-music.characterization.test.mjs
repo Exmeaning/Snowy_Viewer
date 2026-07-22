@@ -212,6 +212,33 @@ test("music list/detail mobile and dark-mode layout contracts remain unchanged",
   assert.doesNotMatch(detail, /fetchLyrics|LyricText/, "the existing music detail route remains independent of lyrics");
 });
 
+test("RootLayout keeps parser scripts opaque to React and initializes analytics after hydration", () => {
+  const layout = readWeb("src/app/layout.tsx");
+  const googleTag = readWeb("src/components/GoogleTagBootstrap.tsx");
+  const body = layout.slice(layout.indexOf("<body"), layout.indexOf("</body>"));
+  assert.match(layout, /`<script id="moesekai-theme-bootstrap">/);
+  assert.match(layout, /id="moesekai-website-jsonld" type="application\/ld\+json"/);
+  assert.match(layout, /id="moesekai-videogame-jsonld" type="application\/ld\+json"/);
+  assert.match(layout, /id="moesekai-navigation-jsonld" type="application\/ld\+json"/);
+  assert.match(layout, /JSON\.stringify\(value\)\.replace\(\/<\/g, "\\\\u003c"\)/);
+  assert.match(body, /<div hidden dangerouslySetInnerHTML=\{\{ __html: bootstrapMarkup \}\} \/>/);
+  assert.match(body, /<GoogleTagBootstrap \/>/);
+  assert.doesNotMatch(layout, /<Script|strategy="(?:before|after)Interactive"/);
+  assert.match(googleTag, /useEffect\(\(\) => \{/);
+  assert.match(googleTag, /document\.createElement\("script"\)/);
+  assert.match(googleTag, /__moesekaiGoogleTagInitialized/);
+});
+
+test("home carousel promotes only the currently visible background as the LCP candidate", () => {
+  const hero = readWeb("src/components/home/HeroCarousel.tsx");
+  assert.equal(hero.match(/isActive=\{index === currentIndex\}/g)?.length, 3);
+  assert.equal(hero.match(/loading=\{isActive \? "eager" : "lazy"\}/g)?.length, 3);
+  assert.equal(hero.match(/fetchPriority=\{isActive \? "high" : undefined\}/g)?.length, 3);
+  assert.doesNotMatch(hero, /loading="eager"/);
+  assert.match(hero, /getEventLogoUrl[\s\S]*loading="lazy"/);
+  assert.match(hero, /getGachaLogoUrl[\s\S]*loading="lazy"/);
+});
+
 test("music SEO remains server-wired for list and detail independently of lyrics", () => {
   assert.match(readWeb("src/app/music/page.tsx"), /withPageBreadcrumb\("music"/);
   assert.match(readWeb("src/app/music/[id]/page.tsx"), /defineMusicDetailClientPage\(MusicDetailClient\)/);

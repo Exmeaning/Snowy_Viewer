@@ -251,6 +251,7 @@ export default function HeroCarousel() {
                     {slide.type === "event" && (
                         <EventSlideContent
                             slide={slide}
+                            isActive={index === currentIndex}
                             assetSource={assetSource}
                             themeColor={themeColor}
                             now={now}
@@ -263,6 +264,7 @@ export default function HeroCarousel() {
                     {slide.type === "gacha" && (
                         <GachaSlideContent
                             slide={slide}
+                            isActive={index === currentIndex}
                             assetSource={assetSource}
                             now={now}
                             formatRemaining={formatRemaining}
@@ -273,6 +275,7 @@ export default function HeroCarousel() {
                     {slide.type === "birthday" && (
                         <BirthdaySlideContent
                             slide={slide}
+                            isActive={index === currentIndex}
                             assetSource={assetSource}
                             formatDate={formatDate}
                             t={t}
@@ -330,6 +333,7 @@ export default function HeroCarousel() {
 
 function EventSlideContent({
     slide,
+    isActive,
     assetSource,
     themeColor,
     now,
@@ -339,6 +343,7 @@ function EventSlideContent({
     translateMasterText,
 }: {
     slide: EventSlide;
+    isActive: boolean;
     assetSource: AssetSourceType;
     themeColor: string;
     now: number;
@@ -373,8 +378,8 @@ function EventSlideContent({
                 fill
                 className="object-cover"
                 unoptimized
-                loading="eager"
-                fetchPriority="high"
+                loading={isActive ? "eager" : "lazy"}
+                fetchPriority={isActive ? "high" : undefined}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
@@ -387,7 +392,7 @@ function EventSlideContent({
                         fill
                         className="object-contain drop-shadow-2xl"
                         unoptimized
-                        loading="eager"
+                        loading="lazy"
                     />
                 </div>
             </div>
@@ -450,6 +455,7 @@ function EventSlideContent({
 
 function GachaSlideContent({
     slide,
+    isActive,
     assetSource,
     now,
     formatRemaining,
@@ -457,6 +463,7 @@ function GachaSlideContent({
     t,
 }: {
     slide: GachaSlide;
+    isActive: boolean;
     assetSource: AssetSourceType;
     now: number;
     formatRemaining: (endTs: number) => string;
@@ -488,7 +495,8 @@ function GachaSlideContent({
                     fill
                     className="object-cover object-top"
                     unoptimized
-                    loading="lazy"
+                    loading={isActive ? "eager" : "lazy"}
+                    fetchPriority={isActive ? "high" : undefined}
                 />
             ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-pink-100 to-purple-100" />
@@ -535,11 +543,13 @@ function GachaSlideContent({
 
 function BirthdaySlideContent({
     slide,
+    isActive,
     assetSource,
     formatDate,
     t,
 }: {
     slide: BirthdaySlide;
+    isActive: boolean;
     assetSource: AssetSourceType;
     formatDate: (ts: number) => string;
     t: ReturnType<typeof useI18n>["t"];
@@ -568,7 +578,8 @@ function BirthdaySlideContent({
                         fill
                         className="object-cover object-top"
                         unoptimized
-                        loading="lazy"
+                        loading={isActive ? "eager" : "lazy"}
+                        fetchPriority={isActive ? "high" : undefined}
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
                 </>

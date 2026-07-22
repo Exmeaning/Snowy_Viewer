@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { JSDOM } from "jsdom";
+import React, { act } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
+import ts from "typescript";
 
 import {
   baseline,
@@ -37,11 +42,13 @@ async function importLyricsDetailPage() {
 };`,
     ],
     [
-      'import { getPublishedLyricsIndexEntry } from "@/lib/lyrics";',
-      `const getPublishedLyricsIndexEntry = async (musicId) => {
-  globalThis.__lyricsDetailSeoTest.calls.push(["publication", musicId]);
-  return globalThis.__lyricsDetailSeoTest.publication;
-};`,
+      'import { fetchLyricsDocument, isLyricsUnavailableError } from "@/lib/lyrics";',
+      `const fetchLyricsDocument = async (musicId) => {
+  globalThis.__lyricsDetailSeoTest.calls.push(["document", musicId]);
+  if (globalThis.__lyricsDetailSeoTest.error) throw globalThis.__lyricsDetailSeoTest.error;
+  return globalThis.__lyricsDetailSeoTest.document;
+};
+const isLyricsUnavailableError = (error) => error?.status === 404;`,
     ],
     [
       'import { defineLyricsDetailClientPage } from "@/lib/seo-detail-metadata";',
@@ -77,6 +84,100 @@ async function importLyricsDetailPage() {
     source = source.replace(from, to);
   }
   return importTypeScriptSource(source, "lyrics-detail-page");
+}
+
+let lyricsClientModuleSequence = 0;
+
+async function importLyricsDetailClient(lyrics) {
+  lyricsClientModuleSequence += 1;
+  const source = readWeb("src/app/lyrics/[musicId]/client.tsx")
+    .replace(/^"use client";\s*/u, "")
+    .replace(/^import[\s\S]*?;\s*$/gmu, "");
+  const prelude = `
+    const dependencies = globalThis.__lyricsClientRuntimeTest;
+    const React = dependencies.React;
+    const { useEffect, useState } = React;
+    const { Image, useParams, MainLayout, LyricText, Link, useI18n, useTheme,
+      fetchMasterData, fetchLyricsDocument, getLyricsTargetLocale,
+      isLyricsUnavailableError, getMusicJacketUrl } = dependencies;
+  `;
+  const transpiled = ts.transpileModule(`${prelude}\n${source}`, {
+    compilerOptions: {
+      jsx: ts.JsxEmit.React,
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+    },
+    fileName: "src/app/lyrics/[musicId]/client.tsx",
+    reportDiagnostics: true,
+  });
+  assert.deepEqual(
+    (transpiled.diagnostics ?? []).filter((item) => item.category === ts.DiagnosticCategory.Error),
+    [],
+  );
+  const encoded = Buffer.from(
+    `${transpiled.outputText}\n//# sourceURL=lyrics-detail-client-${lyricsClientModuleSequence}.mjs`,
+  ).toString("base64");
+
+  const state = { error: null };
+  const translate = (key) => key;
+  globalThis.__lyricsClientRuntimeTest = {
+    React,
+    Image: (props) => React.createElement("img", props),
+    useParams: () => ({ musicId: "10" }),
+    MainLayout: ({ children }) => React.createElement("main", null, children),
+    LyricText: ({ text }) => React.createElement("span", null, text),
+    Link: ({ children, ...props }) => React.createElement("a", props, children),
+    useI18n: function useI18n() {
+      return { locale: "en-US", t: translate };
+    },
+    useTheme: () => ({ assetSource: "main" }),
+    fetchMasterData: async () => [],
+    fetchLyricsDocument: async () => { throw state.error; },
+    getLyricsTargetLocale: lyrics.getLyricsTargetLocale,
+    isLyricsUnavailableError: lyrics.isLyricsUnavailableError,
+    getMusicJacketUrl: () => "/jacket.webp",
+  };
+  return { Client: (await import(`data:text/javascript;base64,${encoded}`)).default, state };
+}
+
+async function renderLyricsClientFailure(lyrics, error) {
+  const { Client, state } = await importLyricsDetailClient(lyrics);
+  state.error = error;
+  const element = React.createElement(Client);
+  const serverHtml = renderToString(element);
+  const dom = new JSDOM(`<!doctype html><html><body><div id="root">${serverHtml}</div></body></html>`, {
+    url: "https://pjsk.moe/en-us/lyrics/10/",
+  });
+  const previousGlobals = {
+    window: globalThis.window,
+    document: globalThis.document,
+  };
+  Object.assign(globalThis, {
+    window: dom.window,
+    document: dom.window.document,
+  });
+  const recoverableErrors = [];
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.getElementById("root");
+  let root;
+  try {
+    await act(async () => {
+      root = hydrateRoot(container, element, {
+        onRecoverableError: (recoverableError) => recoverableErrors.push(recoverableError),
+      });
+      await new Promise((resolve) => setImmediate(resolve));
+    });
+    assert.deepEqual(recoverableErrors, []);
+    return container.textContent;
+  } finally {
+    if (root) await act(async () => root.unmount());
+    dom.window.close();
+    for (const [key, value] of Object.entries(previousGlobals)) {
+      if (value === undefined) delete globalThis[key];
+      else globalThis[key] = value;
+    }
+    delete globalThis.__lyricsClientRuntimeTest;
+  }
 }
 
 test("lyrics loaders consume only the published index and music detail artifact paths", async () => {
@@ -172,15 +273,17 @@ test("lyrics publication lookup gates detail routes on the published index", asy
   }
 
   const page = readWeb("src/app/lyrics/[musicId]/page.tsx");
-  assert.match(page, /getPublishedLyricsIndexEntry/);
+  assert.match(page, /fetchLyricsDocument/);
+  assert.match(page, /isLyricsUnavailableError/);
   assert.match(page, /createDetailFallbackMetadata\("lyrics"/);
-  assert.match(page, /if \(!publication\) notFound\(\)/);
+  assert.match(page, /if \(!await hasAvailableLyrics\(Number\(musicId\)\)\) notFound\(\)/);
 });
 
-test("lyrics detail SEO renders only after publication and otherwise leaks no detail output", async () => {
+test("lyrics detail SEO and page require an available detail while preserving upstream failures", async () => {
   const notFoundError = new Error("NEXT_NOT_FOUND");
   const state = {
-    publication: null,
+    document: fixture.document,
+    error: { status: 404 },
     notFoundError,
     calls: [],
   };
@@ -194,7 +297,7 @@ test("lyrics detail SEO renders only after publication and otherwise leaks no de
       args: ["lyrics", "/lyrics/999", "summary"],
     });
     assert.deepEqual(state.calls, [
-      ["publication", 999],
+      ["document", 999],
       ["fallbackMetadata", "lyrics", "/lyrics/999", "summary"],
     ]);
     state.calls.length = 0;
@@ -204,11 +307,11 @@ test("lyrics detail SEO renders only after publication and otherwise leaks no de
       (error) => error === notFoundError,
     );
     assert.deepEqual(state.calls, [
-      ["publication", 999],
+      ["document", 999],
       ["notFound"],
     ]);
 
-    state.publication = fixture.index.songs[0];
+    state.error = null;
     state.calls.length = 0;
     assert.deepEqual(await page.generateMetadata({ params: Promise.resolve({ musicId: "1" }) }), {
       kind: "published-metadata",
@@ -216,11 +319,23 @@ test("lyrics detail SEO renders only after publication and otherwise leaks no de
     });
     assert.deepEqual(await page.default({ params: Promise.resolve({ musicId: "1" }) }), "published-detail-page");
     assert.deepEqual(state.calls, [
-      ["publication", 1],
+      ["document", 1],
       ["detailMetadata", { id: "1" }],
-      ["publication", 1],
+      ["document", 1],
       ["detailPage", { id: "1" }],
     ]);
+
+    state.error = { status: 503, message: "upstream unavailable" };
+    state.calls.length = 0;
+    await assert.rejects(
+      page.generateMetadata({ params: Promise.resolve({ musicId: "10" }) }),
+      (error) => error === state.error,
+    );
+    await assert.rejects(
+      page.default({ params: Promise.resolve({ musicId: "10" }) }),
+      (error) => error === state.error,
+    );
+    assert.deepEqual(state.calls, [["document", 10], ["document", 10]]);
   } finally {
     delete globalThis.__lyricsDetailSeoTest;
   }
@@ -233,7 +348,14 @@ test("lyrics detail SEO renders only after publication and otherwise leaks no de
 test("lyrics loader rejects missing and malformed artifacts without manufacturing content", async () => {
   globalThis.fetch = async () => ({ ok: false, status: 404, json: async () => ({}) });
   const missing = await importLyrics();
-  await assert.rejects(missing.fetchLyricsDocument(99), (error) => error.name === "LyricsLoadError" && error.status === 404);
+  await assert.rejects(missing.fetchLyricsDocument(99), (error) => missing.isLyricsUnavailableError(error));
+
+  globalThis.fetch = async () => ({ ok: false, status: 503, json: async () => ({}) });
+  const unavailable = await importLyrics();
+  await assert.rejects(
+    unavailable.fetchLyricsDocument(99),
+    (error) => error.name === "LyricsLoadError" && error.status === 503 && !unavailable.isLyricsUnavailableError(error),
+  );
 
   globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ version: 1, songs: "invalid" }) });
   const malformed = await importLyrics();
@@ -258,6 +380,27 @@ test("lyrics loader rejects missing and malformed artifacts without manufacturin
   });
   const privateFields = await importLyrics();
   await assert.rejects(privateFields.fetchLyricsDocument(10), /Invalid lyrics document/);
+});
+
+test("lyrics detail client localizes 404 races and separates upstream failures without leaking errors", async () => {
+  const lyrics = await importLyrics();
+  const unavailableMessage = "private unavailable artifact location";
+  const unavailableText = await renderLyricsClientFailure(
+    lyrics,
+    new lyrics.LyricsLoadError(unavailableMessage, 404),
+  );
+  assert.match(unavailableText, /page\.lyrics\.notFound/);
+  assert.doesNotMatch(unavailableText, /page\.lyrics\.error/);
+  assert.doesNotMatch(unavailableText, new RegExp(unavailableMessage));
+
+  const failureMessage = "private upstream response";
+  const failedText = await renderLyricsClientFailure(
+    lyrics,
+    new lyrics.LyricsLoadError(failureMessage, 503),
+  );
+  assert.match(failedText, /page\.lyrics\.error/);
+  assert.doesNotMatch(failedText, /page\.lyrics\.notFound/);
+  assert.doesNotMatch(failedText, new RegExp(failureMessage));
 });
 
 test("lyrics detail cache evicts the least recently used document at its fixed bound", async () => {

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { getPublishedLyricsIndexEntry } from "@/lib/lyrics";
+import { fetchLyricsDocument, isLyricsUnavailableError } from "@/lib/lyrics";
 import { defineLyricsDetailClientPage } from "@/lib/seo-detail-metadata";
 import { createDetailFallbackMetadata } from "@/lib/seo-metadata";
 import LyricsDetailClient from "./client";
@@ -11,11 +11,21 @@ interface LyricsDetailPageProps {
 
 const Page = defineLyricsDetailClientPage(LyricsDetailClient);
 
+async function hasAvailableLyrics(musicId: number): Promise<boolean> {
+    if (!Number.isInteger(musicId) || musicId <= 0) return false;
+    try {
+        await fetchLyricsDocument(musicId);
+        return true;
+    } catch (error) {
+        if (isLyricsUnavailableError(error)) return false;
+        throw error;
+    }
+}
+
 export async function generateMetadata({ params }: LyricsDetailPageProps) {
     const { musicId } = await params;
     const numericId = Number(musicId);
-    const publication = await getPublishedLyricsIndexEntry(numericId);
-    if (!publication) {
+    if (!await hasAvailableLyrics(numericId)) {
         return createDetailFallbackMetadata("lyrics", `/lyrics/${musicId}`, "summary");
     }
 
@@ -24,7 +34,6 @@ export async function generateMetadata({ params }: LyricsDetailPageProps) {
 
 export default async function LyricsDetailPage({ params }: LyricsDetailPageProps) {
     const { musicId } = await params;
-    const publication = await getPublishedLyricsIndexEntry(Number(musicId));
-    if (!publication) notFound();
+    if (!await hasAvailableLyrics(Number(musicId))) notFound();
     return <Page params={Promise.resolve({ id: musicId })} />;
 }

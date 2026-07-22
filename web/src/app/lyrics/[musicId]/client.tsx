@@ -10,7 +10,7 @@ import Link from "@/components/LocalizedLink";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
-import { fetchLyricsDocument, getLyricsTargetLocale, type ILyricsDocument } from "@/lib/lyrics";
+import { fetchLyricsDocument, getLyricsTargetLocale, isLyricsUnavailableError, type ILyricsDocument } from "@/lib/lyrics";
 import type { IMusicInfo } from "@/types/music";
 import { getMusicJacketUrl } from "@/types/music";
 
@@ -25,7 +25,7 @@ export default function LyricsDetailClient() {
         locale: typeof locale;
         music: IMusicInfo | null;
         lyrics: ILyricsDocument | null;
-        error: string | null;
+        errorKind: "unavailable" | "failed" | null;
     } | null>(null);
 
     useEffect(() => {
@@ -42,17 +42,17 @@ export default function LyricsDetailClient() {
                     locale,
                     music: musics.find((item) => item.id === musicId) ?? null,
                     lyrics: document,
-                    error: null,
+                    errorKind: null,
                 });
             })
-            .catch(() => {
+            .catch((error: unknown) => {
                 if (!cancelled) {
                     setResult({
                         musicId,
                         locale,
                         music: null,
                         lyrics: null,
-                        error: t("page.lyrics.error"),
+                        errorKind: isLyricsUnavailableError(error) ? "unavailable" : "failed",
                     });
                 }
             });
@@ -62,7 +62,7 @@ export default function LyricsDetailClient() {
     const currentResult = result?.musicId === musicId && result.locale === locale ? result : null;
     const music = currentResult?.music ?? null;
     const lyrics = currentResult?.lyrics ?? null;
-    const error = currentResult?.error ?? null;
+    const errorKind = currentResult?.errorKind ?? null;
     const isLoading = hasValidMusicId && !currentResult;
     const targetLocale = getLyricsTargetLocale(locale);
     const showTargetColumn = Boolean(targetLocale);
@@ -79,10 +79,11 @@ export default function LyricsDetailClient() {
                     <div className="flex min-h-[50vh] items-center justify-center" aria-label={t("page.lyrics.loading")}>
                         <div className="loading-spinner" />
                     </div>
-                ) : error || !lyrics || !music ? (
+                ) : errorKind || !lyrics || !music ? (
                     <div role="alert" className="ios-glass-card rounded-2xl p-10 text-center">
-                        <h1 className="text-xl font-bold text-primary-text">{t("page.lyrics.notFound")}</h1>
-                        {error && <p className="mt-2 break-words text-sm text-red-600 dark:text-red-300">{error}</p>}
+                        <h1 className="text-xl font-bold text-primary-text">
+                            {errorKind === "failed" ? t("page.lyrics.error") : t("page.lyrics.notFound")}
+                        </h1>
                     </div>
                 ) : (
                     <>
