@@ -5,6 +5,7 @@ import { stripTypeScriptTypes } from "node:module";
 
 const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const WEB_ROOT = path.resolve(TEST_DIR, "../..");
+export const REPO_ROOT = path.resolve(WEB_ROOT, "..");
 
 export function readWeb(relativePath) {
   return fs.readFileSync(path.join(WEB_ROOT, relativePath), "utf8");

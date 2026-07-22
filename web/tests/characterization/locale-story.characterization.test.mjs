@@ -78,6 +78,7 @@ async function importEventStoryTranslation() {
 }
 
 test("event-story loading deduplicates in-flight requests and caches only nonempty success", async () => {
+  assert.match(readWeb("src/lib/eventStoryTranslation.ts"), /const EVENT_TRANSLATION_CACHE_LIMIT = 64/);
   const requests = [];
   globalThis.fetch = async (url, options) => {
     requests.push({ url: String(url), options });
@@ -215,11 +216,39 @@ test("event story locale isolation fetches en-US only and never fetches ja-JP, z
   assert.equal(requests.length, 1);
 });
 
+test("event story cache evicts the least recently used entry at its fixed bound", async () => {
+  let fetchCount = 0;
+  globalThis.fetch = async () => {
+    fetchCount += 1;
+    return { ok: true, json: async () => structuredClone(baseline.eventStory) };
+  };
+  const events = await importEventStoryTranslation();
+
+  for (let eventId = 1; eventId <= 65; eventId += 1) {
+    await events.loadEventStoryTranslation(eventId, "zh-CN");
+  }
+  assert.equal(fetchCount, 65);
+  await events.loadEventStoryTranslation(65, "zh-CN");
+  assert.equal(fetchCount, 65, "the newest event remains cached");
+  await events.loadEventStoryTranslation(1, "zh-CN");
+  assert.equal(fetchCount, 66, "the oldest event is fetched again after eviction");
+});
+
+test("event reader keys translated state by locale and cancels obsolete locale loads", () => {
+  const source = readWeb("src/app/story/event/[eventId]/[episodeNo]/client.tsx");
+  assert.match(source, /translationState\.locale === locale/);
+  assert.match(source, /let cancelled = false/);
+  assert.match(source, /if \(cancelled\) return/);
+  assert.match(source, /return \(\) => \{ cancelled = true; \}/);
+});
+
 test("story display gates both CN fields on useLLMTranslation and trimmed inequality", () => {
   const source = readWeb("src/components/story/StorySnippet.tsx");
   assert.match(source, /const showCnText = useLLMTranslation && !!cnText && cnText\.trim\(\) !== text\.trim\(\);/);
   assert.match(source, /const showCnDisplayName = useLLMTranslation && !!cnDisplayName && cnDisplayName\.trim\(\) !== characterName\.trim\(\);/);
   assert.match(source, /cnText=\{action\.cnBody\}/);
   assert.match(source, /cnDisplayName=\{action\.cnDisplayName\}/);
+  assert.match(source, /translatedText=\{action\.translatedBody\}/);
+  assert.match(source, /translatedDisplayName=\{action\.translatedDisplayName\}/);
   assert.match(source, /whitespace-pre-wrap mt-1\.5 pt-1\.5 border-t/);
 });

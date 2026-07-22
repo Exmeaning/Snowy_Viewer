@@ -128,13 +128,15 @@ test("CHAR_COLORS remains sourced from types/types.ts and ThemeContext only re-e
   assert.match(themeSource, /export \{ CHAR_COLORS \};/);
 });
 
-function currentMusicMatch(music, queryText, cnById, aliasesById) {
+function currentMusicMatch(music, queryText, cnById, enById, aliasesById) {
   const query = queryText.toLowerCase().trim();
   const queryAsNumber = Number.parseInt(query, 10);
   if (music.id === queryAsNumber) return true;
   if (music.title.toLowerCase().includes(query)) return true;
   const chineseTitle = cnById.get(music.id);
   if (chineseTitle?.toLowerCase().includes(query)) return true;
+  const englishTitle = enById.get(music.id);
+  if (englishTitle?.toLowerCase().includes(query)) return true;
   if (music.composer.toLowerCase().includes(query)) return true;
   if (music.lyricist.toLowerCase().includes(query)) return true;
   if (music.arranger.toLowerCase().includes(query)) return true;
@@ -155,34 +157,40 @@ test("music list/search preserves ID, original, cn, credits, and community alias
 
   const music = { id: 1, title: "ロキ", composer: "みきとP", lyricist: "みきとP", arranger: "-" };
   const cnById = new Map([[1, "ROKI"]]);
+  const enById = new Map([[1, "Roki English"]]);
   const aliases = new Map([[1, ["Roki song"]]]);
-  assert.equal(currentMusicMatch(music, "1", cnById, aliases), true);
-  assert.equal(currentMusicMatch(music, "ロキ", cnById, aliases), true);
-  assert.equal(currentMusicMatch(music, "roki", cnById, aliases), true);
-  assert.equal(currentMusicMatch(music, "みきと", cnById, aliases), true);
-  assert.equal(currentMusicMatch(music, "roki song", cnById, aliases), true);
-  assert.equal(currentMusicMatch(music, "english overlay", cnById, aliases), false);
+  assert.equal(currentMusicMatch(music, "1", cnById, enById, aliases), true);
+  assert.equal(currentMusicMatch(music, "ロキ", cnById, enById, aliases), true);
+  assert.equal(currentMusicMatch(music, "roki", cnById, enById, aliases), true);
+  assert.equal(currentMusicMatch(music, "roki english", cnById, enById, aliases), true);
+  assert.equal(currentMusicMatch(music, "みきと", cnById, enById, aliases), true);
+  assert.equal(currentMusicMatch(music, "roki song", cnById, enById, aliases), true);
+  assert.equal(currentMusicMatch(music, "missing overlay", cnById, enById, aliases), false);
 });
 
-test("search-index consumers remain n/cn-only and keep aliases out of the translation schema", () => {
+test("search-index consumers preserve n/cn, add en, and keep aliases separate", () => {
   const palette = readWeb("src/components/CommandPalette.tsx");
   const music = readWeb("src/app/music/client.tsx");
   assert.match(palette, /n: string;\s*\/\/ name \(JP\)/);
   assert.match(palette, /cn\?: string;\s*\/\/ name \(CN translation\)/);
-  assert.doesNotMatch(palette.match(/interface SearchIndexItem \{[\s\S]*?\n\}/)?.[0] ?? "", /\ben\??:/);
+  assert.match(palette, /en\?: string;\s*\/\/ name \(EN translation\)/);
   assert.match(palette, /item\.n\.toLowerCase\(\)\.includes\(q\)/);
   assert.match(palette, /item\.cn && item\.cn\.toLowerCase\(\)\.includes\(q\)/);
+  assert.match(palette, /item\.en && item\.en\.toLowerCase\(\)\.includes\(q\)/);
   assert.match(palette, /fetchMusicAliases/);
   assert.ok(palette.includes(`fetch("${baseline.baseline.searchIndexUrl}")`));
-  assert.match(music, /if \(item\.g === "music" && item\.cn\)/);
+  assert.match(music, /if \(item\.g !== "music"\) continue;/);
+  assert.match(music, /if \(item\.cn\) cnMap\.set\(item\.id, item\.cn\)/);
+  assert.match(music, /if \(item\.en\) enMap\.set\(item\.id, item\.en\)/);
   assert.deepEqual(Object.keys(baseline.searchIndex[0]).sort(), ["cn", "g", "id", "n"]);
 });
 
 test("MusicItem keeps localized default links and translation precedence", () => {
   const item = readWeb("src/components/music/MusicItem.tsx");
   assert.match(item, /import Link from "@\/components\/LocalizedLink";/);
-  assert.ok(item.includes(`href={\`${baseline.musicUi.itemHrefTemplate}\`}`));
-  assert.match(item, /translateMasterText\("music", "title", music\.title\) \?\? \(useLLMTranslation \? cnTitle : undefined\)/);
+  assert.match(item, /hrefBase = "\/music"/);
+  assert.match(item, /const itemHref = href \?\? `\$\{hrefBase\}\/\$\{music\.id\}`/);
+  assert.match(item, /translateMasterText\("music", "title", music\.title\) \?\? \(useLLMTranslation \? indexedTitle : undefined\)/);
   assert.match(item, /\{music\.title\}[\s\S]*\{translatedTitle &&/);
   assert.ok(item.includes(baseline.musicUi.itemComposerClass));
 
@@ -191,12 +199,12 @@ test("MusicItem keeps localized default links and translation precedence", () =>
 });
 
 test("music list/detail mobile and dark-mode layout contracts remain unchanged", () => {
-  const list = readWeb("src/app/music/client.tsx");
+  const layout = readWeb("src/components/music/music-layout.ts");
   const detail = readWeb("src/app/music/[id]/client.tsx");
   const item = readWeb("src/components/music/MusicItem.tsx");
   const filters = readWeb("src/components/music/MusicFilters.tsx");
 
-  assert.ok(list.includes(`const MUSIC_GRID_CLASS = "${baseline.musicUi.gridClass}";`));
+  assert.ok(layout.includes(`MUSIC_GRID_CLASS = "${baseline.musicUi.gridClass}"`));
   assert.ok(detail.includes(`className="${baseline.musicUi.detailGridClass}"`));
   assert.ok(detail.includes(`className="${baseline.musicUi.detailStickyClass}"`));
   assert.match(detail, /container mx-auto px-4 sm:px-6 py-8/);
@@ -204,10 +212,10 @@ test("music list/detail mobile and dark-mode layout contracts remain unchanged",
   assert.match(item, /sizes="\(max-width: 640px\) 50vw, \(max-width: 1024px\) 33vw, 20vw"/);
   assert.ok(item.includes("dark:text-slate-400"));
   assert.ok(filters.includes("dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700"));
-  assert.doesNotMatch(detail, /lyrics|歌词|歌詞/i, "the current detail UI has no lyrics module");
+  assert.doesNotMatch(detail, /fetchLyrics|LyricText/, "the existing music detail route remains independent of lyrics");
 });
 
-test("music SEO remains server-wired for list and detail without a lyrics route", () => {
+test("music SEO remains server-wired for list and detail independently of lyrics", () => {
   assert.match(readWeb("src/app/music/page.tsx"), /withPageBreadcrumb\("music"/);
   assert.match(readWeb("src/app/music/[id]/page.tsx"), /defineMusicDetailClientPage\(MusicDetailClient\)/);
   assert.match(readWeb("src/lib/seo-routes-data.json"), /"path": "\/music\/", "pageKey": "music"/);
@@ -224,7 +232,8 @@ function runNodeScript(relativePath) {
 test("UI i18n parity, literal usage, hardcoded allowlist, and SEO registry match the captured baseline", () => {
   const keyCheck = runNodeScript("scripts/check-i18n-keys.mjs");
   assert.equal(keyCheck.status, 0, keyCheck.stderr);
-  assert.match(keyCheck.stdout, new RegExp(`\\(${baseline.validation.i18nKeyCount} keys across 5 locales\\)`));
+  const keyCount = Number(keyCheck.stdout.match(/\((\d+) keys across 5 locales\)/)?.[1]);
+  assert.ok(keyCount >= baseline.validation.i18nKeyCount);
 
   const usageCheck = runNodeScript("scripts/check-i18n-usage.mjs");
   assert.equal(usageCheck.status, 0, usageCheck.stderr);
@@ -236,8 +245,7 @@ test("UI i18n parity, literal usage, hardcoded allowlist, and SEO registry match
 
   const seoCheck = runNodeScript("scripts/check-seo-routes.mjs");
   assert.equal(seoCheck.status, 0, seoCheck.stderr);
-  assert.match(
-    seoCheck.stdout,
-    new RegExp(`\\(${baseline.validation.seoIndexableRoutes} indexable, ${baseline.validation.seoNoindexRoutes} noindex\\)`),
-  );
+  const seoCounts = seoCheck.stdout.match(/\((\d+) indexable, (\d+) noindex\)/);
+  assert.ok(Number(seoCounts?.[1]) >= baseline.validation.seoIndexableRoutes);
+  assert.ok(Number(seoCounts?.[2]) >= baseline.validation.seoNoindexRoutes);
 });

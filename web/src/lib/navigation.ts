@@ -17,6 +17,7 @@ export const navigationGroups: NavGroupData[] = [
         items: [
             { href: "/cards" },
             { href: "/music" },
+            { href: "/lyrics" },
             { href: "/music/meta" },
             { href: "/soundtrack" },
             { href: "/character" },
@@ -149,6 +150,7 @@ export const searchableNavItems: SearchableNavItem[] = [
 
     { href: "/cards", group: "database", keywords: ["cards", "card"] },
     { href: "/music", group: "database", keywords: ["music", "song", "songs"] },
+    { href: "/lyrics", group: "database", keywords: ["lyrics", "song lyrics", "translation"] },
     { href: "/music/meta", group: "database", keywords: ["music meta", "song meta", "difficulty"] },
     { href: "/soundtrack", group: "database", keywords: ["soundtrack", "ost", "bgm", "music"] },
     { href: "/character", group: "database", keywords: ["character", "characters"] },
@@ -234,6 +236,7 @@ export const NAV_ITEM_LABEL_KEYS: Record<string, string> = {
     "/": "layout.nav.home",
     "/cards": "layout.nav.items.cards",
     "/music": "layout.nav.items.musicList",
+    "/lyrics": "layout.nav.items.lyrics",
     "/music/meta": "layout.nav.items.musicMeta",
     "/soundtrack": "layout.nav.items.soundtrack",
     "/character": "layout.nav.items.character",
@@ -282,6 +285,7 @@ export const NAV_ITEM_LABEL_KEYS: Record<string, string> = {
 export const NAV_ITEM_DESCRIPTION_KEYS: Record<string, string> = {
     "/cards": "layout.groupPages.cards",
     "/music": "layout.groupPages.music",
+    "/lyrics": "layout.groupPages.lyrics",
     "/music/meta": "layout.groupPages.musicMeta",
     "/soundtrack": "layout.groupPages.soundtrack",
     "/character": "layout.groupPages.character",

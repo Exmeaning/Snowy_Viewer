@@ -15,17 +15,22 @@ interface MusicItemProps {
     difficulties?: Record<string, number>;
     showDifficulty?: boolean;
     cnTitle?: string;
+    enTitle?: string;
+    href?: string;
+    hrefBase?: string;
 }
 
-export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty, cnTitle }: MusicItemProps) {
+export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty, cnTitle, enTitle, href, hrefBase = "/music" }: MusicItemProps) {
     const { assetSource, useLLMTranslation } = useTheme();
-    const { t } = useI18n();
+    const { locale, t } = useI18n();
     const { t: translateMasterText } = useTranslation();
     const jacketUrl = getMusicJacketUrl(music.assetbundleName, assetSource);
-    const translatedTitle = translateMasterText("music", "title", music.title) ?? (useLLMTranslation ? cnTitle : undefined);
+    const indexedTitle = locale === "zh-CN" ? cnTitle : locale === "en-US" ? enTitle : undefined;
+    const translatedTitle = translateMasterText("music", "title", music.title) ?? (useLLMTranslation ? indexedTitle : undefined);
+    const itemHref = href ?? `${hrefBase}/${music.id}`;
 
     return (
-        <Link href={`/music/${music.id}`} className="group pressable block" data-shortcut-item="true">
+        <Link href={itemHref} className="group pressable block" data-shortcut-item="true">
             <div className="relative rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive">
                 {/* Jacket Image */}
                 <div className="relative aspect-square overflow-hidden">

@@ -261,6 +261,20 @@ export const SEO_PAGE_METADATA = {
       "ja-JP": ["楽曲", "楽曲図鑑", "譜面", "楽曲データベース"],
     },
   ),
+  lyrics: definePage(
+    "/lyrics",
+    { "zh-CN": "歌词资料库", "en-US": "Lyrics Library", "ja-JP": "歌詞ライブラリ" },
+    {
+      "zh-CN": "浏览 Project SEKAI 已发布歌曲歌词，对照日文原文、简体中文与英文翻译。",
+      "en-US": "Browse published Project Sekai song lyrics with Japanese source text, Simplified Chinese, and English translations.",
+      "ja-JP": "Project SEKAI の公開済み歌詞を、日本語原文・簡体字中国語・英語翻訳で閲覧できます。",
+    },
+    {
+      "zh-CN": ["歌词", "歌曲歌词", "歌词翻译"],
+      "en-US": ["lyrics", "song lyrics", "lyrics translation"],
+      "ja-JP": ["歌詞", "楽曲歌詞", "歌詞翻訳"],
+    },
+  ),
   soundtrack: definePage(
     "/soundtrack",
     { "zh-CN": "游戏原声带", "en-US": "Soundtrack", "ja-JP": "サウンドトラック" },
@@ -1543,6 +1557,7 @@ export const DETAIL_FALLBACK_TITLES = {
   live: { "zh-CN": "虚拟 Live 详情", "en-US": "Virtual Live Details", "ja-JP": "バーチャルライブ詳細" },
   manga: { "zh-CN": "漫画详情", "en-US": "Comic Details", "ja-JP": "コミック詳細" },
   music: { "zh-CN": "歌曲详情", "en-US": "Music Details", "ja-JP": "楽曲詳細" },
+  lyrics: { "zh-CN": "歌词详情", "en-US": "Lyrics Details", "ja-JP": "歌詞詳細" },
   mysekai: { "zh-CN": "家具详情", "en-US": "Furniture Details", "ja-JP": "家具詳細" },
 } as const satisfies Record<string, LocalizedText>;
 
@@ -1591,6 +1606,11 @@ export const DETAIL_FALLBACK_DESCRIPTIONS = {
     "zh-CN": "查看 Project SEKAI 歌曲详情、谱面、作词作曲与封面资源",
     "en-US": "View Project Sekai song details, charts, credits, and jacket artwork",
     "ja-JP": "Project SEKAI の楽曲詳細、譜面、クレジット、ジャケット画像を確認できます",
+  },
+  lyrics: {
+    "zh-CN": "查看 Project SEKAI 歌曲歌词、日文原文与已发布翻译",
+    "en-US": "View Project Sekai song lyrics, Japanese source text, and published translations",
+    "ja-JP": "Project SEKAI の楽曲歌詞、日本語原文、公開済み翻訳を確認できます",
   },
   mysekai: {
     "zh-CN": "查看 Project SEKAI MySekai 家具详情、素材与风味文本",
@@ -1657,6 +1677,12 @@ export const DETAIL_SEO_TEMPLATES = {
     "en-US": "View charts, difficulty data, vocal versions, and jacket artwork for the Project SEKAI song \"{title}\". Lyrics: {lyricist}; music: {composer}.",
     "ja-JP": "Project SEKAI 楽曲「{title}」の難易度・譜面データ、歌唱バージョン、ジャケットを確認できます。作詞：{lyricist}、作曲：{composer}。",
     "ko-KR": "Project SEKAI 수록곡 ‘{title}’의 난이도와 채보 데이터, 보컬 버전, 재킷 이미지를 확인할 수 있습니다. 작사: {lyricist}, 작곡: {composer}.",
+  },
+  lyrics: {
+    "zh-CN": "阅读 Project SEKAI 歌曲「{title}」的日文歌词，并对照已发布的简体中文与英文翻译。",
+    "en-US": "Read the Japanese lyrics for the Project SEKAI song \"{title}\" alongside published Simplified Chinese and English translations.",
+    "ja-JP": "Project SEKAI 楽曲「{title}」の日本語歌詞と、公開済みの簡体字中国語・英語翻訳を閲覧できます。",
+    "ko-KR": "Project SEKAI 수록곡 ‘{title}’의 일본어 가사와 공개된 중국어 간체 및 영어 번역을 확인할 수 있습니다.",
   },
   mysekai: {
     "zh-CN": "查看 Project SEKAI MySekai 家具「{name}」的外观、制作素材与物品说明。{flavorSuffix}",

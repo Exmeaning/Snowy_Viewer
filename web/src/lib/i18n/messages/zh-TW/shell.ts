@@ -20,6 +20,7 @@ export const zhTWLayout = {
         items: {
             cards: "卡牌",
             musicList: "歌曲清單",
+            lyrics: "歌詞",
             musicMeta: "歌曲 Meta",
             soundtrack: "遊戲原聲帶",
             character: "角色",
@@ -90,6 +91,7 @@ export const zhTWLayout = {
     groupPages: {
         cards: "瀏覽所有卡牌資料",
         music: "瀏覽所有歌曲資訊",
+        lyrics: "閱讀已發布的歌曲歌詞與翻譯",
         musicMeta: "查看歌曲難度與資料分析",
         soundtrack: "使用精緻的遊戲原聲帶播放器",
         character: "查看角色詳細資料",

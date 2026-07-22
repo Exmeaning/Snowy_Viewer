@@ -1,0 +1,68 @@
+{
+  "index": {
+    "schemaVersion": 1,
+    "updatedAt": "2026-07-22T00:00:00Z",
+    "items": [
+      {
+        "musicId": 1,
+        "titles": {
+          "ja-JP": "ロキ",
+          "zh-CN": "ROKI",
+          "en-US": "ROKI"
+        },
+        "availableLocales": ["zh-CN", "en-US"]
+      },
+      {
+        "musicId": 2,
+        "titles": {
+          "ja-JP": "未翻訳の歌"
+        },
+        "availableLocales": []
+      }
+    ]
+  },
+  "document": {
+    "schemaVersion": 1,
+    "musicId": 1,
+    "sourceLocale": "ja-JP",
+    "updatedAt": "2026-07-22T00:00:00Z",
+    "attribution": "Published translation artifact fixture",
+    "lines": [
+      {
+        "id": "line-1",
+        "source": "単独歌唱の一行",
+        "translations": {
+          "zh-CN": "单人演唱的一行",
+          "en-US": "A solo line"
+        },
+        "performerIds": [21]
+      },
+      {
+        "id": "line-2",
+        "source": "二人で歌う一行",
+        "translations": {
+          "zh-CN": "两人合唱的一行",
+          "en-US": "A duet line"
+        },
+        "performerIds": [21, 22]
+      },
+      {
+        "id": "line-3",
+        "source": "三人以上で歌う一行",
+        "translations": {
+          "zh-CN": "三人以上合唱的一行",
+          "en-US": "A line sung by three or more performers"
+        },
+        "performerIds": [1, 2, 3, 21]
+      },
+      {
+        "id": "line-long",
+        "source": "改行や空白を含まない非常に長い歌詞でもレイアウト領域からはみ出さず安全に折り返されることを確認するための文字列ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "translations": {
+          "zh-CN": "用于确认没有换行或空格的超长歌词也会安全折行且不会溢出布局区域的字符串ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        },
+        "performerIds": []
+      }
+    ]
+  }
+}

@@ -3,6 +3,7 @@
   { "path": "/about/", "pageKey": "about", "priority": 0.8, "changefreq": "monthly", "indexable": true },
   { "path": "/cards/", "pageKey": "cards", "priority": 0.9, "changefreq": "daily", "indexable": true },
   { "path": "/music/", "pageKey": "music", "priority": 0.9, "changefreq": "daily", "indexable": true },
+  { "path": "/lyrics/", "pageKey": "lyrics", "priority": 0.8, "changefreq": "daily", "indexable": true },
   { "path": "/music/meta/", "pageKey": "music_meta", "priority": 0.7, "changefreq": "weekly", "indexable": true },
   { "path": "/soundtrack/", "pageKey": "soundtrack", "priority": 0.7, "changefreq": "weekly", "indexable": true },
   { "path": "/events/", "pageKey": "events", "priority": 0.9, "changefreq": "daily", "indexable": true },

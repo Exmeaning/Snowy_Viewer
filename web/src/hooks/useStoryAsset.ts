@@ -3,7 +3,7 @@
  * useStoryAsset — generic story asset loading hook
  *
  * - Resolves lang (jp/cn) from serverSource.
- * - Optionally merges JP translations when provided.
+ * - Optionally merges target-locale overlays into Japanese scenario actions.
  * - Handles StoryAssetMissingError consistently.
  */
 import { useState, useEffect } from "react";
@@ -17,7 +17,7 @@ import type { UiLocale } from "@/lib/i18n";
 export interface UseStoryAssetOptions {
     type: StoryAssetType;
     params: AssetParams | null; // null = not ready yet
-    /** Optional: JP translation to merge (only used when lang=jp) */
+    /** Optional target-locale translation to merge (only used when lang=jp). */
     translation?: IEventStoryTranslation | null;
     /** Episode number for translation lookup */
     episodeNo?: number;

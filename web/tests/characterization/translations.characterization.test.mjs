@@ -49,6 +49,7 @@ function installBrowser(storage = createStorage()) {
 
 test("TranslationData keeps the current source-string categories and known remote schema mismatch", () => {
   const source = readWeb("src/lib/translations.ts");
+  assert.match(source, /const MAX_MEMORY_LOCALES = 2/);
   for (const category of baseline.translationFileOrder) {
     assert.match(source, new RegExp(`/${category}\\.json\\$\\{query\\}`));
   }
@@ -173,6 +174,34 @@ test("ja-JP, zh-TW, and ko-KR return source fallbacks without any target request
     assert.deepEqual(result.music, { title: {}, artist: {}, vocalCaption: {} });
   }
   assert.equal(fetchCount, 0);
+});
+
+test("legacy no-argument call sites resolve the localized route before stored UI state", async () => {
+  const storage = installBrowser(createStorage({
+    [baseline.storage.localStorage.uiLocale]: "zh-CN",
+  }));
+  globalThis.window.location = { pathname: "/en-us/music" };
+  const fetches = [];
+  globalThis.fetch = async (url) => {
+    fetches.push(String(url));
+    return fixtureResponseFor(String(url));
+  };
+  const translations = await importTranslations({
+    isIndexedDBAvailable: () => false,
+    getTranslationCache: async () => assert.fail("IDB unavailable"),
+    setTranslationCache: async () => assert.fail("IDB unavailable"),
+  });
+
+  await translations.loadTranslations();
+  assert.equal(storage.getItem(baseline.storage.localStorage.uiLocale), "zh-CN", "the loader does not rewrite legacy UI state");
+  assert.ok(fetches.every((url) => url.includes("/en-US/")));
+});
+
+test("TranslationContext clears the visible bundle and reloads when UI locale changes", () => {
+  const source = readWeb("src/contexts/TranslationContext.tsx");
+  assert.match(source, /setTranslations\(null\)/);
+  assert.match(source, /loadTranslations\(locale\)/);
+  assert.match(source, /\}, \[locale\]\);/);
 });
 
 test("stale memory is returned immediately and revalidated in the background", async () => {

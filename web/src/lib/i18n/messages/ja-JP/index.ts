@@ -568,6 +568,7 @@ export const jaJPMessages = {
       items: {
         cards: 'カード',
         musicList: '楽曲',
+        lyrics: '歌詞',
         musicMeta: '楽曲Meta',
         soundtrack: 'サウンドトラック',
         character: 'キャラクター',
@@ -638,6 +639,7 @@ export const jaJPMessages = {
     groupPages: {
       cards: 'Browse all card data',
       music: 'Browse all music information',
+      lyrics: '公開済みの歌詞と翻訳を読む',
       musicMeta: 'View difficulty and data analysis for songs',
       soundtrack: 'A polished soundtrack player for background music',
       character: 'View detailed character profiles',
@@ -1526,6 +1528,23 @@ export const jaJPMessages = {
           shortLabel: 'Auto Score'
         }
       }
+    },
+    lyrics: {
+      badge: '歌詞ライブラリ',
+      title: '歌詞',
+      description: '公開済みの日本語歌詞と簡体字中国語・英語翻訳を閲覧できます。',
+      error: '歌詞データの読み込みに失敗しました',
+      loading: '歌詞を読み込んでいます...',
+      empty: '一致する歌詞が見つかりません',
+      emptyHint: '翻訳リポジトリで公開済みの歌詞のみ表示されます。',
+      loadMore: 'さらに読み込む',
+      backToList: '歌詞一覧へ戻る',
+      notFound: 'この楽曲の歌詞が見つかりません',
+      emptyDocument: 'この歌詞ファイルには表示できる行がありません。',
+      japanese: '日本語原文',
+      chinese: '簡体字中国語',
+      english: '英語',
+      sourceFallback: '対象言語の翻訳がないため、日本語原文を表示しています。'
     },
     musicMeta: {
       badge: 'Song Metadata',

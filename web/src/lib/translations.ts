@@ -1,6 +1,6 @@
 /**
- * Translation utilities for Japanese -> Chinese translations
- * Translation data is stored as static JSON files in /public/data/translations/
+ * Translation utilities for Japanese-source locale overlays.
+ * zh-CN uses the legacy root files; en-US uses the locale subdirectory.
  * 
  * IndexedDB caching: Translation data is persisted in IndexedDB and keyed by
  * a version hash derived from the masterdata version. On version change,
@@ -121,6 +121,15 @@ export function getTranslationTargetLocale(locale: string): TranslationTargetLoc
 function resolveTranslationLocale(locale?: string): string {
     if (locale) return locale;
     if (typeof window === "undefined") return "zh-CN";
+    const routeLocale = window.location?.pathname?.split("/").filter(Boolean)[0]?.toLowerCase();
+    const routeUiLocale: Record<string, string> = {
+        "zh-cn": "zh-CN",
+        "zh-tw": "zh-TW",
+        "en-us": "en-US",
+        "ja-jp": "ja-JP",
+        "ko-kr": "ko-KR",
+    };
+    if (routeLocale && routeUiLocale[routeLocale]) return routeUiLocale[routeLocale];
     return localStorage.getItem(UI_LOCALE_STORAGE_KEY) || "zh-CN";
 }
 

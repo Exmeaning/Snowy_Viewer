@@ -80,6 +80,15 @@ const navigationGroups: NavGroup[] = [
                 ),
             },
             {
+                id: "lyrics",
+                href: "/lyrics",
+                icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 18V5l11-2v13M9 9l11-2M9 18a3 3 0 11-3-3h3v3zm11-2a3 3 0 11-3-3h3v3z" />
+                    </svg>
+                ),
+            },
+            {
                 id: "musicMeta",
                 href: "/music/meta",
                 icon: (

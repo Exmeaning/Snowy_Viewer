@@ -566,6 +566,7 @@ export const koKRMessages = {
             items: {
                 cards: "카드",
                 musicList: "음악 목록",
+                lyrics: "가사",
                 musicMeta: "송메타",
                 soundtrack: "게임 사운드트랙",
                 character: "역할",
@@ -636,6 +637,7 @@ export const koKRMessages = {
         groupPages: {
             cards: "모든 카드 데이터 찾아보기",
             music: "모든 노래 정보 찾아보기",
+            lyrics: "공개된 노래 가사와 번역 읽기",
             musicMeta: "노래 난이도 및 데이터 분석 보기",
             soundtrack: "절묘한 배경 음악 사운드 트랙 플레이어",
             character: "역할 세부정보 보기",
@@ -1524,6 +1526,23 @@ export const koKRMessages = {
                     shortLabel: "자동 채점"
                 }
             }
+        },
+        lyrics: {
+            badge: "가사 라이브러리",
+            title: "가사",
+            description: "공개된 일본어 가사와 중국어 간체 및 영어 번역을 확인합니다.",
+            error: "가사 데이터를 불러오지 못했습니다",
+            loading: "가사를 불러오는 중...",
+            empty: "일치하는 가사가 없습니다",
+            emptyHint: "번역 저장소에 공개된 가사만 여기에 표시됩니다.",
+            loadMore: "더 보기",
+            backToList: "가사 목록으로",
+            notFound: "이 곡의 가사를 찾을 수 없습니다",
+            emptyDocument: "이 가사 파일에는 표시할 수 있는 행이 없습니다.",
+            japanese: "일본어 원문",
+            chinese: "중국어 간체",
+            english: "영어",
+            sourceFallback: "대상 언어 번역이 없어 일본어 원문을 표시합니다."
         },
         musicMeta: {
             badge: "노래 메타데이터",
