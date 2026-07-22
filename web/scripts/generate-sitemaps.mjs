@@ -28,6 +28,7 @@ import {
     readJsonIfExists,
     requireFreshBuildData,
 } from './lib/build-fetch.mjs';
+import { fetchPublicLyricsIndex, validatePublicLyricsIndex } from './lib/public-lyrics.mjs';
 import seoRouteData from '../src/lib/seo-routes-data.json' with { type: 'json' };
 
 const SEO_ROUTE_DATA = seoRouteData;
@@ -320,6 +321,19 @@ function buildStoryAreaReaderRoutes(raw, existingData) {
     });
 }
 
+export function buildPublishedLyricsRoutes(raw, existingData) {
+    const index = validatePublicLyricsIndex(raw);
+    return index.songs.map(song => {
+        const routePath = `/lyrics/${song.musicId}/`;
+        return {
+            path: routePath,
+            lastmod: stableLastmod(existingData, routePath, song.updatedAt),
+            priority: 0.6,
+            changefreq: 'weekly',
+        };
+    });
+}
+
 const routeSources = [
     {
         label: 'cards',
@@ -362,6 +376,22 @@ const routeSources = [
                         changefreq: 'weekly',
                     };
                 }),
+            },
+        ],
+    },
+    {
+        label: 'publishedLyrics',
+        filename: 'public lyrics index',
+        fallback: { version: 1, songs: [] },
+        validate: validatePublicLyricsIndex,
+        fetch: fetchPublicLyricsIndex,
+        groups: [
+            {
+                key: 'publishedLyrics',
+                logLabel: 'published lyrics pages',
+                prefix: '/lyrics/',
+                failClosed: true,
+                build: buildPublishedLyricsRoutes,
             },
         ],
     },
@@ -689,6 +719,10 @@ function buildGroupFromRaw(group, raw, existingData, sourceLabel) {
     const previous = existingRoutesByPrefix(existingData, group.prefix, group.excludePrefixes, group.matchRoute);
 
     if (routes.length === 0) {
+        if (group.failClosed) {
+            console.log(`  - 0 ${group.logLabel} (${sourceLabel}, fail closed)`);
+            return { key: group.key, logLabel: group.logLabel, routes: [], source: `${sourceLabel}-fail-closed` };
+        }
         if (previous.length > 0 && !REQUIRE_FRESH) {
             console.warn(`    ⚠ ${group.logLabel} returned 0 entries, keeping existing ${previous.length} routes`);
             return { key: group.key, logLabel: group.logLabel, routes: previous, source: 'existing-empty-response' };
@@ -715,11 +749,17 @@ async function loadRouteSource(source, existingData) {
 
         return source.groups.map(group => buildGroupFromRaw(group, raw, existingData, 'fresh'));
     } catch (error) {
-        if (REQUIRE_FRESH) {
+        const allGroupsFailClosed = source.groups.every(group => group.failClosed);
+        if (REQUIRE_FRESH && !allGroupsFailClosed) {
             throw error;
         }
 
         return source.groups.map(group => {
+            if (group.failClosed) {
+                const routes = group.build(source.fallback, existingData);
+                console.warn(`    ⚠ ${group.logLabel} failed: ${shortenError(error)}, omitting unverified routes`);
+                return { key: group.key, logLabel: group.logLabel, routes, source: 'fail-closed' };
+            }
             const previous = existingRoutesByPrefix(existingData, group.prefix, group.excludePrefixes, group.matchRoute);
             if (previous.length > 0) {
                 console.warn(`    ⚠ ${group.logLabel} failed: ${shortenError(error)}, keeping existing ${previous.length} routes`);
@@ -785,7 +825,9 @@ async function main() {
     console.log('\n=== Sitemap data generation complete! ===');
 }
 
-if (!process.env.BUILD_DATA_REGION) {
+const isDirectExecution = process.argv[1] && path.resolve(process.argv[1]) === __filename;
+
+if (isDirectExecution && !process.env.BUILD_DATA_REGION) {
     for (const region of BUILD_DATA_REGIONS) {
         const result = spawnSync(process.execPath, [__filename], {
             stdio: 'inherit',
@@ -793,7 +835,7 @@ if (!process.env.BUILD_DATA_REGION) {
         });
         if (result.status !== 0) process.exit(result.status || 1);
     }
-} else {
+} else if (isDirectExecution) {
     main().catch(error => {
         console.error('Fatal error:', error);
         process.exit(1);

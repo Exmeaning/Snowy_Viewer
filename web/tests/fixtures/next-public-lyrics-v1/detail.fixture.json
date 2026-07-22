@@ -14,7 +14,9 @@
       "segments": [
         {
           "text": "初音歌う",
-          "performerIds": [1]
+          "performerIds": [
+            1
+          ]
         }
       ]
     }
