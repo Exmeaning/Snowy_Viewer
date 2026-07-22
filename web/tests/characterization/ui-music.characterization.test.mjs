@@ -195,7 +195,8 @@ test("MusicItem keeps localized default links and translation precedence", () =>
   assert.ok(item.includes(baseline.musicUi.itemComposerClass));
 
   const localizedLink = readWeb("src/components/LocalizedLink.tsx");
-  assert.match(localizedLink, /localizePath\(href, locale\)/);
+  assert.match(localizedLink, /const routeLocale = uiLocaleToRouteLocale\(locale\)/);
+  assert.match(localizedLink, /localizePath\(href, routeLocale\)/);
 });
 
 test("music list/detail mobile and dark-mode layout contracts remain unchanged", () => {

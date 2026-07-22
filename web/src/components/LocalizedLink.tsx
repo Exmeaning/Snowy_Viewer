@@ -1,22 +1,22 @@
 "use client";
 
 import Link, { type LinkProps } from "next/link";
-import { usePathname } from "next/navigation";
 import type { AnchorHTMLAttributes } from "react";
 
-import { getRouteLocaleFromPathname, localizePath } from "@/lib/localized-path";
-import { DEFAULT_ROUTE_LOCALE } from "@/lib/locale-routing";
+import { useI18n } from "@/contexts/I18nContext";
+import { localizePath } from "@/lib/localized-path";
+import { uiLocaleToRouteLocale } from "@/lib/locale-routing";
 
 type LocalizedLinkProps = LinkProps
     & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps>
     & { children?: React.ReactNode };
 
 export default function LocalizedLink({ href, ...props }: LocalizedLinkProps) {
-    const pathname = usePathname();
-    const locale = getRouteLocaleFromPathname(pathname) ?? DEFAULT_ROUTE_LOCALE;
+    const { locale } = useI18n();
+    const routeLocale = uiLocaleToRouteLocale(locale);
     const localizedHref = typeof href === "string"
-        ? localizePath(href, locale)
-        : { ...href, pathname: href.pathname ? localizePath(String(href.pathname), locale) : href.pathname };
+        ? localizePath(href, routeLocale)
+        : { ...href, pathname: href.pathname ? localizePath(String(href.pathname), routeLocale) : href.pathname };
 
     return <Link href={localizedHref} {...props} />;
 }
