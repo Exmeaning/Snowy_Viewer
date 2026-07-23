@@ -1,8 +1,27 @@
 import {
+  CardEventCalculator,
   EventCalculator,
   EventType,
-  LiveType
+  LiveType,
+  type UserCard
 } from '../src'
+import { TEST_DATA_PROVIDER } from './fixtures/test-data-provider'
+
+test('card event bonus combines fixture, rarity, and featured-card bonuses', async () => {
+  const cards = await TEST_DATA_PROVIDER.getUserData<UserCard[]>('userCards')
+  const bonus = await new CardEventCalculator(TEST_DATA_PROVIDER).getCardEventBonus(cards[0], 100)
+
+  expect(bonus.getBonus()).toEqual({ fixedBonus: 25, cardBonus: 25, leaderBonus: 0 })
+  expect(bonus.getMaxBonus(true)).toBe(50)
+})
+
+test('deck event bonus sums the fixture cards', async () => {
+  const cards = await TEST_DATA_PROVIDER.getUserData<UserCard[]>('userCards')
+  const bonus = await new EventCalculator(TEST_DATA_PROVIDER)
+    .getDeckEventBonus(cards.slice(0, 5), 100)
+
+  expect(bonus).toBe(150)
+})
 
 test('challenge point', () => {
   const point = EventCalculator.getEventPoint(LiveType.CHALLENGE, EventType.NONE, 1919810)

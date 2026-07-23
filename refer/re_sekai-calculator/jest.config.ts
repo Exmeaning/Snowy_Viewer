@@ -41,8 +41,45 @@ export default {
   //   "clover"
   // ],
 
-  // An object that configures minimum threshold enforcement for coverage results
-  // coverageThreshold: undefined,
+  // Keep production recommendation paths covered by fixture-backed behavioral tests.
+  coverageThreshold: {
+    './src/area-item-recommend/area-item-recommend.ts': {
+      branches: 90,
+      functions: 100,
+      lines: 100,
+      statements: 100
+    },
+    './src/deck-recommend/base-deck-recommend.ts': {
+      branches: 60,
+      functions: 90,
+      lines: 65,
+      statements: 65
+    },
+    './src/deck-recommend/bloom-support-deck-recommend.ts': {
+      branches: 100,
+      functions: 100,
+      lines: 100,
+      statements: 100
+    },
+    './src/deck-recommend/challenge-live-deck-recommend.ts': {
+      branches: 100,
+      functions: 100,
+      lines: 100,
+      statements: 100
+    },
+    './src/deck-recommend/event-bonus-deck-recommend.ts': {
+      branches: 65,
+      functions: 65,
+      lines: 60,
+      statements: 60
+    },
+    './src/deck-recommend/event-deck-recommend.ts': {
+      branches: 65,
+      functions: 100,
+      lines: 100,
+      statements: 100
+    }
+  },
 
   // A path to a custom dependency extractor
   // dependencyExtractor: undefined,
