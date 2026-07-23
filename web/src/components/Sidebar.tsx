@@ -723,6 +723,7 @@ export default function Sidebar({
                     {/* Home shortcut */}
                     <Link
                         href="/"
+                        prefetch={false}
                         onClick={handleNavClick}
                         data-nav-index={(() => { const i = flatIdx; flatIdx++; return i; })()}
                         className={`pressable flex items-center gap-3 px-4 py-2 rounded-full text-sm type-on-glass ${focusedIndex === 0
@@ -779,6 +780,7 @@ export default function Sidebar({
                                                     }`}>
                                                     <Link
                                                         href={item.href}
+                                                        prefetch={false}
                                                         onClick={handleNavClick}
                                                         data-nav-index={thisIdx}
                                                         className="flex items-center gap-3 px-4 py-2 text-sm font-medium type-on-glass flex-1 min-w-0"
@@ -801,6 +803,7 @@ export default function Sidebar({
                     {/* User Info Card */}
                     <Link
                         href="/profile"
+                        prefetch={false}
                         onClick={handleNavClick}
                         className="pressable flex items-center gap-3 p-2 rounded-2xl hover:bg-miku/8 dark:hover:bg-miku/12 group"
                     >

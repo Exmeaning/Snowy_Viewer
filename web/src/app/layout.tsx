@@ -34,14 +34,11 @@ import {
 } from "@/lib/i18n";
 import { BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY } from "@/lib/backgroundAnimation";
 import { isRouteLocale, routeLocaleToUiLocale } from "@/lib/locale-routing";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 const ROUTE_LOCALE_HEADER = "x-moesekai-route-locale";
 
 const SITE_BASE_URL = getSiteBaseUrl();
-
-function serializeJsonLd(value: unknown): string {
-  return JSON.stringify(value).replace(/</g, "\\u003c");
-}
 
 export async function generateMetadata(): Promise<Metadata> {
   return generateRootMetadata();

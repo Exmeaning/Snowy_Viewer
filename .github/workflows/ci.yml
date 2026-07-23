@@ -56,3 +56,29 @@ jobs:
         run: npm run lint
       - name: Build
         run: npm run build:next
+      - name: Validate production image
+        working-directory: ${{ github.workspace }}
+        run: docker build -f Dockerfile -t moesekai:test .
+
+  calculator:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: refer/re_sekai-calculator
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: refer/re_sekai-calculator/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Test all suites
+        run: npm test -- --runInBand
+      - name: Build
+        run: npm run build
+      - name: Audit
+        run: npm audit --audit-level=high

@@ -1017,7 +1017,7 @@ export const enUSMessages = {
             },
             policies: {
                 title: "Site Policies and Ads",
-                description: "Moesekai uses Google AdSense to cover part of the operating costs. For Cookie, personalized ads, and user data handling details, please see the pages below. (Ads are not actually enabled yet.)",
+                description: "Advertising is currently disabled. See the policies below for the actual handling of local account data, OAuth2 tokens, analytics consent, and third-party services.",
                 privacy: "Privacy Policy",
                 terms: "Terms of Service",
                 googleAds: "Google Ad Settings",
@@ -1042,6 +1042,59 @@ export const enUSMessages = {
                 joinGroup: "Moesekai Literature Team",
                 joinSuffix: ".",
             },
+        },
+        privacy: {
+            title: "Privacy Policy",
+            updated: "Last updated: July 24, 2026",
+            overview: {
+                title: "1. Overview",
+                body: "Moesekai (pjsk.moe) is a non-profit PROJECT SEKAI fan data viewer. This policy explains what the site actually stores on your device, when it communicates with third-party services, and how you can control that data.",
+            },
+            local: {
+                title: "2. Data stored on your device",
+                intro: "Moesekai does not require a server-side Moesekai account, but some features store the following in browser localStorage or sessionStorage:",
+                preferences: "Interface preferences such as language, theme, sidebar state, filters, and analytics consent.",
+                account: "Game account identifiers, server, nickname, avatar, and related profile details that you choose to add.",
+                tokens: "OAuth2 access tokens, refresh tokens, granted scopes, and expiry times obtained when you connect an account. These tokens are sensitive credentials.",
+                gameData: "Game-data snapshots synchronized for account tools, including characters, decks, materials, area items, and MySEKAI data.",
+                note: "The site frontend stores these account records and OAuth2 tokens in this browser; they are not uploaded to a Moesekai cloud account database. On a shared device, remove accounts and clear site data before leaving.",
+            },
+            network: {
+                title: "3. Network requests and third parties",
+                intro: "When you use the relevant features, your browser sends requests to content, public game API, or OAuth2 providers:",
+                oauth: "The OAuth2 provider processes sign-in, authorization codes, tokens, and linked game accounts under its own policy.",
+                publicApi: "Public or authorized APIs receive the selected server and game UID and return game data used by site tools.",
+                analytics: "Google Analytics loads only after you explicitly allow it and when the browser sends no opt-out privacy signal. Google may then receive page, device, browser, IP address, and timing information.",
+            },
+            cookies: {
+                title: "4. Cookies, analytics, and ads",
+                analytics: "Google Analytics is off by default. You can grant or revoke analytics consent in site settings; after revocation, the site disables the tag and attempts to remove related analytics cookies.",
+                adsDisabled: "Advertising is currently disabled. Moesekai does not load Google AdSense ad scripts or rely on advertising revenue. We will update this policy and the relevant consent controls before enabling ads in the future.",
+            },
+            use: {
+                title: "5. How data is used",
+                functionality: "Remember your preferences and provide account, deck, and calculator tools.",
+                sync: "Synchronize and display game data from the selected API when you request it.",
+                analytics: "Understand aggregate usage, with your consent, to maintain and improve the site.",
+            },
+            sharing: {
+                title: "6. Sharing and sale",
+                body: "We do not sell locally stored account data or OAuth2 tokens. Your browser sends only the data needed for a feature to the corresponding API, OAuth2, or analytics provider; each third party handles received data under its own policy.",
+            },
+            controls: {
+                title: "7. Your controls",
+                delete: "Remove saved accounts in account management, or clear pjsk.moe site data in your browser to delete all local preferences, account snapshots, and tokens.",
+                consent: "Grant or revoke analytics consent at any time in site settings.",
+                browser: "Use browser cookie, storage, Do Not Track, or Global Privacy Control settings to impose further restrictions.",
+            },
+            links: {
+                title: "8. Third-party links",
+                body: "External links use Moesekai's leaving-site notice. Third-party sites have independent content and privacy policies.",
+                googlePrivacy: "Google Privacy Policy",
+            },
+            children: { title: "9. Children's privacy", body: "The site is not directed to children under 13, and we do not knowingly collect their personal information." },
+            changes: { title: "10. Policy changes", body: "Changes will be published on this page with an updated date. Material changes to data handling will receive an additional notice where appropriate." },
+            contact: { title: "11. Contact", body: "For questions about this policy or data handling, contact us through:", github: "GitHub", qq: "QQ group" },
         },
         leave: {
             badge: "Redirect Notice",

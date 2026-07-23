@@ -1,11 +1,18 @@
 # Build Stage for Frontend
-FROM oven/bun:latest AS builder-web
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates nodejs && rm -rf /var/lib/apt/lists/*
+FROM node:22.17.1-bookworm-slim AS node-build-runtime
+FROM oven/bun:1.3.14 AS builder-web
+COPY --from=node-build-runtime /usr/local/bin/node /usr/local/bin/node
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY refer/re_sekai-calculator/ refer/re_sekai-calculator/
 
-WORKDIR /app
+# The Bun lock belongs to the workspace root, so install from that same root.
+COPY package.json bun.lock ./
+COPY web/package.json web/package.json
+COPY refer/re_sekai-calculator/package.json refer/re_sekai-calculator/package.json
+RUN bun install --frozen-lockfile
+
 COPY web/ web/
+COPY refer/re_sekai-calculator/ refer/re_sekai-calculator/
 WORKDIR /app/web
 # Set API URL empty to allow relative fetching
 ENV NEXT_PUBLIC_API_URL=
@@ -18,65 +25,40 @@ ARG REQUIRE_FRESH_BUILD_DATA=0
 ENV MASTER_DATA_URLS=$MASTER_DATA_URLS
 ENV MANGA_DATA_URLS=$MANGA_DATA_URLS
 ENV REQUIRE_FRESH_BUILD_DATA=$REQUIRE_FRESH_BUILD_DATA
-RUN find /app -name "package-lock.json" -exec sed -i 's/registry.npmmirror.com/registry.npmjs.org/g' {} +
-RUN bun install --frozen-lockfile
-RUN ls -la /app/refer/re_sekai-calculator/src/index.ts
-RUN bun run build
+RUN test -f /app/bun.lock && test -f /app/refer/re_sekai-calculator/src/index.ts
+RUN bun run sitemap && bun run generate:metadata && bun run build:next
 
 # Build Stage for Backend
-FROM golang:1.23-alpine AS builder-go
+FROM golang:1.23.12-alpine3.22 AS builder-go
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY internal ./internal
 COPY main.go .
-RUN go build -o server main.go
+RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o server main.go
 
 # Runtime Stage
-FROM node:20-alpine
+FROM node:22.17.1-alpine3.22
 WORKDIR /app
 
-# Copy Backend
-COPY --from=builder-go /app/server ./server
+RUN apk add --no-cache ca-certificates tini wget
 
-# Copy Next.js Standalone Server
-COPY --from=builder-web /app/web/.next/standalone ./nextjs/
-COPY --from=builder-web /app/web/.next/static ./nextjs/web/.next/static
-COPY --from=builder-web /app/web/public ./nextjs/web/public
-
-# Install certs for external API calls from backend
-RUN apk add --no-cache ca-certificates wget
+# Copy Backend and Next.js standalone server.
+COPY --from=builder-go --chown=node:node /app/server ./server
+COPY --from=builder-web --chown=node:node /app/web/.next/standalone ./nextjs/
+COPY --from=builder-web --chown=node:node /app/web/.next/static ./nextjs/web/.next/static
+COPY --from=builder-web --chown=node:node /app/web/public ./nextjs/web/public
+COPY --chown=node:node --chmod=755 scripts/start-container.sh ./start.sh
 
 # Translation files are served from Next.js public directory.
 ENV TRANSLATION_PATH=/app/nextjs/web/public/data/translations
 ENV TRANSLATION_AUTO_PUSH_ENABLED=false
 
-# Create startup script that runs both servers
-RUN printf '#!/bin/sh\n\
-    # Start Next.js standalone server on port 3000\n\
-    cd /app/nextjs/web && PORT=3000 HOSTNAME=0.0.0.0 node server.js &\n\
-    NEXTJS_PID=$!\n\
-    \n\
-    # Wait for Next.js to be ready\n\
-    echo "Waiting for Next.js to start..."\n\
-    for i in 1 2 3 4 5 6 7 8 9 10; do\n\
-        if wget -q --spider http://localhost:3000 2>/dev/null; then\n\
-            echo "Next.js is ready"\n\
-            break\n\
-        fi\n\
-        echo "Attempt $i: Next.js not ready yet, waiting..."\n\
-        sleep 2\n\
-    done\n\
-    \n\
-    # Start Go API server on port 8080\n\
-    cd /app && ./server &\n\
-    GO_PID=$!\n\
-    \n\
-    # Wait for either process to exit\n\
-    wait -n $NEXTJS_PID $GO_PID\n\
-    exit $?\n' > /app/start.sh && chmod +x /app/start.sh
+USER node
 
-# Go server is the single entry point, proxying frontend to Next.js internally
+# Go is the single entry point and reports ready only after masterdata loads.
 EXPOSE 8080
-
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD wget -q --spider http://127.0.0.1:8080/readyz || exit 1
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["/app/start.sh"]

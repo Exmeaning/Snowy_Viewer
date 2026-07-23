@@ -62,6 +62,8 @@ interface CachedLyricsDocument {
 const LYRICS_DETAIL_CACHE_LIMIT = 24;
 const LYRICS_INDEX_CACHE_TTL = 60 * 1000;
 const LYRICS_DETAIL_CACHE_TTL = 60 * 1000;
+const LYRICS_FETCH_TIMEOUT_MS = 10 * 1000;
+const MAX_LYRICS_ARTIFACT_BYTES = 4 << 20;
 const detailCache = new Map<string, CachedLyricsDocument>();
 const detailRequests = new Map<string, Promise<ILyricsDocument>>();
 let indexCache: ILyricsIndex | null = null;
@@ -160,12 +162,71 @@ function validateDocument(value: unknown, publication: ILyricsIndexEntry): ILyri
     return value as unknown as ILyricsDocument;
 }
 
-async function fetchPublishedJson(url: string, signal?: AbortSignal): Promise<unknown> {
-    const response = await fetch(url, { cache: "no-store", signal });
-    if (!response.ok) {
-        throw new LyricsLoadError(`Lyrics artifact request failed (${response.status})`, response.status);
+async function readJsonLimited(response: Response): Promise<unknown> {
+    const contentLength = Number(response.headers?.get("content-length"));
+    if (Number.isFinite(contentLength) && contentLength > MAX_LYRICS_ARTIFACT_BYTES) {
+        throw new LyricsLoadError("Lyrics artifact is too large");
     }
-    return response.json();
+
+    if (!response.body?.getReader) {
+        const value = await response.json();
+        if (new TextEncoder().encode(JSON.stringify(value)).byteLength > MAX_LYRICS_ARTIFACT_BYTES) {
+            throw new LyricsLoadError("Lyrics artifact is too large");
+        }
+        return value;
+    }
+
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > MAX_LYRICS_ARTIFACT_BYTES) {
+            await reader.cancel();
+            throw new LyricsLoadError("Lyrics artifact is too large");
+        }
+        chunks.push(value);
+    }
+
+    const bytes = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+        bytes.set(chunk, offset);
+        offset += chunk.byteLength;
+    }
+    try {
+        return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    } catch {
+        throw new LyricsLoadError("Invalid lyrics JSON");
+    }
+}
+
+async function fetchPublishedJson(url: string, signal?: AbortSignal): Promise<unknown> {
+    const controller = new AbortController();
+    let timedOut = false;
+    const abortFromCaller = () => controller.abort(signal?.reason);
+    if (signal?.aborted) abortFromCaller();
+    else signal?.addEventListener("abort", abortFromCaller, { once: true });
+    const timeout = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+    }, LYRICS_FETCH_TIMEOUT_MS);
+
+    try {
+        const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+        if (!response.ok) {
+            throw new LyricsLoadError(`Lyrics artifact request failed (${response.status})`, response.status);
+        }
+        return await readJsonLimited(response);
+    } catch (error) {
+        if (timedOut) throw new LyricsLoadError("Lyrics artifact request timed out");
+        throw error;
+    } finally {
+        clearTimeout(timeout);
+        signal?.removeEventListener("abort", abortFromCaller);
+    }
 }
 
 export async function fetchLyricsIndex(signal?: AbortSignal): Promise<ILyricsIndex> {

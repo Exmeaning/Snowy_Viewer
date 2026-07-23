@@ -1,0 +1,70 @@
+{
+  "masterData": {
+    "gameCharacterUnits": [
+      { "id": 1, "gameCharacterId": 1, "unit": "unit_a" }
+    ],
+    "areaItemLevels": [
+      {
+        "areaItemId": 1,
+        "level": 1,
+        "targetUnit": "unit_a",
+        "targetCardAttr": "none",
+        "power1BonusRate": 1,
+        "power1AllMatchBonusRate": 0,
+        "power2BonusRate": 1,
+        "power2AllMatchBonusRate": 0,
+        "power3BonusRate": 1,
+        "power3AllMatchBonusRate": 0,
+        "sentence": "Synthetic level 1"
+      },
+      {
+        "areaItemId": 1,
+        "level": 2,
+        "targetUnit": "unit_a",
+        "targetCardAttr": "none",
+        "power1BonusRate": 2,
+        "power1AllMatchBonusRate": 0,
+        "power2BonusRate": 2,
+        "power2AllMatchBonusRate": 0,
+        "power3BonusRate": 2,
+        "power3AllMatchBonusRate": 0,
+        "sentence": "Synthetic level 2"
+      }
+    ],
+    "shopItems": [
+      {
+        "id": 1002,
+        "shopId": 1,
+        "seq": 1,
+        "releaseConditionId": 0,
+        "resourceBoxId": 0,
+        "costs": [
+          { "shopItemId": 1002, "seq": 1, "cost": { "resourceType": "coin", "resourceId": 0, "quantity": 2500 } }
+        ]
+      }
+    ]
+  },
+  "userData": {
+    "userCards": [
+      { "userId": 9000000001, "cardId": 101, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 1 },
+      { "userId": 9000000001, "cardId": 102, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 2 },
+      { "userId": 9000000001, "cardId": 103, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 3 },
+      { "userId": 9000000001, "cardId": 104, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 4 },
+      { "userId": 9000000001, "cardId": 105, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 5 }
+    ],
+    "userDecks": [
+      { "userId": 9000000001, "deckId": 1, "name": "Synthetic deck", "leader": 101, "subLeader": 102, "member1": 101, "member2": 102, "member3": 103, "member4": 104, "member5": 105 }
+    ],
+    "userChallengeLiveSoloDecks": [
+      { "characterId": 1, "leader": 101, "support1": 102, "support2": 103, "support3": 104, "support4": 105 }
+    ],
+    "userAreas": [
+      { "areaId": 1, "actionSets": [], "areaItems": [{ "areaItemId": 1, "level": 1 }], "userAreaStatus": { "areaId": 1, "status": "released" } }
+    ],
+    "userHonors": []
+  },
+  "musicMeta": [
+    { "music_id": 1, "difficulty": "easy", "music_time": 120, "event_rate": 100, "base_score": 1, "base_score_auto": 0.8, "skill_score_solo": [0, 0, 0, 0, 0, 0], "skill_score_auto": [0, 0, 0, 0, 0, 0], "skill_score_multi": [0, 0, 0, 0, 0, 0], "fever_score": 0.2, "fever_end_time": 80, "tap_count": 100 },
+    { "music_id": 2, "difficulty": "master", "music_time": 150, "event_rate": 110, "base_score": 1.2, "base_score_auto": 0.9, "skill_score_solo": [0, 0, 0, 0, 0, 0], "skill_score_auto": [0, 0, 0, 0, 0, 0], "skill_score_multi": [0, 0, 0, 0, 0, 0], "fever_score": 0.3, "fever_end_time": 100, "tap_count": 500 }
+  ]
+}

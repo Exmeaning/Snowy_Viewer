@@ -17,11 +17,13 @@ import (
 )
 
 const (
-	serverReadHeaderTimeout = 5 * time.Second
-	serverReadTimeout       = 15 * time.Second
-	serverWriteTimeout      = 30 * time.Second
-	serverIdleTimeout       = 60 * time.Second
-	serverMaxHeaderBytes    = 1 << 20
+	serverReadHeaderTimeout   = 5 * time.Second
+	serverReadTimeout         = 15 * time.Second
+	serverWriteTimeout        = 30 * time.Second
+	serverIdleTimeout         = 60 * time.Second
+	serverMaxHeaderBytes      = 1 << 20
+	masterDataRetryInterval   = 30 * time.Second
+	masterDataRefreshInterval = 6 * time.Hour
 )
 
 func main() {
@@ -34,14 +36,30 @@ func main() {
 
 	// Initialize and load master data
 	store := masterdata.NewStore(cfg.MasterDataPath)
-	if err := store.Fetch(); err != nil {
-		fmt.Printf("Initial fetch error: %v\n", err)
-	}
+	store.StartRetryUntilReady(masterDataRetryInterval)
+	store.StartPeriodicUpdate(masterDataRefreshInterval)
 
 	// Create router and register handlers
 	mux := http.NewServeMux()
 	handler := handlers.New(store)
 	handler.RegisterRoutes(mux)
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if !store.IsReady() {
+			w.Header().Set("Cache-Control", "no-store")
+			w.Header().Set("Retry-After", "30")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte(`{"status":"unavailable"}`))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ready"}`))
+	})
 
 	// Prevent unknown /api/* paths from bouncing between Go and Next.js.
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {

@@ -1,0 +1,9 @@
+.git
+.github
+**/node_modules
+**/.next
+**/coverage
+**/dist
+**/dts
+**/.DS_Store
+screenshot-generator

@@ -12,6 +12,7 @@ import {
     ORIGIN_HTML_CACHE_HEADER,
     getPublicPageCachePolicy,
 } from "@/lib/page-cache-policy";
+import { getPublicRequestOrigin } from "@/lib/site-origin";
 
 export const ROUTE_LOCALE_HEADER = "x-moesekai-route-locale";
 export const PUBLIC_PATH_HEADER = "x-moesekai-public-path";
@@ -35,25 +36,8 @@ function preferredRouteLocale(request: NextRequest) {
     return acceptedLocale ? uiLocaleToRouteLocale(acceptedLocale) : DEFAULT_ROUTE_LOCALE;
 }
 
-function firstForwardedValue(value: string | null): string | null {
-    const first = value?.split(",", 1)[0]?.trim();
-    return first || null;
-}
-
 function publicRedirectUrl(request: NextRequest, pathname: string): URL {
-    const host = firstForwardedValue(request.headers.get("x-forwarded-host"))
-        ?? request.headers.get("host")
-        ?? request.nextUrl.host;
-    const protocol = firstForwardedValue(request.headers.get("x-forwarded-proto"))
-        ?? request.nextUrl.protocol.replace(/:$/, "");
-
-    try {
-        return new URL(`${pathname}${request.nextUrl.search}`, `${protocol}://${host}`);
-    } catch {
-        const fallback = request.nextUrl.clone();
-        fallback.pathname = pathname;
-        return fallback;
-    }
+    return new URL(`${pathname}${request.nextUrl.search}`, getPublicRequestOrigin(request.nextUrl.origin));
 }
 
 export function proxy(request: NextRequest) {
@@ -116,9 +100,9 @@ export function proxy(request: NextRequest) {
         ? `/${locale}/`
         : `/${locale}${pathname.startsWith("/") ? pathname : `/${pathname}`}`;
 
-    // Behind the Go reverse proxy, request.nextUrl contains the internal
-    // Next.js host/port. Build the absolute redirect from forwarded/public
-    // request headers so Location never leaks http://localhost:3000.
+    // Never reflect Host or X-Forwarded-* into a Location header. Production
+    // redirects use the configured canonical origin; local development accepts
+    // only explicitly allowed loopback/configured hosts.
     const response = NextResponse.redirect(publicRedirectUrl(request, localizedPathname), 307);
     response.headers.append("Vary", "Cookie, Accept-Language");
     return response;

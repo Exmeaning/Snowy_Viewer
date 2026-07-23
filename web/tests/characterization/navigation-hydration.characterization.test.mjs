@@ -105,7 +105,7 @@ async function getComponentHarness() {
     };
     dependencies.localizePath = localizedPath.localizePath;
     dependencies.uiLocaleToRouteLocale = routing.uiLocaleToRouteLocale;
-    dependencies.Link = function LinkStub({ href, onClick, children, ...props }) {
+    dependencies.Link = function LinkStub({ href, onClick, children, prefetch: _prefetch, ...props }) {
       const resolvedHref = typeof href === "string" ? href : href.pathname ?? "";
       return React.createElement("a", {
         ...props,
@@ -348,6 +348,12 @@ test("LocalizedLink and Sidebar hydrate rewritten root and nested routes without
       await unmount(root, dom, capture);
     });
   }
+});
+
+test("Sidebar links opt out of automatic RSC prefetch without changing localized navigation", () => {
+  const sidebar = readWeb("src/components/Sidebar.tsx");
+  assert.equal((sidebar.match(/prefetch=\{false\}/g) ?? []).length, 3);
+  assert.doesNotMatch(readWeb("src/components/LocalizedLink.tsx"), /prefetch=\{false\}/);
 });
 
 test("post-hydration storage, keyboard navigation, and mobile close remain interactive", async () => {

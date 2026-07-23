@@ -24,7 +24,10 @@ const (
 
 // Store holds all master data in memory
 type Store struct {
-	mutex sync.RWMutex
+	mutex      sync.RWMutex
+	fetchMutex sync.Mutex
+	ready      bool
+	lastError  error
 
 	// Card/Event/Music mappings
 	CardEventMap  map[int]models.EventInfo
@@ -106,31 +109,33 @@ func (s *Store) loadOrFetch(filename string, url string, target interface{}) err
 
 // Fetch loads all master data from local files or remote
 func (s *Store) Fetch() error {
+	s.fetchMutex.Lock()
+	defer s.fetchMutex.Unlock()
 	fmt.Println("Updating master data...")
 
 	var events []models.Event
 	if err := s.loadOrFetch("events.json", EventsURL, &events); err != nil {
-		return fmt.Errorf("fetch events: %v", err)
+		return s.recordFetchError(fmt.Errorf("fetch events: %w", err))
 	}
 
 	var eventCards []models.EventCard
 	if err := s.loadOrFetch("eventCards.json", EventCardsURL, &eventCards); err != nil {
-		return fmt.Errorf("fetch eventCards: %v", err)
+		return s.recordFetchError(fmt.Errorf("fetch eventCards: %w", err))
 	}
 
 	var eventMusics []models.EventMusic
 	if err := s.loadOrFetch("eventMusics.json", EventMusicsURL, &eventMusics); err != nil {
-		return fmt.Errorf("fetch eventMusics: %v", err)
+		return s.recordFetchError(fmt.Errorf("fetch eventMusics: %w", err))
 	}
 
 	var virtualLives []models.VirtualLive
 	if err := s.loadOrFetch("virtualLives.json", VirtualLivesURL, &virtualLives); err != nil {
-		fmt.Printf("Warning: failed to fetch virtualLives: %v\n", err)
+		return s.recordFetchError(fmt.Errorf("fetch virtualLives: %w", err))
 	}
 
 	var gachas []models.Gacha
 	if err := s.loadOrFetch("gachas.json", GachasURL, &gachas); err != nil {
-		fmt.Printf("Warning: failed to fetch gachas: %v\n", err)
+		return s.recordFetchError(fmt.Errorf("fetch gachas: %w", err))
 	}
 
 	// Build Maps
@@ -225,11 +230,56 @@ func (s *Store) Fetch() error {
 	s.VirtualLiveEventMap = newVirtualLiveEventMap
 	s.GachaList = gachas
 	s.GachaPickups = newGachaPickups
+	s.ready = true
+	s.lastError = nil
 	s.mutex.Unlock()
 
 	fmt.Printf("Data updated. Mapped %d cards, %d musics, %d event-vl, loaded %d gachas.\n",
 		len(newCardEventMap), len(newMusicEventMap), len(newEventVirtualLiveMap), len(gachas))
 	return nil
+}
+
+func (s *Store) recordFetchError(err error) error {
+	s.mutex.Lock()
+	s.lastError = err
+	s.mutex.Unlock()
+	return err
+}
+
+// IsReady reports whether at least one complete required masterdata snapshot
+// has been loaded. Refresh failures do not discard an already valid snapshot.
+func (s *Store) IsReady() bool {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.ready
+}
+
+// ReadinessError returns the most recent load error while startup is pending.
+func (s *Store) ReadinessError() error {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.lastError
+}
+
+// StartRetryUntilReady retries failed startup loading until a complete
+// snapshot is available. It is separate from periodic refresh so readiness is
+// not delayed until the normal refresh interval.
+func (s *Store) StartRetryUntilReady(interval time.Duration) {
+	go func() {
+		for {
+			if s.IsReady() {
+				return
+			}
+			if err := s.Fetch(); err != nil {
+				fmt.Printf("Startup masterdata retry error: %v\n", err)
+			}
+			if s.IsReady() {
+				return
+			}
+			timer := time.NewTimer(interval)
+			<-timer.C
+		}
+	}()
 }
 
 // StartPeriodicUpdate starts a goroutine to update data periodically

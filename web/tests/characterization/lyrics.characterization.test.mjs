@@ -31,6 +31,50 @@ async function importLyrics() {
   ]]);
 }
 
+async function importLyricsDetailLayout() {
+  let source = readWeb("src/app/lyrics/[musicId]/layout.tsx");
+  const substitutions = [
+    [
+      'import type { ReactNode } from "react";',
+      "type ReactNode = unknown;",
+    ],
+    [
+      'import { fetchLyricsDocument, isLyricsUnavailableError } from "@/lib/lyrics";',
+      `const fetchLyricsDocument = async (musicId) => {
+  globalThis.__lyricsDetailSeoTest.calls.push(["document", musicId]);
+  if (globalThis.__lyricsDetailSeoTest.error) throw globalThis.__lyricsDetailSeoTest.error;
+  return globalThis.__lyricsDetailSeoTest.document;
+};
+const isLyricsUnavailableError = (error) => error?.status === 404;`,
+    ],
+    [
+      'import { defineLyricsDetailClientPage } from "@/lib/seo-detail-metadata";',
+      `const defineLyricsDetailClientPage = () => {
+  const page = () => null;
+  page.generateMetadata = async ({ params }) => {
+    const resolvedParams = await params;
+    globalThis.__lyricsDetailSeoTest.calls.push(["detailMetadata", resolvedParams]);
+    return { kind: "published-metadata", resolvedParams };
+  };
+  return page;
+};`,
+    ],
+    [
+      'import { createDetailFallbackMetadata } from "@/lib/seo-metadata";',
+      `const createDetailFallbackMetadata = async (...args) => {
+  globalThis.__lyricsDetailSeoTest.calls.push(["fallbackMetadata", ...args]);
+  return { kind: "fallback-metadata", args };
+};`,
+    ],
+    ['import LyricsDetailClient from "./client";', 'const LyricsDetailClient = () => null;'],
+  ];
+  for (const [from, to] of substitutions) {
+    assert.ok(source.includes(from), `missing lyrics detail test substitution: ${from}`);
+    source = source.replace(from, to);
+  }
+  return importTypeScriptSource(source, "lyrics-detail-layout");
+}
+
 async function importLyricsDetailPage() {
   let source = readWeb("src/app/lyrics/[musicId]/page.tsx");
   const substitutions = [
@@ -52,25 +96,10 @@ const isLyricsUnavailableError = (error) => error?.status === 404;`,
     ],
     [
       'import { defineLyricsDetailClientPage } from "@/lib/seo-detail-metadata";',
-      `const defineLyricsDetailClientPage = () => {
-  const page = async ({ params }) => {
-    const resolvedParams = await params;
-    globalThis.__lyricsDetailSeoTest.calls.push(["detailPage", resolvedParams]);
-    return "published-detail-page";
-  };
-  page.generateMetadata = async ({ params }) => {
-    const resolvedParams = await params;
-    globalThis.__lyricsDetailSeoTest.calls.push(["detailMetadata", resolvedParams]);
-    return { kind: "published-metadata", resolvedParams };
-  };
-  return page;
-};`,
-    ],
-    [
-      'import { createDetailFallbackMetadata } from "@/lib/seo-metadata";',
-      `const createDetailFallbackMetadata = async (...args) => {
-  globalThis.__lyricsDetailSeoTest.calls.push(["fallbackMetadata", ...args]);
-  return { kind: "fallback-metadata", args };
+      `const defineLyricsDetailClientPage = () => async ({ params }) => {
+  const resolvedParams = await params;
+  globalThis.__lyricsDetailSeoTest.calls.push(["detailPage", resolvedParams]);
+  return "published-detail-page";
 };`,
     ],
     ['import LyricsDetailClient from "./client";', 'const LyricsDetailClient = () => null;'],
@@ -237,11 +266,46 @@ test("lyrics loaders consume only the published index and music detail artifact 
     `${TRANSLATION_ROOT_URL}/lyrics/index.json`,
     `${TRANSLATION_ROOT_URL}/lyrics/music_10.json`,
   ]);
-  assert.ok(requests.every(({ options }) => options.cache === "no-store"));
+  assert.ok(requests.every(({ options }) => options.cache === "no-store" && options.signal instanceof AbortSignal));
 
   await lyrics.fetchLyricsIndex();
   await lyrics.fetchLyricsDocument(10);
   assert.equal(requests.length, 2, "successful artifacts remain in bounded memory caches");
+});
+
+test("public lyrics fetches enforce an internal timeout and response byte cap", async () => {
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    headers: new Headers({ "content-length": String((4 << 20) + 1) }),
+    body: null,
+    json: async () => fixture.index,
+  });
+  const oversized = await importLyrics();
+  await assert.rejects(oversized.fetchLyricsIndex(), /too large/);
+
+  const originalSetTimeout = globalThis.setTimeout;
+  const originalClearTimeout = globalThis.clearTimeout;
+  try {
+    globalThis.setTimeout = (callback, delay) => {
+      assert.equal(delay, 10_000);
+      queueMicrotask(callback);
+      return 1;
+    };
+    globalThis.clearTimeout = () => {};
+    globalThis.fetch = async (_url, options) => new Promise((_, reject) => {
+      options.signal.addEventListener("abort", () => {
+        const error = new Error("aborted");
+        error.name = "AbortError";
+        reject(error);
+      }, { once: true });
+    });
+    const timedOut = await importLyrics();
+    await assert.rejects(timedOut.fetchLyricsIndex(), /timed out/);
+  } finally {
+    globalThis.setTimeout = originalSetTimeout;
+    globalThis.clearTimeout = originalClearTimeout;
+  }
 });
 
 test("simultaneous lyrics index callers share one in-flight request and validated result", async () => {
@@ -311,9 +375,10 @@ test("lyrics publication lookup gates detail routes on the published index", asy
   }
 
   const page = readWeb("src/app/lyrics/[musicId]/page.tsx");
+  const layout = readWeb("src/app/lyrics/[musicId]/layout.tsx");
   assert.match(page, /fetchLyricsDocument/);
   assert.match(page, /isLyricsUnavailableError/);
-  assert.match(page, /createDetailFallbackMetadata\("lyrics"/);
+  assert.match(layout, /createDetailFallbackMetadata\("lyrics"/);
   assert.match(page, /if \(!await hasAvailableLyrics\(Number\(musicId\)\)\) notFound\(\)/);
 });
 
@@ -328,9 +393,10 @@ test("lyrics detail SEO and page require an available detail while preserving up
   globalThis.__lyricsDetailSeoTest = state;
 
   try {
+    const layout = await importLyricsDetailLayout();
     const page = await importLyricsDetailPage();
 
-    assert.deepEqual(await page.generateMetadata({ params: Promise.resolve({ musicId: "999" }) }), {
+    assert.deepEqual(await layout.generateMetadata({ params: Promise.resolve({ musicId: "999" }) }), {
       kind: "fallback-metadata",
       args: ["lyrics", "/lyrics/999", "summary"],
     });
@@ -351,7 +417,7 @@ test("lyrics detail SEO and page require an available detail while preserving up
 
     state.error = null;
     state.calls.length = 0;
-    assert.deepEqual(await page.generateMetadata({ params: Promise.resolve({ musicId: "1" }) }), {
+    assert.deepEqual(await layout.generateMetadata({ params: Promise.resolve({ musicId: "1" }) }), {
       kind: "published-metadata",
       resolvedParams: { id: "1" },
     });
@@ -366,7 +432,7 @@ test("lyrics detail SEO and page require an available detail while preserving up
     state.error = { status: 503, message: "upstream unavailable" };
     state.calls.length = 0;
     await assert.rejects(
-      page.generateMetadata({ params: Promise.resolve({ musicId: "10" }) }),
+      layout.generateMetadata({ params: Promise.resolve({ musicId: "10" }) }),
       (error) => error === state.error,
     );
     await assert.rejects(
@@ -378,7 +444,7 @@ test("lyrics detail SEO and page require an available detail while preserving up
     state.error = new Error("malformed lyrics payload");
     state.calls.length = 0;
     await assert.rejects(
-      page.generateMetadata({ params: Promise.resolve({ musicId: "10" }) }),
+      layout.generateMetadata({ params: Promise.resolve({ musicId: "10" }) }),
       (error) => error === state.error,
     );
     await assert.rejects(
@@ -393,6 +459,8 @@ test("lyrics detail SEO and page require an available detail while preserving up
   const preset = readWeb("src/lib/seo-detail-metadata.ts");
   assert.match(preset, /kind: "lyrics",[\s\S]*routePrefix: "lyrics",[\s\S]*parentPageKey: "lyrics", entity: \{ type: "MusicRecording" \}/);
   assert.match(readWeb("src/app/lyrics/[musicId]/page.tsx"), /defineLyricsDetailClientPage\(LyricsDetailClient\)/);
+  assert.match(readWeb("src/app/lyrics/[musicId]/layout.tsx"), /export async function generateMetadata/);
+  assert.match(readWeb("src/lib/seo-metadata.ts"), /createDetailFallbackMetadata[\s\S]*robots: missingDetailRobots\(\)/);
 });
 
 test("lyrics segment not-found boundary renders localized 404 copy without detail data", async () => {

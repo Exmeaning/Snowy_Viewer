@@ -62,7 +62,7 @@ async function importSitemap() {
       },
     },
     path: { join: (...parts) => parts.join("/") },
-    headers: async () => new Map(),
+    getCanonicalOrigin: () => "https://pjsk.moe",
     INDEXABLE_SEO_ROUTES: [],
     DEFAULT_ROUTE_LOCALE: "zh-cn",
     SUPPORTED_ROUTE_LOCALES: routeLocales,
@@ -73,7 +73,7 @@ async function importSitemap() {
   const substitutions = [
     ["import fs from 'fs';", `const fs = globalThis.${dependencyKey}.fs;`],
     ["import path from 'path';", `const path = globalThis.${dependencyKey}.path;`],
-    ["import { headers } from 'next/headers';", `const headers = globalThis.${dependencyKey}.headers;`],
+    ["import { getCanonicalOrigin } from '@/lib/site-origin';", `const getCanonicalOrigin = globalThis.${dependencyKey}.getCanonicalOrigin;`],
     ["import { INDEXABLE_SEO_ROUTES } from '@/lib/seo-routes';", `const INDEXABLE_SEO_ROUTES = globalThis.${dependencyKey}.INDEXABLE_SEO_ROUTES;`],
     [
       "import { DEFAULT_ROUTE_LOCALE, getLocaleRouteConfig, SUPPORTED_ROUTE_LOCALES, type RouteLocale } from '@/lib/locale-routing';",

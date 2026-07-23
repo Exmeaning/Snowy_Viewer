@@ -176,7 +176,7 @@ export const zhTWPagePrimary = {
             },
             policies: {
                 title: "站點政策與廣告說明",
-                description: "本站已連結 Google AdSense 用於覆蓋部分運營成本。有關 Cookie、個人化廣告與使用者資料處理方式，請檢視下列頁面。（實際上並沒有連結）",
+                description: "本站目前未啟用廣告。有關本機帳號資料、OAuth2 權杖、分析同意和第三方服務的實際處理方式，請檢視以下政策頁面。",
                 privacy: "隱私政策",
                 terms: "服務條款",
                 googleAds: "Google 廣告設定",
@@ -201,6 +201,59 @@ export const zhTWPagePrimary = {
                 joinGroup: "Moesekai 文藝部",
                 joinSuffix: "！",
             },
+        },
+        privacy: {
+            title: "隱私政策",
+            updated: "最後更新：2026 年 7 月 24 日",
+            overview: {
+                title: "1. 概述",
+                body: "Moesekai（pjsk.moe）是非營利的 PROJECT SEKAI 粉絲資料檢視器。本政策說明本站實際在你的裝置上儲存什麼、何時與第三方服務通訊，以及你可以如何控制這些資料。",
+            },
+            local: {
+                title: "2. 儲存在本機的資料",
+                intro: "本站不需要建立 Moesekai 伺服器帳號，但部分功能會在瀏覽器 localStorage 或 sessionStorage 中儲存：",
+                preferences: "語言、主題、側邊欄、篩選器和分析同意等介面偏好。",
+                account: "你主動新增的遊戲帳號識別碼、伺服器、暱稱和頭像等帳號資料。",
+                tokens: "透過 OAuth2 連接帳號時取得的存取權杖、重新整理權杖、授權範圍和到期時間。權杖屬於敏感憑證。",
+                gameData: "為帳號工具同步的遊戲資料快照，例如角色、隊伍、素材、區域道具和 MySEKAI 資料。",
+                note: "這些帳號資料和 OAuth2 權杖由本站前端儲存在目前瀏覽器中，不會上傳至 Moesekai 雲端帳號資料庫。使用共用裝置時，請在離開前刪除帳號並清除網站資料。",
+            },
+            network: {
+                title: "3. 網路請求與第三方服務",
+                intro: "使用相應功能時，瀏覽器會向內容、公開遊戲 API 或 OAuth2 提供者傳送請求：",
+                oauth: "OAuth2 提供者會依其政策處理登入、授權碼、權杖和已連結的遊戲帳號。",
+                publicApi: "公開 API 或授權介面會接收所選伺服器和遊戲 UID，並回傳本站工具所需的遊戲資料。",
+                analytics: "只有你明確允許，且瀏覽器未傳送拒絕追蹤的隱私訊號時，本站才載入 Google Analytics；屆時 Google 可能接收頁面、裝置、瀏覽器、IP 位址和時間等技術資訊。",
+            },
+            cookies: {
+                title: "4. Cookie、分析與廣告",
+                analytics: "Google Analytics 預設關閉。你可以在網站設定中允許或撤回分析同意；撤回後本站會停用標籤並嘗試刪除相關分析 Cookie。",
+                adsDisabled: "本站目前已停用廣告功能，不載入 Google AdSense 廣告指令碼，也不依賴廣告收入。若未來啟用廣告，我們會先更新本政策和相應同意介面。",
+            },
+            use: {
+                title: "5. 資料用途",
+                functionality: "儲存你的偏好並提供帳號、隊伍和計算工具。",
+                sync: "依你的操作從所選 API 同步並顯示遊戲資料。",
+                analytics: "在你同意時瞭解彙總使用情況，以維護和改善本站。",
+            },
+            sharing: {
+                title: "6. 分享與出售",
+                body: "我們不會出售你的本機帳號資料或 OAuth2 權杖。瀏覽器只會在你使用相關功能時，把必要資料傳送給對應的 API、OAuth2 或分析提供者；這些第三方依各自政策處理收到的資料。",
+            },
+            controls: {
+                title: "7. 你的控制權",
+                delete: "可在帳號管理中刪除已儲存帳號；也可透過瀏覽器清除 pjsk.moe 的網站資料，刪除所有本機偏好、帳號快照和權杖。",
+                consent: "可隨時在網站設定中允許或撤回分析同意。",
+                browser: "可使用瀏覽器的 Cookie、儲存空間、Do Not Track 或 Global Privacy Control 設定進一步限制處理。",
+            },
+            links: {
+                title: "8. 第三方連結",
+                body: "本站的外部連結會先經過離站提示。第三方網站有獨立的內容和隱私政策。",
+                googlePrivacy: "Google 隱私權政策",
+            },
+            children: { title: "9. 兒童隱私", body: "本站不以 13 歲以下兒童為目標，也不會有意收集其個人資訊。" },
+            changes: { title: "10. 政策更新", body: "政策變更會發布在本頁，並更新頂部日期。資料處理方式若有重大變更，會在適當位置另行提示。" },
+            contact: { title: "11. 聯絡我們", body: "如對本政策或資料處理有疑問，請透過以下管道聯絡：", github: "GitHub", qq: "QQ 群" },
         },
         leave: {
             badge: "外部連結提醒",

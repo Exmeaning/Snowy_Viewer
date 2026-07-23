@@ -72,8 +72,21 @@ export function resolveAcceptLanguageUiLocale(header: string | null | undefined,
 
     const languages = header
         .split(",")
-        .map((part) => part.trim().split(";")[0])
-        .filter(Boolean);
+        .map((part, index) => {
+            const [language = "", ...parameters] = part.trim().split(";");
+            let quality = 1;
+            for (const parameter of parameters) {
+                const match = parameter.trim().match(/^q\s*=\s*(.+)$/i);
+                if (!match) continue;
+                const parsed = Number(match[1]);
+                quality = Number.isFinite(parsed) && parsed >= 0 && parsed <= 1 ? parsed : 0;
+                break;
+            }
+            return { language: language.trim(), quality, index };
+        })
+        .filter(({ language, quality }) => Boolean(language) && quality > 0)
+        .sort((left, right) => right.quality - left.quality || left.index - right.index)
+        .map(({ language }) => language);
 
     return resolvePreferredUiLocale(languages, fallback);
 }

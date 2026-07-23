@@ -225,7 +225,8 @@ test("RootLayout renders native parser scripts in the SSR head and defers analyt
   assert.match(headScripts, /id="moesekai-videogame-jsonld"[\s\S]*type="application\/ld\+json"/);
   assert.match(headScripts, /id="moesekai-navigation-jsonld"[\s\S]*type="application\/ld\+json"/);
   assert.match(headScripts, /return null;/);
-  assert.match(layout, /JSON\.stringify\(value\)\.replace\(\/<\/g, "\\\\u003c"\)/);
+  assert.match(layout, /import \{ serializeJsonLd \} from "@\/lib\/json-ld"/);
+  assert.match(readWeb("src/lib/json-ld.ts"), /JSON\.stringify\(value\)\.replace\(JSON_LD_ESCAPE_PATTERN/);
   assert.doesNotMatch(body, /moesekai-(?:website|videogame|navigation)-jsonld/);
   assert.doesNotMatch(layout, /bootstrapMarkup|<div hidden dangerouslySetInnerHTML/);
   assert.match(body, /<GoogleTagBootstrap \/>/);

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestFetchJSONRejectsOversizedResponse(t *testing.T) {
@@ -52,5 +53,44 @@ func TestLoadOrFetchRejectsOversizedLocalFileAndFallsBack(t *testing.T) {
 	}
 	if target["source"] != "remote" {
 		t.Fatalf("target = %#v, want bounded local fallback to remote", target)
+	}
+}
+
+func TestFetchMarksStoreReadyOnlyAfterCompleteSnapshot(t *testing.T) {
+	dir := t.TempDir()
+	store := NewStore(dir)
+	if store.IsReady() {
+		t.Fatal("new store must not be ready")
+	}
+
+	for _, filename := range []string{"events.json", "eventCards.json", "eventMusics.json", "virtualLives.json", "gachas.json"} {
+		if err := os.WriteFile(filepath.Join(dir, filename), []byte("[]"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := store.Fetch(); err != nil {
+		t.Fatal(err)
+	}
+	if !store.IsReady() || store.ReadinessError() != nil {
+		t.Fatalf("ready = %v, error = %v, want complete ready snapshot", store.IsReady(), store.ReadinessError())
+	}
+}
+
+func TestStartupRetryLoadsImmediately(t *testing.T) {
+	dir := t.TempDir()
+	for _, filename := range []string{"events.json", "eventCards.json", "eventMusics.json", "virtualLives.json", "gachas.json"} {
+		if err := os.WriteFile(filepath.Join(dir, filename), []byte("[]"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	store := NewStore(dir)
+	store.StartRetryUntilReady(time.Hour)
+	deadline := time.Now().Add(time.Second)
+	for !store.IsReady() && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
+	}
+	if !store.IsReady() {
+		t.Fatal("startup loader did not attempt an immediate fetch")
 	}
 }

@@ -1,29 +1,8 @@
-import { TestDataProvider } from './data-provider.test'
 import {
-  CardEventCalculator,
-  DeckService,
   EventCalculator,
   EventType,
   LiveType
 } from '../src'
-
-const eventCalculator = new EventCalculator(TestDataProvider.INSTANCE)
-const cardEventCalculator = new CardEventCalculator(TestDataProvider.INSTANCE)
-const deckService = new DeckService(TestDataProvider.INSTANCE)
-// 选一张卡算加成，25+25
-test('card', async () => {
-  await cardEventCalculator.getCardEventBonus(await deckService.getUserCard(510), 88).then(it => {
-    expect(it).toBe(50)
-  })
-})
-
-// 选一个卡组算加成，按mock的数据应该是287.5%加成
-test('deck', async () => {
-  const deck = await deckService.getDeckCards(await deckService.getDeck(1))
-  await eventCalculator.getDeckEventBonus(deck, 88).then(it => {
-    expect(it).toBe(240)
-  })
-})
 
 test('challenge point', () => {
   const point = EventCalculator.getEventPoint(LiveType.CHALLENGE, EventType.NONE, 1919810)

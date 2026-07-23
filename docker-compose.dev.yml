@@ -24,9 +24,9 @@ services:
 
   web:
     build:
-      context: ./web
-      dockerfile: Dockerfile.dev
-    working_dir: /app
+      context: .
+      dockerfile: web/Dockerfile.dev
+    working_dir: /app/web
     environment:
       - NEXT_PUBLIC_API_URL=
       - INTERNAL_API_BASE_URL=http://backend:8080
@@ -34,7 +34,8 @@ services:
       - NEXT_PUBLIC_OAUTH2_CLIENT_ID=${NEXT_PUBLIC_OAUTH2_CLIENT_ID:-oauth-test-public}
       - NEXT_PUBLIC_OAUTH2_REDIRECT_URI=${NEXT_PUBLIC_OAUTH2_REDIRECT_URI:-http://localhost:3000/oauth2/callback/code}
     volumes:
-      - ./web:/app
+      - ./web:/app/web
+      - ./refer/re_sekai-calculator:/app/refer/re_sekai-calculator:ro
       - /app/node_modules
     ports:
       - "3000:3000"

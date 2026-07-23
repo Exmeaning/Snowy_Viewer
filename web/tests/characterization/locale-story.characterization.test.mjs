@@ -30,7 +30,7 @@ test("all five route locales retain their UI, server, asset, and zh-CN fallback 
   assert.equal(routing.defaultContentRegionForPathname(null), "cn");
 });
 
-test("UI locale resolution keeps the current language-family fallbacks and header ordering", async () => {
+test("UI locale resolution keeps language-family fallbacks and RFC quality ordering", async () => {
   const locales = await importWebTypeScript("src/lib/i18n/locales.ts");
   assert.deepEqual([...locales.SUPPORTED_UI_LOCALES], baseline.validation.uiLocales);
   assert.equal(locales.resolveUiLocale("zh-Hant-HK"), "zh-TW");
@@ -42,9 +42,11 @@ test("UI locale resolution keeps the current language-family fallbacks and heade
   assert.equal(locales.normalizeUiLocale("fr"), "zh-CN");
   assert.equal(
     locales.resolveAcceptLanguageUiLocale("ja-JP;q=0.5,en-US;q=1.0"),
-    "ja-JP",
-    "the current parser uses header order rather than q-value sorting",
+    "en-US",
   );
+  assert.equal(locales.resolveAcceptLanguageUiLocale("en-US;q=0, ja-JP;q=1"), "ja-JP");
+  assert.equal(locales.resolveAcceptLanguageUiLocale("fr-FR;q=1, ko;q=0.8, zh;q=0.5"), "ko-KR");
+  assert.equal(locales.resolveAcceptLanguageUiLocale("en;q=bogus, zh-TW;q=0.7"), "zh-TW");
   assert.equal(locales.resolveAcceptLanguageUiLocale(null), "zh-CN");
 });
 
