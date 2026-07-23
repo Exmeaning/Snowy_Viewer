@@ -212,19 +212,26 @@ test("music list/detail mobile and dark-mode layout contracts remain unchanged",
   assert.doesNotMatch(detail, /fetchLyrics|LyricText/, "the existing music detail route remains independent of lyrics");
 });
 
-test("RootLayout keeps parser scripts opaque to React and initializes analytics after hydration", () => {
+test("RootLayout renders native parser scripts in the SSR head and defers analytics to consent", () => {
   const layout = readWeb("src/app/layout.tsx");
+  const headScripts = readWeb("src/components/RootHeadScripts.tsx");
   const googleTag = readWeb("src/components/GoogleTagBootstrap.tsx");
+  const head = layout.slice(layout.indexOf("<head>"), layout.indexOf("</head>"));
   const body = layout.slice(layout.indexOf("<body"), layout.indexOf("</body>"));
-  assert.match(layout, /`<script id="moesekai-theme-bootstrap">/);
-  assert.match(layout, /id="moesekai-website-jsonld" type="application\/ld\+json"/);
-  assert.match(layout, /id="moesekai-videogame-jsonld" type="application\/ld\+json"/);
-  assert.match(layout, /id="moesekai-navigation-jsonld" type="application\/ld\+json"/);
+  assert.match(head, /<RootHeadScripts/);
+  assert.match(headScripts, /useServerInsertedHTML\(\(\) => \{/);
+  assert.match(headScripts, /id="moesekai-theme-bootstrap"/);
+  assert.match(headScripts, /id="moesekai-website-jsonld"[\s\S]*type="application\/ld\+json"/);
+  assert.match(headScripts, /id="moesekai-videogame-jsonld"[\s\S]*type="application\/ld\+json"/);
+  assert.match(headScripts, /id="moesekai-navigation-jsonld"[\s\S]*type="application\/ld\+json"/);
+  assert.match(headScripts, /return null;/);
   assert.match(layout, /JSON\.stringify\(value\)\.replace\(\/<\/g, "\\\\u003c"\)/);
-  assert.match(body, /<div hidden dangerouslySetInnerHTML=\{\{ __html: bootstrapMarkup \}\} \/>/);
+  assert.doesNotMatch(body, /moesekai-(?:website|videogame|navigation)-jsonld/);
+  assert.doesNotMatch(layout, /bootstrapMarkup|<div hidden dangerouslySetInnerHTML/);
   assert.match(body, /<GoogleTagBootstrap \/>/);
   assert.doesNotMatch(layout, /<Script|strategy="(?:before|after)Interactive"/);
   assert.match(googleTag, /useEffect\(\(\) => \{/);
+  assert.match(googleTag, /isAnalyticsAllowed\(readAnalyticsConsent\(\)\)/);
   assert.match(googleTag, /document\.createElement\("script"\)/);
   assert.match(googleTag, /__moesekaiGoogleTagInitialized/);
 });

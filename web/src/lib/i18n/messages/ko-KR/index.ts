@@ -756,6 +756,14 @@ export const koKRMessages = {
             label: "광고 표시",
             description: "이것은 프로젝트 운영을 지원하는 방법 중 하나입니다."
         },
+        analytics: {
+            sectionTitle: "개인정보 보호",
+            label: "익명 사용 분석 허용",
+            description: "동의한 경우에만 운영 사이트에서 Google Analytics를 불러옵니다. 언제든지 동의를 철회할 수 있습니다.",
+            statusGranted: "사용 분석이 허용됨",
+            statusDenied: "사용 분석은 기본적으로 비활성화됨",
+            privacySignal: "브라우저 개인정보 보호 신호(GPC 또는 Do Not Track)로 인해 비활성화됨"
+        },
         assetSource: {
             sectionTitle: "리소스 서버 회선",
             main: "기본 회선",

@@ -86,6 +86,44 @@ const isLyricsUnavailableError = (error) => error?.status === 404;`,
   return importTypeScriptSource(source, "lyrics-detail-page");
 }
 
+async function importLyricsNotFound(locale) {
+  const source = readWeb("src/app/lyrics/[musicId]/not-found.tsx")
+    .replace(/^"use client";\s*/u, "")
+    .replace(/^import[\s\S]*?;\s*$/gmu, "");
+  globalThis.__lyricsNotFoundRuntime = {
+    React,
+    locale,
+    copy: locale === "zh-CN"
+      ? { "page.lyrics.notFound": "未找到该歌曲的歌词", "page.lyrics.backToList": "返回歌词列表" }
+      : { "page.lyrics.notFound": "Lyrics were not found for this song", "page.lyrics.backToList": "Back to lyrics" },
+  };
+  const prelude = `
+    const dependencies = globalThis.__lyricsNotFoundRuntime;
+    const React = dependencies.React;
+    const MainLayout = ({ children }) => React.createElement("div", { "data-layout": true }, children);
+    const Link = ({ children, ...props }) => React.createElement("a", props, children);
+    const getRequestSeoLocale = async () => dependencies.locale;
+    const messagesByLocale = { [dependencies.locale]: dependencies.copy };
+    const fallbackMessages = dependencies.copy;
+    const getMessageByPath = (messages, key) => messages[key] ?? null;
+  `;
+  const transpiled = ts.transpileModule(`${prelude}\n${source}`, {
+    compilerOptions: {
+      jsx: ts.JsxEmit.React,
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+    },
+    fileName: "src/app/lyrics/[musicId]/not-found.tsx",
+    reportDiagnostics: true,
+  });
+  assert.deepEqual(
+    (transpiled.diagnostics ?? []).filter((item) => item.category === ts.DiagnosticCategory.Error),
+    [],
+  );
+  const encoded = Buffer.from(`${transpiled.outputText}\n//# locale=${locale}`).toString("base64");
+  return (await import(`data:text/javascript;base64,${encoded}`)).default;
+}
+
 let lyricsClientModuleSequence = 0;
 
 async function importLyricsDetailClient(lyrics) {
@@ -336,6 +374,18 @@ test("lyrics detail SEO and page require an available detail while preserving up
       (error) => error === state.error,
     );
     assert.deepEqual(state.calls, [["document", 10], ["document", 10]]);
+
+    state.error = new Error("malformed lyrics payload");
+    state.calls.length = 0;
+    await assert.rejects(
+      page.generateMetadata({ params: Promise.resolve({ musicId: "10" }) }),
+      (error) => error === state.error,
+    );
+    await assert.rejects(
+      page.default({ params: Promise.resolve({ musicId: "10" }) }),
+      (error) => error === state.error,
+    );
+    assert.deepEqual(state.calls, [["document", 10], ["document", 10]]);
   } finally {
     delete globalThis.__lyricsDetailSeoTest;
   }
@@ -343,6 +393,27 @@ test("lyrics detail SEO and page require an available detail while preserving up
   const preset = readWeb("src/lib/seo-detail-metadata.ts");
   assert.match(preset, /kind: "lyrics",[\s\S]*routePrefix: "lyrics",[\s\S]*parentPageKey: "lyrics", entity: \{ type: "MusicRecording" \}/);
   assert.match(readWeb("src/app/lyrics/[musicId]/page.tsx"), /defineLyricsDetailClientPage\(LyricsDetailClient\)/);
+});
+
+test("lyrics segment not-found boundary renders localized 404 copy without detail data", async () => {
+  try {
+    const EnglishNotFound = await importLyricsNotFound("en-US");
+    const englishHtml = renderToString(await EnglishNotFound());
+    assert.match(englishHtml, /Lyrics were not found for this song/);
+    assert.match(englishHtml, /Back to lyrics/);
+    assert.doesNotMatch(englishHtml, /<main(?:\s|>)/, "MainLayout owns the page's only main landmark");
+
+    const ChineseNotFound = await importLyricsNotFound("zh-CN");
+    const chineseHtml = renderToString(await ChineseNotFound());
+    assert.match(chineseHtml, /未找到该歌曲的歌词/);
+    assert.match(chineseHtml, /返回歌词列表/);
+
+    const source = readWeb("src/app/lyrics/[musicId]/not-found.tsx");
+    assert.doesNotMatch(source, /application\/ld\+json|attribution|fetchLyrics/);
+    assert.doesNotMatch(source, /<main(?:\s|>)/);
+  } finally {
+    delete globalThis.__lyricsNotFoundRuntime;
+  }
 });
 
 test("lyrics loader rejects missing and malformed artifacts without manufacturing content", async () => {

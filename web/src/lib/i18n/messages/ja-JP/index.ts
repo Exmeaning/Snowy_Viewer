@@ -758,6 +758,14 @@ export const jaJPMessages = {
       label: '広告を表示',
       description: 'プロジェクト運営の支援になります'
     },
+    analytics: {
+      sectionTitle: 'プライバシー',
+      label: '匿名の利用状況分析を許可',
+      description: '同意した場合のみ、本番サイトで Google Analytics を読み込みます。同意はいつでも取り消せます。',
+      statusGranted: '利用状況分析を許可しています',
+      statusDenied: '利用状況分析は既定で無効です',
+      privacySignal: 'ブラウザのプライバシー信号（GPC または Do Not Track）により無効です'
+    },
     assetSource: {
       sectionTitle: 'アセット回線',
       main: 'メイン',

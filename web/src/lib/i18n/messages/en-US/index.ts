@@ -751,13 +751,21 @@ export const enUSMessages = {
             description: "When enabled, list pages will show trained thumbnails by default for 3★+ cards",
         },
         translation: {
-            label: "Use Chinese translations (Moe Translation)",
-            description: "When enabled, Japanese content will show Chinese translations",
+            label: "Use English translations (Moe Translation)",
+            description: "When enabled, Japanese content will show English translations",
         },
         ads: {
             title: "Advertisement",
             label: "Show ads",
             description: "This helps support the project",
+        },
+        analytics: {
+            sectionTitle: "Privacy",
+            label: "Allow anonymous usage analytics",
+            description: "Google Analytics loads only on production sites after you allow it. You can revoke consent at any time.",
+            statusGranted: "Analytics are allowed",
+            statusDenied: "Analytics are disabled by default",
+            privacySignal: "Analytics are disabled by your browser privacy signal (GPC or Do Not Track)",
         },
         assetSource: {
             sectionTitle: "Asset line",

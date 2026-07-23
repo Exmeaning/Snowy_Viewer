@@ -1,4 +1,3 @@
-import type { RollupOptions } from 'rollup'
 import typescript from '@rollup/plugin-typescript'
 import dts from 'rollup-plugin-dts'
 export default [
@@ -30,4 +29,4 @@ export default [
       dts()
     ]
   }
-] as RollupOptions[]
+]

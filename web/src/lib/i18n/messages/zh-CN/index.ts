@@ -758,6 +758,14 @@ export const zhCNMessages = {
             label: "显示广告",
             description: "这是支持我们运营下去的方式之一",
         },
+        analytics: {
+            sectionTitle: "隐私",
+            label: "允许匿名使用情况分析",
+            description: "仅在你同意后，正式站点才会加载 Google Analytics。你可以随时撤回同意。",
+            statusGranted: "已允许使用情况分析",
+            statusDenied: "默认不启用使用情况分析",
+            privacySignal: "浏览器的隐私信号（GPC 或 Do Not Track）已停用使用情况分析",
+        },
         assetSource: {
             sectionTitle: "Assets线路",
             main: "主线",

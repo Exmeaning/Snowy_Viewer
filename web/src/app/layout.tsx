@@ -24,6 +24,7 @@ import {
 import { generateRootMetadata, getSiteBaseUrl } from "@/lib/seo-metadata";
 import { generateRootJsonLd, generateSiteNavigationItemListJsonLd } from "@/lib/structured-data";
 import GoogleTagBootstrap from "@/components/GoogleTagBootstrap";
+import RootHeadScripts from "@/components/RootHeadScripts";
 import {
   SUPPORTED_UI_LOCALES,
   UI_LOCALE_HTML_LANG,
@@ -183,13 +184,6 @@ export default async function RootLayout({
       } catch (e) {}
     })();
   `;
-  const bootstrapMarkup = [
-    `<script id="moesekai-theme-bootstrap">${themeScript}</script>`,
-    `<script id="moesekai-website-jsonld" type="application/ld+json">${serializeJsonLd(jsonLd.website)}</script>`,
-    `<script id="moesekai-videogame-jsonld" type="application/ld+json">${serializeJsonLd(jsonLd.videoGame)}</script>`,
-    `<script id="moesekai-navigation-jsonld" type="application/ld+json">${serializeJsonLd(navigationJsonLd)}</script>`,
-  ].join("");
-
   return (
     <html
       lang={UI_LOCALE_HTML_LANG[initialUiLocale]}
@@ -198,10 +192,14 @@ export default async function RootLayout({
     >
       <head>
         <meta name="color-scheme" content="light dark" />
+        <RootHeadScripts
+          themeScript={themeScript}
+          websiteJsonLd={serializeJsonLd(jsonLd.website)}
+          videoGameJsonLd={serializeJsonLd(jsonLd.videoGame)}
+          navigationJsonLd={serializeJsonLd(navigationJsonLd)}
+        />
       </head>
       <body className="font-sans">
-        {/* Keep parser-executed scripts opaque to React's client renderer. */}
-        <div hidden dangerouslySetInnerHTML={{ __html: bootstrapMarkup }} />
         <ThemeProvider>
           <I18nProvider initialLocale={initialUiLocale} routeLocale={routeLocale}>
             <MasterDataProvider>
