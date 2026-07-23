@@ -53,6 +53,20 @@ ENV TRANSLATION_AUTO_PUSH_ENABLED=false
 
 # Create startup script that runs both servers
 RUN printf '#!/bin/sh\n\
+    # Sync static build assets into persistent archive directory\n\
+    ARCHIVE_DIR="${STATIC_ARCHIVE_DIR:-/app/data/static_archive}"\n\
+    MAX_DAYS="${STATIC_CACHE_MAX_DAYS:-30}"\n\
+    mkdir -p "$ARCHIVE_DIR"\n\
+    if [ -d /app/nextjs/web/.next/static ]; then\n\
+        echo "Syncing Next.js static assets to $ARCHIVE_DIR..."\n\
+        cp -r /app/nextjs/web/.next/static/. "$ARCHIVE_DIR/" 2>/dev/null || true\n\
+    fi\n\
+    if [ -n "$MAX_DAYS" ] && [ "$MAX_DAYS" -gt 0 ]; then\n\
+        echo "Cleaning up static assets older than $MAX_DAYS days in $ARCHIVE_DIR..."\n\
+        find "$ARCHIVE_DIR" -type f -mtime +"$MAX_DAYS" -delete 2>/dev/null || true\n\
+        find "$ARCHIVE_DIR" -type d -empty -delete 2>/dev/null || true\n\
+    fi\n\
+    \n\
     # Start Next.js standalone server on port 3000\n\
     cd /app/nextjs/web && PORT=3000 HOSTNAME=0.0.0.0 node server.js &\n\
     NEXTJS_PID=$!\n\

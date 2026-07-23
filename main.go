@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
+	"path/filepath"
 
 	"snowy_viewer/internal/cache"
 	"snowy_viewer/internal/config"
@@ -50,6 +52,27 @@ func main() {
 				fmt.Printf("Next.js proxy error for %s: %v\n", r.URL.Path, err)
 				http.Error(w, "frontend upstream unavailable", http.StatusBadGateway)
 			}
+
+			// Intercept Next.js static files to serve from persistent archive directory if file exists
+			if cfg.StaticArchiveDir != "" {
+				staticPrefix := "/_next/static/"
+				fileServer := http.StripPrefix(staticPrefix, http.FileServer(http.Dir(cfg.StaticArchiveDir)))
+
+				mux.HandleFunc(staticPrefix, func(w http.ResponseWriter, r *http.Request) {
+					relPath := r.URL.Path[len(staticPrefix):]
+					filePath := filepath.Join(cfg.StaticArchiveDir, filepath.FromSlash(relPath))
+
+					if info, err := os.Stat(filePath); err == nil && !info.IsDir() {
+						w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+						fileServer.ServeHTTP(w, r)
+						return
+					}
+					// Fallback to Next.js server if not present in archive
+					nextjsProxy.ServeHTTP(w, r)
+				})
+				fmt.Printf("Serving persistent static assets from %s for %s\n", cfg.StaticArchiveDir, staticPrefix)
+			}
+
 			fmt.Printf("Proxying frontend requests to Next.js server on %s\n", cfg.FrontendProxyURL)
 			mux.Handle("/", htmlcache.New(nextjsProxy, htmlcache.Config{
 				Dir:           cfg.HTMLCacheDir,
