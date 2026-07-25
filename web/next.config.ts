@@ -5,6 +5,7 @@ const enableLocalHarukiProxy = process.env.NODE_ENV !== "production";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  cacheMaxMemorySize: 50 * 1024 * 1024,
   trailingSlash: true,
   allowedDevOrigins: ["localhost", "127.0.0.1"],
   async rewrites() {

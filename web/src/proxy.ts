@@ -19,7 +19,7 @@ const INTERNAL_LOCALE_REWRITE_HEADER = "x-moesekai-internal-locale-rewrite";
 const QUERY_PAGE_ROBOTS_POLICY = "noindex, follow";
 const QUERY_PAGE_CACHE_POLICY = "private, no-store";
 
-const BYPASS_PATHS = ["/_next", "/api", "/data", "/robots.txt", "/sitemap.xml", "/sitemap-main.xml", "/sitemap-details.xml"];
+const BYPASS_PATHS = ["/_next", "/internal-healthz", "/api", "/data", "/robots.txt", "/sitemap.xml", "/sitemap-main.xml", "/sitemap-details.xml"];
 const FILE_PATH_PATTERN = /\.[a-z0-9]+$/i;
 
 function shouldBypass(pathname: string): boolean {

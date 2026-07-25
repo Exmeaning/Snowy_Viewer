@@ -23,7 +23,7 @@ func Load() *Config {
 		RedisURL:           getEnv("REDIS_URL", "localhost:6379"),
 		Port:               getEnv("PORT", "8080"),
 		MasterDataPath:     getEnv("MASTER_DATA_PATH", "./data/master"),
-		FrontendProxyURL:   getEnv("FRONTEND_PROXY_URL", "http://localhost:3000"),
+		FrontendProxyURL:   getEnv("FRONTEND_PROXY_URL", "http://127.0.0.1:3000"),
 		HTMLCacheDir:       getEnv("HTML_CACHE_DIR", ""),
 		HTMLCacheMaxGB:     getEnvInt("HTML_CACHE_MAX_GB", 20),
 		HTMLCacheEntries:   getEnvInt("HTML_CACHE_MAX_ENTRIES", 100_000),
