@@ -16,6 +16,7 @@ import {
 export const ROUTE_LOCALE_HEADER = "x-moesekai-route-locale";
 export const PUBLIC_PATH_HEADER = "x-moesekai-public-path";
 const INTERNAL_LOCALE_REWRITE_HEADER = "x-moesekai-internal-locale-rewrite";
+const INTERNAL_NEXT_ORIGIN = process.env.INTERNAL_NEXT_ORIGIN || "http://127.0.0.1:3000";
 const QUERY_PAGE_ROBOTS_POLICY = "noindex, follow";
 const QUERY_PAGE_CACHE_POLICY = "private, no-store";
 
@@ -74,8 +75,12 @@ export function proxy(request: NextRequest) {
     if (candidate && isRouteLocale(candidate)) {
         const routeLocale = candidate;
         const internalPath = `/${segments.slice(1).join("/")}${pathname.endsWith("/") && segments.length > 1 ? "/" : ""}`;
-        const rewriteUrl = request.nextUrl.clone();
-        rewriteUrl.pathname = internalPath === "//" ? "/" : internalPath;
+        // The public request is HTTPS, but the co-located standalone Next.js
+        // server listens on plain HTTP. Building this URL from request.nextUrl
+        // would inherit x-forwarded-proto=https and make Next proxy TLS to its
+        // own HTTP port, resulting in EPROTO "wrong version number" errors.
+        const rewriteUrl = new URL(internalPath === "//" ? "/" : internalPath, INTERNAL_NEXT_ORIGIN);
+        rewriteUrl.search = request.nextUrl.search;
 
         const requestHeaders = new Headers(request.headers);
         requestHeaders.set(ROUTE_LOCALE_HEADER, routeLocale);
