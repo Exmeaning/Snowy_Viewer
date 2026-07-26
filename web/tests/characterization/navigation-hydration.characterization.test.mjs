@@ -95,16 +95,17 @@ async function getComponentHarness() {
     const localizedLinkPrelude = `
       const dependencies = globalThis.__moesekaiNavigationHydration;
       const React = dependencies.React;
-      const { useI18n, localizePath, uiLocaleToRouteLocale, Link } = dependencies;
+      const { useI18n, localizePath, Link } = dependencies;
     `;
     dependencies.useI18n = function useI18n() {
+      const locale = React.useContext(LocaleContext);
       return {
-        locale: React.useContext(LocaleContext),
+        locale,
+        routeLocale: routing.uiLocaleToRouteLocale(locale),
         t: (key) => key,
       };
     };
     dependencies.localizePath = localizedPath.localizePath;
-    dependencies.uiLocaleToRouteLocale = routing.uiLocaleToRouteLocale;
     dependencies.Link = function LinkStub({ href, onClick, children, prefetch: _prefetch, ...props }) {
       const resolvedHref = typeof href === "string" ? href : href.pathname ?? "";
       return React.createElement("a", {

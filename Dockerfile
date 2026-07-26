@@ -49,16 +49,21 @@ COPY --from=builder-web --chown=node:node /app/web/.next/standalone ./nextjs/
 COPY --from=builder-web --chown=node:node /app/web/.next/static ./nextjs/web/.next/static
 COPY --from=builder-web --chown=node:node /app/web/public ./nextjs/web/public
 COPY --chown=node:node --chmod=755 scripts/start-container.sh ./start.sh
+RUN mkdir -p /app/data && chown node:node /app/data
 
 # Translation files are served from Next.js public directory.
 ENV TRANSLATION_PATH=/app/nextjs/web/public/data/translations
 ENV TRANSLATION_AUTO_PUSH_ENABLED=false
+ENV FRONTEND_PROXY_URL=http://127.0.0.1:3000
+ENV INTERNAL_NEXT_ORIGIN=http://127.0.0.1:3000
+ENV STATIC_ARCHIVE_DIR=/app/data/static_archive
+ENV NODE_ENV=production
 
 USER node
 
-# Go is the single entry point and reports ready only after masterdata loads.
+# Go is the single entry point. The container is ready only after masterdata loads.
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD wget -q --spider http://127.0.0.1:8080/readyz || exit 1
+HEALTHCHECK --interval=15s --timeout=3s --start-period=45s --retries=3 \
+    CMD wget -q --spider "http://127.0.0.1:${PORT:-8080}/readyz" || exit 1
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["/app/start.sh"]

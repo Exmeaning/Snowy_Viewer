@@ -24,7 +24,7 @@ test("workflows pin actions, declare least privilege, and validate Go plus web",
   assert.match(ci, /go test -race \.\/\.\.\./);
   assert.match(ci, /go vet \.\/\.\.\./);
   assert.match(ci, /Dockerfile\.backend/);
-  assert.match(ci, /calculator:[\s\S]*npm test -- --runInBand[\s\S]*npm run build[\s\S]*npm audit --audit-level=high/);
+  assert.match(ci, /calculator:[\s\S]*npm test -- --runInBand[\s\S]*npm run build[\s\S]*npm audit --omit=dev --audit-level=high[\s\S]*npm audit --audit-level=critical/);
   assert.match(ci, /docker build -f Dockerfile -t moesekai:test/);
   assert.equal(fs.existsSync(path.join(REPO_ROOT, "Dockerfile.go")), false);
   assert.equal(fs.existsSync(path.join(REPO_ROOT, "Dockerfile.backend")), true);

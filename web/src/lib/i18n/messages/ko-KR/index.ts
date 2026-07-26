@@ -793,7 +793,7 @@ export const koKRMessages = {
             refreshing: "상쾌하다..."
         },
         footer: {
-            version: "Moesekai · 1.4-preview-beta4"
+            version: "Moesekai · 1.6-preview-beta1"
         },
         sidebar: {
             notLoggedIn: "로그인되지 않음",
@@ -3950,6 +3950,12 @@ export const koKRMessages = {
             viewList: "목록",
             typeDirectory: "폴더",
             typeAsset: "파일",
+            typeBundle: "압축 파일",
+            typeBundlePlural: "압축 파일",
+            fileCount: "파일 수",
+            totalSize: "총 크기",
+            bundleDetails: "압축 파일 내용",
+            viewBundleFiles: "압축 파일 보기",
             size: "크기",
             version: "버전",
             source: "소스",

@@ -27,6 +27,7 @@ func gachaHandlerForTest(t *testing.T) *Handler {
 	store.GachaList = []models.Gacha{
 		{ID: 1, Name: "First", StartAt: 1},
 		{ID: 2, Name: "Second", StartAt: 2},
+		{ID: 3, Name: "Third", StartAt: 3},
 	}
 	return New(store)
 }
@@ -38,6 +39,7 @@ func TestGachaPaginationRejectsUnsafeValues(t *testing.T) {
 		"page=1&limit=9223372036854775807",
 		"page=-1&limit=2",
 		"page=invalid&limit=2",
+		"page=1&limit=101",
 	} {
 		t.Run(query, func(t *testing.T) {
 			recorder := httptest.NewRecorder()
@@ -57,20 +59,47 @@ func TestGachaPaginationRejectsUnsafeValues(t *testing.T) {
 	}
 }
 
-func TestGachaPaginationAllowsBoundedEmptyPage(t *testing.T) {
-	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/api/gachas?page=1000000&limit=100", nil)
-	gachaHandlerForTest(t).handleGachaList(recorder, request)
+func TestGachaPaginationHandlesBoundedPages(t *testing.T) {
+	tests := []struct {
+		name       string
+		query      string
+		wantPage   int
+		wantLimit  int
+		wantGachas int
+	}{
+		{
+			name:       "maximum bounded page is empty",
+			query:      "page=1000000&limit=100",
+			wantPage:   maxGachaPage,
+			wantLimit:  maxGachaLimit,
+			wantGachas: 0,
+		},
+		{
+			name:       "ordinary final page",
+			query:      "page=2&limit=2",
+			wantPage:   2,
+			wantLimit:  2,
+			wantGachas: 1,
+		},
+	}
 
-	if recorder.Code != http.StatusOK {
-		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusOK)
-	}
-	var response models.GachaListResponse
-	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
-		t.Fatal(err)
-	}
-	if response.Page != maxGachaPage || response.Limit != maxGachaLimit || len(response.Gachas) != 0 {
-		t.Fatalf("response = %#v, want bounded empty page", response)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(http.MethodGet, "/api/gachas?"+tt.query, nil)
+			gachaHandlerForTest(t).handleGachaList(recorder, request)
+
+			if recorder.Code != http.StatusOK {
+				t.Fatalf("status = %d, want %d", recorder.Code, http.StatusOK)
+			}
+			var response models.GachaListResponse
+			if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+				t.Fatal(err)
+			}
+			if response.Page != tt.wantPage || response.Limit != tt.wantLimit || len(response.Gachas) != tt.wantGachas {
+				t.Fatalf("response = %#v, want page=%d limit=%d gachas=%d", response, tt.wantPage, tt.wantLimit, tt.wantGachas)
+			}
+		})
 	}
 }
 

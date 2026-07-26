@@ -172,13 +172,15 @@ func (h *Handler) handleGachaList(w http.ResponseWriter, r *http.Request) {
 
 	// Paginate
 	total := len(filtered)
-	start := (page - 1) * limit
-	if start > total {
-		start = total
+	start := total
+	pageOffset := page - 1
+	// Check the quotient before multiplying so untrusted page/limit values cannot overflow int.
+	if pageOffset <= total/limit {
+		start = pageOffset * limit
 	}
-	end := start + limit
-	if end > total {
-		end = total
+	end := total
+	if limit < total-start {
+		end = start + limit
 	}
 	paged := filtered[start:end]
 

@@ -795,7 +795,7 @@ export const jaJPMessages = {
       refreshing: '更新中...'
     },
     footer: {
-      version: 'Moesekai · 1.4-preview-beta4'
+      version: 'Moesekai · 1.6-preview-beta1'
     },
     sidebar: {
       notLoggedIn: '未ログイン',
@@ -3954,6 +3954,12 @@ export const jaJPMessages = {
       viewList: 'リスト',
       typeDirectory: 'フォルダ',
       typeAsset: 'ファイル',
+      typeBundle: 'アーカイブ',
+      typeBundlePlural: 'アーカイブ',
+      fileCount: 'ファイル数',
+      totalSize: '合計サイズ',
+      bundleDetails: 'アーカイブ内容',
+      viewBundleFiles: 'アーカイブを見る',
       size: 'サイズ',
       version: 'バージョン',
       source: 'ソース',

@@ -58,7 +58,7 @@ jobs:
 
           python3 -c "import json; json.load(open('web/public/data/sitemap-data.jp.json'))"
 
-      - name: Commit Changes
+      - name: Commit & Push Changes
         run: |
           if [[ -n $(git status --porcelain data/master_version.txt web/public/data/sitemap-data*.json) ]]; then
             echo "Changes detected in master data version or sitemap data."
@@ -68,7 +68,7 @@ jobs:
             git add -f data/master_version.txt web/public/data/sitemap-data*.json
             git commit -m "chore: update master data version and sitemap"
             git pull --rebase origin main
-            git push
+            git push origin main
           else
             echo "No changes in master data version or sitemap data."
           fi

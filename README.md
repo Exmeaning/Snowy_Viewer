@@ -54,27 +54,53 @@ AGPL-3.0
 - **PORT**: 后端监听端口（默认 `8080`）
 - **REDIS_URL**: Redis 地址（默认 `localhost:6379`）
 - **MASTER_DATA_PATH**: 可选本地 masterdata 缓存路径（默认 `./data/master`）。仓库不再提交完整 masterdata；本地文件缺失时 Go API 会从远端数据源加载。
+- **STATIC_ARCHIVE_DIR**: Next.js 静态文件归档持久化目录（默认 `./data/static_archive`）。在全量 Docker 容器部署时，启动脚本会自动将新构建的 `.next/static` 产物增量归档保存至该目录，防止新版本部署导致未刷新的在线客户端加载旧 Chunk JS 出现 404 错误。
+- **STATIC_CACHE_MAX_DAYS**: 静态归档产物保留天数（默认 `30`）；设为 `0` 禁用过期清理，其他值必须是非负整数。
+- **HTML_CACHE_DIR**: 可选 HTML 响应缓存目录；为空时禁用磁盘 HTML 缓存。
+- **NEXTJS_PORT**: 全量镜像内部 Next.js 监听端口（默认 `3000`），必须与外部 Go `PORT` 不同。
 
 ### 前端配置 (Next.js Web - standalone 部署)
 
 - **NEXT_PUBLIC_API_URL**: 关联活动/卡池等 API 的后端基准地址；使用当前 standalone + 内置反向代理部署时通常无需配置，前后端分离部署时可设为例如 `https://api.pjsk.moe`。
 
-## Docker 部署 (Go 后端独立部署)
+## Docker 部署
 
-当您在 Pages (如 Cloudflare Pages) 部署了前端静态文件后，可以使用 `Dockerfile.backend` 将 Go 后端作为独立服务构建和部署。Dockerfile 不使用 `.go` 后缀，避免 Go 工具链将其误判为源码。
+### 1. 全量部署 (Go 后端 + Next.js 前端)
 
-### 1. 构建 Docker 镜像
+全量部署镜像内置 Go 服务与 Next.js standalone 服务。建议使用挂载到 `/app/data` 的命名卷，使 masterdata、HTML 缓存和旧版静态 Chunk 归档可以跨容器更新保留：
+
 ```bash
-docker build -t pjsk-go-backend -f Dockerfile.backend .
+docker build -t pjsk-viewer -f Dockerfile .
+
+docker volume create pjsk-viewer-data
+
+docker run -d \
+  -p 8080:8080 \
+  --name pjsk-viewer \
+  --restart unless-stopped \
+  -e PORT=8080 \
+  -v pjsk-viewer-data:/app/data \
+  pjsk-viewer
 ```
 
-### 2. 启动容器
+容器以非 root 用户运行；若改用宿主机 bind mount，宿主目录必须允许容器 UID/GID `1000` 写入。生产 HTTPS 应在可信反向代理或负载均衡器终止，只向外暴露 Go 的 `8080` 端口，不应暴露内部 Next.js 端口。
+
+- `/healthz` 检查 Go 入口及内部 Next.js 服务是否可用。
+- `/readyz` 仅在首份完整 masterdata 加载完成后返回成功；依赖业务 API 的流量应使用此端点作为就绪探针。
+- `/internal-healthz/` 是容器内部 Next.js 专用端点，不应作为公网部署探针。
+
+### 2. 独立后端部署 (Go API Server)
+
+当前端部署在 Pages 等独立平台时，可以使用 `Dockerfile.backend` 构建纯 Go API 服务。Dockerfile 不使用 `.go` 后缀，避免 Go 工具链将其误判为源码。
+
 ```bash
+docker build -t pjsk-go-backend -f Dockerfile.backend .
+
 docker run -d \
   -p 8080:8080 \
   --name pjsk-backend \
   -e PORT=8080 \
   -e REDIS_URL=localhost:6379 \
-  -v $(pwd)/data:/app/data \
+  -v "$(pwd)/data:/app/data" \
   pjsk-go-backend
 ```

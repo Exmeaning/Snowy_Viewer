@@ -2,40 +2,69 @@ name: CI
 
 on:
   pull_request:
+    branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   go:
+    name: Go
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout
+      - name: Check out repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          submodules: recursive
       - name: Set up Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
           cache: true
+      - name: Check formatting
+        shell: bash
+        run: |
+          unformatted="$(gofmt -l main.go internal)"
+          if [[ -n "$unformatted" ]]; then
+            echo "The following Go files need formatting:"
+            echo "$unformatted"
+            exit 1
+          fi
       - name: Test
-        run: go test ./...
+        run: go test ./... -count=1
       - name: Race test
         run: go test -race ./... -count=1
       - name: Vet
         run: go vet ./...
+      - name: Build server
+        run: go build -o "$RUNNER_TEMP/moesekai-server" main.go
+      - name: Validate startup script
+        run: test -x scripts/start-container.sh && sh -n scripts/start-container.sh
       - name: Validate backend image
         run: docker build -f Dockerfile.backend -t moesekai-backend:test .
 
   web:
+    name: Web
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: web
     steps:
-      - name: Checkout
+      - name: Check out repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          submodules: recursive
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -56,18 +85,25 @@ jobs:
         run: npm run lint
       - name: Build
         run: npm run build:next
+      - name: Check localized SSR links
+        run: node scripts/check-localized-link-ssr.mjs
       - name: Validate production image
         working-directory: ${{ github.workspace }}
         run: docker build -f Dockerfile -t moesekai:test .
 
   calculator:
+    name: Calculator
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: refer/re_sekai-calculator
     steps:
-      - name: Checkout
+      - name: Check out repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          submodules: recursive
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -80,5 +116,7 @@ jobs:
         run: npm test -- --runInBand
       - name: Build
         run: npm run build
-      - name: Audit
-        run: npm audit --audit-level=high
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - name: Block critical development-tooling advisories
+        run: npm audit --audit-level=critical

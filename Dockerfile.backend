@@ -30,7 +30,7 @@ COPY --from=builder /app/server ./server
 EXPOSE 8080
 
 # 默认禁用前端反代，开启纯 API 模式（避免连接 3000 端口报错）
-ENV FRONTEND_PROXY_URL=""
+ENV FRONTEND_PROXY_URL="none"
 
 # 运行服务
 CMD ["./server"]

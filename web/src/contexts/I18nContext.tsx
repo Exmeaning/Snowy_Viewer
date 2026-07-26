@@ -17,6 +17,7 @@ import { getRouteLocaleFromPathname, localizePath } from "@/lib/localized-path";
 
 interface I18nContextType {
     locale: UiLocale;
+    routeLocale: RouteLocale;
     setLocale: React.Dispatch<React.SetStateAction<UiLocale>>;
     t: (key: string, values?: MessageInterpolationValues) => string;
     formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
@@ -65,6 +66,10 @@ export function I18nProvider({ children, initialLocale = DEFAULT_UI_LOCALE, rout
     const explicitLocale = routeLocale ? routeLocaleToUiLocale(routeLocale) : undefined;
     const [locale, setLocaleState] = useState<UiLocale>(explicitLocale ?? initialLocale);
     const [hydrated, setHydrated] = useState(false);
+    const resolvedRouteLocale = useMemo(
+        () => routeLocale ?? uiLocaleToRouteLocale(locale),
+        [locale, routeLocale],
+    );
 
     useEffect(() => {
         const resolved = explicitLocale ?? readStoredLocale(initialLocale);
@@ -132,7 +137,15 @@ export function I18nProvider({ children, initialLocale = DEFAULT_UI_LOCALE, rout
     const messages = useMemo(() => messagesByLocale[locale] ?? fallbackMessages, [locale]);
 
     return (
-        <I18nContext.Provider value={{ locale, setLocale, t, formatNumber, formatDate, messages }}>
+        <I18nContext.Provider value={{
+            locale,
+            routeLocale: resolvedRouteLocale,
+            setLocale,
+            t,
+            formatNumber,
+            formatDate,
+            messages,
+        }}>
             {children}
         </I18nContext.Provider>
     );

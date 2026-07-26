@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint",
     "lint:i18n": "node scripts/check-i18n-keys.mjs && node scripts/scan-hardcoded-ui-text.mjs && node scripts/check-seo-routes.mjs && node scripts/check-translation-coverage.mjs",
-    "lint:i18n-usage": "node scripts/check-i18n-usage.mjs"
+    "lint:i18n-usage": "node scripts/check-i18n-usage.mjs",
+    "test:ssr-localized-links": "npm run build:next && node scripts/check-localized-link-ssr.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.106.0",
