@@ -1,6 +1,32 @@
 import { fetchJsonWithFallback } from './build-fetch.mjs';
 
-const DEFAULT_PUBLIC_LYRICS_INDEX_URL = 'https://translation.exmeaning.com/files/translation/lyrics/index.json';
+const DEFAULT_PUBLIC_LYRICS_BASE_URL = 'https://translation.exmeaning.com/files/translation/lyrics';
+
+function parseHttpsBaseUrl(value) {
+    try {
+        const url = new URL(String(value || '').trim());
+        if (
+            url.protocol !== 'https:'
+            || url.username
+            || url.password
+            || url.search
+            || url.hash
+        ) {
+            return null;
+        }
+        const pathname = url.pathname.replace(/\/+$/, '');
+        if (!pathname) return null;
+        url.pathname = pathname;
+        return url.toString().replace(/\/$/, '');
+    } catch {
+        return null;
+    }
+}
+
+function parseHttpsIndexUrl(value) {
+    const url = parseHttpsBaseUrl(value);
+    return url?.endsWith('.json') ? url : null;
+}
 
 function isObject(value) {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -51,11 +77,14 @@ export function validatePublicLyricsIndex(value) {
 }
 
 export function getConfiguredPublicLyricsIndexUrls() {
-    const configured = String(process.env.PUBLIC_LYRICS_INDEX_URLS || '')
+    const configuredIndexUrls = String(process.env.PUBLIC_LYRICS_INDEX_URLS || '')
         .split(',')
-        .map(value => value.trim())
+        .map(parseHttpsIndexUrl)
         .filter(Boolean);
-    return configured.length > 0 ? [...new Set(configured)] : [DEFAULT_PUBLIC_LYRICS_INDEX_URL];
+    if (configuredIndexUrls.length > 0) return [...new Set(configuredIndexUrls)];
+
+    const configuredBaseUrl = parseHttpsBaseUrl(process.env.NEXT_PUBLIC_LYRICS_BASE_URL);
+    return [`${configuredBaseUrl || DEFAULT_PUBLIC_LYRICS_BASE_URL}/index.json`];
 }
 
 export async function fetchPublicLyricsIndex() {

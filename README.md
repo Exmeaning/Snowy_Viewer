@@ -62,6 +62,7 @@ AGPL-3.0
 ### 前端配置 (Next.js Web - standalone 部署)
 
 - **NEXT_PUBLIC_API_URL**: 关联活动/卡池等 API 的后端基准地址；使用当前 standalone + 内置反向代理部署时通常无需配置，前后端分离部署时可设为例如 `https://api.pjsk.moe`。
+- **NEXT_PUBLIC_LYRICS_BASE_URL**: 可选的已发布歌词资产目录，例如 `https://translation.example.com/files/translation/lyrics`。默认读取 `https://translation.exmeaning.com/files/translation/lyrics`；生产构建只接受不含凭据、query 或 fragment 的 HTTPS URL，且 sitemap 构建会从同一目录读取 `index.json`，避免页面与搜索引擎发布视图分叉。开发模式额外允许 `localhost`、`127.0.0.1` 和 `::1` 的 HTTP 地址，便于与本地 NEXT 的 `/files/translation/lyrics` 配对。不要在该变量中写入令牌或其他凭据。
 
 ## Docker 部署
 

@@ -59,11 +59,13 @@ interface CachedLyricsDocument {
     cachedAt: number;
 }
 
+const DEFAULT_LYRICS_BASE_URL = `${TRANSLATION_BASE_URL}/lyrics`;
 const LYRICS_DETAIL_CACHE_LIMIT = 24;
 const LYRICS_INDEX_CACHE_TTL = 60 * 1000;
 const LYRICS_DETAIL_CACHE_TTL = 60 * 1000;
 const LYRICS_FETCH_TIMEOUT_MS = 10 * 1000;
 const MAX_LYRICS_ARTIFACT_BYTES = 4 << 20;
+const LOOPBACK_LYRICS_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 const detailCache = new Map<string, CachedLyricsDocument>();
 const detailRequests = new Map<string, Promise<ILyricsDocument>>();
 let indexCache: ILyricsIndex | null = null;
@@ -73,6 +75,42 @@ let indexRequest: Promise<ILyricsIndex> | null = null;
 export function getLyricsTargetLocale(locale: UiLocale): LyricsTargetLocale | null {
     if (locale === "zh-CN" || locale === "en-US") return locale;
     return null;
+}
+
+function parseLyricsBaseUrl(value: string): URL | null {
+    try {
+        const url = new URL(value);
+        if (
+            (url.protocol !== "http:" && url.protocol !== "https:")
+            || url.username
+            || url.password
+            || url.search
+            || url.hash
+        ) {
+            return null;
+        }
+        const pathname = url.pathname.replace(/\/+$/, "");
+        if (!pathname) return null;
+        url.pathname = pathname;
+        return url;
+    } catch {
+        return null;
+    }
+}
+
+export function getLyricsBaseUrl(): string {
+    const configured = parseLyricsBaseUrl(process.env.NEXT_PUBLIC_LYRICS_BASE_URL || "");
+    if (!configured) return DEFAULT_LYRICS_BASE_URL;
+
+    if (configured.protocol === "https:") return configured.toString().replace(/\/$/, "");
+    if (process.env.NODE_ENV !== "production" && LOOPBACK_LYRICS_HOSTS.has(configured.hostname)) {
+        return configured.toString().replace(/\/$/, "");
+    }
+    return DEFAULT_LYRICS_BASE_URL;
+}
+
+function lyricsArtifactUrl(filename: string): string {
+    return `${getLyricsBaseUrl()}/${filename}`;
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -234,7 +272,7 @@ export async function fetchLyricsIndex(signal?: AbortSignal): Promise<ILyricsInd
     if (indexCache && cacheAge >= 0 && cacheAge < LYRICS_INDEX_CACHE_TTL) return indexCache;
     if (indexRequest) return indexRequest;
 
-    indexRequest = fetchPublishedJson(`${TRANSLATION_BASE_URL}/lyrics/index.json`, signal)
+    indexRequest = fetchPublishedJson(lyricsArtifactUrl("index.json"), signal)
         .then(validateIndex)
         .then((index) => {
             indexCache = index;
@@ -271,7 +309,7 @@ export async function fetchLyricsDocument(musicId: number, signal?: AbortSignal)
     const inflight = detailRequests.get(cacheKey);
     if (inflight) return inflight;
 
-    const request = fetchPublishedJson(`${TRANSLATION_BASE_URL}/lyrics/music_${musicId}.json`, signal)
+    const request = fetchPublishedJson(lyricsArtifactUrl(`music_${musicId}.json`), signal)
         .then((value) => validateDocument(value, publication))
         .then((document) => {
             for (const key of detailCache.keys()) {

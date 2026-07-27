@@ -247,6 +247,52 @@ async function renderLyricsClientFailure(lyrics, error) {
   }
 }
 
+test("lyrics source overrides fail closed and permit only HTTPS or development loopback HTTP", async () => {
+  const original = {
+    NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_LYRICS_BASE_URL: process.env.NEXT_PUBLIC_LYRICS_BASE_URL,
+  };
+  try {
+    process.env.NODE_ENV = "development";
+    for (const [configured, expected] of [
+      ["http://127.0.0.1:18081/files/translation/lyrics/", "http://127.0.0.1:18081/files/translation/lyrics"],
+      ["http://localhost:18081/files/translation/lyrics", "http://localhost:18081/files/translation/lyrics"],
+      ["http://[::1]:18081/files/translation/lyrics", "http://[::1]:18081/files/translation/lyrics"],
+    ]) {
+      process.env.NEXT_PUBLIC_LYRICS_BASE_URL = configured;
+      const lyrics = await importLyrics();
+      assert.equal(lyrics.getLyricsBaseUrl(), expected);
+    }
+
+    let lyrics;
+    for (const unsafe of [
+      "http://example.com/files/translation/lyrics",
+      "https://user:password@example.com/files/translation/lyrics",
+      "https://example.com/files/translation/lyrics?token=secret",
+      "https://example.com/",
+      "not-a-url",
+    ]) {
+      process.env.NEXT_PUBLIC_LYRICS_BASE_URL = unsafe;
+      lyrics = await importLyrics();
+      assert.equal(lyrics.getLyricsBaseUrl(), `${TRANSLATION_ROOT_URL}/lyrics`, unsafe);
+    }
+
+    process.env.NODE_ENV = "production";
+    process.env.NEXT_PUBLIC_LYRICS_BASE_URL = "http://127.0.0.1:18081/files/translation/lyrics";
+    lyrics = await importLyrics();
+    assert.equal(lyrics.getLyricsBaseUrl(), `${TRANSLATION_ROOT_URL}/lyrics`, "production rejects plaintext loopback overrides");
+
+    process.env.NEXT_PUBLIC_LYRICS_BASE_URL = "https://lyrics.example.com/public/";
+    lyrics = await importLyrics();
+    assert.equal(lyrics.getLyricsBaseUrl(), "https://lyrics.example.com/public");
+  } finally {
+    for (const [key, value] of Object.entries(original)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
 test("lyrics loaders consume only the published index and music detail artifact paths", async () => {
   assert.match(readWeb("src/lib/lyrics.ts"), /const LYRICS_DETAIL_CACHE_LIMIT = 24/);
   const requests = [];

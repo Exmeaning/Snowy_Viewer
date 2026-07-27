@@ -10,6 +10,54 @@ import {
   WEB_ROOT,
 } from "./test-helpers.mjs";
 
+test("build-time lyrics index follows the same credential-free HTTPS base as the client", async () => {
+  const moduleUrl = pathToFileURL(path.join(WEB_ROOT, "scripts/lib/public-lyrics.mjs"));
+  const original = {
+    NEXT_PUBLIC_LYRICS_BASE_URL: process.env.NEXT_PUBLIC_LYRICS_BASE_URL,
+    PUBLIC_LYRICS_INDEX_URLS: process.env.PUBLIC_LYRICS_INDEX_URLS,
+  };
+  try {
+    delete process.env.PUBLIC_LYRICS_INDEX_URLS;
+    process.env.NEXT_PUBLIC_LYRICS_BASE_URL = "https://lyrics.example.com/public/";
+    let lyrics = await import(`${moduleUrl.href}?test=${Date.now()}`);
+    assert.deepEqual(lyrics.getConfiguredPublicLyricsIndexUrls(), ["https://lyrics.example.com/public/index.json"]);
+
+    for (const unsafe of [
+      "http://127.0.0.1:18081/files/translation/lyrics",
+      "https://user:password@example.com/files/translation/lyrics",
+      "https://example.com/files/translation/lyrics?token=secret",
+      "https://example.com/",
+      "not-a-url",
+    ]) {
+      process.env.NEXT_PUBLIC_LYRICS_BASE_URL = unsafe;
+      lyrics = await import(`${moduleUrl.href}?test=${Date.now()}-${encodeURIComponent(unsafe)}`);
+      assert.deepEqual(
+        lyrics.getConfiguredPublicLyricsIndexUrls(),
+        ["https://translation.exmeaning.com/files/translation/lyrics/index.json"],
+        unsafe,
+      );
+    }
+
+    process.env.PUBLIC_LYRICS_INDEX_URLS = [
+      "https://first.example/lyrics/index.json",
+      "http://plaintext.example/lyrics/index.json",
+      "https://first.example/lyrics/index.json",
+      "https://raw.githubusercontent.com/example/project/revision/index.fixture.json",
+      "https://second.example/lyrics/index.json?token=secret",
+    ].join(",");
+    lyrics = await import(`${moduleUrl.href}?test=${Date.now()}-explicit`);
+    assert.deepEqual(lyrics.getConfiguredPublicLyricsIndexUrls(), [
+      "https://first.example/lyrics/index.json",
+      "https://raw.githubusercontent.com/example/project/revision/index.fixture.json",
+    ]);
+  } finally {
+    for (const [key, value] of Object.entries(original)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
 test("sitemap generation follows the public lyrics index and excludes unpublished details", async () => {
   const generatorUrl = pathToFileURL(path.join(WEB_ROOT, "scripts/generate-sitemaps.mjs"));
   const generator = await import(`${generatorUrl.href}?test=${Date.now()}`);

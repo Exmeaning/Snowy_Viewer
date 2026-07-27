@@ -63,6 +63,9 @@ test("production and web-dev images install from the frozen workspace root and r
   assert.match(production, /FROM oven\/bun:1\.3\.14/);
   assert.match(production, /COPY package\.json bun\.lock \.\//);
   assert.match(production, /RUN bun install --frozen-lockfile/);
+  assert.match(production, /ARG NEXT_PUBLIC_LYRICS_BASE_URL=https:\/\/translation\.exmeaning\.com\/files\/translation\/lyrics/);
+  assert.match(production, /ENV NEXT_PUBLIC_LYRICS_BASE_URL=\$NEXT_PUBLIC_LYRICS_BASE_URL/);
+  assert.doesNotMatch(production, /NEXT_PUBLIC_LYRICS_BASE_URL=.*(?:token|password|@)/i);
   assert.match(production, /USER node/);
   assert.match(production, /HEALTHCHECK[\s\S]*\/readyz/);
   assert.match(production, /ENTRYPOINT \["\/sbin\/tini", "--"\]/);
