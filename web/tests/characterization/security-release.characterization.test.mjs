@@ -22,8 +22,10 @@ test("workflows pin actions, declare least privilege, and validate Go plus web",
   assert.match(screenshots, /HUB_REPO: \$\{\{ vars\.SCREENSHOT_HUB_REPOSITORY \}\}/);
   assert.match(screenshots, /repository: \$\{\{ env\.HUB_REPO \}\}/);
   assert.match(screenshots, /token: \$\{\{ secrets\.HUB_DEPLOY_TOKEN \}\}/);
+  assert.match(screenshots, /path: hub-repo[\s\S]*persist-credentials: false/);
   assert.match(screenshots, /\[\[ "\$HUB_REPO" =~ \^\[A-Za-z0-9_\.\-\]\+\/\[A-Za-z0-9_\.\-\]\+\$ \]\]/);
-  assert.doesNotMatch(screenshots, new RegExp("x-access-" + "token:"));
+  assert.match(screenshots, /http\.https:\/\/github\.com\/\.extraheader=AUTHORIZATION: basic/);
+  assert.doesNotMatch(screenshots, new RegExp("https://x-access-" + "token:"));
   assert.doesNotMatch(screenshots, /git remote set-url origin/);
 
   const ci = readRepo(".github/workflows/ci.yml");
