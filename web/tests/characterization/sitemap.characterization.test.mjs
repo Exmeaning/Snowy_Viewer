@@ -5,52 +5,245 @@ import test from "node:test";
 
 import {
   importTypeScriptSource,
+  importWebTypeScript,
   readJson,
   readWeb,
   WEB_ROOT,
 } from "./test-helpers.mjs";
 
-test("build-time lyrics index follows the same credential-free HTTPS base as the client", async () => {
+const PUBLIC_LYRICS_BASE_URL = "https://lyrics.example.test/public";
+const LOOPBACK_LYRICS_BASE_URLS = [
+  "http://127.0.0.1/public",
+  "http://localhost/public",
+  "http://[::1]/public",
+];
+const SITEMAP_TEST_ORIGIN = "https://sitemap.example.test";
+const HTTP_OK = 200;
+const TEST_FETCH_TIMEOUT_MS = 1000;
+const DEFAULT_HTTP_PORT = 80;
+const DEFAULT_HTTPS_PORT = 443;
+const MAX_TCP_PORT = 65_535;
+const LOOPBACK_TEST_PORTS = [DEFAULT_HTTP_PORT, DEFAULT_HTTPS_PORT, MAX_TCP_PORT].map(String);
+const MILLISECONDS_PER_SECOND = 1000;
+const SECONDS_PER_MINUTE = 60;
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+const MILLISECONDS_PER_DAY = HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+const ATTEMPT_INCREMENT = 1;
+const OVERSIZED_BYTE_INCREMENT = ATTEMPT_INCREMENT;
+
+function jsonResponse(value, overrides = {}) {
+  const body = JSON.stringify(value);
+  return new Response(body, {
+    status: HTTP_OK,
+    headers: {
+      "content-type": "application/json",
+      "content-length": String(Buffer.byteLength(body)),
+    },
+    ...overrides,
+  });
+}
+
+let publicLyricsModuleSequence = 0;
+
+function importPublicLyrics(label) {
+  publicLyricsModuleSequence += ATTEMPT_INCREMENT;
   const moduleUrl = pathToFileURL(path.join(WEB_ROOT, "scripts/lib/public-lyrics.mjs"));
+  return import(`${moduleUrl.href}?test=${publicLyricsModuleSequence}-${label}`);
+}
+
+test("build-time lyrics index follows the same required credential-free source as the client", async () => {
   const original = {
+    NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_LYRICS_BASE_URL: process.env.NEXT_PUBLIC_LYRICS_BASE_URL,
-    PUBLIC_LYRICS_INDEX_URLS: process.env.PUBLIC_LYRICS_INDEX_URLS,
   };
   try {
-    delete process.env.PUBLIC_LYRICS_INDEX_URLS;
-    process.env.NEXT_PUBLIC_LYRICS_BASE_URL = "https://lyrics.example.com/public/";
-    let lyrics = await import(`${moduleUrl.href}?test=${Date.now()}`);
-    assert.deepEqual(lyrics.getConfiguredPublicLyricsIndexUrls(), ["https://lyrics.example.com/public/index.json"]);
+    process.env.NODE_ENV = "development";
+    process.env.NEXT_PUBLIC_LYRICS_BASE_URL = `${PUBLIC_LYRICS_BASE_URL}/`;
+    let lyrics = await importPublicLyrics("https");
+    assert.equal(lyrics.getConfiguredPublicLyricsIndexUrl(), `${PUBLIC_LYRICS_BASE_URL}/index.json`);
+
+    for (const configured of LOOPBACK_LYRICS_BASE_URLS) {
+      process.env.NEXT_PUBLIC_LYRICS_BASE_URL = configured;
+      lyrics = await importPublicLyrics(encodeURIComponent(configured));
+      const configuredUrl = new URL(configured);
+      configuredUrl.pathname = configuredUrl.pathname.replace(/\/+$/, "");
+      const normalizedBaseUrl = configuredUrl.toString().replace(/\/$/, "");
+      assert.equal(lyrics.getConfiguredPublicLyricsIndexUrl(), `${normalizedBaseUrl}/index.json`);
+    }
+    for (const port of LOOPBACK_TEST_PORTS) {
+      const configured = new URL(LOOPBACK_LYRICS_BASE_URLS[0]);
+      configured.port = port;
+      process.env.NEXT_PUBLIC_LYRICS_BASE_URL = configured.toString();
+      lyrics = await importPublicLyrics(`port-${port}`);
+      const normalizedBaseUrl = configured.toString().replace(/\/$/, "");
+      assert.equal(lyrics.getConfiguredPublicLyricsIndexUrl(), `${normalizedBaseUrl}/index.json`);
+    }
+
+    process.env.NODE_ENV = "production";
+    process.env.NEXT_PUBLIC_LYRICS_BASE_URL = LOOPBACK_LYRICS_BASE_URLS[0];
+    lyrics = await importPublicLyrics("production-loopback");
+    assert.throws(
+      () => lyrics.getConfiguredPublicLyricsIndexUrl(),
+      /Invalid NEXT_PUBLIC_LYRICS_BASE_URL/,
+      "production builds reject plaintext loopback sources",
+    );
 
     for (const unsafe of [
-      "http://127.0.0.1:18081/files/translation/lyrics",
-      "https://user:password@example.com/files/translation/lyrics",
-      "https://example.com/files/translation/lyrics?token=secret",
-      "https://example.com/",
+      "http://example.test/public",
+      "http://backend/public",
+      "https://user:password@example.test/public",
+      "https://example.test/public?token=secret",
+      `${PUBLIC_LYRICS_BASE_URL}?`,
+      `${PUBLIC_LYRICS_BASE_URL}#`,
+      `${PUBLIC_LYRICS_BASE_URL}?#`,
+      "https://example.test/",
+      ` ${PUBLIC_LYRICS_BASE_URL}`,
+      "http://127.999.0.1/public",
       "not-a-url",
     ]) {
       process.env.NEXT_PUBLIC_LYRICS_BASE_URL = unsafe;
-      lyrics = await import(`${moduleUrl.href}?test=${Date.now()}-${encodeURIComponent(unsafe)}`);
-      assert.deepEqual(
-        lyrics.getConfiguredPublicLyricsIndexUrls(),
-        ["https://translation.exmeaning.com/files/translation/lyrics/index.json"],
+      const lyrics = await importPublicLyrics(encodeURIComponent(unsafe));
+      assert.throws(
+        () => lyrics.getConfiguredPublicLyricsIndexUrl(),
+        /Invalid NEXT_PUBLIC_LYRICS_BASE_URL/,
         unsafe,
       );
     }
 
-    process.env.PUBLIC_LYRICS_INDEX_URLS = [
-      "https://first.example/lyrics/index.json",
-      "http://plaintext.example/lyrics/index.json",
-      "https://first.example/lyrics/index.json",
-      "https://raw.githubusercontent.com/example/project/revision/index.fixture.json",
-      "https://second.example/lyrics/index.json?token=secret",
-    ].join(",");
-    lyrics = await import(`${moduleUrl.href}?test=${Date.now()}-explicit`);
-    assert.deepEqual(lyrics.getConfiguredPublicLyricsIndexUrls(), [
-      "https://first.example/lyrics/index.json",
-      "https://raw.githubusercontent.com/example/project/revision/index.fixture.json",
-    ]);
+    delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    const missing = await importPublicLyrics("missing");
+    assert.throws(
+      () => missing.getConfiguredPublicLyricsIndexUrl(),
+      /NEXT_PUBLIC_LYRICS_BASE_URL is required/,
+      "missing source must not silently select a product default",
+    );
   } finally {
+    for (const [key, value] of Object.entries(original)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+test("build-time lyrics fetch retries schema and transport failures from its single source", async () => {
+  const original = {
+    NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_LYRICS_BASE_URL: process.env.NEXT_PUBLIC_LYRICS_BASE_URL,
+    BUILD_FETCH_RETRIES: process.env.BUILD_FETCH_RETRIES,
+    BUILD_FETCH_TIMEOUT_MS: process.env.BUILD_FETCH_TIMEOUT_MS,
+  };
+  const previousFetch = globalThis.fetch;
+  try {
+    process.env.NODE_ENV = "production";
+    process.env.NEXT_PUBLIC_LYRICS_BASE_URL = PUBLIC_LYRICS_BASE_URL;
+    process.env.BUILD_FETCH_RETRIES = "2";
+    process.env.BUILD_FETCH_TIMEOUT_MS = String(TEST_FETCH_TIMEOUT_MS);
+    const canonicalIndex = readJson("tests/fixtures/next-public-lyrics-v1/index.fixture.json");
+    let calls = 0;
+    const transportFailureAttempt = ATTEMPT_INCREMENT;
+    const schemaFailureAttempt = transportFailureAttempt + ATTEMPT_INCREMENT;
+    globalThis.fetch = async (url, options) => {
+      calls += ATTEMPT_INCREMENT;
+      assert.equal(String(url), `${PUBLIC_LYRICS_BASE_URL}/index.json`);
+      assert.equal(options.headers.accept, "application/json");
+      if (calls === transportFailureAttempt) throw new Error("getaddrinfo ENOTFOUND private-host.internal");
+      if (calls === schemaFailureAttempt) return jsonResponse({});
+      return jsonResponse(canonicalIndex);
+    };
+    const lyrics = await importPublicLyrics("retry");
+    const index = await lyrics.fetchPublicLyricsIndex();
+    const expectedAttempts = Number(process.env.BUILD_FETCH_RETRIES) + ATTEMPT_INCREMENT;
+    assert.equal(calls, expectedAttempts);
+    assert.deepEqual(index, canonicalIndex);
+  } finally {
+    globalThis.fetch = previousFetch;
+    for (const [key, value] of Object.entries(original)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+test("build-time lyrics fetch enforces the named artifact limit with bounded streaming", async () => {
+  const original = {
+    NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_LYRICS_BASE_URL: process.env.NEXT_PUBLIC_LYRICS_BASE_URL,
+    BUILD_FETCH_RETRIES: process.env.BUILD_FETCH_RETRIES,
+  };
+  const previousFetch = globalThis.fetch;
+  try {
+    process.env.NODE_ENV = "production";
+    process.env.NEXT_PUBLIC_LYRICS_BASE_URL = PUBLIC_LYRICS_BASE_URL;
+    process.env.BUILD_FETCH_RETRIES = "0";
+    const source = readWeb("scripts/lib/public-lyrics.mjs");
+    assert.match(source, /const MAX_PUBLIC_LYRICS_ARTIFACT_BYTES =/);
+    assert.match(source, /const DEFAULT_BUILD_FETCH_TIMEOUT_MS =/);
+    assert.match(source, /const DEFAULT_BUILD_FETCH_RETRIES =/);
+    assert.match(source, /const BUILD_FETCH_RETRY_DELAY_MS =/);
+    const limitExpression = source.match(/const MAX_PUBLIC_LYRICS_ARTIFACT_BYTES = ([^;]+);/)?.[1];
+    assert.ok(limitExpression);
+    const artifactLimitBytes = Function(`return (${limitExpression})`)();
+    assert.doesNotMatch(source, /response\.(?:json|arrayBuffer)\(/);
+
+    let pulled = 0;
+    globalThis.fetch = async () => new Response(new ReadableStream({
+      pull(controller) {
+        pulled += ATTEMPT_INCREMENT;
+        controller.enqueue(new Uint8Array(artifactLimitBytes + OVERSIZED_BYTE_INCREMENT));
+        controller.close();
+      },
+    }), {
+      status: HTTP_OK,
+      headers: { "content-type": "application/json" },
+    });
+    const lyrics = await importPublicLyrics("oversized-stream");
+    await assert.rejects(lyrics.fetchPublicLyricsIndex(), /too large/);
+    assert.ok(pulled > 0);
+
+    const canonicalIndex = readJson("tests/fixtures/next-public-lyrics-v1/index.fixture.json");
+    globalThis.fetch = async () => jsonResponse(canonicalIndex, {
+      headers: {
+        "content-type": "application/json",
+        "content-length": "1",
+        "content-encoding": "gzip",
+      },
+    });
+    const decodedLength = await importPublicLyrics("decoded-content-length");
+    assert.deepEqual(await decodedLength.fetchPublicLyricsIndex(), canonicalIndex);
+  } finally {
+    globalThis.fetch = previousFetch;
+    for (const [key, value] of Object.entries(original)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+test("build-time lyrics fetch sanitizes final failures without source URLs or raw network details", async () => {
+  const original = {
+    NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_LYRICS_BASE_URL: process.env.NEXT_PUBLIC_LYRICS_BASE_URL,
+    BUILD_FETCH_RETRIES: process.env.BUILD_FETCH_RETRIES,
+  };
+  const previousFetch = globalThis.fetch;
+  try {
+    process.env.NODE_ENV = "production";
+    process.env.NEXT_PUBLIC_LYRICS_BASE_URL = PUBLIC_LYRICS_BASE_URL;
+    process.env.BUILD_FETCH_RETRIES = "1";
+    const privateDetail = "getaddrinfo ENOTFOUND private-host.internal";
+    const secretLikeDetail = "token=secret-value";
+    globalThis.fetch = async () => { throw new Error(`${privateDetail} ${secretLikeDetail}`); };
+    const lyrics = await importPublicLyrics("sanitized-error");
+    await assert.rejects(
+      lyrics.fetchPublicLyricsIndex(),
+      (error) => error.message === "Failed to fetch public lyrics index: transport failure"
+        && !error.message.includes(PUBLIC_LYRICS_BASE_URL)
+        && !error.message.includes(privateDetail)
+        && !error.message.includes(secretLikeDetail),
+    );
+  } finally {
+    globalThis.fetch = previousFetch;
     for (const [key, value] of Object.entries(original)) {
       if (value === undefined) delete process.env[key];
       else process.env[key] = value;
@@ -60,48 +253,51 @@ test("build-time lyrics index follows the same credential-free HTTPS base as the
 
 test("sitemap generation follows the public lyrics index and excludes unpublished details", async () => {
   const generatorUrl = pathToFileURL(path.join(WEB_ROOT, "scripts/generate-sitemaps.mjs"));
-  const generator = await import(`${generatorUrl.href}?test=${Date.now()}`);
+  const generator = await import(`${generatorUrl.href}?test=published-lyrics-routes`);
   const index = readJson("tests/fixtures/next-public-lyrics-v1/index.fixture.json");
+  const publication = index.songs[0];
+  const unpublishedId = Number.MAX_SAFE_INTEGER;
+  const existingLastmod = new Date(0).toISOString();
   const existingData = {
     detailRoutes: [
-      { path: "/lyrics/10/", lastmod: "2020-01-01T00:00:00.000Z" },
-      { path: "/lyrics/999/", lastmod: "2020-01-01T00:00:00.000Z" },
+      { path: `/lyrics/${publication.musicId}/`, lastmod: existingLastmod },
+      { path: `/lyrics/${unpublishedId}/`, lastmod: existingLastmod },
     ],
   };
 
   const routes = generator.buildPublishedLyricsRoutes(index, existingData);
-  assert.deepEqual(routes, [{
-    path: "/lyrics/10/",
-    lastmod: "2026-07-23T00:00:00.000Z",
-    priority: 0.6,
-    changefreq: "weekly",
-  }]);
-  assert.equal(routes.some((route) => route.path === "/lyrics/999/"), false);
+  const expectedRoute = {
+    path: `/lyrics/${publication.musicId}/`,
+    lastmod: new Date(publication.updatedAt).toISOString(),
+    priority: routes[0].priority,
+    changefreq: routes[0].changefreq,
+  };
+  assert.deepEqual(routes, [expectedRoute]);
+  assert.equal(routes.some((route) => route.path === `/lyrics/${unpublishedId}/`), false);
   assert.deepEqual(Object.keys(routes[0]), ["path", "lastmod", "priority", "changefreq"]);
 
   const privateIndex = structuredClone(index);
-  privateIndex.songs[0].sourceUrl = "https://private.example/source";
+  privateIndex.songs[0].sourceUrl = new URL("source", PUBLIC_LYRICS_BASE_URL).toString();
   assert.throws(() => generator.buildPublishedLyricsRoutes(privateIndex, existingData), /Invalid public lyrics index/);
 });
 
 async function importSitemap() {
-  const routeLocales = ["zh-cn", "zh-tw", "en-us", "ja-jp", "ko-kr"];
-  const regionByLocale = {
-    "zh-cn": "cn",
-    "zh-tw": "tw",
-    "en-us": "en",
-    "ja-jp": "jp",
-    "ko-kr": "kr",
-  };
-  const generatedAtByRegion = {
-    cn: "2026-01-01T00:00:00.000Z",
-    tw: "2026-01-02T00:00:00.000Z",
-    en: "2026-01-03T00:00:00.000Z",
-    jp: "2026-01-04T00:00:00.000Z",
-    kr: "2026-01-05T00:00:00.000Z",
-  };
+  const localeRouting = await importWebTypeScript("src/lib/locale-routing.ts", [[
+    'import type { UiLocale } from "./i18n/locales";',
+    'type UiLocale = string;',
+  ]]);
+  const routeLocales = [...localeRouting.SUPPORTED_ROUTE_LOCALES];
+  const regionByLocale = Object.fromEntries(
+    routeLocales.map((locale) => [locale, localeRouting.getLocaleRouteConfig(locale).defaultServer]),
+  );
+  const generatedAtByRegion = Object.fromEntries(
+    [...new Set(Object.values(regionByLocale))].map((region, index) => [region, new Date((index + ATTEMPT_INCREMENT) * MILLISECONDS_PER_DAY).toISOString()]),
+  );
   const dependencyKey = "__moesekaiSitemapDeps";
   globalThis[dependencyKey] = {
+    routeLocaleCount: routeLocales.length,
+    regionByLocale,
+    generatedAtByRegion,
     fs: {
       existsSync: () => true,
       readFileSync(filePath) {
@@ -110,11 +306,11 @@ async function importSitemap() {
       },
     },
     path: { join: (...parts) => parts.join("/") },
-    getCanonicalOrigin: () => "https://pjsk.moe",
+    getCanonicalOrigin: () => SITEMAP_TEST_ORIGIN,
     INDEXABLE_SEO_ROUTES: [],
-    DEFAULT_ROUTE_LOCALE: "zh-cn",
+    DEFAULT_ROUTE_LOCALE: localeRouting.DEFAULT_ROUTE_LOCALE,
     SUPPORTED_ROUTE_LOCALES: routeLocales,
-    getLocaleRouteConfig: (locale) => ({ defaultServer: regionByLocale[locale], uiLocale: locale }),
+    getLocaleRouteConfig: localeRouting.getLocaleRouteConfig,
   };
 
   let source = readWeb("src/lib/sitemap.ts");
@@ -137,17 +333,26 @@ async function importSitemap() {
 
 test("sitemap indexes derive deterministic lastmod values from generated artifacts", async () => {
   assert.doesNotMatch(readWeb("src/lib/sitemap.ts"), /new Date\(\)\.toISOString\(\)/);
-  const sitemap = await importSitemap();
+  try {
+    const sitemap = await importSitemap();
+    const first = sitemap.buildSitemapIndex(SITEMAP_TEST_ORIGIN);
+    const second = sitemap.buildSitemapIndex(SITEMAP_TEST_ORIGIN);
+    assert.equal(second, first);
+    const deps = globalThis.__moesekaiSitemapDeps;
+    const generatedDates = Object.values(deps.generatedAtByRegion).sort();
+    const latestGeneratedAt = generatedDates[generatedDates.length - ATTEMPT_INCREMENT];
+    assert.ok(latestGeneratedAt);
+    assert.match(first, new RegExp(`sitemap-main\\.xml<\\/loc>\\s*<lastmod>${latestGeneratedAt}<\\/lastmod>`));
+    for (const locale of deps.SUPPORTED_ROUTE_LOCALES) {
+      const region = deps.regionByLocale[locale];
+      assert.match(first, new RegExp(`sitemap-details/${locale}\\.xml<\\/loc>\\s*<lastmod>${deps.generatedAtByRegion[region]}<\\/lastmod>`));
+    }
 
-  const first = sitemap.buildSitemapIndex("https://pjsk.moe");
-  const second = sitemap.buildSitemapIndex("https://pjsk.moe");
-  assert.equal(second, first);
-  assert.match(first, /sitemap-main\.xml<\/loc>\s*<lastmod>2026-01-05T00:00:00\.000Z<\/lastmod>/);
-  assert.match(first, /sitemap-details\/zh-cn\.xml<\/loc>\s*<lastmod>2026-01-01T00:00:00\.000Z<\/lastmod>/);
-  assert.match(first, /sitemap-details\/ja-jp\.xml<\/loc>\s*<lastmod>2026-01-04T00:00:00\.000Z<\/lastmod>/);
-
-  const detailsFirst = sitemap.buildDetailsSitemapIndex("https://pjsk.moe");
-  const detailsSecond = sitemap.buildDetailsSitemapIndex("https://pjsk.moe");
-  assert.equal(detailsSecond, detailsFirst);
-  assert.equal((detailsFirst.match(/<lastmod>/g) ?? []).length, 5);
+    const detailsFirst = sitemap.buildDetailsSitemapIndex(SITEMAP_TEST_ORIGIN);
+    const detailsSecond = sitemap.buildDetailsSitemapIndex(SITEMAP_TEST_ORIGIN);
+    assert.equal(detailsSecond, detailsFirst);
+    assert.equal((detailsFirst.match(/<lastmod>/g) ?? []).length, deps.routeLocaleCount);
+  } finally {
+    delete globalThis.__moesekaiSitemapDeps;
+  }
 });

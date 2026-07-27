@@ -94,7 +94,13 @@ jobs:
         run: node scripts/check-localized-link-ssr.mjs
       - name: Validate production image
         working-directory: ${{ github.workspace }}
-        run: docker build -f Dockerfile -t moesekai:test .
+        env:
+          NEXT_PUBLIC_LYRICS_BASE_URL: ${{ vars.NEXT_PUBLIC_LYRICS_BASE_URL }}
+        run: |
+          test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
+          docker build \
+            --build-arg NEXT_PUBLIC_LYRICS_BASE_URL="$NEXT_PUBLIC_LYRICS_BASE_URL" \
+            -f Dockerfile -t moesekai:test .
 
   calculator:
     name: Calculator

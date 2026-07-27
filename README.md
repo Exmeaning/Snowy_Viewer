@@ -62,7 +62,7 @@ AGPL-3.0
 ### 前端配置 (Next.js Web - standalone 部署)
 
 - **NEXT_PUBLIC_API_URL**: 关联活动/卡池等 API 的后端基准地址；使用当前 standalone + 内置反向代理部署时通常无需配置，前后端分离部署时可设为例如 `https://api.pjsk.moe`。
-- **NEXT_PUBLIC_LYRICS_BASE_URL**: 可选的已发布歌词资产目录，例如 `https://translation.example.com/files/translation/lyrics`。默认读取 `https://translation.exmeaning.com/files/translation/lyrics`；生产构建只接受不含凭据、query 或 fragment 的 HTTPS URL，且 sitemap 构建会从同一目录读取 `index.json`，避免页面与搜索引擎发布视图分叉。开发模式额外允许 `localhost`、`127.0.0.1` 和 `::1` 的 HTTP 地址，便于与本地 NEXT 的 `/files/translation/lyrics` 配对。不要在该变量中写入令牌或其他凭据。
+- **NEXT_PUBLIC_LYRICS_BASE_URL**: 必填的已发布歌词资产目录。生产运行与构建只接受不含凭据、query 或 fragment 的 HTTPS URL；开发环境还允许显式配置本机回环 HTTP URL。页面与 sitemap 都从该目录读取同一份 `index.json`，避免发布视图分叉。变量缺失或无效时会直接失败，不会静默切换到其他源。`Dockerfile` 不提供默认地址，构建全量镜像前必须通过 `--build-arg NEXT_PUBLIC_LYRICS_BASE_URL="$NEXT_PUBLIC_LYRICS_BASE_URL"` 显式传入；`docker-compose.dev.yml` 也只透传该变量。GitHub Actions 的镜像验证与定时 sitemap 任务从仓库变量 `NEXT_PUBLIC_LYRICS_BASE_URL` 读取该值，并在缺失时失败关闭。请在当前 shell、CI variable 或未提交的本地环境文件中设置它，不要把令牌、个人配置或环境专属主机名提交到仓库。
 
 ## Docker 部署
 
@@ -71,7 +71,9 @@ AGPL-3.0
 全量部署镜像内置 Go 服务与 Next.js standalone 服务。建议使用挂载到 `/app/data` 的命名卷，使 masterdata、HTML 缓存和旧版静态 Chunk 归档可以跨容器更新保留：
 
 ```bash
-docker build -t pjsk-viewer -f Dockerfile .
+docker build \
+  --build-arg NEXT_PUBLIC_LYRICS_BASE_URL="$NEXT_PUBLIC_LYRICS_BASE_URL" \
+  -t pjsk-viewer -f Dockerfile .
 
 docker volume create pjsk-viewer-data
 

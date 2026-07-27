@@ -28,7 +28,12 @@ import {
     readJsonIfExists,
     requireFreshBuildData,
 } from './lib/build-fetch.mjs';
-import { fetchPublicLyricsIndex, validatePublicLyricsIndex } from './lib/public-lyrics.mjs';
+import {
+    fetchPublicLyricsIndex,
+    PUBLIC_LYRICS_SCHEMA_VERSION,
+    validateConfiguredPublicLyricsSource,
+    validatePublicLyricsIndex,
+} from './lib/public-lyrics.mjs';
 import seoRouteData from '../src/lib/seo-routes-data.json' with { type: 'json' };
 
 const SEO_ROUTE_DATA = seoRouteData;
@@ -41,6 +46,8 @@ const BUILD_REGION = String(process.env.BUILD_DATA_REGION || 'cn').toLowerCase()
 const OUT_FILE = path.join(OUT_DIR, `sitemap-data.${BUILD_REGION}.json`);
 const REQUIRE_FRESH = requireFreshBuildData();
 const RUN_GENERATED_AT = new Date().toISOString();
+const PUBLIC_LYRICS_SITEMAP_PRIORITY = 0.6;
+const PUBLIC_LYRICS_SITEMAP_CHANGEFREQ = 'weekly';
 
 /**
  * Format a real source timestamp to an ISO date string.
@@ -328,8 +335,8 @@ export function buildPublishedLyricsRoutes(raw, existingData) {
         return {
             path: routePath,
             lastmod: stableLastmod(existingData, routePath, song.updatedAt),
-            priority: 0.6,
-            changefreq: 'weekly',
+            priority: PUBLIC_LYRICS_SITEMAP_PRIORITY,
+            changefreq: PUBLIC_LYRICS_SITEMAP_CHANGEFREQ,
         };
     });
 }
@@ -382,7 +389,7 @@ const routeSources = [
     {
         label: 'publishedLyrics',
         filename: 'public lyrics index',
-        fallback: { version: 1, songs: [] },
+        fallback: { version: PUBLIC_LYRICS_SCHEMA_VERSION, songs: [] },
         validate: validatePublicLyricsIndex,
         fetch: fetchPublicLyricsIndex,
         groups: [
@@ -774,6 +781,10 @@ async function loadRouteSource(source, existingData) {
 }
 
 async function main() {
+    // Require and validate the single publication source before the fail-closed
+    // route loader can turn a deployment typo into a green build.
+    validateConfiguredPublicLyricsSource();
+
     console.log(`=== Sitemap Data Generator (${BUILD_REGION}) ===\n`);
     console.log(`Master APIs: ${getConfiguredMasterDataUrls().join(', ')}`);
     console.log(`Manga APIs: ${getConfiguredMangaDataUrls().join(', ')}`);

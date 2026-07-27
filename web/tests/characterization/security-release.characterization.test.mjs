@@ -48,7 +48,11 @@ test("workflows pin actions, declare least privilege, and validate Go plus web",
   assert.match(ci, /go vet \.\/\.\.\./);
   assert.match(ci, /Dockerfile\.backend/);
   assert.match(ci, /calculator:[\s\S]*npm test -- --runInBand[\s\S]*npm run build[\s\S]*npm audit --omit=dev --audit-level=high[\s\S]*npm audit --audit-level=critical/);
-  assert.match(ci, /docker build -f Dockerfile -t moesekai:test/);
+  assert.match(ci, /NEXT_PUBLIC_LYRICS_BASE_URL: \$\{\{ vars\.NEXT_PUBLIC_LYRICS_BASE_URL \}\}/);
+  assert.match(ci, /test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"[\s\S]*docker build \\\n\s+--build-arg NEXT_PUBLIC_LYRICS_BASE_URL="\$NEXT_PUBLIC_LYRICS_BASE_URL"/);
+  const watchMasterData = readRepo(".github/workflows/watch-master-data.yml");
+  assert.match(watchMasterData, /NEXT_PUBLIC_LYRICS_BASE_URL: \$\{\{ vars\.NEXT_PUBLIC_LYRICS_BASE_URL \}\}/);
+  assert.match(watchMasterData, /test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"[\s\S]*npm run sitemap --prefix web/);
   assert.equal(fs.existsSync(path.join(REPO_ROOT, "Dockerfile.go")), false);
   assert.equal(fs.existsSync(path.join(REPO_ROOT, "Dockerfile.backend")), true);
   assert.ok(fs.existsSync(path.join(REPO_ROOT, "docs/DEPLOYMENT_ROLLBACK.md")));
@@ -63,9 +67,12 @@ test("production and web-dev images install from the frozen workspace root and r
   assert.match(production, /FROM oven\/bun:1\.3\.14/);
   assert.match(production, /COPY package\.json bun\.lock \.\//);
   assert.match(production, /RUN bun install --frozen-lockfile/);
-  assert.match(production, /ARG NEXT_PUBLIC_LYRICS_BASE_URL=https:\/\/translation\.exmeaning\.com\/files\/translation\/lyrics/);
+  assert.match(production, /^ARG NEXT_PUBLIC_LYRICS_BASE_URL$/m);
+  assert.doesNotMatch(production, /^ARG NEXT_PUBLIC_LYRICS_BASE_URL=/m);
+  assert.match(production, /ENV NODE_ENV=production[\s\S]*RUN bun run sitemap/);
   assert.match(production, /ENV NEXT_PUBLIC_LYRICS_BASE_URL=\$NEXT_PUBLIC_LYRICS_BASE_URL/);
-  assert.doesNotMatch(production, /NEXT_PUBLIC_LYRICS_BASE_URL=.*(?:token|password|@)/i);
+  assert.match(production, /RUN test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"/);
+  assert.doesNotMatch(production, /NEXT_PUBLIC_LYRICS_BASE_URL=.*(?:https?:\/\/|token|password|@)/i);
   assert.match(production, /USER node/);
   assert.match(production, /HEALTHCHECK[\s\S]*\/readyz/);
   assert.match(production, /ENTRYPOINT \["\/sbin\/tini", "--"\]/);

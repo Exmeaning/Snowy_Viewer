@@ -14,13 +14,15 @@ RUN bun install --frozen-lockfile
 COPY web/ web/
 COPY refer/re_sekai-calculator/ refer/re_sekai-calculator/
 WORKDIR /app/web
+# Build validation must use production URL policy before sitemap generation and Next.js compilation.
+ENV NODE_ENV=production
 # Set API URL empty to allow relative fetching
 ENV NEXT_PUBLIC_API_URL=
 # OAuth2 client ID (baked into client JS at build time)
 ENV NEXT_PUBLIC_OAUTH2_CLIENT_ID=snowy-viewer-public
 # Public lyrics artifacts. Production accepts only a credential-free HTTPS directory;
-# sitemap generation derives index.json from the same source.
-ARG NEXT_PUBLIC_LYRICS_BASE_URL=https://translation.exmeaning.com/files/translation/lyrics
+# sitemap generation derives index.json from the same explicitly supplied source.
+ARG NEXT_PUBLIC_LYRICS_BASE_URL
 ENV NEXT_PUBLIC_LYRICS_BASE_URL=$NEXT_PUBLIC_LYRICS_BASE_URL
 # Build-time data sources. Multiple URLs allow Docker builds to survive flaky DNS/proxy/CDN paths.
 ARG MASTER_DATA_URLS=https://metadata.exmeaning.com/{region}/master,https://metadata.pjsk.moe/{region}/master
@@ -30,6 +32,7 @@ ENV MASTER_DATA_URLS=$MASTER_DATA_URLS
 ENV MANGA_DATA_URLS=$MANGA_DATA_URLS
 ENV REQUIRE_FRESH_BUILD_DATA=$REQUIRE_FRESH_BUILD_DATA
 RUN test -f /app/bun.lock && test -f /app/refer/re_sekai-calculator/src/index.ts
+RUN test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
 RUN bun run sitemap && bun run generate:metadata && bun run build:next
 
 # Build Stage for Backend
