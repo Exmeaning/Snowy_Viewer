@@ -28,6 +28,10 @@ function isAllowedExamplePath(path) {
   return isAllowedSyntheticTestPath(path) || /(?:^|\/)\.env\.(?:example|sample|template)$/i.test(path)
 }
 
+function isHistoricalPlaceholderCredential(scope, username, password) {
+  return scope === 'candidate-history-only' && isPlaceholder(username) && isPlaceholder(password)
+}
+
 function isPlaceholder(value) {
   const normalized = value.toLowerCase()
   return value === '' ||
@@ -115,7 +119,9 @@ function scanContent(path, scope, data) {
   if (!isAllowedSyntheticTestPath(path)) {
     const authenticatedURL = /https?:\/\/([^\s/@:]+):([^\s/@]+)@[^\s/]+/g
     for (let match = authenticatedURL.exec(text); match; match = authenticatedURL.exec(text)) {
-      addFinding('url-embedded-credential', scope, path, data, match.index)
+      if (!isHistoricalPlaceholderCredential(scope, match[1], match[2])) {
+        addFinding('url-embedded-credential', scope, path, data, match.index)
+      }
     }
   }
 
