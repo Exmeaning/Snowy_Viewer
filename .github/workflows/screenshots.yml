@@ -47,14 +47,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Validate screenshot publication configuration
+      - name: Validate screenshot publication destination
         shell: bash
-        env:
-          HUB_DEPLOY_TOKEN: ${{ secrets.HUB_DEPLOY_TOKEN }}
         run: |
           set -euo pipefail
           [[ "$HUB_REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]
-          test -n "$HUB_DEPLOY_TOKEN"
 
       - name: Checkout screenshot repository without URL credentials
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

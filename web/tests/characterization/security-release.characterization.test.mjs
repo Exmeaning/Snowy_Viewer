@@ -24,6 +24,11 @@ test("workflows pin actions, declare least privilege, and validate Go plus web",
   assert.match(screenshots, /token: \$\{\{ secrets\.HUB_DEPLOY_TOKEN \}\}/);
   assert.match(screenshots, /path: hub-repo[\s\S]*persist-credentials: false/);
   assert.match(screenshots, /\[\[ "\$HUB_REPO" =~ \^\[A-Za-z0-9_\.\-\]\+\/\[A-Za-z0-9_\.\-\]\+\$ \]\]/);
+  const validationStep = screenshots.slice(
+    screenshots.indexOf("      - name: Validate screenshot publication destination\n"),
+    screenshots.indexOf("      - name: Checkout screenshot repository without URL credentials\n"),
+  );
+  assert.doesNotMatch(validationStep, /HUB_DEPLOY_TOKEN|secrets\./);
   assert.match(screenshots, /- name: Push screenshots with process-scoped authentication[\s\S]*http\.https:\/\/github\.com\/\.extraheader=AUTHORIZATION: basic/);
   const commitStep = screenshots.slice(
     screenshots.indexOf("      - name: Commit screenshots to Hub repo\n"),
