@@ -29,7 +29,10 @@ test("workflows pin actions, declare least privilege, and validate Go plus web",
     screenshots.indexOf("      - name: Checkout screenshot repository without URL credentials\n"),
   );
   assert.doesNotMatch(validationStep, /HUB_DEPLOY_TOKEN|secrets\./);
-  assert.match(screenshots, /- name: Push screenshots with process-scoped authentication[\s\S]*http\.https:\/\/github\.com\/\.extraheader=AUTHORIZATION: basic/);
+  const pushStep = screenshots.slice(screenshots.indexOf("      - name: Push screenshots with process-scoped authentication\n"));
+  assert.match(pushStep, /GIT_ASKPASS="\$askpass" GIT_TERMINAL_PROMPT=0 git push origin HEAD/);
+  assert.match(pushStep, /trap 'rm -f "\$askpass"' EXIT/);
+  assert.doesNotMatch(pushStep, /extraheader|base64/);
   const commitStep = screenshots.slice(
     screenshots.indexOf("      - name: Commit screenshots to Hub repo\n"),
     screenshots.indexOf("      - name: Push screenshots with process-scoped authentication\n"),
