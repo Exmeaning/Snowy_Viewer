@@ -29,7 +29,8 @@ function isAllowedExamplePath(path) {
 }
 
 function isHistoricalPlaceholderCredential(scope, username, password) {
-  return scope === 'candidate-history-only' && isPlaceholder(username) && isPlaceholder(password)
+  return scope === 'candidate-history-only' &&
+    username.toLowerCase() === 'x-access-token' && password.toLowerCase() === 'token'
 }
 
 function isPlaceholder(value) {
