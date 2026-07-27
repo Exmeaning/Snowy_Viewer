@@ -18,15 +18,14 @@ function addFinding(rule, scope, path, data, offset = 0) {
   findings.push({ rule, scope, path, line, offset: line === null ? offset : undefined })
 }
 
-function isAllowedExamplePath(path) {
+function isAllowedSyntheticTestPath(path) {
   return /(?:^|\/)(?:testdata|tests?|fixtures?|examples?|mocks?)(?:\/|$)/i.test(path) ||
     /(?:^|\/)[^/]+_(?:test|tests)\.[^/]+$/i.test(path) ||
-    /(?:^|\/).*\.(?:test|spec)\.[^/]+$/i.test(path) ||
-    /(?:^|\/)\.env\.(?:example|sample|template)$/i.test(path)
+    /(?:^|\/).*\.(?:test|spec)\.[^/]+$/i.test(path)
 }
 
-function isAllowedExampleValue(value) {
-  return isPlaceholder(value) || /^(?:admin|editor|member|user|username|password|token|access|refresh|renewed|attacker|other|x-access-token)$/i.test(value)
+function isAllowedExamplePath(path) {
+  return isAllowedSyntheticTestPath(path) || /(?:^|\/)\.env\.(?:example|sample|template)$/i.test(path)
 }
 
 function isPlaceholder(value) {
@@ -113,14 +112,14 @@ function scanContent(path, scope, data) {
     for (let match = pattern.exec(text); match; match = pattern.exec(text)) addFinding(rule, scope, path, data, match.index)
   }
 
-  if (!isAllowedExamplePath(path)) {
-    const userInfo = /https?:\/\/([^\s/@:]+):([^\s/@]+)@[^\s/]+/g
-    for (let match = userInfo.exec(text); match; match = userInfo.exec(text)) {
-      if (!isAllowedExampleValue(match[1]) && !isAllowedExampleValue(match[2])) {
-        addFinding('url-embedded-credential', scope, path, data, match.index)
-      }
+  if (!isAllowedSyntheticTestPath(path)) {
+    const authenticatedURL = /https?:\/\/([^\s/@:]+):([^\s/@]+)@[^\s/]+/g
+    for (let match = authenticatedURL.exec(text); match; match = authenticatedURL.exec(text)) {
+      addFinding('url-embedded-credential', scope, path, data, match.index)
     }
+  }
 
+  if (!isAllowedExamplePath(path)) {
     const jwt = /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{10,}\b/g
     for (let match = jwt.exec(text); match; match = jwt.exec(text)) addFinding('jwt-literal', scope, path, data, match.index)
 

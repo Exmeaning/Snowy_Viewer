@@ -18,6 +18,14 @@ test("workflows pin actions, declare least privilege, and validate Go plus web",
     assert.match(source, /permissions:/);
   }
 
+  const screenshots = readRepo(".github/workflows/screenshots.yml");
+  assert.match(screenshots, /HUB_REPO: \$\{\{ vars\.SCREENSHOT_HUB_REPOSITORY \}\}/);
+  assert.match(screenshots, /repository: \$\{\{ env\.HUB_REPO \}\}/);
+  assert.match(screenshots, /token: \$\{\{ secrets\.HUB_DEPLOY_TOKEN \}\}/);
+  assert.match(screenshots, /\[\[ "\$HUB_REPO" =~ \^\[A-Za-z0-9_\.\-\]\+\/\[A-Za-z0-9_\.\-\]\+\$ \]\]/);
+  assert.doesNotMatch(screenshots, new RegExp("x-access-" + "token:"));
+  assert.doesNotMatch(screenshots, /git remote set-url origin/);
+
   const ci = readRepo(".github/workflows/ci.yml");
   assert.match(ci, /permissions:\s*\n\s+contents: read/);
   assert.match(ci, /go test \.\/\.\.\./);
