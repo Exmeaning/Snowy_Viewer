@@ -117,8 +117,6 @@ jobs:
           node index.js $FORCE_FLAG --only cards,events,gacha,music
 
       - name: Commit screenshots to Hub repo
-        env:
-          HUB_DEPLOY_TOKEN: ${{ secrets.HUB_DEPLOY_TOKEN }}
         run: |
           set -euo pipefail
           cd hub-repo
@@ -147,6 +145,13 @@ jobs:
           COMMIT_MSG="$COMMIT_MSG - $(date -u '+%Y-%m-%d %H:%M UTC')"
 
           git commit -m "$COMMIT_MSG"
+
+      - name: Push screenshots with process-scoped authentication
+        env:
+          HUB_DEPLOY_TOKEN: ${{ secrets.HUB_DEPLOY_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd hub-repo
           auth_header=$(printf 'x-access-token:%s' "$HUB_DEPLOY_TOKEN" | base64 | tr -d '\n')
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth_header" push origin HEAD
 
