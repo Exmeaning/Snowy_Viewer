@@ -8,3 +8,16 @@
 **/.DS_Store
 screenshot-generator
 sekai-mmw-preview-web
+
+.env
+.env.*
+.npmrc
+.netrc
+local-dist
+*.p12
+*.pfx
+*.pem
+*.key
+*.keystore
+*.jks
+*.mobileprovision

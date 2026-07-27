@@ -25,6 +25,11 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+          fetch-depth: 0
+      - name: Scan committed content for secrets and local configuration
+        env:
+          SECRET_SCAN_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: node scripts/scan-committed-secrets.mjs
       - name: Set up Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
