@@ -54,8 +54,10 @@ test("workflows pin actions, declare least privilege, and validate Go plus web",
   assert.match(ci, /curl --fail --silent --show-error[\s\S]*--connect-timeout 3[\s\S]*--max-time 10/);
   assert.match(ci, /openssl req -x509[\s\S]*subjectAltName=DNS:host\.docker\.internal,DNS:localhost,IP:127\.0\.0\.1/);
   assert.match(ci, /serve-public-lyrics-build-contract\.mjs[\s\S]*--host 0\.0\.0\.0/);
-  assert.match(ci, /docker buildx create[\s\S]*--driver docker-container --use/);
-  assert.match(ci, /docker buildx build[\s\S]*--secret id=public_lyrics_ca,src="\$fixture_dir\/cert\.pem"/);
+  assert.match(ci, /lyrics_base_url="https:\/\/localhost:\$\{fixture_port\}\/files\/translation\/lyrics"/);
+  assert.match(ci, /docker buildx create[\s\S]*--driver docker-container[\s\S]*--driver-opt network=host[\s\S]*--use/);
+  assert.match(ci, /docker buildx build[\s\S]*--allow network\.host[\s\S]*--network host[\s\S]*--secret id=public_lyrics_ca,src="\$fixture_dir\/cert\.pem"/);
+  assert.doesNotMatch(ci, /host-gateway/);
   assert.match(ci, /--build-arg NEXT_PUBLIC_LYRICS_BASE_URL="\$lyrics_base_url"[\s\S]*--load/);
   assert.doesNotMatch(ci, /vars\.NEXT_PUBLIC_LYRICS_BASE_URL/);
   assert.doesNotMatch(ci, /NEXT_PUBLIC_LYRICS_BASE_URL:\s*https?:\/\//);
