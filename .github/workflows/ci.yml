@@ -80,6 +80,9 @@ jobs:
         run: npm ci
       - name: Characterization tests
         run: node --test tests/characterization/*.test.mjs
+      - name: Validate synthetic HTTPS fixture behavior
+        working-directory: ${{ github.workspace }}
+        run: node --test scripts/serve-public-lyrics-build-contract.test.mjs
       - name: Validate i18n
         run: npm run lint:i18n
       - name: Validate i18n usage
@@ -92,14 +95,61 @@ jobs:
         run: npm run build:next
       - name: Check localized SSR links
         run: node scripts/check-localized-link-ssr.mjs
-      - name: Validate production image
+      - name: Validate production image build contract
         working-directory: ${{ github.workspace }}
-        env:
-          NEXT_PUBLIC_LYRICS_BASE_URL: ${{ vars.NEXT_PUBLIC_LYRICS_BASE_URL }}
         run: |
-          test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
-          docker build \
-            --build-arg NEXT_PUBLIC_LYRICS_BASE_URL="$NEXT_PUBLIC_LYRICS_BASE_URL" \
+          set -euo pipefail
+          fixture_dir="$(mktemp -d)"
+          fixture_pid=""
+          builder_name="public-build-contract-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cleanup() {
+            if [[ -n "$fixture_pid" ]]; then
+              kill "$fixture_pid" 2>/dev/null || true
+              for _ in {1..40}; do
+                kill -0 "$fixture_pid" 2>/dev/null || break
+                sleep 0.05
+              done
+              kill -KILL "$fixture_pid" 2>/dev/null || true
+              wait "$fixture_pid" 2>/dev/null || true
+            fi
+            docker buildx rm --force "$builder_name" >/dev/null 2>&1 || true
+            rm -rf "$fixture_dir"
+          }
+          trap cleanup EXIT
+
+          openssl req -x509 -newkey rsa:2048 -sha256 -nodes \
+            -keyout "$fixture_dir/key.pem" \
+            -out "$fixture_dir/cert.pem" \
+            -days 1 \
+            -subj "/CN=localhost" \
+            -addext "subjectAltName=DNS:host.docker.internal,DNS:localhost,IP:127.0.0.1"
+          node scripts/serve-public-lyrics-build-contract.mjs \
+            --cert "$fixture_dir/cert.pem" \
+            --host 0.0.0.0 \
+            --key "$fixture_dir/key.pem" \
+            --port-file "$fixture_dir/port" &
+          fixture_pid=$!
+          for _ in {1..100}; do
+            [[ -s "$fixture_dir/port" ]] && break
+            kill -0 "$fixture_pid"
+            sleep 0.05
+          done
+          test -s "$fixture_dir/port"
+          fixture_port="$(cat "$fixture_dir/port")"
+          lyrics_base_url="https://host.docker.internal:${fixture_port}/files/translation/lyrics"
+          curl --fail --silent --show-error \
+            --connect-timeout 3 \
+            --max-time 10 \
+            --cacert "$fixture_dir/cert.pem" \
+            "https://127.0.0.1:${fixture_port}/files/translation/lyrics/index.json" \
+            | node -e 'let body=""; process.stdin.setEncoding("utf8"); process.stdin.on("data", chunk => body += chunk); process.stdin.on("end", () => { const value = JSON.parse(body); if (value.version !== 1 || !Array.isArray(value.songs) || value.songs.length !== 0) process.exit(1); });'
+          docker buildx create --name "$builder_name" --driver docker-container --use
+          docker buildx inspect --bootstrap
+          docker buildx build \
+            --add-host host.docker.internal:host-gateway \
+            --secret id=public_lyrics_ca,src="$fixture_dir/cert.pem" \
+            --build-arg NEXT_PUBLIC_LYRICS_BASE_URL="$lyrics_base_url" \
+            --load \
             -f Dockerfile -t moesekai:test .
 
   calculator:

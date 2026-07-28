@@ -57,6 +57,7 @@ jobs:
           GITHUB_BASE="https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master"
           MASTER_DATA_URLS_JP="$GITHUB_BASE,https://metadata.exmeaning.com/jp/master,https://metadata.pjsk.moe/jp/master" \
           REQUIRE_FRESH_BUILD_DATA=1 \
+          REQUIRE_PUBLIC_LYRICS_SOURCE=1 \
           npm run sitemap --prefix web
 
           python3 -c "import json; json.load(open('web/public/data/sitemap-data.jp.json'))"

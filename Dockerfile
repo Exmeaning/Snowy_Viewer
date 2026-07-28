@@ -22,6 +22,8 @@ ENV NEXT_PUBLIC_API_URL=
 ENV NEXT_PUBLIC_OAUTH2_CLIENT_ID=snowy-viewer-public
 # Public lyrics artifacts. Production accepts only a credential-free HTTPS directory;
 # sitemap generation derives index.json from the same explicitly supplied source.
+# CI may mount a short-lived synthetic CA only for the required image build contract;
+# the secret is available to this build step only and is never copied into the image.
 ARG NEXT_PUBLIC_LYRICS_BASE_URL
 ENV NEXT_PUBLIC_LYRICS_BASE_URL=$NEXT_PUBLIC_LYRICS_BASE_URL
 # Build-time data sources. Multiple URLs allow Docker builds to survive flaky DNS/proxy/CDN paths.
@@ -33,7 +35,12 @@ ENV MANGA_DATA_URLS=$MANGA_DATA_URLS
 ENV REQUIRE_FRESH_BUILD_DATA=$REQUIRE_FRESH_BUILD_DATA
 RUN test -f /app/bun.lock && test -f /app/refer/re_sekai-calculator/src/index.ts
 RUN test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
-RUN bun run sitemap && bun run generate:metadata && bun run build:next
+RUN --mount=type=secret,id=public_lyrics_ca,required=false \
+    if [ -f /run/secrets/public_lyrics_ca ]; then \
+      export NODE_EXTRA_CA_CERTS=/run/secrets/public_lyrics_ca; \
+    fi; \
+    export REQUIRE_PUBLIC_LYRICS_SOURCE=1; \
+    bun run sitemap && bun run generate:metadata && bun run build:next
 
 # Build Stage for Backend
 FROM golang:1.23.12-alpine3.22 AS builder-go

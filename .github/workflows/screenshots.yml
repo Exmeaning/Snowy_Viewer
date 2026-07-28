@@ -78,7 +78,10 @@ jobs:
           npm ci
 
       - name: Build and start web app
+        env:
+          NEXT_PUBLIC_LYRICS_BASE_URL: ${{ vars.NEXT_PUBLIC_LYRICS_BASE_URL }}
         run: |
+          test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
           cd web
           npm run build
           npm run start &

@@ -45,6 +45,7 @@ const OUT_DIR = path.join(__dirname, '..', 'public', 'data');
 const BUILD_REGION = String(process.env.BUILD_DATA_REGION || 'cn').toLowerCase();
 const OUT_FILE = path.join(OUT_DIR, `sitemap-data.${BUILD_REGION}.json`);
 const REQUIRE_FRESH = requireFreshBuildData();
+const REQUIRE_PUBLIC_LYRICS_SOURCE = process.env.REQUIRE_PUBLIC_LYRICS_SOURCE === '1';
 const RUN_GENERATED_AT = new Date().toISOString();
 const PUBLIC_LYRICS_SITEMAP_PRIORITY = 0.6;
 const PUBLIC_LYRICS_SITEMAP_CHANGEFREQ = 'weekly';
@@ -757,6 +758,9 @@ async function loadRouteSource(source, existingData) {
         return source.groups.map(group => buildGroupFromRaw(group, raw, existingData, 'fresh'));
     } catch (error) {
         const allGroupsFailClosed = source.groups.every(group => group.failClosed);
+        if (REQUIRE_PUBLIC_LYRICS_SOURCE && source.label === 'publishedLyrics') {
+            throw error;
+        }
         if (REQUIRE_FRESH && !allGroupsFailClosed) {
             throw error;
         }

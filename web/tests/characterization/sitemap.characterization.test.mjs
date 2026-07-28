@@ -251,6 +251,35 @@ test("build-time lyrics fetch sanitizes final failures without source URLs or ra
   }
 });
 
+test("strict sitemap mode rejects unreachable and schema-invalid public lyrics sources", async () => {
+  const original = {
+    NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_LYRICS_BASE_URL: process.env.NEXT_PUBLIC_LYRICS_BASE_URL,
+    BUILD_FETCH_RETRIES: process.env.BUILD_FETCH_RETRIES,
+  };
+  const previousFetch = globalThis.fetch;
+  try {
+    process.env.NODE_ENV = "production";
+    process.env.NEXT_PUBLIC_LYRICS_BASE_URL = PUBLIC_LYRICS_BASE_URL;
+    process.env.BUILD_FETCH_RETRIES = "0";
+
+    for (const [label, fetchImpl, expected] of [
+      ["unreachable", async () => { throw new Error("source unavailable"); }, /transport failure/],
+      ["invalid-schema", async () => jsonResponse({ version: 1, songs: "invalid" }), /Invalid public lyrics index/],
+    ]) {
+      globalThis.fetch = fetchImpl;
+      const lyrics = await importPublicLyrics(`strict-${label}`);
+      await assert.rejects(lyrics.fetchPublicLyricsIndex(), expected);
+    }
+  } finally {
+    globalThis.fetch = previousFetch;
+    for (const [key, value] of Object.entries(original)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
 test("sitemap generation follows the public lyrics index and excludes unpublished details", async () => {
   const generatorUrl = pathToFileURL(path.join(WEB_ROOT, "scripts/generate-sitemaps.mjs"));
   const generator = await import(`${generatorUrl.href}?test=published-lyrics-routes`);
