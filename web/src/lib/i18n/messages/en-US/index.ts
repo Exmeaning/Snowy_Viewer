@@ -708,6 +708,16 @@ export const enUSMessages = {
     },
     settings: {
         title: "Settings",
+        sections: {
+            visual: "Visual",
+            content: "Content",
+            data: "Data",
+            about: "About",
+        },
+        about: {
+            projectDescription: "PROJECT SEKAI Database & Viewer",
+            viewDetails: "About Project",
+        },
         appearance: {
             sectionTitle: "Appearance",
             system: "System",
@@ -777,16 +787,16 @@ export const enUSMessages = {
             checking: "Checking...",
             loadFailed: "Failed to load",
             noCache: "Not cached",
-            cached: "Data is cached locally and future visits will load from the browser database",
-            stale: "A new version was detected and the data will update automatically on the next load",
-            firstVisit: "First visit: data will be loaded from the server and cached locally",
+            cached: "Data cached locally",
+            stale: "New version detected",
+            firstVisit: "Loading from server",
         },
         refresh: {
             idle: "Force refresh all data",
             refreshing: "Refreshing...",
         },
         footer: {
-            version: "Moesekai · 1.6-preview-beta1",
+            version: "Moesekai · 1.6-preview-beta4",
         },
         sidebar: {
             notLoggedIn: "Not signed in",

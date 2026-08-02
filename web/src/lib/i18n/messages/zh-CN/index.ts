@@ -707,6 +707,16 @@ export const zhCNMessages = {
     },
     settings: {
         title: "设置",
+        sections: {
+            visual: "视觉",
+            content: "内容",
+            data: "数据",
+            about: "关于",
+        },
+        about: {
+            projectDescription: "PROJECT SEKAI 查看器 & 数据库",
+            viewDetails: "关于本项目",
+        },
         appearance: {
             sectionTitle: "外观模式",
             system: "自适应",
@@ -776,16 +786,16 @@ export const zhCNMessages = {
             checking: "检测中...",
             loadFailed: "加载失败",
             noCache: "未缓存",
-            cached: "数据已缓存至本地，后续访问将从浏览器数据库加载",
-            stale: "检测到新版本，数据将在下次加载时自动更新",
-            firstVisit: "首次访问，数据将从服务器加载并缓存到本地",
+            cached: "数据已缓存至本地",
+            stale: "检测到新版本",
+            firstVisit: "从服务器加载",
         },
         refresh: {
             idle: "强制刷新全部数据",
             refreshing: "刷新中...",
         },
         footer: {
-            version: "Moesekai · 1.6-preview-beta1",
+            version: "Moesekai · 1.6-preview-beta4",
         },
         sidebar: {
             notLoggedIn: "未登录",

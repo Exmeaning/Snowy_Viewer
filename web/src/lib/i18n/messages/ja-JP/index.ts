@@ -707,6 +707,16 @@ export const jaJPMessages = {
   },
   settings: {
     title: '設定',
+    sections: {
+      visual: 'ビジュアル',
+      content: 'コンテンツ',
+      data: 'データ',
+      about: '概要'
+    },
+    about: {
+      projectDescription: 'PROJECT SEKAI データベース & ビューア',
+      viewDetails: 'プロジェクトについて'
+    },
     appearance: {
       sectionTitle: '表示設定',
       system: 'システム',
@@ -776,16 +786,16 @@ export const jaJPMessages = {
       checking: '確認中...',
       loadFailed: '読み込みに失敗しました',
       noCache: '未キャッシュ',
-      cached: 'データはローカルにキャッシュ済みです。次回以降はブラウザDBから読み込みます',
-      stale: '新しいバージョンを検出しました。次回読み込み時に自動更新されます',
-      firstVisit: '初回訪問です。データをサーバーから読み込み、ローカルにキャッシュします'
+      cached: 'ローカルにキャッシュ済み',
+      stale: '新しいバージョンを検出',
+      firstVisit: 'サーバーから読み込み中'
     },
     refresh: {
       idle: 'すべてのデータを強制更新',
       refreshing: '更新中...'
     },
     footer: {
-      version: 'Moesekai · 1.6-preview-beta1'
+      version: 'Moesekai · 1.6-preview-beta4'
     },
     sidebar: {
       notLoggedIn: '未ログイン',

@@ -705,6 +705,16 @@ export const koKRMessages = {
     },
     settings: {
         title: "설정",
+        sections: {
+            visual: "비주얼",
+            content: "콘텐츠",
+            data: "데이터",
+            about: "정보"
+        },
+        about: {
+            projectDescription: "프로젝트 세카이 데이터베이스 및 뷰어",
+            viewDetails: "프로젝트 정보"
+        },
         appearance: {
             sectionTitle: "화면 모드",
             system: "시스템 설정",
@@ -774,16 +784,16 @@ export const koKRMessages = {
             checking: "확인 중...",
             loadFailed: "로드 실패",
             noCache: "캐시 없음",
-            cached: "데이터가 로컬에 캐시되었습니다. 다음 접속부터 빠르게 로드됩니다.",
-            stale: "새 버전이 감지되었습니다. 다음 로드 시 데이터가 자동으로 업데이트됩니다.",
-            firstVisit: "처음 액세스할 때 데이터는 서버에서 로드되고 로컬로 캐시됩니다."
+            cached: "로컬에 캐시됨",
+            stale: "새 버전 감지됨",
+            firstVisit: "서버에서 로드 중"
         },
         refresh: {
             idle: "모든 데이터 강제 새로 고침",
             refreshing: "상쾌하다..."
         },
         footer: {
-            version: "Moesekai · 1.6-preview-beta1"
+            version: "Moesekai · 1.6-preview-beta4"
         },
         sidebar: {
             notLoggedIn: "로그인되지 않음",
