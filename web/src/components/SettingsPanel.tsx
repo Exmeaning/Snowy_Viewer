@@ -320,7 +320,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         </div>
 
                         {/* Navigation Tabs Bar */}
-                        <div className="flex bg-slate-200/40 dark:bg-slate-900/60 p-1 mx-5 mt-4 rounded-2xl gap-1 shrink-0 border border-slate-200/50 dark:border-slate-800/60">
+                        <div className="flex bg-slate-200/40 dark:bg-slate-900/60 p-1 mx-5 mt-4 rounded-2xl gap-1 shrink-0 border border-slate-200/50 dark:border-slate-800/60 relative">
                             {tabs.map((tab) => {
                                 const isActive = activeTab === tab.id;
                                 return (
@@ -331,379 +331,399 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                             setExpandedDropdown(null);
                                             setTriggerRect(null);
                                         }}
-                                        className={`relative flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                                        className={`relative flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-colors duration-150 flex items-center justify-center gap-1.5 select-none ${
                                             isActive
-                                                ? "bg-white dark:bg-slate-800 text-miku shadow-sm border border-slate-200/40 dark:border-slate-700/60"
+                                                ? "text-miku dark:text-miku"
                                                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                                         }`}
                                     >
-                                        {tab.icon}
-                                        <span>{t(tab.labelKey)}</span>
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="activeSettingsTabPill"
+                                                className="absolute inset-0 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200/40 dark:border-slate-700/60"
+                                                transition={overlayTransition}
+                                            />
+                                        )}
+                                        <span className="relative z-10 flex items-center justify-center gap-1.5">
+                                            {tab.icon}
+                                            <span>{t(tab.labelKey)}</span>
+                                        </span>
                                     </button>
                                 );
                             })}
                         </div>
 
                         {/* Tab Content Body - Auto content height without giant empty bottom gap */}
-                        <div className="p-5 overflow-y-auto max-h-[60vh]">
-                            {/* TAB 1: VISUAL */}
-                            {activeTab === "visual" && (
-                                <div className="space-y-4">
-                                    {/* Appearance Mode Segmented Control */}
-                                    <div>
-                                        <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                            {t("settings.appearance.sectionTitle")}
-                                        </div>
-                                        <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60">
-                                            {appearanceOptions.map((option) => {
-                                                const isSelected = colorSchemePreference === option.id;
-                                                return (
+                        <div className="p-5 overflow-y-auto max-h-[60vh] min-h-[220px]">
+                            <AnimatePresence mode="wait" initial={false}>
+                                <motion.div
+                                    key={activeTab}
+                                    initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 6, filter: "blur(4px)" }}
+                                    animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)" }}
+                                    exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -6, filter: "blur(4px)" }}
+                                    transition={overlayTransition}
+                                    className="space-y-4"
+                                >
+                                    {/* TAB 1: VISUAL */}
+                                    {activeTab === "visual" && (
+                                        <div className="space-y-4">
+                                            {/* Appearance Mode Segmented Control */}
+                                            <div>
+                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    {t("settings.appearance.sectionTitle")}
+                                                </div>
+                                                <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60">
+                                                    {appearanceOptions.map((option) => {
+                                                        const isSelected = colorSchemePreference === option.id;
+                                                        return (
+                                                            <button
+                                                                key={option.id}
+                                                                onClick={() => setColorSchemePreference(option.id)}
+                                                                className={`pressable flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                                                                    isSelected
+                                                                        ? "bg-miku text-white shadow-sm"
+                                                                        : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                                                                }`}
+                                                            >
+                                                                {t(option.labelKey)}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+
+                                            {/* Background Animation Segmented Control */}
+                                            <div>
+                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    {t("settings.backgroundAnimationBudget.sectionTitle")}
+                                                </div>
+                                                <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60">
                                                     <button
-                                                        key={option.id}
-                                                        onClick={() => setColorSchemePreference(option.id)}
+                                                        onClick={() => setBackgroundAnimationBudget("on")}
                                                         className={`pressable flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                                                            isSelected
+                                                            backgroundAnimationBudget === "on"
                                                                 ? "bg-miku text-white shadow-sm"
                                                                 : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                                                         }`}
                                                     >
-                                                        {t(option.labelKey)}
+                                                        {t("settings.backgroundAnimationBudget.on")}
                                                     </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    {/* Background Animation Segmented Control */}
-                                    <div>
-                                        <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                            {t("settings.backgroundAnimationBudget.sectionTitle")}
-                                        </div>
-                                        <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60">
-                                            <button
-                                                onClick={() => setBackgroundAnimationBudget("on")}
-                                                className={`pressable flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                                                    backgroundAnimationBudget === "on"
-                                                        ? "bg-miku text-white shadow-sm"
-                                                        : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                                                }`}
-                                            >
-                                                {t("settings.backgroundAnimationBudget.on")}
-                                            </button>
-                                            <button
-                                                onClick={() => setBackgroundAnimationBudget("off")}
-                                                className={`pressable flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                                                    backgroundAnimationBudget === "off"
-                                                        ? "bg-miku text-white shadow-sm"
-                                                        : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                                                }`}
-                                            >
-                                                {t("settings.backgroundAnimationBudget.off")}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Theme Color Dropdown */}
-                                    <div>
-                                        <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                            {t("settings.themeColor.sectionTitle")}
-                                        </div>
-                                        <button
-                                            onClick={(e) => handleToggleDropdown("theme", e)}
-                                            className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <span
-                                                    className="w-4 h-4 rounded-full"
-                                                    style={{ backgroundColor: CHAR_COLORS[themeCharId] || "#33CCBB" }}
-                                                />
-                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                                                    {getCharacterName(t, Number(themeCharId), "short")}
-                                                </span>
+                                                    <button
+                                                        onClick={() => setBackgroundAnimationBudget("off")}
+                                                        className={`pressable flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                                                            backgroundAnimationBudget === "off"
+                                                                ? "bg-miku text-white shadow-sm"
+                                                                : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                                                        }`}
+                                                    >
+                                                        {t("settings.backgroundAnimationBudget.off")}
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <svg
-                                                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "theme" ? "rotate-180" : ""}`}
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-                                    </div>
 
-                                    {/* Interface Language Dropdown */}
-                                    <div>
-                                        <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                            {t("settings.uiLanguage.sectionTitle")}
-                                        </div>
-                                        <button
-                                            onClick={(e) => handleToggleDropdown("language", e)}
-                                            className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
-                                            aria-haspopup="listbox"
-                                            aria-expanded={expandedDropdown === "language"}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-4 h-4 rounded-full bg-miku/20 flex items-center justify-center">
-                                                    <span className="w-2 h-2 rounded-full bg-miku" />
-                                                </span>
-                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{currentLanguageLabel}</span>
+                                            {/* Theme Color Dropdown */}
+                                            <div>
+                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    {t("settings.themeColor.sectionTitle")}
+                                                </div>
+                                                <button
+                                                    onClick={(e) => handleToggleDropdown("theme", e)}
+                                                    className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <span
+                                                            className="w-4 h-4 rounded-full"
+                                                            style={{ backgroundColor: CHAR_COLORS[themeCharId] || "#33CCBB" }}
+                                                        />
+                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                                                            {getCharacterName(t, Number(themeCharId), "short")}
+                                                        </span>
+                                                    </div>
+                                                    <svg
+                                                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "theme" ? "rotate-180" : ""}`}
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
                                             </div>
-                                            <svg
-                                                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "language" ? "rotate-180" : ""}`}
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-                                        {locale !== "zh-CN" && (
-                                            <p className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200/30 dark:border-amber-900/30 px-2 py-1.5 text-[10px] leading-relaxed text-amber-700 dark:text-amber-500">
-                                                <span className="mt-0.5 inline-flex h-3 w-3 shrink-0 items-center justify-center rounded-full bg-amber-200 dark:bg-amber-900/50 text-[8px] font-black text-amber-700 dark:text-amber-500">!</span>
-                                                <span>{t("settings.uiLanguage.machineTranslationNotice")}</span>
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
 
-                            {/* TAB 2: CONTENT */}
-                            {activeTab === "content" && (
-                                <div className="space-y-4">
-                                    {/* Spoiler Toggle */}
-                                    <div className="flex items-center justify-between py-2 border-b border-slate-200/40 dark:border-slate-800/40">
-                                        <div className="flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                            </svg>
-                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.showSpoiler.label")}</span>
-                                        </div>
-                                        <button
-                                            onClick={() => setShowSpoiler(!isShowSpoiler)}
-                                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${isShowSpoiler ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
-                                        >
-                                            <span
-                                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${isShowSpoiler ? 'translate-x-5' : 'translate-x-0'}`}
-                                            />
-                                        </button>
-                                    </div>
-
-                                    {/* Trained Thumbnail Toggle */}
-                                    <div className="flex items-center justify-between py-2 border-b border-slate-200/40 dark:border-slate-800/40">
-                                        <div className="flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.trainedThumbnail.label")}</span>
-                                            <kbd className="hidden sm:inline-block min-w-[1.5rem] px-1.5 py-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/60 rounded border border-slate-200/50 dark:border-slate-700/40 text-center shadow-sm">]</kbd>
-                                        </div>
-                                        <button
-                                            onClick={() => setUseTrainedThumbnail(!useTrainedThumbnail)}
-                                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useTrainedThumbnail ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
-                                        >
-                                            <span
-                                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${useTrainedThumbnail ? 'translate-x-5' : 'translate-x-0'}`}
-                                            />
-                                        </button>
-                                    </div>
-
-                                    {/* LLM Translation Toggle */}
-                                    <div className="flex items-center justify-between py-2 border-b border-slate-200/40 dark:border-slate-800/40">
-                                        <div className="flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                                            </svg>
-                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.translation.label")}</span>
-                                        </div>
-                                        <button
-                                            onClick={() => setUseLLMTranslation(!useLLMTranslation)}
-                                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useLLMTranslation ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
-                                        >
-                                            <span
-                                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${useLLMTranslation ? 'translate-x-5' : 'translate-x-0'}`}
-                                            />
-                                        </button>
-                                    </div>
-
-                                    {ADS_SETTINGS_VISIBLE && (
-                                        <div className="flex items-center justify-between py-2">
-                                            <div className="flex items-center gap-2">
-                                                <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                                                </svg>
-                                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.ads.label")}</span>
+                                            {/* Interface Language Dropdown */}
+                                            <div>
+                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    {t("settings.uiLanguage.sectionTitle")}
+                                                </div>
+                                                <button
+                                                    onClick={(e) => handleToggleDropdown("language", e)}
+                                                    className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
+                                                    aria-haspopup="listbox"
+                                                    aria-expanded={expandedDropdown === "language"}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="w-4 h-4 rounded-full bg-miku/20 flex items-center justify-center">
+                                                            <span className="w-2 h-2 rounded-full bg-miku" />
+                                                        </span>
+                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{currentLanguageLabel}</span>
+                                                    </div>
+                                                    <svg
+                                                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "language" ? "rotate-180" : ""}`}
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                                {locale !== "zh-CN" && (
+                                                    <p className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200/30 dark:border-amber-900/30 px-2 py-1.5 text-[10px] leading-relaxed text-amber-700 dark:text-amber-500">
+                                                        <span className="mt-0.5 inline-flex h-3 w-3 shrink-0 items-center justify-center rounded-full bg-amber-200 dark:bg-amber-900/50 text-[8px] font-black text-amber-700 dark:text-amber-500">!</span>
+                                                        <span>{t("settings.uiLanguage.machineTranslationNotice")}</span>
+                                                    </p>
+                                                )}
                                             </div>
-                                            <button
-                                                onClick={() => setShowAds(!showAds)}
-                                                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${showAds ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
-                                            >
-                                                <span
-                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${showAds ? 'translate-x-5' : 'translate-x-0'}`}
-                                                />
-                                            </button>
                                         </div>
                                     )}
-                                </div>
-                            )}
 
-                            {/* TAB 3: DATA */}
-                            {activeTab === "data" && (
-                                <div className="space-y-4">
-                                    {/* Server Source / Region Select */}
-                                    <div>
-                                        <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                            {t("settings.serverSource.sectionTitle")}
-                                        </div>
-                                        <button
-                                            onClick={(e) => handleToggleDropdown("serverSource", e)}
-                                            className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-4 h-4 rounded-full bg-miku/20 flex items-center justify-center">
-                                                    <span className="w-2 h-2 rounded-full bg-miku" />
-                                                </span>
-                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{t(`settings.serverSource.${serverSource}`)}</span>
+                                    {/* TAB 2: CONTENT */}
+                                    {activeTab === "content" && (
+                                        <div className="space-y-4">
+                                            {/* Spoiler Toggle */}
+                                            <div className="flex items-center justify-between py-2 border-b border-slate-200/40 dark:border-slate-800/40">
+                                                <div className="flex items-center gap-2">
+                                                    <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.showSpoiler.label")}</span>
+                                                </div>
+                                                <button
+                                                    onClick={() => setShowSpoiler(!isShowSpoiler)}
+                                                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${isShowSpoiler ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                                >
+                                                    <span
+                                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${isShowSpoiler ? 'translate-x-5' : 'translate-x-0'}`}
+                                                    />
+                                                </button>
                                             </div>
-                                            <svg
-                                                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "serverSource" ? "rotate-180" : ""}`}
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-                                    </div>
 
-                                    {/* Asset Source Dropdown */}
-                                    <div>
-                                        <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                            {t("settings.assetSource.sectionTitle")}
-                                        </div>
-                                        <button
-                                            onClick={(e) => handleToggleDropdown("asset", e)}
-                                            className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-4 h-4 rounded-full bg-miku/20 flex items-center justify-center">
-                                                    <span className="w-2 h-2 rounded-full bg-miku" />
-                                                </span>
-                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{t(currentAssetLabel)}</span>
+                                            {/* Trained Thumbnail Toggle */}
+                                            <div className="flex items-center justify-between py-2 border-b border-slate-200/40 dark:border-slate-800/40">
+                                                <div className="flex items-center gap-2">
+                                                    <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.trainedThumbnail.label")}</span>
+                                                    <kbd className="hidden sm:inline-block min-w-[1.5rem] px-1.5 py-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/60 rounded border border-slate-200/50 dark:border-slate-700/40 text-center shadow-sm">]</kbd>
+                                                </div>
+                                                <button
+                                                    onClick={() => setUseTrainedThumbnail(!useTrainedThumbnail)}
+                                                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useTrainedThumbnail ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                                >
+                                                    <span
+                                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${useTrainedThumbnail ? 'translate-x-5' : 'translate-x-0'}`}
+                                                    />
+                                                </button>
                                             </div>
-                                            <svg
-                                                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "asset" ? "rotate-180" : ""}`}
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-                                    </div>
 
-                                    {/* Data Version & Refresh */}
-                                    <div>
-                                        <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                            {t("settings.dataVersion.sectionTitle")}
-                                        </div>
-                                        <div className="space-y-2.5">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs text-slate-500 dark:text-slate-450">{t("settings.dataVersion.cloudVersion")}:</span>
-                                                <span className="text-xs font-mono text-slate-700 dark:text-slate-300">
-                                                    {isLoading ? t("settings.dataVersion.checking") : (cloudVersion || t("settings.dataVersion.loadFailed"))}
-                                                </span>
+                                            {/* LLM Translation Toggle */}
+                                            <div className="flex items-center justify-between py-2 border-b border-slate-200/40 dark:border-slate-800/40">
+                                                <div className="flex items-center gap-2">
+                                                    <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.translation.label")}</span>
+                                                </div>
+                                                <button
+                                                    onClick={() => setUseLLMTranslation(!useLLMTranslation)}
+                                                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useLLMTranslation ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                                >
+                                                    <span
+                                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${useLLMTranslation ? 'translate-x-5' : 'translate-x-0'}`}
+                                                    />
+                                                </button>
                                             </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs text-slate-500 dark:text-slate-450">{t("settings.dataVersion.localCacheVersion")}:</span>
-                                                <span className={`text-xs font-mono ${(localVersion && localVersion !== cloudVersion) ? "text-amber-500 font-bold" : "text-slate-700 dark:text-slate-300"}`}>
-                                                    {localVersion ? (
-                                                        localVersion === cloudVersion ? (
-                                                            <span className="flex items-center gap-1">
-                                                                {localVersion}
-                                                                <svg className="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+
+                                            {ADS_SETTINGS_VISIBLE && (
+                                                <div className="flex items-center justify-between py-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                                                        </svg>
+                                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.ads.label")}</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setShowAds(!showAds)}
+                                                        className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${showAds ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                                    >
+                                                        <span
+                                                            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${showAds ? 'translate-x-5' : 'translate-x-0'}`}
+                                                        />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* TAB 3: DATA */}
+                                    {activeTab === "data" && (
+                                        <div className="space-y-4">
+                                            {/* Server Source / Region Select */}
+                                            <div>
+                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    {t("settings.serverSource.sectionTitle")}
+                                                </div>
+                                                <button
+                                                    onClick={(e) => handleToggleDropdown("serverSource", e)}
+                                                    className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="w-4 h-4 rounded-full bg-miku/20 flex items-center justify-center">
+                                                            <span className="w-2 h-2 rounded-full bg-miku" />
+                                                        </span>
+                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{t(`settings.serverSource.${serverSource}`)}</span>
+                                                    </div>
+                                                    <svg
+                                                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "serverSource" ? "rotate-180" : ""}`}
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            {/* Asset Source Dropdown */}
+                                            <div>
+                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    {t("settings.assetSource.sectionTitle")}
+                                                </div>
+                                                <button
+                                                    onClick={(e) => handleToggleDropdown("asset", e)}
+                                                    className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="w-4 h-4 rounded-full bg-miku/20 flex items-center justify-center">
+                                                            <span className="w-2 h-2 rounded-full bg-miku" />
+                                                        </span>
+                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{t(currentAssetLabel)}</span>
+                                                    </div>
+                                                    <svg
+                                                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "asset" ? "rotate-180" : ""}`}
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            {/* Data Version & Refresh */}
+                                            <div>
+                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    {t("settings.dataVersion.sectionTitle")}
+                                                </div>
+                                                <div className="space-y-2.5">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs text-slate-500 dark:text-slate-450">{t("settings.dataVersion.cloudVersion")}:</span>
+                                                        <span className="text-xs font-mono text-slate-700 dark:text-slate-300">
+                                                            {isLoading ? t("settings.dataVersion.checking") : (cloudVersion || t("settings.dataVersion.loadFailed"))}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs text-slate-500 dark:text-slate-450">{t("settings.dataVersion.localCacheVersion")}:</span>
+                                                        <span className={`text-xs font-mono ${(localVersion && localVersion !== cloudVersion) ? "text-amber-500 font-bold" : "text-slate-700 dark:text-slate-300"}`}>
+                                                            {localVersion ? (
+                                                                localVersion === cloudVersion ? (
+                                                                    <span className="flex items-center gap-1">
+                                                                        {localVersion}
+                                                                        <svg className="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                    </span>
+                                                                ) : localVersion
+                                                            ) : t("settings.dataVersion.noCache")}
+                                                        </span>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={forceRefreshData}
+                                                        disabled={isRefreshing || isLoading}
+                                                        className="w-full px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 disabled:from-slate-300 dark:disabled:from-slate-700 disabled:to-slate-400 dark:disabled:to-slate-800 disabled:text-slate-500 dark:disabled:text-slate-650 rounded-xl transition-all flex items-center justify-center gap-2"
+                                                    >
+                                                        {isRefreshing ? (
+                                                            <>
+                                                                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                                 </svg>
-                                                            </span>
-                                                        ) : localVersion
-                                                    ) : t("settings.dataVersion.noCache")}
-                                                </span>
+                                                                {t("settings.refresh.refreshing")}
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                                </svg>
+                                                                {t("settings.refresh.idle")}
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
-
-                                            <button
-                                                onClick={forceRefreshData}
-                                                disabled={isRefreshing || isLoading}
-                                                className="w-full px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 disabled:from-slate-300 dark:disabled:from-slate-700 disabled:to-slate-400 dark:disabled:to-slate-800 disabled:text-slate-500 dark:disabled:text-slate-650 rounded-xl transition-all flex items-center justify-center gap-2"
-                                            >
-                                                {isRefreshing ? (
-                                                    <>
-                                                        <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                        </svg>
-                                                        {t("settings.refresh.refreshing")}
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                                        </svg>
-                                                        {t("settings.refresh.idle")}
-                                                    </>
-                                                )}
-                                            </button>
                                         </div>
-                                    </div>
-                                </div>
-                            )}
+                                    )}
 
-                            {/* TAB 4: ABOUT */}
-                            {activeTab === "about" && (
-                                <div className="space-y-4">
-                                    <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200/40 dark:border-slate-800/30 flex flex-col items-center text-center space-y-3">
-                                        {/* Dynamic Theme Mapped SVG Logo & Title as Hyperlink */}
-                                        <a
-                                            href="/about"
-                                            onClick={handleNavigateAbout}
-                                            className="group flex flex-col items-center cursor-pointer"
-                                        >
-                                            <div
-                                                className="h-9 w-32 bg-miku transition-transform duration-200 group-hover:scale-105 my-1"
-                                                style={{
-                                                    maskImage: `url(${MOE_LOGO_URL})`,
-                                                    maskSize: "contain",
-                                                    maskPosition: "center",
-                                                    maskRepeat: "no-repeat",
-                                                    WebkitMaskImage: `url(${MOE_LOGO_URL})`,
-                                                    WebkitMaskSize: "contain",
-                                                    WebkitMaskPosition: "center",
-                                                    WebkitMaskRepeat: "no-repeat",
-                                                }}
-                                                role="img"
-                                                aria-label="Moesekai Logo"
-                                            />
-                                            <h4 className="text-base font-bold text-slate-800 dark:text-slate-200 group-hover:text-miku transition-colors mt-1">
-                                                Moesekai Viewer
-                                            </h4>
-                                        </a>
+                                    {/* TAB 4: ABOUT */}
+                                    {activeTab === "about" && (
+                                        <div className="space-y-4">
+                                            <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200/40 dark:border-slate-800/30 flex flex-col items-center text-center space-y-3">
+                                                {/* Dynamic Theme Mapped SVG Logo & Title as Hyperlink */}
+                                                <a
+                                                    href="/about"
+                                                    onClick={handleNavigateAbout}
+                                                    className="group flex flex-col items-center cursor-pointer"
+                                                >
+                                                    <div
+                                                        className="h-9 w-32 bg-miku transition-transform duration-200 group-hover:scale-105 my-1"
+                                                        style={{
+                                                            maskImage: `url(${MOE_LOGO_URL})`,
+                                                            maskSize: "contain",
+                                                            maskPosition: "center",
+                                                            maskRepeat: "no-repeat",
+                                                            WebkitMaskImage: `url(${MOE_LOGO_URL})`,
+                                                            WebkitMaskSize: "contain",
+                                                            WebkitMaskPosition: "center",
+                                                            WebkitMaskRepeat: "no-repeat",
+                                                        }}
+                                                        role="img"
+                                                        aria-label="Moesekai Logo"
+                                                    />
+                                                    <h4 className="text-base font-bold text-slate-800 dark:text-slate-200 group-hover:text-miku transition-colors mt-1">
+                                                        Moesekai Viewer
+                                                    </h4>
+                                                </a>
 
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                                            {t("settings.about.projectDescription")}
-                                        </p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                                    {t("settings.about.projectDescription")}
+                                                </p>
 
-                                        <a
-                                            href="/about"
-                                            onClick={handleNavigateAbout}
-                                            className="pressable w-full px-4 py-2.5 text-xs font-bold text-white bg-miku hover:bg-miku-dark rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors mt-2 cursor-pointer"
-                                        >
-                                            <span>{t("settings.about.viewDetails")}</span>
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </div>
-                            )}
+                                                <a
+                                                    href="/about"
+                                                    onClick={handleNavigateAbout}
+                                                    className="pressable w-full px-4 py-2.5 text-xs font-bold text-white bg-miku hover:bg-miku-dark rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors mt-2 cursor-pointer"
+                                                >
+                                                    <span>{t("settings.about.viewDetails")}</span>
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                    </svg>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            </AnimatePresence>
                         </div>
 
                         {/* Footer with version - Fixed at bottom */}
