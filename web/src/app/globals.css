@@ -827,6 +827,7 @@ button.island-pill-hover {
   background-color: var(--surface-strong) !important;
 }
 
+:root[data-theme="dark"] .text-black,
 :root[data-theme="dark"] .text-slate-900,
 :root[data-theme="dark"] .text-slate-800 {
   color: var(--text-strong) !important;
