@@ -104,6 +104,8 @@ interface FloatingDropdownProps {
 
 function FloatingDropdown({ isOpen, triggerRect, onClose, children, maxHeight = 260 }: FloatingDropdownProps) {
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const prefersReducedMotion = useReducedMotion();
+    const transition = getMotionTransition("snappy", { reducedMotion: !!prefersReducedMotion });
 
     useEffect(() => {
         if (!isOpen) return;
@@ -125,12 +127,10 @@ function FloatingDropdown({ isOpen, triggerRect, onClose, children, maxHeight = 
         };
     }, [isOpen, onClose]);
 
-    if (!isOpen || !triggerRect) return null;
+    const spaceBelow = triggerRect ? window.innerHeight - triggerRect.bottom : 0;
+    const openUpwards = triggerRect ? (spaceBelow < maxHeight + 20 && triggerRect.top > maxHeight) : false;
 
-    const spaceBelow = window.innerHeight - triggerRect.bottom;
-    const openUpwards = spaceBelow < maxHeight + 20 && triggerRect.top > maxHeight;
-
-    const style: React.CSSProperties = {
+    const style: React.CSSProperties = triggerRect ? {
         position: "fixed",
         left: triggerRect.left,
         width: triggerRect.width,
@@ -138,25 +138,49 @@ function FloatingDropdown({ isOpen, triggerRect, onClose, children, maxHeight = 
         ...(openUpwards
             ? { bottom: window.innerHeight - triggerRect.top + 6 }
             : { top: triggerRect.bottom + 6 }),
-    };
+    } : {};
 
     return createPortal(
-        <>
-            <div
-                className="fixed inset-0 z-[299]"
-                onClick={onClose}
-            />
-            <div
-                ref={dropdownRef}
-                style={style}
-                onClick={(e) => e.stopPropagation()}
-                className="liquid-glass-modal rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-700/80"
-            >
-                <div style={{ maxHeight }} className="overflow-y-auto p-2">
-                    {children}
-                </div>
-            </div>
-        </>,
+        <AnimatePresence>
+            {isOpen && triggerRect && (
+                <>
+                    <motion.div
+                        className="fixed inset-0 z-[299]"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        onClick={onClose}
+                    />
+                    <motion.div
+                        ref={dropdownRef}
+                        style={style}
+                        onClick={(e) => e.stopPropagation()}
+                        initial={prefersReducedMotion ? { opacity: 0 } : {
+                            opacity: 0,
+                            scale: 0.95,
+                            y: openUpwards ? 8 : -8,
+                        }}
+                        animate={prefersReducedMotion ? { opacity: 1 } : {
+                            opacity: 1,
+                            scale: 1,
+                            y: 0,
+                        }}
+                        exit={prefersReducedMotion ? { opacity: 0 } : {
+                            opacity: 0,
+                            scale: 0.95,
+                            y: openUpwards ? 8 : -8,
+                        }}
+                        transition={transition}
+                        className="liquid-glass-modal rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-700/80 will-change-transform"
+                    >
+                        <div style={{ maxHeight }} className="overflow-y-auto p-2">
+                            {children}
+                        </div>
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>,
         document.body
     );
 }
@@ -372,20 +396,27 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                 <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
                                                     {t("settings.appearance.sectionTitle")}
                                                 </div>
-                                                <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60">
+                                                <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60 relative">
                                                     {appearanceOptions.map((option) => {
                                                         const isSelected = colorSchemePreference === option.id;
                                                         return (
                                                             <button
                                                                 key={option.id}
                                                                 onClick={() => setColorSchemePreference(option.id)}
-                                                                className={`pressable flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                                                                className={`relative flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors duration-150 select-none ${
                                                                     isSelected
-                                                                        ? "bg-miku text-white shadow-sm"
+                                                                        ? "text-white"
                                                                         : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                                                                 }`}
                                                             >
-                                                                {t(option.labelKey)}
+                                                                {isSelected && (
+                                                                    <motion.div
+                                                                        layoutId="activeAppearancePill"
+                                                                        className="absolute inset-0 bg-miku rounded-lg shadow-sm"
+                                                                        transition={overlayTransition}
+                                                                    />
+                                                                )}
+                                                                <span className="relative z-10">{t(option.labelKey)}</span>
                                                             </button>
                                                         );
                                                     })}
@@ -397,27 +428,33 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                 <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
                                                     {t("settings.backgroundAnimationBudget.sectionTitle")}
                                                 </div>
-                                                <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60">
-                                                    <button
-                                                        onClick={() => setBackgroundAnimationBudget("on")}
-                                                        className={`pressable flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                                                            backgroundAnimationBudget === "on"
-                                                                ? "bg-miku text-white shadow-sm"
-                                                                : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                                                        }`}
-                                                    >
-                                                        {t("settings.backgroundAnimationBudget.on")}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setBackgroundAnimationBudget("off")}
-                                                        className={`pressable flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                                                            backgroundAnimationBudget === "off"
-                                                                ? "bg-miku text-white shadow-sm"
-                                                                : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                                                        }`}
-                                                    >
-                                                        {t("settings.backgroundAnimationBudget.off")}
-                                                    </button>
+                                                <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60 relative">
+                                                    {[
+                                                        { id: "on", labelKey: "settings.backgroundAnimationBudget.on" },
+                                                        { id: "off", labelKey: "settings.backgroundAnimationBudget.off" },
+                                                    ].map((option) => {
+                                                        const isSelected = backgroundAnimationBudget === option.id;
+                                                        return (
+                                                            <button
+                                                                key={option.id}
+                                                                onClick={() => setBackgroundAnimationBudget(option.id as "on" | "off")}
+                                                                className={`relative flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors duration-150 select-none ${
+                                                                    isSelected
+                                                                        ? "text-white"
+                                                                        : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                                                                }`}
+                                                            >
+                                                                {isSelected && (
+                                                                    <motion.div
+                                                                        layoutId="activeBgAnimPill"
+                                                                        className="absolute inset-0 bg-miku rounded-lg shadow-sm"
+                                                                        transition={overlayTransition}
+                                                                    />
+                                                                )}
+                                                                <span className="relative z-10">{t(option.labelKey)}</span>
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
 
@@ -501,8 +538,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                     onClick={() => setShowSpoiler(!isShowSpoiler)}
                                                     className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${isShowSpoiler ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
                                                 >
-                                                    <span
-                                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${isShowSpoiler ? 'translate-x-5' : 'translate-x-0'}`}
+                                                    <motion.span
+                                                        className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow"
+                                                        animate={{ x: isShowSpoiler ? 20 : 0 }}
+                                                        transition={overlayTransition}
                                                     />
                                                 </button>
                                             </div>
@@ -520,8 +559,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                     onClick={() => setUseTrainedThumbnail(!useTrainedThumbnail)}
                                                     className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useTrainedThumbnail ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
                                                 >
-                                                    <span
-                                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${useTrainedThumbnail ? 'translate-x-5' : 'translate-x-0'}`}
+                                                    <motion.span
+                                                        className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow"
+                                                        animate={{ x: useTrainedThumbnail ? 20 : 0 }}
+                                                        transition={overlayTransition}
                                                     />
                                                 </button>
                                             </div>
@@ -538,8 +579,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                     onClick={() => setUseLLMTranslation(!useLLMTranslation)}
                                                     className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useLLMTranslation ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
                                                 >
-                                                    <span
-                                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${useLLMTranslation ? 'translate-x-5' : 'translate-x-0'}`}
+                                                    <motion.span
+                                                        className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow"
+                                                        animate={{ x: useLLMTranslation ? 20 : 0 }}
+                                                        transition={overlayTransition}
                                                     />
                                                 </button>
                                             </div>
@@ -556,8 +599,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                         onClick={() => setShowAds(!showAds)}
                                                         className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${showAds ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
                                                     >
-                                                        <span
-                                                            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${showAds ? 'translate-x-5' : 'translate-x-0'}`}
+                                                        <motion.span
+                                                            className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow"
+                                                            animate={{ x: showAds ? 20 : 0 }}
+                                                            transition={overlayTransition}
                                                         />
                                                     </button>
                                                 </div>
