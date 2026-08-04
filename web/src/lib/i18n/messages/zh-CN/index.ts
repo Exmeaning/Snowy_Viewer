@@ -1719,6 +1719,7 @@ export const zhCNMessages = {
             wishSelectTitle: "当前自选 PU",
             wishSelectSubTitle: "选择自选 PU 卡牌",
             wishSelectDesc: "需要选择 {limit} 张卡。所选自选 PU 与当期新 PU 均按单张 0.4% 计算，其余所有 4★ 共享剩余概率。",
+            wishSelectClear: "清空已选 ({count})",
             selected: "已选择",
             clickSelect: "点击选择",
             newPuCardsTitle: "当期新 PU 卡牌 ({count})",

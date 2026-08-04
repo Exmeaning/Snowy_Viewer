@@ -1743,6 +1743,7 @@ export const jaJPMessages = {
       wishSelectTitle: 'Current Wish Pick',
       wishSelectSubTitle: 'Select Wish Pick Cards',
       wishSelectDesc: 'Choose {limit} cards. Selected Wish Pick and current new featured cards are calculated at 0.4% each, and other 4★ cards share the remaining rate.',
+      wishSelectClear: '選択解除 ({count})',
       selected: '選択中',
       clickSelect: '選択',
       newPuCardsTitle: 'New Featured Cards ({count})',

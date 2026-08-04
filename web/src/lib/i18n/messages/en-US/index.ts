@@ -1720,6 +1720,7 @@ export const enUSMessages = {
             wishSelectTitle: "Current Wish Pick",
             wishSelectSubTitle: "Select Wish Pick Cards",
             wishSelectDesc: "Choose {limit} cards. Selected Wish Pick and current new featured cards are calculated at 0.4% each, and other 4★ cards share the remaining rate.",
+            wishSelectClear: "Clear Selected ({count})",
             selected: "Selected",
             clickSelect: "Select",
             newPuCardsTitle: "New Featured Cards ({count})",

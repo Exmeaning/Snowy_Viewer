@@ -423,7 +423,7 @@ export default function CardSelectorModal({
                                 }}
                                 className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors px-2 py-0.5 rounded bg-red-50 dark:bg-red-950/30 hover:bg-red-100"
                             >
-                                清空已选 ({selectedCardIds.length})
+                                {t("page.gacha.wishSelectClear", { count: selectedCardIds.length })}
                             </button>
                         )}
                     </div>

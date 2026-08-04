@@ -1741,6 +1741,7 @@ export const koKRMessages = {
             wishSelectTitle: "현재 선택된 PU",
             wishSelectSubTitle: "나만의 PU 카드를 선택하세요",
             wishSelectDesc: "{limit} 카드를 선택해야 합니다. 선택된 자체 선택된 PU와 현재 기간의 새로운 PU는 단일 0.4%로 계산되며, 나머지 4*는 모두 나머지 확률을 공유합니다.",
+            wishSelectClear: "선택 해제 ({count})",
             selected: "선택됨",
             clickSelect: "선택하려면 클릭하세요.",
             newPuCardsTitle: "현재 기간({count})의 새 PU 카드",
