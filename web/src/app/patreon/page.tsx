@@ -205,7 +205,6 @@ export default function PatreonPage() {
                                 <ExternalLink
                                     href="https://ko-fi.com/moesekai"
                                 >
-                                    { }
                                     <img
                                         src="https://storage.ko-fi.com/cdn/brandasset/v2/support_me_on_kofi_dark.png"
                                         alt="Support me on Ko-fi"
