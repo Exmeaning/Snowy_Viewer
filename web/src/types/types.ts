@@ -341,6 +341,14 @@ export const CHAR_COLORS: Record<string, string> = {
 
 // ==================== Gacha Types ====================
 
+export interface IGachaInformation {
+    gachaId: number;
+    summary?: string;
+    description?: string;
+    bubbleAssetbundleName?: string;
+    bubbleText?: string;
+}
+
 export interface IGachaInfo {
     id: number;
     gachaType: string;
@@ -359,6 +367,7 @@ export interface IGachaInfo {
     wishLimitedSelectCount?: number;
     gachaCeilExchangeId?: number;
     gachaBonusId?: number;
+    gachaInformation?: IGachaInformation;
 }
 
 export interface IGachaPickup {
@@ -415,5 +424,8 @@ export const GACHA_CATEGORY_LABEL_KEYS: Record<GachaCategoryType, string> = {
 
 // Helper function to check if a gacha is a wish/pick pool
 export function isWishGacha(gacha: IGachaInfo): boolean {
-    return gacha.gachaCardRarityRates.some(rate => rate.lotteryType === "categorized_wish");
+    if (!gacha) return false;
+    if (gacha.wishFixedSelectCount && gacha.wishFixedSelectCount > 0) return true;
+    if (gacha.gachaCardRarityRates?.some(rate => rate.lotteryType === "categorized_wish")) return true;
+    return gacha.gachaDetails?.some(detail => detail.isWish || detail.gachaDetailWishType === "fixed") ?? false;
 }

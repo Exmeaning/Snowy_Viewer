@@ -44,6 +44,14 @@ type GachaInfo struct {
 	AssetbundleName string `json:"assetbundleName"`
 }
 
+type GachaInformation struct {
+	GachaID               int    `json:"gachaId"`
+	Summary               string `json:"summary,omitempty"`
+	Description           string `json:"description,omitempty"`
+	BubbleAssetbundleName string `json:"bubbleAssetbundleName,omitempty"`
+	BubbleText            string `json:"bubbleText,omitempty"`
+}
+
 // Gacha Structs
 type Gacha struct {
 	ID                   int                   `json:"id"`
@@ -55,6 +63,7 @@ type Gacha struct {
 	EndAt                int64                 `json:"endAt"`
 	GachaPickups         []GachaPickup         `json:"gachaPickups"`
 	GachaCardRarityRates []GachaCardRarityRate `json:"gachaCardRarityRates"`
+	GachaInformation     *GachaInformation     `json:"gachaInformation,omitempty"`
 }
 
 type GachaCardRarityRate struct {

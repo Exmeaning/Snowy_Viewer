@@ -13,6 +13,7 @@ import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
+import CardSelectorModal from "@/components/cards/CardSelectorModal";
 import { useI18n } from "@/contexts/I18nContext";
 
 // Gacha Simulator Types
@@ -123,6 +124,10 @@ export default function GachaDetailClient() {
     const [imageViewerOpen, setImageViewerOpen] = useState(false);
     const [customSpinCount, setCustomSpinCount] = useState<string>("");
     const [selectedWishCardIds, setSelectedWishCardIds] = useState<number[]>([]);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+    const [isCardSelectorModalOpen, setIsCardSelectorModalOpen] = useState(false);
+    const [isWishModalOpen, setIsWishModalOpen] = useState(false);
     const { useTrainedThumbnail, assetSource } = useTheme();
     const { setDetailName } = useBreadcrumb();
 
@@ -202,16 +207,6 @@ export default function GachaDetailClient() {
             .filter((c): c is ICardInfo => c !== undefined);
     }, [gacha, cards]);
 
-    const fixedWishCards = useMemo(() => {
-        if (!gacha) return [] as ICardInfo[];
-        const fixedIds = new Set(
-            gacha.gachaDetails
-                .filter(detail => detail.isWish && detail.gachaDetailWishType === "fixed")
-                .map(detail => detail.cardId)
-        );
-        return pickupCards.filter(card => fixedIds.has(card.id));
-    }, [gacha, pickupCards]);
-
     const cardMap = useMemo(() => new Map(cards.map(card => [card.id, card])), [cards]);
 
     const dreamPickNewPuCards = useMemo(() => {
@@ -221,6 +216,28 @@ export default function GachaDetailClient() {
             .map(detail => cardMap.get(detail.cardId))
             .filter((card): card is ICardInfo => !!card && card.cardRarityType === "rarity_4");
     }, [gacha, isWishPickGacha, cardMap]);
+
+    const wishCandidateCards = useMemo(() => {
+        if (!gacha || !isWishPickGacha) return [] as ICardInfo[];
+        const wishDetails = gacha.gachaDetails.filter(detail => {
+            const card = cardMap.get(detail.cardId);
+            return card?.cardRarityType === "rarity_4" && (detail.isWish || detail.gachaDetailWishType === "fixed");
+        });
+
+        const list = wishDetails
+            .map(detail => cardMap.get(detail.cardId))
+            .filter((card): card is ICardInfo => !!card);
+
+        if (list.length > 0) return list;
+
+        // Fallback: Return all 4★ cards in gachaDetails that are not new PU cards
+        const newPuCardIds = new Set(dreamPickNewPuCards.map(c => c.id));
+        return gacha.gachaDetails
+            .map(detail => cardMap.get(detail.cardId))
+            .filter((card): card is ICardInfo => !!card && card.cardRarityType === "rarity_4" && !newPuCardIds.has(card.id));
+    }, [gacha, isWishPickGacha, cardMap, dreamPickNewPuCards]);
+
+    const fixedWishCards = wishCandidateCards;
 
     const selectedWishCards = useMemo(() => {
         if (!isWishPickGacha || selectedWishCardIds.length === 0) {
@@ -240,30 +257,89 @@ export default function GachaDetailClient() {
     }, [fixedWishCards]);
 
     const dreamPickSelectionLimit = useMemo(() => {
-        if (!gacha) return 0;
-        return gacha.wishFixedSelectCount ?? fixedWishCards.length;
-    }, [gacha, fixedWishCards.length]);
+        if (!gacha) return 10;
+        if (gacha.wishSelectCount && gacha.wishSelectCount > 0) {
+            return gacha.wishSelectCount;
+        }
+        if (gacha.wishFixedSelectCount && gacha.wishFixedSelectCount > 0) {
+            return gacha.wishFixedSelectCount;
+        }
+        return wishCandidateCards.length > 0 ? Math.min(10, wishCandidateCards.length) : 10;
+    }, [gacha, wishCandidateCards.length]);
 
     useEffect(() => {
-        if (!isWishPickGacha) {
-            setSelectedWishCardIds([]);
-            return;
-        }
-
-        if (fixedWishCards.length === 0) {
+        if (!isWishPickGacha || fixedWishCards.length === 0) {
             setSelectedWishCardIds([]);
             return;
         }
 
         setSelectedWishCardIds(prev => {
             const validPrev = prev.filter(id => fixedWishCards.some(card => card.id === id));
-            if (validPrev.length === dreamPickSelectionLimit) {
-                return validPrev;
-            }
-            const fallback = fixedWishCards.slice(0, dreamPickSelectionLimit).map(card => card.id);
-            return validPrev.length > 0 ? validPrev.slice(0, dreamPickSelectionLimit) : fallback;
+            return validPrev.slice(0, dreamPickSelectionLimit);
         });
     }, [isWishPickGacha, fixedWishCards, dreamPickSelectionLimit]);
+
+    // Process full card pool list with details and rate share calculation
+    const fullCardPool = useMemo(() => {
+        if (!gacha || !gacha.gachaDetails || cards.length === 0) return [];
+        
+        const pickupSet = new Set((gacha.gachaPickups || []).map(p => p.cardId));
+
+        // Group details by cardRarityType to compute total weight per rarity
+        const weightByRarity: Record<string, number> = {};
+        gacha.gachaDetails.forEach(detail => {
+            const card = cardMap.get(detail.cardId);
+            if (!card) return;
+            const rarity = card.cardRarityType;
+            weightByRarity[rarity] = (weightByRarity[rarity] || 0) + (detail.weight || 1);
+        });
+
+        // Deduplicate card IDs while keeping detail info
+        const detailByCardId = new Map<number, IGachaDetail>();
+        gacha.gachaDetails.forEach(d => {
+            if (!detailByCardId.has(d.cardId)) {
+                detailByCardId.set(d.cardId, d);
+            }
+        });
+
+        const items = Array.from(detailByCardId.values()).map(detail => {
+            const card = cardMap.get(detail.cardId);
+            if (!card) return null;
+
+            const rarity = card.cardRarityType;
+            const totalWeight = weightByRarity[rarity] || detail.weight || 1;
+            const rateShare = totalWeight > 0 ? ((detail.weight || 1) / totalWeight) * 100 : 0;
+            const isPickup = pickupSet.has(card.id);
+
+            return {
+                detail,
+                card,
+                rarity,
+                isPickup,
+                rateShare,
+            };
+        }).filter((item): item is NonNullable<typeof item> => item !== null);
+
+        // Sort: 4★ first, then Birthday, then 3★, then 2★; within same rarity: pickup first, then cardId descending
+        const rarityOrder: Record<string, number> = {
+            rarity_4: 4,
+            rarity_birthday: 3.5,
+            rarity_3: 3,
+            rarity_2: 2,
+            rarity_1: 1,
+        };
+
+        return items.sort((a, b) => {
+            const rA = rarityOrder[a.rarity] || 0;
+            const rB = rarityOrder[b.rarity] || 0;
+            if (rA !== rB) return rB - rA;
+            if (a.isPickup !== b.isPickup) return a.isPickup ? -1 : 1;
+            return b.card.id - a.card.id;
+        });
+    }, [gacha, cards, cardMap]);
+
+    const poolCards = useMemo(() => fullCardPool.map(item => item.card), [fullCardPool]);
+    const pickupCardIds = useMemo(() => (gacha?.gachaPickups || []).map(p => p.cardId), [gacha]);
 
     // Get gacha status
     const getGachaStatus = () => {
@@ -328,21 +404,25 @@ export default function GachaDetailClient() {
         if (!gacha || cards.length === 0 || gachaRarityRates.length === 0) return [] as IGachaDetail[][];
 
         return gachaRarityRates.map(rate => {
-            return gacha.gachaDetails.filter(detail => {
+            const matchingRarity = gacha.gachaDetails.filter(detail => {
                 const card = cardMap.get(detail.cardId);
-                if (!card || card.cardRarityType !== rate.cardRarityType) return false;
-
-                const lotteryType = rate.lotteryType ?? "normal";
-                if (lotteryType === "categorized_wish") {
-                    return !!detail.isWish;
-                }
-
-                if (lotteryType === "normal") {
-                    return !detail.isWish;
-                }
-
-                return true;
+                return card?.cardRarityType === rate.cardRarityType;
             });
+
+            if (matchingRarity.length === 0) return [];
+
+            const lotteryType = rate.lotteryType;
+            if (lotteryType === "categorized_wish") {
+                const wishOnly = matchingRarity.filter(d => !!d.isWish);
+                return wishOnly.length > 0 ? wishOnly : matchingRarity;
+            }
+
+            if (lotteryType === "normal") {
+                const nonWishOnly = matchingRarity.filter(d => !d.isWish);
+                return nonWishOnly.length > 0 ? nonWishOnly : matchingRarity;
+            }
+
+            return matchingRarity;
         });
     }, [cards, gacha, gachaRarityRates, cardMap]);
 
@@ -380,37 +460,76 @@ export default function GachaDetailClient() {
         const normalFourStarIndex = gachaRarityRates.findIndex(
             rate => rate.cardRarityType === "rarity_4" && rate.lotteryType === "normal"
         );
-        const dreamPickSingleRate = 0.4;
-        const totalDreamPickFourStarRate = [wishRateIndex, normalFourStarIndex]
-            .filter(idx => idx !== -1)
-            .reduce((sum, idx) => sum + (gachaRarityRates[idx]?.rate || 0), 0);
 
         const pickDreamPickCard = (): { pulled: IGachaDetail | null; countAsWishRate: boolean } => {
             if (!gacha) return { pulled: null, countAsWishRate: true };
 
+            // Collect all 4-star card details from gachaDetails
+            const allFourStarDetails = gacha.gachaDetails.filter(detail => {
+                const card = cardMap.get(detail.cardId);
+                return card?.cardRarityType === "rarity_4";
+            });
+
+            if (allFourStarDetails.length === 0) return { pulled: null, countAsWishRate: true };
+
             const selectedSet = new Set(selectedWishCardIds);
-            const selectedFixed = rateCardPools[wishRateIndex]?.filter(detail => detail.gachaDetailWishType === "fixed" && selectedSet.has(detail.cardId)) || [];
-            const newPu = rateCardPools[normalFourStarIndex] || [];
-            const allDreamPickFourStars = [...new Map(
-                [...(rateCardPools[wishRateIndex] || []), ...newPu].map(detail => [detail.cardId, detail])
-            ).values()];
 
-            const fixedEntries = selectedFixed.map(detail => ({ item: detail, chance: dreamPickSingleRate }));
-            const newPuEntries = newPu.map(detail => ({ item: detail, chance: dreamPickSingleRate }));
-            const promotedIds = new Set([...selectedFixed, ...newPu].map(detail => detail.cardId));
-            const remainingPool = allDreamPickFourStars.filter(detail => !promotedIds.has(detail.cardId));
-            const promotedChance = [...fixedEntries, ...newPuEntries].reduce((sum, entry) => sum + entry.chance, 0);
-            const remainingChance = Math.max(0, totalDreamPickFourStarRate - promotedChance);
-            const totalRemainingWeight = remainingPool.reduce((sum, detail) => sum + detail.weight, 0);
-            const remainingEntries = totalRemainingWeight > 0
-                ? remainingPool.map(detail => ({
+            // Selected wish cards (from user selection or fixed wish details)
+            const selectedWishDetails = allFourStarDetails.filter(detail => 
+                (detail.isWish || detail.gachaDetailWishType === "fixed") && selectedSet.has(detail.cardId)
+            );
+
+            // New pickup 4-star cards (non-wish PU cards)
+            const newPuDetails = allFourStarDetails.filter(detail => !detail.isWish && detail.gachaDetailWishType !== "fixed");
+
+            // Other 4-star cards in pool
+            const otherDetails = allFourStarDetails.filter(detail => 
+                !selectedWishDetails.some(d => d.cardId === detail.cardId) &&
+                !newPuDetails.some(d => d.cardId === detail.cardId)
+            );
+
+            // Calculate total 4-star rate
+            const totalRate = [wishRateIndex, normalFourStarIndex]
+                .filter(i => i !== -1)
+                .reduce((sum, i) => sum + (gachaRarityRates[i]?.rate || 0), 0) || 3.0;
+
+            const promotedDetails = [...selectedWishDetails, ...newPuDetails];
+            const promotedCount = promotedDetails.length;
+
+            let entries: Array<{ item: IGachaDetail; chance: number }> = [];
+
+            if (promotedCount > 0) {
+                // Limit total PU chance so it doesn't overflow total 4-star rate (max 80% of total rate, 0.4% per card max)
+                const singlePuRate = Math.min(0.4, (totalRate * 0.8) / promotedCount);
+                const totalPuRate = singlePuRate * promotedCount;
+                const remainingRate = Math.max(0.1, totalRate - totalPuRate);
+
+                const puEntries = promotedDetails.map(detail => ({ item: detail, chance: singlePuRate }));
+
+                let remainingEntries: Array<{ item: IGachaDetail; chance: number }> = [];
+                if (otherDetails.length > 0) {
+                    const sumWeight = otherDetails.reduce((s, d) => s + (d.weight > 0 ? d.weight : 1), 0);
+                    remainingEntries = otherDetails.map(detail => ({
+                        item: detail,
+                        chance: remainingRate * ((detail.weight > 0 ? detail.weight : 1) / sumWeight),
+                    }));
+                } else {
+                    const extraPerCard = remainingRate / promotedCount;
+                    puEntries.forEach(entry => { entry.chance += extraPerCard; });
+                }
+
+                entries = [...puEntries, ...remainingEntries];
+            } else {
+                const sumWeight = allFourStarDetails.reduce((s, d) => s + (d.weight > 0 ? d.weight : 1), 0);
+                entries = allFourStarDetails.map(detail => ({
                     item: detail,
-                    chance: remainingChance * (detail.weight / totalRemainingWeight),
-                }))
-                : [];
+                    chance: totalRate * ((detail.weight > 0 ? detail.weight : 1) / sumWeight),
+                }));
+            }
 
-            const pulled = pickByChance([...fixedEntries, ...newPuEntries, ...remainingEntries]);
-            const countAsWishRate = pulled ? !!pulled.isWish : true;
+            const pulled = pickByChance(entries) || allFourStarDetails[0] || null;
+            const countAsWishRate = pulled ? (pulled.isWish || pulled.gachaDetailWishType === "fixed") : true;
+
             return { pulled, countAsWishRate };
         };
 
@@ -425,12 +544,15 @@ export default function GachaDetailClient() {
                     if (isWishPickGacha && (idx === wishRateIndex || idx === normalFourStarIndex)) {
                         const { pulled, countAsWishRate } = pickDreamPickCard();
                         if (pulled) {
-                            const targetIdx = countAsWishRate ? wishRateIndex : normalFourStarIndex;
-                            if (targetIdx !== -1) {
-                                rollResult[targetIdx] += 1;
-                            }
-                        tmpGachaResult.push(pulled);
-
+                            const targetIdx = (countAsWishRate && wishRateIndex !== -1) ? wishRateIndex : (normalFourStarIndex !== -1 ? normalFourStarIndex : idx);
+                            rollResult[targetIdx] = (rollResult[targetIdx] || 0) + 1;
+                            tmpGachaResult.push(pulled);
+                        }
+                    } else if ((rateCardPools[idx]?.length || 0) > 0) {
+                        const pulled = pickByWeight(rateCardPools[idx] || [], detail => detail.weight > 0 ? detail.weight : 1);
+                        if (pulled) {
+                            rollResult[idx] = (rollResult[idx] || 0) + 1;
+                            tmpGachaResult.push(pulled);
                         }
                     }
                 }
@@ -442,24 +564,22 @@ export default function GachaDetailClient() {
 
             const roll = Math.random() * 100;
             const idx = normalSum.findIndex(rate => roll < rate);
-            if (idx !== -1 && (rateCardPools[idx]?.length || 0) > 0) {
+            if (idx !== -1) {
                 if (isWishPickGacha && (idx === wishRateIndex || idx === normalFourStarIndex)) {
                     const { pulled, countAsWishRate } = pickDreamPickCard();
                     if (pulled) {
-                        const targetIdx = countAsWishRate ? wishRateIndex : normalFourStarIndex;
-                        if (targetIdx !== -1) {
-                            rollResult[targetIdx] += 1;
-                        }
+                        const targetIdx = (countAsWishRate && wishRateIndex !== -1) ? wishRateIndex : (normalFourStarIndex !== -1 ? normalFourStarIndex : idx);
+                        rollResult[targetIdx] = (rollResult[targetIdx] || 0) + 1;
                         tmpGachaResult.push(pulled);
 
                         if (isOverRarity && cardRarityTypeToRarity[gachaRarityRates[idx].cardRarityType] < overRarityLevel) {
                             noOverRarityCount += 1;
                         }
                     }
-                } else {
-                    const pulled = pickByWeight(rateCardPools[idx] || [], detail => detail.weight);
+                } else if ((rateCardPools[idx]?.length || 0) > 0) {
+                    const pulled = pickByWeight(rateCardPools[idx] || [], detail => detail.weight > 0 ? detail.weight : 1);
                     if (pulled) {
-                        rollResult[idx] += 1;
+                        rollResult[idx] = (rollResult[idx] || 0) + 1;
                         tmpGachaResult.push(pulled);
 
                         if (isOverRarity && cardRarityTypeToRarity[gachaRarityRates[idx].cardRarityType] < overRarityLevel) {
@@ -509,7 +629,7 @@ export default function GachaDetailClient() {
             // Reverse so newest is first, then prepend to existing history
             return [...new4StarDetails.reverse(), ...prev];
         });
-    }, [cards, gacha, gachaRarityRates, guaranteedRates, normalRates, activePickupCards, rateCardPools, isWishPickGacha, selectedWishCardIds]);
+    }, [cards, cardMap, gacha, gachaRarityRates, guaranteedRates, normalRates, activePickupCards, rateCardPools, isWishPickGacha, selectedWishCardIds]);
 
     // Reset gacha statistics
     const resetGacha = useCallback(() => {
@@ -740,6 +860,114 @@ export default function GachaDetailClient() {
                             </div>
                         </div>
 
+                        {/* Gacha Summary & Tagline Card */}
+                        {(gacha.gachaInformation?.summary || gacha.gachaInformation?.bubbleText) && (
+                            <div className="ios-glass-card rounded-2xl overflow-hidden">
+                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center justify-between">
+                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {t("page.gacha.summaryTitle")}
+                                    </h2>
+                                    {gacha.gachaInformation.summary && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsSummaryExpanded(prev => !prev)}
+                                            className="text-xs font-bold text-miku hover:text-miku-dark transition-colors flex items-center gap-1"
+                                        >
+                                            {isSummaryExpanded ? t("page.gacha.showLessSummary") : t("page.gacha.showMoreSummary")}
+                                            <svg
+                                                className={`w-4 h-4 transition-transform duration-200 ${isSummaryExpanded ? "rotate-180" : ""}`}
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="p-5 space-y-4">
+                                    {gacha.gachaInformation.bubbleText && (
+                                        <div className="px-4 py-3 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-miku/10 border border-pink-200/50 rounded-xl flex items-start gap-3">
+                                            <span className="shrink-0 px-2 py-0.5 bg-pink-500 text-white text-xs font-bold rounded-md shadow-sm">
+                                                {t("page.gacha.bubbleTitle")}
+                                            </span>
+                                            <p className="text-sm font-medium text-slate-700 leading-snug">
+                                                {gacha.gachaInformation.bubbleText}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {gacha.gachaInformation.summary && (
+                                        <div>
+                                            <div className={`text-sm text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50/50 p-4 rounded-xl border border-slate-100 ${!isSummaryExpanded ? "max-h-36 overflow-hidden relative" : ""}`}>
+                                                {gacha.gachaInformation.summary}
+                                                {!isSummaryExpanded && (
+                                                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-50 to-transparent pointer-events-none" />
+                                                )}
+                                            </div>
+                                            {!isSummaryExpanded && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsSummaryExpanded(true)}
+                                                    className="mt-3 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold rounded-xl transition-colors border border-slate-200/60"
+                                                >
+                                                    {t("page.gacha.showMoreSummary")}
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Gacha Detailed Description & Rules Card */}
+                        {gacha.gachaInformation?.description && (
+                            <div className="ios-glass-card rounded-2xl overflow-hidden">
+                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center justify-between">
+                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        {t("page.gacha.descriptionTitle")}
+                                    </h2>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsDescriptionExpanded(prev => !prev)}
+                                        className="text-xs font-bold text-miku hover:text-miku-dark transition-colors flex items-center gap-1"
+                                    >
+                                        {isDescriptionExpanded ? t("page.gacha.showLessDescription") : t("page.gacha.showMoreDescription")}
+                                        <svg
+                                            className={`w-4 h-4 transition-transform duration-200 ${isDescriptionExpanded ? "rotate-180" : ""}`}
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div className="p-5">
+                                    <div className={`text-xs text-slate-600 leading-relaxed whitespace-pre-line ${!isDescriptionExpanded ? "max-h-36 overflow-hidden relative" : ""}`}>
+                                        {gacha.gachaInformation.description}
+                                        {!isDescriptionExpanded && (
+                                            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                                        )}
+                                    </div>
+                                    {!isDescriptionExpanded && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsDescriptionExpanded(true)}
+                                            className="mt-3 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold rounded-xl transition-colors border border-slate-200/60"
+                                        >
+                                            {t("page.gacha.showMoreDescription")}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Gacha Rates Card */}
                         {gacha.gachaCardRarityRates && gacha.gachaCardRarityRates.length > 0 && (
                             <div className="ios-glass-card rounded-2xl overflow-hidden">
@@ -752,12 +980,12 @@ export default function GachaDetailClient() {
                                     </h2>
                                 </div>
                                 <div className="divide-y divide-slate-100">
-                                    {gacha.gachaCardRarityRates.map(rate => {
+                                    {gacha.gachaCardRarityRates.map((rate, idx) => {
                                         const rarityLabel = rate.cardRarityType === "rarity_birthday"
                                             ? t("page.gacha.birthdayLabel")
                                             : t("page.gacha.starLabel", { star: rate.cardRarityType.replace("rarity_", "") });
                                         return (
-                                            <div key={rate.id} className="px-5 py-3 flex items-center justify-between text-sm">
+                                            <div key={rate.id ? `rate-${rate.id}-${idx}` : `${rate.cardRarityType}-${idx}`} className="px-5 py-3 flex items-center justify-between text-sm">
                                                 <span className="text-slate-500 font-medium">{rarityLabel}</span>
                                                 <span className="text-miku font-bold">{rate.rate}%</span>
                                             </div>
@@ -785,46 +1013,17 @@ export default function GachaDetailClient() {
                                                 <div className="flex items-center justify-between gap-3 mb-3">
                                                     <div>
                                                         <h3 className="text-sm font-bold text-slate-800">{t("page.gacha.wishSelectSubTitle")}</h3>
-                                                        <p className="text-xs text-slate-500 mt-1">
-                                                            {t("page.gacha.wishSelectDesc", { limit: dreamPickSelectionLimit })}
-                                                        </p>
                                                     </div>
-                                                    <span className="shrink-0 px-2.5 py-1 rounded-full bg-miku/10 text-miku text-xs font-bold">
-                                                        {selectedWishCardIds.length}/{dreamPickSelectionLimit}
-                                                    </span>
-                                                </div>
-                                                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-4 xl:grid-cols-6 gap-1.5">
-                                                    {fixedWishCards.map(card => {
-                                                        const TRAINED_ONLY_CARDS = [1167];
-                                                        const isTrainedOnlyCard = TRAINED_ONLY_CARDS.includes(card.id);
-                                                        const showTrained = isTrainedOnlyCard || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
-                                                        const isSelected = selectedWishCardIds.includes(card.id);
-                                                        const canSelectMore = selectedWishCardIds.length < dreamPickSelectionLimit;
-                                                        return (
-                                                            <button
-                                                                key={card.id}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSelectedWishCardIds(prev => {
-                                                                        if (prev.includes(card.id)) {
-                                                                            return prev.filter(id => id !== card.id);
-                                                                        }
-                                                                        if (prev.length >= dreamPickSelectionLimit) {
-                                                                            return prev;
-                                                                        }
-                                                                        return [...prev, card.id];
-                                                                    });
-                                                                }}
-                                                                className={`group block rounded-lg overflow-hidden bg-white transition-all ${isSelected ? 'ring-2 ring-miku shadow-md' : 'ring-1 ring-slate-200 hover:ring-miku'} ${!isSelected && !canSelectMore ? 'opacity-60' : ''}`}
-                                                                title={card.prefix}
-                                                            >
-                                                                <SekaiCardThumbnail card={card} trained={showTrained} className="w-full" />
-                                                                <div className={`text-center text-[10px] font-black py-1 leading-none ${isSelected ? 'bg-miku text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                                                    {isSelected ? t("page.gacha.selected") : t("page.gacha.clickSelect")}
-                                                                </div>
-                                                            </button>
-                                                        );
-                                                    })}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsWishModalOpen(true)}
+                                                        className="px-3.5 py-1.5 bg-miku hover:bg-miku-dark text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+                                                    >
+                                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                        </svg>
+                                                        {t("page.gacha.wishSelectSubTitle")} ({selectedWishCardIds.length}/{dreamPickSelectionLimit})
+                                                    </button>
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-4 xl:grid-cols-6 gap-1.5">
@@ -861,7 +1060,7 @@ export default function GachaDetailClient() {
                                 )}
 
                                 <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                    <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
+                                    <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                         <h2 className="font-bold text-slate-800 flex items-center gap-2">
                                             <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -871,9 +1070,21 @@ export default function GachaDetailClient() {
                                                 : t("page.gacha.pickupCardsTitle", { count: pickupCards.length })
                                             }
                                         </h2>
+                                        {fullCardPool.length > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsCardSelectorModalOpen(true)}
+                                                className="px-3 py-1.5 bg-miku/10 hover:bg-miku hover:text-white text-miku text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shrink-0"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                                </svg>
+                                                {t("page.gacha.viewFullCardPool", { count: fullCardPool.length })}
+                                            </button>
+                                        )}
                                     </div>
                                     <div className="p-4">
-                                        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-4 xl:grid-cols-6 gap-1.5">
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-4 xl:grid-cols-6 gap-2">
                                             {(isWishPickGacha ? dreamPickNewPuCards : pickupCards).map(card => {
                                                 const TRAINED_ONLY_CARDS = [1167];
                                                 const isTrainedOnlyCard = TRAINED_ONLY_CARDS.includes(card.id);
@@ -913,6 +1124,15 @@ export default function GachaDetailClient() {
                                 <p>{t("page.gacha.noPickupCards")}</p>
                             </div>
                         )}
+
+                        {/* Card Selector Modal for Full Card Pool */}
+                        <CardSelectorModal
+                            isOpen={isCardSelectorModalOpen}
+                            onClose={() => setIsCardSelectorModalOpen(false)}
+                            cards={poolCards}
+                            gachaDetails={gacha.gachaDetails}
+                            pickupCardIds={pickupCardIds}
+                        />
 
                         {/* Consolidated Simulator & Statistics (Sidebar Mode) */}
                         <div className="ios-glass-card rounded-2xl overflow-hidden">
@@ -1181,6 +1401,27 @@ export default function GachaDetailClient() {
                     </Link>
                 </div>
             </div>
+
+            {/* Wish PU Card Selector Modal */}
+            <CardSelectorModal
+                isOpen={isWishModalOpen}
+                onClose={() => setIsWishModalOpen(false)}
+                title={`${t("page.gacha.wishSelectSubTitle")} (${selectedWishCardIds.length}/${dreamPickSelectionLimit})`}
+                cards={wishCandidateCards}
+                selectedCardIds={selectedWishCardIds}
+                maxSelectCount={dreamPickSelectionLimit}
+                onToggleCardSelect={(card) => {
+                    setSelectedWishCardIds(prev => {
+                        if (prev.includes(card.id)) {
+                            return prev.filter(id => id !== card.id);
+                        }
+                        if (prev.length >= dreamPickSelectionLimit) {
+                            return prev;
+                        }
+                        return [...prev, card.id];
+                    });
+                }}
+            />
         </MainLayout >
     );
 }
