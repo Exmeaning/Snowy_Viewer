@@ -1,3 +1,4 @@
+import { getExternalLyricsPerformer } from "@/lib/lyrics-performers";
 import { CHAR_COLORS } from "@/types/types";
 
 function parseHex(hex: string): [number, number, number] {
@@ -47,7 +48,7 @@ export function adjustHexForContrast(color: string, background: string, minimumR
 }
 
 export function getLyricsPerformerColors(characterId: number): { base: string; light: string; dark: string } | null {
-    const base = CHAR_COLORS[String(characterId)];
+    const base = CHAR_COLORS[String(characterId)] ?? getExternalLyricsPerformer(characterId)?.color;
     if (!base) return null;
     return {
         base,

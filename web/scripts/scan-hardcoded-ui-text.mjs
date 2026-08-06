@@ -26,6 +26,7 @@ const ALLOWLIST = new Map([
     ["src/lib/oldComicTips.ts", "Official comic titles and source tips"],
     ["src/lib/mysekai-i18n.ts", "Masterdata-derived MySekai translation map"],
     ["src/lib/songConstants.ts", "Official song aliases and search correction data"],
+    ["src/lib/lyrics-performers.ts", "Audited nonvisual persisted performer source IDs shared with the lyrics producer"],
     ["src/types/types.ts", "Project SEKAI official unit and character names plus legacy type constants"],
     ["src/lib/storyLoader.ts", "Masterdata and story translation fallback map"],
 ]);

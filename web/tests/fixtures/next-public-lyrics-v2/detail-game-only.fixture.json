@@ -1,0 +1,51 @@
+{
+  "version": 2,
+  "musicId": 12,
+  "revision": 1,
+  "updatedAt": "2026-07-31T02:00:00Z",
+  "state": "game_only",
+  "attributions": [
+    {
+      "provider": "sekaipedia",
+      "title": "Game Version Only",
+      "revisionId": 1202,
+      "revisionUrl": "https://www.sekaipedia.org/wiki/Game_Version_Only?oldid=1202",
+      "licenseName": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+    }
+  ],
+  "availableVersions": [
+    "game"
+  ],
+  "lines": [
+    {
+      "id": "game-000001",
+      "order": 0,
+      "japanese": "ゲームで歌う",
+      "zh-CN": "",
+      "en-US": "",
+      "segments": [
+        {
+          "text": "ゲームで歌う",
+          "performerIds": [],
+          "ruby": [
+            {
+              "text": "ゲームで"
+            },
+            {
+              "text": "歌",
+              "reading": "うた"
+            },
+            {
+              "text": "う"
+            }
+          ]
+        }
+      ],
+      "trailingPerformerIds": [
+        1,
+        2
+      ]
+    }
+  ]
+}

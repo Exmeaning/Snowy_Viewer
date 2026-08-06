@@ -30,6 +30,7 @@ import {
 } from './lib/build-fetch.mjs';
 import {
     fetchPublicLyricsIndex,
+    hasPublicLyricsDetail,
     PUBLIC_LYRICS_SCHEMA_VERSION,
     validateConfiguredPublicLyricsSource,
     validatePublicLyricsIndex,
@@ -331,7 +332,7 @@ function buildStoryAreaReaderRoutes(raw, existingData) {
 
 export function buildPublishedLyricsRoutes(raw, existingData) {
     const index = validatePublicLyricsIndex(raw);
-    return index.songs.map(song => {
+    return index.songs.filter(hasPublicLyricsDetail).map(song => {
         const routePath = `/lyrics/${song.musicId}/`;
         return {
             path: routePath,

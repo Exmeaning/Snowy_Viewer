@@ -7,6 +7,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useTranslation } from "@/contexts/TranslationContext";
 
 const ALL_DIFFICULTIES: MusicDifficultyType[] = ["easy", "normal", "hard", "expert", "master", "append"];
+const JACKET_OVERLAY_BADGE_CLASS = "inline-flex h-5 items-center rounded bg-black/60 px-1.5 font-mono text-[10px] font-normal leading-4 text-white shadow-sm backdrop-blur-sm";
 
 interface MusicItemProps {
     music: IMusicInfo;
@@ -18,9 +19,10 @@ interface MusicItemProps {
     enTitle?: string;
     href?: string;
     hrefBase?: string;
+    jacketTopLeftLabel?: string;
 }
 
-export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty, cnTitle, enTitle, href, hrefBase = "/music" }: MusicItemProps) {
+export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty, cnTitle, enTitle, href, hrefBase = "/music", jacketTopLeftLabel }: MusicItemProps) {
     const { assetSource, useLLMTranslation } = useTheme();
     const { locale, t } = useI18n();
     const { t: translateMasterText } = useTranslation();
@@ -57,7 +59,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                     </div>
 
                     {/* ID Badge */}
-                    <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/60 rounded text-[10px] text-white font-mono">
+                    <div className={`absolute right-2 top-2 z-10 ${JACKET_OVERLAY_BADGE_CLASS}`}>
                         #{music.id}
                     </div>
 
@@ -68,10 +70,19 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                         </div>
                     )}
 
-                    {/* Spoiler Badge - Top Left */}
-                    {isSpoiler && (
-                        <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-orange-500 rounded text-[10px] text-white font-bold shadow">
-                            {t("common.badge.spoiler")}
+                    {/* Top-left jacket badges use the same compact overlay language as the ID badge. */}
+                    {(jacketTopLeftLabel || isSpoiler) && (
+                        <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
+                            {jacketTopLeftLabel && (
+                                <span className={JACKET_OVERLAY_BADGE_CLASS}>
+                                    {jacketTopLeftLabel}
+                                </span>
+                            )}
+                            {isSpoiler && (
+                                <span className="rounded bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-white shadow-sm">
+                                    {t("common.badge.spoiler")}
+                                </span>
+                            )}
                         </div>
                     )}
                 </div>

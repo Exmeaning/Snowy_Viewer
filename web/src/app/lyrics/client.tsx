@@ -10,8 +10,14 @@ import { MUSIC_GRID_CLASS } from "@/components/music/music-layout";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
+import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { fetchMasterData } from "@/lib/fetch";
-import { fetchLyricsIndex, type ILyricsIndexEntry } from "@/lib/lyrics";
+import {
+    fetchLyricsIndex,
+    getLyricsAvailableVersions,
+    hasLyricsDetail,
+    type ILyricsIndexEntry,
+} from "@/lib/lyrics";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import type { IMusicInfo, IMusicTagInfo, MusicCategoryType, MusicTagType } from "@/types/music";
 
@@ -92,8 +98,19 @@ function LyricsContent() {
         replaceCurrentUrlSearchParams(params);
     }, [hasEventOnly, searchQuery, selectedCategories, selectedTag, sortBy, sortOrder]);
 
+    const totalPublishedMusics = useMemo(
+        () => musics.filter((music) => {
+            const lyrics = lyricsByMusicId.get(music.id);
+            return lyrics ? hasLyricsDetail(lyrics) : false;
+        }).length,
+        [lyricsByMusicId, musics],
+    );
+
     const filteredMusics = useMemo(() => {
-        let result = musics.filter((music) => lyricsByMusicId.has(music.id));
+        let result = musics.filter((music) => {
+            const lyrics = lyricsByMusicId.get(music.id);
+            return lyrics ? hasLyricsDetail(lyrics) : false;
+        });
         if (selectedTag !== "all") {
             let matchingIds: Set<number>;
             if (selectedTag === "vocaloid") {
@@ -145,101 +162,153 @@ function LyricsContent() {
         resetDisplayCount();
     };
 
+    const quickFilterContent = (
+        <MusicFilters
+            title={t("page.lyrics.filterTitle")}
+            countUnit={t("page.lyrics.countUnit")}
+            searchPlaceholder={t("page.lyrics.searchPlaceholder")}
+            selectedTag={selectedTag}
+            onTagChange={(tag) => {
+                setSelectedTag(tag);
+                resetDisplayCount();
+            }}
+            selectedCategories={selectedCategories}
+            onCategoryChange={(categories) => {
+                setSelectedCategories(categories);
+                resetDisplayCount();
+            }}
+            hasEventOnly={hasEventOnly}
+            onHasEventOnlyChange={(eventOnly) => {
+                setHasEventOnly(eventOnly);
+                resetDisplayCount();
+            }}
+            searchQuery={searchQuery}
+            onSearchChange={(query) => {
+                setSearchQuery(query);
+                resetDisplayCount();
+            }}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={(nextSort, nextOrder) => {
+                setSortBy(nextSort === "id" ? "id" : "publishedAt");
+                setSortOrder(nextOrder);
+                resetDisplayCount();
+            }}
+            customSortOptions={[
+                { id: "publishedAt", label: t("common.filter.sortByPublishedAt") },
+                { id: "id", label: t("common.filter.sortById") },
+            ]}
+            onReset={resetFilters}
+            totalMusics={totalPublishedMusics}
+            filteredMusics={filteredMusics.length}
+        />
+    );
+
+    useQuickFilter(t("page.lyrics.filterTitle"), quickFilterContent, [
+        selectedTag,
+        selectedCategories,
+        hasEventOnly,
+        searchQuery,
+        sortBy,
+        sortOrder,
+        totalPublishedMusics,
+        filteredMusics.length,
+    ]);
+
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            <div className="mb-8">
-                <span className="inline-flex rounded-full bg-miku/10 px-3 py-1 text-xs font-bold text-miku">{t("page.lyrics.badge")}</span>
-                <h1 className="mt-3 text-3xl sm:text-4xl font-black text-primary-text">{t("page.lyrics.title")}</h1>
-                <p className="mt-2 max-w-2xl text-slate-500 dark:text-slate-400">{t("page.lyrics.description")}</p>
+            <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
+                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.lyrics.badge")}</span>
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                    {t("page.lyrics.title")} <span className="text-miku">{t("page.lyrics.titleHighlight")}</span>
+                </h1>
+                <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-2xl mx-auto">{t("page.lyrics.description")}</p>
             </div>
 
-            {error ? (
-                <div role="alert" className="ios-glass-card rounded-2xl p-8 text-center text-red-600 dark:text-red-300">
-                    <p className="font-bold">{error}</p>
+            {error && (
+                <div role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm dark:bg-red-950/30 dark:border-red-900/60 dark:text-red-300">
+                    <p className="font-bold">{t("common.state.loadingFailed")}</p>
+                    <p>{error}</p>
+                    <button onClick={() => window.location.reload()} className="mt-2 text-red-500 underline hover:no-underline dark:text-red-300">
+                        {t("common.action.retry")}
+                    </button>
                 </div>
-            ) : (
-                <div className="flex flex-col lg:flex-row gap-6">
+            )}
+
+            <div className="flex flex-col lg:flex-row gap-6">
                     <aside className="w-full lg:w-80 lg:shrink-0">
-                        <div className="lg:sticky lg:top-24">
-                            <MusicFilters
-                                selectedTag={selectedTag}
-                                onTagChange={(tag) => {
-                                    setSelectedTag(tag);
-                                    resetDisplayCount();
-                                }}
-                                selectedCategories={selectedCategories}
-                                onCategoryChange={(categories) => {
-                                    setSelectedCategories(categories);
-                                    resetDisplayCount();
-                                }}
-                                hasEventOnly={hasEventOnly}
-                                onHasEventOnlyChange={(eventOnly) => {
-                                    setHasEventOnly(eventOnly);
-                                    resetDisplayCount();
-                                }}
-                                searchQuery={searchQuery}
-                                onSearchChange={(query) => {
-                                    setSearchQuery(query);
-                                    resetDisplayCount();
-                                }}
-                                sortBy={sortBy}
-                                sortOrder={sortOrder}
-                                onSortChange={(nextSort, nextOrder) => {
-                                    setSortBy(nextSort === "id" ? "id" : "publishedAt");
-                                    setSortOrder(nextOrder);
-                                    resetDisplayCount();
-                                }}
-                                customSortOptions={[
-                                    { id: "publishedAt", label: t("common.filter.sortByPublishedAt") },
-                                    { id: "id", label: t("common.filter.sortById") },
-                                ]}
-                                onReset={resetFilters}
-                                totalMusics={lyricsByMusicId.size}
-                                filteredMusics={filteredMusics.length}
-                            />
+                        <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
+                            {quickFilterContent}
                         </div>
                     </aside>
-                    <main className="min-w-0 flex-1">
+                    <section className="min-w-0 flex-1" aria-label={t("page.lyrics.title")}>
                         {isLoading ? (
                             <div className={MUSIC_GRID_CLASS} aria-label={t("page.lyrics.loading")}>
-                                {Array.from({ length: 10 }).map((_, index) => (
-                                    <div key={index} className="aspect-[3/4] animate-pulse rounded-xl bg-slate-200/70 dark:bg-slate-700/70" />
+                                {Array.from({ length: 15 }).map((_, index) => (
+                                    <div key={index} className="animate-pulse">
+                                        <div className="overflow-hidden rounded-xl border border-slate-200/60 bg-white/60 dark:border-slate-700/60 dark:bg-slate-800/60">
+                                            <div className="aspect-square bg-slate-200 dark:bg-slate-700" />
+                                            <div className="space-y-2 p-3">
+                                                <div className="h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-700" />
+                                                <div className="h-3 w-1/2 rounded bg-slate-200 dark:bg-slate-700" />
+                                            </div>
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         ) : filteredMusics.length === 0 ? (
-                            <div className="ios-glass-card rounded-2xl p-12 text-center">
-                                <p className="text-lg font-bold text-primary-text">{t("page.lyrics.empty")}</p>
-                                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("page.lyrics.emptyHint")}</p>
+                            <div className="py-16 text-center">
+                                <div className="mb-4 text-6xl" aria-hidden="true">🎼</div>
+                                <h3 className="mb-2 text-xl font-bold text-slate-600 dark:text-slate-300">{t("page.lyrics.empty")}</h3>
+                                <p className="text-slate-500 dark:text-slate-400">{t("page.lyrics.emptyHint")}</p>
                             </div>
                         ) : (
                             <>
                                 <div className={MUSIC_GRID_CLASS}>
                                     {filteredMusics.slice(0, displayCount).map((music) => {
                                         const lyrics = lyricsByMusicId.get(music.id);
+                                        const versions = lyrics ? getLyricsAvailableVersions(lyrics) : [];
+                                        const versionLabel = versions.length === 1 && versions[0] === "game"
+                                            ? "page.lyrics.versionGame"
+                                            : versions.length === 2 ? "page.lyrics.versionFullAndGame" : "page.lyrics.versionFull";
                                         return (
-                                            <MusicItem
-                                                key={music.id}
-                                                music={music}
-                                                isSpoiler={music.publishedAt > now}
-                                                cnTitle={lyrics?.title["zh-CN"]}
-                                                enTitle={lyrics?.title["en-US"]}
-                                                hrefBase="/lyrics"
-                                            />
+                                            <div key={music.id} className="min-w-0">
+                                                <MusicItem
+                                                    music={music}
+                                                    isSpoiler={music.publishedAt > now}
+                                                    cnTitle={lyrics?.title["zh-CN"]}
+                                                    enTitle={lyrics?.title["en-US"]}
+                                                    hrefBase="/lyrics"
+                                                    jacketTopLeftLabel={t(versionLabel)}
+                                                />
+                                            </div>
                                         );
                                     })}
                                 </div>
-                                {displayCount < filteredMusics.length && (
-                                    <div className="mt-8 text-center">
-                                        <button onClick={loadMore} className="pressable ios-glass-btn ios-glass-btn-primary rounded-full px-8 py-3 font-bold">
+                                {displayCount < filteredMusics.length ? (
+                                    <div className="mt-8 flex justify-center">
+                                        <button
+                                            onClick={loadMore}
+                                            data-shortcut-load-more="true"
+                                            className="pressable ios-glass-btn ios-glass-btn-primary rounded-full px-8 py-3 font-bold"
+                                        >
                                             {t("page.lyrics.loadMore")}
+                                            <span className="ml-2 text-sm opacity-80 type-caption">
+                                                ({Math.min(displayCount, filteredMusics.length)} / {filteredMusics.length})
+                                            </span>
                                         </button>
+                                    </div>
+                                ) : (
+                                    <div className="mt-8 text-center text-sm text-slate-400">
+                                        {t("page.lyrics.allLoaded", { count: String(filteredMusics.length) })}
                                     </div>
                                 )}
                             </>
                         )}
-                    </main>
+                    </section>
                 </div>
-            )}
         </div>
     );
 }

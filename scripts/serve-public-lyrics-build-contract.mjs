@@ -5,7 +5,7 @@ import https from "node:https";
 import { pathToFileURL } from "node:url";
 
 export const BUILD_CONTRACT_INDEX_PATH = "/files/translation/lyrics/index.json";
-export const BUILD_CONTRACT_INDEX_BYTES = Buffer.from('{"version":1,"songs":[]}', "utf8");
+export const BUILD_CONTRACT_INDEX_BYTES = Buffer.from('{"version":2,"songs":[{"musicId":10,"revision":4,"updatedAt":"2026-07-31T00:00:00Z","title":{"ja-JP":"新曲"},"state":"complete","availableVersions":["full","game"]}]}', "utf8");
 
 export function handleBuildContractRequest(request, response) {
   const method = String(request.method || "");

@@ -239,11 +239,11 @@ const lyricsSource = readWeb("src/lib/lyrics.ts");
 const lyricsDetail = entriesById.get("lyrics-detail");
 const lyricsIndex = entriesById.get("lyrics-index");
 assert.ok(lyricsDetail && lyricsIndex, "lyrics index and detail entries are required");
-for (const field of ["japanese", "zh-CN", "en-US", "segments", "performerIds", "attribution", "revision"]) {
+for (const field of ["state", "japanese", "zh-CN", "en-US", "segments", "performerIds", "trailingPerformerIds", "ruby", "attribution", "availableVersions", "gameProjection", "revision"]) {
     assert.match(lyricsSource, new RegExp(`\\b${field}\\b`));
     assert.ok(lyricsDetail.fields.some((documented) => documented.includes(field)), `lyrics detail omits ${field}`);
 }
-for (const field of ["musicId", "title", "revision", "updatedAt"]) {
+for (const field of ["musicId", "title", "revision", "updatedAt", "state", "availableVersions", "noLyricsReason"]) {
     assert.match(lyricsSource, new RegExp(`\\b${field}\\b`));
     assert.ok(lyricsIndex.fields.some((documented) => documented.includes(field)), `lyrics index omits ${field}`);
 }
@@ -255,7 +255,11 @@ assert.match(lyricsPage, /fetchLyricsDocument/);
 assert.match(lyricsPage, /isLyricsUnavailableError/);
 assert.match(lyricsPage, /notFound\(\)/);
 assert.match(lyricsClient, /lyrics\.attribution/);
-assert.match(lyricText, /performer\.shortName/);
+assert.match(lyricsClient, /lyrics\.attributions\.map/);
+assert.match(lyricsClient, /getLyricsDisplayLines\(lyrics, activeVersion\)/);
+assert.match(lyricText, /performers\.map\(\(performer\)/);
+assert.match(lyricText, /<ruby/);
+assert.match(lyricText, /<rt/);
 assert.match(lyricText, /--performer-light/);
 assert.match(lyricText, /--performer-dark/);
 

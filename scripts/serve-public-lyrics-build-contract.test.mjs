@@ -25,13 +25,23 @@ function invoke(method, url) {
   return { statusCode, headers, body: Buffer.concat(chunks) };
 }
 
-test("build-contract fixture exposes only the canonical empty public lyrics index", () => {
+test("build-contract fixture exposes a minimal strict Public Lyrics v2 index", () => {
   const response = invoke("GET", BUILD_CONTRACT_INDEX_PATH);
   assert.equal(response.statusCode, 200);
   assert.equal(response.headers["content-type"], "application/json; charset=utf-8");
   assert.equal(Number(response.headers["content-length"]), BUILD_CONTRACT_INDEX_BYTES.byteLength);
-  assert.equal(response.body.toString("utf8"), '{"version":1,"songs":[]}');
-  assert.deepEqual(JSON.parse(response.body), { version: 1, songs: [] });
+  assert.equal(response.body.toString("utf8"), '{"version":2,"songs":[{"musicId":10,"revision":4,"updatedAt":"2026-07-31T00:00:00Z","title":{"ja-JP":"新曲"},"state":"complete","availableVersions":["full","game"]}]}');
+  assert.deepEqual(JSON.parse(response.body), {
+    version: 2,
+    songs: [{
+      musicId: 10,
+      revision: 4,
+      updatedAt: "2026-07-31T00:00:00Z",
+      title: { "ja-JP": "新曲" },
+      state: "complete",
+      availableVersions: ["full", "game"],
+    }],
+  });
 });
 
 test("build-contract listener accepts only explicit loopback or all-interface hosts", () => {

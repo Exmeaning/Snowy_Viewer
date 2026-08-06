@@ -14,6 +14,10 @@ import {
 import { useI18n } from "@/contexts/I18nContext";
 
 interface MusicFiltersProps {
+    // Context labels
+    title?: string;
+    countUnit?: string;
+    searchPlaceholder?: string;
     // Tag filter
     selectedTag: MusicTagType;
     onTagChange: (tag: MusicTagType) => void;
@@ -72,6 +76,9 @@ const DIFFICULTY_OPTIONS = [
 ];
 
 export default function MusicFilters({
+    title,
+    countUnit,
+    searchPlaceholder,
     selectedTag,
     onTagChange,
     selectedCategories,
@@ -115,12 +122,13 @@ export default function MusicFilters({
 
     return (
         <BaseFilters
+            title={title}
             filteredCount={filteredMusics}
             totalCount={totalMusics}
-            countUnit={t("page.music.countUnit")}
+            countUnit={countUnit ?? t("page.music.countUnit")}
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
-            searchPlaceholder={t("page.music.searchPlaceholder")}
+            searchPlaceholder={searchPlaceholder ?? t("page.music.searchPlaceholder")}
             sortOptions={customSortOptions || SORT_OPTIONS}
             sortBy={sortBy}
             sortOrder={sortOrder}
