@@ -34,7 +34,7 @@ const ExternalLink: React.FC<ExternalLinkProps> = ({
             try {
                 const urlObj = new URL(url);
                 const hostname = urlObj.hostname.toLowerCase();
-                const isSafeDomain = SAFE_DOMAINS.some(domain => 
+                const isSafeDomain = SAFE_DOMAINS.some(domain =>
                     hostname === domain || hostname.endsWith('.' + domain)
                 );
                 return !isSafeDomain;
