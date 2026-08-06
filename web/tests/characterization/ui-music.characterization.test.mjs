@@ -205,7 +205,7 @@ test("music list/detail mobile and dark-mode layout contracts remain unchanged",
   assert.ok(detail.includes(`className="${baseline.musicUi.detailGridClass}"`));
   assert.ok(detail.includes(`className="${baseline.musicUi.detailStickyClass}"`));
   assert.match(detail, /container mx-auto px-4 sm:px-6 py-8/);
-  assert.match(detail, /text-2xl sm:text-3xl/);
+  assert.match(detail, /min-w-0 text-2xl font-black text-slate-800 sm:text-3xl/);
   assert.match(item, /sizes="\(max-width: 640px\) 50vw, \(max-width: 1024px\) 33vw, 20vw"/);
   assert.ok(item.includes("dark:text-slate-400"));
   assert.ok(filters.includes("dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700"));

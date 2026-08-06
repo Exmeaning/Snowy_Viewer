@@ -163,6 +163,16 @@ export const zhTWSearch = {
 
 export const zhTWSettings = {
     title: "設定",
+    sections: {
+        visual: "視覺",
+        content: "內容",
+        data: "數據",
+        about: "關於",
+    },
+    about: {
+        projectDescription: "PROJECT SEKAI 檢視器與資料庫",
+        viewDetails: "關於本專案",
+    },
     appearance: {
         sectionTitle: "外觀模式",
         system: "跟隨系統",
@@ -240,16 +250,16 @@ export const zhTWSettings = {
         checking: "檢查中...",
         loadFailed: "載入失敗",
         noCache: "尚未快取",
-        cached: "資料已快取至本機，之後造訪時將從瀏覽器資料庫載入",
-        stale: "偵測到新版本，資料會在下次載入時自動更新",
-        firstVisit: "首次造訪，資料將從伺服器載入並快取至本機",
+        cached: "資料已快取至本機",
+        stale: "檢測到新版本",
+        firstVisit: "從伺服器載入",
     },
     refresh: {
         idle: "強制重新整理所有資料",
         refreshing: "重新整理中...",
     },
     footer: {
-        version: "Moesekai · 1.6-preview-beta1",
+        version: "Moesekai · 1.6-preview-beta4",
     },
     sidebar: {
         notLoggedIn: "尚未登入",

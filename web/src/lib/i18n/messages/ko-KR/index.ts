@@ -707,6 +707,16 @@ export const koKRMessages = {
     },
     settings: {
         title: "설정",
+        sections: {
+            visual: "비주얼",
+            content: "콘텐츠",
+            data: "데이터",
+            about: "정보"
+        },
+        about: {
+            projectDescription: "프로젝트 세카이 데이터베이스 및 뷰어",
+            viewDetails: "프로젝트 정보"
+        },
         appearance: {
             sectionTitle: "화면 모드",
             system: "시스템 설정",
@@ -784,16 +794,16 @@ export const koKRMessages = {
             checking: "확인 중...",
             loadFailed: "로드 실패",
             noCache: "캐시 없음",
-            cached: "데이터가 로컬에 캐시되었습니다. 다음 접속부터 빠르게 로드됩니다.",
-            stale: "새 버전이 감지되었습니다. 다음 로드 시 데이터가 자동으로 업데이트됩니다.",
-            firstVisit: "처음 액세스할 때 데이터는 서버에서 로드되고 로컬로 캐시됩니다."
+            cached: "로컬에 캐시됨",
+            stale: "새 버전 감지됨",
+            firstVisit: "서버에서 로드 중"
         },
         refresh: {
             idle: "모든 데이터 강제 새로 고침",
             refreshing: "상쾌하다..."
         },
         footer: {
-            version: "Moesekai · 1.6-preview-beta1"
+            version: "Moesekai · 1.6-preview-beta4"
         },
         sidebar: {
             notLoggedIn: "로그인되지 않음",
@@ -1614,6 +1624,7 @@ export const koKRMessages = {
             attribution: "번역 크레딧",
             translation: "번역",
             proofreading: "교정",
+            translationAndProofreading: "번역 & 교정",
             translationCreditsEmpty: "번역 크레딧이 아직 입력되지 않았습니다.",
             sourceLicenseTitle: "가사 출처 및 라이선스",
             revision: "공개 리비전",
@@ -1838,6 +1849,7 @@ export const koKRMessages = {
             wishSelectTitle: "현재 선택된 PU",
             wishSelectSubTitle: "나만의 PU 카드를 선택하세요",
             wishSelectDesc: "{limit} 카드를 선택해야 합니다. 선택된 자체 선택된 PU와 현재 기간의 새로운 PU는 단일 0.4%로 계산되며, 나머지 4*는 모두 나머지 확률을 공유합니다.",
+            wishSelectClear: "선택 해제 ({count})",
             selected: "선택됨",
             clickSelect: "선택하려면 클릭하세요.",
             newPuCardsTitle: "현재 기간({count})의 새 PU 카드",
@@ -1861,6 +1873,19 @@ export const koKRMessages = {
             star4Label: "별 4개",
             history4StarsTitle: "역사 4★ / 생일 결과",
             pityPull: "{count} 펌프",
+            summaryTitle: "뽑기 소개",
+            descriptionTitle: "뽑기 상세 및 주의사항",
+            bubbleTitle: "뽑기 문구",
+            cardPoolTitle: "출현 멤버 목록 ({count})",
+            cardPoolSubtitle: "이 뽑기에서 출현하는 모든 멤버",
+            filterAllRarities: "전체 레어리티",
+            weightLabel: "가중치: {weight}",
+            rateShareLabel: "동일 레어리티 내 비율: {percentage}%",
+            showMoreDescription: "자세한 규칙 보기",
+            showLessDescription: "자세한 규칙 접기",
+            showMoreSummary: "소개 전체 보기",
+            showLessSummary: "소개 접기",
+            viewFullCardPool: "출현 멤버 전체 목록 보기 ({count})",
             states: {
                 notStarted: "시작되지 않음",
                 ongoing: "진행 중",

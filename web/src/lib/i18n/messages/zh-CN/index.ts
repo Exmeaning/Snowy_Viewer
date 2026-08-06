@@ -709,6 +709,16 @@ export const zhCNMessages = {
     },
     settings: {
         title: "设置",
+        sections: {
+            visual: "视觉",
+            content: "内容",
+            data: "数据",
+            about: "关于",
+        },
+        about: {
+            projectDescription: "PROJECT SEKAI 查看器 & 数据库",
+            viewDetails: "关于本项目",
+        },
         appearance: {
             sectionTitle: "外观模式",
             system: "自适应",
@@ -786,16 +796,16 @@ export const zhCNMessages = {
             checking: "检测中...",
             loadFailed: "加载失败",
             noCache: "未缓存",
-            cached: "数据已缓存至本地，后续访问将从浏览器数据库加载",
-            stale: "检测到新版本，数据将在下次加载时自动更新",
-            firstVisit: "首次访问，数据将从服务器加载并缓存到本地",
+            cached: "数据已缓存至本地",
+            stale: "检测到新版本",
+            firstVisit: "从服务器加载",
         },
         refresh: {
             idle: "强制刷新全部数据",
             refreshing: "刷新中...",
         },
         footer: {
-            version: "Moesekai · 1.6-preview-beta1",
+            version: "Moesekai · 1.6-preview-beta4",
         },
         sidebar: {
             notLoggedIn: "未登录",
@@ -1024,7 +1034,7 @@ export const zhCNMessages = {
             },
             sponsors: {
                 title: "赞助者致谢（不分先后）",
-                list: "阳子（赞助服务器） cike 晓月 Hakuchumu 性价比 luoxia 雪莹ちゃん 蘸色绘糖/晕星奏 tony_all 沙皮 轩 末乐回忆 metamiku madoka 垂耳兔kawayi amia maveriki 以及 四位不愿意透露具体ID的支持者",
+                list: "阳子（赞助服务器） cike 晓月 Hakuchumu 性价比 luoxia 雪莹ちゃん 蘸色绘糖/晕星奏 tony_all 沙皮 轩 末乐回忆 M氏 ick110811 metamiku madoka 垂耳兔kawayi amia maveriki 以及 四位不愿意透露具体ID的支持者",
             },
             specialThanks: {
                 title: "感谢支持 Moesekai 的名单（不分先后）",
@@ -1592,6 +1602,7 @@ export const zhCNMessages = {
             attribution: "翻译署名",
             translation: "翻译",
             proofreading: "校对",
+            translationAndProofreading: "翻译&校对",
             translationCreditsEmpty: "暂未填写翻译署名",
             sourceLicenseTitle: "歌词来源与许可",
             revision: "发布版本",
@@ -1816,6 +1827,7 @@ export const zhCNMessages = {
             wishSelectTitle: "当前自选 PU",
             wishSelectSubTitle: "选择自选 PU 卡牌",
             wishSelectDesc: "需要选择 {limit} 张卡。所选自选 PU 与当期新 PU 均按单张 0.4% 计算，其余所有 4★ 共享剩余概率。",
+            wishSelectClear: "清空已选 ({count})",
             selected: "已选择",
             clickSelect: "点击选择",
             newPuCardsTitle: "当期新 PU 卡牌 ({count})",
@@ -1839,6 +1851,19 @@ export const zhCNMessages = {
             star4Label: "4星",
             history4StarsTitle: "历史 4★ / 生日 结果",
             pityPull: "{count}抽",
+            summaryTitle: "卡池简介",
+            descriptionTitle: "招募说明与注意事项",
+            bubbleTitle: "招募标语",
+            cardPoolTitle: "出现卡牌清单 ({count})",
+            cardPoolSubtitle: "包含该招募中所有可招募到的卡牌成员",
+            filterAllRarities: "全部星级",
+            weightLabel: "权重: {weight}",
+            rateShareLabel: "同星级占比: {percentage}%",
+            showMoreDescription: "展开完整招募说明",
+            showLessDescription: "收起招募说明",
+            showMoreSummary: "展开完整卡池简介",
+            showLessSummary: "收起卡池简介",
+            viewFullCardPool: "查看完整出现卡牌清单 ({count})",
             states: {
                 notStarted: "未开始",
                 ongoing: "进行中",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from "react";
 
 import MainLayout from "@/components/MainLayout";
 import BaseFilters, { FilterSection, FilterButton } from "@/components/common/BaseFilters";
@@ -85,6 +85,54 @@ export interface MergedAssetItem {
     totalSize: number;
     source?: string;
     version?: string;
+}
+
+export interface DirCacheEntry {
+    type: "dir";
+    bundleItems: BundleBrowseItem[];
+    nextCursor: string;
+    snapshotRevision: number;
+    scrollY: number;
+}
+
+export interface BundleCacheEntry {
+    type: "bundle";
+    rawAssetFiles: AssetBrowserItem[];
+    activeBundleMeta: BundleMetaInfo | null;
+    nextCursor: string;
+    snapshotRevision: number;
+    scrollY: number;
+}
+
+export type ViewCacheEntry = DirCacheEntry | BundleCacheEntry;
+
+const CACHE_STORAGE_KEY = "asset_viewer_view_cache_v1";
+
+function saveCacheToSessionStorage(cacheMap: Map<string, ViewCacheEntry>) {
+    if (typeof window === "undefined") return;
+    try {
+        const entries = Array.from(cacheMap.entries());
+        const sliced = entries.slice(-20);
+        sessionStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(sliced));
+    } catch {
+        // ignore quota errors
+    }
+}
+
+function loadCacheFromSessionStorage(): Map<string, ViewCacheEntry> {
+    if (typeof window === "undefined") return new Map();
+    try {
+        const saved = sessionStorage.getItem(CACHE_STORAGE_KEY);
+        if (saved) {
+            const entries = JSON.parse(saved);
+            if (Array.isArray(entries)) {
+                return new Map(entries);
+            }
+        }
+    } catch {
+        // ignore errors
+    }
+    return new Map();
 }
 
 function formatBytes(bytes?: number): string {
@@ -295,6 +343,40 @@ function AssetViewerContent() {
     const [previewTextError, setPreviewTextError] = useState<string | null>(null);
     const [copyFeedback, setCopyFeedback] = useState(false);
 
+    // View cache and scroll restore state
+    const viewCacheRef = useRef<Map<string, ViewCacheEntry>>(new Map());
+    const activeViewKeyRef = useRef<string>("");
+    const lastScrollYRef = useRef<number>(0);
+
+    // Initialize cache from sessionStorage on mount
+    useEffect(() => {
+        viewCacheRef.current = loadCacheFromSessionStorage();
+    }, []);
+
+    // Track scroll position continuously
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const handleScroll = () => {
+            lastScrollYRef.current = window.scrollY;
+        };
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    const getViewKey = useCallback((s: string, p: string, b: string) => {
+        return b ? `bundle:${s}:${b}` : `dir:${s}:${p}`;
+    }, []);
+
+    const saveCurrentViewScroll = useCallback(() => {
+        const key = activeViewKeyRef.current;
+        if (!key) return;
+        const cached = viewCacheRef.current.get(key);
+        if (cached) {
+            cached.scrollY = lastScrollYRef.current;
+            saveCacheToSessionStorage(viewCacheRef.current);
+        }
+    }, []);
+
     // Sync state to URL query parameters
     useEffect(() => {
         const url = new URL(window.location.href);
@@ -336,7 +418,57 @@ function AssetViewerContent() {
     }, [assetSource]);
 
     // Fetch view data
-    const fetchCurrentView = useCallback(async () => {
+    const fetchCurrentView = useCallback(async (forceRefresh = false) => {
+        const key = getViewKey(server, prefix, bundlePath);
+
+        if (activeViewKeyRef.current && activeViewKeyRef.current !== key) {
+            saveCurrentViewScroll();
+        }
+        activeViewKeyRef.current = key;
+
+        if (!forceRefresh && viewCacheRef.current.has(key)) {
+            const cached = viewCacheRef.current.get(key)!;
+            if (cached.type === "bundle" && bundlePath) {
+                setRawAssetFiles(cached.rawAssetFiles);
+                setActiveBundleMeta(cached.activeBundleMeta);
+                setBundleItems([]);
+                setNextCursor(cached.nextCursor);
+                setSnapshotRevision(cached.snapshotRevision);
+                setIsLoading(false);
+                setError(null);
+
+                const targetY = cached.scrollY || 0;
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            window.scrollTo({ top: targetY, behavior: "instant" });
+                            lastScrollYRef.current = targetY;
+                        }, 50);
+                    });
+                });
+                return;
+            } else if (cached.type === "dir" && !bundlePath) {
+                setBundleItems(cached.bundleItems);
+                setRawAssetFiles([]);
+                setActiveBundleMeta(null);
+                setNextCursor(cached.nextCursor);
+                setSnapshotRevision(cached.snapshotRevision);
+                setIsLoading(false);
+                setError(null);
+
+                const targetY = cached.scrollY || 0;
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            window.scrollTo({ top: targetY, behavior: "instant" });
+                            lastScrollYRef.current = targetY;
+                        }, 50);
+                    });
+                });
+                return;
+            }
+        }
+
         try {
             setIsLoading(true);
             setError(null);
@@ -348,11 +480,27 @@ function AssetViewerContent() {
                     throw new Error(`HTTP ${res.status}`);
                 }
                 const data: BundleFilesResponse = await res.json();
-                setRawAssetFiles(data.items || []);
-                setActiveBundleMeta(data.bundle || null);
+                const items = data.items || [];
+                const meta = data.bundle || null;
+                const cursor = data.nextCursor || "";
+                const rev = data.snapshotRevision || 0;
+
+                setRawAssetFiles(items);
+                setActiveBundleMeta(meta);
                 setBundleItems([]);
-                setNextCursor(data.nextCursor || "");
-                setSnapshotRevision(data.snapshotRevision || 0);
+                setNextCursor(cursor);
+                setSnapshotRevision(rev);
+
+                const newCache: BundleCacheEntry = {
+                    type: "bundle",
+                    rawAssetFiles: items,
+                    activeBundleMeta: meta,
+                    nextCursor: cursor,
+                    snapshotRevision: rev,
+                    scrollY: 0,
+                };
+                viewCacheRef.current.set(key, newCache);
+                saveCacheToSessionStorage(viewCacheRef.current);
             } else {
                 const url = `${gatewayDomain}/api/assets/bundles?server=${server}&prefix=${encodeURIComponent(prefix)}&limit=200`;
                 const res = await fetch(url);
@@ -360,19 +508,35 @@ function AssetViewerContent() {
                     throw new Error(`HTTP ${res.status}`);
                 }
                 const data: BundleBrowseResponse = await res.json();
-                setBundleItems(data.items || []);
+                const items = data.items || [];
+                const cursor = data.nextCursor || "";
+                const rev = data.snapshotRevision || 0;
+
+                setBundleItems(items);
                 setRawAssetFiles([]);
                 setActiveBundleMeta(null);
-                setNextCursor(data.nextCursor || "");
-                setSnapshotRevision(data.snapshotRevision || 0);
+                setNextCursor(cursor);
+                setSnapshotRevision(rev);
+
+                const newCache: DirCacheEntry = {
+                    type: "dir",
+                    bundleItems: items,
+                    nextCursor: cursor,
+                    snapshotRevision: rev,
+                    scrollY: 0,
+                };
+                viewCacheRef.current.set(key, newCache);
+                saveCacheToSessionStorage(viewCacheRef.current);
             }
+            window.scrollTo({ top: 0, behavior: "instant" });
+            lastScrollYRef.current = 0;
         } catch (err) {
             console.error("Failed to load assets view:", err);
             setError(err instanceof Error ? err.message : "Unknown error");
         } finally {
             setIsLoading(false);
         }
-    }, [server, prefix, bundlePath, gatewayDomain]);
+    }, [server, prefix, bundlePath, gatewayDomain, getViewKey, saveCurrentViewScroll]);
 
     useEffect(() => {
         fetchCurrentView();
@@ -381,6 +545,7 @@ function AssetViewerContent() {
     // Fetch next page
     const fetchMore = useCallback(async () => {
         if (!nextCursor || isLoadingMore) return;
+        const key = getViewKey(server, prefix, bundlePath);
         try {
             setIsLoadingMore(true);
 
@@ -391,9 +556,23 @@ function AssetViewerContent() {
                     throw new Error(`HTTP ${res.status}`);
                 }
                 const data: BundleFilesResponse = await res.json();
-                setRawAssetFiles(prev => [...prev, ...(data.items || [])]);
-                setNextCursor(data.nextCursor || "");
-                setSnapshotRevision(data.snapshotRevision || 0);
+                const newItems = data.items || [];
+                const cursor = data.nextCursor || "";
+                const rev = data.snapshotRevision || 0;
+
+                setRawAssetFiles(prev => {
+                    const updated = [...prev, ...newItems];
+                    const cached = viewCacheRef.current.get(key);
+                    if (cached && cached.type === "bundle") {
+                        cached.rawAssetFiles = updated;
+                        cached.nextCursor = cursor;
+                        cached.snapshotRevision = rev;
+                        saveCacheToSessionStorage(viewCacheRef.current);
+                    }
+                    return updated;
+                });
+                setNextCursor(cursor);
+                setSnapshotRevision(rev);
             } else {
                 const url = `${gatewayDomain}/api/assets/bundles?server=${server}&prefix=${encodeURIComponent(prefix)}&limit=200&cursor=${encodeURIComponent(nextCursor)}`;
                 const res = await fetch(url);
@@ -401,16 +580,30 @@ function AssetViewerContent() {
                     throw new Error(`HTTP ${res.status}`);
                 }
                 const data: BundleBrowseResponse = await res.json();
-                setBundleItems(prev => [...prev, ...(data.items || [])]);
-                setNextCursor(data.nextCursor || "");
-                setSnapshotRevision(data.snapshotRevision || 0);
+                const newItems = data.items || [];
+                const cursor = data.nextCursor || "";
+                const rev = data.snapshotRevision || 0;
+
+                setBundleItems(prev => {
+                    const updated = [...prev, ...newItems];
+                    const cached = viewCacheRef.current.get(key);
+                    if (cached && cached.type === "dir") {
+                        cached.bundleItems = updated;
+                        cached.nextCursor = cursor;
+                        cached.snapshotRevision = rev;
+                        saveCacheToSessionStorage(viewCacheRef.current);
+                    }
+                    return updated;
+                });
+                setNextCursor(cursor);
+                setSnapshotRevision(rev);
             }
         } catch (err) {
             console.error("Failed to load more items:", err);
         } finally {
             setIsLoadingMore(false);
         }
-    }, [server, prefix, bundlePath, gatewayDomain, nextCursor, isLoadingMore]);
+    }, [server, prefix, bundlePath, gatewayDomain, nextCursor, isLoadingMore, getViewKey]);
 
     // Group raw files into merged asset items (merging png + webp)
     const mergedAssetFiles = useMemo(() => {
@@ -436,12 +629,14 @@ function AssetViewerContent() {
     // Breadcrumb click handler
     const handleBreadcrumbClick = (bc: { name: string; path: string; isBundle: boolean }) => {
         if (bc.isBundle) return;
+        saveCurrentViewScroll();
         setBundlePath("");
         setPrefix(bc.path);
     };
 
     // Go back up one level
     const handleGoBack = useCallback(() => {
+        saveCurrentViewScroll();
         if (bundlePath) {
             setBundlePath("");
             return;
@@ -451,7 +646,7 @@ function AssetViewerContent() {
         parts.pop();
         const parentPath = parts.length > 0 ? parts.join("/") + "/" : "";
         setPrefix(parentPath);
-    }, [prefix, bundlePath]);
+    }, [prefix, bundlePath, saveCurrentViewScroll]);
 
     // Processed directory & bundle items
     const processedBundleItems = useMemo(() => {
@@ -615,7 +810,10 @@ function AssetViewerContent() {
                         <FilterButton
                             key={srv}
                             selected={server === srv}
-                            onClick={() => setServer(srv)}
+                            onClick={() => {
+                                saveCurrentViewScroll();
+                                setServer(srv);
+                            }}
                         >
                             {t(`settings.serverSource.${srv}`) || srv.toUpperCase()}
                         </FilterButton>
@@ -814,7 +1012,7 @@ function AssetViewerContent() {
                             </LocalizedLink>
 
                             <button
-                                onClick={fetchCurrentView}
+                                onClick={() => fetchCurrentView(true)}
                                 className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
                                 title={t("common.action.refresh")}
                             >
@@ -876,7 +1074,7 @@ function AssetViewerContent() {
                             <p className="text-red-500 font-bold mb-3">{t("page.assetViewer.loadFailed")}</p>
                             <p className="text-slate-500 text-xs mb-4">{error}</p>
                             <button
-                                onClick={fetchCurrentView}
+                                onClick={() => fetchCurrentView(true)}
                                 className="ios-glass-btn ios-glass-btn-primary px-4 py-2 text-xs rounded-xl"
                             >
                                 {t("common.action.retry")}
@@ -901,6 +1099,7 @@ function AssetViewerContent() {
                                                 <div
                                                     key={`${item.path}-${index}`}
                                                     onClick={() => {
+                                                        saveCurrentViewScroll();
                                                         if (isDir) {
                                                             setPrefix(item.path.endsWith("/") ? item.path : item.path + "/");
                                                         } else {
@@ -944,6 +1143,7 @@ function AssetViewerContent() {
                                                 <div
                                                     key={`${item.path}-${index}`}
                                                     onClick={() => {
+                                                        saveCurrentViewScroll();
                                                         if (isDir) {
                                                             setPrefix(item.path.endsWith("/") ? item.path : item.path + "/");
                                                         } else {

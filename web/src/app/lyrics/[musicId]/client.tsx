@@ -103,6 +103,11 @@ export default function LyricsDetailClient() {
         : hasFullVersion ? "full" : "game";
     const displayLines = lyrics ? getLyricsDisplayLines(lyrics, activeVersion) : [];
     const translationCredits = lyrics?.version === 2 ? lyrics.translationCredits : undefined;
+    const translationCredit = translationCredits?.translation?.trim();
+    const proofreadingCredit = translationCredits?.proofreading?.trim();
+    const sharedTranslationCredit = translationCredit && translationCredit === proofreadingCredit
+        ? translationCredit
+        : undefined;
 
     useEffect(() => {
         if (!lyrics || !requestedVersionParam || (requestedVersionParam === "game" && hasGameVersion)) return;
@@ -235,21 +240,32 @@ export default function LyricsDetailClient() {
                                     </dl>
                                 ) : translationCredits ? (
                                     <dl className="space-y-4 text-sm">
-                                        {translationCredits.translation && (
+                                        {sharedTranslationCredit ? (
                                             <div className="space-y-1">
-                                                <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
+                                                <dt className="font-bold text-primary-text">{t("page.lyrics.translationAndProofreading")}</dt>
                                                 <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                    {translationCredits.translation}
+                                                    {sharedTranslationCredit}
                                                 </dd>
                                             </div>
-                                        )}
-                                        {translationCredits.proofreading && (
-                                            <div className="space-y-1">
-                                                <dt className="font-bold text-primary-text">{t("page.lyrics.proofreading")}</dt>
-                                                <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                    {translationCredits.proofreading}
-                                                </dd>
-                                            </div>
+                                        ) : (
+                                            <>
+                                                {translationCredit && (
+                                                    <div className="space-y-1">
+                                                        <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
+                                                        <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
+                                                            {translationCredit}
+                                                        </dd>
+                                                    </div>
+                                                )}
+                                                {proofreadingCredit && (
+                                                    <div className="space-y-1">
+                                                        <dt className="font-bold text-primary-text">{t("page.lyrics.proofreading")}</dt>
+                                                        <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
+                                                            {proofreadingCredit}
+                                                        </dd>
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </dl>
                                 ) : (

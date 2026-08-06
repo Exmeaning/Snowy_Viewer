@@ -171,11 +171,17 @@ test("saved grant cannot override Global Privacy Control", async () => {
   });
 });
 
-test("settings and onboarding expose the same localized consent control", () => {
+test("tabbed settings and onboarding expose one localized consent control while retaining overlay shortcuts", () => {
   const settings = readWeb("src/components/SettingsPanel.tsx");
   const setup = readWeb("src/components/home/SetupGuide.tsx");
   const control = readWeb("src/components/AnalyticsConsentControl.tsx");
-  assert.match(settings, /<AnalyticsConsentControl \/>/);
+  assert.equal((settings.match(/<AnalyticsConsentControl \/>/g) ?? []).length, 1);
+  assert.match(settings, /type SettingsTab = "visual" \| "content" \| "data" \| "about"/);
+  assert.match(settings, /activeTab === "content"/);
+  assert.match(settings, /settings\.analytics\.sectionTitle/);
+  assert.match(settings, /matchesShortcutCombo\(event, SETTINGS_TOGGLE_COMBO\)/);
+  assert.match(settings, /CLOSE_OVERLAY_COMBOS\.some/);
+  assert.match(settings, /document\.body\.style\.overflow = previousBodyOverflow/);
   assert.match(setup, /<AnalyticsConsentControl accentColor=\{themeColor\} \/>/);
   assert.match(control, /role="switch"/);
   assert.match(control, /aria-checked=\{isGranted\}/);

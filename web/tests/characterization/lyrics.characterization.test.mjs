@@ -51,6 +51,7 @@ const fixtureV2 = {
   fullOnlyDocument: readJson("tests/fixtures/next-public-lyrics-v2/detail-full-only.fixture.json"),
   gameOnlyDocument: readJson("tests/fixtures/next-public-lyrics-v2/detail-game-only.fixture.json"),
 };
+const creditsPresentationFixture = readJson("tests/fixtures/lyrics-credits-presentation.fixture.json");
 const fixtureV2MoegirlAttribution = fixtureV2.document.attributions.find((attribution) => attribution.provider === "moegirl_public_exact");
 assert.ok(fixtureV2MoegirlAttribution, "canonical v2 detail fixture must include the exact public Moegirl attribution");
 assert.equal(fixtureV2MoegirlAttribution.revisionUrl, MOEGIRL_PUBLIC_EXACT_REVISION_URL);
@@ -300,8 +301,16 @@ async function importLyricsDetailClient(lyrics) {
     `${transpiled.outputText}\n//# sourceURL=lyrics-detail-client-${lyricsClientModuleSequence}.mjs`,
   ).toString("base64");
 
-  const state = { error: null, document: null, musics: [], musicId: fixture.document.musicId, search: "", replacedSearch: null };
-  const translate = (key) => key;
+  const state = {
+    error: null,
+    document: null,
+    musics: [],
+    musicId: fixture.document.musicId,
+    search: "",
+    replacedSearch: null,
+    translations: {},
+  };
+  const translate = (key) => state.translations[key] ?? key;
   globalThis.__lyricsClientRuntimeTest = {
     React,
     Image: ({ fill: _fill, unoptimized: _unoptimized, priority: _priority, ...props }) => React.createElement("img", props),
@@ -719,6 +728,47 @@ test("Public Lyrics v2 accepts Sekaipedia only with its exact public license pai
     assert.equal("romaji" in document.lines[0], false);
     assert.equal("rawEvidence" in document.attributions.at(-1), false);
     assert.equal("internal" in document, false);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
+test("Public Lyrics v2 translation credits accept exact values and reject empty, untrimmed, or open shapes", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  try {
+    for (const credits of [creditsPresentationFixture.same, creditsPresentationFixture.distinct]) {
+      const detail = structuredClone(fixtureV2.document);
+      detail.translationCredits = structuredClone(credits);
+      globalThis.fetch = async (url) => jsonResponse(
+        String(url).endsWith("/index.json") ? structuredClone(fixtureV2.index) : detail,
+      );
+      const lyrics = await importLyrics();
+      assert.deepEqual(
+        (await lyrics.fetchLyricsDocument(detail.musicId)).translationCredits,
+        credits,
+      );
+    }
+
+    const invalidCases = [
+      ["empty object", {}],
+      ["untrimmed translation", { translation: ` ${creditsPresentationFixture.same.translation}` }],
+      ["untrimmed proofreading", { proofreading: `${creditsPresentationFixture.same.proofreading} ` }],
+      ["unknown field", { ...creditsPresentationFixture.same, reviewer: "private" }],
+      ["non-string", { translation: 1 }],
+    ];
+    for (const [label, translationCredits] of invalidCases) {
+      const detail = structuredClone(fixtureV2.document);
+      detail.translationCredits = translationCredits;
+      globalThis.fetch = async (url) => jsonResponse(
+        String(url).endsWith("/index.json") ? structuredClone(fixtureV2.index) : detail,
+      );
+      const lyrics = await importLyrics();
+      await assert.rejects(lyrics.fetchLyricsDocument(detail.musicId), /Invalid lyrics document/, label);
+    }
   } finally {
     globalThis.fetch = previousFetch;
     if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
@@ -1742,6 +1792,99 @@ test("lyrics detail client defaults to Full and honors a shareable Game projecti
   } finally {
     delete globalThis.__lyricsClientRuntimeTest;
   }
+});
+
+test("lyrics credits merge identical values, split distinct values, localize empty credits, and order Sekaipedia source/license metadata", async () => {
+  const labels = creditsPresentationFixture.labels["en-US"];
+  const translations = {
+    "page.lyrics.attribution": labels.heading,
+    "page.lyrics.translation": labels.translation,
+    "page.lyrics.proofreading": labels.proofreading,
+    "page.lyrics.translationAndProofreading": labels.translationAndProofreading,
+    "page.lyrics.translationCreditsEmpty": labels.empty,
+    "page.lyrics.sourceLicenseTitle": labels.sourceLicenseTitle,
+    "page.lyrics.sourceRevision": labels.sourceRevision,
+    "page.lyrics.sourceLicense": labels.sourceLicense,
+    "page.lyrics.attributionProviders.sekaipedia": labels.sekaipedia,
+  };
+
+  const lyrics = await importLyrics();
+  const renderCredits = async (translationCredits) => renderLyricsClientRuntime(lyrics, (state) => {
+    const document = structuredClone(fixtureV2.document);
+    if (translationCredits === null) delete document.translationCredits;
+    else document.translationCredits = structuredClone(translationCredits);
+    state.musicId = document.musicId;
+    state.document = document;
+    state.translations = translations;
+    state.musics = [{
+      id: document.musicId,
+      title: fixtureV2Publication.title["en-US"],
+      assetbundleName: fixtureV2Publication.title["ja-JP"],
+      categories: [],
+    }];
+  });
+
+  const same = await renderCredits(creditsPresentationFixture.same);
+  const sameDom = new JSDOM(same.html);
+  const sameTerms = [...sameDom.window.document.querySelectorAll("dt")].map((item) => item.textContent?.trim());
+  const sameValues = [...sameDom.window.document.querySelectorAll("dd")].map((item) => item.textContent?.trim());
+  assert.equal(sameTerms.filter((value) => value === labels.translationAndProofreading).length, 1);
+  assert.equal(sameTerms.filter((value) => value === labels.translation).length, 0);
+  assert.equal(sameTerms.filter((value) => value === labels.proofreading).length, 0);
+  assert.equal(sameValues.filter((value) => value === creditsPresentationFixture.same.translation).length, 1);
+  const creditsHeading = [...sameDom.window.document.querySelectorAll("h2")]
+    .find((item) => item.textContent?.trim() === labels.heading);
+  const sourceHeading = [...sameDom.window.document.querySelectorAll("h3")]
+    .find((item) => item.textContent?.trim() === labels.sourceLicenseTitle);
+  assert.ok(creditsHeading, "the credits card heading is localized as Translation credits");
+  assert.ok(sourceHeading, "the source/license heading is rendered below credits");
+  assert.ok(
+    creditsHeading.compareDocumentPosition(sourceHeading) & sameDom.window.Node.DOCUMENT_POSITION_FOLLOWING,
+    "source/license metadata follows the translation credits content",
+  );
+
+  const sekaipediaAttribution = fixtureV2.document.attributions.find((item) => item.provider === "sekaipedia");
+  assert.ok(sekaipediaAttribution);
+  const sekaipediaRow = [...sameDom.window.document.querySelectorAll("li")]
+    .find((item) => item.textContent?.includes(labels.sekaipedia));
+  assert.ok(sekaipediaRow);
+  assert.deepEqual(
+    [...sekaipediaRow.querySelectorAll("dt")].map((item) => item.textContent?.trim()),
+    [labels.sourceRevision, labels.sourceLicense],
+  );
+  assert.deepEqual(
+    [...sekaipediaRow.querySelectorAll("dd")].map((item) => item.textContent?.trim()),
+    [String(sekaipediaAttribution.revisionId), "CC BY-SA 4.0"],
+  );
+  assert.deepEqual(
+    [...sekaipediaRow.querySelectorAll("a")].map((item) => item.getAttribute("href")),
+    [sekaipediaAttribution.revisionUrl, "https://creativecommons.org/licenses/by-sa/4.0/"],
+  );
+  sameDom.window.close();
+
+  const distinct = await renderCredits(creditsPresentationFixture.distinct);
+  const distinctDom = new JSDOM(distinct.html);
+  const distinctTerms = [...distinctDom.window.document.querySelectorAll("dt")].map((item) => item.textContent?.trim());
+  const distinctValues = [...distinctDom.window.document.querySelectorAll("dd")].map((item) => item.textContent?.trim());
+  assert.equal(distinctTerms.filter((value) => value === labels.translation).length, 1);
+  assert.equal(distinctTerms.filter((value) => value === labels.proofreading).length, 1);
+  assert.equal(distinctTerms.filter((value) => value === labels.translationAndProofreading).length, 0);
+  assert.ok(distinctValues.includes(creditsPresentationFixture.distinct.translation));
+  assert.ok(distinctValues.includes(creditsPresentationFixture.distinct.proofreading));
+  distinctDom.window.close();
+
+  const empty = await renderCredits(creditsPresentationFixture.empty);
+  const emptyDom = new JSDOM(empty.html);
+  assert.ok([...emptyDom.window.document.querySelectorAll("p")]
+    .some((item) => item.textContent?.trim() === labels.empty));
+  assert.doesNotMatch(empty.text, new RegExp(creditsPresentationFixture.same.translation));
+  emptyDom.window.close();
+
+  assert.match(
+    readWeb("src/lib/i18n/messages/zh-CN/index.ts"),
+    new RegExp(`translationAndProofreading: "${creditsPresentationFixture.labels["zh-CN"].translationAndProofreading}"`),
+  );
+  assert.match(readWeb("src/app/lyrics/[musicId]/client.tsx"), /translationCredits\?\.translation\?\.trim\(\)/);
 });
 
 test("lyrics detail client localizes 404 races and separates upstream failures without leaking errors", async () => {

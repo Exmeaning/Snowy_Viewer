@@ -710,6 +710,16 @@ export const enUSMessages = {
     },
     settings: {
         title: "Settings",
+        sections: {
+            visual: "Visual",
+            content: "Content",
+            data: "Data",
+            about: "About",
+        },
+        about: {
+            projectDescription: "PROJECT SEKAI Database & Viewer",
+            viewDetails: "About Project",
+        },
         appearance: {
             sectionTitle: "Appearance",
             system: "System",
@@ -787,16 +797,16 @@ export const enUSMessages = {
             checking: "Checking...",
             loadFailed: "Failed to load",
             noCache: "Not cached",
-            cached: "Data is cached locally and future visits will load from the browser database",
-            stale: "A new version was detected and the data will update automatically on the next load",
-            firstVisit: "First visit: data will be loaded from the server and cached locally",
+            cached: "Data cached locally",
+            stale: "New version detected",
+            firstVisit: "Loading from server",
         },
         refresh: {
             idle: "Force refresh all data",
             refreshing: "Refreshing...",
         },
         footer: {
-            version: "Moesekai · 1.6-preview-beta1",
+            version: "Moesekai · 1.6-preview-beta4",
         },
         sidebar: {
             notLoggedIn: "Not signed in",
@@ -1025,7 +1035,7 @@ export const enUSMessages = {
             },
             sponsors: {
                 title: "Sponsor Thanks (in no particular order)",
-                list: "阳子(support server),cike, 晓月, Hakuchumu, 性价比, luoxia, 雪莹ちゃん, 蘸色绘糖/晕星奏, tony_all, 沙皮, 轩, 末乐回忆, metamiku, madoka, 垂耳兔kawayi, amia,maveriki, and four supporters who prefer not to disclose their IDs.",
+                list: "阳子(support server),cike, 晓月, Hakuchumu, 性价比, luoxia, 雪莹ちゃん, 蘸色绘糖/晕星奏, tony_all, 沙皮, 轩, 末乐回忆 M氏 ick110811, metamiku, madoka, 垂耳兔kawayi, amia,maveriki, and four supporters who prefer not to disclose their IDs.",
             },
             specialThanks: {
                 title: "Supporter Thanks (in no particular order)",
@@ -1593,6 +1603,7 @@ export const enUSMessages = {
             attribution: "Translation credits",
             translation: "Translation",
             proofreading: "Proofreading",
+            translationAndProofreading: "Translation & proofreading",
             translationCreditsEmpty: "No translation credits have been provided.",
             sourceLicenseTitle: "Lyrics source and license",
             revision: "Published revision",
@@ -1817,6 +1828,7 @@ export const enUSMessages = {
             wishSelectTitle: "Current Wish Pick",
             wishSelectSubTitle: "Select Wish Pick Cards",
             wishSelectDesc: "Choose {limit} cards. Selected Wish Pick and current new featured cards are calculated at 0.4% each, and other 4★ cards share the remaining rate.",
+            wishSelectClear: "Clear Selected ({count})",
             selected: "Selected",
             clickSelect: "Select",
             newPuCardsTitle: "New Featured Cards ({count})",
@@ -1840,6 +1852,19 @@ export const enUSMessages = {
             star4Label: "4★",
             history4StarsTitle: "History 4★ / Birthday Results",
             pityPull: "{count} pulls",
+            summaryTitle: "Gacha Overview",
+            descriptionTitle: "Gacha Details & Rules",
+            bubbleTitle: "Gacha Tagline",
+            cardPoolTitle: "Card Pool List ({count})",
+            cardPoolSubtitle: "All available cards in this gacha pool",
+            filterAllRarities: "All Rarities",
+            weightLabel: "Weight: {weight}",
+            rateShareLabel: "Rarity Share: {percentage}%",
+            showMoreDescription: "Show full details",
+            showLessDescription: "Hide details",
+            showMoreSummary: "Show full overview",
+            showLessSummary: "Hide overview",
+            viewFullCardPool: "View Full Card Pool List ({count})",
             states: {
                 notStarted: "Not Started",
                 ongoing: "Ongoing",

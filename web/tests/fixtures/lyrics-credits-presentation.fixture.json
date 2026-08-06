@@ -1,0 +1,27 @@
+{
+  "same": {
+    "translation": "credit:translator-001",
+    "proofreading": "credit:translator-001"
+  },
+  "distinct": {
+    "translation": "credit:translator-001",
+    "proofreading": "credit:proofreader-002"
+  },
+  "empty": null,
+  "labels": {
+    "en-US": {
+      "heading": "Translation credits",
+      "translation": "Translation",
+      "proofreading": "Proofreading",
+      "translationAndProofreading": "Translation & proofreading",
+      "empty": "No translation credits have been provided.",
+      "sourceLicenseTitle": "Lyrics source and license",
+      "sourceRevision": "Source revision",
+      "sourceLicense": "License",
+      "sekaipedia": "Sekaipedia"
+    },
+    "zh-CN": {
+      "translationAndProofreading": "翻译&校对"
+    }
+  }
+}
