@@ -16,11 +16,17 @@ import {
     fetchLyricsDocument,
     getLyricsDisplayLines,
     getLyricsDisplaySegments,
+    getLyricsRendition,
+    getLyricsRenditions,
     getLyricsTargetLocale,
+    getPublishedLyricsIndexEntry,
     hasFullLyricsVersion,
     hasGameLyricsVersion,
     isLyricsUnavailableError,
+    type ILyricsAttribution,
     type ILyricsDocument,
+    type ILyricsIndexEntry,
+    type ILyricsV3ComponentAttribution,
     type LyricsVersion,
 } from "@/lib/lyrics";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
@@ -28,6 +34,24 @@ import type { IMusicInfo, MusicCategoryType } from "@/types/music";
 import { getMusicJacketUrl, MUSIC_CATEGORY_COLORS } from "@/types/music";
 
 type RawMusicCategory = MusicCategoryType | { musicCategoryName: MusicCategoryType };
+type LyricsDisplayAttribution = ILyricsAttribution | ILyricsV3ComponentAttribution;
+
+function getLyricsDisplayAttributions(attributions: readonly LyricsDisplayAttribution[]): LyricsDisplayAttribution[] {
+    const seen = new Set<string>();
+    return attributions.filter((attribution) => {
+        const identity = [
+            attribution.provider,
+            attribution.title,
+            attribution.revisionId,
+            attribution.revisionUrl,
+            attribution.licenseName,
+            attribution.licenseUrl,
+        ].join("\u0000");
+        if (seen.has(identity)) return false;
+        seen.add(identity);
+        return true;
+    });
+}
 
 export default function LyricsDetailClient() {
     const params = useParams();
@@ -39,12 +63,14 @@ export default function LyricsDetailClient() {
     const hasValidMusicId = Number.isInteger(musicId) && musicId > 0;
     const requestedVersionParam = searchParams.get("version");
     const requestedVersion: LyricsVersion = requestedVersionParam === "game" ? "game" : "full";
+    const requestedRenditionKey = searchParams.get("rendition");
     const [result, setResult] = useState<{
         musicId: number;
         locale: typeof locale;
         music: IMusicInfo | null;
+        publication: ILyricsIndexEntry | null;
         lyrics: ILyricsDocument | null;
-        errorKind: "unavailable" | "failed" | null;
+        errorKind: "unavailable" | "not-found" | "failed" | null;
     } | null>(null);
 
     useEffect(() => {
@@ -52,9 +78,13 @@ export default function LyricsDetailClient() {
         let cancelled = false;
         Promise.all([
             fetchMasterData<IMusicInfo[]>("musics.json"),
-            fetchLyricsDocument(musicId),
+            getPublishedLyricsIndexEntry(musicId),
+            fetchLyricsDocument(musicId).then(
+                (document) => ({ document, error: null as unknown }),
+                (error: unknown) => ({ document: null, error }),
+            ),
         ])
-            .then(([musics, document]) => {
+            .then(([musics, publication, detail]) => {
                 if (cancelled) return;
                 const foundMusic = musics.find((item) => item.id === musicId) ?? null;
                 const normalizedMusic = foundMusic
@@ -67,22 +97,27 @@ export default function LyricsDetailClient() {
                         ),
                     }
                     : null;
+                const errorKind = detail.error
+                    ? isLyricsUnavailableError(detail.error) ? publication ? "unavailable" : "not-found" : "failed"
+                    : null;
                 setResult({
                     musicId,
                     locale,
                     music: normalizedMusic,
-                    lyrics: document,
-                    errorKind: null,
+                    publication,
+                    lyrics: detail.document,
+                    errorKind,
                 });
             })
-            .catch((error: unknown) => {
+            .catch(() => {
                 if (!cancelled) {
                     setResult({
                         musicId,
                         locale,
                         music: null,
+                        publication: null,
                         lyrics: null,
-                        errorKind: isLyricsUnavailableError(error) ? "unavailable" : "failed",
+                        errorKind: "failed",
                     });
                 }
             });
@@ -96,18 +131,43 @@ export default function LyricsDetailClient() {
     const isLoading = hasValidMusicId && !currentResult;
     const targetLocale = getLyricsTargetLocale(locale);
     const showTargetColumn = Boolean(targetLocale);
-    const hasFullVersion = lyrics ? hasFullLyricsVersion(lyrics) : true;
-    const hasGameVersion = lyrics ? hasGameLyricsVersion(lyrics) : false;
+    const renditions = lyrics?.version === 3 ? [...getLyricsRenditions(lyrics)] : [];
+    const activeRendition = lyrics?.version === 3
+        ? getLyricsRendition(lyrics, requestedRenditionKey)
+        : null;
+    const versionSource = activeRendition ?? lyrics;
+    const hasFullVersion = versionSource ? hasFullLyricsVersion(versionSource) : true;
+    const hasGameVersion = versionSource ? hasGameLyricsVersion(versionSource) : false;
     const activeVersion: LyricsVersion = requestedVersion === "game" && hasGameVersion
         ? "game"
         : hasFullVersion ? "full" : "game";
-    const displayLines = lyrics ? getLyricsDisplayLines(lyrics, activeVersion) : [];
-    const translationCredits = lyrics?.version === 2 ? lyrics.translationCredits : undefined;
+    const displayLines = lyrics
+        ? getLyricsDisplayLines(lyrics, activeVersion, activeRendition?.key)
+        : [];
+    const translationCredits = activeRendition?.translationCredits
+        ?? (lyrics?.version === 2 ? lyrics.translationCredits : undefined);
+    const attributions = getLyricsDisplayAttributions(
+        activeRendition?.provenance
+            ?? (lyrics?.version === 2 ? lyrics.attributions : []),
+    );
     const translationCredit = translationCredits?.translation?.trim();
     const proofreadingCredit = translationCredits?.proofreading?.trim();
     const sharedTranslationCredit = translationCredit && translationCredit === proofreadingCredit
         ? translationCredit
         : undefined;
+
+    useEffect(() => {
+        if (
+            !lyrics
+            || lyrics.version !== 3
+            || !requestedRenditionKey
+            || !activeRendition
+            || activeRendition.key === requestedRenditionKey
+        ) return;
+        const query = new URLSearchParams(searchParams.toString());
+        query.set("rendition", activeRendition.key);
+        replaceCurrentUrlSearchParams(query);
+    }, [activeRendition, lyrics, requestedRenditionKey, searchParams]);
 
     useEffect(() => {
         if (!lyrics || !requestedVersionParam || (requestedVersionParam === "game" && hasGameVersion)) return;
@@ -119,6 +179,16 @@ export default function LyricsDetailClient() {
     useEffect(() => {
         if (music) setDetailName(music.title);
     }, [music, setDetailName]);
+
+    const selectRendition = (renditionKey: string) => {
+        if (!renditions.some((rendition) => rendition.key === renditionKey)) return;
+        const query = new URLSearchParams(window.location.search);
+        query.set("rendition", renditionKey);
+        if (renditionKey === activeRendition?.key && requestedVersion === "game" && !hasGameVersion) {
+            query.delete("version");
+        }
+        replaceCurrentUrlSearchParams(query);
+    };
 
     const selectVersion = (version: LyricsVersion) => {
         if (version === "full" && !hasFullVersion || version === "game" && !hasGameVersion) return;
@@ -274,7 +344,7 @@ export default function LyricsDetailClient() {
                                     </p>
                                 )}
                             </div>
-                            {lyrics.version === 2 && (
+                            {attributions.length > 0 && (
                                 <>
                                     <div className="border-y border-slate-100/80 bg-slate-50/40 px-5 py-3 dark:border-slate-700/60 dark:bg-slate-900/20">
                                         <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -282,8 +352,8 @@ export default function LyricsDetailClient() {
                                         </h3>
                                     </div>
                                     <ul className="divide-y divide-slate-100/80 dark:divide-slate-700/60">
-                                        {lyrics.attributions.map((attribution) => (
-                                            <li key={`${attribution.provider}-${attribution.revisionUrl}`} className="space-y-2 p-5 text-sm">
+                                        {attributions.map((attribution) => (
+                                            <li key={`${attribution.provider}-${attribution.revisionUrl}-${"component" in attribution ? attribution.component : "legacy"}`} className="space-y-2 p-5 text-sm">
                                                 <div>
                                                     <p className="font-bold text-primary-text">{t(`page.lyrics.attributionProviders.${attribution.provider}`)}</p>
                                                     <p className="mt-0.5 break-words text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">{attribution.title}</p>
@@ -323,6 +393,24 @@ export default function LyricsDetailClient() {
                                     </svg>
                                     {t("page.lyrics.contentTitle")}
                                 </h2>
+                                {renditions.length > 1 && (
+                                    <div role="group" aria-label={t("page.lyrics.versionLabel")} className="flex max-w-full flex-wrap gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+                                        {renditions.map((rendition) => (
+                                            <button
+                                                key={rendition.key}
+                                                type="button"
+                                                aria-pressed={activeRendition?.key === rendition.key}
+                                                onClick={() => selectRendition(rendition.key)}
+                                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${activeRendition?.key === rendition.key
+                                                    ? "bg-white text-miku shadow-sm dark:bg-slate-700"
+                                                    : "text-slate-500 hover:text-primary-text dark:text-slate-300"
+                                                }`}
+                                            >
+                                                {rendition.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                                 <div role="group" aria-label={t("page.lyrics.versionLabel")} className="inline-flex w-fit rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
                                     {hasFullVersion && (
                                         <button
@@ -381,6 +469,7 @@ export default function LyricsDetailClient() {
                                                         <LyricText
                                                             segments={getLyricsDisplaySegments(line)}
                                                             trailingPerformerIds={"trailingPerformerIds" in line ? line.trailingPerformerIds : undefined}
+                                                            performers={activeRendition?.performers}
                                                         />
                                                     </div>
                                                     {showTargetColumn && (

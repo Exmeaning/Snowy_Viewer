@@ -265,16 +265,24 @@ test("build-time lyrics fetch never retries non-retryable HTTP or schema failure
   }
 });
 
-test("build-time lyrics index validation accepts strict v1 and v2 only", async () => {
-  const lyrics = await importPublicLyrics("dual-schema");
+test("build-time lyrics index validation accepts strict v1, v2, and v3", async () => {
+  const lyrics = await importPublicLyrics("triple-schema");
   const v1 = readJson("tests/fixtures/next-public-lyrics-v1/index.fixture.json");
   const v2 = readJson("tests/fixtures/next-public-lyrics-v2/index.fixture.json");
+  const v3 = structuredClone(v2);
+  v3.version = 3;
+  assert.equal(lyrics.PUBLIC_LYRICS_SCHEMA_VERSION, 3);
   assert.deepEqual(lyrics.validatePublicLyricsIndex(structuredClone(v1)), v1);
   assert.deepEqual(lyrics.validatePublicLyricsIndex(structuredClone(v2)), v2);
+  assert.deepEqual(lyrics.validatePublicLyricsIndex(structuredClone(v3)), v3);
 
   const malformedV2 = structuredClone(v2);
   malformedV2.songs[0].availableVersions = ["game", "full"];
   assert.throws(() => lyrics.validatePublicLyricsIndex(malformedV2), /Invalid public lyrics index/);
+  const malformedV3Complete = structuredClone(v3);
+  malformedV3Complete.songs[0].availableVersions = ["game"];
+  assert.throws(() => lyrics.validatePublicLyricsIndex(malformedV3Complete), /Invalid public lyrics index/);
+  assert.throws(() => lyrics.validatePublicLyricsIndex({ version: 3, songs: [] }), /Invalid public lyrics index/);
   const v1WithV2Field = structuredClone(v1);
   v1WithV2Field.songs[0].availableVersions = ["full"];
   assert.throws(() => lyrics.validatePublicLyricsIndex(v1WithV2Field), /Invalid public lyrics index/);
@@ -630,6 +638,14 @@ test("sitemap generation follows the public lyrics index and excludes unpublishe
   assert.deepEqual(routes, [expectedRoute]);
   assert.equal(routes.some((route) => route.path === `/lyrics/${unpublishedId}/`), false);
   assert.deepEqual(Object.keys(routes[0]), ["path", "lastmod", "priority", "changefreq"]);
+
+  const v3 = readJson("tests/fixtures/next-public-lyrics-v2/index.fixture.json");
+  v3.version = 3;
+  const v3Routes = generator.buildPublishedLyricsRoutes(v3, existingData);
+  assert.deepEqual(v3Routes.map((route) => route.path), ["/lyrics/10/", "/lyrics/11/", "/lyrics/12/"]);
+  assert.equal(v3Routes.some((route) => [13, 14, 15, 16, 17].some((musicId) => route.path === `/lyrics/${musicId}/`)), false);
+  assert.deepEqual(generator.buildPublishedLyricsRoutes({ version: 2, songs: [] }, existingData), []);
+  assert.match(readWeb("scripts/generate-sitemaps.mjs"), /fallback: \{ version: 2, songs: \[\] \}/);
 
   const privateIndex = structuredClone(index);
   privateIndex.songs[0].sourceUrl = new URL("source", PUBLIC_LYRICS_BASE_URL).toString();

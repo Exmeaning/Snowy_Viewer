@@ -55,7 +55,7 @@ test("workflows pin actions, declare least privilege, and validate Go plus web",
   assert.match(ci, /openssl req -x509[\s\S]*subjectAltName=DNS:host\.docker\.internal,DNS:localhost,IP:127\.0\.0\.1/);
   assert.match(ci, /serve-public-lyrics-build-contract\.mjs[\s\S]*--host 0\.0\.0\.0/);
   assert.match(ci, /lyrics_base_url="https:\/\/localhost:\$\{fixture_port\}\/files\/translation\/lyrics"/);
-  assert.match(ci, /value\.version !== 2[\s\S]*song\?\.availableVersions\?\.join\(","\) !== "full,game"/);
+  assert.match(ci, /value\.version !== 3[\s\S]*song\?\.availableVersions\?\.join\(","\) !== "full,game"/);
   assert.match(ci, /docker buildx create[\s\S]*--driver docker-container[\s\S]*--driver-opt network=host[\s\S]*--use/);
   assert.match(ci, /docker buildx build[\s\S]*--allow network\.host[\s\S]*--network host[\s\S]*--secret id=public_lyrics_ca,src="\$fixture_dir\/cert\.pem"/);
   assert.doesNotMatch(ci, /host-gateway/);
@@ -85,8 +85,13 @@ test("production and web-dev images install from the frozen workspace root and r
   assert.match(production, /ENV NODE_ENV=production[\s\S]*bun run sitemap/);
   assert.match(production, /ENV NEXT_PUBLIC_LYRICS_BASE_URL=\$NEXT_PUBLIC_LYRICS_BASE_URL/);
   assert.match(production, /RUN test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"/);
+  assert.match(production, /RUN printf '%s\\n' "\$NEXT_PUBLIC_LYRICS_BASE_URL" > \/app\/public-lyrics-base-url-build-contract/);
+  assert.match(production, /COPY --from=builder-web[\s\S]*public-lyrics-base-url-build-contract/);
   assert.match(production, /export REQUIRE_PUBLIC_LYRICS_SOURCE=1;[\s\S]*bun run sitemap/);
   assert.doesNotMatch(production, /NEXT_PUBLIC_LYRICS_BASE_URL=.*(?:https?:\/\/|token|password|@)/i);
+  const startContainer = readRepo("scripts/start-container.sh");
+  assert.match(startContainer, /public-lyrics-base-url-build-contract/);
+  assert.match(startContainer, /does not match the build-time public lyrics source/);
   assert.match(production, /USER node/);
   assert.match(production, /HEALTHCHECK[\s\S]*\/readyz/);
   assert.match(production, /ENTRYPOINT \["\/sbin\/tini", "--"\]/);

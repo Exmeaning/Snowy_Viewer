@@ -5,7 +5,8 @@ const PUBLIC_LYRICS_INDEX_FILENAME = 'index.json';
 const IPV4_LOOPBACK_FIRST_OCTET = 127;
 const IPV4_MAX_OCTET = 255;
 const PUBLIC_LYRICS_SCHEMA_VERSION_V1 = 1;
-export const PUBLIC_LYRICS_SCHEMA_VERSION = 2;
+const PUBLIC_LYRICS_SCHEMA_VERSION_V2 = 2;
+export const PUBLIC_LYRICS_SCHEMA_VERSION = 3;
 const MIN_PUBLIC_LYRICS_ENTITY_ID = 1;
 const MAX_PUBLIC_LYRICS_INDEX_ENTRIES = 100_000;
 const MAX_PUBLIC_LYRICS_TITLE_LENGTH = 64 * 1024;
@@ -119,9 +120,12 @@ export function validatePublicLyricsIndex(value) {
     if (
         !isObject(value)
         || !hasOnlyKeys(value, ['version', 'songs'])
-        || (value.version !== PUBLIC_LYRICS_SCHEMA_VERSION_V1 && value.version !== PUBLIC_LYRICS_SCHEMA_VERSION)
+        || (value.version !== PUBLIC_LYRICS_SCHEMA_VERSION_V1
+            && value.version !== PUBLIC_LYRICS_SCHEMA_VERSION_V2
+            && value.version !== PUBLIC_LYRICS_SCHEMA_VERSION)
         || !Array.isArray(value.songs)
         || value.songs.length > MAX_PUBLIC_LYRICS_INDEX_ENTRIES
+        || value.version === PUBLIC_LYRICS_SCHEMA_VERSION && value.songs.length === 0
     ) {
         throw new Error('Invalid public lyrics index');
     }

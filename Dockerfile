@@ -35,6 +35,7 @@ ENV MANGA_DATA_URLS=$MANGA_DATA_URLS
 ENV REQUIRE_FRESH_BUILD_DATA=$REQUIRE_FRESH_BUILD_DATA
 RUN test -f /app/bun.lock && test -f /app/refer/re_sekai-calculator/src/index.ts
 RUN test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
+RUN printf '%s\n' "$NEXT_PUBLIC_LYRICS_BASE_URL" > /app/public-lyrics-base-url-build-contract
 RUN --mount=type=secret,id=public_lyrics_ca,required=false \
     if [ -f /run/secrets/public_lyrics_ca ]; then \
       export NODE_EXTRA_CA_CERTS=/run/secrets/public_lyrics_ca; \
@@ -55,10 +56,15 @@ RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o server main.go
 FROM node:22.17.1-alpine3.22
 WORKDIR /app
 
+ARG NEXT_PUBLIC_LYRICS_BASE_URL
+ENV NEXT_PUBLIC_LYRICS_BASE_URL=$NEXT_PUBLIC_LYRICS_BASE_URL
+RUN test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
+
 RUN apk add --no-cache ca-certificates tini wget
 
 # Copy Backend and Next.js standalone server.
 COPY --from=builder-go --chown=node:node /app/server ./server
+COPY --from=builder-web --chown=node:node /app/public-lyrics-base-url-build-contract ./public-lyrics-base-url-build-contract
 COPY --from=builder-web --chown=node:node /app/web/.next/standalone ./nextjs/
 COPY --from=builder-web --chown=node:node /app/web/.next/static ./nextjs/web/.next/static
 COPY --from=builder-web --chown=node:node /app/web/public ./nextjs/web/public

@@ -22,7 +22,21 @@ export const EXTERNAL_LYRICS_PERFORMERS = [
 const EXTERNAL_LYRICS_PERFORMER_BY_ID = new Map<number, ExternalLyricsPerformer>(
     EXTERNAL_LYRICS_PERFORMERS.map((performer) => [performer.id, performer]),
 );
+const EXTERNAL_LYRICS_PERFORMER_BY_SOURCE_ID = new Map<string, ExternalLyricsPerformer>(
+    EXTERNAL_LYRICS_PERFORMERS.map((performer) => [performer.sourceId, performer]),
+);
 
 export function getExternalLyricsPerformer(id: number): ExternalLyricsPerformer | null {
     return EXTERNAL_LYRICS_PERFORMER_BY_ID.get(id) ?? null;
+}
+
+export function getExternalLyricsPerformerBySourceId(sourceId: string): ExternalLyricsPerformer | null {
+    return EXTERNAL_LYRICS_PERFORMER_BY_SOURCE_ID.get(sourceId) ?? null;
+}
+
+export function getLyricsCharacterIdBySourceId(sourceId: string): number | null {
+    const match = /^歌唱者-(\d+)$/.exec(sourceId);
+    if (!match) return null;
+    const characterId = Number(match[1]);
+    return Number.isSafeInteger(characterId) && characterId >= 1 && characterId <= 26 ? characterId : null;
 }

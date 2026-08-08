@@ -6,16 +6,21 @@ import type { CSSProperties } from "react";
 import { useI18n } from "@/contexts/I18nContext";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { getCharacterName } from "@/lib/i18n";
-import type { ILyricsDisplaySegment, ILyricsRubySpan } from "@/lib/lyrics";
-import { getLyricsPerformerColors } from "@/lib/lyrics-colors";
-import { getExternalLyricsPerformer } from "@/lib/lyrics-performers";
+import type { ILyricsDisplaySegment, ILyricsRubySpan, ILyricsV3Performer, LyricsPerformerID } from "@/lib/lyrics";
+import { adjustHexForContrast, getLyricsPerformerColors } from "@/lib/lyrics-colors";
+import {
+    getExternalLyricsPerformer,
+    getExternalLyricsPerformerBySourceId,
+    getLyricsCharacterIdBySourceId,
+} from "@/lib/lyrics-performers";
 
 interface LyricTextProps {
     text?: string;
-    performerIds?: number[];
+    performerIds?: LyricsPerformerID[];
     ruby?: ILyricsRubySpan[];
     segments?: ILyricsDisplaySegment[];
-    trailingPerformerIds?: number[];
+    trailingPerformerIds?: LyricsPerformerID[];
+    performers?: readonly ILyricsV3Performer[];
     showPerformerAvatars?: boolean;
 }
 
@@ -27,18 +32,18 @@ type PerformerStyle = CSSProperties & {
 };
 
 interface PerformerDescriptor {
-    id: number;
+    id: LyricsPerformerID;
     name: string;
-    avatarUrl: string;
-    colors: { base: string; light: string; dark: string };
+    avatarUrl?: string;
+    colors?: { base: string; light: string; dark: string };
 }
 
-function samePerformerGroup(left: number[], right: number[]): boolean {
+function samePerformerGroup(left: LyricsPerformerID[], right: LyricsPerformerID[]): boolean {
     return left.length === right.length && left.every((id, index) => id === right[index]);
 }
 
-function linePerformerGroups(segments: ILyricsDisplaySegment[], trailingPerformerIds: number[]): number[][] {
-    const groups: number[][] = [];
+function linePerformerGroups(segments: ILyricsDisplaySegment[], trailingPerformerIds: LyricsPerformerID[]): LyricsPerformerID[][] {
+    const groups: LyricsPerformerID[][] = [];
     for (const segment of segments) {
         if (segment.performerIds.length === 0) continue;
         const previous = groups.at(-1);
@@ -51,18 +56,20 @@ function linePerformerGroups(segments: ILyricsDisplaySegment[], trailingPerforme
 }
 
 function segmentStyle(performers: PerformerDescriptor[]): { className: string; style?: PerformerStyle } {
-    if (performers.length === 1) {
+    const colored = performers.filter((performer) => performer.colors);
+    if (performers.length === 1 && colored.length === 1) {
+        const colors = colored[0].colors as NonNullable<PerformerDescriptor["colors"]>;
         return {
             className: "text-[var(--performer-light)] dark:text-[var(--performer-dark)]",
             style: {
-                "--performer-light": performers[0].colors.light,
-                "--performer-dark": performers[0].colors.dark,
+                "--performer-light": colors.light,
+                "--performer-dark": colors.dark,
             },
         };
     }
-    if (performers.length > 1) {
-        const light = `linear-gradient(90deg, ${performers.map((performer) => performer.colors.light).join(", ")})`;
-        const dark = `linear-gradient(90deg, ${performers.map((performer) => performer.colors.dark).join(", ")})`;
+    if (performers.length > 1 && colored.length === performers.length) {
+        const light = `linear-gradient(90deg, ${performers.map((performer) => performer.colors?.light).join(", ")})`;
+        const dark = `linear-gradient(90deg, ${performers.map((performer) => performer.colors?.dark).join(", ")})`;
         return {
             className: "bg-[image:var(--performer-gradient-light)] bg-clip-text text-transparent dark:bg-[image:var(--performer-gradient-dark)]",
             style: {
@@ -93,6 +100,7 @@ export default function LyricText({
     ruby,
     segments,
     trailingPerformerIds = [],
+    performers = [],
     showPerformerAvatars = true,
 }: LyricTextProps) {
     const { t } = useI18n();
@@ -102,15 +110,34 @@ export default function LyricText({
         ruby: ruby?.length ? ruby : [{ text }],
     }];
 
-    const performer = (id: number): PerformerDescriptor | null => {
-        const colors = getLyricsPerformerColors(id);
-        if (!colors) return null;
-        const external = getExternalLyricsPerformer(id);
+    const performer = (id: LyricsPerformerID): PerformerDescriptor | null => {
+        if (typeof id === "number") {
+            const colors = getLyricsPerformerColors(id);
+            if (!colors) return null;
+            const external = getExternalLyricsPerformer(id);
+            return {
+                id,
+                colors,
+                name: external?.name ?? getCharacterName(t, id, "short"),
+                avatarUrl: external?.avatarUrl ?? getCharacterIconUrl(id),
+            };
+        }
+        const source = performers.find((item) => item.performerId === id);
+        if (!source) return null;
+        const characterId = getLyricsCharacterIdBySourceId(id);
+        const external = getExternalLyricsPerformerBySourceId(id);
+        const sourceColor = source.color ?? external?.color;
+        const colors = sourceColor ? {
+            base: sourceColor,
+            light: adjustHexForContrast(sourceColor, "#ffffff"),
+            dark: adjustHexForContrast(sourceColor, "#0f172a"),
+        } : characterId ? getLyricsPerformerColors(characterId) : undefined;
+        const avatarUrl = characterId ? getCharacterIconUrl(characterId) : external?.avatarUrl;
         return {
             id,
-            colors,
-            name: external?.name ?? getCharacterName(t, id, "short"),
-            avatarUrl: external?.avatarUrl ?? getCharacterIconUrl(id),
+            name: source.name,
+            ...(avatarUrl ? { avatarUrl } : {}),
+            ...(colors ? { colors } : {}),
         };
     };
 
@@ -143,9 +170,9 @@ export default function LyricText({
                                 className={`inline-flex shrink-0 items-center ${group.length > 1 ? "-space-x-1.5" : ""}`}
                                 aria-label={names}
                             >
-                                {group.map((item) => (
+                                {group.map((item) => item.avatarUrl ? (
                                     <span
-                                        key={item.id}
+                                        key={String(item.id)}
                                         className="relative inline-flex h-6 w-6 shrink-0 overflow-hidden rounded-full border-2 border-white bg-slate-100 shadow-sm ring-1 ring-slate-900/10 dark:border-slate-900 dark:bg-slate-800 dark:ring-white/15"
                                         aria-hidden="true"
                                     >
@@ -157,6 +184,14 @@ export default function LyricText({
                                             className="object-cover"
                                             unoptimized
                                         />
+                                    </span>
+                                ) : (
+                                    <span
+                                        key={String(item.id)}
+                                        className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-1.5 text-[9px] font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                        aria-hidden="true"
+                                    >
+                                        {item.name.slice(0, 2)}
                                     </span>
                                 ))}
                             </span>

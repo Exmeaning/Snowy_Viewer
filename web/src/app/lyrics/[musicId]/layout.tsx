@@ -12,6 +12,12 @@ interface LyricsDetailLayoutProps {
 
 const Page = defineLyricsDetailClientPage(LyricsDetailClient);
 
+function parseCanonicalMusicId(value: string): number | null {
+    if (!/^[1-9]\d*$/.test(value)) return null;
+    const musicId = Number(value);
+    return Number.isSafeInteger(musicId) ? musicId : null;
+}
+
 async function hasAvailableLyrics(musicId: number): Promise<boolean> {
     if (!Number.isInteger(musicId) || musicId <= 0) return false;
     try {
@@ -25,11 +31,12 @@ async function hasAvailableLyrics(musicId: number): Promise<boolean> {
 
 export async function generateMetadata({ params }: Pick<LyricsDetailLayoutProps, "params">) {
     const { musicId } = await params;
-    if (!await hasAvailableLyrics(Number(musicId))) {
+    const canonicalMusicId = parseCanonicalMusicId(musicId);
+    if (canonicalMusicId === null || !await hasAvailableLyrics(canonicalMusicId)) {
         return createDetailFallbackMetadata("lyrics", `/lyrics/${musicId}`, "summary");
     }
 
-    return Page.generateMetadata({ params: Promise.resolve({ id: musicId }) });
+    return Page.generateMetadata({ params: Promise.resolve({ id: String(canonicalMusicId) }) });
 }
 
 export default function LyricsDetailLayout({ children }: LyricsDetailLayoutProps) {

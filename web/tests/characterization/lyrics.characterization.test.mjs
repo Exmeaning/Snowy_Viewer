@@ -76,6 +76,112 @@ const SEKAIPEDIA_ATTRIBUTION = {
   licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
 };
 
+function v3Line(id, japanese, performerIds) {
+  return {
+    id,
+    order: 0,
+    japanese,
+    "zh-CN": `${japanese}译文`,
+    "en-US": `${japanese} translation`,
+    segments: [{ text: japanese, performerIds, ruby: [{ text: japanese }] }],
+    trailingPerformerIds: [],
+  };
+}
+
+function v3Attributions(key, components) {
+  return components.map(component => ({
+    ...SEKAIPEDIA_ATTRIBUTION,
+    component: `renditions/${key}/${component}`,
+  }));
+}
+
+const fixtureV3 = {
+  version: 3,
+  musicId: 902,
+  revision: 337500,
+  updatedAt: "2026-08-07T12:00:00Z",
+  state: "complete",
+  renditions: [
+    {
+      key: "sekai",
+      kind: "sekai",
+      label: "SEKAI",
+      availableVersions: ["full", "game"],
+      performers: [{ performerId: "miku", name: "初音ミク", color: "#33CCBB" }],
+      full: { version: { kind: "sekai", label: "Full" }, lines: [v3Line("sekai-full-1", "SEKAI", ["miku"])] },
+      game: { version: { kind: "sekai", label: "Game" }, lines: [v3Line("sekai-game-1", "SEKAI", ["miku"])] },
+      relation: { kind: "exact_projection", fullRenditionKey: "sekai", lineIds: ["sekai-full-1"] },
+      sourceTabPaths: [["SEKAI", "Full"], ["SEKAI", "Game"]],
+      provenance: v3Attributions("sekai", ["full_text", "full_performer_segmentation", "full_ruby", "game_text", "game_performer_segmentation", "game_ruby", "relation", "version"]),
+      translationCredits: { translation: "译者", proofreading: "译者" },
+    },
+    {
+      key: "virtual-singer",
+      kind: "vocaloid",
+      label: "VIRTUAL SINGER",
+      availableVersions: ["game"],
+      performers: [{ performerId: "miku", name: "初音ミク", color: "#33CCBB" }],
+      game: { version: { kind: "vocaloid", label: "Game" }, lines: [v3Line("vs-game-1", "VIRTUAL", ["miku"])] },
+      relation: { kind: "none" },
+      sourceTabPaths: [["VIRTUAL SINGER", "Game"]],
+      provenance: v3Attributions("virtual-singer", ["game_text", "game_performer_segmentation", "game_ruby", "version"]),
+      translationCredits: { translation: "独立译者" },
+    },
+  ],
+};
+
+function strictV3ProjectionFixture() {
+  const detail = structuredClone(fixtureV3);
+  const rendition = detail.renditions[0];
+  const fullLines = [
+    {
+      id: "full-1",
+      order: 0,
+      japanese: "初音",
+      "zh-CN": "初音",
+      "en-US": "Hatsune",
+      segments: [{ text: "初音", performerIds: ["miku"], ruby: [{ text: "初音", reading: "はつね" }] }],
+      trailingPerformerIds: [],
+    },
+    {
+      id: "full-2",
+      order: 1,
+      japanese: "歌う",
+      "zh-CN": "歌唱",
+      "en-US": "Sing",
+      stanzaBreakBefore: true,
+      segments: [{ text: "歌う", performerIds: ["miku"], ruby: [{ text: "歌", reading: "うた" }, { text: "う" }] }],
+      trailingPerformerIds: ["miku"],
+    },
+  ];
+  const gameLine = structuredClone(fullLines[1]);
+  gameLine.id = "game-1";
+  gameLine.order = 0;
+  rendition.full.lines = fullLines;
+  rendition.game.lines = [gameLine];
+  rendition.relation.lineIds = ["full-2"];
+  detail.renditions = [rendition];
+  return detail;
+}
+
+function v3IndexForDetail(detail) {
+  const versions = new Set(detail.renditions.flatMap((rendition) => rendition.availableVersions));
+  const availableVersions = versions.has("full") && versions.has("game")
+    ? ["full", "game"]
+    : versions.has("full") ? ["full"] : ["game"];
+  return {
+    version: 3,
+    songs: [{
+      musicId: detail.musicId,
+      revision: detail.revision,
+      updatedAt: detail.updatedAt,
+      title: { "ja-JP": "新曲", "zh-CN": "新曲", "en-US": "New Song" },
+      state: detail.state,
+      availableVersions,
+    }],
+  };
+}
+
 function jsonResponse(value, overrides = {}) {
   return rawJsonResponse(JSON.stringify(value), overrides);
 }
@@ -124,8 +230,16 @@ async function importLyricText() {
     const useI18n = () => ({ t: (key) => key });
     const getCharacterName = (_t, id) => \`character-\${id}\`;
     const getCharacterIconUrl = (id) => \`/character-\${id}.webp\`;
+    const adjustHexForContrast = (color) => color;
     const getLyricsPerformerColors = (id) => dependencies.colors.get(id) ?? null;
     const getExternalLyricsPerformer = (id) => dependencies.external.get(id) ?? null;
+    const getExternalLyricsPerformerBySourceId = (sourceId) =>
+      [...dependencies.external.values()].find((item) => item.sourceId === sourceId) ?? null;
+    const getLyricsCharacterIdBySourceId = (sourceId) => {
+      const match = /^歌唱者-(\\d+)$/.exec(sourceId);
+      const characterId = match ? Number(match[1]) : null;
+      return characterId >= 1 && characterId <= 26 ? characterId : null;
+    };
   `;
   const transpiled = ts.transpileModule(`${prelude}\n${source}`, {
     compilerOptions: {
@@ -219,8 +333,8 @@ const isLyricsUnavailableError = (error) => error?.status === globalThis.__lyric
     ],
     ['import LyricsDetailClient from "./client";', 'const LyricsDetailClient = () => null;'],
     [
-      'return <Page params={Promise.resolve({ id: musicId })} />;',
-      'return Page({ params: Promise.resolve({ id: musicId }) });',
+      'return <Page params={Promise.resolve({ id: String(canonicalMusicId) })} />;',
+      'return Page({ params: Promise.resolve({ id: String(canonicalMusicId) }) });',
     ],
   ];
   for (const [from, to] of substitutions) {
@@ -280,9 +394,9 @@ async function importLyricsDetailClient(lyrics) {
     const React = dependencies.React;
     const { useEffect, useState } = React;
     const { Image, useParams, useSearchParams, ExternalLink, MainLayout, LyricText, Link, useBreadcrumb, useI18n, useTheme,
-      fetchMasterData, fetchLyricsDocument, getLyricsDisplayLines, getLyricsDisplaySegments,
+      fetchMasterData, fetchLyricsDocument, getLyricsDisplayLines, getLyricsDisplaySegments, getLyricsRendition, getLyricsRenditions,
       getLyricsTargetLocale, hasFullLyricsVersion, hasGameLyricsVersion, isLyricsUnavailableError, replaceCurrentUrlSearchParams,
-      getMusicJacketUrl, MUSIC_CATEGORY_COLORS } = dependencies;
+      getPublishedLyricsIndexEntry, getMusicJacketUrl, MUSIC_CATEGORY_COLORS } = dependencies;
   `;
   const transpiled = ts.transpileModule(`${prelude}\n${source}`, {
     compilerOptions: {
@@ -304,6 +418,7 @@ async function importLyricsDetailClient(lyrics) {
   const state = {
     error: null,
     document: null,
+    publication: null,
     musics: [],
     musicId: fixture.document.musicId,
     search: "",
@@ -332,12 +447,19 @@ async function importLyricsDetailClient(lyrics) {
     },
     useTheme: () => ({ assetSource: "main" }),
     fetchMasterData: async () => state.musics,
+    getPublishedLyricsIndexEntry: async (musicId) => {
+      if (state.publication) return state.publication;
+      const sourceIndex = state.document?.version === 2 ? fixtureV2.index : fixture.index;
+      return sourceIndex.songs.find((song) => song.musicId === musicId) ?? null;
+    },
     fetchLyricsDocument: async () => {
       if (state.error) throw state.error;
       return state.document;
     },
     getLyricsDisplayLines: lyrics.getLyricsDisplayLines,
     getLyricsDisplaySegments: lyrics.getLyricsDisplaySegments,
+    getLyricsRendition: lyrics.getLyricsRendition,
+    getLyricsRenditions: lyrics.getLyricsRenditions,
     getLyricsTargetLocale: lyrics.getLyricsTargetLocale,
     hasFullLyricsVersion: lyrics.hasFullLyricsVersion,
     hasGameLyricsVersion: lyrics.hasGameLyricsVersion,
@@ -1484,7 +1606,8 @@ test("lyrics publication lookup gates detail routes on the published index", asy
   assert.match(page, /fetchLyricsDocument/);
   assert.match(page, /isLyricsUnavailableError/);
   assert.match(layout, /createDetailFallbackMetadata\("lyrics"/);
-  assert.match(page, /if \(!await hasAvailableLyrics\(Number\(musicId\)\)\) notFound\(\)/);
+  assert.match(page, /canonicalMusicId === null \|\| !await hasAvailableLyrics\(canonicalMusicId\)/);
+  assert.match(page, /\^\[1-9\]\\d\*\$/);
 });
 
 test("lyrics detail SEO and page require an available detail while preserving upstream failures", async () => {
@@ -1535,6 +1658,21 @@ test("lyrics detail SEO and page require an available detail while preserving up
       ["document", fixture.document.musicId],
       ["detailPage", { id: String(fixture.document.musicId) }],
     ]);
+
+    for (const alias of ["010", "1e1", "+10", "0", "-1", String(Number.MAX_SAFE_INTEGER + SINGLE_INCREMENT)]) {
+      state.calls.length = 0;
+      assert.deepEqual(await layout.generateMetadata({ params: Promise.resolve({ musicId: alias }) }), {
+        kind: "fallback-metadata",
+        args: ["lyrics", `/lyrics/${alias}`, "summary"],
+      });
+      assert.deepEqual(state.calls, [["fallbackMetadata", "lyrics", `/lyrics/${alias}`, "summary"]], alias);
+      state.calls.length = 0;
+      await assert.rejects(
+        page.default({ params: Promise.resolve({ musicId: alias }) }),
+        (error) => error === notFoundError,
+      );
+      assert.deepEqual(state.calls, [["notFound"]], alias);
+    }
 
     state.error = { status: HTTP_SERVICE_UNAVAILABLE, message: "upstream unavailable" };
     state.calls.length = 0;
@@ -1794,6 +1932,322 @@ test("lyrics detail client defaults to Full and honors a shareable Game projecti
   }
 });
 
+test("Public Lyrics v3 keeps peer renditions separate and preserves an independent Game-only family", async () => {
+  const lyrics = await importLyrics();
+  const publication = {
+    musicId: fixtureV3.musicId,
+    revision: fixtureV3.revision,
+    updatedAt: fixtureV3.updatedAt,
+    title: { "ja-JP": "新曲", "zh-CN": "新曲", "en-US": "New Song" },
+    state: "complete",
+    availableVersions: ["full", "game"],
+  };
+  const music = { id: fixtureV3.musicId, title: "New Song", assetbundleName: "new-song", categories: [] };
+
+  const sekai = await renderLyricsClientRuntime(lyrics, (state) => {
+    state.musicId = fixtureV3.musicId;
+    state.publication = structuredClone(publication);
+    state.document = structuredClone(fixtureV3);
+    state.musics = [music];
+  });
+  assert.match(sekai.text, /SEKAI/);
+  assert.match(sekai.text, /VIRTUAL SINGER/);
+  assert.match(sekai.text, /page\.lyrics\.versionFull/);
+  assert.match(sekai.text, /page\.lyrics\.versionGame/);
+  assert.match(sekai.text, /page\.lyrics\.translationAndProofreading/);
+
+  const virtualSinger = await renderLyricsClientRuntime(lyrics, (state) => {
+    state.musicId = fixtureV3.musicId;
+    state.search = "rendition=virtual-singer&version=full";
+    state.publication = structuredClone(publication);
+    state.document = structuredClone(fixtureV3);
+    state.musics = [music];
+  });
+  assert.match(virtualSinger.text, /VIRTUAL/);
+  assert.match(virtualSinger.text, /独立译者/);
+  assert.match(virtualSinger.text, /page\.lyrics\.versionGame/);
+  assert.doesNotMatch(virtualSinger.text, /page\.lyrics\.versionFull/);
+  assert.equal(virtualSinger.state.replacedSearch, "rendition=virtual-singer");
+  assert.match(virtualSinger.text, new RegExp(String(SEKAIPEDIA_ATTRIBUTION.revisionId)));
+
+  const switched = await renderLyricsClientRuntime(lyrics, (state) => {
+    state.musicId = fixtureV3.musicId;
+    state.search = "keep=yes&rendition=sekai";
+    state.publication = structuredClone(publication);
+    state.document = structuredClone(fixtureV3);
+    state.musics = [music];
+  }, ({ container, window }) => {
+    const button = [...container.querySelectorAll("button")].find((item) => item.textContent === "VIRTUAL SINGER");
+    assert.ok(button);
+    button.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  });
+  assert.equal(switched.state.replacedSearch, "keep=yes&rendition=virtual-singer");
+});
+
+test("Public Lyrics v3 accepts a top-level Game-only detail without fabricating Full", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  try {
+    const detail = structuredClone(fixtureV3);
+    detail.musicId += SINGLE_INCREMENT;
+    detail.state = "game_only";
+    detail.renditions = [structuredClone(fixtureV3.renditions[1])];
+    const index = v3IndexForDetail(detail);
+    globalThis.fetch = async (url) => jsonResponse(
+      String(url).endsWith("/index.json") ? structuredClone(index) : structuredClone(detail),
+    );
+
+    const lyrics = await importLyrics();
+    const document = await lyrics.fetchLyricsDocument(detail.musicId);
+    assert.equal(document.state, "game_only");
+    assert.deepEqual(lyrics.getLyricsAvailableVersions(document), ["game"]);
+    assert.equal(document.renditions.length, 1);
+    assert.equal("full" in document.renditions[0], false);
+    assert.ok(document.renditions[0].game);
+
+    const rendered = await renderLyricsClientRuntime(lyrics, (state) => {
+      state.musicId = detail.musicId;
+      state.publication = structuredClone(index.songs[0]);
+      state.document = structuredClone(detail);
+      state.musics = [{ id: detail.musicId, title: "Game-only Song", assetbundleName: "game-only", categories: [] }];
+    });
+    assert.match(rendered.text, /page\.lyrics\.versionGame/);
+    assert.doesNotMatch(rendered.text, /page\.lyrics\.versionFull/);
+    assert.match(rendered.text, /VIRTUAL/);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
+test("Public Lyrics v3 rejects unknown fields at document, rendition, and line levels", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  try {
+    const cases = [
+      ["document", (detail) => { detail.privateUnknown = true; }],
+      ["rendition", (detail) => { detail.renditions[0].privateUnknown = true; }],
+      ["line", (detail) => { detail.renditions[0].game.lines[0].privateUnknown = true; }],
+    ];
+    for (const [label, mutate] of cases) {
+      const detail = structuredClone(fixtureV3);
+      mutate(detail);
+      const index = v3IndexForDetail(detail);
+      globalThis.fetch = async (url) => String(url).endsWith("/index.json")
+        ? jsonResponse(index)
+        : rawJsonResponse(JSON.stringify(detail));
+      const lyrics = await importLyrics();
+      await assert.rejects(lyrics.fetchLyricsDocument(detail.musicId), /Invalid lyrics document/, label);
+    }
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
+test("Public Lyrics v3 preserves source-exact ASCII and ideographic edge whitespace", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  try {
+    const exactJapanese = "  SEKAI\u3000";
+    const detail = structuredClone(fixtureV3);
+    const fullLine = detail.renditions[0].full.lines[0];
+    const gameLine = detail.renditions[0].game.lines[0];
+    for (const line of [fullLine, gameLine]) {
+      line.japanese = exactJapanese;
+      line.segments[0].text = exactJapanese;
+      line.segments[0].ruby = [{ text: exactJapanese }];
+    }
+    const publication = {
+      musicId: detail.musicId,
+      revision: detail.revision,
+      updatedAt: detail.updatedAt,
+      title: { "ja-JP": "新曲", "zh-CN": "新曲", "en-US": "New Song" },
+      state: "complete",
+      availableVersions: ["full", "game"],
+    };
+    globalThis.fetch = async (url) => jsonResponse(
+      String(url).endsWith("/index.json")
+        ? { version: 3, songs: [publication] }
+        : detail,
+    );
+
+    const lyrics = await importLyrics();
+    const document = await lyrics.fetchLyricsDocument(detail.musicId);
+    assert.equal(document.renditions[0].full.lines[0].japanese, exactJapanese);
+    assert.equal(document.renditions[0].full.lines[0].segments[0].text, exactJapanese);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
+test("Public Lyrics v3 exact projections preserve independent Game IDs and source facts", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  try {
+    const detail = strictV3ProjectionFixture();
+    const sourceGameLine = detail.renditions[0].game.lines[0];
+    sourceGameLine.segments = [
+      { text: "歌", performerIds: [], ruby: [{ text: "歌", reading: "うた" }] },
+      { text: "う", performerIds: ["miku"], ruby: [{ text: "う" }] },
+    ];
+    sourceGameLine.trailingPerformerIds = [];
+    delete sourceGameLine.stanzaBreakBefore;
+    const index = v3IndexForDetail(detail);
+    globalThis.fetch = async (url) => jsonResponse(
+      String(url).endsWith("/index.json") ? structuredClone(index) : structuredClone(detail),
+    );
+
+    const lyrics = await importLyrics();
+    const document = await lyrics.fetchLyricsDocument(detail.musicId);
+    const rendition = document.renditions[0];
+    const fullLine = rendition.full.lines[1];
+    const gameLine = rendition.game.lines[0];
+    assert.notEqual(gameLine.id, fullLine.id, "Game keeps its own canonical line ID");
+    assert.equal(gameLine.order, 0);
+    assert.equal(fullLine.order, 1);
+    assert.deepEqual(rendition.relation.lineIds, [fullLine.id]);
+    assert.deepEqual(lyrics.getLyricsDisplayLines(document, "game", rendition.key).map((line) => line.id), [gameLine.id]);
+    assert.equal(lyrics.getLyricsDisplayLines(document, "game", rendition.key)[0], gameLine);
+    assert.notEqual(lyrics.getLyricsDisplayLines(document, "game", rendition.key)[0], fullLine);
+    assert.equal(gameLine["zh-CN"], fullLine["zh-CN"], "exact-projection localization is canonicalized from Full");
+    assert.notDeepEqual(gameLine.segments, fullLine.segments, "Game source segmentation, performers, and ruby remain independently owned");
+    assert.notEqual(Boolean(gameLine.stanzaBreakBefore), Boolean(fullLine.stanzaBreakBefore));
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
+test("Public Lyrics v3 exact projections reject relation/text/localization drift but accept independent Game source facts", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  try {
+    const invalidCases = [
+      ["relation mapping", (detail) => { detail.renditions[0].relation.lineIds = ["full-1"]; }],
+      ["source text", (detail) => {
+        const line = detail.renditions[0].game.lines[0];
+        line.japanese = "読む";
+        line.segments = [{ text: "読む", performerIds: ["miku"], ruby: [{ text: "読", reading: "よ" }, { text: "む" }] }];
+      }],
+      ["Chinese localization", (detail) => { detail.renditions[0].game.lines[0]["zh-CN"] = "独立游戏译文"; }],
+      ["English localization", (detail) => { detail.renditions[0].game.lines[0]["en-US"] = "Independent Game translation"; }],
+    ];
+
+    for (const [label, mutate] of invalidCases) {
+      const detail = strictV3ProjectionFixture();
+      mutate(detail);
+      const index = v3IndexForDetail(detail);
+      globalThis.fetch = async (url) => jsonResponse(
+        String(url).endsWith("/index.json") ? structuredClone(index) : structuredClone(detail),
+      );
+      const lyrics = await importLyrics();
+      await assert.rejects(lyrics.fetchLyricsDocument(detail.musicId), /Invalid lyrics document/, label);
+    }
+
+    const independentSourceFactCases = [
+      ["segment boundaries", (detail) => {
+        detail.renditions[0].game.lines[0].segments = [
+          { text: "歌", performerIds: ["miku"], ruby: [{ text: "歌", reading: "うた" }] },
+          { text: "う", performerIds: ["miku"], ruby: [{ text: "う" }] },
+        ];
+      }],
+      ["ruby reading", (detail) => { detail.renditions[0].game.lines[0].segments[0].ruby[0].reading = "か"; }],
+      ["segment performers", (detail) => { detail.renditions[0].game.lines[0].segments[0].performerIds = []; }],
+      ["trailing performers", (detail) => { detail.renditions[0].game.lines[0].trailingPerformerIds = []; }],
+      ["stanza boundary", (detail) => { delete detail.renditions[0].game.lines[0].stanzaBreakBefore; }],
+    ];
+    for (const [label, mutate] of independentSourceFactCases) {
+      const detail = strictV3ProjectionFixture();
+      mutate(detail);
+      const index = v3IndexForDetail(detail);
+      globalThis.fetch = async (url) => jsonResponse(
+        String(url).endsWith("/index.json") ? structuredClone(index) : structuredClone(detail),
+      );
+      const lyrics = await importLyrics();
+      const document = await lyrics.fetchLyricsDocument(detail.musicId);
+      assert.equal(document.renditions[0].game.lines[0].id, "game-1", label);
+    }
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
+test("Public Lyrics v3 ruby requires kana readings only on nonnumeric Han bases and forbids romanization", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  try {
+    const detailForRuby = (text, ruby) => {
+      const detail = strictV3ProjectionFixture();
+      const rendition = detail.renditions[0];
+      delete rendition.game;
+      rendition.availableVersions = ["full"];
+      rendition.relation = { kind: "none" };
+      rendition.full.lines = [{
+        id: "full-ruby",
+        order: 0,
+        japanese: text,
+        "zh-CN": "译文",
+        "en-US": "Translation",
+        segments: [{ text, performerIds: ["miku"], ruby }],
+        trailingPerformerIds: [],
+      }];
+      return detail;
+    };
+    const fetchDetail = async (detail) => {
+      const index = v3IndexForDetail(detail);
+      globalThis.fetch = async (url) => jsonResponse(
+        String(url).endsWith("/index.json") ? structuredClone(index) : structuredClone(detail),
+      );
+      const lyrics = await importLyrics();
+      return lyrics.fetchLyricsDocument(detail.musicId);
+    };
+
+    for (const [label, text, ruby] of [
+      ["Han with kana", "歌", [{ text: "歌", reading: "うた" }]],
+      ["plain kana", "かな", [{ text: "かな" }]],
+      ["ideographic zero", "〇", [{ text: "〇" }]],
+    ]) {
+      const document = await fetchDetail(detailForRuby(text, ruby));
+      assert.equal(document.renditions[0].full.lines[0].japanese, text, label);
+    }
+
+    const invalidCases = [
+      ["Han without reading", "歌", [{ text: "歌" }], null],
+      ["reading on kana", "かな", [{ text: "かな", reading: "かな" }], null],
+      ["reading on ideographic zero", "〇", [{ text: "〇", reading: "れい" }], null],
+      ["romanized reading", "歌", [{ text: "歌", reading: "uta" }], null],
+      ["reading without kana", "歌", [{ text: "歌", reading: "ー" }], null],
+      ["mixed Han and kana base", "歌う", [{ text: "歌う", reading: "うたう" }], null],
+      ["romanization field", "歌", [{ text: "歌", reading: "うた" }], (detail) => {
+        detail.renditions[0].full.lines[0].romaji = "uta";
+      }],
+    ];
+    for (const [label, text, ruby, mutate] of invalidCases) {
+      const detail = detailForRuby(text, ruby);
+      mutate?.(detail);
+      await assert.rejects(fetchDetail(detail), /Invalid lyrics document/, label);
+    }
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
 test("lyrics credits merge identical values, split distinct values, localize empty credits, and order Sekaipedia source/license metadata", async () => {
   const labels = creditsPresentationFixture.labels["en-US"];
   const translations = {
@@ -1861,6 +2315,29 @@ test("lyrics credits merge identical values, split distinct values, localize emp
     [sekaipediaAttribution.revisionUrl, "https://creativecommons.org/licenses/by-sa/4.0/"],
   );
   sameDom.window.close();
+
+  const v3 = await renderLyricsClientRuntime(lyrics, (state) => {
+    const document = structuredClone(fixtureV3);
+    state.musicId = document.musicId;
+    state.document = document;
+    state.publication = v3IndexForDetail(document).songs[0];
+    state.translations = translations;
+    state.musics = [{
+      id: document.musicId,
+      title: "New Song",
+      assetbundleName: "new_song",
+      categories: [],
+    }];
+  });
+  const v3Dom = new JSDOM(v3.html);
+  const v3SourceHeading = [...v3Dom.window.document.querySelectorAll("h3")]
+    .find((item) => item.textContent?.trim() === labels.sourceLicenseTitle);
+  const v3SourceList = v3SourceHeading?.parentElement?.nextElementSibling;
+  assert.equal(v3SourceList?.querySelectorAll("li").length, 1,
+    "v3 provenance components collapse into one visible source card per source identity");
+  v3Dom.window.close();
+
+  assert.match(readWeb("src/app/lyrics/[musicId]/client.tsx"), /getLyricsDisplayAttributions/);
 
   const distinct = await renderCredits(creditsPresentationFixture.distinct);
   const distinctDom = new JSDOM(distinct.html);
@@ -2145,11 +2622,14 @@ test("lyric segments keep solid and gradient colors with deduplicated line-end a
   assert.match(clientSource, /<LyricText[\s\S]*segments=\{getLyricsDisplaySegments\(line\)\}[\s\S]*trailingPerformerIds=/);
   assert.deepEqual(fixtureV2.fullOnlyDocument.lines[0].segments[0].performerIds, []);
   assert.deepEqual(fixture.vocaloidOnlyDocument.lines[0].segments[0].performerIds, []);
-  assert.doesNotMatch(`${source}\n${lyricsSource}\n${clientSource}`, /\b(?:romaji|romanized|romanization|provenance)\b/i);
+  assert.doesNotMatch(`${source}\n${lyricsSource}\n${clientSource}`, /\b(?:romaji|romanized|romanization)\b/i);
 
   const performers = await importWebTypeScript("src/lib/lyrics-performers.ts");
   assert.deepEqual(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.id), [1001, 1007, 1009, 1011, 1018, 1019]);
   assert.equal(new Set(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.sourceId)).size, 6);
+  assert.equal(performers.getLyricsCharacterIdBySourceId("歌唱者-19"), 19);
+  assert.equal(performers.getLyricsCharacterIdBySourceId("歌唱者-25"), 25);
+  assert.equal(performers.getLyricsCharacterIdBySourceId("外部歌唱者-01"), null);
   assert.doesNotMatch(performerSource, /placeholder|initial|letter/i);
   for (const performer of performers.EXTERNAL_LYRICS_PERFORMERS) {
     assert.equal(performers.getExternalLyricsPerformer(performer.id), performer);
@@ -2160,12 +2640,14 @@ test("lyric segments keep solid and gradient colors with deduplicated line-end a
   globalThis.__lyricTextRuntimeTest = {
     React,
     colors: new Map([
+      [19, { base: "#CCAA88", light: "#745A42", dark: "#E7C5A3" }],
       [21, { base: "#33CCBB", light: "#17786F", dark: "#5EE6D5" }],
       [22, { base: "#FFCC11", light: "#7A5F00", dark: "#FFE066" }],
+      [25, { base: "#DD4444", light: "#8A2020", dark: "#FF8585" }],
       [1001, { base: "#70B85A", light: "#34712A", dark: "#93DF7A" }],
     ]),
     external: new Map([
-      [1001, { id: 1001, name: "GUMI", avatarUrl: "/images/lyrics-performers/gumi.webp" }],
+      [1001, { id: 1001, sourceId: "外部歌唱者-01", name: "GUMI", color: "#70B85A", avatarUrl: "/images/lyrics-performers/gumi.webp" }],
     ]),
   };
   try {
@@ -2234,12 +2716,42 @@ test("lyric segments keep solid and gradient colors with deduplicated line-end a
       "aria-only performer names must not become visible lyric text");
     groupedDom.window.close();
 
+    const v3CharacterHtml = renderToString(React.createElement(LyricText, {
+      text: "歌唱", performerIds: ["歌唱者-21"], ruby: [{ text: "歌唱" }],
+      performers: [{ performerId: "歌唱者-21", name: "初音ミク" }],
+    }));
+    assert.match(v3CharacterHtml, /--performer-light/);
+    assert.match(v3CharacterHtml, /aria-label="初音ミク"/);
+    assert.match(v3CharacterHtml, /src="\/character-21\.webp"/);
+    assert.doesNotMatch(v3CharacterHtml, />初音ミク</,
+      "v3 character names remain accessible labels instead of visible fallback pills");
+
+    const v3MixedCharacterHtml = renderToString(React.createElement(LyricText, {
+      text: "東雲 MEIKO", performerIds: ["歌唱者-19", "歌唱者-25"],
+      ruby: [{ text: "東雲 MEIKO" }],
+      performers: [
+        { performerId: "歌唱者-19", name: "東雲絵名" },
+        { performerId: "歌唱者-25", name: "MEIKO" },
+      ],
+    }));
+    assert.match(v3MixedCharacterHtml, /linear-gradient\(90deg/);
+    assert.match(v3MixedCharacterHtml, /aria-label="東雲絵名, MEIKO"/);
+    assert.equal((v3MixedCharacterHtml.match(/src="\/character-(?:19|25)\.webp"/g) ?? []).length, 2);
+
     const externalHtml = renderToString(React.createElement(LyricText, {
       text: "外部歌唱", performerIds: [1001], ruby: [{ text: "外部歌唱" }],
     }));
     assert.match(externalHtml, /aria-label="GUMI"/);
     assert.match(externalHtml, /\/images\/lyrics-performers\/gumi\.webp/);
     assert.doesNotMatch(externalHtml, /title=/);
+
+    const v3ExternalHtml = renderToString(React.createElement(LyricText, {
+      text: "外部歌唱", performerIds: ["外部歌唱者-01"], ruby: [{ text: "外部歌唱" }],
+      performers: [{ performerId: "外部歌唱者-01", name: "GUMI" }],
+    }));
+    assert.match(v3ExternalHtml, /--performer-light/);
+    assert.match(v3ExternalHtml, /aria-label="GUMI"/);
+    assert.match(v3ExternalHtml, /\/images\/lyrics-performers\/gumi\.webp/);
   } finally {
     delete globalThis.__lyricTextRuntimeTest;
   }
@@ -2283,13 +2795,13 @@ test("lyrics list and detail retain loading, empty, error, long-line, mobile, an
   assert.match(detail, /useSearchParams\(\)/);
   assert.match(detail, /query\.set\("version", "game"\)/);
   assert.match(detail, /query\.delete\("version"\)/);
-  assert.match(detail, /getLyricsDisplayLines\(lyrics, activeVersion\)/);
+  assert.match(detail, /getLyricsDisplayLines\(lyrics, activeVersion(?:, [^)]+)?\)/);
   assert.match(detail, /lyrics\.attribution/);
-  assert.match(detail, /lyrics\.attributions\.map/);
+  assert.match(detail, /attributions\.map/);
   assert.match(detail, /<ExternalLink/);
   assert.match(detail, /page\.lyrics\.translationFallback/);
   assert.match(detail, /page\.lyrics\.attribution/);
-  assert.doesNotMatch(detail, /romaji|romanized|romanization|provenance/i);
+  assert.doesNotMatch(detail, /romaji|romanized|romanization/i);
   assert.ok(fixture.document.attribution);
   assert.match(layout, /grid-cols-2 sm:grid-cols-3 md:grid-cols-4/);
   assert.match(musicItem, /hrefBase = "\/music"/);

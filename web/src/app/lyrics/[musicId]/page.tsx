@@ -6,6 +6,12 @@ import LyricsDetailClient from "./client";
 
 const Page = defineLyricsDetailClientPage(LyricsDetailClient);
 
+function parseCanonicalMusicId(value: string): number | null {
+    if (!/^[1-9]\d*$/.test(value)) return null;
+    const musicId = Number(value);
+    return Number.isSafeInteger(musicId) ? musicId : null;
+}
+
 async function hasAvailableLyrics(musicId: number): Promise<boolean> {
     if (!Number.isInteger(musicId) || musicId <= 0) return false;
     try {
@@ -19,6 +25,7 @@ async function hasAvailableLyrics(musicId: number): Promise<boolean> {
 
 export default async function LyricsDetailPage({ params }: { params: Promise<{ musicId: string }> }) {
     const { musicId } = await params;
-    if (!await hasAvailableLyrics(Number(musicId))) notFound();
-    return <Page params={Promise.resolve({ id: musicId })} />;
+    const canonicalMusicId = parseCanonicalMusicId(musicId);
+    if (canonicalMusicId === null || !await hasAvailableLyrics(canonicalMusicId)) notFound();
+    return <Page params={Promise.resolve({ id: String(canonicalMusicId) })} />;
 }

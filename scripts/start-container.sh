@@ -46,6 +46,20 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 143' INT TERM
 
+if [ ! -s /app/public-lyrics-base-url-build-contract ]; then
+    echo "Public lyrics build URL contract is missing" >&2
+    exit 1
+fi
+BUILT_PUBLIC_LYRICS_BASE_URL="$(cat /app/public-lyrics-base-url-build-contract)"
+if [ -z "${NEXT_PUBLIC_LYRICS_BASE_URL:-}" ]; then
+    echo "NEXT_PUBLIC_LYRICS_BASE_URL is not configured at runtime" >&2
+    exit 1
+fi
+if [ "$NEXT_PUBLIC_LYRICS_BASE_URL" != "$BUILT_PUBLIC_LYRICS_BASE_URL" ]; then
+    echo "NEXT_PUBLIC_LYRICS_BASE_URL does not match the build-time public lyrics source" >&2
+    exit 1
+fi
+
 ARCHIVE_DIR="${STATIC_ARCHIVE_DIR:-/app/data/static_archive}"
 MAX_DAYS="${STATIC_CACHE_MAX_DAYS:-30}"
 case "$MAX_DAYS" in

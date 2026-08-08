@@ -31,7 +31,6 @@ import {
 import {
     fetchPublicLyricsIndex,
     hasPublicLyricsDetail,
-    PUBLIC_LYRICS_SCHEMA_VERSION,
     validateConfiguredPublicLyricsSource,
     validatePublicLyricsIndex,
 } from './lib/public-lyrics.mjs';
@@ -391,7 +390,8 @@ const routeSources = [
     {
         label: 'publishedLyrics',
         filename: 'public lyrics index',
-        fallback: { version: PUBLIC_LYRICS_SCHEMA_VERSION, songs: [] },
+        // v3 forbids an empty catalog; retain the valid legacy empty fallback for fail-closed recovery.
+        fallback: { version: 2, songs: [] },
         validate: validatePublicLyricsIndex,
         fetch: fetchPublicLyricsIndex,
         groups: [
