@@ -1,6 +1,7 @@
 // Breadcrumb navigation data
 
 import { stripRouteLocale } from "@/lib/localized-path";
+import { LYRICS_ENTRY_VISIBLE } from "@/lib/lyrics-visibility";
 
 export interface NavItemData {
     href: string;
@@ -11,7 +12,7 @@ export interface NavGroupData {
     items: NavItemData[];
 }
 
-export const navigationGroups: NavGroupData[] = [
+const allNavigationGroups: NavGroupData[] = [
     {
         href: "/breadcrumb-database",
         items: [
@@ -95,6 +96,13 @@ export const navigationGroups: NavGroupData[] = [
     },
 ];
 
+export const navigationGroups: NavGroupData[] = allNavigationGroups.map((group) => ({
+    ...group,
+    items: LYRICS_ENTRY_VISIBLE
+        ? group.items
+        : group.items.filter((item) => item.href !== "/lyrics"),
+}));
+
 /**
  * Finds the best matching navigation item and its group for a pathname.
  */
@@ -104,7 +112,7 @@ export function findNavMatch(pathname: string): { group: NavGroupData; item: Nav
         ? routePathname.slice(0, -1)
         : routePathname;
     let bestMatch: { group: NavGroupData; item: NavItemData } | null = null;
-    for (const group of navigationGroups) {
+    for (const group of allNavigationGroups) {
         for (const item of group.items) {
             // Keep the longest prefix match so nested routes choose the most specific item.
             if (normalized === item.href || normalized.startsWith(item.href + "/")) {
@@ -118,7 +126,19 @@ export function findNavMatch(pathname: string): { group: NavGroupData; item: Nav
             }
         }
     }
-    return bestMatch;
+    if (!bestMatch) return null;
+
+    // Hidden routes retain their own breadcrumb when opened directly, but never
+    // appear in breadcrumb dropdowns while the entry-point flag is disabled.
+    return {
+        item: bestMatch.item,
+        group: {
+            ...bestMatch.group,
+            items: bestMatch.group.items.filter((item) =>
+                LYRICS_ENTRY_VISIBLE || item.href !== "/lyrics" || item.href === bestMatch.item.href
+            ),
+        },
+    };
 }
 
 /**
@@ -145,7 +165,7 @@ export interface SearchableNavItem {
     keywords: string[];
 }
 
-export const searchableNavItems: SearchableNavItem[] = [
+const allSearchableNavItems: SearchableNavItem[] = [
     { href: "/", group: "navigation", keywords: ["home", "index"] },
 
     { href: "/cards", group: "database", keywords: ["cards", "card"] },
@@ -192,6 +212,10 @@ export const searchableNavItems: SearchableNavItem[] = [
     { href: "/my-materials", group: "personal", keywords: ["my materials", "materials", "resources", "mysekai materials"] },
     { href: "/about", group: "personal", keywords: ["about", "info"] },
 ];
+
+export const searchableNavItems: SearchableNavItem[] = LYRICS_ENTRY_VISIBLE
+    ? allSearchableNavItems
+    : allSearchableNavItems.filter((item) => item.href !== "/lyrics");
 
 export const SEARCH_GROUP_ROUTES: Record<string, string> = {
     events: "/events",

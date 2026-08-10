@@ -18,6 +18,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import {
     NAV_ITEM_LABEL_KEYS,
 } from "@/lib/navigation";
+import { LYRICS_ENTRY_VISIBLE } from "@/lib/lyrics-visibility";
 import {
     getShortcutById,
     isEditableEventTarget,
@@ -79,7 +80,7 @@ const navigationGroups: NavGroup[] = [
                     </svg>
                 ),
             },
-            {
+            ...(LYRICS_ENTRY_VISIBLE ? [{
                 id: "lyrics",
                 href: "/lyrics",
                 icon: (
@@ -87,7 +88,7 @@ const navigationGroups: NavGroup[] = [
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 18V5l11-2v13M9 9l11-2M9 18a3 3 0 11-3-3h3v3zm11-2a3 3 0 11-3-3h3v3z" />
                     </svg>
                 ),
-            },
+            }] : []),
             {
                 id: "musicMeta",
                 href: "/music/meta",

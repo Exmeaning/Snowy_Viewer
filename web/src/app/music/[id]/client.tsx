@@ -29,6 +29,7 @@ import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
 import { getPublishedLyricsIndexEntry, hasLyricsDetail } from "@/lib/lyrics";
+import { LYRICS_ENTRY_VISIBLE } from "@/lib/lyrics-visibility";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import { useI18n } from "@/contexts/I18nContext";
 
@@ -144,9 +145,11 @@ export default function MusicDetailPage() {
 
     // Lyrics availability is optional and must never block the music detail page.
     useEffect(() => {
+        setHasPublishedLyrics(false);
+        if (!LYRICS_ENTRY_VISIBLE) return;
+
         const controller = new AbortController();
         let active = true;
-        setHasPublishedLyrics(false);
 
         getPublishedLyricsIndexEntry(musicId, controller.signal)
             .then((entry) => {
@@ -433,7 +436,7 @@ export default function MusicDetailPage() {
                                     translationClassName="block text-lg font-medium text-slate-400 mt-1"
                                 />
                             </h1>
-                            {hasPublishedLyrics && (
+                            {LYRICS_ENTRY_VISIBLE && hasPublishedLyrics && (
                                 <Link
                                     href={`/lyrics/${music.id}`}
                                     className="-translate-y-1 whitespace-nowrap rounded-md border border-sky-400/35 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-bold text-sky-500 transition-colors hover:border-sky-400/60 hover:bg-sky-500/15 hover:text-sky-400 sm:text-xs"

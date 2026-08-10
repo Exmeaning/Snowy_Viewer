@@ -144,6 +144,7 @@ async function getComponentHarness() {
       useCardThumbnail: () => null,
       useTheme: () => ({ assetSource: "main" }),
       NAV_ITEM_LABEL_KEYS: {},
+      LYRICS_ENTRY_VISIBLE: false,
       getShortcutById: (id) => ({ combos: shortcutCombos[id] ?? [] }),
       isEditableEventTarget: () => false,
       isKeyboardEventComposing: () => false,
@@ -160,7 +161,7 @@ async function getComponentHarness() {
         usePathname, useRouter, localizePathForBrowser, stripRouteLocale,
         ACCOUNTS_CHANGED_EVENT, getActiveAccount, getCharacterIconUrl,
         getTopCharacterId, getCachedAvatarUrl, useCardThumbnail, useTheme,
-        useI18n, NAV_ITEM_LABEL_KEYS, getShortcutById, isEditableEventTarget,
+        useI18n, NAV_ITEM_LABEL_KEYS, LYRICS_ENTRY_VISIBLE, getShortcutById, isEditableEventTarget,
         isKeyboardEventComposing, matchesShortcutCombo, parseShortcutCombos,
       } = dependencies;
     `;
