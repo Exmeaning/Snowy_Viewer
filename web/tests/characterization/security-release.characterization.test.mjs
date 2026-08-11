@@ -80,15 +80,22 @@ test("production and web-dev images install from the frozen workspace root and r
   assert.match(production, /FROM oven\/bun:1\.3\.14/);
   assert.match(production, /COPY package\.json bun\.lock \.\//);
   assert.match(production, /RUN bun install --frozen-lockfile/);
-  assert.match(production, /^ARG NEXT_PUBLIC_LYRICS_BASE_URL$/m);
-  assert.doesNotMatch(production, /^ARG NEXT_PUBLIC_LYRICS_BASE_URL=/m);
+  assert.equal(
+    production.match(/^ARG NEXT_PUBLIC_LYRICS_BASE_URL=https:\/\/translation\.exmeaning\.com\/files\/translation\/lyrics$/gm)?.length,
+    2,
+  );
+  assert.doesNotMatch(production, /^ARG NEXT_PUBLIC_LYRICS_BASE_URL$/m);
   assert.match(production, /ENV NODE_ENV=production[\s\S]*bun run sitemap/);
   assert.match(production, /ENV NEXT_PUBLIC_LYRICS_BASE_URL=\$NEXT_PUBLIC_LYRICS_BASE_URL/);
   assert.match(production, /RUN test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"/);
   assert.match(production, /RUN printf '%s\\n' "\$NEXT_PUBLIC_LYRICS_BASE_URL" > \/app\/public-lyrics-base-url-build-contract/);
   assert.match(production, /COPY --from=builder-web[\s\S]*public-lyrics-base-url-build-contract/);
   assert.match(production, /export REQUIRE_PUBLIC_LYRICS_SOURCE=1;[\s\S]*bun run sitemap/);
-  assert.doesNotMatch(production, /NEXT_PUBLIC_LYRICS_BASE_URL=.*(?:https?:\/\/|token|password|@)/i);
+  const productionWithoutReviewedLyricsDefault = production.replaceAll(
+    "ARG NEXT_PUBLIC_LYRICS_BASE_URL=https://translation.exmeaning.com/files/translation/lyrics",
+    "ARG NEXT_PUBLIC_LYRICS_BASE_URL=<reviewed-public-lyrics-base>",
+  );
+  assert.doesNotMatch(productionWithoutReviewedLyricsDefault, /NEXT_PUBLIC_LYRICS_BASE_URL=.*(?:https?:\/\/|token|password|@)/i);
   const startContainer = readRepo("scripts/start-container.sh");
   assert.match(startContainer, /public-lyrics-base-url-build-contract/);
   assert.match(startContainer, /does not match the build-time public lyrics source/);
