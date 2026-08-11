@@ -11,7 +11,6 @@ import Link from "@/components/LocalizedLink";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { fetchMasterData } from "@/lib/fetch";
 import {
     fetchLyricsDocument,
     getLyricsDisplayLines,
@@ -29,11 +28,10 @@ import {
     type ILyricsV3ComponentAttribution,
     type LyricsVersion,
 } from "@/lib/lyrics";
+import { fetchLyricsMusicById } from "@/lib/lyrics-music-source";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
-import type { IMusicInfo, MusicCategoryType } from "@/types/music";
+import type { IMusicInfo } from "@/types/music";
 import { getMusicJacketUrl, MUSIC_CATEGORY_COLORS } from "@/types/music";
-
-type RawMusicCategory = MusicCategoryType | { musicCategoryName: MusicCategoryType };
 type LyricsDisplayAttribution = ILyricsAttribution | ILyricsV3ComponentAttribution;
 
 function getLyricsDisplayAttributions(attributions: readonly LyricsDisplayAttribution[]): LyricsDisplayAttribution[] {
@@ -77,33 +75,22 @@ export default function LyricsDetailClient() {
         if (!hasValidMusicId) return;
         let cancelled = false;
         Promise.all([
-            fetchMasterData<IMusicInfo[]>("musics.json"),
+            fetchLyricsMusicById(musicId),
             getPublishedLyricsIndexEntry(musicId),
             fetchLyricsDocument(musicId).then(
                 (document) => ({ document, error: null as unknown }),
                 (error: unknown) => ({ document: null, error }),
             ),
         ])
-            .then(([musics, publication, detail]) => {
+            .then(([music, publication, detail]) => {
                 if (cancelled) return;
-                const foundMusic = musics.find((item) => item.id === musicId) ?? null;
-                const normalizedMusic = foundMusic
-                    ? {
-                        ...foundMusic,
-                        categories: ((foundMusic.categories ?? []) as unknown as RawMusicCategory[]).map((category) =>
-                            typeof category === "object" && category !== null && "musicCategoryName" in category
-                                ? category.musicCategoryName
-                                : category
-                        ),
-                    }
-                    : null;
                 const errorKind = detail.error
                     ? isLyricsUnavailableError(detail.error) ? publication ? "unavailable" : "not-found" : "failed"
                     : null;
                 setResult({
                     musicId,
                     locale,
-                    music: normalizedMusic,
+                    music,
                     publication,
                     lyrics: detail.document,
                     errorKind,

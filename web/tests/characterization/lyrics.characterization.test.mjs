@@ -394,7 +394,7 @@ async function importLyricsDetailClient(lyrics) {
     const React = dependencies.React;
     const { useEffect, useState } = React;
     const { Image, useParams, useSearchParams, ExternalLink, MainLayout, LyricText, Link, useBreadcrumb, useI18n, useTheme,
-      fetchMasterData, fetchLyricsDocument, getLyricsDisplayLines, getLyricsDisplaySegments, getLyricsRendition, getLyricsRenditions,
+      fetchLyricsMusicById, fetchLyricsDocument, getLyricsDisplayLines, getLyricsDisplaySegments, getLyricsRendition, getLyricsRenditions,
       getLyricsTargetLocale, hasFullLyricsVersion, hasGameLyricsVersion, isLyricsUnavailableError, replaceCurrentUrlSearchParams,
       getPublishedLyricsIndexEntry, getMusicJacketUrl, MUSIC_CATEGORY_COLORS } = dependencies;
   `;
@@ -446,7 +446,7 @@ async function importLyricsDetailClient(lyrics) {
       return { locale: "en-US", t: translate, formatDate: (value) => String(value) };
     },
     useTheme: () => ({ assetSource: "main" }),
-    fetchMasterData: async () => state.musics,
+    fetchLyricsMusicById: async (musicId) => state.musics.find((music) => music.id === musicId) ?? null,
     getPublishedLyricsIndexEntry: async (musicId) => {
       if (state.publication) return state.publication;
       const sourceIndex = state.document?.version === 2 ? fixtureV2.index : fixture.index;
