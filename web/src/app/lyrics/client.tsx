@@ -18,10 +18,9 @@ import {
     hasLyricsDetail,
     type ILyricsIndexEntry,
 } from "@/lib/lyrics";
+import { fetchLyricsMusicCatalog } from "@/lib/lyrics-music-source";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import type { IMusicInfo, IMusicTagInfo, MusicCategoryType, MusicTagType } from "@/types/music";
-
-type RawMusicCategory = MusicCategoryType | { musicCategoryName: MusicCategoryType };
 
 function LyricsContent() {
     const searchParams = useSearchParams();
@@ -57,23 +56,19 @@ function LyricsContent() {
 
     useEffect(() => {
         let cancelled = false;
+        const indexRequest = fetchLyricsIndex();
         Promise.all([
-            fetchLyricsIndex(),
-            fetchMasterData<IMusicInfo[]>("musics.json"),
+            indexRequest,
+            indexRequest.then((index) => fetchLyricsMusicCatalog(new Set(
+                index.songs.filter(hasLyricsDetail).map((item) => item.musicId),
+            ))),
             fetchMasterData<IMusicTagInfo[]>("musicTags.json"),
             fetchMasterData<{ musicId: number }[]>("eventMusics.json"),
         ])
             .then(([index, musicData, tags, eventMusics]) => {
                 if (cancelled) return;
                 setLyricsByMusicId(new Map(index.songs.map((item) => [item.musicId, item])));
-                setMusics(musicData.map((music) => ({
-                    ...music,
-                    categories: (music.categories as unknown as RawMusicCategory[]).map((category) =>
-                        typeof category === "object" && category !== null && "musicCategoryName" in category
-                            ? category.musicCategoryName
-                            : category
-                    ),
-                })));
+                setMusics(musicData);
                 setMusicTags(tags);
                 setEventMusicIds(new Set(eventMusics.map((item) => item.musicId)));
                 setError(null);
