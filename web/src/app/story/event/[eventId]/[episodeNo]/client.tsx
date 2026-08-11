@@ -14,53 +14,71 @@ import { loadEventStoryTranslation, IEventStoryTranslation } from "@/lib/eventSt
 import { loadTranslations } from "@/lib/translations";
 import { mergeStoryTitle } from "@/lib/storyLoader";
 import { useI18n } from "@/contexts/I18nContext";
+import type { UiLocale } from "@/lib/i18n";
 
 export default function StoryEventReaderClient() {
     const params = useParams();
     const { assetSource, serverSource, useLLMTranslation } = useTheme();
-    const { t } = useI18n();
+    const { locale, t } = useI18n();
     const eventId = parseInt(params.eventId as string);
     const episodeNo = parseInt(params.episodeNo as string);
 
     const [eventStory, setEventStory] = useState<IEventStory | null>(null);
     const [eventInfo, setEventInfo] = useState<IEventInfo | null>(null);
-    const [translation, setTranslation] = useState<IEventStoryTranslation | null>(null);
-    const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
+    const [translationState, setTranslationState] = useState<{
+        eventId: number;
+        episodeNo: number;
+        locale: UiLocale;
+        translation: IEventStoryTranslation | null;
+        translatedTitle: string | null;
+    } | null>(null);
     const [masterLoading, setMasterLoading] = useState(true);
+
+    const activeTranslation = translationState?.eventId === eventId
+        && translationState.episodeNo === episodeNo
+        && translationState.locale === locale
+        ? translationState
+        : null;
+    const translation = activeTranslation?.translation ?? null;
+    const translatedTitle = activeTranslation?.translatedTitle ?? null;
 
     // Load master data + translation
     useEffect(() => {
         if (!eventId || !episodeNo) return;
+        let cancelled = false;
         async function load() {
             setMasterLoading(true);
             try {
                 const [storiesData, eventsData, translationsData, trans] = await Promise.all([
                     fetchMasterData<IEventStory[]>("eventStories.json"),
                     fetchMasterData<IEventInfo[]>("events.json"),
-                    loadTranslations(),
-                    serverSource === "jp" ? loadEventStoryTranslation(eventId) : Promise.resolve(null),
+                    loadTranslations(locale),
+                    serverSource !== "cn" ? loadEventStoryTranslation(eventId, locale) : Promise.resolve(null),
                 ]);
+                if (cancelled) return;
                 const story = storiesData.find(s => s.eventId === eventId) ?? null;
                 setEventStory(story);
                 const event = eventsData.find(e => e.id === eventId) ?? null;
                 setEventInfo(event);
-                setTranslation(trans);
 
+                let nextTranslatedTitle: string | null = null;
                 if (story) {
                     const ep = story.eventStoryEpisodes.find(e => e.episodeNo === episodeNo);
                     if (ep) {
                         const title = mergeStoryTitle(ep.title, trans, episodeNo);
-                        setTranslatedTitle(title);
+                        nextTranslatedTitle = title;
                         const eventName = translationsData?.events?.name?.[event?.name ?? ""] ?? event?.name ?? t("page.story.event.fallbackEventName", { id: eventId });
                         document.title = `${title} - ${eventName} - Moesekai`;
                     }
                 }
+                setTranslationState({ eventId, episodeNo, locale, translation: trans, translatedTitle: nextTranslatedTitle });
             } finally {
-                setMasterLoading(false);
+                if (!cancelled) setMasterLoading(false);
             }
         }
         load();
-    }, [eventId, episodeNo, serverSource, t]);
+        return () => { cancelled = true; };
+    }, [eventId, episodeNo, locale, serverSource, t]);
 
     const episode = eventStory?.eventStoryEpisodes.find(ep => ep.episodeNo === episodeNo);
     const prevEpisode = eventStory?.eventStoryEpisodes.find(ep => ep.episodeNo === episodeNo - 1);
@@ -74,6 +92,7 @@ export default function StoryEventReaderClient() {
         } : null,
         translation: useLLMTranslation ? translation : null,
         episodeNo,
+        translationLocale: locale,
         fallbackErrorMessage: t("common.state.loadingFailed"),
     });
 

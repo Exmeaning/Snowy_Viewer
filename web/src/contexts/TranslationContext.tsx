@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useTheme } from "./ThemeContext";
+import { useI18n } from "./I18nContext";
 import { loadTranslations, getTranslation, hasTranslation, TranslationData, TranslationMap } from "@/lib/translations";
 
 interface TranslationContextType {
@@ -20,16 +21,19 @@ interface TranslationProviderProps {
 
 export function TranslationProvider({ children }: TranslationProviderProps) {
     const { useLLMTranslation } = useTheme();
+    const { locale } = useI18n();
     const [translations, setTranslations] = useState<TranslationData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     // Load translations on mount
     useEffect(() => {
         let mounted = true;
+        setTranslations(null);
+        setIsLoading(true);
 
         async function load() {
             try {
-                const data = await loadTranslations();
+                const data = await loadTranslations(locale);
                 if (mounted) {
                     setTranslations(data);
                 }
@@ -47,7 +51,7 @@ export function TranslationProvider({ children }: TranslationProviderProps) {
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [locale]);
 
     // Translation helper function
     const t = useCallback((category: keyof TranslationData, subCategory: string, original: string): string | null => {

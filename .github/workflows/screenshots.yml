@@ -6,13 +6,18 @@
 #   - Push to main (data/master_version.txt): Incremental update on master data change
 #   - Manual dispatch: Full regeneration or incremental update available manually
 #
-# Saves screenshots to: Exmeaning/Snowy_Viewer_Hub repository
+# Saves screenshots to the repository selected by SCREENSHOT_HUB_REPOSITORY.
 #
-# Required Secrets:
-#   - HUB_DEPLOY_TOKEN: GitHub PAT with repo scope for Snowy_Viewer_Hub
+# Required repository variable:
+#   - SCREENSHOT_HUB_REPOSITORY: exact owner/repository destination
+# Required secret:
+#   - HUB_DEPLOY_TOKEN: fine-grained token with Contents read/write for only that repository
 # ============================================================
 
 name: Generate Screenshots
+
+permissions:
+  contents: read
 
 on:
   push:
@@ -28,8 +33,7 @@ on:
         type: boolean
 
 env:
-  REGISTRY: ghcr.io
-  HUB_REPO: Exmeaning/Snowy_Viewer_Hub
+  HUB_REPO: ${{ vars.SCREENSHOT_HUB_REPOSITORY }}
   SCREENSHOTS_PATH: screenshots
 
 jobs:
@@ -39,15 +43,29 @@ jobs:
 
     steps:
       - name: Checkout main repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
-      - name: Checkout Hub repo
-        run: git clone --depth 1 https://x-access-token:${{ secrets.HUB_DEPLOY_TOKEN }}@github.com/${{ env.HUB_REPO }}.git hub-repo
+      - name: Validate screenshot publication destination
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$HUB_REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]
+
+      - name: Checkout screenshot repository without URL credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: ${{ env.HUB_REPO }}
+          token: ${{ secrets.HUB_DEPLOY_TOKEN }}
+          path: hub-repo
+          fetch-depth: 1
+          persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install system dependencies for Puppeteer
         run: |
@@ -60,7 +78,10 @@ jobs:
           npm ci
 
       - name: Build and start web app
+        env:
+          NEXT_PUBLIC_LYRICS_BASE_URL: ${{ vars.NEXT_PUBLIC_LYRICS_BASE_URL }}
         run: |
+          test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
           cd web
           npm run build
           npm run start &
@@ -97,13 +118,13 @@ jobs:
 
       - name: Commit screenshots to Hub repo
         run: |
+          set -euo pipefail
           cd hub-repo
           
           # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.HUB_DEPLOY_TOKEN }}@github.com/${{ env.HUB_REPO }}.git
-          
+
           # Copy new screenshots
           rm -rf ${{ env.SCREENSHOTS_PATH }}
           mkdir -p ${{ env.SCREENSHOTS_PATH }}
@@ -122,9 +143,27 @@ jobs:
             COMMIT_MSG="🖼️ Full screenshot regeneration"
           fi
           COMMIT_MSG="$COMMIT_MSG - $(date -u '+%Y-%m-%d %H:%M UTC')"
-          
+
           git commit -m "$COMMIT_MSG"
-          git push
+
+      - name: Push screenshots with process-scoped authentication
+        env:
+          HUB_DEPLOY_TOKEN: ${{ secrets.HUB_DEPLOY_TOKEN }}
+        run: |
+          set -euo pipefail
+          askpass="$RUNNER_TEMP/screenshot-git-askpass-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.sh"
+          trap 'rm -f "$askpass"' EXIT
+          cat > "$askpass" <<'SH'
+          #!/bin/sh
+          case "$1" in
+            *Username*) printf '%s\n' x-access-token ;;
+            *Password*) printf '%s\n' "$HUB_DEPLOY_TOKEN" ;;
+            *) exit 1 ;;
+          esac
+          SH
+          chmod 0700 "$askpass"
+          cd hub-repo
+          GIT_ASKPASS="$askpass" GIT_TERMINAL_PROMPT=0 git push origin HEAD
 
       - name: Summary
         run: |

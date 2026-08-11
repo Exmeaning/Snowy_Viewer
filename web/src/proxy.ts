@@ -12,11 +12,13 @@ import {
     ORIGIN_HTML_CACHE_HEADER,
     getPublicPageCachePolicy,
 } from "@/lib/page-cache-policy";
+import { getPublicRequestOrigin } from "@/lib/site-origin";
 
 export const ROUTE_LOCALE_HEADER = "x-moesekai-route-locale";
 export const PUBLIC_PATH_HEADER = "x-moesekai-public-path";
 const INTERNAL_LOCALE_REWRITE_HEADER = "x-moesekai-internal-locale-rewrite";
-const INTERNAL_NEXT_ORIGIN = process.env.INTERNAL_NEXT_ORIGIN;
+const INTERNAL_NEXT_ORIGIN = process.env.INTERNAL_NEXT_ORIGIN
+    || `http://127.0.0.1:${process.env.PORT || "3000"}`;
 const QUERY_PAGE_ROBOTS_POLICY = "noindex, follow";
 const QUERY_PAGE_CACHE_POLICY = "private, no-store";
 
@@ -36,25 +38,8 @@ function preferredRouteLocale(request: NextRequest) {
     return acceptedLocale ? uiLocaleToRouteLocale(acceptedLocale) : DEFAULT_ROUTE_LOCALE;
 }
 
-function firstForwardedValue(value: string | null): string | null {
-    const first = value?.split(",", 1)[0]?.trim();
-    return first || null;
-}
-
 function publicRedirectUrl(request: NextRequest, pathname: string): URL {
-    const host = firstForwardedValue(request.headers.get("x-forwarded-host"))
-        ?? request.headers.get("host")
-        ?? request.nextUrl.host;
-    const protocol = firstForwardedValue(request.headers.get("x-forwarded-proto"))
-        ?? request.nextUrl.protocol.replace(/:$/, "");
-
-    try {
-        return new URL(`${pathname}${request.nextUrl.search}`, `${protocol}://${host}`);
-    } catch {
-        const fallback = request.nextUrl.clone();
-        fallback.pathname = pathname;
-        return fallback;
-    }
+    return new URL(`${pathname}${request.nextUrl.search}`, getPublicRequestOrigin(request.nextUrl.origin));
 }
 
 export function proxy(request: NextRequest) {
@@ -75,12 +60,10 @@ export function proxy(request: NextRequest) {
     if (candidate && isRouteLocale(candidate)) {
         const routeLocale = candidate;
         const internalPath = `/${segments.slice(1).join("/")}${pathname.endsWith("/") && segments.length > 1 ? "/" : ""}`;
-        // The public request is HTTPS, but the co-located standalone Next.js
-        // server listens on plain HTTP. Building this URL from request.nextUrl
-        // would inherit x-forwarded-proto=https and make Next proxy TLS to its
-        // own HTTP port, resulting in EPROTO "wrong version number" errors.
-        const internalOrigin = INTERNAL_NEXT_ORIGIN || `http://${request.nextUrl.host}`;
-        const rewriteUrl = new URL(internalPath === "//" ? "/" : internalPath, internalOrigin);
+        // The public request can be HTTPS while the co-located standalone server
+        // listens on loopback HTTP. Use an explicit trusted internal origin rather
+        // than inheriting the public request scheme or reflecting its Host header.
+        const rewriteUrl = new URL(internalPath === "//" ? "/" : internalPath, INTERNAL_NEXT_ORIGIN);
         rewriteUrl.search = request.nextUrl.search;
 
         const requestHeaders = new Headers(request.headers);
@@ -122,9 +105,9 @@ export function proxy(request: NextRequest) {
         ? `/${locale}/`
         : `/${locale}${pathname.startsWith("/") ? pathname : `/${pathname}`}`;
 
-    // Behind the Go reverse proxy, request.nextUrl contains the internal
-    // Next.js host/port. Build the absolute redirect from forwarded/public
-    // request headers so Location never leaks http://localhost:3000.
+    // Never reflect Host or X-Forwarded-* into a Location header. Production
+    // redirects use the configured canonical origin; local development accepts
+    // only explicitly allowed loopback/configured hosts.
     const response = NextResponse.redirect(publicRedirectUrl(request, localizedPathname), 307);
     response.headers.append("Vary", "Cookie, Accept-Language");
     return response;

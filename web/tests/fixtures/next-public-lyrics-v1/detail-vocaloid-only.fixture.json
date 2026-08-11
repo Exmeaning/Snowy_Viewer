@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "musicId": 10,
+  "revision": 3,
+  "updatedAt": "2026-07-23T00:00:00Z",
+  "attribution": "Lyrics transcription and translation by the MoeSeka team",
+  "lines": [
+    {
+      "id": "line-1",
+      "order": 0,
+      "japanese": "初音歌う",
+      "zh-CN": "",
+      "en-US": "",
+      "segments": [
+        {
+          "text": "初音歌う",
+          "performerIds": []
+        }
+      ]
+    }
+  ]
+}

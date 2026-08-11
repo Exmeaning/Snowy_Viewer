@@ -1,0 +1,151 @@
+{
+  "masterData": {
+    "areas": [
+      { "id": 1, "assetbundleName": "synthetic_area", "areaType": "street", "viewType": "normal", "name": "Synthetic Area", "releaseConditionId": 0 }
+    ],
+    "areaItems": [
+      { "id": 1, "areaId": 1, "name": "Synthetic Item", "flavorText": "Fixture area item", "spawnPoint": "center", "assetbundleName": "synthetic_item" }
+    ],
+    "areaItemLevels": [
+      {
+        "areaItemId": 1,
+        "level": 1,
+        "targetUnit": "unit_a",
+        "targetCardAttr": "any",
+        "power1BonusRate": 1,
+        "power1AllMatchBonusRate": 1,
+        "power2BonusRate": 1,
+        "power2AllMatchBonusRate": 1,
+        "power3BonusRate": 1,
+        "power3AllMatchBonusRate": 1,
+        "sentence": "Synthetic level 1"
+      },
+      {
+        "areaItemId": 1,
+        "level": 2,
+        "targetUnit": "unit_a",
+        "targetCardAttr": "any",
+        "power1BonusRate": 2,
+        "power1AllMatchBonusRate": 2,
+        "power2BonusRate": 2,
+        "power2AllMatchBonusRate": 2,
+        "power3BonusRate": 2,
+        "power3AllMatchBonusRate": 2,
+        "sentence": "Synthetic level 2"
+      }
+    ],
+    "cards": [
+      { "id": 101, "seq": 1, "characterId": 1, "cardRarityType": "rarity_4", "specialTrainingPower1BonusFixed": 0, "specialTrainingPower2BonusFixed": 0, "specialTrainingPower3BonusFixed": 0, "attr": "cool", "supportUnit": "none", "skillId": 1, "cardSkillName": "Synthetic skill", "prefix": "Synthetic 101", "assetbundleName": "card_101", "gachaPhrase": "", "flavorText": "", "releaseAt": 0, "cardParameters": [{ "id": 1011, "cardId": 101, "cardLevel": 10, "cardParameterType": "param1", "power": 1000 }, { "id": 1012, "cardId": 101, "cardLevel": 10, "cardParameterType": "param2", "power": 1000 }, { "id": 1013, "cardId": 101, "cardLevel": 10, "cardParameterType": "param3", "power": 1000 }], "specialTrainingCosts": [], "masterLessonAchieveResources": { "releaseConditionId": 0, "cardId": 101, "masterRank": 0, "resources": [] } },
+      { "id": 102, "seq": 2, "characterId": 2, "cardRarityType": "rarity_4", "specialTrainingPower1BonusFixed": 0, "specialTrainingPower2BonusFixed": 0, "specialTrainingPower3BonusFixed": 0, "attr": "cute", "supportUnit": "none", "skillId": 1, "cardSkillName": "Synthetic skill", "prefix": "Synthetic 102", "assetbundleName": "card_102", "gachaPhrase": "", "flavorText": "", "releaseAt": 0, "cardParameters": [{ "id": 1021, "cardId": 102, "cardLevel": 10, "cardParameterType": "param1", "power": 2000 }, { "id": 1022, "cardId": 102, "cardLevel": 10, "cardParameterType": "param2", "power": 2000 }, { "id": 1023, "cardId": 102, "cardLevel": 10, "cardParameterType": "param3", "power": 2000 }], "specialTrainingCosts": [], "masterLessonAchieveResources": { "releaseConditionId": 0, "cardId": 102, "masterRank": 0, "resources": [] } },
+      { "id": 103, "seq": 3, "characterId": 3, "cardRarityType": "rarity_4", "specialTrainingPower1BonusFixed": 0, "specialTrainingPower2BonusFixed": 0, "specialTrainingPower3BonusFixed": 0, "attr": "happy", "supportUnit": "none", "skillId": 1, "cardSkillName": "Synthetic skill", "prefix": "Synthetic 103", "assetbundleName": "card_103", "gachaPhrase": "", "flavorText": "", "releaseAt": 0, "cardParameters": [{ "id": 1031, "cardId": 103, "cardLevel": 10, "cardParameterType": "param1", "power": 3000 }, { "id": 1032, "cardId": 103, "cardLevel": 10, "cardParameterType": "param2", "power": 3000 }, { "id": 1033, "cardId": 103, "cardLevel": 10, "cardParameterType": "param3", "power": 3000 }], "specialTrainingCosts": [], "masterLessonAchieveResources": { "releaseConditionId": 0, "cardId": 103, "masterRank": 0, "resources": [] } },
+      { "id": 104, "seq": 4, "characterId": 4, "cardRarityType": "rarity_4", "specialTrainingPower1BonusFixed": 0, "specialTrainingPower2BonusFixed": 0, "specialTrainingPower3BonusFixed": 0, "attr": "mysterious", "supportUnit": "none", "skillId": 1, "cardSkillName": "Synthetic skill", "prefix": "Synthetic 104", "assetbundleName": "card_104", "gachaPhrase": "", "flavorText": "", "releaseAt": 0, "cardParameters": [{ "id": 1041, "cardId": 104, "cardLevel": 10, "cardParameterType": "param1", "power": 4000 }, { "id": 1042, "cardId": 104, "cardLevel": 10, "cardParameterType": "param2", "power": 4000 }, { "id": 1043, "cardId": 104, "cardLevel": 10, "cardParameterType": "param3", "power": 4000 }], "specialTrainingCosts": [], "masterLessonAchieveResources": { "releaseConditionId": 0, "cardId": 104, "masterRank": 0, "resources": [] } },
+      { "id": 105, "seq": 5, "characterId": 5, "cardRarityType": "rarity_4", "specialTrainingPower1BonusFixed": 0, "specialTrainingPower2BonusFixed": 0, "specialTrainingPower3BonusFixed": 0, "attr": "pure", "supportUnit": "none", "skillId": 1, "cardSkillName": "Synthetic skill", "prefix": "Synthetic 105", "assetbundleName": "card_105", "gachaPhrase": "", "flavorText": "", "releaseAt": 0, "cardParameters": [{ "id": 1051, "cardId": 105, "cardLevel": 10, "cardParameterType": "param1", "power": 5000 }, { "id": 1052, "cardId": 105, "cardLevel": 10, "cardParameterType": "param2", "power": 5000 }, { "id": 1053, "cardId": 105, "cardLevel": 10, "cardParameterType": "param3", "power": 5000 }], "specialTrainingCosts": [], "masterLessonAchieveResources": { "releaseConditionId": 0, "cardId": 105, "masterRank": 0, "resources": [] } },
+      { "id": 106, "seq": 6, "characterId": 6, "cardRarityType": "rarity_4", "specialTrainingPower1BonusFixed": 0, "specialTrainingPower2BonusFixed": 0, "specialTrainingPower3BonusFixed": 0, "attr": "cool", "supportUnit": "none", "skillId": 1, "cardSkillName": "Synthetic skill", "prefix": "Synthetic 106", "assetbundleName": "card_106", "gachaPhrase": "", "flavorText": "", "releaseAt": 0, "cardParameters": [{ "id": 1061, "cardId": 106, "cardLevel": 10, "cardParameterType": "param1", "power": 6000 }, { "id": 1062, "cardId": 106, "cardLevel": 10, "cardParameterType": "param2", "power": 6000 }, { "id": 1063, "cardId": 106, "cardLevel": 10, "cardParameterType": "param3", "power": 6000 }], "specialTrainingCosts": [], "masterLessonAchieveResources": { "releaseConditionId": 0, "cardId": 106, "masterRank": 0, "resources": [] } },
+      { "id": 107, "seq": 7, "characterId": 1, "cardRarityType": "rarity_4", "specialTrainingPower1BonusFixed": 0, "specialTrainingPower2BonusFixed": 0, "specialTrainingPower3BonusFixed": 0, "attr": "cute", "supportUnit": "none", "skillId": 1, "cardSkillName": "Synthetic skill", "prefix": "Synthetic 107", "assetbundleName": "card_107", "gachaPhrase": "", "flavorText": "", "releaseAt": 0, "cardParameters": [{ "id": 1071, "cardId": 107, "cardLevel": 10, "cardParameterType": "param1", "power": 7000 }, { "id": 1072, "cardId": 107, "cardLevel": 10, "cardParameterType": "param2", "power": 7000 }, { "id": 1073, "cardId": 107, "cardLevel": 10, "cardParameterType": "param3", "power": 7000 }], "specialTrainingCosts": [], "masterLessonAchieveResources": { "releaseConditionId": 0, "cardId": 107, "masterRank": 0, "resources": [] } }
+    ],
+    "cardEpisodes": [],
+    "masterLessons": [],
+    "skills": [
+      { "id": 1, "shortDescription": "Score up", "description": "Synthetic score skill", "descriptionSpriteName": "", "skillFilterId": 1, "skillEffects": [{ "id": 1, "skillEffectType": "score_up", "activateNotesJudgmentType": "perfect", "skillEffectDetails": [{ "id": 1, "level": 1, "activateEffectDuration": 5, "activateEffectValueType": "rate", "activateEffectValue": 10 }] }] }
+    ],
+    "gameCharacters": [
+      { "id": 1, "unit": "unit_a" },
+      { "id": 2, "unit": "unit_a" },
+      { "id": 3, "unit": "unit_a" },
+      { "id": 4, "unit": "unit_a" },
+      { "id": 5, "unit": "unit_a" },
+      { "id": 6, "unit": "unit_a" }
+    ],
+    "gameCharacterUnits": [
+      { "id": 1, "gameCharacterId": 1, "unit": "unit_a" }
+    ],
+    "characterRanks": [
+      { "id": 1, "characterId": 1, "characterRank": 1, "power1BonusRate": 0, "power2BonusRate": 0, "power3BonusRate": 0 },
+      { "id": 2, "characterId": 2, "characterRank": 1, "power1BonusRate": 0, "power2BonusRate": 0, "power3BonusRate": 0 },
+      { "id": 3, "characterId": 3, "characterRank": 1, "power1BonusRate": 0, "power2BonusRate": 0, "power3BonusRate": 0 },
+      { "id": 4, "characterId": 4, "characterRank": 1, "power1BonusRate": 0, "power2BonusRate": 0, "power3BonusRate": 0 },
+      { "id": 5, "characterId": 5, "characterRank": 1, "power1BonusRate": 0, "power2BonusRate": 0, "power3BonusRate": 0 },
+      { "id": 6, "characterId": 6, "characterRank": 1, "power1BonusRate": 0, "power2BonusRate": 0, "power3BonusRate": 0 }
+    ],
+    "events": [
+      { "id": 100, "eventType": "marathon", "name": "Synthetic Marathon" },
+      { "id": 101, "eventType": "world_bloom", "name": "Synthetic World Bloom" }
+    ],
+    "eventDeckBonuses": [
+      { "id": 1, "eventId": 100, "bonusRate": 20 },
+      { "id": 2, "eventId": 101, "bonusRate": 15 }
+    ],
+    "eventCards": [
+      { "id": 1, "cardId": 101, "eventId": 100, "bonusRate": 25, "leaderBonusRate": 0, "isDisplayCardStory": true }
+    ],
+    "eventRarityBonusRates": [
+      { "id": 1, "cardRarityType": "rarity_4", "masterRank": 0, "bonusRate": 5 }
+    ],
+    "eventHonorBonuses": [],
+    "worldBlooms": [
+      { "id": 1, "eventId": 101, "gameCharacterId": 1, "worldBloomChapterType": "game_character", "chapterNo": 1, "chapterStartAt": 0, "aggregateAt": 1, "chapterEndAt": 2, "isSupplemental": false }
+    ],
+    "worldBloomDifferentAttributeBonuses": [
+      { "attributeCount": 1, "bonusRate": 0 },
+      { "attributeCount": 2, "bonusRate": 5 },
+      { "attributeCount": 3, "bonusRate": 10 },
+      { "attributeCount": 4, "bonusRate": 15 },
+      { "attributeCount": 5, "bonusRate": 20 }
+    ],
+    "worldBloomSupportDeckBonuses": [
+      { "cardRarityType": "rarity_4", "worldBloomSupportDeckCharacterBonuses": [{ "id": 1, "worldBloomSupportDeckCharacterType": "specific", "bonusRate": 5 }, { "id": 2, "worldBloomSupportDeckCharacterType": "others", "bonusRate": 2 }], "worldBloomSupportDeckMasterRankBonuses": [{ "id": 1, "masterRank": 0, "bonusRate": 1 }], "worldBloomSupportDeckSkillLevelBonuses": [{ "id": 1, "skillLevel": 1, "bonusRate": 1 }] }
+    ],
+    "worldBloomSupportDeckUnitEventLimitedBonuses": [],
+    "honors": [],
+    "shopItems": [
+      {
+        "id": 1002,
+        "shopId": 1,
+        "seq": 1,
+        "releaseConditionId": 0,
+        "resourceBoxId": 0,
+        "costs": [
+          { "shopItemId": 1002, "seq": 1, "cost": { "resourceType": "coin", "resourceId": 0, "quantity": 2500 } },
+          { "shopItemId": 1002, "seq": 2, "cost": { "resourceType": "material", "resourceId": 17, "quantity": 100 } },
+          { "shopItemId": 1002, "seq": 3, "cost": { "resourceType": "material", "resourceId": 57, "quantity": 5 } }
+        ]
+      }
+    ]
+  },
+  "userData": {
+    "userCards": [
+      { "userId": 9000000001, "cardId": 101, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 1, "episodes": [] },
+      { "userId": 9000000001, "cardId": 102, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 2, "episodes": [] },
+      { "userId": 9000000001, "cardId": 103, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 3, "episodes": [] },
+      { "userId": 9000000001, "cardId": 104, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 4, "episodes": [] },
+      { "userId": 9000000001, "cardId": 105, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 5, "episodes": [] },
+      { "userId": 9000000001, "cardId": 106, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 6, "episodes": [] },
+      { "userId": 9000000001, "cardId": 107, "level": 10, "totalExp": 0, "skillLevel": 1, "skillExp": 0, "totalSkillExp": 0, "masterRank": 0, "specialTrainingStatus": "done", "defaultImage": "special_training", "duplicateCount": 0, "createdAt": 7, "episodes": [] }
+    ],
+    "userCharacters": [
+      { "characterId": 1, "characterRank": 1 },
+      { "characterId": 2, "characterRank": 1 },
+      { "characterId": 3, "characterRank": 1 },
+      { "characterId": 4, "characterRank": 1 },
+      { "characterId": 5, "characterRank": 1 },
+      { "characterId": 6, "characterRank": 1 }
+    ],
+    "userDecks": [
+      { "userId": 9000000001, "deckId": 1, "name": "Synthetic deck", "leader": 101, "subLeader": 102, "member1": 101, "member2": 102, "member3": 103, "member4": 104, "member5": 105 }
+    ],
+    "userChallengeLiveSoloDecks": [
+      { "characterId": 1, "leader": 107, "support1": 101, "support2": 0, "support3": 0, "support4": 0 }
+    ],
+    "userAreas": [
+      { "areaId": 1, "actionSets": [], "areaItems": [{ "areaItemId": 1, "level": 1 }], "userAreaStatus": { "areaId": 1, "status": "released" } }
+    ],
+    "userHonors": [],
+    "userMysekaiCanvases": [],
+    "userMysekaiGates": [],
+    "userMysekaiFixtureGameCharacterPerformanceBonuses": []
+  },
+  "musicMeta": [
+    { "music_id": 1, "difficulty": "easy", "music_time": 120, "event_rate": 100, "base_score": 1, "base_score_auto": 0.8, "skill_score_solo": [0, 0, 0, 0, 0, 0], "skill_score_auto": [0, 0, 0, 0, 0, 0], "skill_score_multi": [0, 0, 0, 0, 0, 0], "fever_score": 0.2, "fever_end_time": 80, "tap_count": 100 },
+    { "music_id": 2, "difficulty": "master", "music_time": 150, "event_rate": 110, "base_score": 1.2, "base_score_auto": 0.9, "skill_score_solo": [0, 0, 0, 0, 0, 0], "skill_score_auto": [0, 0, 0, 0, 0, 0], "skill_score_multi": [0, 0, 0, 0, 0, 0], "fever_score": 0.3, "fever_end_time": 100, "tap_count": 500 }
+  ]
+}

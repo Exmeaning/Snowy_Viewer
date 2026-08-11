@@ -22,6 +22,8 @@ import {
 import { assertNoIndexSeoRoute, findSeoRouteByPageKey, findSeoRouteByPath, isIndexableSeoPath, normalizeSeoPath } from "@/lib/seo-routes";
 import { DetailSeoSummaryProvider } from "@/contexts/DetailSeoSummaryContext";
 import { generateDetailBreadcrumbJsonLd, generateDetailEntityJsonLd, generatePageBreadcrumbJsonLd, type DetailEntityType } from "@/lib/structured-data";
+import { serializeJsonLd } from "@/lib/json-ld";
+import { getCanonicalOrigin } from "@/lib/site-origin";
 import {
     formatDetailSeoDescription,
     formatDynamicSeoDescription,
@@ -39,7 +41,7 @@ import {
     type SeoPageKey,
 } from "@/lib/seo-keywords";
 
-const SITE_BASE_URL = process.env.NEXT_PUBLIC_SITE_DOMAIN || "https://pjsk.moe";
+const SITE_BASE_URL = getCanonicalOrigin();
 const DETAIL_BREADCRUMB_SCRIPT_PREFIX = "detail-breadcrumb";
 const PAGE_BREADCRUMB_SCRIPT_PREFIX = "page-breadcrumb";
 const DEFAULT_ICON_URL = "/data/icon/icon.jpg";
@@ -238,7 +240,7 @@ export function withPageBreadcrumb(pageKey: SeoPageKey, render: () => ReactNode)
             createElement("script", {
                 id: `${PAGE_BREADCRUMB_SCRIPT_PREFIX}-${pageKey}`,
                 type: "application/ld+json",
-                dangerouslySetInnerHTML: { __html: JSON.stringify(breadcrumbJsonLd) },
+                dangerouslySetInnerHTML: { __html: serializeJsonLd(breadcrumbJsonLd) },
             }),
             render(),
         );
@@ -431,12 +433,12 @@ export function defineSeoDynamicPage<TData, TParams extends Record<string, strin
             createElement("script", {
                 id: scriptId,
                 type: "application/ld+json",
-                dangerouslySetInnerHTML: { __html: JSON.stringify(breadcrumbJsonLd) },
+                dangerouslySetInnerHTML: { __html: serializeJsonLd(breadcrumbJsonLd) },
             }),
             entityJsonLd ? createElement("script", {
                 id: `${scriptId}-entity`,
                 type: "application/ld+json",
-                dangerouslySetInnerHTML: { __html: JSON.stringify(entityJsonLd) },
+                dangerouslySetInnerHTML: { __html: serializeJsonLd(entityJsonLd) },
             }) : null,
             createElement(
                 DetailSeoSummaryProvider,
@@ -650,13 +652,13 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
             createElement("script", {
                 id: scriptId,
                 type: "application/ld+json",
-                dangerouslySetInnerHTML: { __html: JSON.stringify(breadcrumbJsonLd) },
+                dangerouslySetInnerHTML: { __html: serializeJsonLd(breadcrumbJsonLd) },
             }),
             entityJsonLd
                 ? createElement("script", {
                     id: `${scriptId}-entity`,
                     type: "application/ld+json",
-                    dangerouslySetInnerHTML: { __html: JSON.stringify(entityJsonLd) },
+                    dangerouslySetInnerHTML: { __html: serializeJsonLd(entityJsonLd) },
                 })
                 : null,
             createElement(

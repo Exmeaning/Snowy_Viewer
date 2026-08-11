@@ -14,16 +14,20 @@ import (
 )
 
 const (
-	EventsURL       = "https://metadata.exmeaning.com/jp/master/events.json"
-	EventCardsURL   = "https://metadata.exmeaning.com/jp/master/eventCards.json"
-	EventMusicsURL  = "https://metadata.exmeaning.com/jp/master/eventMusics.json"
-	VirtualLivesURL = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/virtualLives.json"
-	GachasURL       = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/gachas.json"
+	EventsURL                = "https://metadata.exmeaning.com/jp/master/events.json"
+	EventCardsURL            = "https://metadata.exmeaning.com/jp/master/eventCards.json"
+	EventMusicsURL           = "https://metadata.exmeaning.com/jp/master/eventMusics.json"
+	VirtualLivesURL          = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/virtualLives.json"
+	GachasURL                = "https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master/gachas.json"
+	maxMasterDataBytes int64 = 64 << 20
 )
 
 // Store holds all master data in memory
 type Store struct {
-	mutex sync.RWMutex
+	mutex      sync.RWMutex
+	fetchMutex sync.Mutex
+	ready      bool
+	lastError  error
 
 	// Card/Event/Music mappings
 	CardEventMap  map[int]models.EventInfo
@@ -66,26 +70,38 @@ func fetchJSON(url string, target interface{}) error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("bad status: %s", resp.Status)
 	}
-	body, err := io.ReadAll(resp.Body)
+	if resp.ContentLength > maxMasterDataBytes {
+		return fmt.Errorf("masterdata response exceeds %d bytes", maxMasterDataBytes)
+	}
+	return decodeJSONLimited(resp.Body, target)
+}
+
+func decodeJSONLimited(reader io.Reader, target interface{}) error {
+	body, err := io.ReadAll(io.LimitReader(reader, maxMasterDataBytes+1))
 	if err != nil {
 		return err
+	}
+	if int64(len(body)) > maxMasterDataBytes {
+		return fmt.Errorf("masterdata payload exceeds %d bytes", maxMasterDataBytes)
 	}
 	return json.Unmarshal(body, target)
 }
 
 func (s *Store) loadOrFetch(filename string, url string, target interface{}) error {
 	localPath := filepath.Join(s.localDataPath, filename)
-	if _, err := os.Stat(localPath); err == nil {
-		content, err := os.ReadFile(localPath)
-		if err == nil {
-			if err := json.Unmarshal(content, target); err == nil {
+	if info, err := os.Stat(localPath); err == nil {
+		if info.Size() > maxMasterDataBytes {
+			fmt.Printf("Warning: local %s exceeds %d bytes. Falling back to remote.\n", filename, maxMasterDataBytes)
+		} else if file, openErr := os.Open(localPath); openErr == nil {
+			defer file.Close()
+			if err := decodeJSONLimited(file, target); err == nil {
 				fmt.Printf("Loaded %s from local file\n", filename)
 				return nil
 			} else {
 				fmt.Printf("Warning: failed to unmarshal local %s: %v. Falling back to remote.\n", filename, err)
 			}
 		} else {
-			fmt.Printf("Warning: failed to read local %s: %v. Falling back to remote.\n", filename, err)
+			fmt.Printf("Warning: failed to read local %s: %v. Falling back to remote.\n", filename, openErr)
 		}
 	}
 	return fetchJSON(url, target)
@@ -93,31 +109,33 @@ func (s *Store) loadOrFetch(filename string, url string, target interface{}) err
 
 // Fetch loads all master data from local files or remote
 func (s *Store) Fetch() error {
+	s.fetchMutex.Lock()
+	defer s.fetchMutex.Unlock()
 	fmt.Println("Updating master data...")
 
 	var events []models.Event
 	if err := s.loadOrFetch("events.json", EventsURL, &events); err != nil {
-		return fmt.Errorf("fetch events: %v", err)
+		return s.recordFetchError(fmt.Errorf("fetch events: %w", err))
 	}
 
 	var eventCards []models.EventCard
 	if err := s.loadOrFetch("eventCards.json", EventCardsURL, &eventCards); err != nil {
-		return fmt.Errorf("fetch eventCards: %v", err)
+		return s.recordFetchError(fmt.Errorf("fetch eventCards: %w", err))
 	}
 
 	var eventMusics []models.EventMusic
 	if err := s.loadOrFetch("eventMusics.json", EventMusicsURL, &eventMusics); err != nil {
-		return fmt.Errorf("fetch eventMusics: %v", err)
+		return s.recordFetchError(fmt.Errorf("fetch eventMusics: %w", err))
 	}
 
 	var virtualLives []models.VirtualLive
 	if err := s.loadOrFetch("virtualLives.json", VirtualLivesURL, &virtualLives); err != nil {
-		fmt.Printf("Warning: failed to fetch virtualLives: %v\n", err)
+		return s.recordFetchError(fmt.Errorf("fetch virtualLives: %w", err))
 	}
 
 	var gachas []models.Gacha
 	if err := s.loadOrFetch("gachas.json", GachasURL, &gachas); err != nil {
-		fmt.Printf("Warning: failed to fetch gachas: %v\n", err)
+		return s.recordFetchError(fmt.Errorf("fetch gachas: %w", err))
 	}
 
 	// Build Maps
@@ -212,11 +230,56 @@ func (s *Store) Fetch() error {
 	s.VirtualLiveEventMap = newVirtualLiveEventMap
 	s.GachaList = gachas
 	s.GachaPickups = newGachaPickups
+	s.ready = true
+	s.lastError = nil
 	s.mutex.Unlock()
 
 	fmt.Printf("Data updated. Mapped %d cards, %d musics, %d event-vl, loaded %d gachas.\n",
 		len(newCardEventMap), len(newMusicEventMap), len(newEventVirtualLiveMap), len(gachas))
 	return nil
+}
+
+func (s *Store) recordFetchError(err error) error {
+	s.mutex.Lock()
+	s.lastError = err
+	s.mutex.Unlock()
+	return err
+}
+
+// IsReady reports whether at least one complete required masterdata snapshot
+// has been loaded. Refresh failures do not discard an already valid snapshot.
+func (s *Store) IsReady() bool {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.ready
+}
+
+// ReadinessError returns the most recent load error while startup is pending.
+func (s *Store) ReadinessError() error {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.lastError
+}
+
+// StartRetryUntilReady retries failed startup loading until a complete
+// snapshot is available. It is separate from periodic refresh so readiness is
+// not delayed until the normal refresh interval.
+func (s *Store) StartRetryUntilReady(interval time.Duration) {
+	go func() {
+		for {
+			if s.IsReady() {
+				return
+			}
+			if err := s.Fetch(); err != nil {
+				fmt.Printf("Startup masterdata retry error: %v\n", err)
+			}
+			if s.IsReady() {
+				return
+			}
+			timer := time.NewTimer(interval)
+			<-timer.C
+		}
+	}()
 }
 
 // StartPeriodicUpdate starts a goroutine to update data periodically

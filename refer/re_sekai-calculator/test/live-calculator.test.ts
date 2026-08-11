@@ -1,29 +1,22 @@
-import { TestDataProvider } from './data-provider.test'
-import { LiveCalculator, LiveType, DeckService } from '../src'
+import { LiveCalculator, LiveType, type DeckDetail } from '../src'
+import { TEST_DATA_PROVIDER } from './fixtures/test-data-provider'
 
-const liveCalculator = new LiveCalculator(TestDataProvider.INSTANCE)
-const deckService = new DeckService(TestDataProvider.INSTANCE)
+const deck = {
+  cards: [
+    { cardId: 101, skill: { scoreUp: 100, lifeRecovery: 500 } },
+    { cardId: 102, skill: { scoreUp: 0, lifeRecovery: 0 } },
+    { cardId: 103, skill: { scoreUp: 0, lifeRecovery: 0 } },
+    { cardId: 104, skill: { scoreUp: 0, lifeRecovery: 0 } },
+    { cardId: 105, skill: { scoreUp: 0, lifeRecovery: 0 } }
+  ],
+  power: { total: 100000 }
+} as unknown as DeckDetail
 
-// LUKA卡组回复量为0，分数不好说
-test('solo', async () => {
-  const deck = await deckService.getChallengeLiveSoloDeckCards(await deckService.getChallengeLiveSoloDeck(24))
-  await liveCalculator.getLiveDetail(
-    deck, await liveCalculator.getMusicMeta(104, 'master'), LiveType.SOLO).then(it => {
-    expect(it.life).toBe(1000)
-    expect(it.tap).toBe(533)
-    expect(it.time).toBe(117.6)
-    expect(it.score).toBeGreaterThan(2200000)
-  })
-})
+test('live detail uses deterministic music timing, tap count, power, and life caps', async () => {
+  const calculator = new LiveCalculator(TEST_DATA_PROVIDER)
+  const music = await calculator.getMusicMeta(1, 'easy')
+  const detail = LiveCalculator.getLiveDetailByDeck(deck, music, LiveType.SOLO)
 
-// 多人卡组无回复
-test('multi', async () => {
-  const deck = await deckService.getDeckCards(await deckService.getDeck(1))
-  await liveCalculator.getLiveDetail(
-    deck, await liveCalculator.getMusicMeta(1, 'easy'), LiveType.MULTI).then(it => {
-    expect(it.life).toBe(1000)
-    expect(it.tap).toBe(76)
-    expect(it.time).toBe(123.2)
-    expect(it.score).toBeGreaterThan(1000000)
-  })
+  expect(detail).toEqual({ score: 400000, time: 120, life: 2000, tap: 100 })
+  expect(LiveCalculator.getMultiActiveBonus(500000)).toBe(7500)
 })

@@ -566,6 +566,7 @@ export const koKRMessages = {
             items: {
                 cards: "카드",
                 musicList: "음악 목록",
+                lyrics: "가사",
                 musicMeta: "송메타",
                 soundtrack: "게임 사운드트랙",
                 character: "역할",
@@ -636,6 +637,7 @@ export const koKRMessages = {
         groupPages: {
             cards: "모든 카드 데이터 찾아보기",
             music: "모든 노래 정보 찾아보기",
+            lyrics: "공개된 노래 가사와 번역 읽기",
             musicMeta: "노래 난이도 및 데이터 분석 보기",
             soundtrack: "절묘한 배경 음악 사운드 트랙 플레이어",
             character: "역할 세부정보 보기",
@@ -763,6 +765,14 @@ export const koKRMessages = {
             title: "광고",
             label: "광고 표시",
             description: "이것은 프로젝트 운영을 지원하는 방법 중 하나입니다."
+        },
+        analytics: {
+            sectionTitle: "개인정보 보호",
+            label: "익명 사용 분석 허용",
+            description: "동의한 경우에만 운영 사이트에서 Google Analytics를 불러옵니다. 언제든지 동의를 철회할 수 있습니다.",
+            statusGranted: "사용 분석이 허용됨",
+            statusDenied: "사용 분석은 기본적으로 비활성화됨",
+            privacySignal: "브라우저 개인정보 보호 신호(GPC 또는 Do Not Track)로 인해 비활성화됨"
         },
         assetSource: {
             sectionTitle: "리소스 서버 회선",
@@ -1014,7 +1024,7 @@ export const koKRMessages = {
             },
             policies: {
                 title: "사이트 정책 및 광고 지침",
-                description: "본 사이트는 운영비의 일부를 충당하기 위해 Google 애드센스에 연결되었습니다. 쿠키, 개인화된 광고 및 사용자 데이터 처리에 대한 정보는 다음 페이지를 참조하십시오. (실제로 연결되지는 않음)",
+                description: "현재 광고는 비활성화되어 있습니다. 로컬 계정 데이터, OAuth2 토큰, 분석 동의 및 제3자 서비스의 실제 처리 방식은 아래 정책을 확인하세요.",
                 privacy: "개인 정보 보호 정책",
                 terms: "서비스 약관",
                 googleAds: "Google 광고 설정",
@@ -1039,6 +1049,59 @@ export const koKRMessages = {
                 joinGroup: "모에세카이 문학예술학과",
                 joinSuffix: "."
             }
+        },
+        privacy: {
+            title: "개인정보 처리방침",
+            updated: "최종 업데이트: 2026년 7월 24일",
+            overview: {
+                title: "1. 개요",
+                body: "Moesekai(pjsk.moe)는 비영리 PROJECT SEKAI 팬 데이터 뷰어입니다. 이 방침은 기기에 저장되는 정보, 제3자 서비스와 통신하는 시점, 이용자가 데이터를 관리하는 방법을 설명합니다."
+            },
+            local: {
+                title: "2. 기기에 저장되는 데이터",
+                intro: "Moesekai 서버 계정은 필요하지 않지만 일부 기능은 브라우저 localStorage 또는 sessionStorage에 다음 정보를 저장합니다.",
+                preferences: "언어, 테마, 사이드바, 필터, 분석 동의 등의 화면 설정.",
+                account: "이용자가 추가한 게임 계정 식별자, 서버, 닉네임, 아바타 등의 프로필 정보.",
+                tokens: "OAuth2 연결 시 받은 액세스 토큰, 리프레시 토큰, 권한 범위, 만료 시간. 토큰은 민감한 인증 정보입니다.",
+                gameData: "캐릭터, 덱, 재료, 에어리어 아이템, 마이세카이 데이터 등 계정 도구를 위해 동기화한 게임 데이터 스냅샷.",
+                note: "이 계정 정보와 OAuth2 토큰은 현재 브라우저에 저장되며 Moesekai 클라우드 계정 데이터베이스로 업로드되지 않습니다. 공용 기기에서는 사용 후 계정과 사이트 데이터를 삭제하세요."
+            },
+            network: {
+                title: "3. 네트워크 요청과 제3자 서비스",
+                intro: "관련 기능을 사용하면 브라우저가 콘텐츠, 공개 게임 API 또는 OAuth2 제공자에게 요청을 보냅니다.",
+                oauth: "OAuth2 제공자는 자체 정책에 따라 로그인, 인증 코드, 토큰, 연결된 게임 계정을 처리합니다.",
+                publicApi: "공개 또는 인증 API는 선택한 서버와 게임 UID를 받고 사이트 도구에 필요한 게임 데이터를 반환합니다.",
+                analytics: "명시적으로 허용하고 브라우저가 추적 거부 개인정보 신호를 보내지 않을 때만 Google Analytics를 불러옵니다. 이때 Google은 페이지, 기기, 브라우저, IP 주소, 시간 등의 기술 정보를 받을 수 있습니다."
+            },
+            cookies: {
+                title: "4. 쿠키, 분석 및 광고",
+                analytics: "Google Analytics는 기본적으로 꺼져 있습니다. 사이트 설정에서 동의하거나 철회할 수 있으며, 철회하면 태그를 비활성화하고 관련 분석 쿠키 삭제를 시도합니다.",
+                adsDisabled: "현재 광고 기능은 비활성화되어 있습니다. Google AdSense 광고 스크립트를 불러오지 않으며 광고 수익에 의존하지 않습니다. 향후 광고를 활성화하기 전에 이 방침과 동의 화면을 업데이트합니다."
+            },
+            use: {
+                title: "5. 데이터 이용 목적",
+                functionality: "설정을 기억하고 계정, 덱, 계산 도구를 제공하기 위해 사용합니다.",
+                sync: "요청에 따라 선택한 API에서 게임 데이터를 동기화하고 표시하기 위해 사용합니다.",
+                analytics: "동의한 경우 집계된 이용 현황을 파악해 사이트를 유지하고 개선하기 위해 사용합니다."
+            },
+            sharing: {
+                title: "6. 공유 및 판매",
+                body: "로컬에 저장된 계정 데이터나 OAuth2 토큰을 판매하지 않습니다. 기능에 필요한 데이터만 브라우저에서 해당 API, OAuth2 또는 분석 제공자에게 전송하며, 각 제3자는 자체 정책에 따라 처리합니다."
+            },
+            controls: {
+                title: "7. 이용자 선택권",
+                delete: "계정 관리에서 저장된 계정을 삭제할 수 있습니다. 브라우저에서 pjsk.moe 사이트 데이터를 지우면 모든 로컬 설정, 계정 스냅샷, 토큰이 삭제됩니다.",
+                consent: "사이트 설정에서 언제든지 분석 동의를 허용하거나 철회할 수 있습니다.",
+                browser: "브라우저의 쿠키, 저장소, Do Not Track 또는 Global Privacy Control 설정으로 처리를 추가 제한할 수 있습니다."
+            },
+            links: {
+                title: "8. 제3자 링크",
+                body: "외부 링크는 Moesekai의 사이트 이탈 안내를 거칩니다. 제3자 사이트에는 별도의 콘텐츠와 개인정보 처리방침이 있습니다.",
+                googlePrivacy: "Google 개인정보처리방침"
+            },
+            children: { title: "9. 아동 개인정보", body: "이 사이트는 만 13세 미만 아동을 대상으로 하지 않으며, 아동의 개인정보를 고의로 수집하지 않습니다." },
+            changes: { title: "10. 방침 변경", body: "변경 사항은 갱신된 날짜와 함께 이 페이지에 게시합니다. 데이터 처리에 중대한 변화가 있으면 필요한 경우 별도로 알립니다." },
+            contact: { title: "11. 문의", body: "이 방침 또는 데이터 처리에 관한 문의처:", github: "GitHub", qq: "QQ 그룹" }
         },
         leave: {
             badge: "점프 팁",
@@ -1465,6 +1528,7 @@ export const koKRMessages = {
             notFoundTitle: "노래 데이터를 찾을 수 없습니다(Not Found)",
             notFoundDesc: "노래 ID가 올바른지 확인하세요. 노래가 최신 구현인 경우 \"설정\"으로 이동하여 외부 데이터 서버를 전환하거나 새로 고칠 수 있습니다.",
             backToList: "음악목록으로 돌아가기",
+            goToLyrics: "가사 페이지로 이동",
             jacketPreviewTitle: "{title} 큰 표지 이미지",
             clickExpand: "확대하려면 클릭하세요.",
             basicInfo: "노래정보",
@@ -1533,6 +1597,50 @@ export const koKRMessages = {
                     label: "자동 점수판",
                     shortLabel: "자동 채점"
                 }
+            }
+        },
+        lyrics: {
+            badge: "가사 라이브러리",
+            title: "가사",
+            titleHighlight: "라이브러리",
+            description: "공개된 일본어 가사와 중국어 간체 및 영어 번역을 확인합니다.",
+            filterTitle: "가사 필터",
+            countUnit: "곡",
+            searchPlaceholder: "곡명 또는 ID 검색...",
+            error: "가사 데이터를 불러오지 못했습니다",
+            loading: "가사를 불러오는 중...",
+            empty: "일치하는 가사가 없습니다",
+            emptyHint: "번역 저장소에 공개된 가사만 여기에 표시됩니다.",
+            loadMore: "더 보기",
+            allLoaded: "가사 {count}곡을 모두 표시했습니다",
+            backToList: "가사 목록으로",
+            notFound: "이 곡의 가사를 찾을 수 없습니다",
+            emptyDocument: "이 가사 파일에는 표시할 수 있는 행이 없습니다.",
+            contentTitle: "가사 본문",
+            japanese: "일본어 원문",
+            chinese: "중국어 간체",
+            english: "영어",
+            sourceFallback: "대상 언어 번역이 없어 일본어 원문을 표시합니다.",
+            attribution: "번역 크레딧",
+            translation: "번역",
+            proofreading: "교정",
+            translationAndProofreading: "번역 & 교정",
+            translationCreditsEmpty: "번역 크레딧이 아직 입력되지 않았습니다.",
+            sourceLicenseTitle: "가사 출처 및 라이선스",
+            revision: "공개 리비전",
+            updatedAt: "업데이트",
+            versionLabel: "가사 버전",
+            versionFull: "Full",
+            versionGame: "Game",
+            versionFullAndGame: "Full｜Game",
+            translationFallback: "일본어 원문으로 표시",
+            sourceRevision: "출처 리비전",
+            sourceLicense: "라이선스",
+            attributionProviders: {
+                vocaloid_fandom: "Vocaloid Lyrics Wiki",
+                moegirl: "모에걸피디아",
+                moegirl_public_exact: "모에걸피디아 (전체 공개 페이지)",
+                sekaipedia: "Sekaipedia"
             }
         },
         musicMeta: {

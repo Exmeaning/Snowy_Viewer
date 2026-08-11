@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
-import Script from "next/script";
 
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -24,7 +23,8 @@ import {
 } from "@/lib/ads";
 import { generateRootMetadata, getSiteBaseUrl } from "@/lib/seo-metadata";
 import { generateRootJsonLd, generateSiteNavigationItemListJsonLd } from "@/lib/structured-data";
-import { buildGoogleTagBootstrapScript } from "@/lib/googleTag";
+import GoogleTagBootstrap from "@/components/GoogleTagBootstrap";
+import RootHeadScripts from "@/components/RootHeadScripts";
 import {
   SUPPORTED_UI_LOCALES,
   UI_LOCALE_HTML_LANG,
@@ -34,11 +34,11 @@ import {
 } from "@/lib/i18n";
 import { BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY } from "@/lib/backgroundAnimation";
 import { isRouteLocale, routeLocaleToUiLocale } from "@/lib/locale-routing";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 const ROUTE_LOCALE_HEADER = "x-moesekai-route-locale";
 
 const SITE_BASE_URL = getSiteBaseUrl();
-const googleTagScript = buildGoogleTagBootstrapScript();
 
 export async function generateMetadata(): Promise<Metadata> {
   return generateRootMetadata();
@@ -181,7 +181,6 @@ export default async function RootLayout({
       } catch (e) {}
     })();
   `;
-
   return (
     <html
       lang={UI_LOCALE_HTML_LANG[initialUiLocale]}
@@ -190,28 +189,14 @@ export default async function RootLayout({
     >
       <head>
         <meta name="color-scheme" content="light dark" />
+        <RootHeadScripts
+          themeScript={themeScript}
+          websiteJsonLd={serializeJsonLd(jsonLd.website)}
+          videoGameJsonLd={serializeJsonLd(jsonLd.videoGame)}
+          navigationJsonLd={serializeJsonLd(navigationJsonLd)}
+        />
       </head>
       <body className="font-sans">
-        <Script id="moesekai-theme-bootstrap" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <Script id="moesekai-google-tag-bootstrap" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: googleTagScript }} />
-        <Script
-          id="moesekai-website-jsonld"
-          type="application/ld+json"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd.website) }}
-        />
-        <Script
-          id="moesekai-videogame-jsonld"
-          type="application/ld+json"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd.videoGame) }}
-        />
-        <Script
-          id="moesekai-navigation-jsonld"
-          type="application/ld+json"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(navigationJsonLd) }}
-        />
         <ThemeProvider>
           <I18nProvider initialLocale={initialUiLocale} routeLocale={routeLocale}>
             <MasterDataProvider>
@@ -225,6 +210,7 @@ export default async function RootLayout({
             </MasterDataProvider>
           </I18nProvider>
         </ThemeProvider>
+        <GoogleTagBootstrap />
         <ServiceWorkerRegistrar />
       </body>
     </html>

@@ -1,203 +1,136 @@
 import {
+  BaseDeckRecommend,
+  BloomSupportDeckRecommend,
   ChallengeLiveDeckRecommend,
-  DeckCalculator,
   DeckService,
-  EventCalculator,
-  EventDeckRecommend,
   EventBonusDeckRecommend,
-  EventType,
-  EventService,
-  LiveCalculator,
+  EventDeckRecommend,
   LiveType,
-  type UserArea,
-  type UserCard, BloomSupportDeckRecommend
+  RecommendAlgorithm,
+  RecommendTarget,
+  type DeckCardDetail,
+  type UserCard
 } from '../src'
-import { TestDataProvider } from './data-provider.test'
-import { safeNumber } from '../src/util/number-util'
+import { TEST_DATA_PROVIDER } from './fixtures/test-data-provider'
 
-const challengeRecommend = new ChallengeLiveDeckRecommend(TestDataProvider.INSTANCE)
-const eventRecommend = new EventDeckRecommend(TestDataProvider.INSTANCE)
-const liveCalculator = new LiveCalculator(TestDataProvider.INSTANCE)
-const deckCalculator = new DeckCalculator(TestDataProvider.INSTANCE)
-const deckService = new DeckService(TestDataProvider.INSTANCE)
-const eventService = new EventService(TestDataProvider.INSTANCE)
+const cards = Array.from({ length: 5 }, (_, index) => ({ cardId: 101 + index })) as DeckCardDetail[]
 
-/**
- * 调整用户数据，拉满各项指标
- */
-export async function maxUser(): Promise<void> {
-  const userCards = await TestDataProvider.INSTANCE.getUserData<UserCard[]>('userCards')
-  userCards.forEach(it => {
-    it.masterRank = 5
-    it.skillLevel = 4
+test('recommended card output converts to stable deck contracts', () => {
+  expect(DeckService.toUserDeck(cards, 9000000001, 7, 'Synthetic')).toMatchObject({
+    userId: 9000000001,
+    deckId: 7,
+    leader: 101,
+    subLeader: 102,
+    member5: 105
   })
-
-  const userAreas = await TestDataProvider.INSTANCE.getUserData<UserArea[]>('userAreas')
-  userAreas.forEach(area => {
-    area.areaItems.forEach(it => {
-      it.level = 15
-    })
+  expect(DeckService.toUserChallengeLiveSoloDeck(cards, 1)).toEqual({
+    characterId: 1,
+    leader: 101,
+    support1: 102,
+    support2: 103,
+    support3: 104,
+    support4: 105
   })
+})
+
+test('deck conversion rejects invalid card counts', () => {
+  expect(() => DeckService.toUserDeck(cards.slice(0, 4))).toThrow('deck card should be 5')
+  expect(() => DeckService.toUserChallengeLiveSoloDeck([], 1)).toThrow('deck card should >= 1')
+})
+
+async function getFixtureInput () {
+  return {
+    musicMeta: (await TEST_DATA_PROVIDER.getMusicMeta())[0],
+    userCards: await TEST_DATA_PROVIDER.getUserData<UserCard[]>('userCards')
+  }
 }
 
-test('challenge', async () => {
-  // await maxUser()
-  const deck = await deckService.getChallengeLiveSoloDeckCards({
-    characterId: 24,
-    leader: 510,
-    support1: 151,
-    support2: 238,
-    support3: 271,
-    support4: 406
-  })
-  const musicMeta = await liveCalculator.getMusicMeta(104, 'master')
-  const liveDetail = await liveCalculator.getLiveDetail(deck, musicMeta, LiveType.SOLO)
-  const score = liveDetail.score
-  // console.log(`Current score:${score}`)
-  await challengeRecommend.recommendChallengeLiveDeck(24, {
-    musicMeta,
-    limit: 1
-    // debugLog: (str) => { console.log(`Challenge: ${str}`) }
-  }).then(it => {
-    // console.log(it)
-    expect(it[0].score).toBeGreaterThanOrEqual(score)
-    const deck = DeckService.toUserChallengeLiveSoloDeck(it[0].cards, 24)
-    expect(deck.leader).toBe(it[0].cards[0].cardId)
-  })
+test('base recommendation selects the strongest valid five-character deck', async () => {
+  const { musicMeta, userCards } = await getFixtureInput()
+  const result = await new BaseDeckRecommend(TEST_DATA_PROVIDER).recommendHighScoreDeck(
+    userCards,
+    () => 0,
+    {
+      musicMeta,
+      algorithm: RecommendAlgorithm.DFS,
+      target: RecommendTarget.Power,
+      timeoutMs: 5000
+    },
+    LiveType.MULTI
+  )
+
+  expect(result).toHaveLength(1)
+  expect(result[0].cards.map(it => it.cardId).sort((a, b) => a - b)).toEqual([103, 104, 105, 106, 107])
+  expect(result[0].score).toBe(result[0].power.total)
 })
-test('event', async () => {
-  // await maxUser()
-  const musicMeta = await liveCalculator.getMusicMeta(74, 'master')
-  const cards = await deckService.getDeckCards({
-    userId: 1145141919810,
-    deckId: 1,
-    name: 'ユニット01',
-    leader: 510,
-    subLeader: 87,
-    member1: 510,
-    member2: 87,
-    member3: 196,
-    member4: 152,
-    member5: 219
-  })
-  const deckDetail = await deckCalculator.getDeckDetail(cards, cards, await eventService.getEventConfig(89))
-  const score = EventCalculator.getDeckEventPoint(deckDetail, musicMeta, LiveType.MULTI, EventType.MARATHON)
-  // console.log(`Current score:${score}`)
-  const recommend0 = await eventRecommend.recommendEventDeck(89, LiveType.MULTI, {
-    musicMeta,
-    limit: 1
-    // debugLog: (str) => { console.log(`Event0: ${str}`) }
-  })
-  // console.log(recommend0[0].deckCards)
-  expect(recommend0[0].score).toBeGreaterThanOrEqual(score)
 
-  const deck = DeckService.toUserDeck(recommend0[0].cards)
-  expect(deck.leader).toBe(recommend0[0].cards[0].cardId)
-
-  const recommend1 = await eventRecommend.recommendEventDeck(89, LiveType.MULTI, {
+test('challenge recommendation keeps cards for the requested character', async () => {
+  const { musicMeta } = await getFixtureInput()
+  const result = await new ChallengeLiveDeckRecommend(TEST_DATA_PROVIDER).recommendChallengeLiveDeck(1, {
     musicMeta,
-    limit: 1,
-    cardConfig: {
-      rarity_1: {
-        rankMax: true,
-        masterMax: true,
-        episodeRead: true,
-        skillMax: true
-      },
-      rarity_2: {
-        rankMax: true,
-        masterMax: true,
-        episodeRead: true,
-        skillMax: true
-      },
-      rarity_3: {
-        rankMax: true,
-        masterMax: true,
-        episodeRead: true,
-        skillMax: true
-      },
-      rarity_birthday: {
-        rankMax: true,
-        masterMax: false,
-        episodeRead: true,
-        skillMax: false
-      },
-      rarity_4: {
-        rankMax: true,
-        masterMax: false,
-        episodeRead: true,
-        skillMax: false
-      }
+    member: 2,
+    algorithm: RecommendAlgorithm.DFS,
+    timeoutMs: 5000
+  })
+
+  expect(result).toHaveLength(1)
+  expect(result[0].cards.map(it => it.cardId).sort((a, b) => a - b)).toEqual([101, 107])
+  expect(result[0].score).toBeGreaterThan(0)
+})
+
+test('event recommendation returns a scored deck with fixture bonuses', async () => {
+  const { musicMeta } = await getFixtureInput()
+  const result = await new EventDeckRecommend(TEST_DATA_PROVIDER).recommendEventDeck(
+    100,
+    LiveType.MULTI,
+    {
+      musicMeta,
+      algorithm: RecommendAlgorithm.DFS,
+      timeoutMs: 5000
     }
-    // debugLog: (str) => { console.log(`Event1: ${str}`) }
-  })
-  // console.log(recommend1)
-  expect(recommend1[0].score).toBeGreaterThanOrEqual(recommend0[0].score)
+  )
+
+  expect(result).toHaveLength(1)
+  expect(result[0].cards).toHaveLength(5)
+  expect(result[0].eventBonus).toBeGreaterThanOrEqual(125)
+  expect(result[0].score).toBeGreaterThan(0)
 })
 
-const bloomSupportRecommend = new BloomSupportDeckRecommend(TestDataProvider.INSTANCE)
+test('world bloom recommendation and support recommendation agree', async () => {
+  const { musicMeta } = await getFixtureInput()
+  const eventRecommend = new EventDeckRecommend(TEST_DATA_PROVIDER)
+  const result = await eventRecommend.recommendEventDeck(
+    101,
+    LiveType.MULTI,
+    {
+      musicMeta,
+      algorithm: RecommendAlgorithm.DFS,
+      timeoutMs: 5000
+    },
+    1
+  )
 
-test('bloom', async () => {
-  const musicMeta = await liveCalculator.getMusicMeta(74, 'master')
-  const recommend0 = await eventRecommend.recommendEventDeck(112, LiveType.MULTI, {
-    musicMeta,
-    limit: 10,
-    debugLog: (str) => {
-      console.log(`Bloom: ${str}`)
-    }
-  }, 18)
-  console.log(recommend0.map(it => `${it.eventBonus !== undefined ? it.eventBonus : '0'}+${it.supportDeckBonus !== undefined ? it.supportDeckBonus : '0'} -> ${it.score}`))
-  expect(recommend0.length).toBeGreaterThanOrEqual(1)
-  expect(recommend0[0].supportDeckBonus).toBeGreaterThanOrEqual(1)
+  expect(result).toHaveLength(1)
+  expect(result[0].eventBonus).toBe(120)
+  expect(result[0].supportDeckBonus).toBeGreaterThan(0)
 
-  const recommend1 = await bloomSupportRecommend.recommendBloomSupportDeck(recommend0[0].cards, 112, 18)
-  // console.log(recommend1.map(it => it.supportDeckBonus))
-  expect(recommend1.reduce((a, it) => a + safeNumber(it.supportDeckBonus), 0)).toBe(recommend0[0].supportDeckBonus)
+  const supportCards = await new BloomSupportDeckRecommend(TEST_DATA_PROVIDER)
+    .recommendBloomSupportDeck(result[0].cards, 101, 1)
+  expect(supportCards.reduce((sum, card) => sum + (card.supportDeckBonus ?? 0), 0))
+    .toBe(result[0].supportDeckBonus)
 })
 
-const eventBonusRecommend = new EventBonusDeckRecommend(TestDataProvider.INSTANCE)
+test('event bonus recommendation finds an exact deterministic target', async () => {
+  const { musicMeta } = await getFixtureInput()
+  const result = await new EventBonusDeckRecommend(TEST_DATA_PROVIDER).recommendEventBonusDeck(
+    100,
+    150,
+    LiveType.MULTI,
+    { musicMeta, timeoutMs: 5000 }
+  )
 
-test('event bonus target', async () => {
-  const musicMeta = await liveCalculator.getMusicMeta(74, 'master')
-
-  // 先用普通推荐获得一个实际可行的活动加成值
-  const recommend0 = await eventRecommend.recommendEventDeck(89, LiveType.MULTI, {
-    musicMeta,
-    limit: 1
-  })
-  expect(recommend0.length).toBeGreaterThanOrEqual(1)
-  const knownBonus = safeNumber(recommend0[0].eventBonus) + safeNumber(recommend0[0].supportDeckBonus)
-  console.log(`Known achievable event bonus: ${knownBonus}`)
-
-  // 用已知的加成值作为精确目标（minBonus=maxBonus=knownBonus），应能找到恰好等于该值的卡组
-  const result = await eventBonusRecommend.recommendEventBonusDeck(89, knownBonus, LiveType.MULTI, {
-    musicMeta,
-    debugLog: (str) => { console.log(`EventBonus: ${str}`) }
-  })
-  expect(result.length).toBeGreaterThanOrEqual(1)
-  const actualBonus = safeNumber(result[0].eventBonus) + safeNumber(result[0].supportDeckBonus)
-  expect(actualBonus).toBe(knownBonus)
-
-  // 检查卡组中没有重复角色
-  const characterIds = result[0].cards.map(it => it.cardId)
-  expect(new Set(characterIds).size).toBe(characterIds.length)
-
-  // 用范围搜索（传入maxBonus作为第6参数），应返回在范围内的卡组
-  const rangeResult = await eventBonusRecommend.recommendEventBonusDeck(89, 0, LiveType.MULTI, {
-    musicMeta,
-    debugLog: (str) => { console.log(`EventBonusRange: ${str}`) }
-  }, 0, knownBonus)
-  expect(rangeResult.length).toBeGreaterThanOrEqual(1)
-  // 所有结果的加成值应在 [0, knownBonus] 范围内
-  rangeResult.forEach(it => {
-    const b = safeNumber(it.eventBonus) + safeNumber(it.supportDeckBonus)
-    expect(b).toBeGreaterThanOrEqual(0)
-    expect(b).toBeLessThanOrEqual(knownBonus)
-  })
-
-  // 用不可能的目标值，应返回空数组
-  const impossibleResult = await eventBonusRecommend.recommendEventBonusDeck(89, 99999, LiveType.MULTI, {
-    musicMeta
-  })
-  expect(impossibleResult.length).toBe(0)
+  expect(result).toHaveLength(1)
+  expect(result[0].score).toBe(150)
+  expect(result[0].eventBonus).toBe(150)
+  expect(result[0].cards.map(it => it.cardId).sort((a, b) => a - b)).toEqual([101, 102, 103, 104, 105])
 })

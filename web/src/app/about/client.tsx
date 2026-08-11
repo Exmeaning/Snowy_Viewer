@@ -175,17 +175,7 @@ export default function AboutClient() {
                             >
                                 <span>{t("page.about.policies.terms")}</span>
                             </Link>
-                            <ExternalLink
-                                href="https://www.google.com/settings/ads"
-                                target="_blank"
-                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:text-miku hover:border-miku/30 hover:shadow-sm transition-all"
-                            >
-                                <span>{t("page.about.policies.googleAds")}</span>
-                            </ExternalLink>
                         </div>
-                        <p className="text-xs text-slate-400 mt-4 leading-relaxed">
-                            {t("page.about.policies.adSettingsHint")}
-                        </p>
                     </div>
 
                     <div className="md:col-span-3 p-6 rounded-xl shadow-md border border-slate-100 bg-white/80 backdrop-blur-sm hover:shadow-xl transition-shadow">

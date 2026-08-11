@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
@@ -11,9 +12,29 @@ import (
 	"snowy_viewer/internal/models"
 )
 
+const (
+	defaultGachaPage     = 1
+	defaultGachaLimit    = 24
+	maxGachaPage         = 1_000_000
+	maxGachaLimit        = 100
+	masterDataRetryAfter = "30"
+)
+
 // Handler holds dependencies for HTTP handlers
 type Handler struct {
 	store *masterdata.Store
+}
+
+func (h *Handler) requireMasterData(w http.ResponseWriter) bool {
+	if h.store.IsReady() {
+		return true
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Retry-After", masterDataRetryAfter)
+	w.WriteHeader(http.StatusServiceUnavailable)
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": "masterdata unavailable"})
+	return false
 }
 
 // New creates a new Handler instance
@@ -35,40 +56,60 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *Handler) handleCardEventMap(w http.ResponseWriter, r *http.Request) {
+	if !h.requireMasterData(w) {
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(h.store.GetCardEventMap())
 }
 
 func (h *Handler) handleMusicEventMap(w http.ResponseWriter, r *http.Request) {
+	if !h.requireMasterData(w) {
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(h.store.GetMusicEventMap())
 }
 
 func (h *Handler) handleCardGachaMap(w http.ResponseWriter, r *http.Request) {
+	if !h.requireMasterData(w) {
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(h.store.GetCardGachaMap())
 }
 
 func (h *Handler) handleEventVirtualLiveMap(w http.ResponseWriter, r *http.Request) {
+	if !h.requireMasterData(w) {
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(h.store.GetEventVirtualLiveMap())
 }
 
 func (h *Handler) handleVirtualLiveEventMap(w http.ResponseWriter, r *http.Request) {
+	if !h.requireMasterData(w) {
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(h.store.GetVirtualLiveEventMap())
 }
 
 func (h *Handler) handleGachaList(w http.ResponseWriter, r *http.Request) {
+	if !h.requireMasterData(w) {
+		return
+	}
 	// Parse Params
 	query := r.URL.Query()
-	page, _ := strconv.Atoi(query.Get("page"))
-	if page < 1 {
-		page = 1
+	page, err := parseBoundedPositiveInt(query.Get("page"), defaultGachaPage, maxGachaPage)
+	if err != nil {
+		writePaginationError(w, err)
+		return
 	}
-	limit, _ := strconv.Atoi(query.Get("limit"))
-	if limit < 1 {
-		limit = 24
+	limit, err := parseBoundedPositiveInt(query.Get("limit"), defaultGachaLimit, maxGachaLimit)
+	if err != nil {
+		writePaginationError(w, err)
+		return
 	}
 	search := strings.ToLower(query.Get("search"))
 	sortBy := query.Get("sortBy")
@@ -172,7 +213,27 @@ func (h *Handler) handleGachaList(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+func parseBoundedPositiveInt(raw string, fallback, maximum int) (int, error) {
+	if raw == "" {
+		return fallback, nil
+	}
+	value, err := strconv.ParseUint(raw, 10, 31)
+	if err != nil || value < 1 || value > uint64(maximum) {
+		return 0, fmt.Errorf("pagination value must be between 1 and %d", maximum)
+	}
+	return int(value), nil
+}
+
+func writePaginationError(w http.ResponseWriter, err error) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusBadRequest)
+	json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+}
+
 func (h *Handler) handleGachaDetail(w http.ResponseWriter, r *http.Request) {
+	if !h.requireMasterData(w) {
+		return
+	}
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < 4 {
 		http.NotFound(w, r)

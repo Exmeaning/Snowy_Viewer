@@ -34,6 +34,11 @@ export const ZH_TW_SEO_PAGE_METADATA = {
         "瀏覽 Project SEKAI 歌曲清單，檢視譜面難度、定數、作詞作曲與 MV 資訊。",
         ["歌曲", "歌曲圖鑑", "譜面", "歌曲 Meta"],
     ),
+    lyrics: page(
+        "歌詞資料庫",
+        "瀏覽 Project SEKAI 已發布的歌曲歌詞，對照日文原文、簡體中文與英文翻譯。",
+        ["歌詞", "歌曲歌詞", "歌詞翻譯"],
+    ),
     soundtrack: page(
         "遊戲原聲帶",
         "收聽並瀏覽 Project SEKAI 遊戲原聲帶、背景音樂與相關音訊資源。",
@@ -449,6 +454,7 @@ export const ZH_TW_DETAIL_FALLBACK_TITLES = {
     live: "虛擬演唱會詳情",
     manga: "漫畫詳情",
     music: "歌曲詳情",
+    lyrics: "歌詞詳情",
     mysekai: "家具詳情",
 } as const;
 
@@ -462,6 +468,7 @@ export const ZH_TW_DETAIL_FALLBACK_DESCRIPTIONS = {
     live: "檢視 Project SEKAI 虛擬演唱會詳情、時間與獎勵資訊",
     manga: "檢視 Project SEKAI 官方四格漫畫各話詳情",
     music: "檢視 Project SEKAI 歌曲詳情、譜面、作詞作曲與封面資源",
+    lyrics: "檢視 Project SEKAI 歌曲歌詞、日文原文與已發布翻譯",
     mysekai: "檢視 Project SEKAI MySekai 家具詳情、素材與風味文字",
 } as const;
 
@@ -476,5 +483,6 @@ export const ZH_TW_DETAIL_SEO_TEMPLATES = {
     live: "查看 Project SEKAI 虛擬演唱會「{name}」的演出時間、出演角色、曲目與參與獎勵。",
     manga: "閱讀 Project SEKAI 官方四格漫畫「{title}」，查看本話標題與完整漫畫圖片。",
     music: "查看 Project SEKAI 歌曲「{title}」的難度與譜面資料、演唱版本和封面；作詞：{lyricist}，作曲：{composer}。",
+    lyrics: "閱讀 Project SEKAI 歌曲「{title}」的日文歌詞，並對照已發布的簡體中文與英文翻譯。",
     mysekai: "查看 Project SEKAI MySekai 家具「{name}」的外觀、製作素材與物品說明。{flavorSuffix}",
 } as const;

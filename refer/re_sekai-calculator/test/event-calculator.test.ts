@@ -1,28 +1,26 @@
-import { TestDataProvider } from './data-provider.test'
 import {
   CardEventCalculator,
-  DeckService,
   EventCalculator,
   EventType,
-  LiveType
+  LiveType,
+  type UserCard
 } from '../src'
+import { TEST_DATA_PROVIDER } from './fixtures/test-data-provider'
 
-const eventCalculator = new EventCalculator(TestDataProvider.INSTANCE)
-const cardEventCalculator = new CardEventCalculator(TestDataProvider.INSTANCE)
-const deckService = new DeckService(TestDataProvider.INSTANCE)
-// 选一张卡算加成，25+25
-test('card', async () => {
-  await cardEventCalculator.getCardEventBonus(await deckService.getUserCard(510), 88).then(it => {
-    expect(it).toBe(50)
-  })
+test('card event bonus combines fixture, rarity, and featured-card bonuses', async () => {
+  const cards = await TEST_DATA_PROVIDER.getUserData<UserCard[]>('userCards')
+  const bonus = await new CardEventCalculator(TEST_DATA_PROVIDER).getCardEventBonus(cards[0], 100)
+
+  expect(bonus.getBonus()).toEqual({ fixedBonus: 25, cardBonus: 25, leaderBonus: 0 })
+  expect(bonus.getMaxBonus(true)).toBe(50)
 })
 
-// 选一个卡组算加成，按mock的数据应该是287.5%加成
-test('deck', async () => {
-  const deck = await deckService.getDeckCards(await deckService.getDeck(1))
-  await eventCalculator.getDeckEventBonus(deck, 88).then(it => {
-    expect(it).toBe(240)
-  })
+test('deck event bonus sums the fixture cards', async () => {
+  const cards = await TEST_DATA_PROVIDER.getUserData<UserCard[]>('userCards')
+  const bonus = await new EventCalculator(TEST_DATA_PROVIDER)
+    .getDeckEventBonus(cards.slice(0, 5), 100)
+
+  expect(bonus).toBe(150)
 })
 
 test('challenge point', () => {

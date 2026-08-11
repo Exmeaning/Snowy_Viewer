@@ -18,6 +18,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import {
     NAV_ITEM_LABEL_KEYS,
 } from "@/lib/navigation";
+import { LYRICS_ENTRY_VISIBLE } from "@/lib/lyrics-visibility";
 import {
     getShortcutById,
     isEditableEventTarget,
@@ -79,6 +80,15 @@ const navigationGroups: NavGroup[] = [
                     </svg>
                 ),
             },
+            ...(LYRICS_ENTRY_VISIBLE ? [{
+                id: "lyrics",
+                href: "/lyrics",
+                icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 18V5l11-2v13M9 9l11-2M9 18a3 3 0 11-3-3h3v3zm11-2a3 3 0 11-3-3h3v3z" />
+                    </svg>
+                ),
+            }] : []),
             {
                 id: "musicMeta",
                 href: "/music/meta",
@@ -714,11 +724,12 @@ export default function Sidebar({
                     {/* Home shortcut */}
                     <Link
                         href="/"
+                        prefetch={false}
                         onClick={handleNavClick}
                         data-nav-index={(() => { const i = flatIdx; flatIdx++; return i; })()}
                         className={`pressable flex items-center gap-3 px-4 py-2 rounded-full text-sm type-on-glass ${focusedIndex === 0
                             ? "island-pill-active ring-2 ring-miku/30"
-                            : pathname === "/"
+                            : isHome
                                 ? "island-pill-active"
                                 : "island-pill-hover text-slate-600 dark:text-slate-300 hover:text-miku dark:hover:text-miku"
                             }`}
@@ -770,6 +781,7 @@ export default function Sidebar({
                                                     }`}>
                                                     <Link
                                                         href={item.href}
+                                                        prefetch={false}
                                                         onClick={handleNavClick}
                                                         data-nav-index={thisIdx}
                                                         className="flex items-center gap-3 px-4 py-2 text-sm font-medium type-on-glass flex-1 min-w-0"
@@ -792,6 +804,7 @@ export default function Sidebar({
                     {/* User Info Card */}
                     <Link
                         href="/profile"
+                        prefetch={false}
                         onClick={handleNavClick}
                         className="pressable flex items-center gap-3 p-2 rounded-2xl hover:bg-miku/8 dark:hover:bg-miku/12 group"
                     >

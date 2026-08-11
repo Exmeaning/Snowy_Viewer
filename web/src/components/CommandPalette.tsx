@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback, useDeferredValue } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { searchableNavItems, SEARCH_GROUP_LABEL_KEYS, SEARCH_GROUP_ROUTES, SEARCH_STATIC_GROUP_LABEL_KEYS, NAV_ITEM_LABEL_KEYS } from "@/lib/navigation";
@@ -14,6 +14,7 @@ interface SearchIndexItem {
     id: number;
     n: string;   // name (JP)
     cn?: string;  // name (CN translation)
+    en?: string;  // name (EN translation)
     g: string;    // group: cards, music, events, gacha
     c?: number;   // characterId (cards only)
 }
@@ -40,6 +41,7 @@ const WILDCARD_STORAGE_KEY = "moesekai_search_wildcard_enabled";
 export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandPaletteProps) {
     const [mounted, setMounted] = useState(false);
     const [query, setQuery] = useState("");
+    const deferredQuery = useDeferredValue(query);
     const [activeIndex, setActiveIndex] = useState(0);
     const [useWildcard, setUseWildcard] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -51,7 +53,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
     const [isLoadingIndex, setIsLoadingIndex] = useState(false);
     const indexLoadedRef = useRef(false);
     const wildcardShortcut = getPrimaryShortcutLabel("toggle-search-wildcard");
-    const { t } = useI18n();
+    const { locale, t } = useI18n();
     const prefersReducedMotion = useReducedMotion();
     const overlayTransition = getMotionTransition("snappy", {
         reducedMotion: !!prefersReducedMotion,
@@ -84,28 +86,29 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
             indexLoadedRef.current = true;
             setIsLoadingIndex(true);
 
-            // Load search index and music aliases in parallel
-            Promise.all([
-                fetch("https://translation.exmeaning.com/data/search-index.json")
-                    .then((res) => res.json()) as Promise<SearchIndexItem[]>,
-                fetchMusicAliases().catch(() => new Map()) // Don't fail if aliases fail to load
-            ])
-                .then(([indexData, aliasesMap]) => {
+            // Aliases are optional and must not delay the primary multilingual index.
+            fetch("https://translation.exmeaning.com/data/search-index.json")
+                .then((res) => res.json() as Promise<SearchIndexItem[]>)
+                .then((indexData) => {
                     setSearchIndex(indexData);
-                    setMusicAliasesMap(aliasesMap);
-                    setIsLoadingIndex(false);
                 })
                 .catch((err) => {
                     console.warn("Failed to load search index:", err);
+                })
+                .finally(() => {
                     setIsLoadingIndex(false);
                 });
+
+            fetchMusicAliases()
+                .then(setMusicAliasesMap)
+                .catch(() => setMusicAliasesMap(new Map()));
         }
     }, [isOpen, isLoadingIndex]);
 
     // Filter items based on query
     const searchRegex = useMemo(() => {
         if (!useWildcard) return null;
-        const q = query.trim();
+        const q = deferredQuery.trim();
         if (!q) return null;
         try {
             // Convert * and ? to regex equivalents, escape other regex specials
@@ -119,10 +122,10 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
         } catch (_e) {
             return null;
         }
-    }, [query, useWildcard]);
+    }, [deferredQuery, useWildcard]);
 
     const filtered = useMemo(() => {
-        const qStr = query.trim();
+        const qStr = deferredQuery.trim();
         if (!qStr) return searchableNavItems;
         const q = qStr.toLowerCase();
 
@@ -143,11 +146,11 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                     item.keywords.some((kw) => kw.toLowerCase().includes(q));
             }
         });
-    }, [query, searchRegex, t]);
+    }, [deferredQuery, searchRegex, t]);
 
     // Filter dynamic search index items based on query
     const dynamicFiltered = useMemo(() => {
-        const qStr = query.trim();
+        const qStr = deferredQuery.trim();
         if (!qStr || !searchIndex) return [];
         const q = qStr.toLowerCase();
 
@@ -157,6 +160,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                 if (searchRegex.test(idStr)) return { ...item };
                 if (searchRegex.test(item.n)) return { ...item };
                 if (item.cn && searchRegex.test(item.cn)) return { ...item };
+                if (item.en && searchRegex.test(item.en)) return { ...item };
                 if (item.c) {
                     const charName = CHARACTER_NAMES[item.c];
                     if (charName && searchRegex.test(charName)) return { ...item };
@@ -174,6 +178,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                 if (idStr === qStr) return { ...item }; // Exact ID match
                 if (item.n.toLowerCase().includes(q)) return { ...item };
                 if (item.cn && item.cn.toLowerCase().includes(q)) return { ...item };
+                if (item.en && item.en.toLowerCase().includes(q)) return { ...item };
                 // For cards, also search by character name
                 if (item.c) {
                     const charName = CHARACTER_NAMES[item.c];
@@ -201,7 +206,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
         }
 
         return Object.entries(grouped).flatMap(([, items]) => items);
-    }, [query, searchIndex, searchRegex, musicAliasesMap]);
+    }, [deferredQuery, searchIndex, searchRegex, musicAliasesMap]);
 
     // Combined flat list for keyboard navigation
     const totalItems = filtered.length + dynamicFiltered.length;
@@ -479,12 +484,14 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                                 const subtitle = item.c
                                                     ? CHARACTER_NAMES[item.c] || ""
                                                     : "";
-                                                // For music, show CN title; if matched via alias, append alias
-                                                const cnTitle = item.g === "music" ? (item.cn || "") : "";
-                                                const aliasHint = item.g === "music" && item.matchedAlias && item.matchedAlias !== item.cn
+                                                // Show the active target title while all indexed locales remain searchable.
+                                                const localizedTitle = item.g === "music"
+                                                    ? (locale === "zh-CN" ? item.cn : locale === "en-US" ? item.en : "") || ""
+                                                    : "";
+                                                const aliasHint = item.g === "music" && item.matchedAlias && item.matchedAlias !== localizedTitle
                                                     ? `(${item.matchedAlias})`
                                                     : "";
-                                                const musicSubtitle = [cnTitle, aliasHint].filter(Boolean).join(" ");
+                                                const musicSubtitle = [localizedTitle, aliasHint].filter(Boolean).join(" ");
                                                 return (
                                                     <button
                                                         key={`${item.g}-${item.id}`}

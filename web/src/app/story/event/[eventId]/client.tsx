@@ -20,6 +20,14 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { IStoryAdminResponse, IStoryAdminChapter } from "@/types/storyAdmin";
 import ExternalLink from "@/components/ExternalLink";
 import { useI18n } from "@/contexts/I18nContext";
+import { useTranslation } from "@/contexts/TranslationContext";
+import {
+  getStoryTranslation,
+  loadEventStoryTranslation,
+  selectEventStoryLocalizedText,
+  type IEventStoryTranslation,
+} from "@/lib/eventStoryTranslation";
+import type { UiLocale } from "@/lib/i18n";
 
 const STORY_DETAIL_MIRROR_BASE_URL = "https://moe.exmeaning.com/story/detail";
 
@@ -81,7 +89,7 @@ function normalizeMirrorStoryDetail(
     asset_bundle_name: assetbundleName,
     title_jp: data.title_jp || "",
     title_cn: data.title_cn || "",
-    outline_jp: data.outline_jp || "",
+    outline_jp: data.outline_jp || story?.outline || "",
     outline_cn: data.outline_cn || "",
     chapter_count: chapters.length,
     summary_status: chapters.length > 0 ? "completed" : "missing",
@@ -139,11 +147,15 @@ function ChapterItem({
   eventId,
   assetBundleName,
   showImage,
+  locale,
+  translatedTitle,
 }: {
   chapter: IStoryAdminChapter;
   eventId: number;
   assetBundleName: string;
   showImage: boolean;
+  locale: UiLocale;
+  translatedTitle?: string;
 }) {
   const { assetSource } = useTheme();
   const { t } = useI18n();
@@ -151,6 +163,17 @@ function ChapterItem({
     assetBundleName,
     chapter.chapter_no,
     assetSource,
+  );
+  const displayTitle = selectEventStoryLocalizedText(
+    locale,
+    chapter.title_jp,
+    chapter.title_cn,
+    translatedTitle,
+  );
+  const displaySummary = selectEventStoryLocalizedText(
+    locale,
+    undefined,
+    chapter.summary_cn,
   );
 
   return (
@@ -177,7 +200,7 @@ function ChapterItem({
           <div className="flex-1 min-w-0 py-1">
             <div className="flex items-center justify-between gap-2">
               <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 group-hover:text-miku transition-colors line-clamp-1">
-                {chapter.title_cn || chapter.title_jp}
+                {displayTitle}
               </h3>
               <div className="sm:hidden text-slate-400 group-hover:text-miku transition-all group-hover:translate-x-1">
                 <svg
@@ -195,9 +218,9 @@ function ChapterItem({
                 </svg>
               </div>
             </div>
-            {chapter.summary_cn ? (
+            {displaySummary ? (
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                {chapter.summary_cn}
+                {displaySummary}
               </p>
             ) : (
               <p className="text-sm text-slate-400 italic mt-1">{t("page.story.event.noChapterSummary")}</p>
@@ -226,12 +249,18 @@ function ChapterItem({
 
 export default function StoryEventDetailClient() {
   const params = useParams();
-  const { assetSource, serverSource } = useTheme();
-  const { t } = useI18n();
+  const { assetSource, serverSource, useLLMTranslation } = useTheme();
+  const { locale, t } = useI18n();
+  const { t: translateMasterText } = useTranslation();
   const eventId = Number(params.eventId);
 
   const [adminData, setAdminData] = useState<IStoryAdminResponse | null>(null);
   const [eventInfo, setEventInfo] = useState<IEventInfo | null>(null);
+  const [eventStory, setEventStory] = useState<IEventStory | null>(null);
+  const [translationState, setTranslationState] = useState<{
+    locale: UiLocale;
+    translation: IEventStoryTranslation | null;
+  } | null>(null);
   const [bilibiliEvent, setBilibiliEvent] = useState<IBilibiliEvent | null>(
     null,
   );
@@ -253,15 +282,18 @@ export default function StoryEventDetailClient() {
         setError(null);
         setAdminData(null);
         setEventInfo(null);
+        setEventStory(null);
+        setTranslationState(null);
         setBilibiliEvent(null);
         setFallbackChapters([]);
 
         const bilibiliPromise = fetchOptionalBilibiliEvent(eventId);
 
-        const [eventsData, storiesData, bEvent] = await Promise.all([
+        const [eventsData, storiesData, bEvent, storyTranslation] = await Promise.all([
           fetchMasterData<IEventInfo[]>("events.json"),
           fetchMasterData<IEventStory[]>("eventStories.json"),
           bilibiliPromise,
+          loadEventStoryTranslation(eventId, locale),
         ]);
 
         if (cancelled) return;
@@ -288,6 +320,8 @@ export default function StoryEventDetailClient() {
         if (cancelled) return;
 
         setEventInfo(event);
+        setEventStory(story ?? null);
+        setTranslationState({ locale, translation: storyTranslation });
         setFallbackChapters(nextFallbackChapters);
         if (summaryData) setAdminData(summaryData);
         if (bEvent) setBilibiliEvent(bEvent);
@@ -305,7 +339,7 @@ export default function StoryEventDetailClient() {
     return () => {
       cancelled = true;
     };
-  }, [eventId, serverSource, t]);
+  }, [eventId, locale, serverSource, t]);
 
   if (isLoading) {
     return (
@@ -350,6 +384,29 @@ export default function StoryEventDetailClient() {
 
   const chapters = adminData?.chapters ?? [];
   const totalChapters = chapters.length || fallbackChapters.length;
+  const storyTranslation = translationState?.locale === locale
+    ? translationState.translation
+    : null;
+  const sourceTitle = adminData?.title_jp || eventInfo.name;
+  const translatedEventTitle = translateMasterText("events", "name", eventInfo.name) ?? undefined;
+  const displayTitle = selectEventStoryLocalizedText(
+    locale,
+    sourceTitle,
+    adminData?.title_cn,
+    translatedEventTitle,
+  );
+  const displaySummary = selectEventStoryLocalizedText(
+    locale,
+    undefined,
+    adminData?.summary_cn,
+  );
+  const displayOutline = selectEventStoryLocalizedText(
+    locale,
+    adminData?.outline_jp || eventStory?.outline,
+    adminData?.outline_cn,
+  );
+  const showSummaryCredit = locale === "zh-CN"
+    && Boolean(adminData?.summary_cn || adminData?.outline_cn);
 
   return (
     <MainLayout>
@@ -379,11 +436,13 @@ export default function StoryEventDetailClient() {
             </div>
             <div className="flex-1 text-center sm:text-left min-w-0">
               <h1 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white mb-2 drop-shadow-sm">
-                {adminData?.title_cn || eventInfo.name}
+                {displayTitle}
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
-                {adminData?.title_jp}
-              </p>
+              {sourceTitle && sourceTitle !== displayTitle && (
+                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
+                  {sourceTitle}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -499,24 +558,24 @@ export default function StoryEventDetailClient() {
                 </svg>
                 {t("page.story.event.summaryTitle")}
               </h2>
-              {adminData?.summary_cn ? (
+              {displaySummary ? (
                 <div className="prose prose-sm dark:prose-invert text-slate-600 dark:text-slate-400">
-                  <p>{adminData.summary_cn}</p>
+                  <p>{displaySummary}</p>
                 </div>
               ) : (
                 <p className="text-slate-400 italic text-sm">{t("page.story.event.noEventSummary")}</p>
               )}
-              {adminData?.outline_cn && (
+              {displayOutline && (
                 <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700">
                   <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                     {t("page.story.event.outlineTitle")}
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {adminData.outline_cn}
+                    {displayOutline}
                   </p>
                 </div>
               )}
-              {adminData && (
+              {showSummaryCredit && (
                 <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
                   <p className="text-xs text-slate-400 italic text-right">
                     {t("page.story.event.summaryCredit")}
@@ -561,6 +620,10 @@ export default function StoryEventDetailClient() {
                     eventId={eventId}
                     assetBundleName={eventInfo.assetbundleName}
                     showImage={showEpImages}
+                    locale={locale}
+                    translatedTitle={useLLMTranslation
+                      ? getStoryTranslation(storyTranslation, chapter.chapter_no)?.title
+                      : undefined}
                   />
                 ))
               ) : fallbackChapters.length > 0 ? (
@@ -583,6 +646,10 @@ export default function StoryEventDetailClient() {
                     eventId={eventId}
                     assetBundleName={eventInfo.assetbundleName}
                     showImage={showEpImages}
+                    locale={locale}
+                    translatedTitle={useLLMTranslation
+                      ? getStoryTranslation(storyTranslation, chapter.chapter_no)?.title
+                      : undefined}
                   />
                 ))
               ) : (

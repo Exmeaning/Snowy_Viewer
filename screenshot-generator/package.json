@@ -8,9 +8,9 @@
         "generate": "node index.js"
     },
     "dependencies": {
-        "puppeteer": "^21.0.0"
+        "puppeteer": "25.3.0"
     },
     "engines": {
-        "node": ">=18"
+        "node": ">=22.12.0"
     }
 }

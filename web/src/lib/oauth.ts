@@ -58,6 +58,21 @@ const OAUTH2_REDIRECT_URI = process.env.NEXT_PUBLIC_OAUTH2_REDIRECT_URI || "";
 const OAUTH_PENDING_KEY = "moesekai_oauth_pending";
 const OAUTH_PENDING_TTL_MS = 10 * 60 * 1000;
 const OAUTH2_REQUEST_TIMEOUT_MS = 15 * 1000;
+const OAUTH_RETURN_FALLBACK = "/profile";
+
+export function sanitizeOAuthReturnTo(value: unknown, fallback = OAUTH_RETURN_FALLBACK): string {
+    if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return fallback;
+    if (/[\\\u0000-\u001f\u007f]/.test(value)) return fallback;
+
+    try {
+        const decoded = decodeURIComponent(value);
+        if (decoded.startsWith("//") || /[\\\u0000-\u001f\u007f]/.test(decoded)) return fallback;
+        const parsed = new URL(value, "https://moesekai.invalid");
+        return parsed.origin === "https://moesekai.invalid" ? value : fallback;
+    } catch {
+        return fallback;
+    }
+}
 
 export function getOAuthConfig() {
     return {
@@ -171,7 +186,7 @@ export async function startOAuthConnect(returnTo = "/profile"): Promise<void> {
     const pending: OAuthPendingState = {
         state,
         codeVerifier,
-        returnTo: localizePathForBrowser(returnTo),
+        returnTo: localizePathForBrowser(sanitizeOAuthReturnTo(returnTo)),
         createdAt: Date.now(),
     };
     const nextPendingMap = prunePendingOAuthStates(readPendingOAuthStateMap());
@@ -216,7 +231,7 @@ export function clearPendingOAuthState(state?: string | null): void {
 }
 
 export function getOAuthReturnTo(state?: string | null): string {
-    return getPendingOAuthState(state)?.returnTo || "/profile";
+    return sanitizeOAuthReturnTo(getPendingOAuthState(state)?.returnTo);
 }
 
 type OAuthErrorTranslator = (key: string) => string;

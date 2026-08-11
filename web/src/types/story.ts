@@ -241,6 +241,9 @@ export interface IProcessedAction {
     // CN Translation (from event story translation files)
     cnBody?: string;
     cnDisplayName?: string;
+    // Locale-neutral target fields. CN aliases above remain for legacy callers.
+    translatedBody?: string;
+    translatedDisplayName?: string;
     translationSource?: 'official_cn' | 'llm' | 'human';
     // SpecialEffect specific
     seType?: string;

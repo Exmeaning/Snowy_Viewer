@@ -91,3 +91,21 @@ web/public/globe.svg
 web/public/next.svg
 web/public/vercel.svg
 web/public/window.svg
+
+# Local build handoff and machine-specific overrides
+local-dist/
+.env.*
+!.env.example
+!.env.*.example
+.npmrc
+.netrc
+*.p12
+*.pfx
+*.pem
+*.key
+*.keystore
+*.jks
+*.mobileprovision
+*.code-workspace
+coverage/
+refer/re_sekai-calculator/coverage/

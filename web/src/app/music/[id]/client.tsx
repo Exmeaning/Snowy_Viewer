@@ -28,6 +28,8 @@ import { getCharacterIconUrl, getEventBannerUrl, MOE_MUSIC_META_URL, MOE_RANKING
 import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
+import { getPublishedLyricsIndexEntry, hasLyricsDetail } from "@/lib/lyrics";
+import { LYRICS_ENTRY_VISIBLE } from "@/lib/lyrics-visibility";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import { useI18n } from "@/contexts/I18nContext";
 
@@ -116,6 +118,7 @@ export default function MusicDetailPage() {
     const [relatedEvents, setRelatedEvents] = useState<EventLite[]>([]);
     const [limitedTimeMusics, setLimitedTimeMusics] = useState<IlimitedTimeMusicsInfo[]>([]);
     const [outsideCharacters, setOutsideCharacters] = useState<Record<number, string>>({});
+    const [hasPublishedLyrics, setHasPublishedLyrics] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
@@ -139,6 +142,28 @@ export default function MusicDetailPage() {
     useEffect(() => {
         if (music) setDetailName(music.title);
     }, [music, setDetailName]);
+
+    // Lyrics availability is optional and must never block the music detail page.
+    useEffect(() => {
+        setHasPublishedLyrics(false);
+        if (!LYRICS_ENTRY_VISIBLE) return;
+
+        const controller = new AbortController();
+        let active = true;
+
+        getPublishedLyricsIndexEntry(musicId, controller.signal)
+            .then((entry) => {
+                if (active) setHasPublishedLyrics(entry !== null && hasLyricsDetail(entry));
+            })
+            .catch(() => {
+                if (active) setHasPublishedLyrics(false);
+            });
+
+        return () => {
+            active = false;
+            controller.abort();
+        };
+    }, [musicId]);
 
     // Fetch data
     useEffect(() => {
@@ -400,15 +425,28 @@ export default function MusicDetailPage() {
                             })}
                         </div>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-slate-800 mb-2">
-                        <TranslatedText
-                            original={music.title}
-                            category="music"
-                            field="title"
-                            originalClassName=""
-                            translationClassName="block text-lg font-medium text-slate-400 mt-1"
-                        />
-                    </h1>
+                    <div className="mb-2">
+                        <div className="inline-flex max-w-full items-start gap-2">
+                            <h1 className="min-w-0 text-2xl font-black text-slate-800 sm:text-3xl">
+                                <TranslatedText
+                                    original={music.title}
+                                    category="music"
+                                    field="title"
+                                    originalClassName=""
+                                    translationClassName="block text-lg font-medium text-slate-400 mt-1"
+                                />
+                            </h1>
+                            {LYRICS_ENTRY_VISIBLE && hasPublishedLyrics && (
+                                <Link
+                                    href={`/lyrics/${music.id}`}
+                                    className="-translate-y-1 whitespace-nowrap rounded-md border border-sky-400/35 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-bold text-sky-500 transition-colors hover:border-sky-400/60 hover:bg-sky-500/15 hover:text-sky-400 sm:text-xs"
+                                >
+                                    {t("page.music.goToLyrics")}
+                                    <span className="ms-0.5" aria-hidden="true">↗</span>
+                                </Link>
+                            )}
+                        </div>
+                    </div>
                     <div className="flex items-center gap-3 flex-wrap">
                         <span className="text-slate-600">{music.composer}</span>
                         {tagNames.length > 0 && (

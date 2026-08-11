@@ -2,15 +2,14 @@
  * Shared sitemap utilities.
  * 
  * Reads the pre-generated sitemap-data.json and builds XML
- * with the correct base URL derived from the request Host header.
+ * against the configured canonical origin.
  */
 
 import fs from 'fs';
 import path from 'path';
-import { headers } from 'next/headers';
-
 import { INDEXABLE_SEO_ROUTES } from '@/lib/seo-routes';
 import { DEFAULT_ROUTE_LOCALE, getLocaleRouteConfig, SUPPORTED_ROUTE_LOCALES, type RouteLocale } from '@/lib/locale-routing';
+import { getCanonicalOrigin } from '@/lib/site-origin';
 
 interface SitemapRoute {
     path: string;
@@ -52,21 +51,10 @@ function getData(region: string): SitemapData | null {
 }
 
 /**
- * Resolve the base URL from the request Host header.
- * Falls back to NEXT_PUBLIC_SITE_DOMAIN env or pjsk.moe.
+ * Resolve the configured canonical origin without reflecting request headers.
  */
 export async function getBaseUrl(): Promise<string> {
-    try {
-        const headersList = await headers();
-        const host = headersList.get('host');
-        if (host) {
-            const proto = headersList.get('x-forwarded-proto') || 'https';
-            return `${proto}://${host}`;
-        }
-    } catch {
-        // headers() not available outside request context
-    }
-    return process.env.NEXT_PUBLIC_SITE_DOMAIN || 'https://pjsk.moe';
+    return getCanonicalOrigin();
 }
 
 function escapeXml(value: string): string {
@@ -116,11 +104,27 @@ ${entries.join('\n')}
 </urlset>`;
 }
 
-function wrapSitemapIndex(baseUrl: string, sitemapNames: string[]): string {
-    const now = new Date().toISOString();
-    const entries = sitemapNames.map(name => `  <sitemap>
+function validGeneratedAt(data: SitemapData | null): string | null {
+    if (!data?.generatedAt || Number.isNaN(Date.parse(data.generatedAt))) return null;
+    return data.generatedAt;
+}
+
+function detailSitemapLastmod(locale: RouteLocale): string {
+    const region = getLocaleRouteConfig(locale).defaultServer;
+    return validGeneratedAt(getData(region)) ?? '1970-01-01T00:00:00.000Z';
+}
+
+function mainSitemapLastmod(): string {
+    return SUPPORTED_ROUTE_LOCALES
+        .map(detailSitemapLastmod)
+        .sort()
+        .at(-1) ?? '1970-01-01T00:00:00.000Z';
+}
+
+function wrapSitemapIndex(baseUrl: string, sitemaps: { name: string; lastmod: string }[]): string {
+    const entries = sitemaps.map(({ name, lastmod }) => `  <sitemap>
     <loc>${escapeXml(joinUrl(baseUrl, `/${name}`))}</loc>
-    <lastmod>${escapeXml(now)}</lastmod>
+    <lastmod>${escapeXml(lastmod)}</lastmod>
   </sitemap>`);
 
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -131,15 +135,21 @@ ${entries.join('\n')}
 
 export function buildSitemapIndex(baseUrl: string): string {
     return wrapSitemapIndex(baseUrl, [
-        'sitemap-main.xml',
-        ...SUPPORTED_ROUTE_LOCALES.map(locale => `sitemap-details/${locale}.xml`),
+        { name: 'sitemap-main.xml', lastmod: mainSitemapLastmod() },
+        ...SUPPORTED_ROUTE_LOCALES.map(locale => ({
+            name: `sitemap-details/${locale}.xml`,
+            lastmod: detailSitemapLastmod(locale),
+        })),
     ]);
 }
 
 export function buildDetailsSitemapIndex(baseUrl: string): string {
     return wrapSitemapIndex(
         baseUrl,
-        SUPPORTED_ROUTE_LOCALES.map(locale => `sitemap-details/${locale}.xml`),
+        SUPPORTED_ROUTE_LOCALES.map(locale => ({
+            name: `sitemap-details/${locale}.xml`,
+            lastmod: detailSitemapLastmod(locale),
+        })),
     );
 }
 

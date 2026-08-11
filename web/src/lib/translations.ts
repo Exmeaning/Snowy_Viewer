@@ -1,6 +1,6 @@
 /**
- * Translation utilities for Japanese -> Chinese translations
- * Translation data is stored as static JSON files in /public/data/translations/
+ * Translation utilities for Japanese-source locale overlays.
+ * zh-CN uses the canonical root files; en-US uses the v2 locale directory.
  * 
  * IndexedDB caching: Translation data is persisted in IndexedDB and keyed by
  * a version hash derived from the masterdata version. On version change,
@@ -10,8 +10,14 @@
 import { getTranslationCache, setTranslationCache, isIndexedDBAvailable } from "./masterdata-cache";
 import { MASTERDATA_VERSION_KEY } from "./fetch";
 
-// Base URL for all translation data
-export const TRANSLATION_BASE_URL = "https://translation.exmeaning.com/translation";
+const TRANSLATION_ORIGIN = "https://translation.exmeaning.com";
+export const TRANSLATION_BASE_URL = `${TRANSLATION_ORIGIN}/files/translation`;
+
+export function getTranslationAssetBaseUrl(locale: TranslationTargetLocale): string {
+    return locale === "zh-CN"
+        ? TRANSLATION_BASE_URL
+        : `${TRANSLATION_ORIGIN}/files/v2/${locale}/translation`;
+}
 export interface TranslationMap {
     [key: string]: string;
 }
@@ -92,9 +98,14 @@ const emptyTranslationData: TranslationData = {
     costumes: { name: {}, colorName: {}, designer: {} },
 };
 
-// Cache for loaded translations (in-memory, per session)
-let translationCache: TranslationData | null = null;
-let loadingPromise: Promise<TranslationData> | null = null;
+export type TranslationTargetLocale = "zh-CN" | "en-US";
+
+const UI_LOCALE_STORAGE_KEY = "moesekai_ui_locale";
+const MAX_MEMORY_LOCALES = 2;
+
+// Locale-bounded in-memory caches. zh-CN and en-US are the only fetched targets.
+const translationCaches = new Map<TranslationTargetLocale, TranslationData>();
+const loadingPromises = new Map<TranslationTargetLocale, Promise<TranslationData>>();
 
 // IndexedDB cache key for the combined translation bundle
 const TRANSLATION_IDB_KEY = "translations-bundle";
@@ -108,29 +119,76 @@ const TRANSLATION_CACHE_TIME_KEY = "translation-cache-time";
 // Key for forcing translation cache-bust when proofreading updates occur
 const TRANSLATION_DATA_VERSION_KEY = "translation-data-version";
 
+export function getTranslationTargetLocale(locale: string): TranslationTargetLocale | null {
+    if (locale === "zh-CN" || locale === "en-US") return locale;
+    return null;
+}
+
+function resolveTranslationLocale(locale?: string): string {
+    if (locale) return locale;
+    if (typeof window === "undefined") return "zh-CN";
+    const routeLocale = window.location?.pathname?.split("/").filter(Boolean)[0]?.toLowerCase();
+    const routeUiLocale: Record<string, string> = {
+        "zh-cn": "zh-CN",
+        "zh-tw": "zh-TW",
+        "en-us": "en-US",
+        "ja-jp": "ja-JP",
+        "ko-kr": "ko-KR",
+    };
+    if (routeLocale && routeUiLocale[routeLocale]) return routeUiLocale[routeLocale];
+    return localStorage.getItem(UI_LOCALE_STORAGE_KEY) || "zh-CN";
+}
+
+function localeStorageKey(key: string, locale: TranslationTargetLocale): string {
+    return locale === "zh-CN" ? key : `${key}:${locale}`;
+}
+
+function translationBundleKey(locale: TranslationTargetLocale): string {
+    return locale === "zh-CN" ? TRANSLATION_IDB_KEY : `${TRANSLATION_IDB_KEY}:${locale}`;
+}
+
+function setMemoryCache(locale: TranslationTargetLocale, data: TranslationData): void {
+    translationCaches.delete(locale);
+    translationCaches.set(locale, data);
+    while (translationCaches.size > MAX_MEMORY_LOCALES) {
+        const oldest = translationCaches.keys().next().value as TranslationTargetLocale | undefined;
+        if (!oldest) break;
+        translationCaches.delete(oldest);
+    }
+}
+
+function getMemoryCache(locale: TranslationTargetLocale): TranslationData | null {
+    const cached = translationCaches.get(locale);
+    if (!cached) return null;
+    translationCaches.delete(locale);
+    translationCaches.set(locale, cached);
+    return cached;
+}
+
 /**
  * Get the current translation version hash.
  * Uses masterdata version from localStorage as the invalidation key.
  * Falls back to a static string if no version is available.
  */
-function getTranslationVersionHash(): string {
+function getTranslationVersionHash(locale: TranslationTargetLocale): string {
     if (typeof window === "undefined") return "build";
     const masterVersion = localStorage.getItem(MASTERDATA_VERSION_KEY) || "unknown";
-    const translationVersion = localStorage.getItem(TRANSLATION_DATA_VERSION_KEY) || "0";
-    return `${masterVersion}:${translationVersion}`;
+    const translationVersion = localStorage.getItem(localeStorageKey(TRANSLATION_DATA_VERSION_KEY, locale)) || "0";
+    const versionHash = `${masterVersion}:${translationVersion}`;
+    return locale === "zh-CN" ? versionHash : `${locale}:${versionHash}`;
 }
 
-function getTranslationDataVersion(): string {
+function getTranslationDataVersion(locale: TranslationTargetLocale): string {
     if (typeof window === "undefined") return "";
-    return localStorage.getItem(TRANSLATION_DATA_VERSION_KEY) || "";
+    return localStorage.getItem(localeStorageKey(TRANSLATION_DATA_VERSION_KEY, locale)) || "";
 }
 
 /**
  * Check if translation cache has expired (TTL-based)
  */
-function isTranslationCacheStale(): boolean {
+function isTranslationCacheStale(locale: TranslationTargetLocale): boolean {
     if (typeof window === "undefined") return true;
-    const cachedTime = localStorage.getItem(TRANSLATION_CACHE_TIME_KEY);
+    const cachedTime = localStorage.getItem(localeStorageKey(TRANSLATION_CACHE_TIME_KEY, locale));
     if (!cachedTime) return true;
     return Date.now() - Number(cachedTime) > TRANSLATION_CACHE_TTL;
 }
@@ -139,9 +197,9 @@ function isTranslationCacheStale(): boolean {
  * Fetch all translation files from network.
  * Translation data is served from the MoeSekai-Hub static deployment.
  */
-async function fetchAllTranslations(): Promise<TranslationData> {
-    const baseUrl = TRANSLATION_BASE_URL;
-    const version = getTranslationDataVersion();
+async function fetchAllTranslations(locale: TranslationTargetLocale): Promise<TranslationData> {
+    const baseUrl = getTranslationAssetBaseUrl(locale);
+    const version = getTranslationDataVersion(locale);
     const query = version ? `?v=${encodeURIComponent(version)}` : "";
 
     const [cards, skills, events, information, music, virtualLive, mysekai, gacha, sticker, comic, characters, units, costumes] = await Promise.all([
@@ -181,17 +239,16 @@ async function fetchAllTranslations(): Promise<TranslationData> {
  * Background revalidation: fetch fresh translations and update cache if changed.
  * Runs silently without blocking the UI.
  */
-function backgroundRevalidateTranslations(versionHash: string): void {
-    fetchAllTranslations()
+function backgroundRevalidateTranslations(locale: TranslationTargetLocale, versionHash: string): void {
+    fetchAllTranslations(locale)
         .then((fresh) => {
-            // Update in-memory cache
-            translationCache = fresh;
+            setMemoryCache(locale, fresh);
             // Update IndexedDB cache
             if (isIndexedDBAvailable()) {
-                setTranslationCache(TRANSLATION_IDB_KEY, fresh, versionHash).catch(() => { });
+                setTranslationCache(translationBundleKey(locale), fresh, versionHash).catch(() => { });
             }
             // Update timestamp
-            localStorage.setItem(TRANSLATION_CACHE_TIME_KEY, Date.now().toString());
+            localStorage.setItem(localeStorageKey(TRANSLATION_CACHE_TIME_KEY, locale), Date.now().toString());
         })
         .catch(() => {
             // Silent fail — stale data is better than no data
@@ -203,34 +260,40 @@ function backgroundRevalidateTranslations(versionHash: string): void {
  * Returns cached data if already loaded (memory → IndexedDB → network)
  * Uses stale-while-revalidate: returns cached data immediately, refreshes in background if stale.
  */
-export async function loadTranslations(): Promise<TranslationData> {
+export async function loadTranslations(locale?: string): Promise<TranslationData> {
+    const targetLocale = getTranslationTargetLocale(resolveTranslationLocale(locale));
+    if (!targetLocale) return emptyTranslationData;
+
     // 1. Return in-memory cache if available
-    if (translationCache) {
+    const memoryCache = getMemoryCache(targetLocale);
+    if (memoryCache) {
         // If cache is stale, trigger background revalidation
-        if (isTranslationCacheStale()) {
-            backgroundRevalidateTranslations(getTranslationVersionHash());
+        if (isTranslationCacheStale(targetLocale)) {
+            backgroundRevalidateTranslations(targetLocale, getTranslationVersionHash(targetLocale));
         }
-        return translationCache;
+        return memoryCache;
     }
 
     // If already loading, wait for that promise
-    if (loadingPromise) {
-        return loadingPromise;
+    const inflight = loadingPromises.get(targetLocale);
+    if (inflight) {
+        return inflight;
     }
 
     // Start loading
-    loadingPromise = (async (): Promise<TranslationData> => {
-        const versionHash = getTranslationVersionHash();
+    const loadingPromise = (async (): Promise<TranslationData> => {
+        const versionHash = getTranslationVersionHash(targetLocale);
+        const bundleKey = translationBundleKey(targetLocale);
 
         // 2. Try IndexedDB cache
         if (isIndexedDBAvailable()) {
             try {
-                const cached = await getTranslationCache<TranslationData>(TRANSLATION_IDB_KEY, versionHash);
+                const cached = await getTranslationCache<TranslationData>(bundleKey, versionHash);
                 if (cached) {
-                    translationCache = cached;
+                    setMemoryCache(targetLocale, cached);
                     // If stale, revalidate in background (stale-while-revalidate)
-                    if (isTranslationCacheStale()) {
-                        backgroundRevalidateTranslations(versionHash);
+                    if (isTranslationCacheStale(targetLocale)) {
+                        backgroundRevalidateTranslations(targetLocale, versionHash);
                     }
                     return cached;
                 }
@@ -241,16 +304,16 @@ export async function loadTranslations(): Promise<TranslationData> {
 
         // 3. Fetch from network (cache miss)
         try {
-            const result = await fetchAllTranslations();
-            translationCache = result;
+            const result = await fetchAllTranslations(targetLocale);
+            setMemoryCache(targetLocale, result);
 
             // 4. Write to IndexedDB (async, non-blocking)
             if (isIndexedDBAvailable()) {
-                setTranslationCache(TRANSLATION_IDB_KEY, result, versionHash).catch(() => { });
+                setTranslationCache(bundleKey, result, versionHash).catch(() => { });
             }
             // Update timestamp
             if (typeof window !== "undefined") {
-                localStorage.setItem(TRANSLATION_CACHE_TIME_KEY, Date.now().toString());
+                localStorage.setItem(localeStorageKey(TRANSLATION_CACHE_TIME_KEY, targetLocale), Date.now().toString());
             }
 
             return result;
@@ -258,8 +321,11 @@ export async function loadTranslations(): Promise<TranslationData> {
             console.error("Failed to load translations:", error);
             return emptyTranslationData;
         }
-    })();
+    })().finally(() => {
+        loadingPromises.delete(targetLocale);
+    });
 
+    loadingPromises.set(targetLocale, loadingPromise);
     return loadingPromise;
 }
 
@@ -305,10 +371,20 @@ export function hasTranslation(map: TranslationMap | undefined, key: string): bo
  * Clear the translation cache (useful for testing or forced refresh)
  * Clears both in-memory and IndexedDB caches.
  */
-export function clearTranslationCache(): void {
-    translationCache = null;
-    loadingPromise = null;
-    // Also clear IndexedDB translation cache
+export function clearTranslationCache(locale?: string): void {
+    const targetLocale = locale ? getTranslationTargetLocale(locale) : null;
+    if (locale && !targetLocale) return;
+    if (targetLocale) {
+        translationCaches.delete(targetLocale);
+        loadingPromises.delete(targetLocale);
+        if (isIndexedDBAvailable()) {
+            import("./masterdata-cache").then(m => m.deleteTranslationCache(translationBundleKey(targetLocale))).catch(() => { });
+        }
+        return;
+    }
+
+    translationCaches.clear();
+    loadingPromises.clear();
     if (isIndexedDBAvailable()) {
         import("./masterdata-cache").then(m => m.clearTranslationCache()).catch(() => { });
     }
@@ -319,9 +395,12 @@ export function clearTranslationCache(): void {
  * This bumps a local version key to force cache-busting query params
  * and clears current caches so subsequent page loads fetch fresh files.
  */
-export function markTranslationsUpdated(): void {
+export function markTranslationsUpdated(locale?: string): void {
     if (typeof window === "undefined") return;
-    localStorage.setItem(TRANSLATION_DATA_VERSION_KEY, Date.now().toString());
-    localStorage.removeItem(TRANSLATION_CACHE_TIME_KEY);
-    clearTranslationCache();
+    const resolvedLocale = resolveTranslationLocale(locale);
+    const targetLocale = getTranslationTargetLocale(resolvedLocale);
+    if (!targetLocale) return;
+    localStorage.setItem(localeStorageKey(TRANSLATION_DATA_VERSION_KEY, targetLocale), Date.now().toString());
+    localStorage.removeItem(localeStorageKey(TRANSLATION_CACHE_TIME_KEY, targetLocale));
+    clearTranslationCache(targetLocale);
 }

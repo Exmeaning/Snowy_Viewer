@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
-import { formatOAuthErrorMessage, startOAuthConnect } from "@/lib/oauth";
+import { formatOAuthErrorMessage, sanitizeOAuthReturnTo, startOAuthConnect } from "@/lib/oauth";
 
 export default function ConnectClient() {
     const { t } = useI18n();
@@ -13,7 +13,7 @@ export default function ConnectClient() {
 
     const returnTo = useMemo(() => {
         const value = searchParams.get("returnTo");
-        return value && value.startsWith("/") ? value : "/profile";
+        return sanitizeOAuthReturnTo(value);
     }, [searchParams]);
 
     useEffect(() => {

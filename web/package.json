@@ -10,19 +10,19 @@
     "generate:metadata": "node scripts/generate-metadata-map.mjs",
     "start": "next start",
     "lint": "eslint",
-    "lint:i18n": "node scripts/check-i18n-keys.mjs && node scripts/scan-hardcoded-ui-text.mjs && node scripts/check-seo-routes.mjs",
+    "lint:i18n": "node scripts/check-i18n-keys.mjs && node scripts/scan-hardcoded-ui-text.mjs && node scripts/check-seo-routes.mjs && node scripts/check-translation-coverage.mjs",
     "lint:i18n-usage": "node scripts/check-i18n-usage.mjs",
     "test:ssr-localized-links": "npm run build:next && node scripts/check-localized-link-ssr.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.95.3",
+    "@supabase/supabase-js": "2.106.0",
     "@swc/helpers": "^0.5.15",
     "@types/qrcode": "^1.5.6",
     "brotli-dec-wasm": "^2.3.2",
-    "echarts": "^6.0.0",
+    "echarts": "6.1.0",
     "echarts-for-react": "^3.0.6",
     "framer-motion": "^12.34.0",
-    "next": "^16.1.1",
+    "next": "16.2.11",
     "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -37,8 +37,21 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.162.0",
     "eslint": "^9",
-    "eslint-config-next": "16.1.1",
+    "eslint-config-next": "16.2.11",
+    "eslint-plugin-react-hooks": "7.0.1",
+    "jsdom": "^29.1.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@babel/core": "7.29.6",
+    "brace-expansion@1.x": "1.1.16",
+    "brace-expansion@2.x": "2.1.2",
+    "brace-expansion@5.x": "5.0.7",
+    "eslint-plugin-react-hooks": "7.0.1",
+    "js-yaml@4.x": "4.3.0",
+    "picomatch@4.x": "4.0.4",
+    "postcss": "8.5.22",
+    "sharp": "0.35.3"
   }
 }

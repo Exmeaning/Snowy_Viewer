@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
@@ -19,6 +21,16 @@ import (
 	"snowy_viewer/internal/middleware"
 )
 
+const (
+	serverReadHeaderTimeout   = 5 * time.Second
+	serverReadTimeout         = 15 * time.Second
+	serverWriteTimeout        = 30 * time.Second
+	serverIdleTimeout         = 60 * time.Second
+	serverMaxHeaderBytes      = 1 << 20
+	masterDataRetryInterval   = 30 * time.Second
+	masterDataRefreshInterval = 6 * time.Hour
+)
+
 func main() {
 	// Load configuration
 	cfg := config.Load()
@@ -27,11 +39,10 @@ func main() {
 	appCache := cache.New(cfg.RedisURL)
 	defer appCache.Close()
 
-	// Initialize and load master data
+	// Initialize and load master data without blocking the process health endpoint.
 	store := masterdata.NewStore(cfg.MasterDataPath)
-	if err := store.Fetch(); err != nil {
-		fmt.Printf("Initial fetch error: %v\n", err)
-	}
+	store.StartRetryUntilReady(masterDataRetryInterval)
+	store.StartPeriodicUpdate(masterDataRefreshInterval)
 
 	// Create router and register handlers
 	mux := http.NewServeMux()
@@ -43,74 +54,23 @@ func main() {
 		http.NotFound(w, r)
 	})
 
-	// Set up frontend proxy or default to API-only mode
+	// Set up frontend proxy or default to API-only mode.
 	if cfg.FrontendProxyURL != "" && cfg.FrontendProxyURL != "none" {
-		nextjsURL, err := url.Parse(cfg.FrontendProxyURL)
+		nextjsURL, err := parseFrontendProxyURL(cfg.FrontendProxyURL)
 		if err != nil {
 			fmt.Printf("Invalid FRONTEND_PROXY_URL %q: %v\n", cfg.FrontendProxyURL, err)
+			registerAPIOnlyHealthRoute(mux)
+			registerReadinessRoute(mux, store, nil)
 			setupAPIOnlyMode(mux)
 		} else {
-			nextjsProxy := httputil.NewSingleHostReverseProxy(nextjsURL)
-			transport := http.DefaultTransport.(*http.Transport).Clone()
-			transport.MaxIdleConns = 100
-			transport.MaxIdleConnsPerHost = 32
-			transport.IdleConnTimeout = 90 * time.Second
-			transport.ResponseHeaderTimeout = 30 * time.Second
-			nextjsProxy.Transport = transport
-			nextjsProxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-				fmt.Printf("Next.js proxy error for %s: %v\n", r.URL.Path, err)
-				http.Error(w, "frontend upstream unavailable", http.StatusBadGateway)
-			}
+			nextjsProxy := newFrontendProxy(nextjsURL)
+			frontendHealth := newFrontendHealthCheck(cfg.FrontendProxyURL)
+			registerFrontendHealthRoute(mux, frontendHealth)
+			registerReadinessRoute(mux, store, frontendHealth)
 
-			healthClient := &http.Client{Timeout: 2 * time.Second}
-			healthURL := strings.TrimRight(cfg.FrontendProxyURL, "/") + "/internal-healthz/"
-			mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-				if r.Method != http.MethodGet && r.Method != http.MethodHead {
-					w.Header().Set("Allow", "GET, HEAD")
-					http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-					return
-				}
-
-				req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, healthURL, nil)
-				if err == nil {
-					var resp *http.Response
-					resp, err = healthClient.Do(req)
-					if resp != nil {
-						_ = resp.Body.Close()
-						if resp.StatusCode != http.StatusNoContent {
-							err = fmt.Errorf("unexpected frontend health status: %s", resp.Status)
-						}
-					}
-				}
-
-				w.Header().Set("Content-Type", "application/json")
-				w.Header().Set("Cache-Control", "no-store")
-				if err != nil {
-					w.WriteHeader(http.StatusServiceUnavailable)
-					_ = json.NewEncoder(w).Encode(map[string]string{"status": "unhealthy", "frontend": "unavailable"})
-					return
-				}
-				_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok", "frontend": "ok"})
-			})
-
-			// Intercept Next.js static files to serve from persistent archive directory if file exists
+			// Intercept Next.js static files to serve from the persistent archive when available.
 			if cfg.StaticArchiveDir != "" {
-				staticPrefix := "/_next/static/"
-				fileServer := http.StripPrefix(staticPrefix, http.FileServer(http.Dir(cfg.StaticArchiveDir)))
-
-				mux.HandleFunc(staticPrefix, func(w http.ResponseWriter, r *http.Request) {
-					relPath := r.URL.Path[len(staticPrefix):]
-					filePath := filepath.Join(cfg.StaticArchiveDir, filepath.FromSlash(relPath))
-
-					if info, err := os.Stat(filePath); err == nil && !info.IsDir() {
-						w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-						fileServer.ServeHTTP(w, r)
-						return
-					}
-					// Fallback to Next.js server if not present in archive
-					nextjsProxy.ServeHTTP(w, r)
-				})
-				fmt.Printf("Serving persistent static assets from %s for %s\n", cfg.StaticArchiveDir, staticPrefix)
+				registerStaticArchiveRoute(mux, cfg.StaticArchiveDir, nextjsProxy)
 			}
 
 			fmt.Printf("Proxying frontend requests to Next.js server on %s\n", cfg.FrontendProxyURL)
@@ -122,6 +82,8 @@ func main() {
 			}))
 		}
 	} else {
+		registerAPIOnlyHealthRoute(mux)
+		registerReadinessRoute(mux, store, nil)
 		setupAPIOnlyMode(mux)
 	}
 
@@ -129,8 +91,159 @@ func main() {
 	finalHandler := middleware.Chain(mux, middleware.CORS, middleware.Gzip)
 
 	fmt.Printf("Server starting on :%s...\n", cfg.Port)
-	if err := http.ListenAndServe(":"+cfg.Port, finalHandler); err != nil {
+	server := newHTTPServer(":"+cfg.Port, finalHandler)
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		fmt.Printf("Error starting server: %s\n", err)
+	}
+}
+
+func parseFrontendProxyURL(raw string) (*url.URL, error) {
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return nil, err
+	}
+	if (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" || parsed.User != nil {
+		return nil, fmt.Errorf("must be an absolute HTTP(S) URL without credentials")
+	}
+	return parsed, nil
+}
+
+func newFrontendProxy(nextjsURL *url.URL) *httputil.ReverseProxy {
+	nextjsProxy := httputil.NewSingleHostReverseProxy(nextjsURL)
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.MaxIdleConns = 100
+	transport.MaxIdleConnsPerHost = 32
+	transport.IdleConnTimeout = 90 * time.Second
+	transport.ResponseHeaderTimeout = 30 * time.Second
+	nextjsProxy.Transport = transport
+	nextjsProxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		fmt.Printf("Next.js proxy error for %s: %v\n", r.URL.Path, err)
+		http.Error(w, "frontend upstream unavailable", http.StatusBadGateway)
+	}
+	return nextjsProxy
+}
+
+type frontendHealthCheck func(context.Context) error
+
+func newFrontendHealthCheck(frontendProxyURL string) frontendHealthCheck {
+	healthClient := &http.Client{Timeout: 2 * time.Second}
+	healthURL := strings.TrimRight(frontendProxyURL, "/") + "/internal-healthz/"
+	return func(ctx context.Context) error {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, healthURL, nil)
+		if err != nil {
+			return err
+		}
+		resp, err := healthClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusNoContent {
+			return fmt.Errorf("unexpected frontend health status: %s", resp.Status)
+		}
+		return nil
+	}
+}
+
+func registerFrontendHealthRoute(mux *http.ServeMux, checkFrontend frontendHealthCheck) {
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			w.Header().Set("Allow", "GET, HEAD")
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		if err := checkFrontend(r.Context()); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_ = json.NewEncoder(w).Encode(map[string]string{"status": "unhealthy", "frontend": "unavailable"})
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok", "frontend": "ok"})
+	})
+}
+
+func registerAPIOnlyHealthRoute(mux *http.ServeMux) {
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			w.Header().Set("Allow", "GET, HEAD")
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok", "mode": "api-only"})
+	})
+}
+
+func registerReadinessRoute(mux *http.ServeMux, store *masterdata.Store, checkFrontend frontendHealthCheck) {
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			w.Header().Set("Allow", "GET, HEAD")
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		if !store.IsReady() || (checkFrontend != nil && checkFrontend(r.Context()) != nil) {
+			w.Header().Set("Retry-After", "30")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte(`{"status":"unavailable"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"status":"ready"}`))
+	})
+}
+
+func registerStaticArchiveRoute(mux *http.ServeMux, archiveDir string, fallback http.Handler) {
+	const staticPrefix = "/_next/static/"
+	archiveRoot, err := filepath.Abs(archiveDir)
+	if err != nil {
+		fmt.Printf("Invalid static archive directory %q: %v\n", archiveDir, err)
+		return
+	}
+	fileServer := http.StripPrefix(staticPrefix, http.FileServer(http.Dir(archiveRoot)))
+
+	mux.HandleFunc(staticPrefix, func(w http.ResponseWriter, r *http.Request) {
+		relPath, err := url.PathUnescape(strings.TrimPrefix(r.URL.EscapedPath(), staticPrefix))
+		if err != nil || relPath == "" {
+			fallback.ServeHTTP(w, r)
+			return
+		}
+
+		cleanRelPath := filepath.Clean(filepath.FromSlash(relPath))
+		if cleanRelPath == "." || filepath.IsAbs(cleanRelPath) || cleanRelPath == ".." || strings.HasPrefix(cleanRelPath, ".."+string(filepath.Separator)) {
+			fallback.ServeHTTP(w, r)
+			return
+		}
+		filePath := filepath.Join(archiveRoot, cleanRelPath)
+		if rel, relErr := filepath.Rel(archiveRoot, filePath); relErr != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			fallback.ServeHTTP(w, r)
+			return
+		}
+
+		if info, statErr := os.Stat(filePath); statErr == nil && !info.IsDir() {
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			fileServer.ServeHTTP(w, r)
+			return
+		}
+		// Fall back to Next.js when the requested asset is not archived.
+		fallback.ServeHTTP(w, r)
+	})
+	fmt.Printf("Serving persistent static assets from %s for %s\n", archiveRoot, staticPrefix)
+}
+
+func newHTTPServer(addr string, handler http.Handler) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: serverReadHeaderTimeout,
+		ReadTimeout:       serverReadTimeout,
+		WriteTimeout:      serverWriteTimeout,
+		IdleTimeout:       serverIdleTimeout,
+		MaxHeaderBytes:    serverMaxHeaderBytes,
 	}
 }
 
@@ -140,7 +253,7 @@ func setupAPIOnlyMode(mux *http.ServeMux) {
 		if r.URL.Path == "/" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"status":"ok","message":"PJSK Moe API Server"}`))
+			_, _ = w.Write([]byte(`{"status":"ok","message":"PJSK Moe API Server"}`))
 			return
 		}
 		http.NotFound(w, r)

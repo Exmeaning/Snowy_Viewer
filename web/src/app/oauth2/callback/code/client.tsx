@@ -13,6 +13,7 @@ import {
     normalizeBindingGameId,
     normalizeBindingServer,
     resolveOAuthAuthorization,
+    sanitizeOAuthReturnTo,
     type OAuthAuthorizationPhase,
     type OAuthBinding,
 } from "@/lib/oauth";
@@ -43,8 +44,7 @@ function getPhaseMessage(phase: CallbackPhase, t: (key: string) => string): stri
 }
 
 function buildSuccessReturnUrl(returnTo: string, accountId: string): string {
-    const fallbackPath = "/profile";
-    const safeReturnTo = returnTo.startsWith("/") ? returnTo : fallbackPath;
+    const safeReturnTo = sanitizeOAuthReturnTo(returnTo);
     if (typeof window === "undefined") {
         return `${safeReturnTo}${safeReturnTo.includes("?") ? "&" : "?"}oauth=success&account=${encodeURIComponent(accountId)}`;
     }

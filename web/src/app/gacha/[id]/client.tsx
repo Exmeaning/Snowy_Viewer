@@ -282,7 +282,7 @@ export default function GachaDetailClient() {
     // Process full card pool list with details and rate share calculation
     const fullCardPool = useMemo(() => {
         if (!gacha || !gacha.gachaDetails || cards.length === 0) return [];
-        
+
         const pickupSet = new Set((gacha.gachaPickups || []).map(p => p.cardId));
 
         // Group details by cardRarityType to compute total weight per rarity
@@ -475,7 +475,7 @@ export default function GachaDetailClient() {
             const selectedSet = new Set(selectedWishCardIds);
 
             // Selected wish cards (from user selection or fixed wish details)
-            const selectedWishDetails = allFourStarDetails.filter(detail => 
+            const selectedWishDetails = allFourStarDetails.filter(detail =>
                 (detail.isWish || detail.gachaDetailWishType === "fixed") && selectedSet.has(detail.cardId)
             );
 
@@ -483,7 +483,7 @@ export default function GachaDetailClient() {
             const newPuDetails = allFourStarDetails.filter(detail => !detail.isWish && detail.gachaDetailWishType !== "fixed");
 
             // Other 4-star cards in pool
-            const otherDetails = allFourStarDetails.filter(detail => 
+            const otherDetails = allFourStarDetails.filter(detail =>
                 !selectedWishDetails.some(d => d.cardId === detail.cardId) &&
                 !newPuDetails.some(d => d.cardId === detail.cardId)
             );

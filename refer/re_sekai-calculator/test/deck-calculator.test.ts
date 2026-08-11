@@ -1,19 +1,37 @@
-import { TestDataProvider } from './data-provider.test'
-import { DeckCalculator, DeckService } from '../src'
+import { DeckCalculator, type CardDetail } from '../src'
 
-const deckService = new DeckService(TestDataProvider.INSTANCE)
-const deckCalculator = new DeckCalculator(TestDataProvider.INSTANCE)
-// 选一个卡组算数据，测试数据是263805综合、[80,80,100,40,40]加分、[0,0,0,0,250]回复
-test('deck', async () => {
-  const scoreUp = [100, 85, 80, 80, 80]
-  const lifeRecovery = [0, 0, 0, 0, 0]
-  const deck = await deckService.getDeckCards(await deckService.getDeck(1))
-  await deckCalculator.getDeckDetail(deck, deck).then(it => {
-    // console.log(it.cards)
-    expect(it.power.total).toBe(276977)
-    it.cards.forEach((it, i) => {
-      expect(it.skill.scoreUp).toBe(scoreUp[i])
-      expect(it.skill.lifeRecovery).toBe(lifeRecovery[i])
-    })
+function card (cardId: number, scoreUp: number): CardDetail {
+  return {
+    cardId,
+    level: 10,
+    skillLevel: 1,
+    masterRank: 0,
+    attr: 'cool',
+    units: ['unit_a'],
+    defaultImage: 'special_training',
+    power: {
+      getPower: () => ({ base: 10000, areaItemBonus: 0, characterBonus: 0, fixtureBonus: 0, gateBonus: 0, total: 10000 })
+    },
+    skill: {
+      hasPreTraining: false,
+      getSkill: () => ({ skillId: cardId, isAfterTraining: true, scoreUpFixed: scoreUp, scoreUpToReference: scoreUp, lifeRecovery: 0 })
+    }
+  } as unknown as CardDetail
+}
+
+test('deck detail deterministically sums power and selects the strongest leader', () => {
+  const cards = [card(101, 40), card(102, 80), card(103, 60), card(104, 50), card(105, 70)]
+  const detail = DeckCalculator.getDeckDetailByCards(cards, cards, 100)
+
+  expect(detail.power).toEqual({
+    base: 50000,
+    areaItemBonus: 0,
+    characterBonus: 0,
+    honorBonus: 100,
+    fixtureBonus: 0,
+    gateBonus: 0,
+    total: 50100
   })
+  expect(detail.cards[0].cardId).toBe(102)
+  expect(detail.cards.map(it => it.skill.scoreUp)).toEqual([80, 40, 60, 50, 70])
 })
