@@ -24,7 +24,7 @@ ENV NEXT_PUBLIC_OAUTH2_CLIENT_ID=snowy-viewer-public
 # sitemap generation derives index.json from the same explicitly supplied source.
 # CI may mount a short-lived synthetic CA only for the required image build contract;
 # the secret is available to this build step only and is never copied into the image.
-ARG NEXT_PUBLIC_LYRICS_BASE_URL=https://translation.exmeaning.com/files/translation/lyrics
+ARG NEXT_PUBLIC_LYRICS_BASE_URL=https://translation.exmeaning.com/translation/lyrics
 ENV NEXT_PUBLIC_LYRICS_BASE_URL=$NEXT_PUBLIC_LYRICS_BASE_URL
 # Build-time data sources. Multiple URLs allow Docker builds to survive flaky DNS/proxy/CDN paths.
 ARG MASTER_DATA_URLS=https://metadata.exmeaning.com/{region}/master,https://metadata.pjsk.moe/{region}/master
@@ -56,7 +56,7 @@ RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o server main.go
 FROM node:22.17.1-alpine3.22
 WORKDIR /app
 
-ARG NEXT_PUBLIC_LYRICS_BASE_URL=https://translation.exmeaning.com/files/translation/lyrics
+ARG NEXT_PUBLIC_LYRICS_BASE_URL=https://translation.exmeaning.com/translation/lyrics
 ENV NEXT_PUBLIC_LYRICS_BASE_URL=$NEXT_PUBLIC_LYRICS_BASE_URL
 RUN test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
 

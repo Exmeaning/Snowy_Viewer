@@ -81,7 +81,7 @@ test("production and web-dev images install from the frozen workspace root and r
   assert.match(production, /COPY package\.json bun\.lock \.\//);
   assert.match(production, /RUN bun install --frozen-lockfile/);
   assert.equal(
-    production.match(/^ARG NEXT_PUBLIC_LYRICS_BASE_URL=https:\/\/translation\.exmeaning\.com\/files\/translation\/lyrics$/gm)?.length,
+    production.match(/^ARG NEXT_PUBLIC_LYRICS_BASE_URL=https:\/\/translation\.exmeaning\.com\/translation\/lyrics$/gm)?.length,
     2,
   );
   assert.doesNotMatch(production, /^ARG NEXT_PUBLIC_LYRICS_BASE_URL$/m);
@@ -92,7 +92,7 @@ test("production and web-dev images install from the frozen workspace root and r
   assert.match(production, /COPY --from=builder-web[\s\S]*public-lyrics-base-url-build-contract/);
   assert.match(production, /export REQUIRE_PUBLIC_LYRICS_SOURCE=1;[\s\S]*bun run sitemap/);
   const productionWithoutReviewedLyricsDefault = production.replaceAll(
-    "ARG NEXT_PUBLIC_LYRICS_BASE_URL=https://translation.exmeaning.com/files/translation/lyrics",
+    "ARG NEXT_PUBLIC_LYRICS_BASE_URL=https://translation.exmeaning.com/translation/lyrics",
     "ARG NEXT_PUBLIC_LYRICS_BASE_URL=<reviewed-public-lyrics-base>",
   );
   assert.doesNotMatch(productionWithoutReviewedLyricsDefault, /NEXT_PUBLIC_LYRICS_BASE_URL=.*(?:https?:\/\/|token|password|@)/i);
