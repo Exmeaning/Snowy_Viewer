@@ -52,10 +52,7 @@ jobs:
           PY
 
       - name: Generate Sitemap Data
-        env:
-          NEXT_PUBLIC_LYRICS_BASE_URL: ${{ vars.NEXT_PUBLIC_LYRICS_BASE_URL }}
         run: |
-          test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
           GITHUB_BASE="https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master"
           MASTER_DATA_URLS_JP="$GITHUB_BASE,https://metadata.exmeaning.com/jp/master,https://metadata.pjsk.moe/jp/master" \
           REQUIRE_FRESH_BUILD_DATA=1 \

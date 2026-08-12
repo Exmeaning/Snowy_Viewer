@@ -222,14 +222,6 @@ export const zhTWSettings = {
         label: "顯示廣告",
         description: "這是支持我們持續營運的方式之一",
     },
-    analytics: {
-        sectionTitle: "隱私",
-        label: "允許匿名使用情況分析",
-        description: "只有在你同意後，正式網站才會載入 Google Analytics。你可以隨時撤回同意。",
-        statusGranted: "已允許使用情況分析",
-        statusDenied: "預設不啟用使用情況分析",
-        privacySignal: "瀏覽器的隱私信號（GPC 或 Do Not Track）已停用使用情況分析",
-    },
     assetSource: {
         sectionTitle: "Assets 線路",
         main: "主要線路",

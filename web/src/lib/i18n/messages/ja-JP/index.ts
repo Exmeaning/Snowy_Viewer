@@ -768,14 +768,6 @@ export const jaJPMessages = {
       label: '広告を表示',
       description: 'プロジェクト運営の支援になります'
     },
-    analytics: {
-      sectionTitle: 'プライバシー',
-      label: '匿名の利用状況分析を許可',
-      description: '同意した場合のみ、本番サイトで Google Analytics を読み込みます。同意はいつでも取り消せます。',
-      statusGranted: '利用状況分析を許可しています',
-      statusDenied: '利用状況分析は既定で無効です',
-      privacySignal: 'ブラウザのプライバシー信号（GPC または Do Not Track）により無効です'
-    },
     assetSource: {
       sectionTitle: 'アセット回線',
       main: 'メイン',
@@ -1026,7 +1018,7 @@ export const jaJPMessages = {
       },
       policies: {
         title: 'Site Policies and Ads',
-        description: '現在、広告は無効です。端末内のアカウント情報、OAuth2 トークン、アクセス解析への同意、第三者サービスの実際の取り扱いは、以下のポリシーをご確認ください。',
+        description: '現在、広告は無効です。端末内のアカウント情報、OAuth2 トークン、利用状況分析、第三者サービスの実際の取り扱いは、以下のポリシーをご確認ください。',
         privacy: 'プライバシーポリシー',
         terms: '利用規約',
         googleAds: 'Google Ad Settings',
@@ -1054,7 +1046,7 @@ export const jaJPMessages = {
     },
     privacy: {
       title: 'プライバシーポリシー',
-      updated: '最終更新日：2026年7月24日',
+      updated: '最終更新日：2026年8月12日',
       overview: {
         title: '1. 概要',
         body: 'Moesekai（pjsk.moe）は、非営利の PROJECT SEKAI ファン向けデータビューアーです。本ポリシーでは、端末に保存される情報、第三者サービスとの通信、および利用者が行える管理について説明します。'
@@ -1062,7 +1054,7 @@ export const jaJPMessages = {
       local: {
         title: '2. 端末に保存されるデータ',
         intro: 'Moesekai のサーバーアカウントは不要ですが、一部機能はブラウザーの localStorage または sessionStorage に次の情報を保存します。',
-        preferences: '言語、テーマ、サイドバー、フィルター、アクセス解析への同意などの表示設定。',
+        preferences: '言語、テーマ、サイドバー、フィルターなどの表示設定。',
         account: '利用者が追加したゲームアカウントの識別子、サーバー、ニックネーム、アバターなどのプロフィール情報。',
         tokens: 'OAuth2 接続時に取得したアクセストークン、リフレッシュトークン、権限範囲、有効期限。これらは機密性の高い認証情報です。',
         gameData: 'キャラクター、編成、素材、エリアアイテム、マイセカイ情報など、アカウント機能用に同期したゲームデータのスナップショット。',
@@ -1073,11 +1065,11 @@ export const jaJPMessages = {
         intro: '対応する機能を利用すると、ブラウザーはコンテンツ、公開ゲーム API、または OAuth2 提供者へリクエストを送信します。',
         oauth: 'OAuth2 提供者は、独自のポリシーに基づいてログイン、認可コード、トークン、連携ゲームアカウントを処理します。',
         publicApi: '公開 API または認可 API は、選択したサーバーとゲーム UID を受け取り、サイト機能で使うゲームデータを返します。',
-        analytics: '明示的に許可し、ブラウザーから拒否のプライバシー信号が送られていない場合のみ Google Analytics を読み込みます。その際、Google はページ、端末、ブラウザー、IP アドレス、時刻などの技術情報を受け取ることがあります。'
+        analytics: '本番サイトでは Google Analytics を読み込みます。Google はページ、端末、ブラウザー、IP アドレス、時刻などの技術情報を受け取ることがあります。'
       },
       cookies: {
         title: '4. Cookie、アクセス解析、広告',
-        analytics: 'Google Analytics は初期状態で無効です。サイト設定で同意または撤回でき、撤回後はタグを無効化し、関連する解析 Cookie の削除を試みます。',
+        analytics: '本番サイトでは集計された利用状況を把握するため、Google Analytics を使用します。Google が解析 Cookie を設定することがあります。',
         adsDisabled: '現在、広告機能は無効です。Google AdSense の広告スクリプトは読み込まず、広告収入にも依存していません。将来広告を有効にする前に、本ポリシーと同意画面を更新します。'
       },
       use: {
@@ -1093,7 +1085,6 @@ export const jaJPMessages = {
       controls: {
         title: '7. 利用者による管理',
         delete: 'アカウント管理で保存済みアカウントを削除できます。ブラウザーで pjsk.moe のサイトデータを消去すると、設定、アカウントのスナップショット、トークンをすべて削除できます。',
-        consent: 'サイト設定から、アクセス解析への同意をいつでも許可または撤回できます。',
         browser: 'Cookie、ストレージ、Do Not Track、Global Privacy Control のブラウザー設定でも処理を制限できます。'
       },
       links: {

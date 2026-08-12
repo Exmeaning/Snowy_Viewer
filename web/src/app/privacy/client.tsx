@@ -8,7 +8,7 @@ const bulletGroups = [
     ["local.preferences", "local.account", "local.tokens", "local.gameData"],
     ["network.oauth", "network.publicApi", "network.analytics"],
     ["use.functionality", "use.sync", "use.analytics"],
-    ["controls.delete", "controls.consent", "controls.browser"],
+    ["controls.delete", "controls.browser"],
 ] as const;
 
 export default function PrivacyPolicyClient() {

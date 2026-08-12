@@ -7,8 +7,6 @@ import { useI18n } from "@/contexts/I18nContext";
 import { getCharacterName, SUPPORTED_UI_LOCALES, UI_LOCALE_LABELS, UI_LOCALE_STORAGE_KEY, detectBrowserUiLocale, type UiLocale } from "@/lib/i18n";
 import { MOE_LOGO_URL } from "@/lib/assets";
 import { motion, AnimatePresence } from "framer-motion";
-import AnalyticsConsentControl from "@/components/AnalyticsConsentControl";
-
 // Character subset for theme selection
 // Full character list for theme selection
 const SELECTED_THEME_CHARACTERS = [
@@ -795,10 +793,6 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                       </button>
                     </div>
                   )}
-
-                  <div className="p-4">
-                    <AnalyticsConsentControl accentColor={themeColor} />
-                  </div>
                 </div>
               </motion.div>
             )}

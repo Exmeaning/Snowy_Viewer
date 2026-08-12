@@ -769,14 +769,6 @@ export const enUSMessages = {
             label: "Show ads",
             description: "This helps support the project",
         },
-        analytics: {
-            sectionTitle: "Privacy",
-            label: "Allow anonymous usage analytics",
-            description: "Google Analytics loads only on production sites after you allow it. You can revoke consent at any time.",
-            statusGranted: "Analytics are allowed",
-            statusDenied: "Analytics are disabled by default",
-            privacySignal: "Analytics are disabled by your browser privacy signal (GPC or Do Not Track)",
-        },
         assetSource: {
             sectionTitle: "Asset line",
             main: "Main",
@@ -1027,7 +1019,7 @@ export const enUSMessages = {
             },
             policies: {
                 title: "Site Policies and Ads",
-                description: "Advertising is currently disabled. See the policies below for the actual handling of local account data, OAuth2 tokens, analytics consent, and third-party services.",
+                description: "Advertising is currently disabled. See the policies below for the actual handling of local account data, OAuth2 tokens, usage analytics, and third-party services.",
                 privacy: "Privacy Policy",
                 terms: "Terms of Service",
                 googleAds: "Google Ad Settings",
@@ -1055,7 +1047,7 @@ export const enUSMessages = {
         },
         privacy: {
             title: "Privacy Policy",
-            updated: "Last updated: July 24, 2026",
+            updated: "Last updated: August 12, 2026",
             overview: {
                 title: "1. Overview",
                 body: "Moesekai (pjsk.moe) is a non-profit PROJECT SEKAI fan data viewer. This policy explains what the site actually stores on your device, when it communicates with third-party services, and how you can control that data.",
@@ -1063,7 +1055,7 @@ export const enUSMessages = {
             local: {
                 title: "2. Data stored on your device",
                 intro: "Moesekai does not require a server-side Moesekai account, but some features store the following in browser localStorage or sessionStorage:",
-                preferences: "Interface preferences such as language, theme, sidebar state, filters, and analytics consent.",
+                preferences: "Interface preferences such as language, theme, sidebar state, and filters.",
                 account: "Game account identifiers, server, nickname, avatar, and related profile details that you choose to add.",
                 tokens: "OAuth2 access tokens, refresh tokens, granted scopes, and expiry times obtained when you connect an account. These tokens are sensitive credentials.",
                 gameData: "Game-data snapshots synchronized for account tools, including characters, decks, materials, area items, and MySEKAI data.",
@@ -1074,18 +1066,18 @@ export const enUSMessages = {
                 intro: "When you use the relevant features, your browser sends requests to content, public game API, or OAuth2 providers:",
                 oauth: "The OAuth2 provider processes sign-in, authorization codes, tokens, and linked game accounts under its own policy.",
                 publicApi: "Public or authorized APIs receive the selected server and game UID and return game data used by site tools.",
-                analytics: "Google Analytics loads only after you explicitly allow it and when the browser sends no opt-out privacy signal. Google may then receive page, device, browser, IP address, and timing information.",
+                analytics: "Production sites load Google Analytics. Google may receive page, device, browser, IP address, and timing information.",
             },
             cookies: {
                 title: "4. Cookies, analytics, and ads",
-                analytics: "Google Analytics is off by default. You can grant or revoke analytics consent in site settings; after revocation, the site disables the tag and attempts to remove related analytics cookies.",
+                analytics: "Production sites use Google Analytics to understand aggregate visits. Google may set analytics cookies.",
                 adsDisabled: "Advertising is currently disabled. Moesekai does not load Google AdSense ad scripts or rely on advertising revenue. We will update this policy and the relevant consent controls before enabling ads in the future.",
             },
             use: {
                 title: "5. How data is used",
                 functionality: "Remember your preferences and provide account, deck, and calculator tools.",
                 sync: "Synchronize and display game data from the selected API when you request it.",
-                analytics: "Understand aggregate usage, with your consent, to maintain and improve the site.",
+                analytics: "Understand aggregate usage to maintain and improve the site.",
             },
             sharing: {
                 title: "6. Sharing and sale",
@@ -1094,7 +1086,6 @@ export const enUSMessages = {
             controls: {
                 title: "7. Your controls",
                 delete: "Remove saved accounts in account management, or clear pjsk.moe site data in your browser to delete all local preferences, account snapshots, and tokens.",
-                consent: "Grant or revoke analytics consent at any time in site settings.",
                 browser: "Use browser cookie, storage, Do Not Track, or Global Privacy Control settings to impose further restrictions.",
             },
             links: {

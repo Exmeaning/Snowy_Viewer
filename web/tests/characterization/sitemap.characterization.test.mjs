@@ -156,10 +156,10 @@ test("build-time lyrics index follows the same required credential-free source a
 
     delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
     const missing = await importPublicLyrics("missing");
-    assert.throws(
-      () => missing.getConfiguredPublicLyricsIndexUrl(),
-      /NEXT_PUBLIC_LYRICS_BASE_URL is required/,
-      "missing source must not silently select a product default",
+    assert.equal(
+      missing.getConfiguredPublicLyricsIndexUrl(),
+      "https://translation.exmeaning.com/translation/lyrics/index.json",
+      "missing source uses the reviewed production Public Lyrics directory",
     );
   } finally {
     for (const [key, value] of Object.entries(original)) {
