@@ -17,7 +17,8 @@ mismatch as a fail-closed incident; do not expose unvalidated lyrics bytes.
 3. Run the CI commands from `.github/workflows/ci.yml`.
 4. Regenerate sitemap data with `npm run --prefix web sitemap` and inspect all
    five `web/public/data/sitemap-data.*.json` files. Public Lyrics is a
-   fail-closed source: set `NEXT_PUBLIC_LYRICS_BASE_URL` and
+   fail-closed source: generation uses the coded production directory by
+   default, or `NEXT_PUBLIC_LYRICS_BASE_URL` when explicitly overridden. Keep
    `REQUIRE_PUBLIC_LYRICS_SOURCE=1`, and stop if the source is unavailable or
    invalid. Do not rely on `REQUIRE_FRESH_BUILD_DATA=1` for this contract; it
    does not make the fail-closed lyrics source succeed. Never commit a degraded,

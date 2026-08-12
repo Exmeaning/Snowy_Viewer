@@ -52,8 +52,8 @@ if [ ! -s /app/public-lyrics-base-url-build-contract ]; then
 fi
 BUILT_PUBLIC_LYRICS_BASE_URL="$(cat /app/public-lyrics-base-url-build-contract)"
 if [ -z "${NEXT_PUBLIC_LYRICS_BASE_URL:-}" ]; then
-    echo "NEXT_PUBLIC_LYRICS_BASE_URL is not configured at runtime" >&2
-    exit 1
+    NEXT_PUBLIC_LYRICS_BASE_URL="$BUILT_PUBLIC_LYRICS_BASE_URL"
+    export NEXT_PUBLIC_LYRICS_BASE_URL
 fi
 if [ "$NEXT_PUBLIC_LYRICS_BASE_URL" != "$BUILT_PUBLIC_LYRICS_BASE_URL" ]; then
     echo "NEXT_PUBLIC_LYRICS_BASE_URL does not match the build-time public lyrics source" >&2

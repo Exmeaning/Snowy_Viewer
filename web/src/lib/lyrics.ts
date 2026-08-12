@@ -1,4 +1,5 @@
 import type { UiLocale } from "@/lib/i18n";
+import { DEFAULT_PUBLIC_LYRICS_BASE_URL } from "@/lib/public-lyrics-base-url.mjs";
 import { parseStrictJson } from "@/lib/strict-json.mjs";
 
 const LYRICS_SCHEMA_VERSION_V1 = 1;
@@ -392,8 +393,7 @@ function parseLyricsBaseUrl(value: string): URL | null {
 export function getLyricsBaseUrl(): string {
     // Keep this direct property access: Next.js statically replaces NEXT_PUBLIC_* references
     // in client bundles, while computed environment lookups are not guaranteed to be inlined.
-    const raw = process.env.NEXT_PUBLIC_LYRICS_BASE_URL || "";
-    if (!raw) throw new LyricsLoadError("Lyrics base URL is not configured");
+    const raw = process.env.NEXT_PUBLIC_LYRICS_BASE_URL || DEFAULT_PUBLIC_LYRICS_BASE_URL;
 
     const configured = parseLyricsBaseUrl(raw);
     if (!configured) throw new LyricsLoadError("Invalid configured lyrics base URL");

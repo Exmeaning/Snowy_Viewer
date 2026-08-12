@@ -209,11 +209,18 @@ function replaceRawJsonToken(body, token, replacement, label) {
 }
 
 async function importLyrics() {
+  const lyricsBaseUrl = pathToFileURL(path.join(REPO_ROOT, "web/src/lib/public-lyrics-base-url.mjs")).href;
   const strictJsonUrl = pathToFileURL(path.join(REPO_ROOT, "web/src/lib/strict-json.mjs")).href;
-  return importWebTypeScript("src/lib/lyrics.ts", [[
-    'import { parseStrictJson } from "@/lib/strict-json.mjs";',
-    `import { parseStrictJson } from "${strictJsonUrl}";`,
-  ]]);
+  return importWebTypeScript("src/lib/lyrics.ts", [
+    [
+      'import { DEFAULT_PUBLIC_LYRICS_BASE_URL } from "@/lib/public-lyrics-base-url.mjs";',
+      `import { DEFAULT_PUBLIC_LYRICS_BASE_URL } from "${lyricsBaseUrl}";`,
+    ],
+    [
+      'import { parseStrictJson } from "@/lib/strict-json.mjs";',
+      `import { parseStrictJson } from "${strictJsonUrl}";`,
+    ],
+  ]);
 }
 
 let lyricTextModuleSequence = 0;
@@ -565,10 +572,10 @@ test("lyrics source config fails closed and permits only credential-free HTTPS o
 
     delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
     let lyrics = await importLyrics();
-    assert.throws(
-      () => lyrics.getLyricsBaseUrl(),
-      /Lyrics base URL is not configured/,
-      "missing config must not silently select another source",
+    assert.equal(
+      lyrics.getLyricsBaseUrl(),
+      "https://translation.exmeaning.com/translation/lyrics",
+      "missing config uses the reviewed production Public Lyrics directory",
     );
 
     process.env.NODE_ENV = "production";
@@ -1371,6 +1378,7 @@ test("public lyrics fetches enforce named timeout and artifact byte limits witho
   try {
     const source = readWeb("src/lib/lyrics.ts");
     assert.match(source, /process\.env\.NEXT_PUBLIC_LYRICS_BASE_URL/);
+    assert.match(source, /process\.env\.NEXT_PUBLIC_LYRICS_BASE_URL \|\| DEFAULT_PUBLIC_LYRICS_BASE_URL/);
     assert.doesNotMatch(source, /process\.env\[[^\]]*LYRICS[^\]]*\]/);
     assert.match(source, /const LYRICS_DETAIL_CACHE_LIMIT =/);
     assert.match(source, /const LYRICS_CACHE_TTL_MS =/);

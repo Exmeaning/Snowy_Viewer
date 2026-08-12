@@ -62,10 +62,13 @@ test("workflows pin actions, declare least privilege, and validate Go plus web",
   assert.match(ci, /--build-arg NEXT_PUBLIC_LYRICS_BASE_URL="\$lyrics_base_url"[\s\S]*--load/);
   assert.doesNotMatch(ci, /vars\.NEXT_PUBLIC_LYRICS_BASE_URL/);
   assert.doesNotMatch(ci, /NEXT_PUBLIC_LYRICS_BASE_URL:\s*https?:\/\//);
-  assert.match(screenshots, /Build and start web app[\s\S]*NEXT_PUBLIC_LYRICS_BASE_URL: \$\{\{ vars\.NEXT_PUBLIC_LYRICS_BASE_URL \}\}[\s\S]*test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"[\s\S]*npm run build/);
+  assert.match(screenshots, /Build and start web app[\s\S]*npm run build/);
+  assert.doesNotMatch(screenshots, /vars\.NEXT_PUBLIC_LYRICS_BASE_URL/);
+  assert.doesNotMatch(screenshots, /test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"/);
   const watchMasterData = readRepo(".github/workflows/watch-master-data.yml");
-  assert.match(watchMasterData, /NEXT_PUBLIC_LYRICS_BASE_URL: \$\{\{ vars\.NEXT_PUBLIC_LYRICS_BASE_URL \}\}/);
-  assert.match(watchMasterData, /test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"[\s\S]*REQUIRE_FRESH_BUILD_DATA=1[\s\S]*REQUIRE_PUBLIC_LYRICS_SOURCE=1[\s\S]*npm run sitemap --prefix web/);
+  assert.doesNotMatch(watchMasterData, /vars\.NEXT_PUBLIC_LYRICS_BASE_URL/);
+  assert.doesNotMatch(watchMasterData, /test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"/);
+  assert.match(watchMasterData, /REQUIRE_FRESH_BUILD_DATA=1[\s\S]*REQUIRE_PUBLIC_LYRICS_SOURCE=1[\s\S]*npm run sitemap --prefix web/);
   assert.equal(fs.existsSync(path.join(REPO_ROOT, "Dockerfile.go")), false);
   assert.equal(fs.existsSync(path.join(REPO_ROOT, "Dockerfile.backend")), true);
   assert.ok(fs.existsSync(path.join(REPO_ROOT, "docs/DEPLOYMENT_ROLLBACK.md")));
@@ -96,9 +99,15 @@ test("production and web-dev images install from the frozen workspace root and r
     "ARG NEXT_PUBLIC_LYRICS_BASE_URL=<reviewed-public-lyrics-base>",
   );
   assert.doesNotMatch(productionWithoutReviewedLyricsDefault, /NEXT_PUBLIC_LYRICS_BASE_URL=.*(?:https?:\/\/|token|password|@)/i);
+  const lyricsBaseUrl = readRepo("web/src/lib/public-lyrics-base-url.mjs");
+  assert.match(lyricsBaseUrl, /export const DEFAULT_PUBLIC_LYRICS_BASE_URL = "https:\/\/translation\.exmeaning\.com\/translation\/lyrics";/);
+  assert.match(readRepo("web/src/lib/lyrics.ts"), /from "@\/lib\/public-lyrics-base-url\.mjs"/);
+  assert.match(readRepo("web/scripts/lib/public-lyrics.mjs"), /from '\.\.\/\.\.\/src\/lib\/public-lyrics-base-url\.mjs'/);
   const startContainer = readRepo("scripts/start-container.sh");
   assert.match(startContainer, /public-lyrics-base-url-build-contract/);
+  assert.match(startContainer, /NEXT_PUBLIC_LYRICS_BASE_URL="\$BUILT_PUBLIC_LYRICS_BASE_URL"/);
   assert.match(startContainer, /does not match the build-time public lyrics source/);
+  assert.doesNotMatch(startContainer, /is not configured at runtime/);
   assert.match(production, /USER node/);
   assert.match(production, /HEALTHCHECK[\s\S]*\/readyz/);
   assert.match(production, /ENTRYPOINT \["\/sbin\/tini", "--"\]/);

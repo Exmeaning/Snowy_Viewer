@@ -1,3 +1,4 @@
+import { DEFAULT_PUBLIC_LYRICS_BASE_URL } from '../../src/lib/public-lyrics-base-url.mjs';
 import { parseStrictJson } from '../../src/lib/strict-json.mjs';
 
 const PUBLIC_LYRICS_SOURCE_ENV = 'NEXT_PUBLIC_LYRICS_BASE_URL';
@@ -173,10 +174,7 @@ export function validatePublicLyricsIndex(value) {
 }
 
 export function getConfiguredPublicLyricsIndexUrl() {
-    const raw = String(process.env[PUBLIC_LYRICS_SOURCE_ENV] || '');
-    if (!raw) {
-        throw new Error(`${PUBLIC_LYRICS_SOURCE_ENV} is required`);
-    }
+    const raw = String(process.env[PUBLIC_LYRICS_SOURCE_ENV] || DEFAULT_PUBLIC_LYRICS_BASE_URL);
 
     const configuredBaseUrl = parsePublicLyricsBaseUrl(raw);
     if (!configuredBaseUrl) {
