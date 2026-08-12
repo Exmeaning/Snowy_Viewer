@@ -8,7 +8,10 @@
       "name": "GUMI",
       "rightsHolder": "Internet Co., Ltd.",
       "officialSourceUrl": "https://www.ssw.co.jp/products/vocaloid6/megpoid/",
-      "assetStatus": "existing-local-avatar"
+      "officialAssetUrl": "https://www.ssw.co.jp/products/images/v6vb-mphdl.png",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/gumi.webp",
+      "processing": "crop-and-resize-only"
     },
     {
       "sourceId": "外部歌唱者-02",
@@ -54,7 +57,10 @@
       "name": "KAFU",
       "rightsHolder": "Musical Isotope",
       "officialSourceUrl": "https://musical-isotope.kamitsubaki.jp/terms/",
-      "assetStatus": "existing-local-avatar"
+      "officialAssetUrl": "https://musical-isotope.kamitsubaki.jp/wp-content/uploads/2022/06/product_kaf.png",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/kafu.webp",
+      "processing": "crop-and-resize-only"
     },
     {
       "sourceId": "外部歌唱者-08",
@@ -72,7 +78,10 @@
       "name": "SEKAI",
       "rightsHolder": "Musical Isotope",
       "officialSourceUrl": "https://musical-isotope.kamitsubaki.jp/terms/",
-      "assetStatus": "existing-local-avatar"
+      "officialAssetUrl": "https://musical-isotope.kamitsubaki.jp/wp-content/uploads/2022/06/product_sekai.png",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/sekai.webp",
+      "processing": "crop-and-resize-only"
     },
     {
       "sourceId": "外部歌唱者-11",
@@ -80,7 +89,10 @@
       "name": "Zundamon",
       "rightsHolder": "東北ずん子・ずんだもんプロジェクト",
       "officialSourceUrl": "https://zunko.jp/guideline.html",
-      "assetStatus": "existing-local-avatar"
+      "officialAssetUrl": "https://zunko.jp/images/chara_zm.png",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/zundamon.webp",
+      "processing": "crop-and-resize-only"
     },
     {
       "sourceId": "外部歌唱者-12",
@@ -148,7 +160,9 @@
       "name": "Kotonoha Aoi",
       "rightsHolder": "AHS Co. Ltd.",
       "officialSourceUrl": "https://www.ah-soft.com/voiceroid/kotonoha/",
-      "assetStatus": "existing-local-avatar"
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/aoi.webp",
+      "processing": "crop-and-resize-only"
     },
     {
       "sourceId": "外部歌唱者-19",
@@ -156,7 +170,9 @@
       "name": "Kotonoha Akane",
       "rightsHolder": "AHS Co. Ltd.",
       "officialSourceUrl": "https://www.ah-soft.com/voiceroid/kotonoha/",
-      "assetStatus": "existing-local-avatar"
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/akane.webp",
+      "processing": "crop-and-resize-only"
     }
   ]
 }
