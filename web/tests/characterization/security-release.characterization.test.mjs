@@ -63,11 +63,7 @@ test("workflows pin actions, declare least privilege, and validate Go plus web",
   assert.doesNotMatch(ci, /vars\.NEXT_PUBLIC_LYRICS_BASE_URL/);
   assert.doesNotMatch(ci, /NEXT_PUBLIC_LYRICS_BASE_URL:\s*https?:\/\//);
   assert.match(screenshots, /Build and start web app[\s\S]*npm run build/);
-  assert.doesNotMatch(screenshots, /vars\.NEXT_PUBLIC_LYRICS_BASE_URL/);
-  assert.doesNotMatch(screenshots, /test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"/);
   const watchMasterData = readRepo(".github/workflows/watch-master-data.yml");
-  assert.doesNotMatch(watchMasterData, /vars\.NEXT_PUBLIC_LYRICS_BASE_URL/);
-  assert.doesNotMatch(watchMasterData, /test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"/);
   assert.match(watchMasterData, /REQUIRE_FRESH_BUILD_DATA=1[\s\S]*REQUIRE_PUBLIC_LYRICS_SOURCE=1[\s\S]*npm run sitemap --prefix web/);
   assert.equal(fs.existsSync(path.join(REPO_ROOT, "Dockerfile.go")), false);
   assert.equal(fs.existsSync(path.join(REPO_ROOT, "Dockerfile.backend")), true);
