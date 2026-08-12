@@ -2643,6 +2643,20 @@ test("lyric segments keep solid and gradient colors with deduplicated line-end a
   assert.equal(performers.getLyricsCharacterIdBySourceId("歌唱者-25"), 25);
   assert.equal(performers.getLyricsCharacterIdBySourceId("外部歌唱者-01"), null);
   assert.doesNotMatch(performerSource, /placeholder|initial|letter/i);
+  for (const legacyIllustration of [
+    "gumi.svg",
+    "kafu.svg",
+    "sekai.svg",
+    "zundamon.svg",
+    "kotonoha-aoi.svg",
+    "kotonoha-akane.svg",
+  ]) {
+    assert.equal(
+      fs.existsSync(path.join(REPO_ROOT, "web/public/images/lyrics-performers", legacyIllustration)),
+      false,
+      `${legacyIllustration} must not remain available as a reusable self-drawn avatar source`,
+    );
+  }
   for (const performer of performers.EXTERNAL_LYRICS_PERFORMERS) {
     assert.equal(performers.getExternalLyricsPerformer(performer.id), performer);
     if (performer.avatarUrl) {
