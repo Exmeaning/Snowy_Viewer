@@ -2,15 +2,19 @@
 
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
 import LyricText from "@/components/lyrics/LyricText";
 import Link from "@/components/LocalizedLink";
+import { TranslatedText } from "@/components/common/TranslatedText";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useI18n } from "@/contexts/I18nContext";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, AssetSourceType } from "@/contexts/ThemeContext";
+import { fetchMasterData } from "@/lib/fetch";
+import { getCharacterIconUrl, getMusicVocalAudioUrl } from "@/lib/assets";
+import { getCharacterName } from "@/lib/i18n";
 import {
     fetchLyricsDocument,
     getLyricsDisplayLines,
@@ -30,7 +34,7 @@ import {
 } from "@/lib/lyrics";
 import { fetchLyricsMusicById } from "@/lib/lyrics-music-source";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
-import type { IMusicInfo } from "@/types/music";
+import type { IMusicInfo, IMusicVocalInfo } from "@/types/music";
 import { getMusicJacketUrl, MUSIC_CATEGORY_COLORS } from "@/types/music";
 type LyricsDisplayAttribution = ILyricsAttribution | ILyricsV3ComponentAttribution;
 
@@ -49,6 +53,181 @@ function getLyricsDisplayAttributions(attributions: readonly LyricsDisplayAttrib
         seen.add(identity);
         return true;
     });
+}
+
+// Vocal Audio Player Component aligned with /music/[id]
+function VocalPlayer({
+    vocal,
+    fillerSec,
+    assetSource,
+    outsideCharacters,
+    downloadLabel,
+    getCharacterLabel,
+}: {
+    vocal: IMusicVocalInfo;
+    fillerSec: number;
+    assetSource: AssetSourceType;
+    outsideCharacters: Record<number, string>;
+    downloadLabel: string;
+    getCharacterLabel: (characterId: number) => string;
+}) {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const audioUrl = getMusicVocalAudioUrl(vocal.assetbundleName, assetSource);
+
+    const togglePlay = () => {
+        if (!audioRef.current) {
+            audioRef.current = new Audio(audioUrl);
+            audioRef.current.onended = () => setIsPlaying(false);
+            audioRef.current.onplay = () => setIsPlaying(true);
+            audioRef.current.onpause = () => setIsPlaying(false);
+            audioRef.current.onloadedmetadata = () => {
+                if (audioRef.current) setDuration(audioRef.current.duration);
+            };
+            audioRef.current.ontimeupdate = () => {
+                if (audioRef.current) {
+                    setProgress(audioRef.current.currentTime);
+                }
+            };
+
+            if (fillerSec > 0) {
+                audioRef.current.currentTime = fillerSec;
+            }
+        }
+
+        if (isPlaying) {
+            audioRef.current.pause();
+        } else {
+            audioRef.current.play().catch(console.error);
+        }
+    };
+
+    const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const time = parseFloat(e.target.value);
+        setProgress(time);
+        if (audioRef.current) {
+            audioRef.current.currentTime = time;
+        }
+    };
+
+    const formatTime = (time: number) => {
+        const mins = Math.floor(time / 60);
+        const secs = Math.floor(time % 60);
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
+
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
+    }, []);
+
+    return (
+        <div className="px-5 py-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors group">
+            <div className="flex items-center gap-4">
+                <button
+                    onClick={togglePlay}
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                    className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${isPlaying
+                        ? "bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900"
+                        : "bg-miku text-white shadow-md shadow-miku/20 hover:scale-105 active:scale-95"
+                    }`}
+                >
+                    {isPlaying ? (
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                        </svg>
+                    ) : (
+                        <svg className="w-5 h-5 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    )}
+                </button>
+
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="text-sm font-bold text-primary-text truncate">
+                            <TranslatedText
+                                original={vocal.caption}
+                                category="music"
+                                field="vocalCaption"
+                                originalClassName="truncate block"
+                                translationClassName="text-xs text-slate-400 truncate block font-normal"
+                            />
+                        </div>
+                        <a
+                            href={audioUrl}
+                            download={`${vocal.caption}.mp3`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 text-slate-400 hover:text-miku hover:bg-miku/5 rounded-lg transition-colors"
+                            title={downloadLabel}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                        </a>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 mb-2">
+                        {vocal.characters?.map((chara) => {
+                            const isGameChar = chara.characterType === "game_character";
+                            const charName = isGameChar
+                                ? getCharacterLabel(chara.characterId)
+                                : outsideCharacters[chara.characterId] || `Guest ${chara.characterId}`;
+                            const hasIcon = isGameChar && chara.characterId <= 26;
+
+                            return hasIcon ? (
+                                <div
+                                    key={chara.id}
+                                    className="w-6 h-6 rounded-full overflow-hidden bg-slate-100 ring-1 ring-white dark:ring-slate-800"
+                                    title={charName}
+                                >
+                                    <Image
+                                        src={getCharacterIconUrl(chara.characterId)}
+                                        alt=""
+                                        width={24}
+                                        height={24}
+                                        className="w-full h-full object-cover"
+                                        unoptimized
+                                    />
+                                </div>
+                            ) : (
+                                <span
+                                    key={chara.id}
+                                    className="text-[10px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full"
+                                >
+                                    {charName}
+                                </span>
+                            );
+                        })}
+                    </div>
+
+                    {duration > 0 && (
+                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                            <span>{formatTime(progress)}</span>
+                            <input
+                                type="range"
+                                min={0}
+                                max={duration}
+                                step={0.1}
+                                value={progress}
+                                onChange={handleSeek}
+                                className="flex-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-miku"
+                            />
+                            <span>{formatTime(duration)}</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 }
 
 export default function LyricsDetailClient() {
@@ -70,6 +249,8 @@ export default function LyricsDetailClient() {
         lyrics: ILyricsDocument | null;
         errorKind: "unavailable" | "not-found" | "failed" | null;
     } | null>(null);
+    const [vocals, setVocals] = useState<IMusicVocalInfo[]>([]);
+    const [outsideCharacters, setOutsideCharacters] = useState<Record<number, string>>({});
 
     useEffect(() => {
         if (!hasValidMusicId) return;
@@ -81,8 +262,10 @@ export default function LyricsDetailClient() {
                 (document) => ({ document, error: null as unknown }),
                 (error: unknown) => ({ document: null, error }),
             ),
+            fetchMasterData<IMusicVocalInfo[]>("musicVocals.json").catch(() => []),
+            fetchMasterData<Record<number, string>>("outsideCharacters.json").catch(() => ({})),
         ])
-            .then(([music, publication, detail]) => {
+            .then(([music, publication, detail, vocalsData, outsideCharsData]) => {
                 if (cancelled) return;
                 const errorKind = detail.error
                     ? isLyricsUnavailableError(detail.error) ? publication ? "unavailable" : "not-found" : "failed"
@@ -95,6 +278,8 @@ export default function LyricsDetailClient() {
                     lyrics: detail.document,
                     errorKind,
                 });
+                setVocals((vocalsData || []).filter((v) => v.musicId === musicId));
+                setOutsideCharacters(outsideCharsData || {});
             })
             .catch(() => {
                 if (!cancelled) {
@@ -117,7 +302,6 @@ export default function LyricsDetailClient() {
     const errorKind = currentResult?.errorKind ?? null;
     const isLoading = hasValidMusicId && !currentResult;
     const targetLocale = getLyricsTargetLocale(locale);
-    const showTargetColumn = Boolean(targetLocale);
     const renditions = lyrics?.version === 3 ? [...getLyricsRenditions(lyrics)] : [];
     const activeRendition = lyrics?.version === 3
         ? getLyricsRendition(lyrics, requestedRenditionKey)
@@ -131,6 +315,10 @@ export default function LyricsDetailClient() {
     const displayLines = lyrics
         ? getLyricsDisplayLines(lyrics, activeVersion, activeRendition?.key)
         : [];
+    const hasTargetTranslation = targetLocale
+        ? displayLines.some((line) => Boolean(line[targetLocale]?.trim()))
+        : false;
+    const showTargetColumn = Boolean(targetLocale && hasTargetTranslation);
     const translationCredits = activeRendition?.translationCredits
         ?? (lyrics?.version === 2 ? lyrics.translationCredits : undefined);
     const attributions = getLyricsDisplayAttributions(
@@ -238,6 +426,13 @@ export default function LyricsDetailClient() {
                                 {t(`common.musicCategories.${category}`)}
                             </span>
                         ))}
+                        <Link
+                            href={`/music/${music.id}`}
+                            className="inline-flex items-center gap-1 rounded-full border border-sky-400/35 bg-sky-500/10 px-2.5 py-0.5 text-xs font-bold text-sky-500 transition-colors hover:border-sky-400/60 hover:bg-sky-500/15 hover:text-sky-400"
+                        >
+                            <span>{t("page.music.goToLyrics") ? "歌曲详情" : "Music Detail"}</span>
+                            <span aria-hidden="true">→</span>
+                        </Link>
                     </div>
                     <h1 className="break-words text-2xl font-black text-primary-text sm:text-3xl">{music.title}</h1>
                     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
@@ -248,6 +443,7 @@ export default function LyricsDetailClient() {
 
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(260px,0.72fr)_minmax(0,1.28fr)]">
                     <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+                        {/* Music Jacket Card */}
                         <div className="ios-glass-card overflow-hidden rounded-2xl">
                             <div className="relative aspect-square bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
                                 <Image
@@ -276,6 +472,34 @@ export default function LyricsDetailClient() {
                             </div>
                         </div>
 
+                        {/* Vocal Versions Audio Player Card */}
+                        {vocals.length > 0 && (
+                            <div className="ios-glass-card overflow-hidden rounded-2xl">
+                                <div className="border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent px-5 py-4 dark:border-slate-700/60 dark:from-miku/10">
+                                    <h2 className="flex items-center gap-2 font-bold text-primary-text">
+                                        <svg className="h-5 w-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                        </svg>
+                                        {t("page.music.vocalVersions", { seconds: Math.round((music.fillerSec || 0) * 10) / 10 })}
+                                    </h2>
+                                </div>
+                                <div className="divide-y divide-slate-100/80 dark:divide-slate-700/60 max-h-80 overflow-y-auto">
+                                    {vocals.map((vocal) => (
+                                        <VocalPlayer
+                                            key={vocal.id}
+                                            vocal={vocal}
+                                            fillerSec={music.fillerSec}
+                                            assetSource={assetSource}
+                                            outsideCharacters={outsideCharacters}
+                                            downloadLabel={t("page.music.downloadAudio")}
+                                            getCharacterLabel={(characterId) => getCharacterName(t, characterId)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Attribution Card */}
                         <div className="ios-glass-card overflow-hidden rounded-2xl">
                             <div className="border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent px-5 py-4 dark:border-slate-700/60 dark:from-miku/10">
                                 <h2 className="flex items-center gap-2 font-bold text-primary-text">
@@ -380,50 +604,54 @@ export default function LyricsDetailClient() {
                                     </svg>
                                     {t("page.lyrics.contentTitle")}
                                 </h2>
-                                {renditions.length > 1 && (
-                                    <div role="group" aria-label={t("page.lyrics.versionLabel")} className="flex max-w-full flex-wrap gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
-                                        {renditions.map((rendition) => (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {renditions.length > 1 && (
+                                        <div role="group" aria-label={t("page.lyrics.versionLabel")} className="flex max-w-full flex-wrap gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+                                            {renditions.map((rendition) => (
+                                                <button
+                                                    key={rendition.key}
+                                                    type="button"
+                                                    aria-pressed={activeRendition?.key === rendition.key}
+                                                    onClick={() => selectRendition(rendition.key)}
+                                                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${activeRendition?.key === rendition.key
+                                                        ? "bg-white text-miku shadow-sm dark:bg-slate-700 dark:text-miku"
+                                                        : "text-slate-500 hover:text-primary-text dark:text-slate-300"
+                                                    }`}
+                                                >
+                                                    {rendition.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {hasFullVersion && hasGameVersion ? (
+                                        <div role="group" aria-label={t("page.lyrics.versionLabel")} className="inline-flex w-fit rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
                                             <button
-                                                key={rendition.key}
                                                 type="button"
-                                                aria-pressed={activeRendition?.key === rendition.key}
-                                                onClick={() => selectRendition(rendition.key)}
-                                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${activeRendition?.key === rendition.key
-                                                    ? "bg-white text-miku shadow-sm dark:bg-slate-700"
+                                                aria-pressed={activeVersion === "full"}
+                                                onClick={() => selectVersion("full")}
+                                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${activeVersion === "full"
+                                                    ? "bg-white text-miku shadow-sm dark:bg-slate-700 dark:text-miku"
                                                     : "text-slate-500 hover:text-primary-text dark:text-slate-300"
                                                 }`}
                                             >
-                                                {rendition.label}
+                                                {t("page.lyrics.versionFull")}
                                             </button>
-                                        ))}
-                                    </div>
-                                )}
-                                <div role="group" aria-label={t("page.lyrics.versionLabel")} className="inline-flex w-fit rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
-                                    {hasFullVersion && (
-                                        <button
-                                            type="button"
-                                            aria-pressed={activeVersion === "full"}
-                                            onClick={() => selectVersion("full")}
-                                            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${activeVersion === "full"
-                                                ? "bg-white text-miku shadow-sm dark:bg-slate-700"
-                                                : "text-slate-500 hover:text-primary-text dark:text-slate-300"
-                                            }`}
-                                        >
-                                            {t("page.lyrics.versionFull")}
-                                        </button>
-                                    )}
-                                    {hasGameVersion && (
-                                        <button
-                                            type="button"
-                                            aria-pressed={activeVersion === "game"}
-                                            onClick={() => selectVersion("game")}
-                                            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${activeVersion === "game"
-                                                ? "bg-white text-miku shadow-sm dark:bg-slate-700"
-                                                : "text-slate-500 hover:text-primary-text dark:text-slate-300"
-                                            }`}
-                                        >
-                                            {t("page.lyrics.versionGame")}
-                                        </button>
+                                            <button
+                                                type="button"
+                                                aria-pressed={activeVersion === "game"}
+                                                onClick={() => selectVersion("game")}
+                                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${activeVersion === "game"
+                                                    ? "bg-white text-miku shadow-sm dark:bg-slate-700 dark:text-miku"
+                                                    : "text-slate-500 hover:text-primary-text dark:text-slate-300"
+                                                }`}
+                                            >
+                                                {t("page.lyrics.versionGame")}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <span className="inline-flex items-center rounded-lg bg-miku/10 px-3 py-1.5 text-xs font-bold text-miku">
+                                            {activeVersion === "game" ? t("page.lyrics.versionGame") : t("page.lyrics.versionFull")}
+                                        </span>
                                     )}
                                 </div>
                             </div>
@@ -492,3 +720,4 @@ export default function LyricsDetailClient() {
         </MainLayout>
     );
 }
+
