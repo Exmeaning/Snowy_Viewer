@@ -8,6 +8,7 @@ interface RootHeadScriptsProps {
   themeScript: string;
   videoGameJsonLd: string;
   websiteJsonLd: string;
+  googleTagScript?: string;
 }
 
 export default function RootHeadScripts({
@@ -15,6 +16,7 @@ export default function RootHeadScripts({
   themeScript,
   videoGameJsonLd,
   websiteJsonLd,
+  googleTagScript,
 }: RootHeadScriptsProps) {
   const inserted = useRef(false);
 
@@ -28,6 +30,12 @@ export default function RootHeadScripts({
           id="moesekai-theme-bootstrap"
           dangerouslySetInnerHTML={{ __html: themeScript }}
         />
+        {googleTagScript && (
+          <script
+            id="moesekai-google-tag-bootstrap"
+            dangerouslySetInnerHTML={{ __html: googleTagScript }}
+          />
+        )}
         <script
           id="moesekai-website-jsonld"
           type="application/ld+json"

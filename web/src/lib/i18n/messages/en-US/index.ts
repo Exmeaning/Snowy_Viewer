@@ -1523,6 +1523,7 @@ export const enUSMessages = {
             notFoundDesc: "Please verify if the song ID is correct. If this song was recently released, try going to Settings to switch or refresh the data server.",
             backToList: "Back to Music List",
             goToLyrics: "Go to lyrics",
+            goToMusicDetail: "Music Detail",
             jacketPreviewTitle: "{title} Jacket Art",
             clickExpand: "Click to expand",
             basicInfo: "Song Info",

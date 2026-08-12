@@ -1520,6 +1520,7 @@ export const koKRMessages = {
             notFoundDesc: "노래 ID가 올바른지 확인하세요. 노래가 최신 구현인 경우 \"설정\"으로 이동하여 외부 데이터 서버를 전환하거나 새로 고칠 수 있습니다.",
             backToList: "음악목록으로 돌아가기",
             goToLyrics: "가사 페이지로 이동",
+            goToMusicDetail: "음악 상세",
             jacketPreviewTitle: "{title} 큰 표지 이미지",
             clickExpand: "확대하려면 클릭하세요.",
             basicInfo: "노래정보",

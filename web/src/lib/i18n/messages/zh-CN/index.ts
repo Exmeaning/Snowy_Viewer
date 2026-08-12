@@ -1522,6 +1522,7 @@ export const zhCNMessages = {
             notFoundDesc: "请确认乐曲 ID 是否正确。若该乐曲为最新实装，可以尝试前往「设置」切换或刷新外部数据服务器。",
             backToList: "返回音乐列表",
             goToLyrics: "跳转到歌词页",
+            goToMusicDetail: "歌曲详情",
             jacketPreviewTitle: "{title} 封面大图",
             clickExpand: "点击放大",
             basicInfo: "乐曲信息",

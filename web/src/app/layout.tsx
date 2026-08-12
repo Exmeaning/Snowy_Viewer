@@ -34,11 +34,13 @@ import {
 } from "@/lib/i18n";
 import { BACKGROUND_ANIMATION_BUDGET_STORAGE_KEY } from "@/lib/backgroundAnimation";
 import { isRouteLocale, routeLocaleToUiLocale } from "@/lib/locale-routing";
+import { buildGoogleTagBootstrapScript } from "@/lib/googleTag";
 import { serializeJsonLd } from "@/lib/json-ld";
 
 const ROUTE_LOCALE_HEADER = "x-moesekai-route-locale";
 
 const SITE_BASE_URL = getSiteBaseUrl();
+const googleTagScript = buildGoogleTagBootstrapScript();
 
 export async function generateMetadata(): Promise<Metadata> {
   return generateRootMetadata();
@@ -194,6 +196,7 @@ export default async function RootLayout({
           websiteJsonLd={serializeJsonLd(jsonLd.website)}
           videoGameJsonLd={serializeJsonLd(jsonLd.videoGame)}
           navigationJsonLd={serializeJsonLd(navigationJsonLd)}
+          googleTagScript={googleTagScript}
         />
       </head>
       <body className="font-sans">

@@ -430,7 +430,7 @@ export default function LyricsDetailClient() {
                             href={`/music/${music.id}`}
                             className="inline-flex items-center gap-1 rounded-full border border-sky-400/35 bg-sky-500/10 px-2.5 py-0.5 text-xs font-bold text-sky-500 transition-colors hover:border-sky-400/60 hover:bg-sky-500/15 hover:text-sky-400"
                         >
-                            <span>{t("page.music.goToLyrics") ? "歌曲详情" : "Music Detail"}</span>
+                            <span>{t("page.music.goToMusicDetail")}</span>
                             <span aria-hidden="true">→</span>
                         </Link>
                     </div>

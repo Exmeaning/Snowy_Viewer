@@ -682,6 +682,7 @@ export const zhTWPagePrimary = {
             notFoundDesc: "請確認樂曲 ID 是否正確。若該樂曲為最新實裝，可以嘗試前往「設定」切換或重新整理外部資料伺服器。",
             backToList: "返回音樂列表",
             goToLyrics: "前往歌詞頁",
+            goToMusicDetail: "歌曲詳情",
             jacketPreviewTitle: "{title} 封面大圖",
             clickExpand: "按一下放大",
             basicInfo: "樂曲資訊",
