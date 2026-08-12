@@ -1,5 +1,6 @@
 "use client";
 
+import AnalyticsConsentControl from "@/components/AnalyticsConsentControl";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
@@ -42,6 +43,9 @@ export default function PrivacyPolicyClient() {
                     </Section>
                     <Section title={t("page.privacy.cookies.title")}>
                         <p>{t("page.privacy.cookies.analytics")}</p>
+                        <div className="mt-4 rounded-xl border border-slate-200/70 bg-white/50 p-4 dark:border-slate-700/60 dark:bg-slate-900/30">
+                            <AnalyticsConsentControl />
+                        </div>
                         <p className="mt-3 font-medium text-primary-text">{t("page.privacy.cookies.adsDisabled")}</p>
                     </Section>
                     <Section title={t("page.privacy.use.title")}>

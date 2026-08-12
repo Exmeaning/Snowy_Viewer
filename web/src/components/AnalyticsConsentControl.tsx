@@ -5,7 +5,7 @@ import { useEffect, useId, useState } from "react";
 import { useI18n } from "@/contexts/I18nContext";
 import {
   ANALYTICS_CONSENT_CHANGED_EVENT,
-  hasAnalyticsPrivacySignal,
+  isAnalyticsAllowed,
   isAnalyticsConsentStorageEvent,
   readAnalyticsConsent,
   writeAnalyticsConsent,
@@ -22,12 +22,10 @@ export default function AnalyticsConsentControl({ accentColor }: AnalyticsConsen
   const statusId = `${controlId}-status`;
   const descriptionId = `${controlId}-description`;
   const [consent, setConsent] = useState<AnalyticsConsentChoice | null>(null);
-  const [privacySignal, setPrivacySignal] = useState(false);
 
   useEffect(() => {
     const syncConsent = () => {
       setConsent(readAnalyticsConsent());
-      setPrivacySignal(hasAnalyticsPrivacySignal());
     };
     const handleStorage = (event: StorageEvent) => {
       if (isAnalyticsConsentStorageEvent(event)) syncConsent();
@@ -42,16 +40,12 @@ export default function AnalyticsConsentControl({ accentColor }: AnalyticsConsen
     };
   }, []);
 
-  const isGranted = consent === "granted";
-  const grantBlocked = privacySignal && !isGranted;
-  const statusKey = privacySignal
-    ? "settings.analytics.privacySignal"
-    : isGranted
-      ? "settings.analytics.statusGranted"
-      : "settings.analytics.statusDenied";
+  const isGranted = isAnalyticsAllowed(consent);
+  const statusKey = isGranted
+    ? "settings.analytics.statusGranted"
+    : "settings.analytics.statusDenied";
 
   const toggleConsent = () => {
-    if (grantBlocked) return;
     const nextConsent = isGranted ? "denied" : "granted";
     if (writeAnalyticsConsent(nextConsent)) setConsent(nextConsent);
   };
@@ -73,9 +67,8 @@ export default function AnalyticsConsentControl({ accentColor }: AnalyticsConsen
           aria-checked={isGranted}
           aria-describedby={`${statusId} ${descriptionId}`}
           aria-label={t("settings.analytics.label")}
-          disabled={grantBlocked}
           onClick={toggleConsent}
-          className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${isGranted ? "bg-miku" : "bg-slate-200 dark:bg-slate-700"}`}
+          className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${isGranted ? "bg-miku" : "bg-slate-200 dark:bg-slate-700"}`}
           style={isGranted && accentColor ? { backgroundColor: accentColor } : undefined}
         >
           <span

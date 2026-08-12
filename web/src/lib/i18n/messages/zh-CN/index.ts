@@ -770,10 +770,10 @@ export const zhCNMessages = {
         },
         analytics: {
             sectionTitle: "隐私",
-            label: "允许匿名使用情况分析",
-            description: "仅在你同意后，正式站点才会加载 Google Analytics。你可以随时撤回同意。",
-            statusGranted: "已允许使用情况分析",
-            statusDenied: "默认不启用使用情况分析",
+            label: "匿名使用情况分析",
+            description: "正式站点默认加载 Google Analytics，用于了解汇总访问情况。你可以随时在本页或隐私政策中关闭。",
+            statusGranted: "已启用使用情况分析",
+            statusDenied: "已关闭使用情况分析",
             privacySignal: "浏览器的隐私信号（GPC 或 Do Not Track）已停用使用情况分析",
         },
         assetSource: {
@@ -1054,7 +1054,7 @@ export const zhCNMessages = {
         },
         privacy: {
             title: "隐私政策",
-            updated: "最后更新：2026 年 7 月 24 日",
+            updated: "最后更新：2026 年 8 月 12 日",
             overview: {
                 title: "1. 概述",
                 body: "Moesekai（pjsk.moe）是非营利的 PROJECT SEKAI 粉丝数据查看器。本政策说明本站实际在你的设备上保存什么、何时与第三方服务通信，以及你可以如何控制这些数据。",
@@ -1073,18 +1073,18 @@ export const zhCNMessages = {
                 intro: "使用相应功能时，浏览器会向内容、公共游戏 API 或 OAuth2 提供方发送请求：",
                 oauth: "OAuth2 授权提供方会处理登录、授权码、令牌和已绑定游戏账号；其处理受该提供方政策约束。",
                 publicApi: "公共 API 或授权接口会接收所选服务器和游戏 UID，并返回用于本站工具的游戏数据。",
-                analytics: "只有你明确允许且浏览器未发送拒绝跟踪隐私信号时，本站才加载 Google Analytics；届时 Google 可能接收页面、设备、浏览器、IP 地址和时间等技术信息。",
+                analytics: "正式站点默认加载 Google Analytics。Google 可能接收页面、设备、浏览器、IP 地址和时间等技术信息。你可以随时关闭。",
             },
             cookies: {
                 title: "4. Cookie、分析与广告",
-                analytics: "Google Analytics 默认关闭。你可以在站点设置中允许或撤回分析同意；撤回后本站会停用标签并尝试删除相关分析 Cookie。",
+                analytics: "Google Analytics 默认开启。你可以在本页或站点设置中随时关闭；关闭后本站会停用标签并尝试删除相关分析 Cookie。",
                 adsDisabled: "本站当前已禁用广告功能，不加载 Google AdSense 广告脚本，也不使用广告收入。若未来启用广告，我们会先更新本政策和相应同意界面。",
             },
             use: {
                 title: "5. 数据用途",
                 functionality: "保存你的偏好并提供账号、卡组和计算工具。",
                 sync: "按你的操作从所选 API 同步并显示游戏数据。",
-                analytics: "在你同意时了解汇总使用情况，以维护和改进本站。",
+                analytics: "了解汇总使用情况，以维护和改进本站。",
             },
             sharing: {
                 title: "6. 共享与出售",
@@ -1093,7 +1093,7 @@ export const zhCNMessages = {
             controls: {
                 title: "7. 你的控制权",
                 delete: "可在账号管理中删除已保存账号；也可通过浏览器清除 pjsk.moe 的站点数据，删除所有本机偏好、账号快照和令牌。",
-                consent: "可随时在站点设置中允许或撤回分析同意。",
+                consent: "可随时在本页或站点设置中开启或关闭使用情况分析。",
                 browser: "可使用浏览器的 Cookie、存储、Do Not Track 或 Global Privacy Control 设置进一步限制处理。",
             },
             links: {

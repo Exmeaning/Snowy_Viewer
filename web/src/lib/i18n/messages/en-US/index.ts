@@ -771,10 +771,10 @@ export const enUSMessages = {
         },
         analytics: {
             sectionTitle: "Privacy",
-            label: "Allow anonymous usage analytics",
-            description: "Google Analytics loads only on production sites after you allow it. You can revoke consent at any time.",
-            statusGranted: "Analytics are allowed",
-            statusDenied: "Analytics are disabled by default",
+            label: "Anonymous usage analytics",
+            description: "Production sites load Google Analytics by default to understand aggregate visits. You can turn it off here or in the privacy policy at any time.",
+            statusGranted: "Analytics are enabled",
+            statusDenied: "Analytics are turned off",
             privacySignal: "Analytics are disabled by your browser privacy signal (GPC or Do Not Track)",
         },
         assetSource: {
@@ -1055,7 +1055,7 @@ export const enUSMessages = {
         },
         privacy: {
             title: "Privacy Policy",
-            updated: "Last updated: July 24, 2026",
+            updated: "Last updated: August 12, 2026",
             overview: {
                 title: "1. Overview",
                 body: "Moesekai (pjsk.moe) is a non-profit PROJECT SEKAI fan data viewer. This policy explains what the site actually stores on your device, when it communicates with third-party services, and how you can control that data.",
@@ -1074,11 +1074,11 @@ export const enUSMessages = {
                 intro: "When you use the relevant features, your browser sends requests to content, public game API, or OAuth2 providers:",
                 oauth: "The OAuth2 provider processes sign-in, authorization codes, tokens, and linked game accounts under its own policy.",
                 publicApi: "Public or authorized APIs receive the selected server and game UID and return game data used by site tools.",
-                analytics: "Google Analytics loads only after you explicitly allow it and when the browser sends no opt-out privacy signal. Google may then receive page, device, browser, IP address, and timing information.",
+                analytics: "Production sites load Google Analytics by default. Google may receive page, device, browser, IP address, and timing information. You can turn it off at any time.",
             },
             cookies: {
                 title: "4. Cookies, analytics, and ads",
-                analytics: "Google Analytics is off by default. You can grant or revoke analytics consent in site settings; after revocation, the site disables the tag and attempts to remove related analytics cookies.",
+                analytics: "Google Analytics is on by default. You can turn it off on this page or in site settings; after that, the site disables the tag and attempts to remove related analytics cookies.",
                 adsDisabled: "Advertising is currently disabled. Moesekai does not load Google AdSense ad scripts or rely on advertising revenue. We will update this policy and the relevant consent controls before enabling ads in the future.",
             },
             use: {
@@ -1094,7 +1094,7 @@ export const enUSMessages = {
             controls: {
                 title: "7. Your controls",
                 delete: "Remove saved accounts in account management, or clear pjsk.moe site data in your browser to delete all local preferences, account snapshots, and tokens.",
-                consent: "Grant or revoke analytics consent at any time in site settings.",
+                consent: "Turn analytics on or off at any time on this page or in site settings.",
                 browser: "Use browser cookie, storage, Do Not Track, or Global Privacy Control settings to impose further restrictions.",
             },
             links: {

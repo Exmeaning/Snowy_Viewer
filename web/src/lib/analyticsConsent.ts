@@ -3,16 +3,6 @@ export const ANALYTICS_CONSENT_CHANGED_EVENT = "moesekai-analytics-consent-chang
 
 export type AnalyticsConsentChoice = "granted" | "denied";
 
-interface PrivacyNavigator {
-  doNotTrack?: string | null;
-  globalPrivacyControl?: boolean;
-  msDoNotTrack?: string | null;
-}
-
-interface PrivacyWindow {
-  doNotTrack?: string | null;
-}
-
 export function readAnalyticsConsent(
   storage: Pick<Storage, "getItem"> | undefined = typeof window === "undefined" ? undefined : window.localStorage,
 ): AnalyticsConsentChoice | null {
@@ -25,21 +15,9 @@ export function readAnalyticsConsent(
   }
 }
 
-export function hasAnalyticsPrivacySignal(
-  navigatorLike: PrivacyNavigator | undefined = typeof navigator === "undefined" ? undefined : navigator,
-  windowLike: PrivacyWindow | undefined = typeof window === "undefined" ? undefined : window as unknown as PrivacyWindow,
-): boolean {
-  if (navigatorLike?.globalPrivacyControl === true) return true;
-  return [navigatorLike?.doNotTrack, navigatorLike?.msDoNotTrack, windowLike?.doNotTrack]
-    .some((value) => value === "1" || value?.toLowerCase() === "yes");
-}
-
-export function isAnalyticsAllowed(
-  consent: AnalyticsConsentChoice | null,
-  navigatorLike?: PrivacyNavigator,
-  windowLike?: PrivacyWindow,
-): boolean {
-  return consent === "granted" && !hasAnalyticsPrivacySignal(navigatorLike, windowLike);
+export function isAnalyticsAllowed(consent: AnalyticsConsentChoice | null): boolean {
+  // Default on for this non-profit fan site. Only an explicit opt-out disables the tag.
+  return consent !== "denied";
 }
 
 export function isAnalyticsConsentStorageEvent(event: Pick<StorageEvent, "key">): boolean {

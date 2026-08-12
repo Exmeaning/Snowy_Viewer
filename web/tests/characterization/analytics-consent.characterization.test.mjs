@@ -39,7 +39,7 @@ async function importGoogleTagBootstrap(dependencies) {
   return (await import(`data:text/javascript;base64,${encoded}`)).default;
 }
 
-async function withAnalyticsDom({ consent = null, globalPrivacyControl = false } = {}, callback) {
+async function withAnalyticsDom({ consent = null } = {}, callback) {
   const dom = new JSDOM("<!doctype html><html><head></head><body><div id=\"root\"></div></body></html>", {
     url: "https://pjsk.moe/en-us/",
   });
@@ -50,10 +50,6 @@ async function withAnalyticsDom({ consent = null, globalPrivacyControl = false }
     StorageEvent: globalThis.StorageEvent,
   };
   const previousNavigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, "navigator");
-  Object.defineProperty(dom.window.navigator, "globalPrivacyControl", {
-    configurable: true,
-    value: globalPrivacyControl,
-  });
   if (consent) dom.window.localStorage.setItem("moesekai_analytics_consent", consent);
   Object.assign(globalThis, {
     window: dom.window,
@@ -82,25 +78,22 @@ async function withAnalyticsDom({ consent = null, globalPrivacyControl = false }
   }
 }
 
-test("analytics consent defaults off and honors GPC and Do Not Track", async () => {
+test("analytics consent defaults on and only an explicit deny disables it", async () => {
   const consent = await importWebTypeScript("src/lib/analyticsConsent.ts");
   const storage = {
     getItem: () => null,
   };
 
   assert.equal(consent.readAnalyticsConsent(storage), null);
-  assert.equal(consent.isAnalyticsAllowed(null, {}, {}), false);
-  assert.equal(consent.isAnalyticsAllowed("granted", { globalPrivacyControl: true }, {}), false);
-  assert.equal(consent.isAnalyticsAllowed("granted", { doNotTrack: "1" }, {}), false);
-  assert.equal(consent.isAnalyticsAllowed("granted", { msDoNotTrack: "yes" }, {}), false);
-  assert.equal(consent.isAnalyticsAllowed("granted", {}, { doNotTrack: "1" }), false);
-  assert.equal(consent.isAnalyticsAllowed("granted", {}, {}), true);
+  assert.equal(consent.isAnalyticsAllowed(null), true);
+  assert.equal(consent.isAnalyticsAllowed("granted"), true);
+  assert.equal(consent.isAnalyticsAllowed("denied"), false);
   assert.equal(consent.isAnalyticsConsentStorageEvent({ key: consent.ANALYTICS_CONSENT_STORAGE_KEY }), true);
   assert.equal(consent.isAnalyticsConsentStorageEvent({ key: null }), true);
   assert.equal(consent.isAnalyticsConsentStorageEvent({ key: "unrelated" }), false);
 });
 
-test("GoogleTagBootstrap loads once after grant and disables/removes it on revoke", async () => {
+test("GoogleTagBootstrap loads by default and disables/removes it on revoke", async () => {
   const consent = await importWebTypeScript("src/lib/analyticsConsent.ts");
   await withAnalyticsDom({}, async () => {
     const GoogleTagBootstrap = await importGoogleTagBootstrap({
@@ -115,12 +108,8 @@ test("GoogleTagBootstrap loads once after grant and disables/removes it on revok
       root = hydrateRoot(container, element);
     });
 
-    assert.equal(document.getElementById("moesekai-google-tag"), null, "default deny must not load Google");
-    await act(async () => {
-      assert.equal(consent.writeAnalyticsConsent("granted"), true);
-    });
     const script = document.getElementById("moesekai-google-tag");
-    assert.ok(script);
+    assert.ok(script, "default allow must load Google");
     assert.match(script.src, /googletagmanager\.com\/gtag\/js\?id=G-TEST/);
     assert.equal(window.__moesekaiGoogleTagInitialized, true);
 
@@ -146,15 +135,14 @@ test("GoogleTagBootstrap loads once after grant and disables/removes it on revok
       window.localStorage.clear();
       window.dispatchEvent(new StorageEvent("storage", { key: null }));
     });
-    assert.equal(document.getElementById("moesekai-google-tag"), null, "cross-tab storage clear must revoke consent");
-    assert.equal(window["ga-disable-G-TEST"], true);
+    assert.ok(document.getElementById("moesekai-google-tag"), "clearing storage restores the default-on tag");
     return root;
   });
 });
 
-test("saved grant cannot override Global Privacy Control", async () => {
+test("saved deny keeps Google Analytics unloaded", async () => {
   const consent = await importWebTypeScript("src/lib/analyticsConsent.ts");
-  await withAnalyticsDom({ consent: "granted", globalPrivacyControl: true }, async () => {
+  await withAnalyticsDom({ consent: "denied" }, async () => {
     const GoogleTagBootstrap = await importGoogleTagBootstrap({
       ...consent,
       getGoogleTagMeasurementId: () => "G-TEST",
@@ -171,9 +159,10 @@ test("saved grant cannot override Global Privacy Control", async () => {
   });
 });
 
-test("tabbed settings and onboarding expose one localized consent control while retaining overlay shortcuts", () => {
+test("tabbed settings, onboarding, and privacy expose one localized consent control while retaining overlay shortcuts", () => {
   const settings = readWeb("src/components/SettingsPanel.tsx");
   const setup = readWeb("src/components/home/SetupGuide.tsx");
+  const privacy = readWeb("src/app/privacy/client.tsx");
   const control = readWeb("src/components/AnalyticsConsentControl.tsx");
   assert.equal((settings.match(/<AnalyticsConsentControl \/>/g) ?? []).length, 1);
   assert.match(settings, /type SettingsTab = "visual" \| "content" \| "data" \| "about"/);
@@ -183,7 +172,8 @@ test("tabbed settings and onboarding expose one localized consent control while 
   assert.match(settings, /CLOSE_OVERLAY_COMBOS\.some/);
   assert.match(settings, /document\.body\.style\.overflow = previousBodyOverflow/);
   assert.match(setup, /<AnalyticsConsentControl accentColor=\{themeColor\} \/>/);
+  assert.match(privacy, /<AnalyticsConsentControl \/>/);
   assert.match(control, /role="switch"/);
   assert.match(control, /aria-checked=\{isGranted\}/);
-  assert.match(control, /settings\.analytics\.privacySignal/);
+  assert.match(control, /isAnalyticsAllowed\(consent\)/);
 });

@@ -212,7 +212,7 @@ test("music list/detail mobile and dark-mode layout contracts remain unchanged",
   assert.doesNotMatch(detail, /fetchLyrics|LyricText/, "the existing music detail route remains independent of lyrics");
 });
 
-test("RootLayout renders native parser scripts in the SSR head and defers analytics to consent", () => {
+test("RootLayout renders native parser scripts in the SSR head and loads analytics unless denied", () => {
   const layout = readWeb("src/app/layout.tsx");
   const headScripts = readWeb("src/components/RootHeadScripts.tsx");
   const googleTag = readWeb("src/components/GoogleTagBootstrap.tsx");

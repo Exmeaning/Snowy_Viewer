@@ -768,10 +768,10 @@ export const koKRMessages = {
         },
         analytics: {
             sectionTitle: "개인정보 보호",
-            label: "익명 사용 분석 허용",
-            description: "동의한 경우에만 운영 사이트에서 Google Analytics를 불러옵니다. 언제든지 동의를 철회할 수 있습니다.",
-            statusGranted: "사용 분석이 허용됨",
-            statusDenied: "사용 분석은 기본적으로 비활성화됨",
+            label: "익명 사용 분석",
+            description: "운영 사이트는 집계된 방문 현황을 파악하기 위해 Google Analytics를 기본으로 불러옵니다. 이 페이지나 개인정보 처리방침에서 언제든지 끌 수 있습니다.",
+            statusGranted: "사용 분석이 켜져 있음",
+            statusDenied: "사용 분석이 꺼져 있음",
             privacySignal: "브라우저 개인정보 보호 신호(GPC 또는 Do Not Track)로 인해 비활성화됨"
         },
         assetSource: {
@@ -1052,7 +1052,7 @@ export const koKRMessages = {
         },
         privacy: {
             title: "개인정보 처리방침",
-            updated: "최종 업데이트: 2026년 7월 24일",
+            updated: "최종 업데이트: 2026년 8월 12일",
             overview: {
                 title: "1. 개요",
                 body: "Moesekai(pjsk.moe)는 비영리 PROJECT SEKAI 팬 데이터 뷰어입니다. 이 방침은 기기에 저장되는 정보, 제3자 서비스와 통신하는 시점, 이용자가 데이터를 관리하는 방법을 설명합니다."
@@ -1071,11 +1071,11 @@ export const koKRMessages = {
                 intro: "관련 기능을 사용하면 브라우저가 콘텐츠, 공개 게임 API 또는 OAuth2 제공자에게 요청을 보냅니다.",
                 oauth: "OAuth2 제공자는 자체 정책에 따라 로그인, 인증 코드, 토큰, 연결된 게임 계정을 처리합니다.",
                 publicApi: "공개 또는 인증 API는 선택한 서버와 게임 UID를 받고 사이트 도구에 필요한 게임 데이터를 반환합니다.",
-                analytics: "명시적으로 허용하고 브라우저가 추적 거부 개인정보 신호를 보내지 않을 때만 Google Analytics를 불러옵니다. 이때 Google은 페이지, 기기, 브라우저, IP 주소, 시간 등의 기술 정보를 받을 수 있습니다."
+                analytics: "운영 사이트는 Google Analytics를 기본으로 불러옵니다. Google은 페이지, 기기, 브라우저, IP 주소, 시간 등의 기술 정보를 받을 수 있습니다. 언제든지 끌 수 있습니다."
             },
             cookies: {
                 title: "4. 쿠키, 분석 및 광고",
-                analytics: "Google Analytics는 기본적으로 꺼져 있습니다. 사이트 설정에서 동의하거나 철회할 수 있으며, 철회하면 태그를 비활성화하고 관련 분석 쿠키 삭제를 시도합니다.",
+                analytics: "Google Analytics는 기본적으로 켜져 있습니다. 이 페이지나 사이트 설정에서 언제든지 끌 수 있으며, 끄면 태그를 비활성화하고 관련 분석 쿠키 삭제를 시도합니다.",
                 adsDisabled: "현재 광고 기능은 비활성화되어 있습니다. Google AdSense 광고 스크립트를 불러오지 않으며 광고 수익에 의존하지 않습니다. 향후 광고를 활성화하기 전에 이 방침과 동의 화면을 업데이트합니다."
             },
             use: {
@@ -1091,7 +1091,7 @@ export const koKRMessages = {
             controls: {
                 title: "7. 이용자 선택권",
                 delete: "계정 관리에서 저장된 계정을 삭제할 수 있습니다. 브라우저에서 pjsk.moe 사이트 데이터를 지우면 모든 로컬 설정, 계정 스냅샷, 토큰이 삭제됩니다.",
-                consent: "사이트 설정에서 언제든지 분석 동의를 허용하거나 철회할 수 있습니다.",
+                consent: "이 페이지나 사이트 설정에서 언제든지 사용 분석을 켜거나 끌 수 있습니다.",
                 browser: "브라우저의 쿠키, 저장소, Do Not Track 또는 Global Privacy Control 설정으로 처리를 추가 제한할 수 있습니다."
             },
             links: {
