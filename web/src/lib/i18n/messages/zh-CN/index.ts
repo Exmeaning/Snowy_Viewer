@@ -768,14 +768,6 @@ export const zhCNMessages = {
             label: "显示广告",
             description: "这是支持我们运营下去的方式之一",
         },
-        analytics: {
-            sectionTitle: "隐私",
-            label: "匿名使用情况分析",
-            description: "正式站点默认加载 Google Analytics，用于了解汇总访问情况。你可以随时在本页或隐私政策中关闭。",
-            statusGranted: "已启用使用情况分析",
-            statusDenied: "已关闭使用情况分析",
-            privacySignal: "浏览器的隐私信号（GPC 或 Do Not Track）已停用使用情况分析",
-        },
         assetSource: {
             sectionTitle: "Assets线路",
             main: "主线",
@@ -1026,7 +1018,7 @@ export const zhCNMessages = {
             },
             policies: {
                 title: "站点政策与广告说明",
-                description: "本站当前未启用广告。有关本机账号数据、OAuth2 令牌、分析同意和第三方服务的实际处理方式，请查看以下政策页面。",
+                description: "本站当前未启用广告。有关本机账号数据、OAuth2 令牌、使用情况分析和第三方服务的实际处理方式，请查看以下政策页面。",
                 privacy: "隐私政策",
                 terms: "服务条款",
                 googleAds: "Google 广告设置",
@@ -1062,7 +1054,7 @@ export const zhCNMessages = {
             local: {
                 title: "2. 保存在本机的数据",
                 intro: "本站无需创建 Moesekai 服务器账号，但部分功能会在浏览器 localStorage 或 sessionStorage 中保存：",
-                preferences: "语言、主题、侧边栏、筛选器和分析同意等界面偏好。",
+                preferences: "语言、主题、侧边栏、筛选器等界面偏好。",
                 account: "你主动添加的游戏账号标识、服务器、昵称和头像等账号资料。",
                 tokens: "通过 OAuth2 连接账号时取得的访问令牌、刷新令牌、授权范围和到期时间。令牌属于敏感凭据。",
                 gameData: "为账号工具同步的游戏数据快照，例如角色、卡组、材料、区域道具和 MySEKAI 数据。",
@@ -1073,11 +1065,11 @@ export const zhCNMessages = {
                 intro: "使用相应功能时，浏览器会向内容、公共游戏 API 或 OAuth2 提供方发送请求：",
                 oauth: "OAuth2 授权提供方会处理登录、授权码、令牌和已绑定游戏账号；其处理受该提供方政策约束。",
                 publicApi: "公共 API 或授权接口会接收所选服务器和游戏 UID，并返回用于本站工具的游戏数据。",
-                analytics: "正式站点默认加载 Google Analytics。Google 可能接收页面、设备、浏览器、IP 地址和时间等技术信息。你可以随时关闭。",
+                analytics: "正式站点加载 Google Analytics。Google 可能接收页面、设备、浏览器、IP 地址和时间等技术信息。",
             },
             cookies: {
                 title: "4. Cookie、分析与广告",
-                analytics: "Google Analytics 默认开启。你可以在本页或站点设置中随时关闭；关闭后本站会停用标签并尝试删除相关分析 Cookie。",
+                analytics: "正式站点使用 Google Analytics 了解汇总访问情况。Google 可能设置分析 Cookie。",
                 adsDisabled: "本站当前已禁用广告功能，不加载 Google AdSense 广告脚本，也不使用广告收入。若未来启用广告，我们会先更新本政策和相应同意界面。",
             },
             use: {
@@ -1093,7 +1085,6 @@ export const zhCNMessages = {
             controls: {
                 title: "7. 你的控制权",
                 delete: "可在账号管理中删除已保存账号；也可通过浏览器清除 pjsk.moe 的站点数据，删除所有本机偏好、账号快照和令牌。",
-                consent: "可随时在本页或站点设置中开启或关闭使用情况分析。",
                 browser: "可使用浏览器的 Cookie、存储、Do Not Track 或 Global Privacy Control 设置进一步限制处理。",
             },
             links: {

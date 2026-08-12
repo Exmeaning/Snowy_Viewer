@@ -17,8 +17,6 @@ import {
     parseShortcutCombos,
 } from "@/lib/shortcuts";
 import { getCharacterName, SUPPORTED_UI_LOCALES, UI_LOCALE_LABELS } from "@/lib/i18n";
-import AnalyticsConsentControl from "@/components/AnalyticsConsentControl";
-
 interface SettingsPanelProps {
     isOpen: boolean;
     onClose: () => void;
@@ -608,14 +606,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                     </button>
                                                 </div>
                                             )}
-
-                                            {/* Privacy and analytics consent */}
-                                            <div className="border-t border-slate-200/40 pt-4 dark:border-slate-800/40">
-                                                <div className="mb-3 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                    {t("settings.analytics.sectionTitle")}
-                                                </div>
-                                                <AnalyticsConsentControl />
-                                            </div>
                                         </div>
                                     )}
 

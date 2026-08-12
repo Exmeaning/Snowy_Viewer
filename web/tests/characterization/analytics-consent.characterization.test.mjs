@@ -7,7 +7,7 @@ import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import ts from "typescript";
 
-import { importWebTypeScript, readWeb } from "./test-helpers.mjs";
+import { readWeb } from "./test-helpers.mjs";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -16,9 +16,8 @@ async function importGoogleTagBootstrap(dependencies) {
     .replace(/^"use client";\s*/u, "")
     .replace(/^import[\s\S]*?;\s*$/gmu, "");
   const prelude = `
-    const dependencies = globalThis.__analyticsConsentRuntime;
-    const { React, ANALYTICS_CONSENT_CHANGED_EVENT, isAnalyticsConsentStorageEvent,
-      isAnalyticsAllowed, readAnalyticsConsent, getGoogleTagMeasurementId } = dependencies;
+    const React = globalThis.__googleTagRuntime.React;
+    const getGoogleTagMeasurementId = (...args) => globalThis.__googleTagRuntime.getGoogleTagMeasurementId(...args);
     const { useEffect } = React;
   `;
   const transpiled = ts.transpileModule(`${prelude}\n${source}`, {
@@ -34,12 +33,12 @@ async function importGoogleTagBootstrap(dependencies) {
     (transpiled.diagnostics ?? []).filter((item) => item.category === ts.DiagnosticCategory.Error),
     [],
   );
-  globalThis.__analyticsConsentRuntime = { React, ...dependencies };
+  globalThis.__googleTagRuntime = { React, ...dependencies };
   const encoded = Buffer.from(transpiled.outputText).toString("base64");
   return (await import(`data:text/javascript;base64,${encoded}`)).default;
 }
 
-async function withAnalyticsDom({ consent = null } = {}, callback) {
+async function withAnalyticsDom(callback) {
   const dom = new JSDOM("<!doctype html><html><head></head><body><div id=\"root\"></div></body></html>", {
     url: "https://pjsk.moe/en-us/",
   });
@@ -50,7 +49,6 @@ async function withAnalyticsDom({ consent = null } = {}, callback) {
     StorageEvent: globalThis.StorageEvent,
   };
   const previousNavigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, "navigator");
-  if (consent) dom.window.localStorage.setItem("moesekai_analytics_consent", consent);
   Object.assign(globalThis, {
     window: dom.window,
     document: dom.window.document,
@@ -74,30 +72,13 @@ async function withAnalyticsDom({ consent = null } = {}, callback) {
     }
     if (previousNavigatorDescriptor) Object.defineProperty(globalThis, "navigator", previousNavigatorDescriptor);
     else delete globalThis.navigator;
-    delete globalThis.__analyticsConsentRuntime;
+    delete globalThis.__googleTagRuntime;
   }
 }
 
-test("analytics consent defaults on and only an explicit deny disables it", async () => {
-  const consent = await importWebTypeScript("src/lib/analyticsConsent.ts");
-  const storage = {
-    getItem: () => null,
-  };
-
-  assert.equal(consent.readAnalyticsConsent(storage), null);
-  assert.equal(consent.isAnalyticsAllowed(null), true);
-  assert.equal(consent.isAnalyticsAllowed("granted"), true);
-  assert.equal(consent.isAnalyticsAllowed("denied"), false);
-  assert.equal(consent.isAnalyticsConsentStorageEvent({ key: consent.ANALYTICS_CONSENT_STORAGE_KEY }), true);
-  assert.equal(consent.isAnalyticsConsentStorageEvent({ key: null }), true);
-  assert.equal(consent.isAnalyticsConsentStorageEvent({ key: "unrelated" }), false);
-});
-
-test("GoogleTagBootstrap loads by default and disables/removes it on revoke", async () => {
-  const consent = await importWebTypeScript("src/lib/analyticsConsent.ts");
-  await withAnalyticsDom({}, async () => {
+test("GoogleTagBootstrap always loads Google Analytics when a measurement ID exists", async () => {
+  await withAnalyticsDom(async () => {
     const GoogleTagBootstrap = await importGoogleTagBootstrap({
-      ...consent,
       getGoogleTagMeasurementId: () => "G-TEST",
     });
     const element = React.createElement(GoogleTagBootstrap);
@@ -109,43 +90,17 @@ test("GoogleTagBootstrap loads by default and disables/removes it on revoke", as
     });
 
     const script = document.getElementById("moesekai-google-tag");
-    assert.ok(script, "default allow must load Google");
+    assert.ok(script, "production hosts must load Google Analytics");
     assert.match(script.src, /googletagmanager\.com\/gtag\/js\?id=G-TEST/);
     assert.equal(window.__moesekaiGoogleTagInitialized, true);
-
-    await act(async () => {
-      consent.writeAnalyticsConsent("granted");
-    });
-    assert.equal(document.querySelectorAll("#moesekai-google-tag").length, 1, "repeated grant must not duplicate the loader");
-
-    document.cookie = "_ga=test; Path=/";
-    await act(async () => {
-      consent.writeAnalyticsConsent("denied");
-    });
-    assert.equal(document.getElementById("moesekai-google-tag"), null);
-    assert.equal(window.__moesekaiGoogleTagInitialized, false);
-    assert.equal(window["ga-disable-G-TEST"], true);
-    assert.doesNotMatch(document.cookie, /_ga=/);
-
-    await act(async () => {
-      consent.writeAnalyticsConsent("granted");
-    });
-    assert.ok(document.getElementById("moesekai-google-tag"));
-    await act(async () => {
-      window.localStorage.clear();
-      window.dispatchEvent(new StorageEvent("storage", { key: null }));
-    });
-    assert.ok(document.getElementById("moesekai-google-tag"), "clearing storage restores the default-on tag");
     return root;
   });
 });
 
-test("saved deny keeps Google Analytics unloaded", async () => {
-  const consent = await importWebTypeScript("src/lib/analyticsConsent.ts");
-  await withAnalyticsDom({ consent: "denied" }, async () => {
+test("GoogleTagBootstrap stays idle without a measurement ID", async () => {
+  await withAnalyticsDom(async () => {
     const GoogleTagBootstrap = await importGoogleTagBootstrap({
-      ...consent,
-      getGoogleTagMeasurementId: () => "G-TEST",
+      getGoogleTagMeasurementId: () => undefined,
     });
     const element = React.createElement(GoogleTagBootstrap);
     const container = document.getElementById("root");
@@ -154,26 +109,26 @@ test("saved deny keeps Google Analytics unloaded", async () => {
       root = hydrateRoot(container, element);
     });
     assert.equal(document.getElementById("moesekai-google-tag"), null);
-    assert.equal(window["ga-disable-G-TEST"], true);
+    assert.equal(window.__moesekaiGoogleTagInitialized, undefined);
     return root;
   });
 });
 
-test("tabbed settings, onboarding, and privacy expose one localized consent control while retaining overlay shortcuts", () => {
+test("settings, onboarding, and privacy no longer expose an analytics consent toggle", () => {
   const settings = readWeb("src/components/SettingsPanel.tsx");
   const setup = readWeb("src/components/home/SetupGuide.tsx");
   const privacy = readWeb("src/app/privacy/client.tsx");
-  const control = readWeb("src/components/AnalyticsConsentControl.tsx");
-  assert.equal((settings.match(/<AnalyticsConsentControl \/>/g) ?? []).length, 1);
+  const googleTag = readWeb("src/components/GoogleTagBootstrap.tsx");
+
+  assert.doesNotMatch(settings, /AnalyticsConsentControl|settings\.analytics/);
   assert.match(settings, /type SettingsTab = "visual" \| "content" \| "data" \| "about"/);
   assert.match(settings, /activeTab === "content"/);
-  assert.match(settings, /settings\.analytics\.sectionTitle/);
   assert.match(settings, /matchesShortcutCombo\(event, SETTINGS_TOGGLE_COMBO\)/);
   assert.match(settings, /CLOSE_OVERLAY_COMBOS\.some/);
   assert.match(settings, /document\.body\.style\.overflow = previousBodyOverflow/);
-  assert.match(setup, /<AnalyticsConsentControl accentColor=\{themeColor\} \/>/);
-  assert.match(privacy, /<AnalyticsConsentControl \/>/);
-  assert.match(control, /role="switch"/);
-  assert.match(control, /aria-checked=\{isGranted\}/);
-  assert.match(control, /isAnalyticsAllowed\(consent\)/);
+  assert.doesNotMatch(setup, /AnalyticsConsentControl/);
+  assert.doesNotMatch(privacy, /AnalyticsConsentControl|controls\.consent/);
+  assert.doesNotMatch(googleTag, /analyticsConsent|isAnalyticsAllowed|readAnalyticsConsent/);
+  assert.match(googleTag, /getGoogleTagMeasurementId\(window\.location\.hostname\)/);
+  assert.match(googleTag, /document\.createElement\("script"\)/);
 });

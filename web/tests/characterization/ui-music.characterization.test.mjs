@@ -212,7 +212,7 @@ test("music list/detail mobile and dark-mode layout contracts remain unchanged",
   assert.doesNotMatch(detail, /fetchLyrics|LyricText/, "the existing music detail route remains independent of lyrics");
 });
 
-test("RootLayout renders native parser scripts in the SSR head and loads analytics unless denied", () => {
+test("RootLayout renders native parser scripts in the SSR head and always loads analytics", () => {
   const layout = readWeb("src/app/layout.tsx");
   const headScripts = readWeb("src/components/RootHeadScripts.tsx");
   const googleTag = readWeb("src/components/GoogleTagBootstrap.tsx");
@@ -232,7 +232,9 @@ test("RootLayout renders native parser scripts in the SSR head and loads analyti
   assert.match(body, /<GoogleTagBootstrap \/>/);
   assert.doesNotMatch(layout, /<Script|strategy="(?:before|after)Interactive"/);
   assert.match(googleTag, /useEffect\(\(\) => \{/);
-  assert.match(googleTag, /isAnalyticsAllowed\(readAnalyticsConsent\(\)\)/);
+  assert.match(googleTag, /getGoogleTagMeasurementId\(window\.location\.hostname\)/);
+  assert.match(googleTag, /if \(measurementId\) enableGoogleTag\(measurementId\)/);
+  assert.doesNotMatch(googleTag, /analyticsConsent|isAnalyticsAllowed|readAnalyticsConsent/);
   assert.match(googleTag, /document\.createElement\("script"\)/);
   assert.match(googleTag, /__moesekaiGoogleTagInitialized/);
 });

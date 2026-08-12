@@ -116,6 +116,7 @@ test("privacy disclosures are localized, match disabled ads, and route external 
   assert.match(client, /"local\.tokens"/);
   assert.match(client, /"local\.gameData"/);
   assert.match(client, /page\.privacy\.cookies\.adsDisabled/);
+  assert.doesNotMatch(client, /AnalyticsConsentControl|controls\.consent/);
   assert.doesNotMatch(client, /<a\s/i);
   assert.equal((client.match(/<ExternalLink/g) ?? []).length, 2);
 });
