@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "scope": "Public Lyrics v3 external performer avatar credits",
+  "performers": [
+    {
+      "sourceId": "外部歌唱者-01",
+      "numericId": 1001,
+      "name": "GUMI",
+      "rightsHolder": "Internet Co., Ltd.",
+      "officialSourceUrl": "https://www.ssw.co.jp/products/vocaloid6/megpoid/",
+      "assetStatus": "existing-local-avatar"
+    },
+    {
+      "sourceId": "外部歌唱者-02",
+      "numericId": 1002,
+      "name": "Kasane Teto",
+      "rightsHolder": "線 / 小山乃舞世 / TWINDRILL",
+      "credit": "重音テト © 線 / 小山乃舞世 / TWINDRILL",
+      "officialSourceUrl": "https://kasaneteto.jp/illust-logo/",
+      "guidelineUrl": "https://kasaneteto.jp/guidelines/character.html",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/teto.webp",
+      "processing": "crop-and-resize-only"
+    },
+    {
+      "sourceId": "外部歌唱者-03",
+      "numericId": 1003,
+      "name": "flower",
+      "rightsHolder": "Gynoid",
+      "officialSourceUrl": "https://www.gynoid.co.jp/items/view/18",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/flower.webp",
+      "processing": "crop-and-resize-only"
+    },
+    {
+      "sourceId": "外部歌唱者-04",
+      "numericId": 1004,
+      "name": "Nenerobo",
+      "assetStatus": "fallback"
+    },
+    {
+      "sourceId": "外部歌唱者-06",
+      "numericId": 1006,
+      "name": "Kamui Gakupo",
+      "rightsHolder": "Internet Co., Ltd. / 三浦建太郎",
+      "officialSourceUrl": "https://www.ssw.co.jp/products/vocaloid3/gackpoid/",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/gakupo.webp",
+      "processing": "crop-and-resize-only"
+    },
+    {
+      "sourceId": "外部歌唱者-07",
+      "numericId": 1007,
+      "name": "KAFU",
+      "rightsHolder": "Musical Isotope",
+      "officialSourceUrl": "https://musical-isotope.kamitsubaki.jp/terms/",
+      "assetStatus": "existing-local-avatar"
+    },
+    {
+      "sourceId": "外部歌唱者-08",
+      "numericId": 1008,
+      "name": "Gekiyaku",
+      "rightsHolder": "KAMITSUBAKI STUDIO / Musical Isotope",
+      "officialSourceUrl": "https://musical-isotope.kamitsubaki.jp/terms/",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/gekiyaku.webp",
+      "processing": "crop-and-resize-only"
+    },
+    {
+      "sourceId": "外部歌唱者-09",
+      "numericId": 1009,
+      "name": "SEKAI",
+      "rightsHolder": "Musical Isotope",
+      "officialSourceUrl": "https://musical-isotope.kamitsubaki.jp/terms/",
+      "assetStatus": "existing-local-avatar"
+    },
+    {
+      "sourceId": "外部歌唱者-11",
+      "numericId": 1011,
+      "name": "Zundamon",
+      "rightsHolder": "東北ずん子・ずんだもんプロジェクト",
+      "officialSourceUrl": "https://zunko.jp/guideline.html",
+      "assetStatus": "existing-local-avatar"
+    },
+    {
+      "sourceId": "外部歌唱者-12",
+      "numericId": 1012,
+      "name": "Kaai Yuki",
+      "rightsHolder": "AH-Software Co. Ltd.",
+      "officialSourceUrl": "https://www.ah-soft.com/vocaloid/kaaiyuki/",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/yuki.webp",
+      "processing": "crop-and-resize-only"
+    },
+    {
+      "sourceId": "外部歌唱者-13",
+      "numericId": 1013,
+      "name": "Adachi Rei",
+      "rightsHolder": "m1namo",
+      "officialSourceUrl": "https://adachirei.com/",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/adachi-rei.webp",
+      "processing": "crop-and-resize-only"
+    },
+    {
+      "sourceId": "外部歌唱者-14",
+      "numericId": 1014,
+      "name": "RIME",
+      "rightsHolder": "KAMITSUBAKI STUDIO / Musical Isotope",
+      "officialSourceUrl": "https://musical-isotope.kamitsubaki.jp/terms/",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/rime.webp",
+      "processing": "crop-and-resize-only"
+    },
+    {
+      "sourceId": "外部歌唱者-15",
+      "numericId": 1015,
+      "name": "Hanakuma Chifuyu",
+      "rightsHolder": "TOKYO6 ENTERTAINMENT",
+      "officialSourceUrl": "https://tokyo6.tokyo/hanakuma/",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/chifuyu.webp",
+      "processing": "crop-and-resize-only"
+    },
+    {
+      "sourceId": "外部歌唱者-16",
+      "numericId": 1016,
+      "name": "VY1",
+      "rightsHolder": "Yamaha Corporation",
+      "officialSourceUrl": "https://www.vocaloid.com/en/terms/",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/vy1.webp",
+      "processing": "crop-and-resize-only"
+    },
+    {
+      "sourceId": "外部歌唱者-17",
+      "numericId": 1017,
+      "name": "SOLARIA",
+      "rightsHolder": "Eclipsed Sounds",
+      "officialSourceUrl": "https://www.eclipsedsounds.com/solaria/",
+      "assetStatus": "official-crop-added",
+      "assetPath": "web/public/images/lyrics-performers/solaria.webp",
+      "processing": "crop-and-resize-only"
+    },
+    {
+      "sourceId": "外部歌唱者-18",
+      "numericId": 1018,
+      "name": "Kotonoha Aoi",
+      "rightsHolder": "AHS Co. Ltd.",
+      "officialSourceUrl": "https://www.ah-soft.com/voiceroid/kotonoha/",
+      "assetStatus": "existing-local-avatar"
+    },
+    {
+      "sourceId": "外部歌唱者-19",
+      "numericId": 1019,
+      "name": "Kotonoha Akane",
+      "rightsHolder": "AHS Co. Ltd.",
+      "officialSourceUrl": "https://www.ah-soft.com/voiceroid/kotonoha/",
+      "assetStatus": "existing-local-avatar"
+    }
+  ]
+}

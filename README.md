@@ -24,6 +24,34 @@ sekai-calculator 采用 **LGPL-2.1** 开源协议。
 [PJSK-Sticker](https://github.com/Parallel-SEKAI/PJSK-Sticker)
 [sekai-stickers](https://github.com/TheOriginalAyaka/sekai-stickers)
 
+## 歌词头像版权 / Lyrics avatar credits
+
+歌词页面中的外部歌唱者头像均为小尺寸头像裁切图，版权归各自权利人所有。官方来源与署名集中记录如下：
+
+- **GUMI** — © Internet Co., Ltd. — [官方页面](https://www.ssw.co.jp/products/vocaloid6/megpoid/)
+- **Kasane Teto / 重音テト** — `重音テト © 線 / 小山乃舞世 / TWINDRILL` — [官方插画](https://kasaneteto.jp/illust-logo/) · [角色指南](https://kasaneteto.jp/guidelines/character.html)
+- **flower** — © Gynoid — [官方素材页](https://www.gynoid.co.jp/items/view/18)
+- **Nenerobo** — 暂无已确认的独立官方头像素材，当前保留文字回退头像
+- **Kamui Gakupo** — © Internet Co., Ltd. / 三浦建太郎 — [官方角色页](https://www.ssw.co.jp/products/vocaloid3/gackpoid/)
+- **KAFU** — © Musical Isotope — [官方条款](https://musical-isotope.kamitsubaki.jp/terms/)
+- **Gekiyaku** — © KAMITSUBAKI STUDIO / Musical Isotope — [官方条款](https://musical-isotope.kamitsubaki.jp/terms/)
+- **SEKAI** — © Musical Isotope — [官方条款](https://musical-isotope.kamitsubaki.jp/terms/)
+- **Zundamon / ずんだもん** — © 東北ずん子・ずんだもんプロジェクト — [官方指南](https://zunko.jp/guideline.html)
+- **Kaai Yuki** — © AH-Software Co. Ltd. — [官方角色页](https://www.ah-soft.com/vocaloid/kaaiyuki/)
+- **Adachi Rei** — © m1namo — [官方页面](https://adachirei.com/)
+- **RIME** — © KAMITSUBAKI STUDIO / Musical Isotope — [官方条款](https://musical-isotope.kamitsubaki.jp/terms/)
+- **Hanakuma Chifuyu** — © TOKYO6 ENTERTAINMENT — [官方页面](https://tokyo6.tokyo/hanakuma/)
+- **VY1** — © Yamaha Corporation — [官方指南](https://www.vocaloid.com/en/terms/)
+- **SOLARIA** — © Eclipsed Sounds — [官方页面](https://www.eclipsedsounds.com/solaria/)
+- **Kotonoha Aoi / 琴葉葵** — © AHS Co. Ltd. — [官方页面](https://www.ah-soft.com/voiceroid/kotonoha/)
+- **Kotonoha Akane / 琴葉茜** — © AHS Co. Ltd. — [官方页面](https://www.ah-soft.com/voiceroid/kotonoha/)
+
+以上已列出的身份均已使用对应公开素材裁切为歌词页头像；`Nenerobo` 因暂未找到可确认的独立官方头像素材，仍保留文字回退。
+
+头像只做裁切、缩放和页面显示用途，不代表本项目拥有上述角色或素材的版权。
+
+可核对来源见 [`docs/lyrics-external-avatar-sources.json`](docs/lyrics-external-avatar-sources.json)。
+
 谱面预览器参考了**watagashi-uni**的sekai-mmw-preview-web 及 mikumikuworld 的相关实现
 [sekai-mmw-preview-web](https://github.com/watagashi-uni/sekai-mmw-preview-web)
 [MikuMikuWorld](https://github.com/crash5band/MikuMikuWorld)

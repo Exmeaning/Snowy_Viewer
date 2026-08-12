@@ -2633,16 +2633,22 @@ test("lyric segments keep solid and gradient colors with deduplicated line-end a
   assert.doesNotMatch(`${source}\n${lyricsSource}\n${clientSource}`, /\b(?:romaji|romanized|romanization)\b/i);
 
   const performers = await importWebTypeScript("src/lib/lyrics-performers.ts");
-  assert.deepEqual(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.id), [1001, 1007, 1009, 1011, 1018, 1019]);
-  assert.equal(new Set(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.sourceId)).size, 6);
+  assert.deepEqual(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.id), [1001, 1002, 1003, 1004, 1006, 1007, 1008, 1009, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019]);
+  assert.equal(new Set(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.sourceId)).size, 17);
+  assert.equal(performers.getExternalLyricsPerformerBySourceId("外部歌唱者-03")?.name, "flower");
+  assert.equal(performers.getExternalLyricsPerformerBySourceId("外部歌唱者-13")?.name, "Adachi Rei");
+  assert.equal(performers.getExternalLyricsPerformer(1004)?.avatarUrl, undefined);
+  assert.equal(performers.getExternalLyricsPerformer(1004)?.name, "Nenerobo");
   assert.equal(performers.getLyricsCharacterIdBySourceId("歌唱者-19"), 19);
   assert.equal(performers.getLyricsCharacterIdBySourceId("歌唱者-25"), 25);
   assert.equal(performers.getLyricsCharacterIdBySourceId("外部歌唱者-01"), null);
   assert.doesNotMatch(performerSource, /placeholder|initial|letter/i);
   for (const performer of performers.EXTERNAL_LYRICS_PERFORMERS) {
     assert.equal(performers.getExternalLyricsPerformer(performer.id), performer);
-    const assetPath = path.join(REPO_ROOT, "web/public", performer.avatarUrl.replace(/^\//, ""));
-    assert.ok(fs.statSync(assetPath).size > 1000, `${performer.name} must have a real local avatar asset`);
+    if (performer.avatarUrl) {
+      const assetPath = path.join(REPO_ROOT, "web/public", performer.avatarUrl.replace(/^\//, ""));
+      assert.ok(fs.statSync(assetPath).size > 1000, `${performer.name} must have a real local avatar asset`);
+    }
   }
 
   globalThis.__lyricTextRuntimeTest = {
@@ -2653,9 +2659,25 @@ test("lyric segments keep solid and gradient colors with deduplicated line-end a
       [22, { base: "#FFCC11", light: "#7A5F00", dark: "#FFE066" }],
       [25, { base: "#DD4444", light: "#8A2020", dark: "#FF8585" }],
       [1001, { base: "#70B85A", light: "#34712A", dark: "#93DF7A" }],
+      [1002, { base: "#D83B67", light: "#7B1734", dark: "#F58BA8" }],
     ]),
     external: new Map([
       [1001, { id: 1001, sourceId: "外部歌唱者-01", name: "GUMI", color: "#70B85A", avatarUrl: "/images/lyrics-performers/gumi.webp" }],
+      [1002, { id: 1002, sourceId: "外部歌唱者-02", name: "Kasane Teto", color: "#D83B67", avatarUrl: "/images/lyrics-performers/teto.webp" }],
+      [1003, { id: 1003, sourceId: "外部歌唱者-03", name: "flower", color: "#7B6A84", avatarUrl: "/images/lyrics-performers/flower.webp" }],
+      [1006, { id: 1006, sourceId: "外部歌唱者-06", name: "Kamui Gakupo", color: "#6F73C8", avatarUrl: "/images/lyrics-performers/gakupo.webp" }],
+      [1007, { id: 1007, sourceId: "外部歌唱者-07", name: "KAFU", color: "#8A8A91", avatarUrl: "/images/lyrics-performers/kafu.webp" }],
+      [1008, { id: 1008, sourceId: "外部歌唱者-08", name: "Gekiyaku", color: "#A66D87", avatarUrl: "/images/lyrics-performers/gekiyaku.webp" }],
+      [1009, { id: 1009, sourceId: "外部歌唱者-09", name: "SEKAI", color: "#4A89A8", avatarUrl: "/images/lyrics-performers/sekai.webp" }],
+      [1011, { id: 1011, sourceId: "外部歌唱者-11", name: "Zundamon", color: "#78AF54", avatarUrl: "/images/lyrics-performers/zundamon.webp" }],
+      [1012, { id: 1012, sourceId: "外部歌唱者-12", name: "Kaai Yuki", color: "#4F5A4B", avatarUrl: "/images/lyrics-performers/yuki.webp" }],
+      [1013, { id: 1013, sourceId: "外部歌唱者-13", name: "Adachi Rei", color: "#E56E1B", avatarUrl: "/images/lyrics-performers/adachi-rei.webp" }],
+      [1014, { id: 1014, sourceId: "外部歌唱者-14", name: "RIME", color: "#563E8E", avatarUrl: "/images/lyrics-performers/rime.webp" }],
+      [1015, { id: 1015, sourceId: "外部歌唱者-15", name: "Hanakuma Chifuyu", color: "#506D87", avatarUrl: "/images/lyrics-performers/chifuyu.webp" }],
+      [1016, { id: 1016, sourceId: "外部歌唱者-16", name: "VY1", color: "#31A1B5", avatarUrl: "/images/lyrics-performers/vy1.webp" }],
+      [1017, { id: 1017, sourceId: "外部歌唱者-17", name: "SOLARIA", color: "#B86D46", avatarUrl: "/images/lyrics-performers/solaria.webp" }],
+      [1018, { id: 1018, sourceId: "外部歌唱者-18", name: "Kotonoha Aoi", color: "#4D8FCC", avatarUrl: "/images/lyrics-performers/kotonoha-aoi.webp" }],
+      [1019, { id: 1019, sourceId: "外部歌唱者-19", name: "Kotonoha Akane", color: "#D75C58", avatarUrl: "/images/lyrics-performers/kotonoha-akane.webp" }],
     ]),
   };
   try {
@@ -2760,6 +2782,35 @@ test("lyric segments keep solid and gradient colors with deduplicated line-end a
     assert.match(v3ExternalHtml, /--performer-light/);
     assert.match(v3ExternalHtml, /aria-label="GUMI"/);
     assert.match(v3ExternalHtml, /\/images\/lyrics-performers\/gumi\.webp/);
+
+    const tetoHtml = renderToString(React.createElement(LyricText, {
+      text: "重音テト", performerIds: [1002], ruby: [{ text: "重音テト" }],
+    }));
+    assert.match(tetoHtml, /aria-label="Kasane Teto"/);
+    assert.match(tetoHtml, /\/images\/lyrics-performers\/teto\.webp/);
+
+    const v3TetoHtml = renderToString(React.createElement(LyricText, {
+      text: "重音テト", performerIds: ["外部歌唱者-02"], ruby: [{ text: "重音テト" }],
+      performers: [{ performerId: "外部歌唱者-02", name: "Kasane Teto" }],
+    }));
+    assert.match(v3TetoHtml, /aria-label="Kasane Teto"/);
+    assert.match(v3TetoHtml, /\/images\/lyrics-performers\/teto\.webp/);
+
+    const v3MissingSetHtml = renderToString(React.createElement(LyricText, {
+      text: "外部合唱", performerIds: ["外部歌唱者-03", "外部歌唱者-13", "外部歌唱者-14", "外部歌唱者-15"], ruby: [{ text: "外部合唱" }],
+      performers: [
+        { performerId: "外部歌唱者-03", name: "flower" },
+        { performerId: "外部歌唱者-13", name: "Adachi Rei" },
+        { performerId: "外部歌唱者-14", name: "RIME" },
+        { performerId: "外部歌唱者-15", name: "Hanakuma Chifuyu" },
+      ],
+    }));
+    assert.match(v3MissingSetHtml, /aria-label="flower, Adachi Rei, RIME, Hanakuma Chifuyu"/);
+    assert.match(v3MissingSetHtml, /\/images\/lyrics-performers\/flower\.webp/);
+    assert.match(v3MissingSetHtml, /\/images\/lyrics-performers\/adachi-rei\.webp/);
+    assert.match(v3MissingSetHtml, /\/images\/lyrics-performers\/rime\.webp/);
+    assert.match(v3MissingSetHtml, /\/images\/lyrics-performers\/chifuyu\.webp/);
+    assert.doesNotMatch(v3MissingSetHtml, />fl<|>Ad<|>RI<|>Ha</);
   } finally {
     delete globalThis.__lyricTextRuntimeTest;
   }
