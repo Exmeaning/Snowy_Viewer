@@ -315,10 +315,7 @@ export default function LyricsDetailClient() {
     const displayLines = lyrics
         ? getLyricsDisplayLines(lyrics, activeVersion, activeRendition?.key)
         : [];
-    const hasTargetTranslation = targetLocale
-        ? displayLines.some((line) => Boolean(line[targetLocale]?.trim()))
-        : false;
-    const showTargetColumn = Boolean(targetLocale && hasTargetTranslation);
+    const showTargetColumn = Boolean(targetLocale);
     const translationCredits = activeRendition?.translationCredits
         ?? (lyrics?.version === 2 ? lyrics.translationCredits : undefined);
     const attributions = getLyricsDisplayAttributions(

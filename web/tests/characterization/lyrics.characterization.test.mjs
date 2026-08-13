@@ -399,11 +399,11 @@ async function importLyricsDetailClient(lyrics) {
   const prelude = `
     const dependencies = globalThis.__lyricsClientRuntimeTest;
     const React = dependencies.React;
-    const { useEffect, useState } = React;
+    const { useEffect, useState, useRef } = React;
     const { Image, useParams, useSearchParams, ExternalLink, MainLayout, LyricText, Link, useBreadcrumb, useI18n, useTheme,
       fetchLyricsMusicById, fetchLyricsDocument, getLyricsDisplayLines, getLyricsDisplaySegments, getLyricsRendition, getLyricsRenditions,
       getLyricsTargetLocale, hasFullLyricsVersion, hasGameLyricsVersion, isLyricsUnavailableError, replaceCurrentUrlSearchParams,
-      getPublishedLyricsIndexEntry, getMusicJacketUrl, MUSIC_CATEGORY_COLORS } = dependencies;
+      getPublishedLyricsIndexEntry, getMusicJacketUrl, MUSIC_CATEGORY_COLORS, TranslatedText, fetchMasterData, getCharacterIconUrl, getMusicVocalAudioUrl, getCharacterName } = dependencies;
   `;
   const transpiled = ts.transpileModule(`${prelude}\n${source}`, {
     compilerOptions: {
@@ -449,11 +449,21 @@ async function importLyricsDetailClient(lyrics) {
       "data-lyric-ruby": (segment.ruby ?? []).map((span) => span.reading ? `${span.text}:${span.reading}` : span.text).join("|"),
     }, segment.text))),
     Link: ({ children, ...props }) => React.createElement("a", props, children),
+    TranslatedText: ({ original, category, field }) => React.createElement("span", { "data-translated-category": category, "data-translated-field": field }, original),
     useI18n: function useI18n() {
       return { locale: "en-US", t: translate, formatDate: (value) => String(value) };
     },
     useTheme: () => ({ assetSource: "main" }),
     fetchLyricsMusicById: async (musicId) => state.musics.find((music) => music.id === musicId) ?? null,
+    fetchMasterData: async (file) => {
+      const name = String(file);
+      if (name.toLowerCase().includes("vocal")) return [];
+      if (name.toLowerCase().includes("outside")) return {};
+      return name.endsWith(".json") ? [] : {};
+    },
+    getCharacterIconUrl: (id) => `/character-${id}.webp`,
+    getMusicVocalAudioUrl: (name, _source) => `/audio/${name}.mp3`,
+    getCharacterName: (_t, id) => `character-${id}`,
     getPublishedLyricsIndexEntry: async (musicId) => {
       if (state.publication) return state.publication;
       const sourceIndex = state.document?.version === 2 ? fixtureV2.index : fixture.index;
