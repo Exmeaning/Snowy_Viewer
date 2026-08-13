@@ -38,10 +38,7 @@ export default function CharacterRankRadar({ characterRanks }: Props) {
         fn(); window.addEventListener("resize", fn); return () => window.removeEventListener("resize", fn);
     }, []);
 
-    const orderedIds = useMemo(() => {
-        const ids = UNIT_CONFIG[unit].ids;
-        return ids.length > 1 ? [ids[0], ...ids.slice(1).reverse()] : ids;
-    }, [unit]);
+    const orderedIds = useMemo(() => UNIT_CONFIG[unit].ids, [unit]);
 
     const chartData = useMemo(() => {
         const raw = orderedIds.map((id) => characterRanks.get(id) || 0);
@@ -88,7 +85,7 @@ export default function CharacterRankRadar({ characterRanks }: Props) {
         const cx = c?.[0] ?? width * 0.5; const cy = c?.[1] ?? height * 0.54;
         const labelOffset = mobile ? (unit === "overview" ? 8 : 10) : (unit === "overview" ? 12 : 14);
         const next = chartData.raw.map((pv, i) => {
-            const axisIndex = i === 0 ? 0 : n - i;
+            const axisIndex = i;
             const ac = chart.convertToPixel({ radarIndex: 0 } as never, [axisIndex, chartData.max]) as number[] | undefined;
             const norm = Math.max(0, Math.min(pv / chartData.max, 1));
             let x: number;
