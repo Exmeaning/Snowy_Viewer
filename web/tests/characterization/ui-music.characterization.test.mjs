@@ -233,10 +233,8 @@ test("RootLayout renders native parser scripts in the SSR head and always loads 
   assert.doesNotMatch(layout, /<Script|strategy="(?:before|after)Interactive"/);
   assert.match(googleTag, /useEffect\(\(\) => \{/);
   assert.match(googleTag, /getGoogleTagMeasurementId\(window\.location\.hostname\)/);
-  assert.match(googleTag, /if \(measurementId\) enableGoogleTag\(measurementId\)/);
+  assert.match(googleTag, /window\.gtag\("config", measurementId/);
   assert.doesNotMatch(googleTag, /analyticsConsent|isAnalyticsAllowed|readAnalyticsConsent/);
-  assert.match(googleTag, /document\.createElement\("script"\)/);
-  assert.match(googleTag, /__moesekaiGoogleTagInitialized/);
 });
 
 test("home carousel promotes only the currently visible background as the LCP candidate", () => {

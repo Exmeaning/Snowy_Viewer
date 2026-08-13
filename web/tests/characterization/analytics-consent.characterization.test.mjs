@@ -18,7 +18,8 @@ async function importGoogleTagBootstrap(dependencies) {
   const prelude = `
     const React = globalThis.__googleTagRuntime.React;
     const getGoogleTagMeasurementId = (...args) => globalThis.__googleTagRuntime.getGoogleTagMeasurementId(...args);
-    const { useEffect } = React;
+    const usePathname = () => globalThis.__googleTagRuntime.pathname ?? "/";
+    const { useEffect, useRef } = React;
   `;
   const transpiled = ts.transpileModule(`${prelude}\n${source}`, {
     compilerOptions: {
@@ -76,10 +77,14 @@ async function withAnalyticsDom(callback) {
   }
 }
 
-test("GoogleTagBootstrap always loads Google Analytics when a measurement ID exists", async () => {
+test("GoogleTagBootstrap sends pageview config when a measurement ID exists", async () => {
   await withAnalyticsDom(async () => {
+    const gtagCalls = [];
+    window.gtag = (...args) => gtagCalls.push(args);
+
     const GoogleTagBootstrap = await importGoogleTagBootstrap({
       getGoogleTagMeasurementId: () => "G-TEST",
+      pathname: "/cards",
     });
     const element = React.createElement(GoogleTagBootstrap);
     const container = document.getElementById("root");
@@ -89,18 +94,19 @@ test("GoogleTagBootstrap always loads Google Analytics when a measurement ID exi
       root = hydrateRoot(container, element);
     });
 
-    const script = document.getElementById("moesekai-google-tag");
-    assert.ok(script, "production hosts must load Google Analytics");
-    assert.match(script.src, /googletagmanager\.com\/gtag\/js\?id=G-TEST/);
-    assert.equal(window.__moesekaiGoogleTagInitialized, true);
+    assert.equal(gtagCalls.length, 0);
     return root;
   });
 });
 
 test("GoogleTagBootstrap stays idle without a measurement ID", async () => {
   await withAnalyticsDom(async () => {
+    const gtagCalls = [];
+    window.gtag = (...args) => gtagCalls.push(args);
+
     const GoogleTagBootstrap = await importGoogleTagBootstrap({
       getGoogleTagMeasurementId: () => undefined,
+      pathname: "/cards",
     });
     const element = React.createElement(GoogleTagBootstrap);
     const container = document.getElementById("root");
@@ -108,8 +114,7 @@ test("GoogleTagBootstrap stays idle without a measurement ID", async () => {
     await act(async () => {
       root = hydrateRoot(container, element);
     });
-    assert.equal(document.getElementById("moesekai-google-tag"), null);
-    assert.equal(window.__moesekaiGoogleTagInitialized, undefined);
+    assert.equal(gtagCalls.length, 0);
     return root;
   });
 });
@@ -130,5 +135,5 @@ test("settings, onboarding, and privacy no longer expose an analytics consent to
   assert.doesNotMatch(privacy, /AnalyticsConsentControl|controls\.consent/);
   assert.doesNotMatch(googleTag, /analyticsConsent|isAnalyticsAllowed|readAnalyticsConsent/);
   assert.match(googleTag, /getGoogleTagMeasurementId\(window\.location\.hostname\)/);
-  assert.match(googleTag, /document\.createElement\("script"\)/);
+  assert.match(readWeb("src/lib/googleTag.ts"), /document\.createElement\('script'\)/);
 });

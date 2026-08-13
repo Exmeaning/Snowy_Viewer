@@ -121,8 +121,9 @@ function isContentStringField(field) {
         && !field.endsWith("Rarity")
         && !field.endsWith("Platform");
 }
+const webSrcPrefix = path.join(WEB_ROOT, "src").replace(/\\/g, "/");
 const projectSources = program.getSourceFiles().filter((sourceFile) =>
-    sourceFile.fileName.startsWith(path.join(WEB_ROOT, "src"))
+    sourceFile.fileName.replace(/\\/g, "/").startsWith(webSrcPrefix)
     && !sourceFile.isDeclarationFile
 );
 
