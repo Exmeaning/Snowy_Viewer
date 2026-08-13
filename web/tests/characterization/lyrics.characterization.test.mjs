@@ -575,7 +575,7 @@ test("lyrics source config fails closed and permits only credential-free HTTPS o
     let lyrics = await importLyrics();
     assert.equal(
       lyrics.getLyricsBaseUrl(),
-      "https://translation.exmeaning.com/translation/lyrics",
+      "https://translation.exmeaning.com/files/translation/lyrics",
       "missing config uses the reviewed production Public Lyrics directory",
     );
 
