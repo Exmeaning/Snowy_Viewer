@@ -88,23 +88,33 @@ export default function CharacterRankRadar({ characterRanks }: Props) {
         const cx = c?.[0] ?? width * 0.5; const cy = c?.[1] ?? height * 0.54;
         const labelOffset = mobile ? (unit === "overview" ? 8 : 10) : (unit === "overview" ? 12 : 14);
         const next = chartData.raw.map((pv, i) => {
-            const axisIndex = i === 0 ? 0 : n - i;
-            const ac = chart.convertToPixel({ radarIndex: 0 } as never, [axisIndex, chartData.max]) as number[] | undefined;
+            const ac = chart.convertToPixel({ radarIndex: 0 } as never, [i, chartData.max]) as number[] | undefined;
             const norm = Math.max(0, Math.min(pv / chartData.max, 1));
             let x: number;
             let y: number;
+            let lx: number;
+            let ly: number;
             if (ac && ac.length >= 2 && Number.isFinite(ac[0]) && Number.isFinite(ac[1])) {
-                x = cx + (ac[0] - cx) * norm;
-                y = cy + (ac[1] - cy) * norm;
+                const ax = ac[0] - cx;
+                const ay = ac[1] - cy;
+                const alen = Math.hypot(ax, ay) || 1;
+                x = cx + ax * norm;
+                y = cy + ay * norm;
+                lx = x + (ax / alen) * labelOffset;
+                ly = y + (ay / alen) * labelOffset;
             } else {
-                const angle = -Math.PI / 2 + (Math.PI * 2 * axisIndex) / n;
+                const angle = -Math.PI / 2 + (Math.PI * 2 * i) / n;
                 const radius = Math.min(width, height) * 0.5 * (mobile ? (unit === "overview" ? 0.58 : 0.64) : (unit === "overview" ? 0.67 : 0.74));
-                x = cx + Math.cos(angle) * radius * norm;
-                y = cy + Math.sin(angle) * radius * norm;
+                const ax = Math.cos(angle) * radius;
+                const ay = Math.sin(angle) * radius;
+                const alen = Math.hypot(ax, ay) || 1;
+                x = cx + ax * norm;
+                y = cy + ay * norm;
+                lx = x + (ax / alen) * labelOffset;
+                ly = y + (ay / alen) * labelOffset;
             }
-            const vx = x - cx; const vy = y - cy; const len = Math.hypot(vx, vy) || 1;
             const cid = orderedIds[i];
-            return { x, y, lx: x + (vx / len) * labelOffset, ly: y + (vy / len) * labelOffset, color: unit === "overview" ? unitColor(cid) : UNIT_CONFIG[unit].color, value: Math.round(pv || 0) };
+            return { x, y, lx, ly, color: unit === "overview" ? unitColor(cid) : UNIT_CONFIG[unit].color, value: Math.round(pv || 0) };
         });
         setSize({ width, height }); setPoints(next);
     }, [chartData, orderedIds, unit, mobile]);
