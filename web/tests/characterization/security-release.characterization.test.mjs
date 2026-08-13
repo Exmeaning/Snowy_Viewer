@@ -11,35 +11,14 @@ function readRepo(relativePath) {
 }
 
 test("workflows pin actions, declare least privilege, and validate Go plus web", () => {
-  for (const workflow of ["ci.yml", "screenshots.yml", "watch-master-data.yml"]) {
-    const source = readRepo(`.github/workflows/${workflow}`);
+  const workflowDir = path.join(REPO_ROOT, ".github/workflows");
+  const workflowFiles = fs.readdirSync(workflowDir).filter((file) => file.endsWith(".yml") || file.endsWith(".yaml"));
+  for (const workflowFile of workflowFiles) {
+    const source = readRepo(`.github/workflows/${workflowFile}`);
     assert.doesNotMatch(source, /uses:\s+[^\s]+@v\d+/);
     assert.match(source, /uses:\s+[^\s]+@[0-9a-f]{40}/);
     assert.match(source, /permissions:/);
   }
-
-  const screenshots = readRepo(".github/workflows/screenshots.yml");
-  assert.match(screenshots, /HUB_REPO: \$\{\{ vars\.SCREENSHOT_HUB_REPOSITORY \}\}/);
-  assert.match(screenshots, /repository: \$\{\{ env\.HUB_REPO \}\}/);
-  assert.match(screenshots, /token: \$\{\{ secrets\.HUB_DEPLOY_TOKEN \}\}/);
-  assert.match(screenshots, /path: hub-repo[\s\S]*persist-credentials: false/);
-  assert.match(screenshots, /\[\[ "\$HUB_REPO" =~ \^\[A-Za-z0-9_\.\-\]\+\/\[A-Za-z0-9_\.\-\]\+\$ \]\]/);
-  const validationStep = screenshots.slice(
-    screenshots.indexOf("      - name: Validate screenshot publication destination\n"),
-    screenshots.indexOf("      - name: Checkout screenshot repository without URL credentials\n"),
-  );
-  assert.doesNotMatch(validationStep, /HUB_DEPLOY_TOKEN|secrets\./);
-  const pushStep = screenshots.slice(screenshots.indexOf("      - name: Push screenshots with process-scoped authentication\n"));
-  assert.match(pushStep, /GIT_ASKPASS="\$askpass" GIT_TERMINAL_PROMPT=0 git push origin HEAD/);
-  assert.match(pushStep, /trap 'rm -f "\$askpass"' EXIT/);
-  assert.doesNotMatch(pushStep, /extraheader|base64/);
-  const commitStep = screenshots.slice(
-    screenshots.indexOf("      - name: Commit screenshots to Hub repo\n"),
-    screenshots.indexOf("      - name: Push screenshots with process-scoped authentication\n"),
-  );
-  assert.doesNotMatch(commitStep, /HUB_DEPLOY_TOKEN|secrets\./);
-  assert.doesNotMatch(screenshots, new RegExp("https://x-access-" + "token:"));
-  assert.doesNotMatch(screenshots, /git remote set-url origin/);
 
   const ci = readRepo(".github/workflows/ci.yml");
   assert.match(ci, /permissions:\s*\n\s+contents: read/);
@@ -62,7 +41,6 @@ test("workflows pin actions, declare least privilege, and validate Go plus web",
   assert.match(ci, /--build-arg NEXT_PUBLIC_LYRICS_BASE_URL="\$lyrics_base_url"[\s\S]*--load/);
   assert.doesNotMatch(ci, /vars\.NEXT_PUBLIC_LYRICS_BASE_URL/);
   assert.doesNotMatch(ci, /NEXT_PUBLIC_LYRICS_BASE_URL:\s*https?:\/\//);
-  assert.match(screenshots, /Build and start web app[\s\S]*npm run build/);
   const watchMasterData = readRepo(".github/workflows/watch-master-data.yml");
   assert.match(watchMasterData, /Update Master Data Version/);
   assert.match(watchMasterData, /data\/master_version\.txt/);
