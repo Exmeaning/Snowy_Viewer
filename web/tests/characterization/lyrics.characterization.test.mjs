@@ -401,7 +401,7 @@ async function importLyricsDetailClient(lyrics) {
     const React = dependencies.React;
     const { useEffect, useState } = React;
     const { Image, useParams, useSearchParams, ExternalLink, MainLayout, LyricText, Link, useBreadcrumb, useI18n, useTheme,
-      fetchLyricsMusicById, fetchLyricsDocument, getLyricsDisplayLines, getLyricsDisplaySegments, getLyricsRendition, getLyricsRenditions,
+      fetchLyricsMusicById, fetchLyricsDocument, fetchMasterData, getLyricsDisplayLines, getLyricsDisplaySegments, getLyricsRendition, getLyricsRenditions,
       getLyricsTargetLocale, hasFullLyricsVersion, hasGameLyricsVersion, isLyricsUnavailableError, replaceCurrentUrlSearchParams,
       getPublishedLyricsIndexEntry, getMusicJacketUrl, MUSIC_CATEGORY_COLORS } = dependencies;
   `;
@@ -463,6 +463,7 @@ async function importLyricsDetailClient(lyrics) {
       if (state.error) throw state.error;
       return state.document;
     },
+    fetchMasterData: async () => [],
     getLyricsDisplayLines: lyrics.getLyricsDisplayLines,
     getLyricsDisplaySegments: lyrics.getLyricsDisplaySegments,
     getLyricsRendition: lyrics.getLyricsRendition,
@@ -1922,7 +1923,7 @@ test("lyrics detail client defaults to Full and honors a shareable Game projecti
     });
     assert.equal(fullOnly.state.replacedSearch, "keep=yes");
     assert.doesNotMatch(fullOnly.text, /page\.lyrics\.versionGame/);
-    assert.match(fullOnly.text, /page\.lyrics\.translationFallback/);
+    assert.match(fullOnly.text, /page\.lyrics\.translationCreditsEmpty|page\.lyrics\.translationFallback/);
 
     const gameOnly = await renderLyricsClientRuntime(lyrics, (state) => {
       state.musicId = fixtureV2.gameOnlyDocument.musicId;

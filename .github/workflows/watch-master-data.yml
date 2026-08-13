@@ -19,18 +19,6 @@ jobs:
         with:
           token: ${{ secrets.ADMIN_PAT || secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'web/package-lock.json'
-
-      - name: Install dependencies
-        run: |
-          cd web
-          npm ci
-
       - name: Update Master Data Version
         run: |
           mkdir -p data
@@ -51,27 +39,17 @@ jobs:
               f.write(str(data_version) + "\n")
           PY
 
-      - name: Generate Sitemap Data
-        run: |
-          GITHUB_BASE="https://raw.githubusercontent.com/Team-Haruki/haruki-sekai-master/main/master"
-          MASTER_DATA_URLS_JP="$GITHUB_BASE,https://metadata.exmeaning.com/jp/master,https://metadata.pjsk.moe/jp/master" \
-          REQUIRE_FRESH_BUILD_DATA=1 \
-          REQUIRE_PUBLIC_LYRICS_SOURCE=1 \
-          npm run sitemap --prefix web
-
-          python3 -c "import json; json.load(open('web/public/data/sitemap-data.jp.json'))"
-
       - name: Commit & Push Changes
         run: |
-          if [[ -n $(git status --porcelain data/master_version.txt web/public/data/sitemap-data*.json) ]]; then
-            echo "Changes detected in master data version or sitemap data."
+          if [[ -n $(git status --porcelain data/master_version.txt) ]]; then
+            echo "Changes detected in master data version."
 
             git config --global user.name "github-actions[bot]"
             git config --global user.email "github-actions[bot]@users.noreply.github.com"
-            git add -f data/master_version.txt web/public/data/sitemap-data*.json
-            git commit -m "chore: update master data version and sitemap"
+            git add data/master_version.txt
+            git commit -m "chore: update master data version"
             git pull --rebase origin main
             git push origin main
           else
-            echo "No changes in master data version or sitemap data."
+            echo "No changes in master data version."
           fi
