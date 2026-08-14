@@ -390,7 +390,7 @@ const routeSources = [
     {
         label: 'publishedLyrics',
         filename: 'public lyrics index',
-        // v3 forbids an empty catalog; retain the valid legacy empty fallback for fail-closed recovery.
+        // v3/v4 forbid an empty catalog; retain the valid legacy empty fallback for fail-closed recovery.
         fallback: { version: 2, songs: [] },
         validate: validatePublicLyricsIndex,
         fetch: fetchPublicLyricsIndex,

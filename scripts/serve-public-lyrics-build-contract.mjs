@@ -6,13 +6,23 @@ import { pathToFileURL } from "node:url";
 
 export const BUILD_CONTRACT_INDEX_PATH = "/files/translation/lyrics/index.json";
 export const BUILD_CONTRACT_DETAIL_PATH = "/files/translation/lyrics/music_10.json";
-export const BUILD_CONTRACT_INDEX_BYTES = Buffer.from('{"version":3,"songs":[{"musicId":10,"revision":4,"updatedAt":"2026-07-31T00:00:00Z","title":{"ja-JP":"新曲"},"state":"complete","availableVersions":["full"]}]}', "utf8");
+export const BUILD_CONTRACT_INDEX_BYTES = Buffer.from('{"version":4,"songs":[{"musicId":10,"revision":4,"updatedAt":"2026-07-31T00:00:00Z","title":{"ja-JP":"新曲"},"state":"complete","availableVersions":["full"]}]}', "utf8");
 export const BUILD_CONTRACT_DETAIL_BYTES = Buffer.from(JSON.stringify({
-  version: 3,
+  version: 4,
   musicId: 10,
   revision: 4,
   updatedAt: "2026-07-31T00:00:00Z",
   state: "complete",
+  defaultTranslationEditionKey: "build-contract",
+  translationEditions: [{
+    key: "build-contract",
+    label: "Build Contract",
+    renditions: [{
+      renditionKey: "original",
+      translationCredits: { translation: "Build Contract Translator" },
+      full: { translations: ["歌唱"] },
+    }],
+  }],
   renditions: [{
     key: "original",
     kind: "original",
@@ -64,7 +74,6 @@ export const BUILD_CONTRACT_DETAIL_BYTES = Buffer.from(JSON.stringify({
         licenseUrl: "https://creativecommons.org/licenses/by-sa/3.0/",
       },
     ],
-    translationCredits: { translation: "Build Contract Translator" },
   }],
 }), "utf8");
 

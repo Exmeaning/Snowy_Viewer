@@ -1,0 +1,122 @@
+{
+  "version": 4,
+  "musicId": 11,
+  "revision": 1,
+  "updatedAt": "2026-07-31T01:00:00Z",
+  "state": "complete",
+  "defaultTranslationEditionKey": "main",
+  "translationEditions": [
+    {
+      "key": "alternate",
+      "label": "另一译本",
+      "renditions": [
+        {
+          "renditionKey": "vocaloid",
+          "translationCredits": {
+            "translation": "Legacy Translator"
+          },
+          "full": {
+            "translations": [
+              "另一种译文"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "main",
+      "label": "默认译本",
+      "renditions": [
+        {
+          "renditionKey": "vocaloid",
+          "translationCredits": {
+            "translation": "Legacy Translator"
+          },
+          "full": {
+            "translations": [
+              "默认译文"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "renditions": [
+    {
+      "key": "vocaloid",
+      "kind": "vocaloid",
+      "label": "VIRTUAL SINGER",
+      "availableVersions": [
+        "full"
+      ],
+      "performers": [],
+      "full": {
+        "version": {
+          "kind": "vocaloid",
+          "label": "VIRTUAL SINGER"
+        },
+        "lines": [
+          {
+            "id": "full-000001",
+            "order": 0,
+            "japanese": "歌う",
+            "segments": [
+              {
+                "text": "歌う",
+                "performerIds": [],
+                "ruby": [
+                  {
+                    "text": "歌",
+                    "reading": "うた"
+                  },
+                  {
+                    "text": "う"
+                  }
+                ]
+              }
+            ],
+            "trailingPerformerIds": []
+          }
+        ]
+      },
+      "relation": {
+        "kind": "none"
+      },
+      "sourceTabPaths": [
+        [
+          "Lyrics",
+          "VIRTUAL SINGER"
+        ]
+      ],
+      "provenance": [
+        {
+          "component": "renditions/vocaloid/full_text",
+          "provider": "sekaipedia",
+          "title": "VIRTUAL SINGER",
+          "revisionId": 1202,
+          "revisionUrl": "https://www.sekaipedia.org/wiki/Game_Version_Only?oldid=1202",
+          "licenseName": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        },
+        {
+          "component": "renditions/vocaloid/relation",
+          "provider": "sekaipedia",
+          "title": "VIRTUAL SINGER",
+          "revisionId": 1202,
+          "revisionUrl": "https://www.sekaipedia.org/wiki/Game_Version_Only?oldid=1202",
+          "licenseName": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        },
+        {
+          "component": "renditions/vocaloid/version",
+          "provider": "sekaipedia",
+          "title": "VIRTUAL SINGER",
+          "revisionId": 1202,
+          "revisionUrl": "https://www.sekaipedia.org/wiki/Game_Version_Only?oldid=1202",
+          "licenseName": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      ]
+    }
+  ]
+}

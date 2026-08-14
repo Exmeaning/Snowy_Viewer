@@ -142,7 +142,7 @@ jobs:
             --max-time 10 \
             --cacert "$fixture_dir/cert.pem" \
             "https://127.0.0.1:${fixture_port}/files/translation/lyrics/index.json" \
-            | node -e 'let body=""; process.stdin.setEncoding("utf8"); process.stdin.on("data", chunk => body += chunk); process.stdin.on("end", () => { const value = JSON.parse(body); const song = value.songs?.[0]; if (value.version !== 3 || value.songs?.length !== 1 || song?.musicId !== 10 || song?.state !== "complete" || song?.availableVersions?.join(",") !== "full") process.exit(1); });'
+            | node -e 'let body=""; process.stdin.setEncoding("utf8"); process.stdin.on("data", chunk => body += chunk); process.stdin.on("end", () => { const value = JSON.parse(body); const song = value.songs?.[0]; if (value.version !== 4 || value.songs?.length !== 1 || song?.musicId !== 10 || song?.state !== "complete" || song?.availableVersions?.join(",") !== "full") process.exit(1); });'
           docker buildx create \
             --name "$builder_name" \
             --driver docker-container \

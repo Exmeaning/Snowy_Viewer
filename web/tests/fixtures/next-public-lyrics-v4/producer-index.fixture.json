@@ -1,0 +1,101 @@
+{
+  "version": 4,
+  "songs": [
+    {
+      "musicId": 11,
+      "revision": 1,
+      "updatedAt": "2026-07-31T01:00:00Z",
+      "state": "complete",
+      "title": {
+        "ja-JP": "VIRTUAL SINGER"
+      },
+      "availableVersions": [
+        "full"
+      ]
+    },
+    {
+      "musicId": 12,
+      "revision": 1,
+      "updatedAt": "2026-07-31T02:00:00Z",
+      "state": "complete",
+      "title": {
+        "ja-JP": "SEKAI Version"
+      },
+      "availableVersions": [
+        "full",
+        "game"
+      ]
+    },
+    {
+      "musicId": 13,
+      "revision": 1,
+      "updatedAt": "2026-07-31T03:00:00Z",
+      "state": "game_only",
+      "title": {
+        "ja-JP": "Game Version Only"
+      },
+      "availableVersions": [
+        "game"
+      ]
+    },
+    {
+      "musicId": 14,
+      "revision": 1,
+      "updatedAt": "2026-07-31T04:00:00Z",
+      "state": "complete",
+      "title": {
+        "ja-JP": "SEKAI Version and VIRTUAL SINGER"
+      },
+      "availableVersions": [
+        "full",
+        "game"
+      ]
+    },
+    {
+      "musicId": 15,
+      "revision": 1,
+      "updatedAt": "2026-07-31T05:00:00Z",
+      "state": "satisfied_no_lyrics",
+      "title": {
+        "ja-JP": "Instrumental"
+      },
+      "noLyricsReason": "catalog_instrumental"
+    },
+    {
+      "musicId": 16,
+      "revision": 1,
+      "updatedAt": "2026-07-31T06:00:00Z",
+      "state": "ambiguous",
+      "title": {
+        "ja-JP": "Ambiguous"
+      }
+    },
+    {
+      "musicId": 17,
+      "revision": 1,
+      "updatedAt": "2026-07-31T07:00:00Z",
+      "state": "missing",
+      "title": {
+        "ja-JP": "Missing"
+      }
+    },
+    {
+      "musicId": 789,
+      "revision": 1,
+      "updatedAt": "2026-07-31T08:00:00Z",
+      "state": "incomplete",
+      "title": {
+        "ja-JP": "Incomplete"
+      }
+    },
+    {
+      "musicId": 790,
+      "revision": 1,
+      "updatedAt": "2026-07-31T09:00:00Z",
+      "state": "failed",
+      "title": {
+        "ja-JP": "Failed"
+      }
+    }
+  ]
+}

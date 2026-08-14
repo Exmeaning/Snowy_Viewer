@@ -5,6 +5,7 @@ import { parseStrictJson } from "@/lib/strict-json.mjs";
 const LYRICS_SCHEMA_VERSION_V1 = 1;
 const LYRICS_SCHEMA_VERSION_V2 = 2;
 const LYRICS_SCHEMA_VERSION_V3 = 3;
+const LYRICS_SCHEMA_VERSION_V4 = 4;
 const HTTP_NOT_FOUND = 404;
 const IPV4_LOOPBACK_FIRST_OCTET = 127;
 const IPV4_MAX_OCTET = 255;
@@ -41,7 +42,11 @@ export interface ILyricsIndexEntry {
 }
 
 export interface ILyricsIndex {
-    version: typeof LYRICS_SCHEMA_VERSION_V1 | typeof LYRICS_SCHEMA_VERSION_V2 | typeof LYRICS_SCHEMA_VERSION_V3;
+    version:
+        | typeof LYRICS_SCHEMA_VERSION_V1
+        | typeof LYRICS_SCHEMA_VERSION_V2
+        | typeof LYRICS_SCHEMA_VERSION_V3
+        | typeof LYRICS_SCHEMA_VERSION_V4;
     songs: ILyricsIndexEntry[];
 }
 
@@ -197,7 +202,61 @@ export interface ILyricsDocumentV3 extends ILyricsDocumentBase {
     renditions: ILyricsRendition[];
 }
 
-export type ILyricsDocument = ILyricsDocumentV1 | ILyricsDocumentV2 | ILyricsDocumentV3;
+export interface ILyricsV4SourceLine {
+    id: string;
+    order: number;
+    japanese: string;
+    stanzaBreakBefore?: boolean;
+    segments: ILyricsV3Segment[];
+    trailingPerformerIds: string[];
+}
+
+export interface ILyricsV4SourceRenditionSide {
+    version: ILyricsRenditionVersion;
+    lines: ILyricsV4SourceLine[];
+}
+
+export interface ILyricsV4SourceRendition {
+    key: string;
+    kind: LyricsRenditionKind;
+    label: string;
+    availableVersions: LyricsAvailableVersions;
+    performers: ILyricsV3Performer[];
+    full?: ILyricsV4SourceRenditionSide;
+    game?: ILyricsV4SourceRenditionSide;
+    relation: ILyricsRenditionRelation;
+    sourceTabPaths: string[][];
+    provenance: ILyricsV3ComponentAttribution[];
+}
+
+export interface ILyricsV4TranslationSide {
+    translations: string[];
+}
+
+export interface ILyricsV4TranslationEditionRendition {
+    renditionKey: string;
+    translationCredits?: ILyricsTranslationCredits;
+    full?: ILyricsV4TranslationSide;
+    game?: ILyricsV4TranslationSide;
+}
+
+export interface ILyricsV4TranslationEdition {
+    key: string;
+    label: string;
+    renditions: ILyricsV4TranslationEditionRendition[];
+}
+
+export interface ILyricsDocumentV4 extends ILyricsDocumentBase {
+    version: typeof LYRICS_SCHEMA_VERSION_V4;
+    state: "complete" | "game_only";
+    defaultTranslationEditionKey: string;
+    translationEditions: ILyricsV4TranslationEdition[];
+    renditions: ILyricsV4SourceRendition[];
+}
+
+export type ILyricsDisplayLine = ILyricsLine | (ILyricsV4SourceLine & Partial<Record<LyricsTargetLocale, string>>);
+export type ILyricsDisplayRendition = ILyricsRendition | ILyricsV4SourceRendition;
+export type ILyricsDocument = ILyricsDocumentV1 | ILyricsDocumentV2 | ILyricsDocumentV3 | ILyricsDocumentV4;
 
 export class LyricsLoadError extends Error {
     constructor(
@@ -231,6 +290,8 @@ const MAX_LYRICS_RUBY_SPANS_PER_SEGMENT = 256;
 const MAX_LYRICS_V3_RUBY_SPANS_PER_SEGMENT = 8192;
 const MAX_LYRICS_ATTRIBUTIONS = 16;
 const MAX_LYRICS_V3_RENDITIONS = 16;
+const MAX_LYRICS_V4_TRANSLATION_EDITIONS = 16;
+const MAX_LYRICS_V4_EDITION_LABEL_LENGTH = 256;
 const MAX_LYRICS_V3_PERFORMERS = 256;
 const MAX_LYRICS_V3_ATTRIBUTIONS = 128;
 const MAX_LYRICS_V3_TAB_PATHS = 32;
@@ -285,7 +346,9 @@ export function getLyricsTargetLocale(locale: UiLocale): LyricsTargetLocale | nu
     return null;
 }
 
-export function getLyricsAvailableVersions(value: ILyricsIndexEntry | ILyricsDocument | ILyricsRendition): readonly LyricsVersion[] {
+export function getLyricsAvailableVersions(
+    value: ILyricsIndexEntry | ILyricsDocument | ILyricsDisplayRendition,
+): readonly LyricsVersion[] {
     if ("availableVersions" in value && value.availableVersions) return value.availableVersions;
     if ("renditions" in value) {
         const versions = new Set(value.renditions.flatMap((rendition) => rendition.availableVersions));
@@ -295,24 +358,65 @@ export function getLyricsAvailableVersions(value: ILyricsIndexEntry | ILyricsDoc
     return ["full"];
 }
 
-export function getLyricsRenditions(document: ILyricsDocument): readonly ILyricsRendition[] {
-    return document.version === LYRICS_SCHEMA_VERSION_V3 ? document.renditions : [];
+export function getLyricsRenditions(document: ILyricsDocument): readonly ILyricsDisplayRendition[] {
+    return document.version === LYRICS_SCHEMA_VERSION_V3 || document.version === LYRICS_SCHEMA_VERSION_V4
+        ? document.renditions
+        : [];
 }
 
-export function getLyricsRendition(document: ILyricsDocument, renditionKey?: string | null): ILyricsRendition | null {
-    if (document.version !== LYRICS_SCHEMA_VERSION_V3) return null;
+export function getLyricsRendition(document: ILyricsDocument, renditionKey?: string | null): ILyricsDisplayRendition | null {
+    if (document.version !== LYRICS_SCHEMA_VERSION_V3 && document.version !== LYRICS_SCHEMA_VERSION_V4) return null;
     return document.renditions.find((rendition) => rendition.key === renditionKey) ?? document.renditions[0] ?? null;
+}
+
+export function getLyricsTranslationEditions(
+    document: ILyricsDocument,
+    locale: UiLocale,
+): readonly ILyricsV4TranslationEdition[] {
+    // Public v4 currently carries the editor's zh-CN translation materialization.
+    // The wire shape has no locale discriminator, so exposing it as en-US would
+    // silently relabel Chinese text as English. Keep other UI locales source-only.
+    return document.version === LYRICS_SCHEMA_VERSION_V4 && getLyricsTargetLocale(locale) === "zh-CN"
+        ? document.translationEditions
+        : [];
+}
+
+export function resolveLyricsTranslationEdition(
+    document: ILyricsDocument,
+    locale: UiLocale,
+    editionKey?: string | null,
+): ILyricsV4TranslationEdition | null {
+    const editions = getLyricsTranslationEditions(document, locale);
+    if (document.version !== LYRICS_SCHEMA_VERSION_V4 || editions.length === 0) return null;
+    return editions.find((edition) => edition.key === editionKey)
+        ?? editions.find((edition) => edition.key === document.defaultTranslationEditionKey)
+        ?? null;
+}
+
+export function getLyricsSelectedTranslationCredits(
+    document: ILyricsDocument,
+    renditionKey?: string | null,
+    translationEditionKey?: string | null,
+    locale: UiLocale = "zh-CN",
+): ILyricsTranslationCredits | undefined {
+    if (document.version === LYRICS_SCHEMA_VERSION_V2) return document.translationCredits;
+    const rendition = getLyricsRendition(document, renditionKey);
+    if (!rendition) return undefined;
+    if (document.version === LYRICS_SCHEMA_VERSION_V3) return (rendition as ILyricsRendition).translationCredits;
+    if (document.version !== LYRICS_SCHEMA_VERSION_V4) return undefined;
+    const edition = resolveLyricsTranslationEdition(document, locale, translationEditionKey);
+    return edition?.renditions.find((entry) => entry.renditionKey === rendition.key)?.translationCredits;
 }
 
 export function hasLyricsDetail(value: ILyricsIndexEntry): boolean {
     return value.state === undefined || value.state === "complete" || value.state === "game_only";
 }
 
-export function hasFullLyricsVersion(value: ILyricsIndexEntry | ILyricsDocument | ILyricsRendition): boolean {
+export function hasFullLyricsVersion(value: ILyricsIndexEntry | ILyricsDocument | ILyricsDisplayRendition): boolean {
     return getLyricsAvailableVersions(value).includes("full");
 }
 
-export function hasGameLyricsVersion(value: ILyricsIndexEntry | ILyricsDocument | ILyricsRendition): boolean {
+export function hasGameLyricsVersion(value: ILyricsIndexEntry | ILyricsDocument | ILyricsDisplayRendition): boolean {
     return getLyricsAvailableVersions(value).includes("game");
 }
 
@@ -320,7 +424,7 @@ export function getLyricsRubySpans(segment: ILyricsSegment): ILyricsRubySpan[] {
     return "ruby" in segment ? segment.ruby : [{ text: segment.text }];
 }
 
-export function getLyricsDisplaySegments(line: ILyricsLine, preserveUnassignedSegments = false): ILyricsDisplaySegment[] {
+export function getLyricsDisplaySegments(line: ILyricsDisplayLine, preserveUnassignedSegments = false): ILyricsDisplaySegment[] {
     const segments = line.segments.map((segment) => ({
         text: segment.text,
         performerIds: [...segment.performerIds],
@@ -337,12 +441,52 @@ export function getLyricsDisplaySegments(line: ILyricsLine, preserveUnassignedSe
     }];
 }
 
-export function getLyricsDisplayLines(document: ILyricsDocument, version: LyricsVersion, renditionKey?: string | null): ILyricsLine[] {
+function getV4EditionRendition(
+    edition: ILyricsV4TranslationEdition,
+    renditionKey: string,
+): ILyricsV4TranslationEditionRendition | null {
+    return edition.renditions.find((rendition) => rendition.renditionKey === renditionKey) ?? null;
+}
+
+export function getLyricsDisplayLines(
+    document: ILyricsDocument,
+    version: LyricsVersion,
+    renditionKey?: string | null,
+    translationEditionKey?: string | null,
+    locale: UiLocale = "zh-CN",
+): ILyricsDisplayLine[] {
     if (document.version === LYRICS_SCHEMA_VERSION_V3) {
-        const rendition = getLyricsRendition(document, renditionKey);
+        const rendition = getLyricsRendition(document, renditionKey) as ILyricsRendition | null;
         if (!rendition) return [];
         if (version === "game") return rendition.game?.lines ?? [];
         return rendition.full?.lines ?? [];
+    }
+    if (document.version === LYRICS_SCHEMA_VERSION_V4) {
+        const rendition = getLyricsRendition(document, renditionKey) as ILyricsV4SourceRendition | null;
+        if (!rendition) return [];
+        const sourceLines = version === "game" ? rendition.game?.lines ?? [] : rendition.full?.lines ?? [];
+        const targetLocale = getLyricsTargetLocale(locale);
+        const edition = resolveLyricsTranslationEdition(document, locale, translationEditionKey);
+        const editionRendition = edition ? getV4EditionRendition(edition, rendition.key) : null;
+        if (targetLocale !== "zh-CN" || !editionRendition) return sourceLines;
+
+        let translations: readonly string[] | null = null;
+        if (version === "full") {
+            translations = editionRendition.full?.translations ?? null;
+        } else if (rendition.relation.kind === "exact_projection") {
+            const fullLines = rendition.full?.lines ?? [];
+            const translationByFullLineID = new Map(
+                fullLines.map((line, index) => [line.id, editionRendition.full?.translations[index] ?? ""]),
+            );
+            translations = (rendition.relation.lineIds ?? []).map((lineID) => translationByFullLineID.get(lineID) ?? "");
+        } else {
+            translations = editionRendition.game?.translations ?? null;
+        }
+        if (!translations) return sourceLines;
+        return sourceLines.map((line, index) => ({
+            ...line,
+            [targetLocale]: translations[index] ?? "",
+        }));
     }
     if (document.version === LYRICS_SCHEMA_VERSION_V2 && document.state === "game_only") return document.lines;
     if (version !== "game" || document.version !== LYRICS_SCHEMA_VERSION_V2 || !document.gameProjection) {
@@ -480,10 +624,13 @@ function validateIndex(value: unknown): ILyricsIndex {
     if (
         !isObject(value)
         || !hasOnlyKeys(value, ["version", "songs"])
-        || (value.version !== LYRICS_SCHEMA_VERSION_V1 && value.version !== LYRICS_SCHEMA_VERSION_V2 && value.version !== LYRICS_SCHEMA_VERSION_V3)
+        || (value.version !== LYRICS_SCHEMA_VERSION_V1
+            && value.version !== LYRICS_SCHEMA_VERSION_V2
+            && value.version !== LYRICS_SCHEMA_VERSION_V3
+            && value.version !== LYRICS_SCHEMA_VERSION_V4)
         || !Array.isArray(value.songs)
         || value.songs.length > MAX_LYRICS_INDEX_ENTRIES
-        || value.version === LYRICS_SCHEMA_VERSION_V3 && value.songs.length === 0
+        || (value.version === LYRICS_SCHEMA_VERSION_V3 || value.version === LYRICS_SCHEMA_VERSION_V4) && value.songs.length === 0
     ) {
         throw new LyricsLoadError("Invalid lyrics index");
     }
@@ -763,6 +910,27 @@ function isLineV3(value: unknown, performers: ReadonlySet<string>, expectedOrder
     return segments.map((segment) => (segment as Record<string, unknown>).text).join("") === value.japanese;
 }
 
+function isLineV4(value: unknown, performers: ReadonlySet<string>, expectedOrder: number): value is ILyricsV4SourceLine {
+    if (!isObject(value) || !hasOnlyKeys(value, ["id", "order", "japanese", "stanzaBreakBefore", "segments", "trailingPerformerIds"])) return false;
+    if (typeof value.id !== "string" || value.id.length === 0 || value.id.length > MAX_LYRICS_LINE_ID_LENGTH
+        || value.order !== expectedOrder
+        || typeof value.japanese !== "string" || value.japanese.length === 0 || value.japanese.length > MAX_LYRICS_TEXT_LENGTH
+        || /[\r\n\0]/u.test(value.japanese)
+        || (value.stanzaBreakBefore !== undefined && typeof value.stanzaBreakBefore !== "boolean")
+        || !Array.isArray(value.segments) || value.segments.length === 0 || value.segments.length > MAX_LYRICS_SEGMENTS_PER_LINE
+        || !isStringPerformerIds(value.trailingPerformerIds, performers)) return false;
+    const segments = value.segments as unknown[];
+    for (const segment of segments) {
+        if (!isObject(segment) || !hasOnlyKeys(segment, ["text", "performerIds", "ruby"])
+            || typeof segment.text !== "string" || segment.text.length === 0 || segment.text.length > MAX_LYRICS_TEXT_LENGTH
+            || !isStringPerformerIds(segment.performerIds, performers)
+            || !Array.isArray(segment.ruby) || segment.ruby.length === 0 || segment.ruby.length > MAX_LYRICS_V3_RUBY_SPANS_PER_SEGMENT
+            || !segment.ruby.every(isRubySpanV3)
+            || segment.ruby.map((span) => span.text).join("") !== segment.text) return false;
+    }
+    return segments.map((segment) => (segment as Record<string, unknown>).text).join("") === value.japanese;
+}
+
 function isRenditionKind(value: unknown): value is LyricsRenditionKind {
     return value === "original" || value === "sekai" || value === "vocaloid" || value === "alternate";
 }
@@ -776,6 +944,24 @@ function isRenditionSide(value: unknown, kind: LyricsRenditionKind, performers: 
     const lineIds = new Set<string>();
     return value.lines.every((line, index) => {
         if (!isLineV3(line, performers, index) || lineIds.has(line.id)) return false;
+        lineIds.add(line.id);
+        return true;
+    });
+}
+
+function isRenditionSideV4(
+    value: unknown,
+    kind: LyricsRenditionKind,
+    performers: ReadonlySet<string>,
+): value is ILyricsV4SourceRenditionSide {
+    if (!isObject(value) || !hasOnlyKeys(value, ["version", "lines"]) || !isObject(value.version)
+        || !hasOnlyKeys(value.version, ["kind", "label"]) || value.version.kind !== kind
+        || typeof value.version.label !== "string" || value.version.label.length === 0 || value.version.label.length > MAX_LYRICS_ATTRIBUTION_TITLE_LENGTH
+        || value.version.label !== value.version.label.trim()
+        || !Array.isArray(value.lines) || value.lines.length === 0 || value.lines.length > MAX_LYRICS_LINES) return false;
+    const lineIds = new Set<string>();
+    return value.lines.every((line, index) => {
+        if (!isLineV4(line, performers, index) || lineIds.has(line.id)) return false;
         lineIds.add(line.id);
         return true;
     });
@@ -843,6 +1029,28 @@ function isV3Relation(value: unknown, renditionKey: string, full: ILyricsRenditi
         });
 }
 
+function isV4Relation(
+    value: unknown,
+    renditionKey: string,
+    full: ILyricsV4SourceRenditionSide | undefined,
+    game: ILyricsV4SourceRenditionSide | undefined,
+): value is ILyricsRenditionRelation {
+    if (!isObject(value) || !hasOnlyKeys(value, ["kind", "fullRenditionKey", "lineIds"])) return false;
+    if (value.kind === "none") return value.fullRenditionKey === undefined && value.lineIds === undefined;
+    if (value.kind !== "exact_projection" || !full || !game || value.fullRenditionKey !== renditionKey
+        || !Array.isArray(value.lineIds) || value.lineIds.length === 0 || value.lineIds.length !== game.lines.length
+        || value.lineIds.length > MAX_LYRICS_LINES || new Set(value.lineIds).size !== value.lineIds.length
+        || !value.lineIds.every((lineID) => typeof lineID === "string" && lineID.length > 0 && lineID.length <= MAX_LYRICS_LINE_ID_LENGTH)) return false;
+    const lineByID = new Map(full.lines.map((line, index) => [line.id, { line, index }]));
+    let previousIndex = -1;
+    return value.lineIds.every((lineID, index) => {
+        const match = lineByID.get(lineID as string);
+        if (!match || match.index <= previousIndex || match.line.japanese !== game.lines[index]?.japanese) return false;
+        previousIndex = match.index;
+        return true;
+    });
+}
+
 function isV3SourceTabPaths(value: unknown): value is string[][] {
     if (!Array.isArray(value) || value.length === 0 || value.length > MAX_LYRICS_V3_TAB_PATHS) return false;
     const seen = new Set<string>();
@@ -890,6 +1098,121 @@ function isV3Rendition(value: unknown, previousKey: string): value is ILyricsRen
     return true;
 }
 
+function isV4SourceRendition(value: unknown, previousKey: string): value is ILyricsV4SourceRendition {
+    if (!isObject(value) || !hasOnlyKeys(value, ["key", "kind", "label", "availableVersions", "performers", "full", "game", "relation", "sourceTabPaths", "provenance"])
+        || typeof value.key !== "string" || !/^[a-z0-9][a-z0-9._-]{0,127}$/u.test(value.key) || value.key <= previousKey
+        || !isRenditionKind(value.kind) || typeof value.label !== "string" || value.label.length === 0 || value.label.length > MAX_LYRICS_ATTRIBUTION_TITLE_LENGTH
+        || value.label !== value.label.trim() || !Array.isArray(value.performers) || value.performers.length > MAX_LYRICS_V3_PERFORMERS
+        || !isAvailableVersions(value.availableVersions) || !isV3SourceTabPaths(value.sourceTabPaths)
+        || !Array.isArray(value.provenance) || value.provenance.length === 0 || value.provenance.length > MAX_LYRICS_V3_ATTRIBUTIONS) return false;
+    const performerIDs = new Set<string>();
+    let previousPerformerID = "";
+    for (const performer of value.performers) {
+        if (!isV3Performer(performer, previousPerformerID)) return false;
+        previousPerformerID = performer.performerId;
+        performerIDs.add(performer.performerId);
+    }
+    const full = value.full === undefined ? undefined : isRenditionSideV4(value.full, value.kind, performerIDs) ? value.full : null;
+    const game = value.game === undefined ? undefined : isRenditionSideV4(value.game, value.kind, performerIDs) ? value.game : null;
+    if (full === null || game === null || !full && !game) return false;
+    const expectedVersions: LyricsVersion[] = [...(full ? ["full" as const] : []), ...(game ? ["game" as const] : [])];
+    if (!sameAvailableVersions(value.availableVersions, expectedVersions) || !isV4Relation(value.relation, value.key, full, game)) return false;
+    const components = new Set<string>();
+    const ranks = ["full_text", "full_performer_segmentation", "full_ruby", "game_text", "game_performer_segmentation", "game_ruby", "relation", "version"];
+    let previousRank = -1;
+    for (const attribution of value.provenance) {
+        if (!isV3Attribution(attribution, value.key) || components.has(attribution.component)) return false;
+        const component = attribution.component.slice(`renditions/${value.key}/`.length);
+        const rank = ranks.indexOf(component);
+        if (rank <= previousRank) return false;
+        previousRank = rank;
+        components.add(attribution.component);
+    }
+    return true;
+}
+
+function isV4TranslationSide(value: unknown, expectedLineCount: number): value is ILyricsV4TranslationSide {
+    return isObject(value)
+        && hasOnlyKeys(value, ["translations"])
+        && Array.isArray(value.translations)
+        && value.translations.length === expectedLineCount
+        && value.translations.length <= MAX_LYRICS_LINES
+        && value.translations.every((translation) => typeof translation === "string" && translation.length <= MAX_LYRICS_TEXT_LENGTH);
+}
+
+function isV4TranslationEditionRendition(
+    value: unknown,
+    sourceRendition: ILyricsV4SourceRendition,
+): value is ILyricsV4TranslationEditionRendition {
+    if (!isObject(value) || !hasOnlyKeys(value, ["renditionKey", "translationCredits", "full", "game"])
+        || value.renditionKey !== sourceRendition.key
+        || value.translationCredits !== undefined && !isTranslationCredits(value.translationCredits)) return false;
+    const fullLineCount = sourceRendition.full?.lines.length ?? 0;
+    const gameLineCount = sourceRendition.game?.lines.length ?? 0;
+    const full = value.full === undefined ? undefined : isV4TranslationSide(value.full, fullLineCount) ? value.full : null;
+    const game = value.game === undefined ? undefined : isV4TranslationSide(value.game, gameLineCount) ? value.game : null;
+    if (full === null || game === null) return false;
+    if (sourceRendition.relation.kind === "exact_projection") {
+        return Boolean(sourceRendition.full && sourceRendition.game && full && !game);
+    }
+    return Boolean(sourceRendition.full) === Boolean(full) && Boolean(sourceRendition.game) === Boolean(game);
+}
+
+function isV4TranslationEdition(
+    value: unknown,
+    previousKey: string,
+    sourceRenditions: readonly ILyricsV4SourceRendition[],
+): value is ILyricsV4TranslationEdition {
+    if (!isObject(value) || !hasOnlyKeys(value, ["key", "label", "renditions"])
+        || typeof value.key !== "string" || !/^[a-z0-9][a-z0-9._-]{0,127}$/u.test(value.key) || value.key <= previousKey
+        || typeof value.label !== "string" || value.label.length === 0
+        || new TextEncoder().encode(value.label).byteLength > MAX_LYRICS_V4_EDITION_LABEL_LENGTH
+        || value.label !== value.label.trim()
+        || !Array.isArray(value.renditions) || value.renditions.length !== sourceRenditions.length) return false;
+    return value.renditions.every((rendition, index) => isV4TranslationEditionRendition(rendition, sourceRenditions[index] as ILyricsV4SourceRendition));
+}
+
+function validateDocumentV4(value: Record<string, unknown>, publication: ILyricsIndexEntry): ILyricsDocumentV4 {
+    if (!hasOnlyKeys(value, ["version", "musicId", "revision", "updatedAt", "state", "defaultTranslationEditionKey", "translationEditions", "renditions"])
+        || (value.state !== "complete" && value.state !== "game_only") || value.state !== publication.state
+        || typeof value.defaultTranslationEditionKey !== "string" || !/^[a-z0-9][a-z0-9._-]{0,127}$/u.test(value.defaultTranslationEditionKey)
+        || !Array.isArray(value.translationEditions) || value.translationEditions.length === 0 || value.translationEditions.length > MAX_LYRICS_V4_TRANSLATION_EDITIONS
+        || !Array.isArray(value.renditions) || value.renditions.length === 0 || value.renditions.length > MAX_LYRICS_V3_RENDITIONS) {
+        throw new LyricsLoadError("Invalid lyrics document");
+    }
+    const renditions: ILyricsV4SourceRendition[] = [];
+    let previousRenditionKey = "";
+    let hasFull = false;
+    let hasGame = false;
+    for (const rendition of value.renditions) {
+        if (!isV4SourceRendition(rendition, previousRenditionKey)) throw new LyricsLoadError("Invalid lyrics document");
+        previousRenditionKey = rendition.key;
+        hasFull ||= rendition.full !== undefined;
+        hasGame ||= rendition.game !== undefined;
+        renditions.push(rendition);
+    }
+    let previousEditionKey = "";
+    let hasDefaultEdition = false;
+    for (const edition of value.translationEditions) {
+        if (!isV4TranslationEdition(edition, previousEditionKey, renditions)) throw new LyricsLoadError("Invalid lyrics document");
+        previousEditionKey = edition.key;
+        hasDefaultEdition ||= edition.key === value.defaultTranslationEditionKey;
+    }
+    if (!hasDefaultEdition || !hasFull && !hasGame || value.state === "game_only" && hasFull
+        || !publication.availableVersions
+        || !sameAvailableVersions(publication.availableVersions, getLyricsAvailableVersions({
+            version: LYRICS_SCHEMA_VERSION_V4,
+            musicId: value.musicId as number,
+            revision: value.revision as number,
+            updatedAt: value.updatedAt as string,
+            state: value.state,
+            defaultTranslationEditionKey: value.defaultTranslationEditionKey,
+            translationEditions: value.translationEditions,
+            renditions,
+        } as ILyricsDocumentV4))) throw new LyricsLoadError("Invalid lyrics document");
+    return value as unknown as ILyricsDocumentV4;
+}
+
 function validateDocumentV3(value: Record<string, unknown>, publication: ILyricsIndexEntry): ILyricsDocumentV3 {
     if (!hasOnlyKeys(value, ["version", "musicId", "revision", "updatedAt", "state", "renditions"])
         || (value.state !== "complete" && value.state !== "game_only") || value.state !== publication.state
@@ -931,6 +1254,7 @@ function validateDocument(value: unknown, publication: ILyricsIndexEntry, indexV
     ) {
         throw new LyricsLoadError("Invalid lyrics document");
     }
+    if (indexVersion === LYRICS_SCHEMA_VERSION_V4) return validateDocumentV4(value, publication);
     if (indexVersion === LYRICS_SCHEMA_VERSION_V3) return validateDocumentV3(value, publication);
     if (!Array.isArray(value.lines) || value.lines.length === 0 || value.lines.length > MAX_LYRICS_LINES) {
         throw new LyricsLoadError("Invalid lyrics document");

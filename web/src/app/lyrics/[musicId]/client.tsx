@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
 import LyricText from "@/components/lyrics/LyricText";
+import TranslationEditionSelect from "@/components/lyrics/TranslationEditionSelect";
 import Link from "@/components/LocalizedLink";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
@@ -21,9 +22,12 @@ import {
     getLyricsDisplaySegments,
     getLyricsRendition,
     getLyricsRenditions,
+    getLyricsSelectedTranslationCredits,
     getLyricsTargetLocale,
+    getLyricsTranslationEditions,
     getPublishedLyricsIndexEntry,
     hasFullLyricsVersion,
+    resolveLyricsTranslationEdition,
     hasGameLyricsVersion,
     isLyricsUnavailableError,
     type ILyricsAttribution,
@@ -238,9 +242,15 @@ export default function LyricsDetailClient() {
     const { assetSource } = useTheme();
     const { setDetailName } = useBreadcrumb();
     const hasValidMusicId = Number.isInteger(musicId) && musicId > 0;
-    const requestedVersionParam = searchParams.get("version");
+    const searchParamString = searchParams.toString();
+    const requestedVersionParams = searchParams.getAll("version");
+    const requestedVersionParam = requestedVersionParams.length === 1 ? requestedVersionParams[0] : null;
     const requestedVersion: LyricsVersion = requestedVersionParam === "game" ? "game" : "full";
-    const requestedRenditionKey = searchParams.get("rendition");
+    const requestedRenditionParams = searchParams.getAll("rendition");
+    const requestedRenditionParamCount = requestedRenditionParams.length;
+    const requestedRenditionKey = requestedRenditionParamCount === 1 ? requestedRenditionParams[0] : null;
+    const requestedTranslationParams = searchParams.getAll("translation");
+    const requestedTranslationEditionKey = requestedTranslationParams.length === 1 ? requestedTranslationParams[0] : null;
     const [result, setResult] = useState<{
         musicId: number;
         locale: typeof locale;
@@ -302,8 +312,12 @@ export default function LyricsDetailClient() {
     const errorKind = currentResult?.errorKind ?? null;
     const isLoading = hasValidMusicId && !currentResult;
     const targetLocale = getLyricsTargetLocale(locale);
-    const renditions = lyrics?.version === 3 ? [...getLyricsRenditions(lyrics)] : [];
-    const activeRendition = lyrics?.version === 3
+    // Public v4 currently carries zh-CN editions only. Other UI locales must
+    // remain genuinely source-only instead of relabeling Japanese fallback text.
+    const displayTargetLocale = lyrics?.version === 4 && targetLocale !== "zh-CN" ? null : targetLocale;
+    const hasRenditionDimension = lyrics?.version === 3 || lyrics?.version === 4;
+    const renditions = lyrics && hasRenditionDimension ? [...getLyricsRenditions(lyrics)] : [];
+    const activeRendition = lyrics && hasRenditionDimension
         ? getLyricsRendition(lyrics, requestedRenditionKey)
         : null;
     const versionSource = activeRendition ?? lyrics;
@@ -312,15 +326,21 @@ export default function LyricsDetailClient() {
     const activeVersion: LyricsVersion = requestedVersion === "game" && hasGameVersion
         ? "game"
         : hasFullVersion ? "full" : "game";
+    const translationEditions = lyrics ? [...getLyricsTranslationEditions(lyrics, locale)] : [];
+    const activeTranslationEdition = lyrics
+        ? resolveLyricsTranslationEdition(lyrics, locale, requestedTranslationEditionKey)
+        : null;
+    const activeTranslationEditionKey = activeTranslationEdition?.key ?? null;
     const displayLines = lyrics
-        ? getLyricsDisplayLines(lyrics, activeVersion, activeRendition?.key)
+        ? getLyricsDisplayLines(lyrics, activeVersion, activeRendition?.key, activeTranslationEditionKey, locale)
         : [];
-    const hasTargetTranslation = targetLocale
-        ? displayLines.some((line) => Boolean(line[targetLocale]?.trim()))
+    const hasTargetTranslation = displayTargetLocale
+        ? displayLines.some((line) => Boolean(line[displayTargetLocale]?.trim()))
         : false;
-    const showTargetColumn = Boolean(targetLocale && hasTargetTranslation);
-    const translationCredits = activeRendition?.translationCredits
-        ?? (lyrics?.version === 2 ? lyrics.translationCredits : undefined);
+    const showTargetColumn = Boolean(displayTargetLocale && hasTargetTranslation);
+    const translationCredits = lyrics
+        ? getLyricsSelectedTranslationCredits(lyrics, activeRendition?.key, activeTranslationEditionKey, locale)
+        : undefined;
     const attributions = getLyricsDisplayAttributions(
         activeRendition?.provenance
             ?? (lyrics?.version === 2 ? lyrics.attributions : []),
@@ -332,35 +352,66 @@ export default function LyricsDetailClient() {
         : undefined;
 
     useEffect(() => {
-        if (
-            !lyrics
-            || lyrics.version !== 3
-            || !requestedRenditionKey
-            || !activeRendition
-            || activeRendition.key === requestedRenditionKey
-        ) return;
-        const query = new URLSearchParams(searchParams.toString());
-        query.set("rendition", activeRendition.key);
-        replaceCurrentUrlSearchParams(query);
-    }, [activeRendition, lyrics, requestedRenditionKey, searchParams]);
+        if (!lyrics) return;
+        const query = new URLSearchParams(searchParamString);
 
-    useEffect(() => {
-        if (!lyrics || !requestedVersionParam || (requestedVersionParam === "game" && hasGameVersion)) return;
-        const query = new URLSearchParams(searchParams.toString());
-        query.delete("version");
-        replaceCurrentUrlSearchParams(query);
-    }, [hasGameVersion, lyrics, requestedVersionParam, searchParams]);
+        const canonicalizeSingleValue = (key: string, canonicalValue: string | null) => {
+            const values = query.getAll(key);
+            if (canonicalValue === null) {
+                if (values.length > 0) query.delete(key);
+                return;
+            }
+            if (values.length !== 1 || values[0] !== canonicalValue) {
+                query.delete(key);
+                query.set(key, canonicalValue);
+            }
+        };
+
+        if (hasRenditionDimension && activeRendition) {
+            if (requestedRenditionParamCount > 1
+                || requestedRenditionParamCount === 1 && requestedRenditionKey !== activeRendition.key) {
+                canonicalizeSingleValue("rendition", activeRendition.key);
+            }
+        } else {
+            canonicalizeSingleValue("rendition", null);
+        }
+
+        const canonicalVersionParam = activeVersion === "game" && hasFullVersion ? "game" : null;
+        canonicalizeSingleValue("version", canonicalVersionParam);
+
+        const canonicalTranslationParam = lyrics.version === 4
+            && activeTranslationEdition
+            && activeTranslationEdition.key !== lyrics.defaultTranslationEditionKey
+            ? activeTranslationEdition.key
+            : null;
+        canonicalizeSingleValue("translation", canonicalTranslationParam);
+
+        if (query.toString() !== searchParamString) replaceCurrentUrlSearchParams(query);
+    }, [
+        activeRendition,
+        activeTranslationEdition,
+        activeVersion,
+        hasFullVersion,
+        hasRenditionDimension,
+        lyrics,
+        requestedRenditionKey,
+        requestedRenditionParamCount,
+        searchParamString,
+    ]);
 
     useEffect(() => {
         if (music) setDetailName(music.title);
     }, [music, setDetailName]);
 
     const selectRendition = (renditionKey: string) => {
-        if (!renditions.some((rendition) => rendition.key === renditionKey)) return;
+        const rendition = renditions.find((item) => item.key === renditionKey);
+        if (!rendition) return;
         const query = new URLSearchParams(window.location.search);
+        query.delete("rendition");
         query.set("rendition", renditionKey);
-        if (renditionKey === activeRendition?.key && requestedVersion === "game" && !hasGameVersion) {
-            query.delete("version");
+        query.delete("version");
+        if (activeVersion === "game" && hasGameLyricsVersion(rendition) && hasFullLyricsVersion(rendition)) {
+            query.set("version", "game");
         }
         replaceCurrentUrlSearchParams(query);
     };
@@ -368,8 +419,16 @@ export default function LyricsDetailClient() {
     const selectVersion = (version: LyricsVersion) => {
         if (version === "full" && !hasFullVersion || version === "game" && !hasGameVersion) return;
         const query = new URLSearchParams(window.location.search);
+        query.delete("version");
         if (version === "game" && hasFullVersion) query.set("version", "game");
-        else query.delete("version");
+        replaceCurrentUrlSearchParams(query);
+    };
+
+    const selectTranslationEdition = (editionKey: string) => {
+        if (!lyrics || lyrics.version !== 4 || !translationEditions.some((edition) => edition.key === editionKey)) return;
+        const query = new URLSearchParams(window.location.search);
+        query.delete("translation");
+        if (editionKey !== lyrics.defaultTranslationEditionKey) query.set("translation", editionKey);
         replaceCurrentUrlSearchParams(query);
     };
 
@@ -598,15 +657,31 @@ export default function LyricsDetailClient() {
                     <section className="min-w-0">
                         <div className="ios-glass-card overflow-hidden rounded-2xl">
                             <div className="flex flex-col gap-3 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent px-5 py-4 dark:border-slate-700/60 dark:from-miku/10 sm:flex-row sm:items-center sm:justify-between">
-                                <h2 className="flex items-center gap-2 font-bold text-primary-text">
+                                <h2 className="flex shrink-0 items-center gap-2 font-bold text-primary-text">
                                     <svg className="h-5 w-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                     </svg>
                                     {t("page.lyrics.contentTitle")}
                                 </h2>
-                                <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                                    {translationEditions.length > 1 && activeTranslationEdition && lyrics.version === 4 && (
+                                        <TranslationEditionSelect
+                                            options={translationEditions.map((edition) => ({
+                                                key: edition.key,
+                                                label: edition.label,
+                                                isDefault: edition.key === lyrics.defaultTranslationEditionKey,
+                                            }))}
+                                            value={activeTranslationEdition.key}
+                                            onChange={selectTranslationEdition}
+                                            label={t("page.lyrics.translationEditionLabel")}
+                                            currentLabel={t("page.lyrics.translationEditionCurrent", { label: activeTranslationEdition.label })}
+                                            defaultLabel={t("page.lyrics.translationEditionDefault")}
+                                            listLabel={t("page.lyrics.translationEditionListLabel")}
+                                            className="w-full sm:w-64"
+                                        />
+                                    )}
                                     {renditions.length > 1 && (
-                                        <div role="group" aria-label={t("page.lyrics.versionLabel")} className="flex max-w-full flex-wrap gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+                                        <div role="group" aria-label={t("page.lyrics.renditionLabel")} className="flex max-w-full flex-wrap gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
                                             {renditions.map((rendition) => (
                                                 <button
                                                     key={rendition.key}
@@ -665,12 +740,12 @@ export default function LyricsDetailClient() {
                                     <div className={`hidden gap-6 border-b border-slate-100 bg-white/30 px-5 py-3 text-xs font-bold uppercase tracking-wide text-slate-400 dark:border-slate-700/60 dark:bg-slate-900/20 md:grid ${showTargetColumn ? "md:grid-cols-2" : "md:grid-cols-1"}`}>
                                         <span>{t("page.lyrics.japanese")}</span>
                                         {showTargetColumn && (
-                                            <span>{targetLocale === "zh-CN" ? t("page.lyrics.chinese") : t("page.lyrics.english")}</span>
+                                            <span>{displayTargetLocale === "zh-CN" ? t("page.lyrics.chinese") : t("page.lyrics.english")}</span>
                                         )}
                                     </div>
                                     <div className="divide-y divide-slate-100/80 dark:divide-slate-700/60">
                                         {displayLines.map((line) => {
-                                            const translated = targetLocale ? line[targetLocale] : undefined;
+                                            const translated = displayTargetLocale ? line[displayTargetLocale] : undefined;
                                             const targetText = translated || line.japanese;
                                             return (
                                                 <article
@@ -690,7 +765,7 @@ export default function LyricsDetailClient() {
                                                     {showTargetColumn && (
                                                         <div className="min-w-0 border-t border-slate-200/60 pt-4 dark:border-slate-700/60 md:border-l md:border-t-0 md:pl-6 md:pt-0">
                                                             <span className="mb-2 block text-[10px] font-bold uppercase tracking-wide text-slate-400 md:hidden">
-                                                                {targetLocale === "zh-CN" ? t("page.lyrics.chinese") : t("page.lyrics.english")}
+                                                                {displayTargetLocale === "zh-CN" ? t("page.lyrics.chinese") : t("page.lyrics.english")}
                                                             </span>
                                                             <LyricText text={targetText} performerIds={[]} />
                                                             {!translated && (

@@ -27,14 +27,14 @@ function invoke(method, url) {
   return { statusCode, headers, body: Buffer.concat(chunks) };
 }
 
-test("build-contract fixture exposes a minimal strict Public Lyrics v3 index", () => {
+test("build-contract fixture exposes a minimal strict Public Lyrics v4 index", () => {
   const response = invoke("GET", BUILD_CONTRACT_INDEX_PATH);
   assert.equal(response.statusCode, 200);
   assert.equal(response.headers["content-type"], "application/json; charset=utf-8");
   assert.equal(Number(response.headers["content-length"]), BUILD_CONTRACT_INDEX_BYTES.byteLength);
-  assert.equal(response.body.toString("utf8"), '{"version":3,"songs":[{"musicId":10,"revision":4,"updatedAt":"2026-07-31T00:00:00Z","title":{"ja-JP":"新曲"},"state":"complete","availableVersions":["full"]}]}');
+  assert.equal(response.body.toString("utf8"), '{"version":4,"songs":[{"musicId":10,"revision":4,"updatedAt":"2026-07-31T00:00:00Z","title":{"ja-JP":"新曲"},"state":"complete","availableVersions":["full"]}]}');
   assert.deepEqual(JSON.parse(response.body), {
-    version: 3,
+    version: 4,
     songs: [{
       musicId: 10,
       revision: 4,
@@ -46,17 +46,27 @@ test("build-contract fixture exposes a minimal strict Public Lyrics v3 index", (
   });
 });
 
-test("build-contract fixture exposes a matching strict Public Lyrics v3 detail", () => {
+test("build-contract fixture exposes a matching strict Public Lyrics v4 detail", () => {
   const response = invoke("GET", BUILD_CONTRACT_DETAIL_PATH);
   assert.equal(response.statusCode, 200);
   assert.equal(response.headers["content-type"], "application/json; charset=utf-8");
   assert.equal(Number(response.headers["content-length"]), BUILD_CONTRACT_DETAIL_BYTES.byteLength);
   assert.deepEqual(JSON.parse(response.body), {
-    version: 3,
+    version: 4,
     musicId: 10,
     revision: 4,
     updatedAt: "2026-07-31T00:00:00Z",
     state: "complete",
+    defaultTranslationEditionKey: "build-contract",
+    translationEditions: [{
+      key: "build-contract",
+      label: "Build Contract",
+      renditions: [{
+        renditionKey: "original",
+        translationCredits: { translation: "Build Contract Translator" },
+        full: { translations: ["歌唱"] },
+      }],
+    }],
     renditions: [{
       key: "original",
       kind: "original",
@@ -108,7 +118,6 @@ test("build-contract fixture exposes a matching strict Public Lyrics v3 detail",
           licenseUrl: "https://creativecommons.org/licenses/by-sa/3.0/",
         },
       ],
-      translationCredits: { translation: "Build Contract Translator" },
     }],
   });
 });

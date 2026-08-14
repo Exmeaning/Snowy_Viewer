@@ -1,0 +1,350 @@
+{
+  "version": 4,
+  "musicId": 904,
+  "revision": 4401,
+  "updatedAt": "2026-08-12T00:00:00Z",
+  "state": "complete",
+  "defaultTranslationEditionKey": "official",
+  "translationEditions": [
+    {
+      "key": "community",
+      "label": "Community Edition",
+      "renditions": [
+        {
+          "renditionKey": "sekai",
+          "translationCredits": {
+            "translation": "Community Translator",
+            "proofreading": "Community Proofreader"
+          },
+          "full": {
+            "translations": [
+              "Community Hatsune",
+              ""
+            ]
+          }
+        },
+        {
+          "renditionKey": "virtual-singer",
+          "translationCredits": {
+            "translation": "Community Virtual Translator"
+          },
+          "full": {
+            "translations": [
+              "Community future"
+            ]
+          },
+          "game": {
+            "translations": [
+              "Community game future"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "official",
+      "label": "Official Edition",
+      "renditions": [
+        {
+          "renditionKey": "sekai",
+          "translationCredits": {
+            "translation": "Official Translator",
+            "proofreading": "Official Translator"
+          },
+          "full": {
+            "translations": [
+              "Official Hatsune",
+              "Official sing"
+            ]
+          }
+        },
+        {
+          "renditionKey": "virtual-singer",
+          "translationCredits": {
+            "translation": "Official Virtual Translator"
+          },
+          "full": {
+            "translations": [
+              "Official future"
+            ]
+          },
+          "game": {
+            "translations": [
+              "Official game future"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "renditions": [
+    {
+      "key": "sekai",
+      "kind": "sekai",
+      "label": "SEKAI",
+      "availableVersions": [
+        "full",
+        "game"
+      ],
+      "performers": [
+        {
+          "performerId": "miku",
+          "name": "初音ミク",
+          "color": "#33CCBB"
+        }
+      ],
+      "full": {
+        "version": {
+          "kind": "sekai",
+          "label": "Full"
+        },
+        "lines": [
+          {
+            "id": "full-1",
+            "order": 0,
+            "japanese": "初音",
+            "segments": [
+              {
+                "text": "初音",
+                "performerIds": [
+                  "miku"
+                ],
+                "ruby": [
+                  {
+                    "text": "初音",
+                    "reading": "はつね"
+                  }
+                ]
+              }
+            ],
+            "trailingPerformerIds": []
+          },
+          {
+            "id": "full-2",
+            "order": 1,
+            "japanese": "歌う",
+            "stanzaBreakBefore": true,
+            "segments": [
+              {
+                "text": "歌う",
+                "performerIds": [
+                  "miku"
+                ],
+                "ruby": [
+                  {
+                    "text": "歌",
+                    "reading": "うた"
+                  },
+                  {
+                    "text": "う"
+                  }
+                ]
+              }
+            ],
+            "trailingPerformerIds": [
+              "miku"
+            ]
+          }
+        ]
+      },
+      "game": {
+        "version": {
+          "kind": "sekai",
+          "label": "Game"
+        },
+        "lines": [
+          {
+            "id": "game-1",
+            "order": 0,
+            "japanese": "歌う",
+            "segments": [
+              {
+                "text": "歌う",
+                "performerIds": [],
+                "ruby": [
+                  {
+                    "text": "歌",
+                    "reading": "うた"
+                  },
+                  {
+                    "text": "う"
+                  }
+                ]
+              }
+            ],
+            "trailingPerformerIds": []
+          }
+        ]
+      },
+      "relation": {
+        "kind": "exact_projection",
+        "fullRenditionKey": "sekai",
+        "lineIds": [
+          "full-2"
+        ]
+      },
+      "sourceTabPaths": [
+        [
+          "SEKAI",
+          "Full"
+        ],
+        [
+          "SEKAI",
+          "Game"
+        ]
+      ],
+      "provenance": [
+        {
+          "component": "renditions/sekai/full_text",
+          "provider": "sekaipedia",
+          "title": "Multiple Translation Test",
+          "revisionId": 2468,
+          "revisionUrl": "https://www.sekaipedia.org/wiki/Multiple_Translation_Test?oldid=2468",
+          "licenseName": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        },
+        {
+          "component": "renditions/sekai/game_text",
+          "provider": "sekaipedia",
+          "title": "Multiple Translation Test",
+          "revisionId": 2468,
+          "revisionUrl": "https://www.sekaipedia.org/wiki/Multiple_Translation_Test?oldid=2468",
+          "licenseName": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        },
+        {
+          "component": "renditions/sekai/relation",
+          "provider": "sekaipedia",
+          "title": "Multiple Translation Test",
+          "revisionId": 2468,
+          "revisionUrl": "https://www.sekaipedia.org/wiki/Multiple_Translation_Test?oldid=2468",
+          "licenseName": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        },
+        {
+          "component": "renditions/sekai/version",
+          "provider": "sekaipedia",
+          "title": "Multiple Translation Test",
+          "revisionId": 2468,
+          "revisionUrl": "https://www.sekaipedia.org/wiki/Multiple_Translation_Test?oldid=2468",
+          "licenseName": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      ]
+    },
+    {
+      "key": "virtual-singer",
+      "kind": "vocaloid",
+      "label": "VIRTUAL SINGER",
+      "availableVersions": [
+        "full",
+        "game"
+      ],
+      "performers": [
+        {
+          "performerId": "miku",
+          "name": "初音ミク",
+          "color": "#33CCBB"
+        }
+      ],
+      "full": {
+        "version": {
+          "kind": "vocaloid",
+          "label": "Full"
+        },
+        "lines": [
+          {
+            "id": "virtual-full-1",
+            "order": 0,
+            "japanese": "未来",
+            "segments": [
+              {
+                "text": "未来",
+                "performerIds": [
+                  "miku"
+                ],
+                "ruby": [
+                  {
+                    "text": "未来",
+                    "reading": "みらい"
+                  }
+                ]
+              }
+            ],
+            "trailingPerformerIds": []
+          }
+        ]
+      },
+      "game": {
+        "version": {
+          "kind": "vocaloid",
+          "label": "Game"
+        },
+        "lines": [
+          {
+            "id": "virtual-game-1",
+            "order": 0,
+            "japanese": "未来",
+            "segments": [
+              {
+                "text": "未来",
+                "performerIds": [
+                  "miku"
+                ],
+                "ruby": [
+                  {
+                    "text": "未来",
+                    "reading": "みらい"
+                  }
+                ]
+              }
+            ],
+            "trailingPerformerIds": []
+          }
+        ]
+      },
+      "relation": {
+        "kind": "none"
+      },
+      "sourceTabPaths": [
+        [
+          "VIRTUAL SINGER",
+          "Full"
+        ],
+        [
+          "VIRTUAL SINGER",
+          "Game"
+        ]
+      ],
+      "provenance": [
+        {
+          "component": "renditions/virtual-singer/full_text",
+          "provider": "sekaipedia",
+          "title": "Multiple Translation Test",
+          "revisionId": 2468,
+          "revisionUrl": "https://www.sekaipedia.org/wiki/Multiple_Translation_Test?oldid=2468",
+          "licenseName": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        },
+        {
+          "component": "renditions/virtual-singer/game_text",
+          "provider": "sekaipedia",
+          "title": "Multiple Translation Test",
+          "revisionId": 2468,
+          "revisionUrl": "https://www.sekaipedia.org/wiki/Multiple_Translation_Test?oldid=2468",
+          "licenseName": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        },
+        {
+          "component": "renditions/virtual-singer/version",
+          "provider": "sekaipedia",
+          "title": "Multiple Translation Test",
+          "revisionId": 2468,
+          "revisionUrl": "https://www.sekaipedia.org/wiki/Multiple_Translation_Test?oldid=2468",
+          "licenseName": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      ]
+    }
+  ]
+}

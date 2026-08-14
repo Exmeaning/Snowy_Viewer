@@ -1,0 +1,20 @@
+{
+  "version": 4,
+  "songs": [
+    {
+      "musicId": 904,
+      "revision": 4401,
+      "updatedAt": "2026-08-12T00:00:00Z",
+      "title": {
+        "ja-JP": "多重翻訳テスト",
+        "zh-CN": "多译本测试",
+        "en-US": "Multiple Translation Test"
+      },
+      "state": "complete",
+      "availableVersions": [
+        "full",
+        "game"
+      ]
+    }
+  ]
+}
