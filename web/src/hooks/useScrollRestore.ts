@@ -65,6 +65,7 @@ export function useScrollRestore({
     const [isRestoring, setIsRestoring] = useState(true);
     const hasRestoredScroll = useRef(false);
     const pendingScrollY = useRef<number | null>(null);
+    const restoreGeneration = useRef(0);
     // Track the last known scroll position for SPA navigation
     // This is crucial because window.scrollY may be 0 when cleanup runs during Next.js navigation
     const lastScrollY = useRef<number>(0);
@@ -172,6 +173,7 @@ export function useScrollRestore({
         }
 
         const targetScrollY = pendingScrollY.current;
+        const generation = restoreGeneration.current;
 
         // Use multiple rAF to ensure content is fully rendered
         // This allows React to complete rendering and DOM to update
@@ -179,6 +181,7 @@ export function useScrollRestore({
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
+                        if (generation !== restoreGeneration.current) return;
                         window.scrollTo({
                             top: targetScrollY,
                             behavior: "instant",
@@ -213,8 +216,12 @@ export function useScrollRestore({
         } catch {
             // sessionStorage not available
         }
-        // Reset refs
+        // Cancel any delayed restoration captured before the filter changed.
+        restoreGeneration.current++;
+        pendingScrollY.current = null;
+        hasRestoredScroll.current = true;
         lastScrollY.current = 0;
+        setIsRestoring(false);
         // Scroll to top on reset
         window.scrollTo({ top: 0, behavior: "instant" });
     }, [defaultDisplayCount, SCROLL_KEY, COUNT_KEY]);

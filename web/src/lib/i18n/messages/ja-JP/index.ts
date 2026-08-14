@@ -1600,7 +1600,7 @@ export const jaJPMessages = {
       description: '公開済みの日本語歌詞と簡体字中国語・英語翻訳を閲覧できます。',
       filterTitle: '歌詞フィルター',
       countUnit: '曲',
-      searchPlaceholder: '楽曲名または ID を検索...',
+      searchPlaceholder: '楽曲名・別名・ID を検索...',
       error: '歌詞データの読み込みに失敗しました',
       loading: '歌詞を読み込んでいます...',
       empty: '一致する歌詞が見つかりません',

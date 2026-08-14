@@ -1576,7 +1576,7 @@ export const zhCNMessages = {
             description: "阅读已发布的日文歌词与简体中文、英文翻译",
             filterTitle: "歌词筛选",
             countUnit: "首",
-            searchPlaceholder: "搜索歌曲名称或 ID...",
+            searchPlaceholder: "搜索歌曲名称、别名或 ID...",
             error: "歌词数据加载失败",
             loading: "正在加载歌词...",
             empty: "没有找到匹配的歌词",

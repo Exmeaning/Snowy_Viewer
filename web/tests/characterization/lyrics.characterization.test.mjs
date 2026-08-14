@@ -17,6 +17,10 @@ import {
   readJson,
   readWeb,
 } from "./test-helpers.mjs";
+import {
+  buildMusicAliasesById,
+  LYRICS_ALIAS_INDEX_URL,
+} from "../../src/lib/lyrics-aliases.mjs";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -3292,6 +3296,100 @@ test("lyric segments keep solid and gradient colors with deduplicated line-end a
   assert.doesNotMatch(`${source}\n${lyricsSource}`, /\b701\b/, "lyrics consumer must not hard-code a stale catalog size");
 });
 
+test("resetting lyrics filters cancels a delayed scroll restoration", async () => {
+  const dom = new JSDOM("<!doctype html><html><body><div id=\"root\"></div></body></html>", {
+    url: "https://example.test/lyrics",
+    pretendToBeVisual: true,
+  });
+  const previousGlobals = {
+    window: globalThis.window,
+    document: globalThis.document,
+    sessionStorage: globalThis.sessionStorage,
+    requestAnimationFrame: globalThis.requestAnimationFrame,
+    cancelAnimationFrame: globalThis.cancelAnimationFrame,
+  };
+  const scrollCalls = [];
+  dom.window.scrollTo = ({ top }) => { scrollCalls.push(top); };
+  dom.window.requestAnimationFrame = (callback) => dom.window.setTimeout(() => callback(Date.now()), 0);
+  dom.window.cancelAnimationFrame = (handle) => dom.window.clearTimeout(handle);
+  Object.assign(globalThis, {
+    window: dom.window,
+    document: dom.window.document,
+    sessionStorage: dom.window.sessionStorage,
+    requestAnimationFrame: dom.window.requestAnimationFrame,
+    cancelAnimationFrame: dom.window.cancelAnimationFrame,
+  });
+  sessionStorage.setItem("lyrics_scroll", "640");
+  globalThis.__scrollRestoreRuntimeTest = { React };
+  const { useScrollRestore } = await importWebTypeScript("src/hooks/useScrollRestore.ts", [[
+    'import { useState, useEffect, useCallback, useRef } from "react";',
+    "const { useState, useEffect, useCallback, useRef } = globalThis.__scrollRestoreRuntimeTest.React;",
+  ]]);
+  const Harness = ({ isReady }) => {
+    const controls = useScrollRestore({
+      storageKey: "lyrics",
+      defaultDisplayCount: 30,
+      increment: 30,
+      isReady,
+    });
+    return React.createElement("button", {
+      type: "button",
+      "data-count": controls.displayCount,
+      "data-restoring": String(controls.isRestoring),
+      onClick: controls.resetDisplayCount,
+    }, "reset");
+  };
+  const container = document.getElementById("root");
+  const waitingElement = React.createElement(Harness, { isReady: false });
+  container.innerHTML = renderToString(waitingElement);
+  let root;
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  try {
+    await act(async () => {
+      root = hydrateRoot(container, waitingElement);
+      await new Promise((resolve) => setImmediate(resolve));
+    });
+    await act(async () => {
+      container.querySelector("button").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+      root.render(React.createElement(Harness, { isReady: true }));
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    });
+    assert.deepEqual(scrollCalls, [0]);
+    assert.equal(container.querySelector("button").getAttribute("data-restoring"), "false");
+    assert.equal(sessionStorage.getItem("lyrics_scroll"), null);
+  } finally {
+    if (root) await act(async () => root.unmount());
+    dom.window.close();
+    for (const [key, value] of Object.entries(previousGlobals)) {
+      if (value === undefined) delete globalThis[key];
+      else globalThis[key] = value;
+    }
+    delete globalThis.__scrollRestoreRuntimeTest;
+  }
+});
+
+test("lyrics alias index accepts only stable music-ID aliases and degrades closed", () => {
+  assert.equal(
+    LYRICS_ALIAS_INDEX_URL,
+    "https://translation.exmeaning.com/files/data/search-index.json",
+  );
+  const aliases = buildMusicAliasesById([
+    { id: 307, g: "music", a: ["孩子氣", " 孩子气 ", "孩子氣", ""] },
+    { id: 307, g: "cards", a: ["wrong group"] },
+    { id: 308, g: "music", a: ["mixed row", 42] },
+    { id: 309, g: "music", a: ["ambiguous first row"] },
+    { id: 309, g: "music", a: ["ambiguous second row"] },
+    { id: 0, g: "music", a: ["invalid ID"] },
+    { id: Number.MAX_SAFE_INTEGER + 1, g: "music", a: ["unsafe ID"] },
+    null,
+  ]);
+  assert.deepEqual(aliases.get(307), ["孩子氣", "孩子气"]);
+  assert.equal(aliases.has(308), false, "mixed-type alias rows fail closed");
+  assert.equal(aliases.has(309), false, "duplicate music IDs fail closed");
+  assert.equal(aliases.size, 1);
+  assert.deepEqual([...buildMusicAliasesById({ malformed: true })], []);
+});
+
 test("lyrics list and detail retain loading, empty, error, long-line, mobile, and dark contracts", () => {
   const list = readWeb("src/app/lyrics/client.tsx");
   const detail = readWeb("src/app/lyrics/[musicId]/client.tsx");
@@ -3299,6 +3397,14 @@ test("lyrics list and detail retain loading, empty, error, long-line, mobile, an
   const layout = readWeb("src/components/music/music-layout.ts");
 
   assert.match(list, /fetchLyricsIndex\(\)/);
+  assert.match(list, /Aliases are optional and must not delay the primary lyrics catalog/);
+  assert.match(list, /fetch\(LYRICS_ALIAS_INDEX_URL, \{ signal: controller\.signal \}\)/);
+  assert.match(list, /setMusicAliasesById\(buildMusicAliasesById\(items\)\)/);
+  assert.match(list, /setAliasIndexSettled\(true\)/);
+  assert.match(list, /waitingForAliasMatch/);
+  assert.match(list, /isReady: !isLoading && \(deferredSearchQuery\.trim\(\) === "" \|\| aliasIndexSettled\)/);
+  assert.match(list, /musicAliasesById\.get\(music\.id\)/);
+  assert.match(list, /aliases\?\.some\(\(alias\) => alias\.toLowerCase\(\)\.includes\(query\)\)/);
   assert.match(list, /<MusicFilters/);
   assert.match(list, /useQuickFilter\(/);
   assert.match(list, /lg:max-h-\[calc\(100vh-6rem\)\]/);

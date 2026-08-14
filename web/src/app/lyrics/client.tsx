@@ -18,6 +18,7 @@ import {
     hasLyricsDetail,
     type ILyricsIndexEntry,
 } from "@/lib/lyrics";
+import { buildMusicAliasesById, LYRICS_ALIAS_INDEX_URL } from "@/lib/lyrics-aliases.mjs";
 import { fetchLyricsMusicCatalog } from "@/lib/lyrics-music-source";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import type { IMusicInfo, IMusicTagInfo, MusicCategoryType, MusicTagType } from "@/types/music";
@@ -30,6 +31,8 @@ function LyricsContent() {
     const [musicTags, setMusicTags] = useState<IMusicTagInfo[]>([]);
     const [eventMusicIds, setEventMusicIds] = useState<Set<number>>(new Set());
     const [lyricsByMusicId, setLyricsByMusicId] = useState<Map<number, ILyricsIndexEntry>>(new Map());
+    const [musicAliasesById, setMusicAliasesById] = useState<Map<number, string[]>>(new Map());
+    const [aliasIndexSettled, setAliasIndexSettled] = useState(false);
     const [selectedTag, setSelectedTag] = useState<MusicTagType>((searchParams.get("tag") as MusicTagType) || "all");
     const [selectedCategories, setSelectedCategories] = useState<MusicCategoryType[]>(
         () => (searchParams.get("categories")?.split(",") as MusicCategoryType[] | undefined) ?? [],
@@ -46,13 +49,6 @@ function LyricsContent() {
     );
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    const { displayCount, loadMore, resetDisplayCount } = useScrollRestore({
-        storageKey: "lyrics",
-        defaultDisplayCount: 30,
-        increment: 30,
-        isReady: !isLoading,
-    });
 
     useEffect(() => {
         let cancelled = false;
@@ -79,8 +75,39 @@ function LyricsContent() {
             .finally(() => {
                 if (!cancelled) setIsLoading(false);
             });
+
         return () => { cancelled = true; };
     }, [t]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 8_000);
+
+        // Aliases are optional and must not delay the primary lyrics catalog.
+        void fetch(LYRICS_ALIAS_INDEX_URL, { signal: controller.signal })
+            .then((response) => {
+                if (!response.ok) throw new Error(`Search index HTTP ${response.status}`);
+                return response.json() as Promise<unknown>;
+            })
+            .then((items) => {
+                if (!cancelled) setMusicAliasesById(buildMusicAliasesById(items));
+            })
+            .catch(() => {
+                // Keep title, creator, translation, and ID search available when
+                // the optional shared index is temporarily unavailable.
+            })
+            .finally(() => {
+                window.clearTimeout(timeout);
+                if (!cancelled) setAliasIndexSettled(true);
+            });
+
+        return () => {
+            cancelled = true;
+            controller.abort();
+            window.clearTimeout(timeout);
+        };
+    }, []);
 
     useEffect(() => {
         const params = new URLSearchParams();
@@ -131,13 +158,15 @@ function LyricsContent() {
             const numericQuery = Number.parseInt(query, 10);
             result = result.filter((music) => {
                 const indexEntry = lyricsByMusicId.get(music.id);
+                const aliases = musicAliasesById.get(music.id);
                 return music.id === numericQuery
                     || music.title.toLowerCase().includes(query)
                     || music.pronunciation.toLowerCase().includes(query)
                     || music.composer.toLowerCase().includes(query)
                     || music.lyricist.toLowerCase().includes(query)
                     || Boolean(indexEntry?.title["zh-CN"]?.toLowerCase().includes(query))
-                    || Boolean(indexEntry?.title["en-US"]?.toLowerCase().includes(query));
+                    || Boolean(indexEntry?.title["en-US"]?.toLowerCase().includes(query))
+                    || Boolean(aliases?.some((alias) => alias.toLowerCase().includes(query)));
             });
         }
         if (!isShowSpoiler) result = result.filter((music) => music.publishedAt <= now);
@@ -145,7 +174,18 @@ function LyricsContent() {
             const difference = sortBy === "id" ? left.id - right.id : left.publishedAt - right.publishedAt;
             return sortOrder === "asc" ? difference : -difference;
         });
-    }, [deferredSearchQuery, eventMusicIds, hasEventOnly, isShowSpoiler, lyricsByMusicId, musicTags, musics, now, selectedCategories, selectedTag, sortBy, sortOrder]);
+    }, [deferredSearchQuery, eventMusicIds, hasEventOnly, isShowSpoiler, lyricsByMusicId, musicAliasesById, musicTags, musics, now, selectedCategories, selectedTag, sortBy, sortOrder]);
+
+    const waitingForAliasMatch = !isLoading
+        && !aliasIndexSettled
+        && deferredSearchQuery.trim() !== ""
+        && filteredMusics.length === 0;
+    const { displayCount, loadMore, resetDisplayCount } = useScrollRestore({
+        storageKey: "lyrics",
+        defaultDisplayCount: 30,
+        increment: 30,
+        isReady: !isLoading && (deferredSearchQuery.trim() === "" || aliasIndexSettled),
+    });
 
     const resetFilters = () => {
         setSelectedTag("all");
@@ -239,7 +279,7 @@ function LyricsContent() {
                         </div>
                     </aside>
                     <section className="min-w-0 flex-1" aria-label={t("page.lyrics.title")}>
-                        {isLoading ? (
+                        {isLoading || waitingForAliasMatch ? (
                             <div className={MUSIC_GRID_CLASS} aria-label={t("page.lyrics.loading")}>
                                 {Array.from({ length: 15 }).map((_, index) => (
                                     <div key={index} className="animate-pulse">

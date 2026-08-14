@@ -1598,7 +1598,7 @@ export const koKRMessages = {
             description: "공개된 일본어 가사와 중국어 간체 및 영어 번역을 확인합니다.",
             filterTitle: "가사 필터",
             countUnit: "곡",
-            searchPlaceholder: "곡명 또는 ID 검색...",
+            searchPlaceholder: "곡명, 별칭 또는 ID 검색...",
             error: "가사 데이터를 불러오지 못했습니다",
             loading: "가사를 불러오는 중...",
             empty: "일치하는 가사가 없습니다",

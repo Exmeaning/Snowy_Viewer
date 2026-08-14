@@ -1577,7 +1577,7 @@ export const enUSMessages = {
             description: "Read published Japanese lyrics with Simplified Chinese and English translations.",
             filterTitle: "Lyrics filters",
             countUnit: "songs",
-            searchPlaceholder: "Search song title or ID...",
+            searchPlaceholder: "Search song title, alias, or ID...",
             error: "Failed to load lyrics data",
             loading: "Loading lyrics...",
             empty: "No matching lyrics found",

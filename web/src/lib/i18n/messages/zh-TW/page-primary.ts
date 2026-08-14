@@ -737,7 +737,7 @@ export const zhTWPagePrimary = {
             description: "閱讀已發布的日文歌詞與簡體中文、英文翻譯",
             filterTitle: "歌詞篩選",
             countUnit: "首",
-            searchPlaceholder: "搜尋歌曲名稱或 ID...",
+            searchPlaceholder: "搜尋歌曲名稱、別名或 ID...",
             error: "歌詞資料載入失敗",
             loading: "正在載入歌詞...",
             empty: "沒有找到符合的歌詞",
