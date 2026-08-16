@@ -3567,6 +3567,14 @@ test("lyrics list and detail retain loading, empty, error, long-line, mobile, an
   assert.match(list, /role="alert"/);
   assert.match(detail, /useBreadcrumb\(\)/);
   assert.match(detail, /setDetailName\(music\.title\)/);
+  assert.match(detail, /useState<Record<number, string>>\(\{\}\)/,
+    "outside character names stay a numeric-id map");
+  assert.match(detail, /fetchMasterData<IOutsideCharacter\[\]>\(\"outsideCharacters\.json\"\)\.catch\(\(\) => \[\] as IOutsideCharacter\[\]\)/,
+    "outsideCharacters.json must be fetched in its array shape, not as a Record");
+  assert.match(detail, /const outsideCharMap: Record<number, string> = \{\};/);
+  assert.match(detail, /for \(const oc of outsideCharsData\) \{\s*outsideCharMap\[oc\.id\] = oc\.name;\s*\}/,
+    "the numeric-id name map must be built from array entries by id and name");
+  assert.match(detail, /setOutsideCharacters\(outsideCharMap\)/);
   assert.match(detail, /divide-y divide-slate-100/);
   assert.match(detail, /grid grid-cols-1/);
   assert.match(detail, /md:grid-cols-2/);

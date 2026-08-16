@@ -38,7 +38,7 @@ import {
 } from "@/lib/lyrics";
 import { fetchLyricsMusicById } from "@/lib/lyrics-music-source";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
-import type { IMusicInfo, IMusicVocalInfo } from "@/types/music";
+import type { IMusicInfo, IMusicVocalInfo, IOutsideCharacter } from "@/types/music";
 import { getMusicJacketUrl, MUSIC_CATEGORY_COLORS } from "@/types/music";
 type LyricsDisplayAttribution = ILyricsAttribution | ILyricsV3ComponentAttribution;
 
@@ -273,7 +273,7 @@ export default function LyricsDetailClient() {
                 (error: unknown) => ({ document: null, error }),
             ),
             fetchMasterData<IMusicVocalInfo[]>("musicVocals.json").catch(() => []),
-            fetchMasterData<Record<number, string>>("outsideCharacters.json").catch(() => ({})),
+            fetchMasterData<IOutsideCharacter[]>("outsideCharacters.json").catch(() => [] as IOutsideCharacter[]),
         ])
             .then(([music, publication, detail, vocalsData, outsideCharsData]) => {
                 if (cancelled) return;
@@ -289,7 +289,12 @@ export default function LyricsDetailClient() {
                     errorKind,
                 });
                 setVocals((vocalsData || []).filter((v) => v.musicId === musicId));
-                setOutsideCharacters(outsideCharsData || {});
+                // Build outside character name map
+                const outsideCharMap: Record<number, string> = {};
+                for (const oc of outsideCharsData) {
+                    outsideCharMap[oc.id] = oc.name;
+                }
+                setOutsideCharacters(outsideCharMap);
             })
             .catch(() => {
                 if (!cancelled) {
