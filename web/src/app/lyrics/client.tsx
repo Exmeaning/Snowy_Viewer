@@ -55,9 +55,7 @@ function LyricsContent() {
         const indexRequest = fetchLyricsIndex();
         Promise.all([
             indexRequest,
-            indexRequest.then((index) => fetchLyricsMusicCatalog(new Set(
-                index.songs.filter(hasLyricsDetail).map((item) => item.musicId),
-            ))),
+            fetchLyricsMusicCatalog(new Set()),
             fetchMasterData<IMusicTagInfo[]>("musicTags.json"),
             fetchMasterData<{ musicId: number }[]>("eventMusics.json"),
         ])
@@ -120,19 +118,18 @@ function LyricsContent() {
         replaceCurrentUrlSearchParams(params);
     }, [hasEventOnly, searchQuery, selectedCategories, selectedTag, sortBy, sortOrder]);
 
-    const totalPublishedMusics = useMemo(
+    const nonInstrumentalMusics = useMemo(
         () => musics.filter((music) => {
             const lyrics = lyricsByMusicId.get(music.id);
-            return lyrics ? hasLyricsDetail(lyrics) : false;
-        }).length,
+            return lyrics?.state !== "satisfied_no_lyrics";
+        }),
         [lyricsByMusicId, musics],
     );
 
+    const totalMusics = nonInstrumentalMusics.length;
+
     const filteredMusics = useMemo(() => {
-        let result = musics.filter((music) => {
-            const lyrics = lyricsByMusicId.get(music.id);
-            return lyrics ? hasLyricsDetail(lyrics) : false;
-        });
+        let result = nonInstrumentalMusics;
         if (selectedTag !== "all") {
             let matchingIds: Set<number>;
             if (selectedTag === "vocaloid") {
@@ -174,7 +171,7 @@ function LyricsContent() {
             const difference = sortBy === "id" ? left.id - right.id : left.publishedAt - right.publishedAt;
             return sortOrder === "asc" ? difference : -difference;
         });
-    }, [deferredSearchQuery, eventMusicIds, hasEventOnly, isShowSpoiler, lyricsByMusicId, musicAliasesById, musicTags, musics, now, selectedCategories, selectedTag, sortBy, sortOrder]);
+    }, [deferredSearchQuery, eventMusicIds, hasEventOnly, isShowSpoiler, lyricsByMusicId, musicAliasesById, musicTags, nonInstrumentalMusics, now, selectedCategories, selectedTag, sortBy, sortOrder]);
 
     const waitingForAliasMatch = !isLoading
         && !aliasIndexSettled
@@ -234,7 +231,7 @@ function LyricsContent() {
                 { id: "id", label: t("common.filter.sortById") },
             ]}
             onReset={resetFilters}
-            totalMusics={totalPublishedMusics}
+            totalMusics={totalMusics}
             filteredMusics={filteredMusics.length}
         />
     );
@@ -246,7 +243,7 @@ function LyricsContent() {
         searchQuery,
         sortBy,
         sortOrder,
-        totalPublishedMusics,
+        totalMusics,
         filteredMusics.length,
     ]);
 
@@ -304,10 +301,13 @@ function LyricsContent() {
                                 <div className={MUSIC_GRID_CLASS}>
                                     {filteredMusics.slice(0, displayCount).map((music) => {
                                         const lyrics = lyricsByMusicId.get(music.id);
+                                        const hasDetail = lyrics ? hasLyricsDetail(lyrics) : false;
                                         const versions = lyrics ? getLyricsAvailableVersions(lyrics) : [];
-                                        const versionLabel = versions.length === 1 && versions[0] === "game"
-                                            ? "page.lyrics.versionGame"
-                                            : versions.length === 2 ? "page.lyrics.versionFullAndGame" : "page.lyrics.versionFull";
+                                        const versionLabel = !hasDetail
+                                            ? "page.lyrics.inProgressBadge"
+                                            : versions.length === 1 && versions[0] === "game"
+                                                ? "page.lyrics.versionGame"
+                                                : versions.length === 2 ? "page.lyrics.versionFullAndGame" : "page.lyrics.versionFull";
                                         return (
                                             <div key={music.id} className="min-w-0">
                                                 <MusicItem

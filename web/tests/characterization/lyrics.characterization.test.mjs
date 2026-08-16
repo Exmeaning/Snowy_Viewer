@@ -39,6 +39,7 @@ const DEFAULT_HTTPS_PORT = 443;
 const MAX_TCP_PORT = 65_535;
 const LOOPBACK_TEST_PORTS = [DEFAULT_HTTP_PORT, DEFAULT_HTTPS_PORT, MAX_TCP_PORT].map(String);
 const SINGLE_INCREMENT = 1;
+const UNPUBLISHED_MUSIC_ID = 900_001;
 const OVERSIZED_BYTE_INCREMENT = SINGLE_INCREMENT;
 const STRICT_JSON_MAX_DEPTH = 64;
 const STRICT_JSON_OVERFLOW_DEPTH = STRICT_JSON_MAX_DEPTH + SINGLE_INCREMENT;
@@ -369,13 +370,24 @@ async function importLyricsDetailPage() {
 };`,
     ],
     [
-      'import { fetchLyricsDocument, isLyricsUnavailableError } from "@/lib/lyrics";',
+      'import { fetchLyricsDocument, getPublishedLyricsIndexEntry, isLyricsUnavailableError } from "@/lib/lyrics";',
       `const fetchLyricsDocument = async (musicId) => {
   globalThis.__lyricsDetailSeoTest.calls.push(["document", musicId]);
   if (globalThis.__lyricsDetailSeoTest.error) throw globalThis.__lyricsDetailSeoTest.error;
   return globalThis.__lyricsDetailSeoTest.document;
 };
+const getPublishedLyricsIndexEntry = async (musicId) => {
+  globalThis.__lyricsDetailSeoTest.calls.push(["publication", musicId]);
+  return globalThis.__lyricsDetailSeoTest.publication ?? null;
+};
 const isLyricsUnavailableError = (error) => error?.status === globalThis.__lyricsDetailSeoTest.notFoundStatus;`,
+    ],
+    [
+      'import { fetchLyricsMusicById } from "@/lib/lyrics-music-source";',
+      `const fetchLyricsMusicById = async (musicId) => {
+  globalThis.__lyricsDetailSeoTest.calls.push(["musicById", musicId]);
+  return globalThis.__lyricsDetailSeoTest.musicFound ? { id: musicId } : null;
+};`,
     ],
     [
       'import { defineLyricsDetailClientPage } from "@/lib/seo-detail-metadata";',
@@ -1680,8 +1692,11 @@ test("lyrics publication lookup gates detail routes on the published index", asy
   const layout = readWeb("src/app/lyrics/[musicId]/layout.tsx");
   assert.match(page, /fetchLyricsDocument/);
   assert.match(page, /isLyricsUnavailableError/);
+  assert.match(page, /getPublishedLyricsIndexEntry/);
+  assert.match(page, /fetchLyricsMusicById/);
   assert.match(layout, /createDetailFallbackMetadata\("lyrics"/);
-  assert.match(page, /canonicalMusicId === null \|\| !await hasAvailableLyrics\(canonicalMusicId\)/);
+  assert.match(page, /resolveLyricsDetailMode\(canonicalMusicId\)/);
+  assert.match(page, /publication\?\.state === "satisfied_no_lyrics"/);
   assert.match(page, /\^\[1-9\]\\d\*\$/);
 });
 
@@ -1690,6 +1705,8 @@ test("lyrics detail SEO and page require an available detail while preserving up
   const state = {
     document: fixture.document,
     error: { status: HTTP_NOT_FOUND },
+    publication: null,
+    musicFound: false,
     notFoundError,
     notFoundStatus: HTTP_NOT_FOUND,
     calls: [],
@@ -1716,7 +1733,9 @@ test("lyrics detail SEO and page require an available detail while preserving up
       (error) => error === notFoundError,
     );
     assert.deepEqual(state.calls, [
+      ["publication", unavailableMusicId],
       ["document", unavailableMusicId],
+      ["musicById", unavailableMusicId],
       ["notFound"],
     ]);
 
@@ -1730,6 +1749,7 @@ test("lyrics detail SEO and page require an available detail while preserving up
     assert.deepEqual(state.calls, [
       ["document", fixture.document.musicId],
       ["detailMetadata", { id: String(fixture.document.musicId) }],
+      ["publication", fixture.document.musicId],
       ["document", fixture.document.musicId],
       ["detailPage", { id: String(fixture.document.musicId) }],
     ]);
@@ -1759,7 +1779,11 @@ test("lyrics detail SEO and page require an available detail while preserving up
       page.default({ params: Promise.resolve({ musicId: String(fixture.document.musicId) }) }),
       (error) => error === state.error,
     );
-    assert.deepEqual(state.calls, [["document", fixture.document.musicId], ["document", fixture.document.musicId]]);
+    assert.deepEqual(state.calls, [
+      ["document", fixture.document.musicId],
+      ["publication", fixture.document.musicId],
+      ["document", fixture.document.musicId],
+    ]);
 
     state.error = new Error("malformed lyrics payload");
     state.calls.length = 0;
@@ -1771,7 +1795,46 @@ test("lyrics detail SEO and page require an available detail while preserving up
       page.default({ params: Promise.resolve({ musicId: String(fixture.document.musicId) }) }),
       (error) => error === state.error,
     );
-    assert.deepEqual(state.calls, [["document", fixture.document.musicId], ["document", fixture.document.musicId]]);
+    assert.deepEqual(state.calls, [
+      ["document", fixture.document.musicId],
+      ["publication", fixture.document.musicId],
+      ["document", fixture.document.musicId],
+    ]);
+
+    // Unpublished songs that exist in the catalog render the page so the
+    // client can show metadata, audio, and the in-progress notice.
+    const draftMusicId = Number.MAX_SAFE_INTEGER - SINGLE_INCREMENT;
+    state.error = { status: HTTP_NOT_FOUND };
+    state.publication = null;
+    state.musicFound = true;
+    state.calls.length = 0;
+    assert.equal(
+      await page.default({ params: Promise.resolve({ musicId: String(draftMusicId) }) }),
+      "published-detail-page",
+    );
+    assert.deepEqual(state.calls, [
+      ["publication", draftMusicId],
+      ["document", draftMusicId],
+      ["musicById", draftMusicId],
+      ["detailPage", { id: String(draftMusicId) }],
+    ]);
+
+    // Reviewed instrumental entries stay behind the not-found boundary.
+    const instrumental = fixtureV2.index.songs.find((song) => song.state === "satisfied_no_lyrics");
+    assert.ok(instrumental, "the v2 fixture must carry a catalog_instrumental entry");
+    state.error = { status: HTTP_NOT_FOUND };
+    state.publication = instrumental;
+    state.musicFound = true;
+    state.calls.length = 0;
+    await assert.rejects(
+      page.default({ params: Promise.resolve({ musicId: String(instrumental.musicId) }) }),
+      (error) => error === notFoundError,
+    );
+    assert.deepEqual(state.calls, [
+      ["publication", instrumental.musicId],
+      ["document", instrumental.musicId],
+      ["notFound"],
+    ]);
   } finally {
     delete globalThis.__lyricsDetailSeoTest;
   }
@@ -1779,6 +1842,7 @@ test("lyrics detail SEO and page require an available detail while preserving up
   const preset = readWeb("src/lib/seo-detail-metadata.ts");
   assert.match(preset, /kind: "lyrics",[\s\S]*routePrefix: "lyrics",[\s\S]*parentPageKey: "lyrics", entity: \{ type: "MusicRecording" \}/);
   assert.match(readWeb("src/app/lyrics/[musicId]/page.tsx"), /defineLyricsDetailClientPage\(LyricsDetailClient\)/);
+  assert.match(readWeb("src/app/lyrics/[musicId]/page.tsx"), /resolveLyricsDetailMode|publication\?\.state === "satisfied_no_lyrics"/);
   assert.match(readWeb("src/app/lyrics/[musicId]/layout.tsx"), /export async function generateMetadata/);
   assert.match(readWeb("src/lib/seo-metadata.ts"), /createDetailFallbackMetadata[\s\S]*robots: missingDetailRobots\(\)/);
 });
@@ -1885,6 +1949,55 @@ test("lyrics detail client renders the canonical committed fixture successfully"
     assert.match(rendered.text, new RegExp(fixture.document.lines[0]["en-US"]));
     assert.match(rendered.html, /md:grid-cols-2/);
     assert.doesNotMatch(rendered.text, /page\.lyrics\.(?:error|notFound)/);
+  } finally {
+    delete globalThis.__lyricsClientRuntimeTest;
+  }
+});
+
+test("lyrics detail client keeps unpublished songs visible with metadata and an in-progress notice", async () => {
+  try {
+    const lyrics = await importLyrics();
+    const rendered = await renderLyricsClientRuntime(lyrics, (state) => {
+      state.musicId = UNPUBLISHED_MUSIC_ID;
+      state.document = null;
+      state.publication = null;
+      state.error = new lyrics.LyricsLoadError("unpublished lyrics", HTTP_NOT_FOUND);
+      state.musics = [{
+        id: UNPUBLISHED_MUSIC_ID,
+        title: "Unpublished Song",
+        assetbundleName: "unpublished_song",
+        categories: [],
+      }];
+    });
+    assert.match(rendered.text, /Unpublished Song/);
+    assert.match(rendered.text, /page\.lyrics\.inProgressBadge/);
+    assert.match(rendered.text, /page\.lyrics\.draftTitle/);
+    assert.match(rendered.text, /page\.lyrics\.draftDescription/);
+    assert.match(rendered.text, /page\.music\.goToMusicDetail/);
+    assert.doesNotMatch(rendered.text, /page\.lyrics\.(?:error|notFound|revision)/);
+  } finally {
+    delete globalThis.__lyricsClientRuntimeTest;
+  }
+});
+
+test("lyrics detail client keeps the instrumental catalog boundary as a 404 instead of an in-progress draft", async () => {
+  try {
+    const lyrics = await importLyrics();
+    const instrumental = fixtureV2.index.songs.find((song) => song.state === "satisfied_no_lyrics");
+    assert.ok(instrumental, "the v2 fixture must carry a catalog_instrumental entry");
+    const rendered = await renderLyricsClientRuntime(lyrics, (state) => {
+      state.musicId = instrumental.musicId;
+      state.document = null;
+      state.publication = instrumental;
+      state.musics = [{
+        id: instrumental.musicId,
+        title: instrumental.title["en-US"] ?? instrumental.title["ja-JP"],
+        assetbundleName: instrumental.title["ja-JP"],
+        categories: [],
+      }];
+    });
+    assert.match(rendered.text, /page\.lyrics\.notFound/);
+    assert.doesNotMatch(rendered.text, /page\.lyrics\.(?:error|draftTitle|inProgressBadge)/);
   } finally {
     delete globalThis.__lyricsClientRuntimeTest;
   }
@@ -2856,6 +2969,35 @@ test("lyrics detail client localizes 404 races and separates upstream failures w
     assert.match(failedText, /page\.lyrics\.error/);
     assert.doesNotMatch(failedText, /page\.lyrics\.notFound/);
     assert.doesNotMatch(failedText, new RegExp(failureMessage));
+
+    // With music metadata available, upstream failures must never masquerade
+    // as an in-progress draft.
+    const failedWithMusic = await renderLyricsClientRuntime(lyrics, (state) => {
+      state.error = new lyrics.LyricsLoadError(failureMessage, HTTP_SERVICE_UNAVAILABLE);
+      state.musics = [{
+        id: fixture.document.musicId,
+        title: "Published Song",
+        assetbundleName: "published_song",
+        categories: [],
+      }];
+    });
+    assert.match(failedWithMusic.text, /page\.lyrics\.error/);
+    assert.doesNotMatch(failedWithMusic.text, /page\.lyrics\.draftTitle/);
+    assert.doesNotMatch(failedWithMusic.text, new RegExp(failureMessage));
+
+    // An index-published song whose document is temporarily missing keeps the
+    // not-found boundary instead of showing an in-progress draft.
+    const unavailableWithMusic = await renderLyricsClientRuntime(lyrics, (state) => {
+      state.error = new lyrics.LyricsLoadError(unavailableMessage, HTTP_NOT_FOUND);
+      state.musics = [{
+        id: fixture.document.musicId,
+        title: "Published Song",
+        assetbundleName: "published_song",
+        categories: [],
+      }];
+    });
+    assert.match(unavailableWithMusic.text, /page\.lyrics\.notFound/);
+    assert.doesNotMatch(unavailableWithMusic.text, /page\.lyrics\.draftTitle/);
   } finally {
     delete globalThis.__lyricsClientRuntimeTest;
   }
@@ -3397,6 +3539,7 @@ test("lyrics list and detail retain loading, empty, error, long-line, mobile, an
   const layout = readWeb("src/components/music/music-layout.ts");
 
   assert.match(list, /fetchLyricsIndex\(\)/);
+  assert.match(list, /fetchLyricsMusicCatalog\(new Set\(\)\)/);
   assert.match(list, /Aliases are optional and must not delay the primary lyrics catalog/);
   assert.match(list, /fetch\(LYRICS_ALIAS_INDEX_URL, \{ signal: controller\.signal \}\)/);
   assert.match(list, /setMusicAliasesById\(buildMusicAliasesById\(items\)\)/);
@@ -3412,7 +3555,10 @@ test("lyrics list and detail retain loading, empty, error, long-line, mobile, an
   assert.doesNotMatch(list, /<main className="min-w-0 flex-1"/);
   assert.match(list, /<MusicItem/);
   assert.match(list, /hrefBase="\/lyrics"/);
+  assert.match(list, /lyrics\?\.state !== "satisfied_no_lyrics"/,
+    "the lyrics list must hide only reviewed instrumental entries, not unpublished songs");
   assert.match(list, /hasLyricsDetail\(lyrics\)/);
+  assert.match(list, /page\.lyrics\.inProgressBadge/);
   assert.match(list, /getLyricsAvailableVersions\(lyrics\)/);
   assert.match(list, /page\.lyrics\.versionFullAndGame/);
   assert.match(list, /page\.lyrics\.versionFull/);
@@ -3440,6 +3586,10 @@ test("lyrics list and detail retain loading, empty, error, long-line, mobile, an
   assert.match(detail, /<ExternalLink/);
   assert.match(detail, /page\.lyrics\.translationFallback/);
   assert.match(detail, /page\.lyrics\.attribution/);
+  assert.match(detail, /publication\?\.state === "satisfied_no_lyrics"/,
+    "only reviewed instrumental songs may stay behind the not-found boundary");
+  assert.match(detail, /page\.lyrics\.draftTitle/);
+  assert.match(detail, /page\.lyrics\.draftDescription/);
   assert.doesNotMatch(detail, /romaji|romanized|romanization/i);
   assert.ok(fixture.document.attribution);
   assert.match(layout, /grid-cols-2 sm:grid-cols-3 md:grid-cols-4/);

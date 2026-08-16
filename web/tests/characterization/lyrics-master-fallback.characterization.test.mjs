@@ -32,7 +32,7 @@ test("lyrics pages use a current-region-first JP fallback only for published lyr
   assert.match(source, /catch \{[\s\S]*return currentRegionMusics\.map\(normalizeLyricsMusic\)/);
 
   const list = readWeb("src/app/lyrics/client.tsx");
-  assert.match(list, /fetchLyricsMusicCatalog\(new Set\([\s\S]*index\.songs\.filter\(hasLyricsDetail\)/);
+  assert.match(list, /fetchLyricsMusicCatalog\(new Set\(\)\)/);
   assert.match(list, /setMusics\(musicData\)/);
 
   const detail = readWeb("src/app/lyrics/\[musicId\]/client.tsx");

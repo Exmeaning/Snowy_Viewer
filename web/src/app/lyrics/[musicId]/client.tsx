@@ -309,6 +309,7 @@ export default function LyricsDetailClient() {
     const currentResult = result?.musicId === musicId && result.locale === locale ? result : null;
     const music = currentResult?.music ?? null;
     const lyrics = currentResult?.lyrics ?? null;
+    const publication = currentResult?.publication ?? null;
     const errorKind = currentResult?.errorKind ?? null;
     const isLoading = hasValidMusicId && !currentResult;
     const targetLocale = getLyricsTargetLocale(locale);
@@ -445,7 +446,32 @@ export default function LyricsDetailClient() {
         );
     }
 
-    if (errorKind || !lyrics || !music) {
+    if (!music || publication?.state === "satisfied_no_lyrics") {
+        return (
+            <MainLayout>
+                <div className="container mx-auto px-4 py-16">
+                    <div role="alert" className="mx-auto max-w-md text-center">
+                        <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                            <svg className="h-12 w-12 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                            </svg>
+                        </div>
+                        <h1 className="mb-2 text-2xl font-bold text-primary-text">
+                            {errorKind === "failed" ? t("page.lyrics.error") : t("page.lyrics.notFound")}
+                        </h1>
+                        <Link href="/lyrics" className="pressable ios-glass-btn ios-glass-btn-primary mt-5 inline-flex items-center gap-2 rounded-xl px-6 py-3 font-bold">
+                            <span aria-hidden="true">←</span>
+                            {t("page.lyrics.backToList")}
+                        </Link>
+                    </div>
+                </div>
+            </MainLayout>
+        );
+    }
+
+    // Upstream failures and index-published-but-missing documents stay on the
+    // error boundary; only a plain unpublished lookup renders the in-progress card.
+    if (!lyrics && errorKind !== "not-found") {
         return (
             <MainLayout>
                 <div className="container mx-auto px-4 py-16">
@@ -516,18 +542,29 @@ export default function LyricsDetailClient() {
                                 />
                             </div>
                             <div className="border-t border-slate-100/80 p-5 dark:border-slate-700/60">
-                                <dl className="space-y-3 text-sm">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <dt className="text-slate-500 dark:text-slate-400">{t("page.lyrics.revision")}</dt>
-                                        <dd className="font-mono font-bold text-primary-text">v{lyrics.revision}</dd>
-                                    </div>
-                                    <div className="flex items-start justify-between gap-4">
-                                        <dt className="text-slate-500 dark:text-slate-400">{t("page.lyrics.updatedAt")}</dt>
-                                        <dd className="text-right font-medium text-primary-text">
-                                            {formatDate(lyrics.updatedAt, { year: "numeric", month: "short", day: "numeric" })}
-                                        </dd>
-                                    </div>
-                                </dl>
+                                {lyrics ? (
+                                    <dl className="space-y-3 text-sm">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <dt className="text-slate-500 dark:text-slate-400">{t("page.lyrics.revision")}</dt>
+                                            <dd className="font-mono font-bold text-primary-text">v{lyrics.revision}</dd>
+                                        </div>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <dt className="text-slate-500 dark:text-slate-400">{t("page.lyrics.updatedAt")}</dt>
+                                            <dd className="text-right font-medium text-primary-text">
+                                                {formatDate(lyrics.updatedAt, { year: "numeric", month: "short", day: "numeric" })}
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                ) : (
+                                    <dl className="space-y-3 text-sm">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <dt className="text-slate-500 dark:text-slate-400">{t("page.lyrics.versionLabel")}</dt>
+                                            <dd className="inline-flex items-center rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                                                {t("page.lyrics.inProgressBadge")}
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                )}
                             </div>
                         </div>
 
@@ -559,104 +596,138 @@ export default function LyricsDetailClient() {
                         )}
 
                         {/* Attribution Card */}
-                        <div className="ios-glass-card overflow-hidden rounded-2xl">
-                            <div className="border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent px-5 py-4 dark:border-slate-700/60 dark:from-miku/10">
-                                <h2 className="flex items-center gap-2 font-bold text-primary-text">
-                                    <svg className="h-5 w-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {t("page.lyrics.attribution")}
-                                </h2>
-                            </div>
-                            <div className="p-5">
-                                {lyrics.version === 1 ? (
-                                    <dl className="text-sm">
-                                        <div className="space-y-1">
-                                            <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
-                                            <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                {lyrics.attribution}
-                                            </dd>
-                                        </div>
-                                    </dl>
-                                ) : translationCredits ? (
-                                    <dl className="space-y-4 text-sm">
-                                        {sharedTranslationCredit ? (
+                        {lyrics && (
+                            <div className="ios-glass-card overflow-hidden rounded-2xl">
+                                <div className="border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent px-5 py-4 dark:border-slate-700/60 dark:from-miku/10">
+                                    <h2 className="flex items-center gap-2 font-bold text-primary-text">
+                                        <svg className="h-5 w-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {t("page.lyrics.attribution")}
+                                    </h2>
+                                </div>
+                                <div className="p-5">
+                                    {lyrics.version === 1 ? (
+                                        <dl className="text-sm">
                                             <div className="space-y-1">
-                                                <dt className="font-bold text-primary-text">{t("page.lyrics.translationAndProofreading")}</dt>
+                                                <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
                                                 <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                    {sharedTranslationCredit}
+                                                    {lyrics.attribution}
                                                 </dd>
                                             </div>
-                                        ) : (
-                                            <>
-                                                {translationCredit && (
-                                                    <div className="space-y-1">
-                                                        <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
-                                                        <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                            {translationCredit}
-                                                        </dd>
+                                        </dl>
+                                    ) : translationCredits ? (
+                                        <dl className="space-y-4 text-sm">
+                                            {sharedTranslationCredit ? (
+                                                <div className="space-y-1">
+                                                    <dt className="font-bold text-primary-text">{t("page.lyrics.translationAndProofreading")}</dt>
+                                                    <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
+                                                        {sharedTranslationCredit}
+                                                    </dd>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    {translationCredit && (
+                                                        <div className="space-y-1">
+                                                            <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
+                                                            <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
+                                                                {translationCredit}
+                                                            </dd>
+                                                        </div>
+                                                    )}
+                                                    {proofreadingCredit && (
+                                                        <div className="space-y-1">
+                                                            <dt className="font-bold text-primary-text">{t("page.lyrics.proofreading")}</dt>
+                                                            <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
+                                                                {proofreadingCredit}
+                                                            </dd>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </dl>
+                                    ) : (
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                                            {t("page.lyrics.translationCreditsEmpty")}
+                                        </p>
+                                    )}
+                                </div>
+                                {attributions.length > 0 && (
+                                    <>
+                                        <div className="border-y border-slate-100/80 bg-slate-50/40 px-5 py-3 dark:border-slate-700/60 dark:bg-slate-900/20">
+                                            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                                {t("page.lyrics.sourceLicenseTitle")}
+                                            </h3>
+                                        </div>
+                                        <ul className="divide-y divide-slate-100/80 dark:divide-slate-700/60">
+                                            {attributions.map((attribution) => (
+                                                <li key={`${attribution.provider}-${attribution.revisionUrl}-${"component" in attribution ? attribution.component : "legacy"}`} className="space-y-2 p-5 text-sm">
+                                                    <div>
+                                                        <p className="font-bold text-primary-text">{t(`page.lyrics.attributionProviders.${attribution.provider}`)}</p>
+                                                        <p className="mt-0.5 break-words text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">{attribution.title}</p>
                                                     </div>
-                                                )}
-                                                {proofreadingCredit && (
-                                                    <div className="space-y-1">
-                                                        <dt className="font-bold text-primary-text">{t("page.lyrics.proofreading")}</dt>
-                                                        <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                            {proofreadingCredit}
-                                                        </dd>
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-                                    </dl>
-                                ) : (
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                                        {t("page.lyrics.translationCreditsEmpty")}
-                                    </p>
+                                                    <dl className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                                        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                                                            <dt>{t("page.lyrics.sourceRevision")}</dt>
+                                                            <dd>
+                                                                <ExternalLink href={attribution.revisionUrl} className="font-mono font-bold text-miku hover:underline">
+                                                                    {attribution.revisionId}
+                                                                </ExternalLink>
+                                                            </dd>
+                                                        </div>
+                                                        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                                                            <dt>{t("page.lyrics.sourceLicense")}</dt>
+                                                            <dd>
+                                                                <ExternalLink href={attribution.licenseUrl} className="font-medium text-miku hover:underline">
+                                                                    {attribution.licenseName}
+                                                                </ExternalLink>
+                                                            </dd>
+                                                        </div>
+                                                    </dl>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </>
                                 )}
                             </div>
-                            {attributions.length > 0 && (
-                                <>
-                                    <div className="border-y border-slate-100/80 bg-slate-50/40 px-5 py-3 dark:border-slate-700/60 dark:bg-slate-900/20">
-                                        <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                            {t("page.lyrics.sourceLicenseTitle")}
-                                        </h3>
-                                    </div>
-                                    <ul className="divide-y divide-slate-100/80 dark:divide-slate-700/60">
-                                        {attributions.map((attribution) => (
-                                            <li key={`${attribution.provider}-${attribution.revisionUrl}-${"component" in attribution ? attribution.component : "legacy"}`} className="space-y-2 p-5 text-sm">
-                                                <div>
-                                                    <p className="font-bold text-primary-text">{t(`page.lyrics.attributionProviders.${attribution.provider}`)}</p>
-                                                    <p className="mt-0.5 break-words text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">{attribution.title}</p>
-                                                </div>
-                                                <dl className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
-                                                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                                                        <dt>{t("page.lyrics.sourceRevision")}</dt>
-                                                        <dd>
-                                                            <ExternalLink href={attribution.revisionUrl} className="font-mono font-bold text-miku hover:underline">
-                                                                {attribution.revisionId}
-                                                            </ExternalLink>
-                                                        </dd>
-                                                    </div>
-                                                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                                                        <dt>{t("page.lyrics.sourceLicense")}</dt>
-                                                        <dd>
-                                                            <ExternalLink href={attribution.licenseUrl} className="font-medium text-miku hover:underline">
-                                                                {attribution.licenseName}
-                                                            </ExternalLink>
-                                                        </dd>
-                                                    </div>
-                                                </dl>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </>
-                            )}
-                        </div>
+                        )}
                     </aside>
 
                     <section className="min-w-0">
-                        <div className="ios-glass-card overflow-hidden rounded-2xl">
-                            <div className="flex flex-col gap-3 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent px-5 py-4 dark:border-slate-700/60 dark:from-miku/10 sm:flex-row sm:items-center sm:justify-between">
+                        {!lyrics ? (
+                            <div className="ios-glass-card overflow-hidden rounded-2xl p-8 sm:p-12 text-center">
+                                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-miku/10 text-miku">
+                                    <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </div>
+                                <div className="inline-flex items-center gap-2 px-3 py-1 border border-miku/30 bg-miku/5 rounded-full mb-3">
+                                    <span className="text-miku text-xs font-bold tracking-wider">{t("page.lyrics.inProgressBadge")}</span>
+                                </div>
+                                <h2 className="text-2xl font-bold text-primary-text mb-3">{t("page.lyrics.draftTitle")}</h2>
+                                <p className="max-w-md mx-auto text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
+                                    {t("page.lyrics.draftDescription")}
+                                </p>
+                                <div className="flex flex-wrap items-center justify-center gap-4">
+                                    <Link
+                                        href={`/music/${music.id}`}
+                                        className="pressable ios-glass-btn inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-miku dark:text-slate-300"
+                                    >
+                                        <span>{t("page.music.goToMusicDetail")}</span>
+                                        <span aria-hidden="true">→</span>
+                                    </Link>
+                                    <Link
+                                        href="/lyrics"
+                                        className="pressable ios-glass-btn ios-glass-btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold"
+                                    >
+                                        <span aria-hidden="true">←</span>
+                                        <span>{t("page.lyrics.backToList")}</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="ios-glass-card overflow-hidden rounded-2xl">
+                                <div className="flex flex-col gap-3 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent px-5 py-4 dark:border-slate-700/60 dark:from-miku/10 sm:flex-row sm:items-center sm:justify-between">
                                 <h2 className="flex shrink-0 items-center gap-2 font-bold text-primary-text">
                                     <svg className="h-5 w-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
@@ -782,7 +853,8 @@ export default function LyricsDetailClient() {
                                 </div>
                             )}
                         </div>
-                    </section>
+                    )}
+                </section>
                 </div>
 
                 <div className="mt-12 text-center">
