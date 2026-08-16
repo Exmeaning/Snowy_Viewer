@@ -804,6 +804,64 @@ test("Public Lyrics v1 accepts bounded empty performer assignments for Vocaloid-
   }
 });
 
+test("database-overlaid legacy v1 details validate under the reviewed v3 index", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  try {
+    const v3Index = {
+      version: 3,
+      songs: [{
+        musicId: UNPUBLISHED_MUSIC_ID,
+        revision: 2,
+        updatedAt: "2026-08-16T09:24:07Z",
+        state: "complete",
+        title: { "ja-JP": "Blessing", "zh-CN": "Blessing" },
+        availableVersions: ["full"],
+      }],
+    };
+    const v1Detail = {
+      version: 1,
+      musicId: UNPUBLISHED_MUSIC_ID,
+      revision: 2,
+      updatedAt: "2026-08-16T09:24:07Z",
+      attribution: "雪莹ちゃん",
+      lines: [{
+        id: "line-1",
+        order: 0,
+        japanese: "Blessings for your birthday",
+        "zh-CN": "",
+        "en-US": "",
+        segments: [{ text: "Blessings for your birthday", performerIds: [21] }],
+      }],
+    };
+    globalThis.fetch = async (url) => jsonResponse(
+      String(url).endsWith("/index.json") ? v3Index : v1Detail,
+    );
+    const lyrics = await importLyrics();
+    const document = await lyrics.fetchLyricsDocument(UNPUBLISHED_MUSIC_ID);
+    assert.equal(document.version, 1);
+    assert.equal(document.lines[0].japanese, "Blessings for your birthday");
+    assert.deepEqual(lyrics.getLyricsAvailableVersions(document), ["full"]);
+
+    const staleDetail = structuredClone(v1Detail);
+    staleDetail.updatedAt = "2026-08-15T09:24:07Z";
+    globalThis.fetch = async (url) => jsonResponse(
+      String(url).endsWith("/index.json") ? v3Index : staleDetail,
+    );
+    const staleLyrics = await importLyrics();
+    await assert.rejects(
+      staleLyrics.fetchLyricsDocument(UNPUBLISHED_MUSIC_ID),
+      /Invalid lyrics document/,
+      "a legacy detail that drifts from the index publication must still fail closed",
+    );
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
 test("Public Lyrics v2 loads complete and explicit Game-only details while text-free states stay index-only", async () => {
   const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
   process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;

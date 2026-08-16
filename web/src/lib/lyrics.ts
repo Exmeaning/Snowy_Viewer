@@ -1244,9 +1244,12 @@ function validateDocumentV3(value: Record<string, unknown>, publication: ILyrics
 }
 
 function validateDocument(value: unknown, publication: ILyricsIndexEntry, indexVersion: ILyricsIndex["version"]): ILyricsDocument {
+    if (!isObject(value)) throw new LyricsLoadError("Invalid lyrics document");
+    // Database-overlaid legacy publications are served as version-1 details
+    // inside the reviewed v3 index; they validate with the legacy v1 rules.
+    const isLegacyDetailUnderV3Index = indexVersion === LYRICS_SCHEMA_VERSION_V3 && value.version === LYRICS_SCHEMA_VERSION_V1;
     if (
-        !isObject(value)
-        || value.version !== indexVersion
+        value.version !== indexVersion && !isLegacyDetailUnderV3Index
         || value.musicId !== publication.musicId
         || value.revision !== publication.revision
         || !isDateTime(value.updatedAt)
@@ -1255,12 +1258,12 @@ function validateDocument(value: unknown, publication: ILyricsIndexEntry, indexV
         throw new LyricsLoadError("Invalid lyrics document");
     }
     if (indexVersion === LYRICS_SCHEMA_VERSION_V4) return validateDocumentV4(value, publication);
-    if (indexVersion === LYRICS_SCHEMA_VERSION_V3) return validateDocumentV3(value, publication);
+    if (indexVersion === LYRICS_SCHEMA_VERSION_V3 && !isLegacyDetailUnderV3Index) return validateDocumentV3(value, publication);
     if (!Array.isArray(value.lines) || value.lines.length === 0 || value.lines.length > MAX_LYRICS_LINES) {
         throw new LyricsLoadError("Invalid lyrics document");
     }
 
-    const isV1 = indexVersion === LYRICS_SCHEMA_VERSION_V1;
+    const isV1 = indexVersion === LYRICS_SCHEMA_VERSION_V1 || isLegacyDetailUnderV3Index;
     if (isV1) {
         if (
             !hasOnlyKeys(value, ["version", "musicId", "revision", "updatedAt", "attribution", "lines"])
