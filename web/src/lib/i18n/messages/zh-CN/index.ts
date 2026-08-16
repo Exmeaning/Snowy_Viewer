@@ -1588,7 +1588,7 @@ export const zhCNMessages = {
             emptyDocument: "该歌词文件目前没有可显示的行",
             contentTitle: "歌词正文",
             japanese: "日文原文",
-            chinese: "简体中文",
+            chinese: "歌词翻译",
             english: "English",
             sourceFallback: "暂无目标语言翻译，显示日文原文",
             attribution: "翻译署名",
