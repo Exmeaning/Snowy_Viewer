@@ -16,21 +16,23 @@ async function importNavigation(lyricsEntryVisible) {
   ]);
 }
 
-test("lyrics entry points default to hidden while direct route metadata remains available", async () => {
+test("lyrics entry points default to visible and the switch can still hide them", async () => {
   const visibility = await importWebTypeScript("src/lib/lyrics-visibility.ts");
-  assert.equal(visibility.LYRICS_ENTRY_VISIBLE, false);
+  assert.equal(visibility.LYRICS_ENTRY_VISIBLE, true);
 
-  const navigation = await importNavigation(false);
+  const navigation = await importNavigation(true);
   const database = navigation.navigationGroups.find((group) => group.href === "/breadcrumb-database");
-  assert.ok(database);
-  assert.equal(database.items.some((item) => item.href === "/lyrics"), false);
-  assert.equal(navigation.searchableNavItems.some((item) => item.href === "/lyrics"), false);
+  assert.ok(database?.items.some((item) => item.href === "/lyrics"));
+  assert.ok(navigation.searchableNavItems.some((item) => item.href === "/lyrics"));
+  assert.ok(navigation.findNavMatch("/music/39")?.group.items.some((item) => item.href === "/lyrics"));
 
-  const musicMatch = navigation.findNavMatch("/en-us/music/39");
-  assert.equal(musicMatch?.item.href, "/music");
-  assert.equal(musicMatch?.group.items.some((item) => item.href === "/lyrics"), false);
+  const hidden = await importNavigation(false);
+  const hiddenDatabase = hidden.navigationGroups.find((group) => group.href === "/breadcrumb-database");
+  assert.ok(hiddenDatabase);
+  assert.equal(hiddenDatabase.items.some((item) => item.href === "/lyrics"), false);
+  assert.equal(hidden.searchableNavItems.some((item) => item.href === "/lyrics"), false);
 
-  const lyricsMatch = navigation.findNavMatch("/zh-cn/lyrics/39");
+  const lyricsMatch = hidden.findNavMatch("/zh-cn/lyrics/39");
   assert.equal(lyricsMatch?.item.href, "/lyrics");
   assert.equal(
     lyricsMatch?.group.items.some((item) => item.href === "/lyrics"),
