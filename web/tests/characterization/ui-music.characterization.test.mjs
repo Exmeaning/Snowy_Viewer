@@ -254,6 +254,31 @@ test("music SEO remains server-wired for list and detail independently of lyrics
   assert.match(readWeb("src/lib/seo-keywords.ts"), /music: definePage\(\s*"\/music"/);
 });
 
+test("2D chart SVG normalization rewrites relative note asset paths and fixes negative rect dimensions", () => {
+  const routeSource = readWeb("src/app/chart-svg/[musicId]/[difficulty]/route.ts");
+  assert.match(routeSource, /export async function GET/);
+
+  const match = routeSource.match(/export function normalizeChartSvg\((?:[\s\S]*?\n\})/);
+  assert.ok(match, "normalizeChartSvg should be exported");
+  const js = stripTypeScriptTypes(match[0].replace(/^export\s+/, ""), { mode: "transform" });
+  const normalizeChartSvg = new Function(
+    "ABSOLUTE_NOTES_BASE",
+    `${js}\nreturn normalizeChartSvg;`,
+  )("https://charts-new.unipjsk.com/moe/notes_new/");
+
+  const sampleSvg = `<svg xmlns="http://www.w3.org/2000/svg"><defs><symbol id="notes-0"><image href="../../notes_new/custom01/notes_0.png" width="118"/></symbol><clipPath id="test"><rect x="0" y="0" width="-3.142857" height="30"/></clipPath></defs></svg>`;
+  const normalized = normalizeChartSvg(sampleSvg);
+
+  assert.ok(!normalized.includes("../../notes_new/"), "Relative notes_new path should be removed");
+  assert.ok(normalized.includes("https://charts-new.unipjsk.com/moe/notes_new/custom01/notes_0.png"), "Absolute notes CDN URL should be used");
+  assert.ok(!normalized.includes('width="-3.142857"'), "Negative rect width should be removed");
+  assert.ok(normalized.includes('width="0"'), "Negative rect width should become 0");
+
+  const assetsSource = readWeb("src/lib/assets.ts");
+  assert.match(assetsSource, /export function getChartSvgUrl\(musicId:\s*number,\s*difficulty:\s*string/);
+  assert.match(assetsSource, /`\/chart-svg\/\$\{musicId\}\/\$\{difficulty\}\.svg`/);
+});
+
 function runNodeScript(relativePath) {
   return spawnSync(process.execPath, [relativePath], {
     cwd: WEB_ROOT,
