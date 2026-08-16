@@ -104,7 +104,8 @@ interface ILyricsDocumentBase {
 
 export interface ILyricsDocumentV1 extends ILyricsDocumentBase {
     version: typeof LYRICS_SCHEMA_VERSION_V1;
-    attribution: string;
+    attribution?: string;
+    attributions?: ILyricsAttribution[];
     lines: ILyricsLineV1[];
 }
 
@@ -1266,10 +1267,12 @@ function validateDocument(value: unknown, publication: ILyricsIndexEntry, indexV
     const isV1 = indexVersion === LYRICS_SCHEMA_VERSION_V1 || isLegacyDetailUnderV3Index;
     if (isV1) {
         if (
-            !hasOnlyKeys(value, ["version", "musicId", "revision", "updatedAt", "attribution", "lines"])
-            || typeof value.attribution !== "string"
-            || value.attribution.trim().length === 0
-            || value.attribution.length > MAX_LYRICS_ATTRIBUTION_LENGTH
+            !hasOnlyKeys(value, ["version", "musicId", "revision", "updatedAt", "attribution", "attributions", "lines"])
+            || (value.attribution !== undefined && (typeof value.attribution !== "string"
+                || value.attribution.trim().length === 0
+                || value.attribution.length > MAX_LYRICS_ATTRIBUTION_LENGTH))
+            || (value.attributions !== undefined && !isAttributions(value.attributions))
+            || (value.attribution === undefined && value.attributions === undefined)
         ) {
             throw new LyricsLoadError("Invalid lyrics document");
         }
