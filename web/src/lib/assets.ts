@@ -201,7 +201,7 @@ export function getMusicScoreUrl(musicId: number, difficulty: string, source: As
 }
 
 export function getChartSvgUrl(musicId: number, difficulty: string, _source: AssetSourceType = "main-jp"): string {
-    return `https://charts-new.unipjsk.com/moe/svg/${musicId}/${difficulty}.svg`;
+    return `/chart-svg/${musicId}/${difficulty}.svg`;
 }
 
 export function getMusicJacketUrl(assetbundleName: string, source: AssetSourceType = "main-jp"): string {
