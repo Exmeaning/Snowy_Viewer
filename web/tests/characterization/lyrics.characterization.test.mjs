@@ -862,6 +862,72 @@ test("database-overlaid legacy v1 details validate under the reviewed v3 index",
   }
 });
 
+test("source-only legacy v1 details carry the source card without a translator credit", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  try {
+    const v3Index = {
+      version: 3,
+      songs: [{
+        musicId: UNPUBLISHED_MUSIC_ID,
+        revision: 2,
+        updatedAt: "2026-08-16T09:24:07Z",
+        state: "complete",
+        title: { "ja-JP": "Test Song" },
+        availableVersions: ["full"],
+      }],
+    };
+    const sourceOnlyDetail = {
+      version: 1,
+      musicId: UNPUBLISHED_MUSIC_ID,
+      revision: 2,
+      updatedAt: "2026-08-16T09:24:07Z",
+      attributions: [{
+        provider: "sekaipedia",
+        title: "Test Song",
+        revisionId: 123,
+        revisionUrl: "https://www.sekaipedia.org/wiki/Test_Song?oldid=123",
+        licenseName: "CC BY-SA 4.0",
+        licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+      }],
+      lines: [{
+        id: "line-1",
+        order: 0,
+        japanese: "日本語の歌詞",
+        "zh-CN": "",
+        "en-US": "",
+        segments: [{ text: "日本語の歌詞", performerIds: [21] }],
+      }],
+    };
+    globalThis.fetch = async (url) => jsonResponse(
+      String(url).endsWith("/index.json") ? v3Index : sourceOnlyDetail,
+    );
+    const lyrics = await importLyrics();
+    const document = await lyrics.fetchLyricsDocument(UNPUBLISHED_MUSIC_ID);
+    assert.equal(document.version, 1);
+    assert.equal(document.attribution, undefined);
+    assert.equal(document.attributions.length, 1);
+    assert.equal(document.attributions[0].provider, "sekaipedia");
+
+    const creditless = structuredClone(sourceOnlyDetail);
+    delete creditless.attributions;
+    globalThis.fetch = async (url) => jsonResponse(
+      String(url).endsWith("/index.json") ? v3Index : creditless,
+    );
+    const creditlessLyrics = await importLyrics();
+    await assert.rejects(
+      creditlessLyrics.fetchLyricsDocument(UNPUBLISHED_MUSIC_ID),
+      /Invalid lyrics document/,
+      "a v1 detail with neither credit nor source card must fail closed",
+    );
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
 test("Public Lyrics v2 loads complete and explicit Game-only details while text-free states stay index-only", async () => {
   const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
   process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;

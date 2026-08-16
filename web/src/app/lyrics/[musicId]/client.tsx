@@ -349,7 +349,7 @@ export default function LyricsDetailClient() {
         : undefined;
     const attributions = getLyricsDisplayAttributions(
         activeRendition?.provenance
-            ?? (lyrics?.version === 2 ? lyrics.attributions : []),
+            ?? ((lyrics?.version === 1 || lyrics?.version === 2) ? (lyrics.attributions ?? []) : []),
     );
     const translationCredit = translationCredits?.translation?.trim();
     const proofreadingCredit = translationCredits?.proofreading?.trim();
@@ -613,14 +613,20 @@ export default function LyricsDetailClient() {
                                 </div>
                                 <div className="p-5">
                                     {lyrics.version === 1 ? (
-                                        <dl className="text-sm">
-                                            <div className="space-y-1">
-                                                <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
-                                                <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                    {lyrics.attribution}
-                                                </dd>
-                                            </div>
-                                        </dl>
+                                        lyrics.attribution ? (
+                                            <dl className="text-sm">
+                                                <div className="space-y-1">
+                                                    <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
+                                                    <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
+                                                        {lyrics.attribution}
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                        ) : (
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                                {t("page.lyrics.translationCreditsEmpty")}
+                                            </p>
+                                        )
                                     ) : translationCredits ? (
                                         <dl className="space-y-4 text-sm">
                                             {sharedTranslationCredit ? (
