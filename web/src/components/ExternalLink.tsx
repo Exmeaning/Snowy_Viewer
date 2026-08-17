@@ -16,6 +16,29 @@ const SAFE_DOMAINS = [
     'pjsk.moe',
 ];
 
+const SAFE_URL_PREFIXES = [
+    'https://space.bilibili.com/5441521',
+];
+
+const isSafeTarget = (url: string): boolean => {
+    try {
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname.toLowerCase();
+        const isSafeDomain = SAFE_DOMAINS.some(domain =>
+            hostname === domain || hostname.endsWith('.' + domain)
+        );
+        if (isSafeDomain) return true;
+
+        const normalizedUrl = (urlObj.origin + urlObj.pathname.replace(/\/+$/, '')).toLowerCase();
+        return SAFE_URL_PREFIXES.some(prefix => {
+            const normalizedPrefix = prefix.replace(/\/+$/, '').toLowerCase();
+            return normalizedUrl === normalizedPrefix || normalizedUrl.startsWith(normalizedPrefix + '/');
+        });
+    } catch (_e) {
+        return false;
+    }
+};
+
 const ExternalLink: React.FC<ExternalLinkProps> = ({
     href,
     children,
@@ -31,17 +54,7 @@ const ExternalLink: React.FC<ExternalLinkProps> = ({
         if (bypassLeave) return false;
 
         if (isAbsoluteUrl) {
-            try {
-                const urlObj = new URL(url);
-                const hostname = urlObj.hostname.toLowerCase();
-                const isSafeDomain = SAFE_DOMAINS.some(domain =>
-                    hostname === domain || hostname.endsWith('.' + domain)
-                );
-                return !isSafeDomain;
-            } catch (_e) {
-                // If URL parsing fails, assume it's not a safe external link
-                return true;
-            }
+            return !isSafeTarget(url);
         }
         return false;
     };
