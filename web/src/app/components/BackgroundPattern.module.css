@@ -130,30 +130,15 @@
     display: block;
     width: 100%;
     height: 100%;
-    /* allow the non-scaling stroke / soft shadow to extend past the viewBox edges */
+    /* allow the non-scaling stroke to extend past the viewBox edges */
     overflow: visible;
     transform-origin: center;
-}
-
-/* desktop-only soft shadow for a touch of depth (cheap on desktop GPUs) */
-@media (min-width: 1025px) {
-    .shapeSvg {
-        filter: drop-shadow(0 12px 24px rgba(80, 92, 130, 0.08));
-    }
 }
 
 /* Circular glowing orbs (border-radius is rock solid on every platform) */
 .shapeCircle {
     border-radius: 999px;
     background: currentColor;
-}
-
-/* The blur filter is desktop-only. On mobile, each blurred node forces its own
- * rasterization layer, compounding the layer-budget pressure. */
-@media (min-width: 1025px) {
-    .shapeCircle {
-        filter: blur(0.5px);
-    }
 }
 
 /* Sparkle & Breathing Animations with smooth sine offsets.
@@ -309,20 +294,20 @@
  * compositor entirely (zero paint cost). Edge-biased horizontal distribution means
  * the surviving shards still cover the viewport without piling up in the center.
  */
-/* Tablet: ~80 shards visible. */
+/* Tablet: ~22 shards visible. */
 @media (max-width: 1024px) {
-    .parallaxLayer1 .shapeFloat:nth-child(n + 33),
-    .parallaxLayer2 .shapeFloat:nth-child(n + 29),
-    .parallaxLayer3 .shapeFloat:nth-child(n + 21) {
+    .parallaxLayer1 .shapeFloat:nth-child(n + 10),
+    .parallaxLayer2 .shapeFloat:nth-child(n + 9),
+    .parallaxLayer3 .shapeFloat:nth-child(n + 6) {
         display: none;
     }
 }
 
-/* Phone: ~42 shards visible. */
+/* Phone: ~12 shards visible. */
 @media (max-width: 640px) {
-    .parallaxLayer1 .shapeFloat:nth-child(n + 19),
-    .parallaxLayer2 .shapeFloat:nth-child(n + 15),
-    .parallaxLayer3 .shapeFloat:nth-child(n + 11) {
+    .parallaxLayer1 .shapeFloat:nth-child(n + 6),
+    .parallaxLayer2 .shapeFloat:nth-child(n + 5),
+    .parallaxLayer3 .shapeFloat:nth-child(n + 3) {
         display: none;
     }
 }

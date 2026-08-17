@@ -23,12 +23,12 @@ type ParallaxShape = {
 };
 
 // Layer config: count per layer.
-// Total ~120 shards produces the dense official-site feel while staying cheap
-// (every shard animates only `transform` on the GPU compositor).
+// ~34 shards total provides an elegant official-site feel while keeping GPU
+// compositor overhead and memory footprint lightweight across all devices.
 const LAYER_CONFIG: Record<ParallaxShape["layer"], { count: number }> = {
-    1: { count: 48 },
-    2: { count: 42 },
-    3: { count: 30 },
+    1: { count: 14 },
+    2: { count: 12 },
+    3: { count: 8 },
 };
 
 // Two explicit triangle archetypes (no random opacity/size mixing):
