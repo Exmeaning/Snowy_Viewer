@@ -775,8 +775,9 @@ function isCanonicalAttributionRevisionUrl(
                 && hasCanonicalAttributionQuery(url, [["oldid", revision], ["title", title]]);
         }
 
-        const hostname = provider === "vocaloid_fandom" ? "vocaloid.fandom.com" : "www.sekaipedia.org";
-        return url.hostname === hostname
+        const isFandom = url.hostname === "vocaloid.fandom.com" || url.hostname === "projectsekai.fandom.com";
+        const isValidHost = provider === "vocaloid_fandom" ? isFandom : url.hostname === "www.sekaipedia.org";
+        return isValidHost
             && url.pathname.startsWith("/wiki/")
             && url.pathname.length > "/wiki/".length
             && hasCanonicalAttributionQuery(url, [["oldid", revision]]);
