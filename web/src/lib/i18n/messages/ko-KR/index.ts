@@ -628,7 +628,8 @@ export const koKRMessages = {
             fanNotice: "이것은 팬 사이트이며 연구 목적으로만 사용되는 팬 데이터베이스입니다.",
             generatedBy: "생성자",
             explore: "탐색",
-            sisterSites: "자매 사이트",
+            sisterSites: "자매 사이트 및 커뮤니티",
+            bilibiliAccount: "Bilibili @PJSK情报局",
             contact: "문의 및 피드백",
             brandDescription: "프로젝트 세카이의 차세대 뷰어.",
             feedback: "피드백 / 기여 제출",
@@ -921,7 +922,9 @@ export const koKRMessages = {
                 deckRecommend: "그룹 카드",
                 prediction: "예측",
                 guessWho: "역할을 추측해 보세요",
-                chartPreview: "차트"
+                chartPreview: "차트",
+                bilibili: "정보국",
+                bilibiliBadge: "B站",
             },
             hero: {
                 noContent: "아직 최신 콘텐츠가 없습니다.",
@@ -973,12 +976,18 @@ export const koKRMessages = {
                 today: "오늘"
             },
             announcements: {
-                viewAll: "查看전체부공공",
+                viewAll: "전체 공지사항 보기",
                 noData: "아직 발표가 없습니다",
-                loadFailedTitle: "공지사항을 받지 못했습니다."
+                loadFailedTitle: "공지사항을 받지 못했습니다.",
+                bilibiliTitle: "PJSK 정보국 · 번역 및 뉴스",
+                bilibiliBadge: "뉴스 / 번역",
+                bilibiliDescription: "Bilibili @PJSK情报局에서 최신 생방송 속보, 이벤트 스토리 번역 및 데이터마이닝 정보를 확인하세요.",
+                bilibiliAction: "Bilibili로 이동",
             },
             friends: {
-                harukiTitle: "하루키 도구 상자"
+                harukiTitle: "하루키 도구 상자",
+                bilibiliTitle: "PJSK 정보국",
+                bilibiliDescription: "Bilibili 뉴스 및 스토리 번역",
             },
             specialThanksPrefix: "특별한 감사:",
             specialThanksHaruki: "하루키(希凪)"
