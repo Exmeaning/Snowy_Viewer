@@ -29,7 +29,6 @@ const ALLOWLIST = new Map([
     ["src/lib/lyrics-performers.ts", "Audited nonvisual persisted performer source IDs shared with the lyrics producer"],
     ["src/types/types.ts", "Project SEKAI official unit and character names plus legacy type constants"],
     ["src/lib/storyLoader.ts", "Masterdata and story translation fallback map"],
-    ["src/lib/team-links.ts", "Team members and official organization links"],
 ]);
 
 const COMMENT_ONLY_ALLOWLIST = new Map([

@@ -1,7 +1,4 @@
-export const PJSK_BILIBILI_SPACE_URL = "https://space.bilibili.com/5441521";
-
 export const MEMBER_LINKS: Record<string, string> = {
-    "@雪莹ちゃん": "https://space.bilibili.com/1234351000",
-    "@爱死天流": "https://space.bilibili.com/475778265",
+    "@\u96ea\u83b9\u3061\u3083\u3093": "https://space.bilibili.com/1234351000",
+    "@\u7231\u6b7b\u5929\u6d41": "https://space.bilibili.com/475778265",
 };
-

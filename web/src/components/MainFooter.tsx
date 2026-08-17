@@ -5,7 +5,6 @@ import { useI18n } from "@/contexts/I18nContext";
 import ExternalLink from "@/components/ExternalLink";
 import { NAV_ITEM_LABEL_KEYS } from "@/lib/navigation";
 import { MOE_LOGO_URL } from "@/lib/assets";
-import { PJSK_BILIBILI_SPACE_URL } from "@/lib/team-links";
 
 const EXPLORE_LINKS = [
     "/",
@@ -44,28 +43,6 @@ export default function MainFooter() {
                         <p className="text-sm type-body text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
                             {t("layout.footer.brandDescription")}
                         </p>
-
-                        {/* Social & Community Badges */}
-                        <div className="pt-1 flex flex-wrap items-center gap-2">
-                            <ExternalLink
-                                href={PJSK_BILIBILI_SPACE_URL}
-                                className="pressable inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#fb7299]/10 hover:bg-[#fb7299] text-[#fb7299] hover:text-white transition-all text-xs font-bold border border-[#fb7299]/20 shadow-sm"
-                            >
-                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                                    <path d="M17.813 4.653h.854c1.51 0 2.769.458 3.778 1.375 1.01.916 1.515 2.146 1.515 3.69v7.502c0 1.545-.505 2.775-1.515 3.69-1.01.918-2.268 1.376-3.778 1.376H5.333c-1.51 0-2.769-.458-3.778-1.376C.545 20 0 18.77 0 17.22V9.718c0-1.544.505-2.774 1.515-3.69 1.01-.917 2.268-1.375 3.778-1.375h.854L4.977 3.56a1.31 1.31 0 111.818-1.884l2.828 2.728c.08.078.149.163.205.254h4.277a1.32 1.32 0 01.205-.254l2.828-2.728a1.31 1.31 0 011.818 1.884L17.813 4.653zm.356 3.67a2.667 2.667 0 00-2.666-2.666H8.497a2.667 2.667 0 00-2.666 2.666v7.53a2.667 2.667 0 002.666 2.666h7.006a2.667 2.667 0 002.666-2.666v-7.53zm-7.666 5.192a1.333 1.333 0 112.666 0v1.192a1.333 1.333 0 11-2.666 0v-1.192zm6.666-1.192c-.736 0-1.333.597-1.333 1.333v1.192a1.333 1.333 0 102.666 0v-1.192c0-.736-.597-1.333-1.333-1.333z"/>
-                                </svg>
-                                <span>{t("layout.footer.bilibiliAccount")}</span>
-                            </ExternalLink>
-                            <ExternalLink
-                                href="https://github.com/StarMoe-org/Moesekai"
-                                className="pressable inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-miku transition-all text-xs font-bold border border-slate-200/80 dark:border-slate-700/80"
-                            >
-                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                                </svg>
-                                <span>GitHub</span>
-                            </ExternalLink>
-                        </div>
                     </div>
 
                     {/* Column 2: Explore */}
@@ -86,7 +63,7 @@ export default function MainFooter() {
                         </ul>
                     </div>
 
-                    {/* Column 3: Sister Sites & Community */}
+                    {/* Column 3: Sister Sites */}
                     <div className="lg:col-span-3 space-y-3">
                         <h3 className="text-xs type-caption font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                             <span className="w-1 h-3 bg-miku rounded-full"></span>
@@ -97,13 +74,6 @@ export default function MainFooter() {
                                 <ExternalLink href="https://bdon.moe" className="pressable text-slate-500 dark:text-slate-400 hover:text-miku flex items-center gap-1 group">
                                     <span className="opacity-0 w-0 group-hover:opacity-100 group-hover:w-3 transition-all duration-[var(--duration-fast)] text-miku">→</span>
                                     bdon.moe <span className="text-xs text-slate-400 font-normal ml-0.5">(Moenotes)</span>
-                                </ExternalLink>
-                            </li>
-                            <li>
-                                <ExternalLink href={PJSK_BILIBILI_SPACE_URL} className="pressable text-[#fb7299] hover:text-[#e0567e] flex items-center gap-1 group font-medium">
-                                    <span className="opacity-0 w-0 group-hover:opacity-100 group-hover:w-3 transition-all duration-[var(--duration-fast)] text-[#fb7299]">→</span>
-                                    {t("page.home.friends.bilibiliTitle")}
-                                    <span className="text-[10px] bg-[#fb7299]/15 text-[#fb7299] font-black px-1.5 py-0.2 rounded ml-1">BILIBILI</span>
                                 </ExternalLink>
                             </li>
                         </ul>
