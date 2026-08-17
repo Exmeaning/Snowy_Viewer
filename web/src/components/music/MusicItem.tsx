@@ -32,7 +32,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
     const itemHref = href ?? `${hrefBase}/${music.id}`;
 
     return (
-        <Link href={itemHref} className="group pressable block" data-shortcut-item="true">
+        <Link href={itemHref} className="group pressable block [content-visibility:auto] [contain-intrinsic-size:auto_320px]" data-shortcut-item="true">
             <div className="relative rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive">
                 {/* Jacket Image */}
                 <div className="relative aspect-square overflow-hidden">
@@ -43,6 +43,8 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)]"
                         unoptimized
+                        loading="lazy"
+                        decoding="async"
                     />
 
                     {/* Category Tags Overlay */}

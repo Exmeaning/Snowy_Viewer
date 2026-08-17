@@ -181,6 +181,7 @@ function LyricsContent() {
         storageKey: "lyrics",
         defaultDisplayCount: 30,
         increment: 30,
+        maxDisplayCount: 90,
         isReady: !isLoading && (deferredSearchQuery.trim() === "" || aliasIndexSettled),
     });
 

@@ -6,6 +6,7 @@ interface UseScrollRestoreOptions {
     defaultDisplayCount: number;  // Default display count
     increment: number;            // Increment amount for load more
     isReady?: boolean;            // Whether content is ready to restore scroll (optional, default true)
+    maxDisplayCount?: number;     // Upper bound for restored/loaded counts (optional)
 }
 
 interface UseScrollRestoreReturn {
@@ -41,9 +42,13 @@ export function useScrollRestore({
     defaultDisplayCount,
     increment,
     isReady = true, // Default to true for backward compatibility
+    maxDisplayCount,
 }: UseScrollRestoreOptions): UseScrollRestoreReturn {
     const SCROLL_KEY = `${storageKey}_scroll`;
     const COUNT_KEY = `${storageKey}_displayCount`;
+    const clampCount = (count: number) => (
+        maxDisplayCount !== undefined && count > maxDisplayCount ? maxDisplayCount : count
+    );
 
     // Initialize displayCount from sessionStorage or use default
     const [displayCount, setDisplayCount] = useState<number>(() => {
@@ -53,7 +58,7 @@ export function useScrollRestore({
             if (saved) {
                 const count = parseInt(saved, 10);
                 if (!isNaN(count) && count >= defaultDisplayCount) {
-                    return count;
+                    return clampCount(count);
                 }
             }
         } catch {
@@ -203,8 +208,11 @@ export function useScrollRestore({
 
     // Load more handler
     const loadMore = useCallback(() => {
-        setDisplayCount(prev => prev + increment);
-    }, [increment]);
+        setDisplayCount(prev => {
+            const next = prev + increment;
+            return maxDisplayCount !== undefined && next > maxDisplayCount ? maxDisplayCount : next;
+        });
+    }, [increment, maxDisplayCount]);
 
     // Reset handler
     const resetDisplayCount = useCallback(() => {
