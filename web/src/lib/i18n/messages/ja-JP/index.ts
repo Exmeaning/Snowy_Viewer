@@ -1038,6 +1038,8 @@ export const jaJPMessages = {
         literatureMembers: '@惜花 @郁郁葱葱 @明日天気に @Aya @樱风 @荇荼 @性价比 @芒果冰沙拌玻璃渣 @luoxia @東雪 @魁灵 @茶椿 @Hakuchumu @瑞希 @幽灵塑料袋 @羽月',
         translationLabel: 'Moesekai Localization Team: ',
         translationMembers: 'Translation / proofreading: @雪莹ちゃん @爱死天流',
+        guideLabel: 'Moesekai 攻略チーム: ',
+        guideMembers: '@Pizza @Misto',
         joinPrefix: 'If you want to help us, join',
         joinMiddle: 'and ask for ',
         joinGroup: 'Moesekai Literature Team',

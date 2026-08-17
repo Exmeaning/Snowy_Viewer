@@ -6,6 +6,7 @@ import Link from "@/components/LocalizedLink";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
+import { MEMBER_LINKS } from "@/lib/team-links";
 
 const techStack = [
     { name: "Golang", color: "bg-blue-100 text-blue-600" },
@@ -15,6 +16,26 @@ const techStack = [
     { name: "Tailwind CSS", color: "bg-sky-100 text-sky-600" },
     { name: "Cloudflare", color: "bg-orange-100 text-orange-600" },
 ];
+
+function renderMemberText(text: string) {
+    const tokens = text.split(/(@[^\s@]+)/g);
+    return tokens.map((token, index) => {
+        const link = MEMBER_LINKS[token];
+        if (link) {
+            return (
+                <ExternalLink
+                    key={index}
+                    href={link}
+                    target="_blank"
+                    className="text-miku hover:underline font-medium transition-colors"
+                >
+                    {token}
+                </ExternalLink>
+            );
+        }
+        return token;
+    });
+}
 
 export default function AboutClient() {
     const { t } = useI18n();
@@ -203,11 +224,15 @@ export default function AboutClient() {
                         <div className="text-sm text-slate-600 leading-7 space-y-4">
                             <div>
                                 <span className="font-bold text-primary-text">{t("page.about.teams.literatureLabel")}</span>
-                                {t("page.about.teams.literatureMembers")}
+                                {renderMemberText(t("page.about.teams.literatureMembers"))}
                             </div>
                             <div>
                                 <span className="font-bold text-primary-text">{t("page.about.teams.translationLabel")}</span>
-                                {t("page.about.teams.translationMembers")}
+                                {renderMemberText(t("page.about.teams.translationMembers"))}
+                            </div>
+                            <div>
+                                <span className="font-bold text-primary-text">{t("page.about.teams.guideLabel")}</span>
+                                {renderMemberText(t("page.about.teams.guideMembers"))}
                             </div>
                             <div className="mt-4 pt-4 border-t border-slate-100">
                                 <p className="font-medium text-miku">
