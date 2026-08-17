@@ -1037,7 +1037,7 @@ export const zhCNMessages = {
                 literatureLabel: "moesekai 文艺部：",
                 literatureMembers: "@惜花 @郁郁葱葱 @明日天気に @Aya @樱风 @荇荼 @性价比 @芒果冰沙拌玻璃渣 @luoxia @東雪 @魁灵 @茶椿 @Hakuchumu @瑞希 @幽灵塑料袋 @羽月",
                 translationLabel: "moesekai 汉化部：",
-                translationMembers: "翻译/校对 @雪莹ちゃん",
+                translationMembers: "翻译/校对 @雪莹ちゃん @爱死天流",
                 joinPrefix: "如果你想帮助我们，可以加入",
                 joinMiddle: "咨询：",
                 joinGroup: "Moesekai 文艺部",

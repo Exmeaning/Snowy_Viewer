@@ -1035,7 +1035,7 @@ export const koKRMessages = {
                 literatureLabel: "모에세카이 문학예술부:",
                 literatureMembers: "@西꽃 @luxuriant @明日天気に @Aya @ Sakura风 @荇tea @ 가격대비 @망고 스무디에 유리슬래그를 섞은 @luoxia @东雪 @kuiling @차춘 @하쿠추무 @Rixi @Ghost 비닐봉지 @Feather Moon",
                 translationLabel: "moesekai 중국어학과:",
-                translationMembers: "번역/교정 @雪莹ちゃん",
+                translationMembers: "번역/교정 @雪莹ちゃん @爱死天流",
                 joinPrefix: "우리를 돕고 싶다면 가입할 수 있습니다.",
                 joinMiddle: "문의:",
                 joinGroup: "모에세카이 문학예술학과",

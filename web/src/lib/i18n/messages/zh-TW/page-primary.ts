@@ -195,7 +195,7 @@ export const zhTWPagePrimary = {
                 literatureLabel: "moesekai 文藝部：",
                 literatureMembers: "@惜花 @郁郁蔥蔥 @明日天気に @Aya @櫻風 @荇荼 @性價比 @芒果冰沙拌玻璃渣 @luoxia @東雪 @魁靈 @茶椿 @Hakuchumu @瑞希 @幽靈塑料袋 @羽月",
                 translationLabel: "moesekai 中文翻譯部：",
-                translationMembers: "翻譯/校對 @雪瑩ちゃん",
+                translationMembers: "翻譯/校對 @雪瑩ちゃん @愛死天流",
                 joinPrefix: "如果你想幫助我們，可以加入",
                 joinMiddle: "咨詢：",
                 joinGroup: "Moesekai 文藝部",
