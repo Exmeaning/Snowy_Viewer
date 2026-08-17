@@ -8,6 +8,20 @@ const nextConfig: NextConfig = {
   cacheMaxMemorySize: 50 * 1024 * 1024,
   trailingSlash: true,
   allowedDevOrigins: ["localhost", "127.0.0.1"],
+  async redirects() {
+    return [
+      {
+        source: "/realtime-ranking",
+        destination: "/realtime-ranking-next",
+        permanent: true,
+      },
+      {
+        source: "/realtime-ranking/:path*",
+        destination: "/realtime-ranking-next/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     return {
       beforeFiles: enableLocalHarukiProxy

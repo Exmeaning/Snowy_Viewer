@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "@/components/LocalizedLink";
 import { useI18n } from "@/contexts/I18nContext";
 import {
     RealtimeRankingRegion,
@@ -62,9 +61,6 @@ export default function BoardHeader({
                     </div>
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {t("page.realtimeRankingNext.subtitle")}
-                        <Link href="/realtime-ranking" className="ml-2 underline decoration-dotted hover:text-miku">
-                            {t("page.realtimeRankingNext.backToClassic")}
-                        </Link>
                     </p>
                 </div>
 

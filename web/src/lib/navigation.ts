@@ -40,7 +40,6 @@ const allNavigationGroups: NavGroupData[] = [
             { href: "/gacha" },
             { href: "/live" },
             { href: "/prediction" },
-            { href: "/realtime-ranking" },
             { href: "/realtime-ranking-next" },
             { href: "/mysekai-preview" },
         ],
@@ -189,8 +188,7 @@ const allSearchableNavItems: SearchableNavItem[] = [
     { href: "/live", group: "activity", keywords: ["live", "concert", "virtual live"] },
     { href: "/story/event", group: "activity", keywords: ["event story", "story", "scenario"] },
     { href: "/prediction", group: "activity", keywords: ["prediction", "ranking", "forecast"] },
-    { href: "/realtime-ranking", group: "activity", keywords: ["realtime ranking", "live ranking", "rank", "ranking"] },
-    { href: "/realtime-ranking-next", group: "activity", keywords: ["realtime ranking next", "live ranking next", "player detail", "rank", "ranking"] },
+    { href: "/realtime-ranking-next", group: "activity", keywords: ["realtime ranking", "realtime ranking next", "live ranking", "live ranking next", "player detail", "rank", "ranking"] },
     { href: "/mysekai-preview", group: "activity", keywords: ["baijing", "housing competition", "mysekai", "top"] },
 
     { href: "/goods-gacha", group: "games", keywords: ["goods gacha", "goods", "blind box"] },
