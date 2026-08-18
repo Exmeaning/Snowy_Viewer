@@ -131,10 +131,16 @@ test("all JSON-LD uses one closing-script-safe serializer", async () => {
 });
 
 test("OAuth return routes reject external, protocol-relative, encoded, and control-character forms", async () => {
-  const oauth = await importWebTypeScript("src/lib/oauth.ts", [[
-    'import { localizePathForBrowser } from "@/lib/localized-path";',
-    "const localizePathForBrowser = (value) => value;",
-  ]]);
+  const oauth = await importWebTypeScript("src/lib/oauth.ts", [
+    [
+      'import { normalizeServer, type ServerType } from "./account-servers";',
+      'const normalizeServer = (value) => (typeof value === "string" && ["cn", "jp", "tw", "kr", "en"].includes(value.trim().toLowerCase()) ? value.trim().toLowerCase() : null);\ntype ServerType = "cn" | "jp" | "tw" | "kr" | "en";',
+    ],
+    [
+      'import { localizePathForBrowser } from "@/lib/localized-path";',
+      "const localizePathForBrowser = (value) => value;",
+    ],
+  ]);
 
   assert.equal(oauth.sanitizeOAuthReturnTo("/cards?sort=id#top"), "/cards?sort=id#top");
   for (const unsafe of [
