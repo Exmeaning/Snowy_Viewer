@@ -381,9 +381,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                             <AnimatePresence mode="wait" initial={false}>
                                 <motion.div
                                     key={activeTab}
-                                    initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 6, filter: "blur(4px)" }}
-                                    animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)" }}
-                                    exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -6, filter: "blur(4px)" }}
+                                    initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+                                    animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                                    exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
                                     transition={overlayTransition}
                                     className="space-y-4"
                                 >
