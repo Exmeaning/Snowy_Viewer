@@ -1496,9 +1496,9 @@ export const zhTWPagePrimary = {
                 world_bloom: "世界綻放",
             },
             regions: {
-                cn: "簡中服 (CN)",
+                cn: "簡中",
                 jp: "日服",
-                tw: "繁中 (TW)",
+                tw: "繁中",
                 kr: "韓服",
                 en: "國際服",
             },

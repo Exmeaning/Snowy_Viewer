@@ -2335,7 +2335,7 @@ export const zhCNMessages = {
             regions: {
                 cn: "国服",
                 jp: "日服",
-                tw: "繁中 (TW)",
+                tw: "繁中",
                 kr: "韩服",
                 en: "国际服",
             },

@@ -2,7 +2,7 @@
 import React from "react";
 import { ICardInfo, getRarityNumber } from "@/types/types";
 import { getCardThumbnailUrl } from "@/lib/assets";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 
 interface SekaiCardThumbnailProps {
     card: ICardInfo;
@@ -10,6 +10,7 @@ interface SekaiCardThumbnailProps {
     mastery?: number;
     width?: number; // Default 156
     className?: string;
+    assetSource?: AssetSourceType;
 }
 
 export default function SekaiCardThumbnail({
@@ -18,8 +19,10 @@ export default function SekaiCardThumbnail({
     mastery = 0,
     width = 156,
     className = "",
+    assetSource: customAssetSource,
 }: SekaiCardThumbnailProps) {
-    const { assetSource } = useTheme();
+    const { assetSource: themeAssetSource } = useTheme();
+    const assetSource = customAssetSource ?? themeAssetSource;
     const [imageError, setImageError] = React.useState(false);
 
     // Determine trained status

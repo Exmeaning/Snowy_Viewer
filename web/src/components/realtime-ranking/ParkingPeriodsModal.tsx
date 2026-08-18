@@ -3,10 +3,11 @@
 import Modal from "@/components/common/Modal";
 import { useI18n } from "@/contexts/I18nContext";
 import { ChurnRankingEntry } from "@/types/realtime-ranking";
+import { ChurnEntryV2 } from "@/types/realtime-ranking-next";
 
 interface ParkingPeriodsModalProps {
     userId: string | null;
-    churnEntry?: ChurnRankingEntry;
+    churnEntry?: ChurnRankingEntry | ChurnEntryV2 | null;
     onClose: () => void;
 }
 
@@ -42,6 +43,7 @@ export default function ParkingPeriodsModal({ userId, churnEntry, onClose }: Par
                 <div className="space-y-3">
                     {periods.map((period, index) => {
                         const isOngoing = !period.end_time;
+                        const startTime = period.start_time ?? (period as { since_ms?: number }).since_ms ?? 0;
                         return (
                             <div
                                 key={index}
@@ -64,7 +66,7 @@ export default function ParkingPeriodsModal({ userId, churnEntry, onClose }: Par
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 text-xs">
                                         <span className="font-medium text-slate-600 dark:text-slate-300">
-                                            {formatDate(period.start_time)}
+                                            {formatDate(startTime)}
                                         </span>
                                         <span className="text-slate-400">→</span>
                                         <span className={`font-medium ${isOngoing ? "text-miku" : "text-slate-600 dark:text-slate-300"}`}>
@@ -72,7 +74,7 @@ export default function ParkingPeriodsModal({ userId, churnEntry, onClose }: Par
                                         </span>
                                     </div>
                                     <div className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
-                                        {t("page.realtimeRanking.churn.duration", { duration: formatDuration(period.start_time, period.end_time, period.duration_s) })}
+                                        {t("page.realtimeRanking.churn.duration", { duration: formatDuration(startTime, period.end_time, period.duration_s) })}
                                     </div>
                                 </div>
 

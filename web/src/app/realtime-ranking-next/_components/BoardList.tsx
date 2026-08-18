@@ -11,6 +11,8 @@ interface BoardListProps {
     masterData: RealtimeRankingMasterData;
     assetSource: AssetSourceType;
     churnData: Map<string, ChurnEntryV2>;
+    showChurn: boolean;
+    onShowParkingPeriods: (userId: string) => void;
     region: RealtimeRankingRegion;
     eventId?: number;
     /** WL character id when in WL mode, otherwise null. */
@@ -39,6 +41,8 @@ export default function BoardList({
     masterData,
     assetSource,
     churnData,
+    showChurn,
+    onShowParkingPeriods,
     region,
     eventId,
     worldLinkCharacterId,
@@ -64,6 +68,9 @@ export default function BoardList({
                         masterData={masterData}
                         assetSource={assetSource}
                         churnEntry={churnEntry}
+                        churnData={churnData}
+                        showChurn={showChurn}
+                        onShowParkingPeriods={onShowParkingPeriods}
                         detailHref={detailHref}
                         isTracked={!entry.isTierLine && trackedUserId === entry.userId}
                         onTrackToggle={onTrackToggle}

@@ -69,9 +69,12 @@ export function useRealtimeBoard(
     const worldLinkCheckedRef = useRef(false);
     const lastChangesRef = useRef(new Map<string, LastChange>());
     const degradedPollCountRef = useRef(0);
+    const boardModeRef = useRef(boardMode);
+    boardModeRef.current = boardMode;
 
     const load = useCallback(async (nextRegion: RealtimeRankingRegion, isPoll: boolean) => {
         const id = ++requestIdRef.current;
+        const currentMode = boardModeRef.current;
         if (isPoll) {
             setIsRefreshing(true);
         } else {
@@ -90,71 +93,87 @@ export function useRealtimeBoard(
         }
 
         try {
-            const [latest, worldLink] = await Promise.all([
-                fetchLatestV2(nextRegion),
-                fetchWorldLinkLatestV2(nextRegion).catch(() => null),
+            // During polling, only refresh the active board mode to avoid unnecessary requests.
+            // On fresh load: fetch overall (if in overall mode, plus probe WL once), or fetch WL (if in WL mode).
+            const shouldFetchOverall = !isPoll || currentMode !== "worldlink";
+            const shouldFetchWorldLink = currentMode === "worldlink" || (!isPoll && !worldLinkCheckedRef.current);
+
+            const [latestResult, worldLinkResult] = await Promise.allSettled([
+                shouldFetchOverall ? fetchLatestV2(nextRegion) : Promise.resolve(snapshotRef.current),
+                shouldFetchWorldLink ? fetchWorldLinkLatestV2(nextRegion) : Promise.resolve(worldLinkSnapshotRef.current),
             ]);
             if (id !== requestIdRef.current) return;
+
+            const latest = latestResult.status === "fulfilled" ? latestResult.value : snapshotRef.current;
+            const worldLink = worldLinkResult.status === "fulfilled" ? worldLinkResult.value : worldLinkSnapshotRef.current;
+
+            if (shouldFetchOverall && latestResult.status === "rejected" && !snapshotRef.current) {
+                throw latestResult.reason;
+            }
 
             // Boundary handling: while polling, ignore a transiently empty/invalid
             // snapshot so the live board does not flash "no players". A fresh load
             // still applies whatever it receives (so genuine empty states surface).
             const latestValid = !!latest && latest.entries.length > 0;
-            if (isPoll && !latestValid) {
+            if (isPoll && shouldFetchOverall && !latestValid) {
                 setError(null);
                 return;
             }
 
-            const previousOverall = snapshotRef.current;
+            if (shouldFetchOverall && latest) {
+                const previousOverall = snapshotRef.current;
 
-            // Resilience: when polling the same event, guard against a transiently
-            // collapsed payload (e.g. only tier lines survive) wiping the TOP rows.
-            let nextOverall = latest;
-            const sameEvent = !!previousOverall && !!latest
-                && previousOverall.eventId === latest.eventId;
-            if (isPoll && sameEvent && degradedPollCountRef.current < MAX_DEGRADED_POLLS) {
-                const merged = mergeResilientEntries(previousOverall!.entries, latest!.entries);
-                if (merged.degraded) {
-                    degradedPollCountRef.current += 1;
-                    nextOverall = { ...latest!, entries: merged.entries };
-                    setStaleRanks(merged.staleRanks);
+                // Resilience: when polling the same event, guard against a transiently
+                // collapsed payload (e.g. only tier lines survive) wiping the TOP rows.
+                let nextOverall = latest;
+                const sameEvent = !!previousOverall && previousOverall.eventId === latest.eventId;
+                if (isPoll && sameEvent && degradedPollCountRef.current < MAX_DEGRADED_POLLS) {
+                    const merged = mergeResilientEntries(previousOverall.entries, latest.entries);
+                    if (merged.degraded) {
+                        degradedPollCountRef.current += 1;
+                        nextOverall = { ...latest, entries: merged.entries };
+                        setStaleRanks(merged.staleRanks);
+                    } else {
+                        degradedPollCountRef.current = 0;
+                        setStaleRanks(new Set());
+                    }
                 } else {
                     degradedPollCountRef.current = 0;
                     setStaleRanks(new Set());
                 }
-            } else {
-                degradedPollCountRef.current = 0;
-                setStaleRanks(new Set());
+
+                setPreviousSnapshot(previousOverall);
+                snapshotRef.current = nextOverall;
+                setSnapshot(nextOverall);
             }
 
-            setPreviousSnapshot(previousOverall);
-            snapshotRef.current = nextOverall;
-            setSnapshot(nextOverall);
+            if (shouldFetchWorldLink) {
+                worldLinkCheckedRef.current = true;
+                const currentEventId = snapshotRef.current?.eventId;
+                const wlMatches = worldLink && (!currentEventId || worldLink.eventId === currentEventId) && worldLink.groups.length > 0;
+                let nextWorldLink = wlMatches ? worldLink : null;
 
-            worldLinkCheckedRef.current = true;
-            const wlMatches = worldLink && nextOverall && worldLink.eventId === nextOverall.eventId && worldLink.groups.length > 0;
-            let nextWorldLink = wlMatches ? worldLink : null;
+                // Resilience: merge each WL group against the matching previous group.
+                const previousWorldLink = worldLinkSnapshotRef.current;
+                if (isPoll && nextWorldLink && previousWorldLink
+                    && previousWorldLink.eventId === nextWorldLink.eventId
+                    && degradedPollCountRef.current < MAX_DEGRADED_POLLS) {
+                    const prevGroupByChar = new Map(
+                        previousWorldLink.groups.map((g) => [g.gameCharacterId, g]),
+                    );
+                    const mergedGroups = nextWorldLink.groups.map((group) => {
+                        const prevGroup = prevGroupByChar.get(group.gameCharacterId);
+                        if (!prevGroup) return group;
+                        const merged = mergeResilientEntries(prevGroup.entries, group.entries);
+                        return merged.degraded ? { ...group, entries: merged.entries } : group;
+                    });
+                    nextWorldLink = { ...nextWorldLink, groups: mergedGroups };
+                }
 
-            // Resilience: merge each WL group against the matching previous group.
-            const previousWorldLink = worldLinkSnapshotRef.current;
-            if (isPoll && nextWorldLink && previousWorldLink
-                && previousWorldLink.eventId === nextWorldLink.eventId
-                && degradedPollCountRef.current < MAX_DEGRADED_POLLS) {
-                const prevGroupByChar = new Map(
-                    previousWorldLink.groups.map((g) => [g.gameCharacterId, g]),
-                );
-                const mergedGroups = nextWorldLink.groups.map((group) => {
-                    const prevGroup = prevGroupByChar.get(group.gameCharacterId);
-                    if (!prevGroup) return group;
-                    const merged = mergeResilientEntries(prevGroup.entries, group.entries);
-                    return merged.degraded ? { ...group, entries: merged.entries } : group;
-                });
-                nextWorldLink = { ...nextWorldLink, groups: mergedGroups };
+                setPreviousWorldLinkSnapshot(previousWorldLink);
+                worldLinkSnapshotRef.current = nextWorldLink;
+                setWorldLinkSnapshot(nextWorldLink);
             }
-
-            setPreviousWorldLinkSnapshot(previousWorldLink);
-            worldLinkSnapshotRef.current = nextWorldLink;
-            setWorldLinkSnapshot(nextWorldLink);
 
             setError(null);
         } catch (err) {
@@ -167,6 +186,17 @@ export function useRealtimeBoard(
             setIsRefreshing(false);
         }
     }, []);
+
+    // Fetch immediately on boardMode switch if switching to a mode without fresh data
+    const prevBoardModeRef = useRef(boardMode);
+    useEffect(() => {
+        if (prevBoardModeRef.current !== boardMode) {
+            prevBoardModeRef.current = boardMode;
+            if (enabled) {
+                void load(region, true);
+            }
+        }
+    }, [boardMode, enabled, load, region]);
 
     // Reset & start polling when region changes / enabled toggles.
     useEffect(() => {

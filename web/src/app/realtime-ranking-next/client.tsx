@@ -1,11 +1,11 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import { getCharacterName } from "@/lib/i18n";
 import { fetchRealtimeRankingMasterData } from "@/lib/realtime-ranking-next-api";
 import {
@@ -15,14 +15,20 @@ import {
     isRealtimeRankingRegion,
 } from "@/types/realtime-ranking-next";
 import CurrentEventCard from "@/components/realtime-ranking/CurrentEventCard";
+import ParkingPeriodsModal from "@/components/realtime-ranking/ParkingPeriodsModal";
 import BoardHeader from "./_components/BoardHeader";
 import BoardList from "./_components/BoardList";
 import { useRealtimeBoard, POLL_INTERVAL } from "./_hooks/useRealtimeBoard";
 import { useChurnData } from "./_hooks/useChurnData";
 import { useCurrentEvent } from "./_hooks/useCurrentEvent";
-import { setRealtimeRankingLine, useRealtimeRankingLine } from "@/lib/realtime-ranking-line";
+import {
+    getEffectiveLine,
+    setRealtimeRankingLine,
+    useRealtimeRankingLine,
+} from "@/lib/realtime-ranking-line";
 
 const DEFAULT_REGION: RealtimeRankingRegion = "cn";
+const SHOW_CHURN_STORAGE_KEY = "rr-next:showChurn";
 
 const EMPTY_MASTER_DATA: RealtimeRankingMasterData = {
     cards: [],
@@ -35,7 +41,7 @@ const EMPTY_MASTER_DATA: RealtimeRankingMasterData = {
 
 function RealtimeRankingNextContent() {
     const { t } = useI18n();
-    const { assetSource, themeColor } = useTheme();
+    const { themeColor } = useTheme();
     const searchParams = useSearchParams();
 
     const [region, setRegion] = useState<RealtimeRankingRegion>(() => {
@@ -48,6 +54,39 @@ function RealtimeRankingNextContent() {
     const [countdown, setCountdown] = useState(Math.floor(POLL_INTERVAL / 1000));
     const [trackedUserId, setTrackedUserId] = useState<string | null>(null);
 
+    const [showChurn, setShowChurn] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try {
+            if (localStorage.getItem(SHOW_CHURN_STORAGE_KEY) === "1") {
+                setShowChurn(true);
+            }
+        } catch {
+            // ignore
+        }
+    }, []);
+
+    const handleShowChurnChange = useCallback((val: boolean) => {
+        setShowChurn(val);
+        if (typeof window !== "undefined") {
+            try {
+                localStorage.setItem(SHOW_CHURN_STORAGE_KEY, val ? "1" : "0");
+            } catch {
+                // ignore
+            }
+        }
+    }, []);
+
+    const [parkingModalUserId, setParkingModalUserId] = useState<string | null>(null);
+
+    // Compute effective asset source based on the selected server and route.
+    const effectiveLine = getEffectiveLine(line, region);
+    const effectiveAssetSource: AssetSourceType = useMemo(
+        () => `${effectiveLine === "global" ? "overseas" : "main"}-${region}` as AssetSourceType,
+        [effectiveLine, region],
+    );
+
     const board = useRealtimeBoard(region, boardMode, true);
     const worldLinkCharacterId = board.isWorldLinkMode && board.activeGroup ? board.activeGroup.gameCharacterId : null;
     const churnData = useChurnData(region, worldLinkCharacterId, true);
@@ -57,6 +96,8 @@ function RealtimeRankingNextContent() {
             ? { eventId: board.snapshot.eventId, startAt: board.snapshot.startAt, endAt: board.snapshot.endAt }
             : null,
     );
+
+    const selectedParkingChurnEntry = parkingModalUserId ? churnData.get(parkingModalUserId) : undefined;
 
     // Master data per region.
     useEffect(() => {
@@ -138,11 +179,13 @@ function RealtimeRankingNextContent() {
                     countdown={countdown}
                     isRefreshing={board.isRefreshing}
                     onRefresh={board.refresh}
+                    showChurn={showChurn}
+                    onShowChurnChange={handleShowChurnChange}
                 />
 
                 <CurrentEventCard
                     event={currentEvent}
-                    assetSource={assetSource}
+                    assetSource={effectiveAssetSource}
                     themeColor={themeColor}
                 />
 
@@ -156,7 +199,7 @@ function RealtimeRankingNextContent() {
                                     boardMode === "overall"
                                         ? "bg-miku text-white shadow-md shadow-miku/20"
                                         : "border border-slate-200 bg-white text-slate-600 hover:border-miku/40 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                                }`}
+                                }}`}
                             >
                                 {t("page.realtimeRankingNext.board.overall")}
                             </button>
@@ -166,7 +209,7 @@ function RealtimeRankingNextContent() {
                                     boardMode === "worldlink"
                                         ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
                                         : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
-                                }`}
+                                }}`}
                             >
                                 {t("page.realtimeRankingNext.board.worldlink")}
                             </button>
@@ -209,8 +252,10 @@ function RealtimeRankingNextContent() {
                     <BoardList
                         entries={board.entries}
                         masterData={masterData}
-                        assetSource={assetSource}
+                        assetSource={effectiveAssetSource}
                         churnData={churnData}
+                        showChurn={showChurn}
+                        onShowParkingPeriods={setParkingModalUserId}
                         region={region}
                         eventId={board.snapshot?.eventId}
                         worldLinkCharacterId={worldLinkCharacterId}
@@ -219,6 +264,12 @@ function RealtimeRankingNextContent() {
                         staleRanks={board.staleRanks}
                     />
                 )}
+
+                <ParkingPeriodsModal
+                    userId={parkingModalUserId}
+                    churnEntry={selectedParkingChurnEntry}
+                    onClose={() => setParkingModalUserId(null)}
+                />
             </div>
         </MainLayout>
     );

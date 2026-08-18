@@ -9,7 +9,7 @@ import MainLayout from "@/components/MainLayout";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import PlayerHonorPreview from "@/components/realtime-ranking/PlayerHonorPreview";
 import { useI18n } from "@/contexts/I18nContext";
-import { useTheme } from "@/contexts/ThemeContext";
+import { type AssetSourceType } from "@/contexts/ThemeContext";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { getCharacterName } from "@/lib/i18n";
 import { fetchRealtimeRankingMasterData } from "@/lib/realtime-ranking-next-api";
@@ -18,6 +18,10 @@ import {
     RealtimeRankingRegion,
     isRealtimeRankingRegion,
 } from "@/types/realtime-ranking-next";
+import {
+    getEffectiveLine,
+    useRealtimeRankingLine,
+} from "@/lib/realtime-ranking-line";
 import ScoreLineChart, { ScoreSeries } from "../../_components/charts/ScoreLineChart";
 import ChurnHeatmap from "../../_components/charts/ChurnHeatmap";
 import SpeedGauge from "../../_components/charts/SpeedGauge";
@@ -39,7 +43,6 @@ const TIER_COLORS = ["#33CCBB", "#f59e0b", "#8b5cf6", "#ec4899", "#3b82f6", "#10
 
 function UserDetailContent() {
     const { t, formatNumber } = useI18n();
-    const { assetSource } = useTheme();
     const params = useParams();
     const searchParams = useSearchParams();
 
@@ -48,6 +51,13 @@ function UserDetailContent() {
     const region: RealtimeRankingRegion = isRealtimeRankingRegion(regionParam) ? regionParam : "cn";
     const wlParam = searchParams.get("wl");
     const worldLinkCharacterId = wlParam && /^\d+$/.test(wlParam) ? Number(wlParam) : null;
+
+    const line = useRealtimeRankingLine();
+    const effectiveLine = getEffectiveLine(line, region);
+    const effectiveAssetSource = useMemo<AssetSourceType>(
+        () => `${effectiveLine === "global" ? "overseas" : "main"}-${region}` as AssetSourceType,
+        [effectiveLine, region],
+    );
 
     const [masterData, setMasterData] = useState<RealtimeRankingMasterData>(EMPTY_MASTER_DATA);
     useEffect(() => {
@@ -174,7 +184,7 @@ function UserDetailContent() {
                                 <div className="flex items-start gap-4">
                                     <div className="w-20 shrink-0 sm:w-24">
                                         {leaderCard ? (
-                                            <SekaiCardThumbnail card={leaderCard} trained={isTrained} mastery={masterRank} width={96} className="w-full" />
+                                            <SekaiCardThumbnail card={leaderCard} trained={isTrained} mastery={masterRank} width={96} className="w-full" assetSource={effectiveAssetSource} />
                                         ) : derivedCharacterId ? (
                                             <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
                                                 <Image src={getCharacterIconUrl(derivedCharacterId)} alt="" fill className="object-cover" unoptimized />
@@ -199,7 +209,7 @@ function UserDetailContent() {
                                             <p className="mt-0.5 truncate text-xs text-slate-400 dark:text-slate-500">{data.self.signature}</p>
                                         )}
                                         <div className="mt-2">
-                                            <PlayerHonorPreview honors={data.self.honors} masterData={masterData} assetSource={assetSource} compact />
+                                            <PlayerHonorPreview honors={data.self.honors} masterData={masterData} assetSource={effectiveAssetSource} compact />
                                         </div>
                                         <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
                                             <div className="text-2xl font-black text-primary-text">

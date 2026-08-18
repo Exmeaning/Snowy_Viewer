@@ -131,3 +131,55 @@ export function calcRecentChurnCount(changes: { t: number; delta: number }[], mi
     const cutoff = Date.now() - minutes * 60 * 1000;
     return changes.filter((c) => c.t >= cutoff && c.delta > 0).length;
 }
+
+export interface HourlyGridCell {
+    hour: number;
+    count: number;
+    isCurrentHour: boolean;
+    localLabel: string;
+}
+
+/** Expand hourly_churn into 48 hours, with the newest hour on the left. */
+export function buildHourlyGridReversed(
+    hourlyChurn: { hour: string; count: number }[],
+): HourlyGridCell[] {
+    const currentHourKey = getCurrentHourKey();
+    const now = new Date();
+
+    const churnMap = new Map<string, number>();
+    for (const h of hourlyChurn) {
+        churnMap.set(h.hour, h.count);
+    }
+
+    const grid: HourlyGridCell[] = [];
+
+    for (let i = 0; i < 48; i++) {
+        const t = new Date(now);
+        t.setUTCHours(t.getUTCHours() - i);
+        t.setUTCMinutes(0, 0, 0);
+        const key = t.toISOString().replace(/\.\d{3}Z$/, "Z");
+        const localT = new Date(t);
+        const hourNum = localT.getHours();
+        const isCurrentHour = key === currentHourKey;
+
+        grid.push({
+            hour: hourNum,
+            count: churnMap.get(key) ?? 0,
+            isCurrentHour,
+            localLabel: `${localT.getMonth() + 1}/${localT.getDate()} ${hourNum}:00`,
+        });
+    }
+
+    return grid;
+}
+
+/** Return the background color class based on count. */
+export function getChurnCellColor(count: number, isCurrentHour: boolean): string {
+    if (count === 0) return "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500";
+    if (isCurrentHour) return "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300";
+    if (count >= 30) return "bg-rose-300 text-rose-900 dark:bg-rose-500/40 dark:text-rose-100";
+    if (count >= 20) return "bg-rose-200 text-rose-800 dark:bg-rose-500/30 dark:text-rose-200";
+    if (count >= 10) return "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300";
+    return "bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-400";
+}
+
