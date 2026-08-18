@@ -124,6 +124,7 @@ export const zhTWPageSecondaryB = {
                 description: "你可以手動輸入 UID，也可以點選 /profile 中已儲存的帳號快速填入。",
                 uidPlaceholder: "輸入遊戲 UID",
                 server: "伺服器",
+                serverJpOnly: "UID 查詢僅支援日服 (JP)",
                 loading: "正在查詢配置…",
                 submit: "查詢並進入預覽",
             },

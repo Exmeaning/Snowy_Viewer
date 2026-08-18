@@ -157,20 +157,12 @@ export default function ChallengeStageChart({
         if (loading || rows) return;
         setLoading(true); setError(null);
         try {
-            const rewardPack = await (async () => {
-                const loadPack = async (targetServer: ServerType) => {
-                    const [rewards, boxes, boxDetails] = await Promise.all([
-                        fetchMasterDataForServer<RewardMaster[]>(targetServer, "challengeLiveHighScoreRewards.json"),
-                        fetchMasterDataForServer<BoxMaster[]>(targetServer, "resourceBoxes.json"),
-                        fetchMasterDataForServer<BoxDetailMasterRow[]>(targetServer, "resourceBoxDetails.json").catch(() => []),
-                    ]);
-                    return { rewards, boxes, boxDetails };
-                };
-
-                const current = await loadPack(server);
-                if (current.rewards.length) return current;
-                return loadPack("jp");
-            })();
+            const [rewards, boxes, boxDetails] = await Promise.all([
+                fetchMasterDataForServer<RewardMaster[]>(server, "challengeLiveHighScoreRewards.json"),
+                fetchMasterDataForServer<BoxMaster[]>(server, "resourceBoxes.json"),
+                fetchMasterDataForServer<BoxDetailMasterRow[]>(server, "resourceBoxDetails.json").catch(() => []),
+            ]);
+            const rewardPack = { rewards, boxes, boxDetails };
 
             const rewardById = new Map<number, RewardMaster>(); rewardPack.rewards.forEach((r) => rewardById.set(r.id, r));
             const completed = new Map<number, Set<number>>();

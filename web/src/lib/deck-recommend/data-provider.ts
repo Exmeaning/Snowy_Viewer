@@ -10,12 +10,14 @@ import {
     DataProvider,
     MusicMeta,
 } from "sekai-calculator";
+import { isValidServer, SERVER_IDS, type ServerType } from "../account-servers";
 import { getHarukiPublicApiBase } from "../haruki-public-api";
 import { augmentMasterDataWithWorldBloomSimulation } from "../world-bloom-simulation";
 
 // ==================== Types ====================
 
-export type HarukiServer = "jp" | "cn" | "tw";
+/** Deck-recommend accepts every server the account system supports. */
+export type HarukiServer = ServerType;
 
 // ==================== Constants ====================
 
@@ -195,8 +197,8 @@ export class SnowyDataProvider implements DataProvider {
         private server: HarukiServer = "jp",
         private oauthAccessToken: string | null = null,
     ) {
-        if (!["jp", "cn", "tw"].includes(server)) {
-            throw new Error(`Unsupported server: ${server}. Only JP, CN, and TW are supported.`);
+        if (!isValidServer(server)) {
+            throw new Error(`Unsupported server: ${server}. Supported servers: ${SERVER_IDS.join(", ").toUpperCase()}.`);
         }
     }
 
@@ -219,6 +221,15 @@ export class SnowyDataProvider implements DataProvider {
         }
     }
 
+    /**
+     * Deliberately reads JP masterdata for every server rather than the account's own server.
+     *
+     * This is NOT a fallback: users routinely plan decks for cards/events that JP has already
+     * released but their own server has not, and JP is a superset of the other regions, so JP
+     * masterdata gives the most complete card pool and skill data. User data still comes from
+     * the account's own server (see getUserDataAll), and userCards/userHonors are filtered
+     * against this JP master list.
+     */
     private async loadRawMasterData(key: string): Promise<unknown[]> {
         const cached = this.masterDataRawCache.get(key);
         if (cached) {

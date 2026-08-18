@@ -23,17 +23,12 @@ import {
     getLeaderCardId,
     refreshOAuthAccountData,
     disconnectOAuthAccount,
+    SERVER_OPTIONS,
     type MoesekaiAccount,
     type ServerType,
 } from "@/lib/account";
 import { startOAuthConnect } from "@/lib/oauth";
 import { useI18n } from "@/contexts/I18nContext";
-
-const SERVER_OPTIONS: { value: ServerType }[] = [
-    { value: "cn" },
-    { value: "jp" },
-    { value: "tw" },
-];
 
 export default function ProfileClient() {
     const { t, formatDate } = useI18n();

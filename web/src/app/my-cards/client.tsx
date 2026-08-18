@@ -27,7 +27,6 @@ import {
     normalizeAccountDataError,
     type AccountDataErrorCode,
     type MoesekaiAccount,
-    type ServerType,
 } from "@/lib/account";
 
 
@@ -117,7 +116,6 @@ function MyCardsContent() {
     const [isFetchingUser, setIsFetchingUser] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [userError, setUserError] = useState<AccountDataErrorCode | null>(null);
-    const [isTwFallback, setIsTwFallback] = useState(false);
     const [uploadTime, setUploadTime] = useState<string | number | null>(null);
     const [filtersInitialized, setFiltersInitialized] = useState(false);
 
@@ -253,14 +251,13 @@ function MyCardsContent() {
         async function loadMasterData() {
             setIsLoading(true);
             setError(null);
-            setIsTwFallback(false);
 
             try {
                 const server = activeAccount!.server;
 
                 // Fetch cards and supplies for the account's server
                 const [cardsData, suppliesData, translationsData] = await Promise.all([
-                    fetchCardsForServer(server),
+                    fetchMasterDataForServer<ICardInfo[]>(server, "cards.json"),
                     fetchMasterDataForServer<CardSupply[]>(server, "cardSupplies.json").catch(() => []),
                     loadTranslations(),
                 ]);
@@ -290,29 +287,6 @@ function MyCardsContent() {
         loadMasterData();
         return () => { cancelled = true; };
     }, [activeAccount, t]);
-
-    // Fetch cards with TW fallback logic
-    async function fetchCardsForServer(server: ServerType): Promise<ICardInfo[]> {
-        if (server === "tw") {
-            // TW: use CN masterdata, fallback to JP for missing cards
-            const cnCards = await fetchMasterDataForServer<ICardInfo[]>("cn", "cards.json");
-            const cnCardIds = new Set(cnCards.map((c) => c.id));
-
-            try {
-                const jpCards = await fetchMasterDataForServer<ICardInfo[]>("jp", "cards.json");
-                const extraCards = jpCards.filter((c) => !cnCardIds.has(c.id));
-                if (extraCards.length > 0) {
-                    setIsTwFallback(true);
-                    return [...cnCards, ...extraCards];
-                }
-            } catch {
-                // JP fetch failed, just use CN
-            }
-            return cnCards;
-        }
-
-        return fetchMasterDataForServer<ICardInfo[]>(server, "cards.json");
-    }
 
     // Fetch user cards from suite API
     useEffect(() => {
@@ -567,16 +541,6 @@ function MyCardsContent() {
                 returnTo="/my-cards"
             />
 
-
-            {/* TW Warning */}
-            {activeAccount?.server === "tw" && (
-                <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200/50 text-xs text-amber-700 flex items-start gap-2">
-                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    <span>{t(isTwFallback ? "common.data.twMasterdataFallbackWarning" : "common.data.twMasterdataWarning")}</span>
-                </div>
-            )}
 
             {/* User Error */}
             {userError && (

@@ -24,7 +24,6 @@ import {
     getTopCharacterId,
     type AccountDataErrorCode,
     type MoesekaiAccount,
-    type ServerType,
 } from "@/lib/account";
 
 import AccountSelectorBar from "@/components/AccountSelectorBar";
@@ -315,7 +314,6 @@ function MyMusicsContent() {
     const [error, setError] = useState<string | null>(null);
     const [userError, setUserError] = useState<AccountDataErrorCode | null>(null);
     const [uploadTime, setUploadTime] = useState<string | number | null>(null);
-    const [isTwFallback, setIsTwFallback] = useState(false);
     const [filtersInitialized, setFiltersInitialized] = useState(false);
     const [best30Expanded, setBest30Expanded] = useState(false);
     const [showBest30Share, setShowBest30Share] = useState(false);
@@ -432,18 +430,14 @@ function MyMusicsContent() {
         async function loadMasterData() {
             setIsLoading(true);
             setError(null);
-            setIsTwFallback(false);
 
             try {
                 const server = activeAccount!.server;
 
-                // TW and CN both use CN masterdata.
-                const dataServer: ServerType = server === "tw" || server === "cn" ? "cn" : "jp";
-
                 const [musicsData, difficultiesData, tagsData, translationsData] = await Promise.all([
-                    fetchMasterDataForServer<Music[]>(dataServer, "musics.json"),
-                    fetchMasterDataForServer<MusicDifficulty[]>(dataServer, "musicDifficulties.json"),
-                    fetchMasterDataForServer<IMusicTagInfo[]>(dataServer, "musicTags.json"),
+                    fetchMasterDataForServer<Music[]>(server, "musics.json"),
+                    fetchMasterDataForServer<MusicDifficulty[]>(server, "musicDifficulties.json"),
+                    fetchMasterDataForServer<IMusicTagInfo[]>(server, "musicTags.json"),
                     loadTranslations(),
                 ]);
 
@@ -458,42 +452,8 @@ function MyMusicsContent() {
                     ),
                 }));
 
-                // For TW, supplement missing songs from JP masterdata when needed.
-                if (server === "tw") {
-                    const cnMusicIds = new Set(normalizedMusicsData.map(m => m.id));
-                    try {
-                        const jpMusics = await fetchMasterDataForServer<Music[]>("jp", "musics.json");
-                        const normalizedJpMusics = jpMusics.map((music) => ({
-                            ...music,
-                            categories: (music.categories as unknown as RawMusicCategory[]).map((cat) =>
-                                typeof cat === "object" && cat !== null && "musicCategoryName" in cat
-                                    ? cat.musicCategoryName
-                                    : cat
-                            ),
-                        }));
-                        const jpDifficulties = await fetchMasterDataForServer<MusicDifficulty[]>("jp", "musicDifficulties.json");
-
-                        const extraMusics = normalizedJpMusics.filter(m => !cnMusicIds.has(m.id));
-                        const extraDifficulties = jpDifficulties.filter(d => !cnMusicIds.has(d.musicId));
-
-                        if (extraMusics.length > 0) {
-                            setIsTwFallback(true);
-                            setAllMusics([...normalizedMusicsData, ...extraMusics]);
-                            setMusicDifficulties([...difficultiesData, ...extraDifficulties]);
-                        } else {
-                            setAllMusics(normalizedMusicsData);
-                            setMusicDifficulties(difficultiesData);
-                        }
-                    } catch {
-                        // If JP masterdata fails, keep using CN masterdata only.
-                        setAllMusics(normalizedMusicsData);
-                        setMusicDifficulties(difficultiesData);
-                    }
-                } else {
-                    setAllMusics(normalizedMusicsData);
-                    setMusicDifficulties(difficultiesData);
-                }
-
+                setAllMusics(normalizedMusicsData);
+                setMusicDifficulties(difficultiesData);
                 setMusicTags(tagsData);
                 setTranslations(translationsData);
 
@@ -898,16 +858,6 @@ function MyMusicsContent() {
                 returnTo="/my-musics"
             />
 
-
-            {/* TW Warning */}
-            {activeAccount?.server === "tw" && isTwFallback && (
-                <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200/50 text-xs text-amber-700 flex items-start gap-2">
-                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    <span>{t("common.data.twMusicFallbackWarning")}</span>
-                </div>
-            )}
 
             {/* User Error */}
             {userError && (

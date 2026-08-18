@@ -1,10 +1,20 @@
 /**
  * Moesekai multi-account system.
  * Uses localStorage only and does not communicate with backend services directly.
- * Supports multiple accounts across multiple servers.
+ * Supports multiple accounts across every supported server (cn/jp/tw/kr/en).
  */
 
-export type ServerType = "jp" | "cn" | "tw";
+import {
+    isValidServer,
+    normalizeServer,
+    SERVER_IDS,
+    SERVER_LABEL_KEYS,
+    SERVER_OPTIONS,
+    type ServerType,
+} from "./account-servers";
+
+export { SERVER_IDS, SERVER_LABEL_KEYS, SERVER_OPTIONS, isValidServer, normalizeServer };
+export type { ServerType };
 
 export interface OAuthTokenInfo {
     accessToken: string;
@@ -151,10 +161,6 @@ export const ACCOUNTS_CHANGED_EVENT = "moesekai:accounts-changed";
 const LEGACY_ACCOUNT_KEY = "moesekai_account";
 const LEGACY_USERID_KEY = "deck_recommend_userid";
 const LEGACY_SERVER_KEY = "deck_recommend_server";
-
-function isValidServer(s: string): s is ServerType {
-    return s === "jp" || s === "cn" || s === "tw";
-}
 
 function makeAccountId(server: ServerType, gameId: string): string {
     return `${server}_${gameId}`;
@@ -874,14 +880,6 @@ export function setCachedAvatarUrl(accountId: string, url: string): void {
     }
 }
 
-export const SERVER_IDS: ServerType[] = ["cn", "jp", "tw"];
-
-export const SERVER_LABEL_KEYS: Record<ServerType, string> = {
-    cn: "common.server.cn",
-    jp: "common.server.jp",
-    tw: "common.server.tw",
-};
-
 export interface CreateOrUpdateOAuthAccountInput {
     binding: OAuthBinding;
     profile: OAuthProfile | null;
@@ -890,9 +888,9 @@ export interface CreateOrUpdateOAuthAccountInput {
 }
 
 export function createOrUpdateOAuthAccount({ binding, profile, tokenSet, initialData }: CreateOrUpdateOAuthAccountInput): MoesekaiAccount {
-    const server = (binding.server || binding.region || "jp") as ServerType;
+    const server = normalizeServer(binding.server ?? binding.region);
     const gameId = String(binding.gameId ?? binding.userId ?? binding.uid ?? "").trim();
-    if (!gameId || !isValidServer(server)) {
+    if (!gameId || !server) {
         throw new Error("INVALID_OAUTH_BINDING");
     }
 
@@ -1033,8 +1031,3 @@ export async function disconnectOAuthAccount(accountId: string): Promise<void> {
         authError: null,
     });
 }
-
-export const SERVER_OPTIONS: { value: ServerType; labelKey: string }[] = SERVER_IDS.map((value) => ({
-    value,
-    labelKey: SERVER_LABEL_KEYS[value],
-}));

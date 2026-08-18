@@ -66,7 +66,9 @@ export const koKRMessages = {
         server: {
             cn: "CN",
             jp: "JP",
-            tw: "TW"
+            tw: "TW",
+            kr: "KR",
+            en: "EN"
         },
         relayServers: {
             tokyo1: {
@@ -131,9 +133,6 @@ export const koKRMessages = {
         data: {
             uploadTimeTitle: "데이터 업로드 시간",
             dataTime: "데이터 시간: {time}",
-            twMasterdataWarning: "중국어 번체(TW)는 중국어 간체(CN) 마스터 데이터를 사용하므로 데이터가 정확하지 않을 수 있습니다.",
-            twMasterdataFallbackWarning: "중국어 번체(TW)는 중국어 간체(CN) 마스터데이터를 사용합니다. 일부 중국어 간체(CN) 미구현 카드에 일본어 서버 데이터가 추가되어 데이터가 정확하지 않을 수 있습니다.",
-            twMusicFallbackWarning: "중국어 번체(TW)는 중국어 간체(CN) 데이터를 사용합니다. 구현되지 않은 일부 중국어(CN) 노래가 일본어 서버 데이터로 보완되었으며 호환성 문제가 있을 수 있습니다.",
             suiteUploadHint: "하루키에 Suite 데이터가 업로드되었는지 확인하세요."
         },
         harukiErrors: {
@@ -3552,6 +3551,7 @@ export const koKRMessages = {
                     description: "UID를 수동으로 입력하거나 /프로필을 클릭하여 저장된 계정을 빠르게 입력할 수 있습니다.",
                     uidPlaceholder: "게임 UID 입력",
                     server: "서버",
+                    serverJpOnly: "UID 조회는 일본 서버(JP)만 지원합니다",
                     loading: "레이아웃 쿼리 중…",
                     submit: "쿼리 및 미리보기 입력"
                 },

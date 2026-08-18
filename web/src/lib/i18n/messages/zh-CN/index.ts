@@ -69,6 +69,8 @@ export const zhCNMessages = {
             cn: "简中 (CN)",
             jp: "日服 (JP)",
             tw: "繁中 (TW)",
+            kr: "韩服 (KR)",
+            en: "国际服 (EN)",
         },
         relayServers: {
             tokyo1: {
@@ -133,9 +135,6 @@ export const zhCNMessages = {
         data: {
             uploadTimeTitle: "数据上传时间",
             dataTime: "数据时间: {time}",
-            twMasterdataWarning: "繁中 (TW) 使用简中 (CN) masterdata，数据可能不准确",
-            twMasterdataFallbackWarning: "繁中 (TW) 使用简中 (CN) masterdata，部分简中 (CN) 未实装卡牌已使用日服数据补充，数据可能不准确",
-            twMusicFallbackWarning: "繁中 (TW) 使用简中 (CN) 数据，部分简中 (CN) 未实装歌曲已使用日服数据补充，可能存在兼容性问题",
             suiteUploadHint: "请确认已在 Haruki 上传 Suite 数据",
         },
         harukiErrors: {
@@ -3530,6 +3529,7 @@ export const zhCNMessages = {
                     description: "可以手动输入 UID，也可以点击 /profile 已保存账号快速填入。",
                     uidPlaceholder: "输入游戏 UID",
                     server: "服务器",
+                    serverJpOnly: "UID 查询仅支持日服 (JP)",
                     loading: "查询布局中…",
                     submit: "查询并进入预览",
                 },

@@ -12,7 +12,7 @@ import CharacterSelector from "@/components/deck-recommend/CharacterSelector";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
-import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, SERVER_OPTIONS } from "@/lib/account";
+import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, isValidServer, SERVER_OPTIONS, type ServerType } from "@/lib/account";
 import { getWl3SimulationGroupByEventId, WL3_SIMULATION_GROUPS } from "@/lib/world-bloom-simulation";
 import { getCharacterName } from "@/lib/i18n";
 import AccountSelector from "@/components/AccountSelector";
@@ -126,7 +126,6 @@ interface DeckRecommendWorkerArgs {
 }
 
 type DeckMode = "event" | "challenge" | "mysekai" | "custom" | "strongest" | "wl3";
-type ServerType = "jp" | "cn" | "tw";
 type StrongestTarget = "power" | "skill";
 
 const MAX_CUSTOM_CHARACTERS = 5;
@@ -372,7 +371,7 @@ export default function DeckRecommendClient() {
         const account = getAccount();
         if (account?.toolStates.deckRecommend) {
             nextUserId = account.toolStates.deckRecommend.userId;
-            nextServer = account.toolStates.deckRecommend.server as ServerType;
+            nextServer = account.toolStates.deckRecommend.server;
             nextAllowSave = true;
         } else {
             const savedUserId = localStorage.getItem("deck_recommend_userid");
@@ -381,8 +380,8 @@ export default function DeckRecommendClient() {
                 nextUserId = savedUserId;
                 nextAllowSave = true;
             }
-            if (savedServer && ["jp", "cn", "tw"].includes(savedServer)) {
-                nextServer = savedServer as ServerType;
+            if (isValidServer(savedServer)) {
+                nextServer = savedServer;
             }
         }
 

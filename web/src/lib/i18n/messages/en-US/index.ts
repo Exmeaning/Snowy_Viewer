@@ -69,6 +69,8 @@ export const enUSMessages = {
             cn: "CN",
             jp: "JP",
             tw: "TW",
+            kr: "KR",
+            en: "EN",
         },
         relayServers: {
             tokyo1: {
@@ -133,9 +135,6 @@ export const enUSMessages = {
         data: {
             uploadTimeTitle: "Data upload time",
             dataTime: "Data time: {time}",
-            twMasterdataWarning: "TW uses CN masterdata, so data may be inaccurate",
-            twMasterdataFallbackWarning: "TW uses CN masterdata; some cards not yet implemented on CN have been supplemented with JP data, so data may be inaccurate",
-            twMusicFallbackWarning: "TW uses CN data; some songs not yet implemented on CN have been supplemented with JP data and may have compatibility issues",
             suiteUploadHint: "Please make sure Suite data has been uploaded to Haruki",
         },
         harukiErrors: {
@@ -3531,6 +3530,7 @@ export const enUSMessages = {
                     description: "Enter a UID manually, or click a saved /profile account to fill it quickly.",
                     uidPlaceholder: "Enter game UID",
                     server: "Server",
+                    serverJpOnly: "UID lookup supports JP only",
                     loading: "Querying layout…",
                     submit: "Query and Open Preview",
                 },

@@ -46,11 +46,6 @@ interface GateLevelMaster {
     powerBonusRate: number;
 }
 
-interface UnitProfileMaster {
-    unit: string;
-    unitName: string;
-}
-
 interface CharaBonus {
     areaItem: number;
     rank: number;
@@ -118,7 +113,6 @@ export default function PowerBonusDetail({
     const [areaItemLevels, setAreaItemLevels] = useState<AreaItemLevelMaster[]>([]);
     const [characterRanks, setCharacterRanks] = useState<CharacterRankMaster[]>([]);
     const [gateLevels, setGateLevels] = useState<GateLevelMaster[]>([]);
-    const [unitNameMap, setUnitNameMap] = useState<Map<string, string>>(new Map());
 
     useEffect(() => {
         let cancelled = false;
@@ -126,21 +120,15 @@ export default function PowerBonusDetail({
             setLoading(true);
             setError(null);
             try {
-                const [a, c, g, unitProfiles] = await Promise.all([
+                const [a, c, g] = await Promise.all([
                     fetchMasterDataForServer<AreaItemLevelMaster[]>(server, "areaItemLevels.json"),
                     fetchMasterDataForServer<CharacterRankMaster[]>(server, "characterRanks.json"),
                     fetchMasterDataForServer<GateLevelMaster[]>(server, "mysekaiGateLevels.json"),
-                    fetchMasterDataForServer<UnitProfileMaster[]>("cn", "unitProfiles.json"), // Always CN for Chinese names
                 ]);
                 if (cancelled) return;
                 setAreaItemLevels(a);
                 setCharacterRanks(c);
                 setGateLevels(g);
-                const uMap = new Map<string, string>();
-                unitProfiles.forEach((u) => {
-                    if (u.unit && u.unitName) uMap.set(u.unit, u.unitName);
-                });
-                setUnitNameMap(uMap);
             } catch {
                 if (!cancelled) setError(t("page.profile.stats.powerBonusLoadFailed"));
             } finally {
@@ -234,7 +222,7 @@ export default function PowerBonusDetail({
             {UNIT_ORDER.map((unitKey) => {
                 const unitBonus = bonus.unit.get(unitKey)!;
                 const charIds = UNIT_CHAR_IDS[unitKey];
-                const unitLabel = unitNameMap.get(unitKey) || t(UNIT_LABEL_KEYS[unitKey]);
+                const unitLabel = t(UNIT_LABEL_KEYS[unitKey]);
                 const isVirtualSinger = unitKey === "piapro";
 
                 return (

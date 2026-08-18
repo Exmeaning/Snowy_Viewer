@@ -68,6 +68,8 @@ export const zhTWCommon = {
         cn: "簡中服 (CN)",
         jp: "日服 (JP)",
         tw: "繁中服 (TW)",
+        kr: "韓服 (KR)",
+        en: "國際服 (EN)",
     },
     relayServers: {
         tokyo1: {
@@ -132,9 +134,6 @@ export const zhTWCommon = {
     data: {
         uploadTimeTitle: "資料上傳時間",
         dataTime: "資料時間：{time}",
-        twMasterdataWarning: "TW 使用 CN 主資料，內容可能不完全準確",
-        twMasterdataFallbackWarning: "TW 使用 CN 主資料，部分 CN 尚未實裝的卡牌已改用 JP 資料補充，內容可能不完全準確",
-        twMusicFallbackWarning: "TW 使用 CN 資料，部分 CN 尚未實裝的歌曲已改用 JP 資料補充，可能會有相容性問題",
         suiteUploadHint: "請確認已在 Haruki 上傳 Suite 資料",
     },
     harukiErrors: {

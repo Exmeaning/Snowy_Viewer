@@ -1,4 +1,4 @@
-import type { ServerType } from "./account";
+import { normalizeServer, type ServerType } from "./account-servers";
 
 import { localizePathForBrowser } from "@/lib/localized-path";
 
@@ -488,9 +488,7 @@ export async function fetchOAuthBindings(accessToken: string): Promise<OAuthBind
 }
 
 export function normalizeBindingServer(binding: OAuthBinding): ServerType | null {
-    const raw = String(binding.server || binding.region || "").toLowerCase();
-    if (raw === "jp" || raw === "cn" || raw === "tw") return raw;
-    return null;
+    return normalizeServer(binding.server ?? binding.region);
 }
 
 export function normalizeBindingGameId(binding: OAuthBinding): string | null {

@@ -7,12 +7,14 @@ import MainLayout from "@/components/MainLayout";
 import MysekaiScenePreview from "@/components/mysekai-preview/MysekaiScenePreview";
 import { useI18n } from "@/contexts/I18nContext";
 import { replaceAssetSourceRegion, type AssetSourceType, useTheme } from "@/contexts/ThemeContext";
-import type { ServerType } from "@/lib/account";
 import { type BaijingServer, getUserMysekaiRoomUrl } from "@/lib/mysekai-preview/baijing";
 import type { MysekaiLayoutPayload } from "@/lib/mysekai-preview/types";
 
 const TURNSTILE_SITE_KEY = "0x4AAAAAADSarNCgQKaLAJ6Y";
 const TURNSTILE_SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+
+/** UID-based scene preview is JP-only: the upstream room API only serves JP rooms. */
+const SCENE_SERVER: BaijingServer = "jp";
 
 type EntryMode = "uid" | "json";
 type JsonSourceMode = "file" | "url";
@@ -231,7 +233,6 @@ export default function MysekaiPreviewSceneClient() {
     const { t } = useI18n();
     const { assetSource } = useTheme();
     const [mode, setMode] = useState<EntryMode>("uid");
-    const [server, setServer] = useState<BaijingServer>("jp");
     const [uid, setUid] = useState("");
     const [turnstileToken, setTurnstileToken] = useState("");
     const [turnstileResetSeed, setTurnstileResetSeed] = useState(0);
@@ -267,7 +268,7 @@ export default function MysekaiPreviewSceneClient() {
         setLoading(true);
         setError(null);
         try {
-            const roomUrl = getUserMysekaiRoomUrl(server, normalizedUid);
+            const roomUrl = getUserMysekaiRoomUrl(SCENE_SERVER, normalizedUid);
             const response = await fetch(`${roomUrl}?_ts=${Date.now()}`, {
                 cache: "no-store",
                 headers: {
@@ -288,10 +289,10 @@ export default function MysekaiPreviewSceneClient() {
             setUid(normalizedUid);
             setPreviewState({
                 kind: "uid",
-                server,
+                server: SCENE_SERVER,
                 uid: normalizedUid,
                 layoutData: data as MysekaiLayoutPayload,
-                layoutKey: `${server}-${normalizedUid}-${Date.now()}`,
+                layoutKey: `${SCENE_SERVER}-${normalizedUid}-${Date.now()}`,
             });
         } catch (submitError) {
             setError(errorMessage(submitError));
@@ -432,13 +433,11 @@ export default function MysekaiPreviewSceneClient() {
                         </div>
 
                         <AccountSelector
-                            allowedServers={["jp", "cn"]}
+                            allowedServers={[SCENE_SERVER]}
                             currentUserId={uid}
-                            currentServer={server as ServerType}
-                            onSelect={(gameId, accountServer) => {
-                                if (accountServer !== "jp" && accountServer !== "cn") return;
+                            currentServer={SCENE_SERVER}
+                            onSelect={(gameId) => {
                                 setUid(gameId);
-                                setServer(accountServer);
                                 setError(null);
                             }}
                         />
@@ -454,21 +453,15 @@ export default function MysekaiPreviewSceneClient() {
                                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none transition focus:border-miku focus:ring-2 focus:ring-miku/20"
                                 />
                             </label>
-                            <label className="block">
+                            <div className="block">
                                 <span className="mb-1 block text-sm font-bold text-slate-600">{t("page.mysekaiPreview.scene.uidForm.server")}</span>
-                                <div className="flex gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
-                                    {(["jp", "cn"] as BaijingServer[]).map((item) => (
-                                        <button
-                                            key={item}
-                                            type="button"
-                                            onClick={() => setServer(item)}
-                                            className={`flex-1 rounded-lg px-3 py-2 text-sm font-black transition active:scale-95 ${server === item ? "bg-miku text-white shadow-sm" : "text-slate-500 hover:bg-white"}`}
-                                        >
-                                            {item.toUpperCase()}
-                                        </button>
-                                    ))}
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-1">
+                                    <div className="rounded-lg bg-miku px-3 py-2 text-center text-sm font-black text-white shadow-sm">
+                                        {t(`common.server.${SCENE_SERVER}`)}
+                                    </div>
                                 </div>
-                            </label>
+                                <p className="mt-1 text-xs text-slate-400">{t("page.mysekaiPreview.scene.uidForm.serverJpOnly")}</p>
+                            </div>
                         </div>
 
                         <div className="mt-5">

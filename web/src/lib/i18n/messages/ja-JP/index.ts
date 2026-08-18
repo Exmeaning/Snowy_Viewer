@@ -68,7 +68,9 @@ export const jaJPMessages = {
     server: {
       cn: '簡体字 (CN)',
       jp: '日本版 (JP)',
-      tw: '繁体字 (TW)'
+      tw: '繁体字 (TW)',
+      kr: '韓国版 (KR)',
+      en: 'グローバル版 (EN)'
     },
     relayServers: {
       tokyo1: {
@@ -133,9 +135,6 @@ export const jaJPMessages = {
     data: {
       uploadTimeTitle: 'データアップロード時刻',
       dataTime: 'データ時刻：{time}',
-      twMasterdataWarning: 'TW は CN の masterdata を使用しているため、データが不正確な場合があります',
-      twMasterdataFallbackWarning: 'TW は CN の masterdata を使用しています。CN 未実装の一部カードは JP データで補完されているため、データが不正確な場合があります',
-      twMusicFallbackWarning: 'TW は CN データを使用しています。CN 未実装の一部楽曲は JP データで補完されており、互換性の問題がある場合があります',
       suiteUploadHint: 'Suite データが Haruki にアップロード済みか確認してください'
     },
     harukiErrors: {
@@ -3554,6 +3553,7 @@ export const jaJPMessages = {
           description: 'Enter a UID manually, or click a saved /profile account to fill it quickly.',
           uidPlaceholder: 'Enter game UID',
           server: 'サーバー',
+          serverJpOnly: 'UID 検索は日本版 (JP) のみ対応しています',
           loading: 'Querying layout…',
           submit: 'Query and Open Preview'
         },

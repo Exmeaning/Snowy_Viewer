@@ -467,8 +467,8 @@ export default function Home() {
           </div>
 
           {/* Scheme B: PJSK Intelligence Bureau Collaborative Banner */}
-          <div className="island-panel material-regular rounded-2xl p-3.5 sm:p-4 border-l-4 border-l-[#fb7299] bg-gradient-to-r from-[#fb7299]/10 via-transparent to-transparent flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
+          <div className="island-panel material-regular rounded-2xl p-3.5 sm:p-4 border-l-4 border-l-[#fb7299] bg-gradient-to-r from-[#fb7299]/10 via-transparent to-transparent flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 overflow-hidden">
+            <div className="flex items-start sm:items-center gap-3 min-w-0 w-full">
               <div className="w-10 h-10 rounded-xl bg-[#fb7299] text-white flex items-center justify-center shrink-0 shadow-md shadow-[#fb7299]/25">
                 <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                   <path
@@ -478,21 +478,21 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-bold text-sm text-primary-text">{t("page.home.announcements.bilibiliTitle")}</span>
                   <span className="bg-[#fb7299]/15 text-[#fb7299] text-[10px] font-black px-1.5 py-0.5 rounded">
                     {t("page.home.announcements.bilibiliBadge")}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug truncate sm:whitespace-normal">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug break-words">
                   {t("page.home.announcements.bilibiliDescription")}
                 </p>
               </div>
             </div>
             <ExternalLink
               href={MOESEKAI_BILIBILI_SPACE_URL}
-              className="pressable shrink-0 text-xs font-bold bg-[#fb7299] hover:bg-[#e0567e] text-white px-3.5 py-2 rounded-xl shadow-sm shadow-[#fb7299]/30 flex items-center gap-1.5 transition-all"
+              className="pressable shrink-0 text-xs font-bold bg-[#fb7299] hover:bg-[#e0567e] text-white px-3.5 py-2 rounded-xl shadow-sm shadow-[#fb7299]/30 flex items-center gap-1.5 transition-all self-start sm:self-auto"
             >
               <span>{t("page.home.announcements.bilibiliAction")}</span>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

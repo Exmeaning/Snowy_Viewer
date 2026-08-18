@@ -144,7 +144,7 @@ export default function AccountSelectorBar({
                             </div>
                             <div>
                                 <label className="block text-[10px] font-medium text-slate-500 mb-1">{t("common.form.server")}</label>
-                                <div className="flex gap-1">
+                                <div className="flex flex-wrap gap-1">
                                     {SERVER_OPTIONS.map((s) => (
                                         <button
                                             key={s.value}

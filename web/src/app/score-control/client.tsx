@@ -6,7 +6,7 @@ import Link from "@/components/LocalizedLink";
 import { IMusicInfo, IMusicMeta } from "@/types/music";
 import type { ICardInfo } from "@/types/types";
 import { fetchMasterData } from "@/lib/fetch";
-import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, SERVER_OPTIONS } from "@/lib/account";
+import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, isValidServer, SERVER_OPTIONS, type ServerType } from "@/lib/account";
 import AccountSelector from "@/components/AccountSelector";
 import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";
@@ -129,10 +129,6 @@ interface UserCardInfo {
 }
 
 type CardMasterInfo = ICardInfo;
-
-type ServerType = "jp" | "cn" | "tw";
-
-
 
 const RARITY_CONFIG_KEYS = [
     { key: "rarity_1", label: "★1", color: "#888888" },
@@ -321,18 +317,18 @@ export default function ScoreControlClient() {
         const account = getAccount();
         if (account?.toolStates.scoreControl) {
             setDbUserId(account.toolStates.scoreControl.userId);
-            setDbServer(account.toolStates.scoreControl.server as ServerType);
+            setDbServer(account.toolStates.scoreControl.server);
             setDbAllowSave(true);
         } else if (account?.toolStates.deckRecommend) {
             setDbUserId(account.toolStates.deckRecommend.userId);
-            setDbServer(account.toolStates.deckRecommend.server as ServerType);
+            setDbServer(account.toolStates.deckRecommend.server);
             setDbAllowSave(true);
         } else {
             const savedUserId = localStorage.getItem("deck_recommend_userid");
             const savedServer = localStorage.getItem("deck_recommend_server");
             if (savedUserId) { setDbUserId(savedUserId); setDbAllowSave(true); }
-            if (savedServer && ["jp", "cn", "tw"].includes(savedServer)) {
-                setDbServer(savedServer as ServerType);
+            if (isValidServer(savedServer)) {
+                setDbServer(savedServer);
             }
         }
     }, []);
