@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { stripTypeScriptTypes } from "node:module";
 import { spawnSync } from "node:child_process";
+import { join } from "node:path";
 import test from "node:test";
 
 import {
@@ -266,17 +268,101 @@ test("2D chart SVG normalization rewrites relative note asset paths and fixes ne
     `${js}\nreturn normalizeChartSvg;`,
   )("https://charts-new.unipjsk.com/moe/notes_new/");
 
-  const sampleSvg = `<svg xmlns="http://www.w3.org/2000/svg"><defs><symbol id="notes-0"><image href="../../notes_new/custom01/notes_0.png" width="118"/></symbol><clipPath id="test"><rect x="0" y="0" width="-3.142857" height="30"/></clipPath></defs></svg>`;
+  const sampleSvg = `<svg xmlns="http://www.w3.org/2000/svg"><defs><symbol id="notes-0"><image href="../../notes_new/custom01/notes_0.png" width="118"/></symbol><symbol id="notes-0-middle" viewBox="0 0 134400 56"><image href="../../notes_new/custom01/notes_0.png" x="-37200" y="-3" width="141600" height="62"/></symbol><clipPath id="test"><rect x="0" y="0" width="-3.142857" height="30"/></clipPath></defs></svg>`;
   const normalized = normalizeChartSvg(sampleSvg);
 
   assert.ok(!normalized.includes("../../notes_new/"), "Relative notes_new path should be removed");
   assert.ok(normalized.includes("https://charts-new.unipjsk.com/moe/notes_new/custom01/notes_0.png"), "Absolute notes CDN URL should be used");
   assert.ok(!normalized.includes('width="-3.142857"'), "Negative rect width should be removed");
   assert.ok(normalized.includes('width="0"'), "Negative rect width should become 0");
+  assert.ok(
+    /<symbol id="notes-0-middle"[^>]*><image preserveAspectRatio="none" /.test(normalized),
+    "Note middle sprite image should get preserveAspectRatio=none so the stretched slice stays visible",
+  );
+  assert.ok(
+    !/<symbol id="notes-0"><image preserveAspectRatio/.test(normalized),
+    "Non-middle note sprite images should be left untouched",
+  );
+  assert.equal(normalizeChartSvg(normalized), normalized, "Normalization should be idempotent");
 
   const assetsSource = readWeb("src/lib/assets.ts");
   assert.match(assetsSource, /export function getChartSvgUrl\(musicId:\s*number,\s*difficulty:\s*string/);
   assert.match(assetsSource, /`\/chart-svg\/\$\{musicId\}\/\$\{difficulty\}\.svg`/);
+});
+
+function loadSus2ImgPipeline() {
+  // The vendored files are plain TS modules importing each other; concatenate them
+  // into one scope (imports removed) so the pipeline runs without a bundler.
+  const order = ["fraction.ts", "model.ts", "parser.ts", "renderer.ts"];
+  let js = "";
+  for (const file of order) {
+    let src = readWeb(`src/vendor/sekai-sus2img/${file}`);
+    src = src.replace(/^import\s+[\s\S]*?from\s+'[^']+'\n/gm, "");
+    js += `\n${stripTypeScriptTypes(src, { mode: "transform" })}`;
+  }
+  js = js.replace(/^export /gm, "");
+  return new Function(`${js}\nreturn { parseSusText, renderScoreToSvg };`)();
+}
+
+test("2D chart self-render pipeline turns SUS text into a complete SVG with local sprites", () => {
+  const routeSource = readWeb("src/app/chart-svg/[musicId]/[difficulty]/route.ts");
+  assert.match(routeSource, /@\/vendor\/sekai-sus2img\/parser/, "route renders from vendored SUS parser");
+  assert.match(routeSource, /@\/vendor\/sekai-sus2img\/renderer/, "route renders with vendored SVG renderer");
+  assert.match(routeSource, /proxyUpstreamChartSvg/, "upstream static SVG proxy remains as fallback");
+  assert.match(routeSource, /"\/notes_new\/custom01"/, "self-render uses locally vendored note sprites");
+
+  const { parseSusText, renderScoreToSvg } = loadSus2ImgPipeline();
+  const sus = [
+    "#BPM01: 120",
+    "#00008: 01",
+    "#00019: 1313", // two taps, lane 9, width 3
+    "#000340: 1424", // one slide (start + end), lane 4, width 4
+  ].join("\n");
+
+  const score = parseSusText(sus);
+  assert.equal(score.notes.length, 4, "two taps + slide start/end should survive parsing");
+
+  score.meta.title = "Test Song";
+  score.meta.difficulty = "MASTER";
+  score.meta.playlevel = "32";
+
+  const { svg, width, height } = renderScoreToSvg(score, {
+    noteHost: "/notes_new/custom01",
+    noteSize: 18,
+    timeHeight: 240,
+  });
+
+  assert.ok(width > 0 && height > 0, "rendered SVG should have positive dimensions");
+  assert.match(svg, /<symbol id="notes-1-middle"[^>]*><image [^>]*preserveAspectRatio="none"/,
+    "stretched note-middle sprites must carry preserveAspectRatio=none");
+  assert.match(svg, /href="\/notes_new\/custom01\/notes_1\.png"/, "note sprites resolve to the local public dir");
+  assert.match(svg, /<use href="#notes-\d+-4"/, "notes are placed via 3-slice symbols");
+  assert.match(svg, /class="slide"/, "slide path is rendered");
+  assert.match(svg, /MASTER 32 譜面確認/, "meta subtitle matches upstream format");
+
+  // Every sprite the renderer can reference must exist locally.
+  const spriteDir = join(WEB_ROOT, "public", "notes_new", "custom01");
+  const expectedSprites = [];
+  for (let n = 0; n <= 6; n += 1) expectedSprites.push(`notes_${n}.png`);
+  expectedSprites.push(
+    "notes_friction_among_crtcl.png",
+    "notes_friction_among_flick.png",
+    "notes_friction_among_long.png",
+    "notes_long_among.png",
+    "notes_long_among_crtcl.png",
+  );
+  for (let w = 1; w <= 6; w += 1) {
+    const ww = `0${w}`;
+    expectedSprites.push(
+      `notes_flick_arrow_${ww}.png`,
+      `notes_flick_arrow_${ww}_diagonal.png`,
+      `notes_flick_arrow_crtcl_${ww}.png`,
+      `notes_flick_arrow_crtcl_${ww}_diagonal.png`,
+    );
+  }
+  for (const sprite of expectedSprites) {
+    assert.ok(existsSync(join(spriteDir, sprite)), `missing local note sprite: ${sprite}`);
+  }
 });
 
 function runNodeScript(relativePath) {

@@ -797,7 +797,7 @@ export const zhCNMessages = {
             refreshing: "刷新中...",
         },
         footer: {
-            version: "Moesekai · 1.6-preview-beta4",
+            version: "Moesekai · 1.7-preview-beta2",
         },
         sidebar: {
             notLoggedIn: "未登录",
@@ -3626,6 +3626,17 @@ export const zhCNMessages = {
                 bgmInfo: "BGM：{text}",
                 noBgmInfo: "BGM：当前场景未设置",
             },
+        },
+        chartImage: {
+            generating: "正在生成谱面预览…",
+            failed: "生成谱面预览失败",
+            missingParams: "缺少乐曲参数",
+            downloadPng: "下载 PNG",
+            openRawSvg: "打开服务端渲染版本",
+            zoomIn: "放大",
+            zoomOut: "缩小",
+            zoomFit: "适应高度",
+            zoomReset: "原始大小",
         },
         chartPreview: {
             badge: "谱面预览",

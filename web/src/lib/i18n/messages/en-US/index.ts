@@ -798,7 +798,7 @@ export const enUSMessages = {
             refreshing: "Refreshing...",
         },
         footer: {
-            version: "Moesekai · 1.6-preview-beta4",
+            version: "Moesekai · 1.7-preview-beta2",
         },
         sidebar: {
             notLoggedIn: "Not signed in",
@@ -1035,7 +1035,7 @@ export const enUSMessages = {
             },
             sponsors: {
                 title: "Sponsor Thanks (in no particular order)",
-                list: "阳子(support server),cike, 晓月, Hakuchumu, 性价比, luoxia, 雪莹ちゃん, 蘸色绘糖/晕星奏, tony_all, 沙皮, 轩, 末乐回忆 M氏 ick110811, metamiku, madoka, 垂耳兔kawayi, amia,maveriki, and four supporters who prefer not to disclose their IDs.",
+                list: "阳子(support server),cike, 晓月, Hakuchumu, 性价比, luoxia, 雪莹ちゃん, 蘸色绘糖/晕星奏, tony_all, 沙皮, 轩, 末乐回忆 M氏 ick110811, metamiku, madoka, 垂耳兔kawayi, amia,maveriki,Conrad,意路二夢 and four supporters who prefer not to disclose their IDs.",
             },
             specialThanks: {
                 title: "Supporter Thanks (in no particular order)",
@@ -3627,6 +3627,17 @@ export const enUSMessages = {
                 bgmInfo: "BGM: {text}",
                 noBgmInfo: "BGM: none for the current scene",
             },
+        },
+        chartImage: {
+            generating: "Generating chart image…",
+            failed: "Failed to generate chart image",
+            missingParams: "Missing music parameters",
+            downloadPng: "Download PNG",
+            openRawSvg: "Open server-rendered version",
+            zoomIn: "Zoom in",
+            zoomOut: "Zoom out",
+            zoomFit: "Fit height",
+            zoomReset: "Actual size",
         },
         chartPreview: {
             badge: "Chart Preview",

@@ -222,6 +222,17 @@ export const zhTWPageSecondaryB = {
             noBgmInfo: "BGM：目前場景未設定",
         },
     },
+    chartImage: {
+        generating: "正在產生譜面預覽…",
+        failed: "產生譜面預覽失敗",
+        missingParams: "缺少樂曲參數",
+        downloadPng: "下載 PNG",
+        openRawSvg: "開啟伺服器渲染版本",
+        zoomIn: "放大",
+        zoomOut: "縮小",
+        zoomFit: "適應高度",
+        zoomReset: "原始大小",
+    },
     chartPreview: {
         badge: "譜面預覽",
         title: "譜面",

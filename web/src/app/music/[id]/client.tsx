@@ -15,7 +15,6 @@ import {
     IOutsideCharacter,
     MusicDifficultyType,
     getMusicJacketUrl,
-    getChartSvgUrl,
     getMusicVocalAudioUrl,
     MUSIC_CATEGORY_COLORS,
     DIFFICULTY_NAMES,
@@ -377,7 +376,6 @@ export default function MusicDetailPage() {
     }
 
     const jacketUrl = getMusicJacketUrl(music.assetbundleName, assetSource);
-    const chartUrl = getChartSvgUrl(musicId, selectedDifficulty);
     const releaseConditionMap: Record<number, string> = {
         1: t("page.music.releaseConditions.initial"),
         5: t("page.music.releaseConditions.musicShop"),
@@ -683,8 +681,8 @@ export default function MusicDetailPage() {
                                         </div>
                                     )}
 
-                                    <a
-                                        href={chartUrl}
+                                    <Link
+                                        href={`/chart-image?musicId=${musicId}&difficulty=${selectedDifficulty}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
@@ -694,7 +692,7 @@ export default function MusicDetailPage() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
                                         {t("page.music.openChartImagePreview", { difficulty: DIFFICULTY_NAMES[selectedDifficulty] })}
-                                    </a>
+                                    </Link>
                                     <Link
                                         href={`/chart-preview?musicId=${musicId}&difficulty=${selectedDifficulty}&preview=true&from=/music/${musicId}`}
                                         className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold border-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all mt-2"

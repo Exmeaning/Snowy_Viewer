@@ -795,7 +795,7 @@ export const koKRMessages = {
             refreshing: "상쾌하다..."
         },
         footer: {
-            version: "Moesekai · 1.6-preview-beta4"
+            version: "Moesekai · 1.7-preview-beta2"
         },
         sidebar: {
             notLoggedIn: "로그인되지 않음",
@@ -3648,6 +3648,17 @@ export const koKRMessages = {
                 bgmInfo: "BGM: {text}",
                 noBgmInfo: "BGM: 현재 장면이 설정되지 않았습니다."
             }
+        },
+        chartImage: {
+            generating: "차트 이미지를 생성하는 중…",
+            failed: "차트 이미지 생성에 실패했습니다",
+            missingParams: "곡 파라미터가 없습니다",
+            downloadPng: "PNG 다운로드",
+            openRawSvg: "서버 렌더링 버전 열기",
+            zoomIn: "확대",
+            zoomOut: "축소",
+            zoomFit: "높이 맞춤",
+            zoomReset: "실제 크기",
         },
         chartPreview: {
             badge: "비트맵 미리보기",

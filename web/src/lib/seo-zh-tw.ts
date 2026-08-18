@@ -134,6 +134,11 @@ export const ZH_TW_SEO_PAGE_METADATA = {
         "使用 MikuMikuWorld 風格的 3D 譜面預覽器檢視歌曲譜面，或載入自訂 SUS／BGM 網址。",
         ["譜面預覽", "3D 譜面", "SUS", "MikuMikuWorld"],
     ),
+    chart_image: page(
+        "譜面圖片預覽",
+        "在瀏覽器中將 Project SEKAI 譜面渲染為可縮放的整曲譜面圖，並支援匯出 PNG。",
+        ["譜面圖片", "譜面預覽", "SUS"],
+    ),
     mysekai_preview: page(
         "烤森百景",
         "瀏覽 Project SEKAI MySekai 居家設計大賽作品、排行縮圖與 3D 預覽。",

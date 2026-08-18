@@ -548,6 +548,20 @@ export const SEO_PAGE_METADATA = {
       "ja-JP": ["譜面プレビュー", "3D譜面", "SUS", "MikuMikuWorld"],
     },
   ),
+  chart_image: definePage(
+    "/chart-image",
+    { "zh-CN": "谱面图片预览", "en-US": "Chart Image Viewer", "ja-JP": "譜面画像プレビュー" },
+    {
+      "zh-CN": "在浏览器中将 Project SEKAI 谱面渲染为可缩放的整曲谱面图，支持导出 PNG。",
+      "en-US": "Render Project Sekai charts into a zoomable full-song chart image in your browser, with PNG export.",
+      "ja-JP": "Project SEKAI の譜面をブラウザ上でズーム可能な譜面画像としてレンダリングし、PNG 出力にも対応します。",
+    },
+    {
+      "zh-CN": ["谱面图片", "谱面预览", "SUS"],
+      "en-US": ["chart image", "chart preview", "SUS"],
+      "ja-JP": ["譜面画像", "譜面プレビュー", "SUS"],
+    },
+  ),
   mysekai_preview: definePage(
     "/mysekai-preview",
     { "zh-CN": "烤森百景", "en-US": "MySekai Housing Competition", "ja-JP": "MySekaiハウジングコンテスト" },

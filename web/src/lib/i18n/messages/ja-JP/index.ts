@@ -797,7 +797,7 @@ export const jaJPMessages = {
       refreshing: '更新中...'
     },
     footer: {
-      version: 'Moesekai · 1.6-preview-beta4'
+      version: 'Moesekai · 1.7-preview-beta2'
     },
     sidebar: {
       notLoggedIn: '未ログイン',
@@ -1034,7 +1034,7 @@ export const jaJPMessages = {
       },
       sponsors: {
         title: 'Sponsor Thanks (in no particular order)',
-        list: '阳子(support server), Hakuchumu, 性价比, luoxia, 雪莹ちゃん, 蘸色绘糖/晕星奏, tony_all, 沙皮, 轩, 末乐回忆 M氏 ick110811, metamiku, madoka, 垂耳兔kawayi, amia, maveriki,and four supporters who prefer not to disclose their IDs.'
+        list: '阳子(support server), Hakuchumu, 性价比, luoxia, 雪莹ちゃん, 蘸色绘糖/晕星奏, tony_all, 沙皮, 轩, 末乐回忆 M氏 ick110811, metamiku, madoka, 垂耳兔kawayi, amia, maveriki,Conrad,意路二夢and four supporters who prefer not to disclose their IDs.'
       },
       specialThanks: {
         title: 'Supporter Thanks (in no particular order)',
@@ -3652,6 +3652,17 @@ export const jaJPMessages = {
         bgmInfo: 'BGM: {text}',
         noBgmInfo: 'BGM: none for the current scene'
       }
+    },
+    chartImage: {
+      generating: '譜面画像を生成中…',
+      failed: '譜面画像の生成に失敗しました',
+      missingParams: '楽曲パラメータがありません',
+      downloadPng: 'PNG をダウンロード',
+      openRawSvg: 'サーバー描画版を開く',
+      zoomIn: '拡大',
+      zoomOut: '縮小',
+      zoomFit: '高さに合わせる',
+      zoomReset: '原寸表示',
     },
     chartPreview: {
       badge: '譜面プレビュー',
