@@ -6,7 +6,11 @@ import {
     RealtimeRankingRegion,
     REALTIME_RANKING_REGION_OPTIONS,
 } from "@/types/realtime-ranking-next";
-import { REALTIME_RANKING_LINE_OPTIONS, RealtimeRankingLine } from "@/lib/realtime-ranking-line";
+import {
+    getAvailableLines,
+    getEffectiveLine,
+    RealtimeRankingLine,
+} from "@/lib/realtime-ranking-line";
 
 interface BoardHeaderProps {
     region: RealtimeRankingRegion;
@@ -46,6 +50,9 @@ export default function BoardHeader({
     const updatedLabel = updatedAt
         ? new Date(updatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" })
         : "—";
+
+    const availableLines = getAvailableLines(region);
+    const effectiveLine = getEffectiveLine(line, region);
 
     return (
         <div className="mb-6">
@@ -87,12 +94,12 @@ export default function BoardHeader({
                         <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
                             {t("page.realtimeRankingNext.line.label")}
                         </span>
-                        {REALTIME_RANKING_LINE_OPTIONS.map((l) => (
+                        {availableLines.map((l) => (
                             <button
                                 key={l}
                                 onClick={() => onLineChange(l)}
                                 className={`rounded-lg px-2.5 py-1 text-xs font-black transition-all ${
-                                    line === l
+                                    effectiveLine === l
                                         ? "bg-miku text-white shadow-sm shadow-miku/20"
                                         : "border border-slate-200 bg-white text-slate-500 hover:border-miku/40 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                                 }`}
