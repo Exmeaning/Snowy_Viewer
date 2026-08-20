@@ -35,6 +35,74 @@
    Tokens are namespaced --hh-*. The accent deliberately inherits from
    --color-miku so the existing 26-character theme picker keeps driving the
    cursor color.
+
+   ── Cascade architecture: why most of this file sits in @layer components ─
+
+   Tailwind 4 emits every utility — including all variants (hover:, focus:,
+   group-hover:, sm:, ...) — inside `@layer utilities`. Per CSS Cascade Level 5
+   an UNLAYERED declaration beats any layered one regardless of specificity, and
+   layer order is checked before specificity. globals.css reaches this file via
+   `@import "./handheld-os.css"`, so anything left unlayered here outranks the
+   entire Tailwind utility set.
+
+   Combined with shorthand properties that was a silent footgun. `.hh-tile` used
+   to declare `background:` and `border:` unlayered, which pinned
+   background-color and border-color/width/style at the very top of the cascade.
+   A call site writing `hh-tile hover:border-[var(--hh-accent)]` compiled fine,
+   passed lint and tsc, and then did nothing at runtime: the variant was emitted
+   but could never win. Silent failure is the worst kind, and it had already
+   done real damage —
+
+     - 71 `hh-btn px-6 py-3`-style call sites across 28 files were all
+       rendering at the hardcoded `.5rem 1rem`;
+     - ~15 `hh-tile bg-red-500/12 border-red-500/30` semantic-tint cards were
+       rendering as plain untinted white tiles;
+     - 43 `hh-label text-[var(--hh-accent)]` labels were rendering in
+       --hh-text-tertiary grey;
+     - several call sites had been rewritten to hand-expand the .hh-tile recipe
+       into raw Tailwind classes purely to escape this, which is the clearest
+       possible signal that the default was wrong rather than the override.
+
+   The fix: the primitive vocabulary below lives in `@layer components`, a layer
+   Tailwind's own `@layer theme, base, components, utilities;` statement already
+   orders BEFORE utilities. hh classes therefore supply DEFAULTS and any utility
+   on the same element wins — the mental model everyone already expects from
+   Tailwind. Tailwind's existing `components` layer is reused rather than
+   inventing a name because it needs no `@layer` ordering statement ahead of
+   `@import` and so cannot silently drift out of order later.
+
+   Declarations in that layer are also written LONGHAND (background-color, not
+   background; border-width/style/color, not border). Layering alone would be
+   enough against utilities, but within a single layer a shorthand still resets
+   its siblings — longhand is what lets `.hh-chip-active` override only the
+   border-color it means to and leave the rest composable.
+
+   ── What deliberately stays UNLAYERED, and why ───────────────────────────
+   Four groups must keep outranking utilities. Do not "finish the job" by
+   wrapping these as well:
+
+   1. The legacy re-skin near the bottom (.ios-glass-*, .glass-card, .island-*,
+      .material-*, .type-*). Its whole purpose is to DEFEAT the glassmorphism-era
+      utilities still written at those call sites: `glass-card border
+      border-white/40 bg-white` must not resolve to a white/40 border on a white
+      card. It also keeps its shorthands for the same reason — `background:`
+      there is meant to wipe any co-declared gradient, not cooperate with it.
+   2. The backdrop-blur neutralization. It matches [class*="backdrop-blur"]
+      precisely in order to cancel a utility; layering it would hand the win
+      straight back to the utility it exists to suppress.
+   3. Focus rings and selection state (.hh-focusable:focus-visible,
+      .hh-press:focus-visible, [data-shortcut-focused], .hh-selected*). A stray
+      shadow-* utility must not be able to erase a focus indicator — that is an
+      accessibility regression, not a styling preference.
+   4. .hh-press / .pressable's `transition`. It guarantees the ~90ms press
+      acknowledgment actually animates. 46 call sites across 24 files also write
+      `transition-colors`; if that utility won, transition-property would lose
+      `transform` and every press would snap instantly. Those call sites express
+      additive intent, not replacement intent.
+
+   The accessibility preference blocks (prefers-reduced-motion / -transparency /
+   -contrast) stay unlayered too: a user preference should outrank author
+   utilities, which is what keeps the border-width bump there landing.
    ========================================================================== */
 
 :root {
@@ -196,12 +264,40 @@
 
 /* ==========================================================================
    Surfaces
+   ==========================================================================
+
+   Everything from here to the end of the "Sedimented patterns" block sits in
+   @layer components — see the cascade note in the file header. Two rules for
+   anything added inside it:
+
+   1. These are DEFAULTS. A utility on the same element is meant to win. Do not
+      reach for !important to force one of these through; that re-creates
+      exactly the bug the layer exists to fix, only louder.
+
+   2. Prefer longhand for anything a call site might want to override only PART
+      of. `background-color` rather than `background`, and
+      `border-width`/`-style`/`-color` rather than `border`, because a shorthand
+      resets its siblings to their initial values — so a later rule setting just
+      `border-color` would silently also be relying on the width and style
+      surviving. Same for padding: `padding-block`/`padding-inline`, so a lone
+      `py-3` at the call site does not wipe the horizontal default.
+
+      Shorthand is still correct where the declaration is total and there is no
+      meaningful partial override. Four deliberately remain: `padding: 3px` on
+      .hh-segment and `padding: 1px` on .hh-switch (uniform on all four sides,
+      and both are load-bearing geometry — the segment's 3px is what makes its
+      nested radii concentric), `border: 0` on .hh-divider (a reset, not paint),
+      and `animation` on .hh-spinner (the whole point of the class).
    ========================================================================== */
+
+@layer components {
 
 /* A tile — the home-menu software square. */
 .hh-tile {
-    background: var(--hh-surface-2);
-    border: 1px solid var(--hh-border);
+    background-color: var(--hh-surface-2);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border);
     border-radius: var(--hh-radius-lg);
     box-shadow: var(--hh-shadow-tile);
     color: var(--hh-text-primary);
@@ -210,8 +306,10 @@
 /* A panel — structural chrome (top bar, side rail, sheet). One step flatter
    than a tile so tiles can sit on top without their shadows colliding. */
 .hh-panel {
-    background: var(--hh-surface-1);
-    border: 1px solid var(--hh-border);
+    background-color: var(--hh-surface-1);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border);
     border-radius: var(--hh-radius-xl);
     box-shadow: var(--hh-shadow-raised);
     color: var(--hh-text-primary);
@@ -219,8 +317,10 @@
 
 /* A floating layer — dropdown, popover, dialog. */
 .hh-float {
-    background: var(--hh-surface-2);
-    border: 1px solid var(--hh-border);
+    background-color: var(--hh-surface-2);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border);
     border-radius: var(--hh-radius-xl);
     box-shadow: var(--hh-shadow-float);
     color: var(--hh-text-primary);
@@ -228,20 +328,25 @@
 
 /* A sunken well — list backgrounds, input troughs, empty states. */
 .hh-well {
-    background: var(--hh-surface-sunken);
-    border: 1px solid var(--hh-border-hairline);
+    background-color: var(--hh-surface-sunken);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border-hairline);
     border-radius: var(--hh-radius-lg);
 }
 
 .hh-ground {
-    background: var(--hh-surface-0);
+    background-color: var(--hh-surface-0);
 }
 
 /* Modal scrim. Opaque-dark rather than blurred — consistent with dropping
    backdrop-filter everywhere else. */
 .hh-scrim {
-    background: var(--hh-scrim);
+    background-color: var(--hh-scrim);
 }
+
+}
+/* ── end @layer components ─────────────────────────────────────────────── */
 
 /* ==========================================================================
    Response — press feedback
@@ -250,6 +355,17 @@
    fast scale with no easing runway. .pressable is the legacy name (86 call
    sites) and .hh-press is the new one; both resolve to identical behavior so
    either can be used during the transition.
+
+   UNLAYERED ON PURPOSE (group 4 in the header note). `transition` is a
+   shorthand and 46 call sites across 24 files pair these classes with
+   `transition-colors`. Layered, that utility would win and rewrite
+   transition-property to colors only, dropping `transform` — every press would
+   then jump to scale() with no 90ms ramp. Writing `transition-colors` next to
+   .pressable reads as "also animate my colors", not "stop animating the
+   press", so this rule keeps the last word. The cost of that choice is narrow
+   and worth naming: `transition` is the one property you cannot override from a
+   call site here. Override the tokens (--hh-dur-press) or add a longhand
+   transition-duration instead.
    ========================================================================== */
 
 .hh-press,
@@ -283,6 +399,14 @@
 
    FocusRing renders the moving ring via shared-layout animation. The rules
    here are its appearance plus the keyboard-only fallback.
+
+   UNLAYERED ON PURPOSE (group 3 in the header note). Every rule in this block
+   is a focus or selection indicator, and all of them carry their signal in
+   `box-shadow`. Layered, any co-declared shadow-* / hover:shadow-* utility
+   would outrank them and silently delete the indicator — losing a focus ring is
+   an accessibility defect, not a cosmetic override, so these keep the last
+   word. .hh-selected is grouped here for the same reason: it is the state that
+   tells the user where the cursor actually is.
    ========================================================================== */
 
 .hh-cursor-ring {
@@ -297,10 +421,30 @@
 /* The tile under the cursor lifts and brightens. Paired with the ring, this
    is what sells the cursor as landing on a physical object. */
 .hh-selected {
-    background: var(--hh-surface-3);
+    background-color: var(--hh-surface-3);
     box-shadow: var(--hh-shadow-raised);
     transform: scale(var(--hh-select-scale));
     z-index: 1;
+}
+
+/* "Selected, but stays put." Same accent read as .hh-selected without the
+   scale-up or the elevation change.
+
+   .hh-selected is built for a traveling cursor: one target at a time, lifting
+   as the cursor lands on it. That model breaks down for a grid of statically
+   selected items — multi-select chips, an active thumbnail in a strip, a picked
+   row in a comparison table. There, several items are selected at once and none
+   of them is "where the cursor is", so scaling them all up just makes the grid
+   jitter and reflow, and the raised shadow makes neighbours look misaligned.
+
+   The 1px spread ring rather than a thicker border is what keeps the geometry
+   stable: box-shadow does not participate in layout, so turning selection on
+   and off cannot nudge the item or its siblings by a pixel. Pair with a
+   surface tint at the call site if the item needs to read as selected without
+   relying on the outline alone. */
+.hh-selected-outline {
+    border-color: var(--hh-accent);
+    box-shadow: 0 0 0 1px var(--hh-accent);
 }
 
 /* Keyboard-only ring: pointer users never see it, keyboard and gamepad users
@@ -349,19 +493,31 @@
    the radius token block above already claimed the rule was.
    ========================================================================== */
 
+@layer components {
+
 .hh-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    /* A DEFAULT size, not a fixed one. This used to be unlayered, so the 71
+       `hh-btn px-6 py-3` / `px-8 py-3` call sites across 28 files were all
+       silently clamped back to .5rem/1rem and several authors resorted to
+       inline styles to escape it. Inside @layer components any padding utility
+       now wins, which is what those call sites were always asking for.
+       Longhand rather than `padding` so a lone `py-3` overrides only the
+       vertical axis and keeps this horizontal default. */
+    padding-block: 0.5rem;
+    padding-inline: 1rem;
     /* A slab, not a pill. Call sites had already started fighting the capsule
        by hand — BaseFilters' full-width reset button overrides this to
        --hh-radius-md inline — which is the clearest signal that the default
        was wrong rather than that the override was special. */
     border-radius: var(--hh-radius-md);
-    border: 1px solid var(--hh-border);
-    background: var(--hh-surface-2);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border);
+    background-color: var(--hh-surface-2);
     color: var(--hh-text-primary);
     font-weight: 600;
     letter-spacing: var(--hh-tracking-body);
@@ -369,23 +525,23 @@
 }
 
 .hh-btn:hover {
-    background: var(--hh-surface-3);
+    background-color: var(--hh-surface-3);
     border-color: var(--hh-border-strong);
 }
 
 .hh-btn-primary {
-    background: var(--hh-accent);
+    background-color: var(--hh-accent);
     border-color: color-mix(in srgb, var(--hh-accent) 78%, black);
     color: var(--hh-text-on-accent);
 }
 
 .hh-btn-primary:hover {
-    background: color-mix(in srgb, var(--hh-accent) 88%, white);
+    background-color: color-mix(in srgb, var(--hh-accent) 88%, white);
     border-color: color-mix(in srgb, var(--hh-accent) 70%, black);
 }
 
 .hh-btn-danger {
-    background: var(--hh-accent-alert);
+    background-color: var(--hh-accent-alert);
     border-color: color-mix(in srgb, var(--hh-accent-alert) 75%, black);
     color: #ffffff;
 }
@@ -434,9 +590,32 @@
     box-sizing: border-box;
     padding: 3px;
     gap: 2px;
-    background: var(--hh-surface-sunken);
-    border: 1px solid var(--hh-border-hairline);
+    background-color: var(--hh-surface-sunken);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border-hairline);
     border-radius: var(--hh-radius-md);
+}
+
+/* Shrink-to-fit variant.
+
+   Full-width is right in the side rail and wrong everywhere else. Dropped into
+   a page header — next to a title, a count, an action button — a control that
+   claims `flex: 1 1 auto` eats every spare pixel of the row and pushes its
+   neighbours to the edges, so three separate call sites had independently
+   hand-written `w-auto grow-0 shrink-0` to cancel it. That is the signal that
+   the sizing model needed a second, named option rather than more local
+   patches.
+
+   All three properties are required, and none is redundant: `width: auto` undoes
+   the 100% base size, `flex-grow: 0` stops it absorbing free space, and
+   `flex-shrink: 0` stops the segment labels being squeezed into ellipsis when
+   the row gets tight — which is the failure mode that made these controls
+   unreadable at narrow widths in the first place. */
+.hh-segment-fit {
+    width: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
 }
 
 .hh-segment-item {
@@ -445,8 +624,10 @@
     min-width: 0;
     /* Horizontal padding drops to a safety margin now that width comes from
        flex; keeping 0.9rem here would only push long labels into ellipsis
-       sooner without changing the block's size. */
-    padding: 0.375rem 0.5rem;
+       sooner without changing the block's size. Longhand for the same reason as
+       .hh-btn: a call site tuning one axis should not reset the other. */
+    padding-block: 0.375rem;
+    padding-inline: 0.5rem;
     border-radius: var(--hh-radius-sm);
     font-size: 0.8125rem;
     font-weight: 600;
@@ -470,7 +651,7 @@
 
 .hh-segment-item[aria-selected="true"],
 .hh-segment-item[data-selected="true"] {
-    background: var(--hh-surface-2);
+    background-color: var(--hh-surface-2);
     color: var(--hh-text-primary);
     box-shadow: var(--hh-shadow-tile);
 }
@@ -479,15 +660,15 @@
    through BaseFilters' FilterButton and getFilterChip/IconStateClasses.
 
    Square-ish for the same reason as .hh-segment, but there is a second,
-   sharper argument here: this rule was silently overriding what the call
-   sites asked for. handheld-os.css is imported unlayered while Tailwind emits
-   utilities inside `@layer utilities`, and unlayered wins regardless of
+   sharper argument here: this rule used to silently override what the call
+   sites asked for. Before this file adopted @layer components it was fully
+   unlayered, and unlayered beats Tailwind's `@layer utilities` regardless of
    specificity — so `rounded-xl` written on a .hh-chip never applied. Six of
    the eight icon-chip call sites (CardFilters, EventFilters, CardSelectorModal)
    explicitly ask for 8px via `rounded-xl` or `rounded-[var(--hh-radius-md)]`
    and were being forced to 999px anyway. Landing on --hh-radius-md makes this
-   default agree with the intent already written at those call sites, rather
-   than defeating it.
+   default agree with the intent already written at those call sites; the
+   layering change is what makes it an actual default rather than a decree.
 
    Note this only re-shapes rectangles. The circular things nearby — character
    avatars and the ALL button in CharacterFilter — are plain buttons carrying
@@ -497,10 +678,13 @@
     align-items: center;
     justify-content: center;
     gap: 0.3rem;
-    padding: 0.3rem 0.7rem;
+    padding-block: 0.3rem;
+    padding-inline: 0.7rem;
     border-radius: var(--hh-radius-md);
-    border: 1px solid var(--hh-border);
-    background: var(--hh-surface-2);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border);
+    background-color: var(--hh-surface-2);
     color: var(--hh-text-secondary);
     font-size: 0.75rem;
     font-weight: 600;
@@ -518,24 +702,26 @@
 }
 
 .hh-chip:hover {
-    background: var(--hh-surface-3);
+    background-color: var(--hh-surface-3);
     color: var(--hh-text-primary);
 }
 
 .hh-chip-active {
-    background: var(--hh-accent);
+    background-color: var(--hh-accent);
     border-color: color-mix(in srgb, var(--hh-accent) 76%, black);
     color: var(--hh-text-on-accent);
 }
 
 .hh-chip-active:hover {
-    background: color-mix(in srgb, var(--hh-accent) 90%, white);
+    background-color: color-mix(in srgb, var(--hh-accent) 90%, white);
     color: var(--hh-text-on-accent);
 }
 
 .hh-input {
-    background: var(--hh-surface-2);
-    border: 1px solid var(--hh-border);
+    background-color: var(--hh-surface-2);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border);
     border-radius: var(--hh-radius-md);
     color: var(--hh-text-primary);
     box-shadow: none;
@@ -551,7 +737,7 @@
 .hh-input:focus {
     outline: none;
     border-color: var(--hh-accent);
-    background: var(--hh-surface-1);
+    background-color: var(--hh-surface-1);
     box-shadow: 0 0 0 1px var(--hh-accent);
 }
 
@@ -564,8 +750,10 @@
     width: 2.5rem;
     height: 1.375rem;
     border-radius: var(--hh-radius-full);
-    background: var(--hh-surface-3);
-    border: 1px solid var(--hh-border-strong);
+    background-color: var(--hh-surface-3);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border-strong);
     padding: 1px;
     transition:
         background-color var(--hh-dur-fast) var(--hh-ease-out),
@@ -573,7 +761,7 @@
 }
 
 .hh-switch-active {
-    background: var(--hh-accent);
+    background-color: var(--hh-accent);
     border-color: color-mix(in srgb, var(--hh-accent) 76%, black);
 }
 
@@ -581,7 +769,7 @@
     width: 1.125rem;
     height: 1.125rem;
     border-radius: var(--hh-radius-full);
-    background: #ffffff;
+    background-color: #ffffff;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     transform: translateX(0);
     transition: transform var(--hh-dur-fast) var(--hh-ease-out);
@@ -589,13 +777,13 @@
 
 .hh-switch-active .hh-switch-thumb {
     transform: translateX(1.125rem);
-    background: var(--hh-text-on-accent);
+    background-color: var(--hh-text-on-accent);
 }
 
 /* List rows are separated by an edge-to-edge hairline, not by gaps. */
 .hh-divider {
     height: 1px;
-    background: var(--hh-border);
+    background-color: var(--hh-border);
     border: 0;
 }
 
@@ -612,10 +800,13 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.5rem 0.875rem;
+    padding-block: 0.5rem;
+    padding-inline: 0.875rem;
     border-radius: var(--hh-radius-full);
-    background: var(--hh-surface-1);
-    border: 1px solid var(--hh-border);
+    background-color: var(--hh-surface-1);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border);
     box-shadow: var(--hh-shadow-raised);
 }
 
@@ -626,8 +817,10 @@
     width: 2.5rem;
     height: 2.5rem;
     border-radius: var(--hh-radius-full);
-    background: var(--hh-surface-2);
-    border: 1px solid var(--hh-border);
+    background-color: var(--hh-surface-2);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border);
     color: var(--hh-text-secondary);
     transition:
         transform var(--hh-dur-press) var(--hh-ease-snap),
@@ -636,7 +829,7 @@
 }
 
 .hh-dock-icon:hover {
-    background: var(--hh-surface-3);
+    background-color: var(--hh-surface-3);
     color: var(--hh-text-primary);
     transform: translateY(-2px);
 }
@@ -675,8 +868,325 @@
     letter-spacing: 0;
 }
 
+/* Slashed zero, opt-in.
+
+   It was suggested that .hh-numeric should carry `slashed-zero` outright, on
+   the grounds that leaderboards read better with 0 and O distinguished. It is
+   not applied there, for three reasons:
+
+   1. It solves a problem those 400+ call sites do not have. .hh-numeric marks
+      scores, ranks, timers, counts and dates — digit-only runs. There is no O
+      in "1,204,880" to confuse a 0 with, so the distinction buys nothing in
+      exactly the place it was proposed for.
+   2. It is not reliably available. The stack this design picks is rounded and
+      largely non-Latin-first (ui-rounded, SF Pro Rounded, Hiragino Maru
+      Gothic). Support for the `zero` OpenType feature is uneven across that
+      list and its fallbacks, so a blanket rule would render slashed on some
+      platforms and not others — inconsistency is worse than either choice.
+   3. It fights the typographic direction. A slashed zero is an engineering /
+      terminal convention; this file deliberately picked a rounded, friendly
+      system face. Putting a technical glyph in every number in the app
+      undercuts that on 400+ elements to fix a legibility case that does not
+      arise.
+
+   Where 0-vs-O ambiguity is real, it is alphanumeric identifiers — asset paths,
+   version and bundle strings, hashes, serials — so it ships as a modifier for
+   those. font-feature-settings is re-declared in full rather than added to,
+   because it does not cascade additively: naming only "zero" here would drop
+   the inherited "tnum". */
+.hh-numeric-slashed {
+    font-variant-numeric: slashed-zero tabular-nums;
+    font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* ==========================================================================
+   Sedimented patterns
+
+   Recipes that were being hand-assembled from the same 4-6 utilities over and
+   over across the migration. Each one below was measured at the call sites
+   first; the count is in its comment. They are named for what they ARE, not for
+   what they look like, so a later retune of the ramp moves them together.
+
+   Everything here is a default like the rest of the layer: put a utility on the
+   element and the utility wins. That is deliberate — these are starting points
+   for the common case, not decrees.
+
+   Some candidates were deliberately NOT sedimented; see the note at the end of
+   this block for what was rejected and why.
+   ========================================================================== */
+
+/* Section header strip — 31 hand-written copies of
+   `px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]`,
+   in detail pages (cards, events, live, gacha, music, costumes), ad cards and
+   chart-preview.
+
+   Only the bottom border is drawn, and only ever the bottom: the header sits
+   INSIDE a .hh-tile / .hh-panel that already owns the outer ring, so a full
+   border here would double the line at three of the four edges. The
+   surface-1 fill is one step darker than the surface-2 body underneath, which
+   is what separates the strip without a shadow — the same value-step logic the
+   ramp is built on. */
+.hh-section-header {
+    padding-block: 1rem;
+    padding-inline: 1.25rem;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--hh-border);
+    background-color: var(--hh-surface-1);
+}
+
+/* Hairline-separated list container — the "rows, not cards" pattern.
+
+   The app has 14+ list surfaces and they had all converged on the same three
+   ideas independently: a tile for the outer ring, `overflow-hidden` so the
+   first and last row corners get clipped to the tile radius instead of poking
+   out square, and `divide-y` between rows. Composes with .hh-tile rather than
+   duplicating it, so `hh-tile hh-list` is the intended spelling.
+
+   The separator is applied with the same `:not(:first-child)` shape Tailwind's
+   divide-y uses, which puts the line BETWEEN rows only — so there is no border
+   to cancel at the bottom edge, where it would otherwise sit directly on top of
+   the tile's own border. */
+.hh-list {
+    overflow: hidden;
+}
+
+.hh-list > * + * {
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-top-color: var(--hh-border-hairline);
+}
+
+/* Table vocabulary — 5+ hand-built copies (prediction, score-control,
+   deck-recommend, profile tables).
+
+   .hh-table intentionally does NOT set `display`, `width` or `border-collapse`
+   on its own beyond collapsing: the call sites are a mix of real <table>
+   elements and div grids, and imposing a display value would break whichever
+   half it did not match. It only owns the separator model.
+
+   Header cells reuse .hh-label at the call site (that is already the convention
+   in every existing table) so .hh-table-head only supplies the fill and the
+   rule under it. */
+.hh-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.hh-table-head {
+    background-color: var(--hh-surface-1);
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--hh-border);
+}
+
+/* Rows are transparent by default so the container's surface shows through and
+   zebra striping stays opt-in. `:last-child` drops the final hairline for the
+   same reason .hh-list has no bottom edge: it would land on the container
+   border. */
+.hh-table-row {
+    background-color: transparent;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--hh-border-hairline);
+    transition: background-color var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.hh-table-row:last-child {
+    border-bottom-width: 0;
+}
+
+.hh-table-row:hover {
+    background-color: var(--hh-surface-sunken);
+}
+
+/* ── Media overlays ──────────────────────────────────────────────────────
+   Two classes for text sitting on top of a photograph. Both hardcode black,
+   and that is the whole point rather than an oversight: everything else in this
+   file follows the surface ramp and flips with the theme, but these are not
+   darkening a surface — they are darkening a card illustration or a song jacket
+   that looks the same in both themes. A theme-following scrim would invert in
+   dark mode and stop protecting the white text it exists to protect. Do not
+   "fix" these to use --hh-surface-*. */
+
+/* 4+ copies of `bg-gradient-to-t from-black/80 via-black/30 to-black/10`
+   (HeroCarousel's SLIDE_SCRIM_CLASS, card/event/live/music detail thumbnails). */
+.hh-scrim-media {
+    background-image: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0.3) 50%,
+        rgba(0, 0, 0, 0.1) 100%
+    );
+}
+
+/* The badge plate that goes with it — duration pills, index numbers and
+   difficulty markers pinned onto a thumbnail. Opaque-dark instead of the
+   `bg-white/x + backdrop-blur` it replaced, which is the same trade the rest of
+   the redesign makes: the blur was what separated the badge from the artwork,
+   so removing it means the plate has to carry that contrast itself.
+
+   No padding or font-size here on purpose — the existing call sites legitimately
+   differ (px-1/px-1.5/px-2.5, 9px to 12px) and baking one in would just produce
+   a new round of local overrides. */
+.hh-badge-on-media {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    border-radius: var(--hh-radius-sm);
+}
+
+/* Ring loader — ~50 hand-rolled copies site-wide, in at least three mutually
+   inconsistent spellings (`border-4 border-t-*`, `border-2 border-white/50
+   border-t-white`, plus hardcoded slate variants that never followed the
+   theme).
+
+   Distinct from globals.css's .loading-spinner, which is a fixed 4rem
+   page-level block. This one inherits its size from the box it is put in
+   (`w-4 h-4`, `h-8 w-8`, ...) and takes its color from the accent, so it works
+   inline inside a button as well as centered in a panel.
+
+   currentColor is not used for the track because the track has to be a faded
+   version of the head; color-mix against the accent keeps the pair in step
+   automatically when the character theme changes.
+
+   Reuses the `spin` keyframe globals.css already defines for .loading-spinner
+   rather than adding a second identical one. Forward reference is fine — an
+   animation-name does not have to be declared before use — and globals.css is
+   the only entry point, so it is always present. */
+.hh-spinner {
+    border-radius: var(--hh-radius-full);
+    border-width: 2px;
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--hh-accent) 26%, transparent);
+    border-top-color: var(--hh-accent);
+    animation: spin 0.7s linear infinite;
+}
+
+/* On a dark photo or an accent-filled button the accent track disappears, so
+   this variant switches the pair to white. */
+.hh-spinner-on-accent {
+    border-color: rgba(255, 255, 255, 0.4);
+    border-top-color: #ffffff;
+}
+
+/* Progress / range meter — 7+ copies of
+   `h-1.5 rounded-full bg-[var(--hh-surface-inset)]` plus an accent fill
+   (deck-recommend, score-control, SetupGuide, AreaItemUpgradeMaterials).
+
+   The track is --hh-surface-inset rather than -sunken because a meter reads as
+   a channel cut into the surface, which is the same reason .hh-input troughs
+   use the inset rung. overflow-hidden lives here so the fill's square corners
+   are clipped by the track's radius and the author does not have to round both. */
+.hh-meter {
+    height: 0.375rem;
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--hh-radius-full);
+    background-color: var(--hh-surface-inset);
+}
+
+/* Width is the caller's job — it is the data. */
+.hh-meter-fill {
+    height: 100%;
+    border-radius: var(--hh-radius-full);
+    background-color: var(--hh-accent);
+    transition: width var(--hh-dur-screen) var(--hh-ease-out);
+}
+
+/* Keycap — 8 copies across KeyboardShortcutsHelp, CommandPalette,
+   SettingsPanel and MainNavbar's KBD_CLASS, which had already been factored
+   into a local constant in one file and copy-pasted in the others.
+
+   min-width plus centering is what keeps a row of single-character caps
+   (↑ ↓ ⏎ K) optically even instead of each one hugging its own glyph. The tile
+   shadow is what makes it read as a physical key rather than a bordered span.
+   globals.css's `[data-shortcut-load-more]::after` pseudo-key is intentionally
+   left alone: it cannot use a class. */
+.hh-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    padding-block: 0.125rem;
+    padding-inline: 0.375rem;
+    border-radius: var(--hh-radius-sm);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--hh-border);
+    background-color: var(--hh-surface-2);
+    box-shadow: var(--hh-shadow-tile);
+    color: var(--hh-text-secondary);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Transparency checker — the backdrop that tells an alpha-channel asset apart
+   from one filled with white. 3 copies in asset-viewer, at 6px / 8px / 10px.
+
+   Sedimented despite the low count because it is the one pattern here that
+   cannot be written with Tailwind utilities at all — the existing call sites use
+   `bg-[radial-gradient(...)] [background-size:8px_8px]`, which is a CSS value
+   smuggled through arbitrary-value syntax, and the alternative is an inline
+   style object. --hh-checker-size lets the three sizes stay one class.
+
+   It is functional, not decorative: without it a transparent PNG and a white
+   PNG are indistinguishable in the viewer. */
+.hh-checker {
+    --hh-checker-size: 8px;
+    background-color: var(--hh-surface-sunken);
+    background-image: radial-gradient(var(--hh-border-strong) 1px, transparent 1px);
+    background-size: var(--hh-checker-size) var(--hh-checker-size);
+}
+
+/* Semantic notice tile — 8 copies of the red / amber / green / blue advisory
+   card (spoiler warnings, AFK notices, data caveats, ToS callouts).
+
+   Takes one --hh-tint from the call site and derives the fill, border and text
+   from it, so the four variants stop being four unrelated triplets of
+   `bg-red-500/12 border-red-500/30 text-red-700`. Those triplets were also
+   among the worst casualties of the old cascade: ~15 of them were written on
+   .hh-tile, which pinned background-color and border-color unlayered, so the
+   tint never rendered at all and the cards showed as plain white tiles.
+
+   color-mix against the surface rather than a fixed alpha is what makes it
+   survive the theme flip: mixing 12% red into a dark surface stays dark, while
+   a flat red/12 overlay would wash out. Meant to compose with .hh-tile —
+   `hh-tile hh-tile-tint` with --hh-tint set inline. */
+.hh-tile-tint {
+    --hh-tint: var(--hh-accent);
+    background-color: color-mix(in srgb, var(--hh-tint) 12%, var(--hh-surface-2));
+    border-color: color-mix(in srgb, var(--hh-tint) 34%, var(--hh-surface-2));
+}
+
+/* ── Considered and rejected ─────────────────────────────────────────────
+   Recorded so the same proposals are not re-litigated from scratch:
+
+   - A `.hh-row` for the inner padding of list rows. Real call sites vary too
+     much (px-4/px-5, py-2.5/py-3/py-4, some with a leading thumbnail column and
+     some without) and the shared part is two padding utilities, which is not
+     worth a name. .hh-list owns the part that was actually duplicated — the
+     separator model.
+   - Baking `overflow-hidden` and `divide-y` into .hh-tile directly. Rejected:
+     most tiles are not lists, and overflow-hidden on a tile silently clips
+     dropdowns, tooltips and focus rings that intentionally overhang it.
+   - A tint scale (.hh-tile-tint-red / -amber / ...). Rejected in favour of the
+     single --hh-tint variable: a fixed set of names would need extending every
+     time a page needs a fifth meaning, and it would re-hardcode the palette
+     this file spent its effort removing.
+   ========================================================================== */
+
+}
+/* ── end @layer components ─────────────────────────────────────────────── */
+
 /* ==========================================================================
    Motion — keyframes
+
+   Unlayered like the legacy animation helpers further down: `animation` is a
+   shorthand and these compete with Tailwind's animate-* utilities, so keeping
+   them here preserves the behavior the app already shipped with.
    ========================================================================== */
 
 /* Cursor lands on a target: one tight outward pulse of the ring. */
