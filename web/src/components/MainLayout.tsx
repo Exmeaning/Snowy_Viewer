@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import MainNavbar from "./MainNavbar";
 import Sidebar from "./Sidebar";
 import MainFooter from "./MainFooter";
@@ -14,9 +14,10 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { usePageListShortcuts } from "@/hooks/usePageListShortcuts";
 import { useTheme } from "@/contexts/ThemeContext";
 import { localizePathForBrowser, stripRouteLocale } from "@/lib/localized-path";
-import { hhReducedVariants, hhScreenVariants } from "@/lib/motion";
+import { hhScreenVariants } from "@/lib/motion";
 import DetailSeoSummary from "@/components/seo/DetailSeoSummary";
 import { useDetailSeoSummary } from "@/contexts/DetailSeoSummaryContext";
+import { playHandheldSound, unlockHandheldAudio } from "@/lib/handheld-sound";
 
 function ScreenshotParamsListener({ onChange }: { onChange: (isScreenshot: boolean) => void }) {
     const searchParams = useSearchParams();
@@ -36,9 +37,6 @@ function hasOverlayHistoryState() {
     return Boolean(getHistoryStateObject().moesekaiOverlay);
 }
 
-/** Stable identity so switching variant sets never re-triggers the animation. */
-const REDUCED_SCREEN_VARIANTS = hhReducedVariants();
-
 interface MainLayoutProps {
     children: React.ReactNode;
     showLoader?: boolean;
@@ -54,7 +52,6 @@ export default function MainLayout({
     const pathname = usePathname();
     const detailSeoSummary = useDetailSeoSummary();
     const { useTrainedThumbnail, setUseTrainedThumbnail, backgroundAnimationBudget } = useTheme();
-    const prefersReducedMotion = useReducedMotion();
     const pageContentRef = useRef<HTMLDivElement>(null);
     const shouldShowAmbientDrift = backgroundAnimationBudget === "on";
     const isHome = stripRouteLocale(pathname) === "/";
@@ -77,6 +74,38 @@ export default function MainLayout({
     const skipNextOverlayHistoryCleanupRef = useRef(false);
 
     const anyOverlayOpen = isSearchOpen || isSettingsOpen || isShortcutsHelpOpen;
+
+    // Open the audio path on the first real gesture of the session.
+    //
+    // Browsers refuse to start an AudioContext outside a user gesture, and a
+    // context created cold stays "suspended" — the first blip after that is
+    // swallowed while it resumes. Doing it here, once, on whichever of these
+    // three fires first, means the sound switch works on the very first click
+    // after the user flips it on. All three are removed together so a pointer
+    // gesture does not leave a dangling key listener behind.
+    useEffect(() => {
+        const events: readonly (keyof WindowEventMap)[] = ["pointerdown", "keydown", "touchstart"];
+        // `once: true` only retires the listener that actually fired, so the
+        // handler removes its siblings itself.
+        const options: AddEventListenerOptions = { once: true, capture: true };
+
+        const handleFirstGesture = () => {
+            for (const eventName of events) {
+                window.removeEventListener(eventName, handleFirstGesture, options);
+            }
+            unlockHandheldAudio();
+        };
+
+        for (const eventName of events) {
+            window.addEventListener(eventName, handleFirstGesture, options);
+        }
+
+        return () => {
+            for (const eventName of events) {
+                window.removeEventListener(eventName, handleFirstGesture, options);
+            }
+        };
+    }, []);
 
     // Mark overlays on <html> so CSS can pause heavy background animations and
     // tone down backdrop blur on mobile while an overlay is present. This is the
@@ -209,6 +238,7 @@ export default function MainLayout({
 
     const handleMenuToggle = useCallback(() => {
         if (isScreenshotMode || immersiveMode) return;
+        playHandheldSound("toggle");
         setIsSidebarOpen(prev => {
             const newState = !prev;
             sessionStorage.setItem('sidebar_open', String(newState));
@@ -217,6 +247,7 @@ export default function MainLayout({
     }, [immersiveMode, isScreenshotMode]);
 
     const handleSidebarClose = useCallback(() => {
+        playHandheldSound("back");
         setIsSidebarOpen(false);
         if (!isScreenshotMode && !immersiveMode) {
             sessionStorage.setItem('sidebar_open', 'false');
@@ -224,10 +255,12 @@ export default function MainLayout({
     }, [immersiveMode, isScreenshotMode]);
 
     const handleSearchClose = useCallback(() => {
+        playHandheldSound("back");
         setIsSearchOpen(false);
     }, []);
 
     const handleSearchNavigate = useCallback((href: string) => {
+        playHandheldSound("confirm");
         skipNextOverlayHistoryCleanupRef.current = true;
         setIsSearchOpen(false);
         router.replace(localizePathForBrowser(href));
@@ -237,15 +270,25 @@ export default function MainLayout({
     const shortcutHandlers = useMemo(() => ({
         onToggleSidebar: () => {
             if (isScreenshotMode || immersiveMode) return;
+            playHandheldSound("toggle");
             setIsSidebarOpen(prev => {
                 const newState = !prev;
                 sessionStorage.setItem('sidebar_open', String(newState));
                 return newState;
             });
         },
-        onToggleSettings: () => setIsSettingsOpen(prev => !prev),
-        onToggleSearch: () => setIsSearchOpen(prev => !prev),
-        onToggleShortcutsHelp: () => setIsShortcutsHelpOpen(prev => !prev),
+        onToggleSettings: () => {
+            playHandheldSound("toggle");
+            setIsSettingsOpen(prev => !prev);
+        },
+        onToggleSearch: () => {
+            playHandheldSound("toggle");
+            setIsSearchOpen(prev => !prev);
+        },
+        onToggleShortcutsHelp: () => {
+            playHandheldSound("toggle");
+            setIsShortcutsHelpOpen(prev => !prev);
+        },
         onToggleTrainedThumbnail: () => setUseTrainedThumbnail(!useTrainedThumbnail),
         onNavigateBack: () => router.back(),
         onNavigateForward: () => window.history.forward(),
@@ -257,10 +300,6 @@ export default function MainLayout({
     }), [router, useTrainedThumbnail, setUseTrainedThumbnail, immersiveMode, isScreenshotMode]);
 
     const isShortcutScopeLocked = isSearchOpen || isSettingsOpen || isShortcutsHelpOpen || immersiveMode;
-
-    // Reduced motion keeps the cross-fade so a route change is still legible —
-    // only the 10px rise is withheld.
-    const screenVariants = prefersReducedMotion ? REDUCED_SCREEN_VARIANTS : hhScreenVariants;
 
     useKeyboardShortcuts(shortcutHandlers, {
         disabled: isShortcutScopeLocked,
@@ -352,10 +391,15 @@ export default function MainLayout({
                         There is no exit variant because the App Router unmounts the
                         old tree before an exit could play. The final state is y: 0, at
                         which point framer-motion writes `transform: none`, so nothing
-                        is left holding a containing block over fixed page content. */}
+                        is left holding a containing block over fixed page content.
+
+                        One variant set only: under reduced motion MotionProvider's
+                        reducedMotion="user" snaps the 10px rise while the cross-fade
+                        still plays, so a route change stays legible without forking
+                        SSR and client markup. */}
                     <motion.div
                         key={pathname}
-                        variants={screenVariants}
+                        variants={hhScreenVariants}
                         initial="initial"
                         animate="animate"
                         className="w-full min-w-0"

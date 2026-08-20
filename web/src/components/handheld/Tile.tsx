@@ -21,7 +21,7 @@
  * selection data attribute, the pointer/focus sync and the roving tab index.
  */
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import type {
   AriaAttributes,
   AriaRole,
@@ -96,16 +96,15 @@ export default function Tile({
   disabled = false,
   ...rest
 }: HandheldTileProps) {
-  const prefersReducedMotion = useReducedMotion();
-
   const tileClassName = ["hh-tile", "hh-focusable", "relative", selected ? "hh-selected" : "", className ?? ""]
     .filter(Boolean)
     .join(" ");
 
-  // Reduced motion: no transform gestures at all. The tile still changes
-  // surface, border and shadow through `.hh-tile` / `.hh-selected`, so every
-  // state remains visible — only the travel and the dip go away.
-  const useGestures = !prefersReducedMotion && !disabled;
+  // Reduced motion is applied globally by MotionProvider, which snaps the
+  // transforms instead of animating them. The tile also changes surface, border
+  // and shadow through `.hh-tile` / `.hh-selected`, so every state stays
+  // visible either way — here only `disabled` withholds the gestures.
+  const useGestures = !disabled;
 
   const sharedProps = {
     // Set from `selected` so a tile is correct on its own; `getItemProps` spread
@@ -114,7 +113,7 @@ export default function Tile({
     ...rest,
     className: tileClassName,
     onClick: disabled ? undefined : onClick,
-    animate: prefersReducedMotion ? undefined : { scale: selected ? HH_SELECT_SCALE : 1, transition: hhSpringSelect },
+    animate: { scale: selected ? HH_SELECT_SCALE : 1, transition: hhSpringSelect },
     whileHover: useGestures ? hhHoverLift : undefined,
     whileTap: useGestures ? hhTapPress : undefined,
     // Applies to the return from hover/press; `animate` carries its own.

@@ -8,6 +8,7 @@ import { getPrimaryShortcutLabel, isKeyboardEventComposing } from "@/lib/shortcu
 import { fetchMusicAliases } from "@/lib/musicAliases";
 import { useI18n } from "@/contexts/I18nContext";
 import { getMotionTransition } from "@/lib/motion";
+import { playHandheldSound } from "@/lib/handheld-sound";
 
 // Dynamic search index item from search-index.json
 interface SearchIndexItem {
@@ -54,6 +55,9 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
     const indexLoadedRef = useRef(false);
     const wildcardShortcut = getPrimaryShortcutLabel("toggle-search-wildcard");
     const { locale, t } = useI18n();
+    // The preference selects the transition curve only. Animated values stay
+    // unconditional so SSR and the client's first frame emit identical inline
+    // styles; MotionProvider's reducedMotion="user" snaps the transforms.
     const prefersReducedMotion = useReducedMotion();
     const overlayTransition = getMotionTransition("snappy", {
         reducedMotion: !!prefersReducedMotion,
@@ -271,8 +275,11 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
         setActiveIndex(0);
     }, [filtered, dynamicFiltered]);
 
+    // Both the mouse and the Enter key land here, so this is the one place the
+    // confirm cue belongs — every result row gets it for free.
     const navigate = useCallback(
         (href: string) => {
+            playHandheldSound("confirm");
             onNavigate(href);
         },
         [onNavigate]
@@ -295,11 +302,13 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                 case "ArrowDown":
                     if (totalItems === 0) return;
                     e.preventDefault();
+                    playHandheldSound("cursor");
                     setActiveIndex((prev) => (prev + 1) % totalItems);
                     break;
                 case "ArrowUp":
                     if (totalItems === 0) return;
                     e.preventDefault();
+                    playHandheldSound("cursor");
                     setActiveIndex((prev) => (prev - 1 + totalItems) % totalItems);
                     break;
                 case "Enter":
@@ -318,6 +327,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                     break;
                 case "Escape":
                     e.preventDefault();
+                    playHandheldSound("back");
                     onClose();
                     break;
                 case "q":
@@ -326,6 +336,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                     // macOS Option+Q triggers œ, keep both for compatibility
                     if (e.ctrlKey || e.metaKey) {
                         e.preventDefault();
+                        playHandheldSound("toggle");
                         setUseWildcard((prev) => !prev);
                     }
                     break;
@@ -356,21 +367,9 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                     {/* Dialog — enter/exit from top (source-anchored path) */}
                     <motion.div
                         className="relative w-full max-w-lg transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[70vh]"
-                        initial={
-                            prefersReducedMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, scale: 0.97, y: -12 }
-                        }
-                        animate={
-                            prefersReducedMotion
-                                ? { opacity: 1 }
-                                : { opacity: 1, scale: 1, y: 0 }
-                        }
-                        exit={
-                            prefersReducedMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, scale: 0.97, y: -12 }
-                        }
+                        initial={{ opacity: 0, scale: 0.97, y: -12 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.97, y: -12 }}
                         transition={panelTransition}
                         onKeyDown={handleKeyDown}
                     >
@@ -411,7 +410,10 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                     </kbd>
                                 </span>
                                 <button
-                                    onClick={() => setUseWildcard(!useWildcard)}
+                                    onClick={() => {
+                                        playHandheldSound("toggle");
+                                        setUseWildcard(!useWildcard);
+                                    }}
                                     className={`pressable relative w-11 h-6 rounded-full transition-colors duration-[var(--duration-fast)] ${useWildcard ? 'bg-miku' : 'bg-slate-200'}`}
                                 >
                                     <span

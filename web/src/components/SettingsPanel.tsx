@@ -104,6 +104,9 @@ interface FloatingDropdownProps {
 
 function FloatingDropdown({ isOpen, triggerRect, onClose, children, maxHeight = 260 }: FloatingDropdownProps) {
     const dropdownRef = useRef<HTMLDivElement>(null);
+    // Reduced motion only selects the transition curve. The animated values
+    // stay unconditional so server and client render the same inline styles —
+    // MotionProvider's reducedMotion="user" snaps the transforms after mount.
     const prefersReducedMotion = useReducedMotion();
     const transition = getMotionTransition("snappy", { reducedMotion: !!prefersReducedMotion });
 
@@ -156,17 +159,17 @@ function FloatingDropdown({ isOpen, triggerRect, onClose, children, maxHeight = 
                         ref={dropdownRef}
                         style={style}
                         onClick={(e) => e.stopPropagation()}
-                        initial={prefersReducedMotion ? { opacity: 0 } : {
+                        initial={{
                             opacity: 0,
                             scale: 0.95,
                             y: openUpwards ? 8 : -8,
                         }}
-                        animate={prefersReducedMotion ? { opacity: 1 } : {
+                        animate={{
                             opacity: 1,
                             scale: 1,
                             y: 0,
                         }}
-                        exit={prefersReducedMotion ? { opacity: 0 } : {
+                        exit={{
                             opacity: 0,
                             scale: 0.95,
                             y: openUpwards ? 8 : -8,
@@ -218,6 +221,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     const panelRef = useRef<HTMLDivElement>(null);
 
     const [mounted, setMounted] = useState(false);
+    // As in FloatingDropdown: the preference picks the curve only, never the
+    // animated values.
     const prefersReducedMotion = useReducedMotion();
     const overlayTransition = getMotionTransition("snappy", {
         reducedMotion: !!prefersReducedMotion,
@@ -258,6 +263,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             if (!shouldCloseByEscape && !shouldCloseByToggle) return;
 
             event.preventDefault();
+            playHandheldSound("back");
             onClose();
         };
 
@@ -267,7 +273,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         };
     }, [isOpen, onClose]);
 
+    // Single entry point for all four dropdown triggers (theme colour, language,
+    // server source, asset source), so opening or closing any of them clicks once.
     const handleToggleDropdown = (id: string, event: React.MouseEvent<HTMLButtonElement>) => {
+        playHandheldSound("toggle");
         if (expandedDropdown === id) {
             setExpandedDropdown(null);
             setTriggerRect(null);
@@ -279,12 +288,20 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
     const handleNavigateAbout = (e: React.MouseEvent) => {
         e.stopPropagation();
+        playHandheldSound("confirm");
         onClose();
         window.location.href = "/about";
     };
 
     // Get current asset line label
     const currentAssetLabel = assetLineOptions.find((opt) => opt.value === assetSource)?.labelKey ?? "settings.assetSource.main";
+
+    // Dismissing the panel — scrim, header button and the About link all route
+    // through here so "leaving" always sounds the same.
+    const handleCloseWithSound = () => {
+        playHandheldSound("back");
+        onClose();
+    };
 
     if (!mounted) return null;
 
@@ -299,7 +316,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={overlayTransition}
-                        onClick={onClose}
+                        onClick={handleCloseWithSound}
                     />
 
                     {/* Dialog - Auto-fits active content height cleanly */}
@@ -308,21 +325,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         ref={panelRef}
                         onClick={(e) => e.stopPropagation()}
                         className="relative w-full max-w-md transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col shadow-2xl my-auto z-10"
-                        initial={
-                            prefersReducedMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, scale: 0.96, y: 12 }
-                        }
-                        animate={
-                            prefersReducedMotion
-                                ? { opacity: 1 }
-                                : { opacity: 1, scale: 1, y: 0 }
-                        }
-                        exit={
-                            prefersReducedMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, scale: 0.96, y: 12 }
-                        }
+                        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.96, y: 12 }}
                         transition={panelTransition}
                     >
                         {/* Header */}
@@ -335,7 +340,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                 {t("settings.title")}
                             </h3>
                             <button
-                                onClick={onClose}
+                                onClick={handleCloseWithSound}
                                 className="pressable p-1.5 text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-lg"
                                 aria-label={t("common.action.close")}
                             >
@@ -353,6 +358,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                     <button
                                         key={tab.id}
                                         onClick={() => {
+                                            playHandheldSound("cursor");
                                             setActiveTab(tab.id);
                                             setExpandedDropdown(null);
                                             setTriggerRect(null);
@@ -384,9 +390,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                             <AnimatePresence mode="wait" initial={false}>
                                 <motion.div
                                     key={activeTab}
-                                    initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
-                                    animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                                    exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+                                    initial={{ opacity: 0, y: 6 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -6 }}
                                     transition={overlayTransition}
                                     className="space-y-4"
                                 >
@@ -404,7 +410,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                         return (
                                                             <button
                                                                 key={option.id}
-                                                                onClick={() => setColorSchemePreference(option.id)}
+                                                                onClick={() => {
+                                                                    playHandheldSound("toggle");
+                                                                    setColorSchemePreference(option.id);
+                                                                }}
                                                                 className={`relative flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors duration-150 select-none ${
                                                                     isSelected
                                                                         ? "text-white"
@@ -439,7 +448,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                         return (
                                                             <button
                                                                 key={option.id}
-                                                                onClick={() => setBackgroundAnimationBudget(option.id as "on" | "off")}
+                                                                onClick={() => {
+                                                                    playHandheldSound("toggle");
+                                                                    setBackgroundAnimationBudget(option.id as "on" | "off");
+                                                                }}
                                                                 className={`relative flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors duration-150 select-none ${
                                                                     isSelected
                                                                         ? "text-white"
@@ -582,7 +594,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.showSpoiler.label")}</span>
                                                 </div>
                                                 <button
-                                                    onClick={() => setShowSpoiler(!isShowSpoiler)}
+                                                    onClick={() => {
+                                                        playHandheldSound("toggle");
+                                                        setShowSpoiler(!isShowSpoiler);
+                                                    }}
                                                     className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${isShowSpoiler ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
                                                 >
                                                     <motion.span
@@ -603,7 +618,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                     <kbd className="hidden sm:inline-block min-w-[1.5rem] px-1.5 py-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/60 rounded border border-slate-200/50 dark:border-slate-700/40 text-center shadow-sm">]</kbd>
                                                 </div>
                                                 <button
-                                                    onClick={() => setUseTrainedThumbnail(!useTrainedThumbnail)}
+                                                    onClick={() => {
+                                                        playHandheldSound("toggle");
+                                                        setUseTrainedThumbnail(!useTrainedThumbnail);
+                                                    }}
                                                     className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useTrainedThumbnail ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
                                                 >
                                                     <motion.span
@@ -623,7 +641,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.translation.label")}</span>
                                                 </div>
                                                 <button
-                                                    onClick={() => setUseLLMTranslation(!useLLMTranslation)}
+                                                    onClick={() => {
+                                                        playHandheldSound("toggle");
+                                                        setUseLLMTranslation(!useLLMTranslation);
+                                                    }}
                                                     className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useLLMTranslation ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
                                                 >
                                                     <motion.span
@@ -643,7 +664,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.ads.label")}</span>
                                                     </div>
                                                     <button
-                                                        onClick={() => setShowAds(!showAds)}
+                                                        onClick={() => {
+                                                            playHandheldSound("toggle");
+                                                            setShowAds(!showAds);
+                                                        }}
                                                         className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${showAds ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
                                                     >
                                                         <motion.span
@@ -741,7 +765,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                     </div>
 
                                                     <button
-                                                        onClick={forceRefreshData}
+                                                        onClick={() => {
+                                                            playHandheldSound("confirm");
+                                                            forceRefreshData();
+                                                        }}
                                                         disabled={isRefreshing || isLoading}
                                                         className="w-full px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 disabled:from-slate-300 dark:disabled:from-slate-700 disabled:to-slate-400 dark:disabled:to-slate-800 disabled:text-slate-500 dark:disabled:text-slate-650 rounded-xl transition-all flex items-center justify-center gap-2"
                                                     >
@@ -850,6 +877,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                 <button
                                                     key={charId}
                                                     onClick={() => {
+                                                        playHandheldSound("confirm");
                                                         setThemeCharacter(String(charId));
                                                         setExpandedDropdown(null);
                                                     }}
@@ -893,6 +921,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                     <button
                                         key={option.id}
                                         onClick={() => {
+                                            playHandheldSound("confirm");
                                             setLocale(option.id);
                                             if (option.id !== "zh-CN") {
                                                 setUseLLMTranslation(false);
@@ -935,6 +964,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                     <button
                                         key={region}
                                         onClick={() => {
+                                            playHandheldSound("confirm");
                                             setExpandedDropdown(null);
                                             if (serverSource !== region) {
                                                 setServerSource(region);
@@ -981,6 +1011,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                     <button
                                         key={option.key}
                                         onClick={() => {
+                                            playHandheldSound("confirm");
                                             setExpandedDropdown(null);
                                             if (assetSource !== optionValue) {
                                                 setAssetSource(optionValue);

@@ -36,6 +36,8 @@ export default function Modal({
 }: ModalProps) {
     const { t } = useI18n();
     const [mounted, setMounted] = useState(false);
+    // Curve only — never the animated values, which must match between server
+    // and client. MotionProvider handles the transform downgrade after mount.
     const prefersReducedMotion = useReducedMotion();
     const overlayTransition = getMotionTransition("snappy", {
         reducedMotion: !!prefersReducedMotion,
@@ -131,21 +133,9 @@ export default function Modal({
                     {/* Dialog — enter/exit same path; critical spring by default */}
                     <motion.div
                         className={`relative w-full ${sizeClasses[size]} transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[85vh]`}
-                        initial={
-                            prefersReducedMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, scale: 0.96, y: 12 }
-                        }
-                        animate={
-                            prefersReducedMotion
-                                ? { opacity: 1 }
-                                : { opacity: 1, scale: 1, y: 0 }
-                        }
-                        exit={
-                            prefersReducedMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, scale: 0.96, y: 12 }
-                        }
+                        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.96, y: 12 }}
                         transition={dialogTransition}
                     >
                         {/* Header */}

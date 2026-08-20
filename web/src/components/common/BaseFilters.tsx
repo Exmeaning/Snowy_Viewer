@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/contexts/I18nContext";
+import { playHandheldSound } from "@/lib/handheld-sound";
 
 // ============================================================================
 // Types
@@ -132,6 +133,7 @@ export default function BaseFilters({
     const isInsideQuickFilter = !!rootElement?.closest(".quick-filter-modal-content");
 
     const toggleCollapsed = () => {
+        playHandheldSound("toggle");
         setMobileCollapsed(prev => {
             const next = !prev;
             try { localStorage.setItem(STORAGE_KEY, String(next)); } catch {}
@@ -141,9 +143,16 @@ export default function BaseFilters({
 
     const handleSortClick = (optionId: string) => {
         if (!onSortChange) return;
+        playHandheldSound("toggle");
         // Toggle order if clicking same option, otherwise default to desc
         const newOrder = sortBy === optionId && sortOrder === "desc" ? "asc" : "desc";
         onSortChange(optionId, newOrder);
+    };
+
+    const handleReset = () => {
+        if (!onReset) return;
+        playHandheldSound("back");
+        onReset();
     };
 
     return (
@@ -237,7 +246,7 @@ export default function BaseFilters({
                     {/* Reset Button */}
                     {hasActiveFilters && onReset && (
                         <button
-                            onClick={onReset}
+                            onClick={handleReset}
                             className="pressable w-full py-2.5 border border-slate-200 dark:border-slate-700 rounded-full text-sm text-slate-600 dark:text-slate-300 font-medium material-thin hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-2"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -308,10 +317,21 @@ interface FilterButtonProps {
     style?: React.CSSProperties;
 }
 
+/**
+ * Every filter chip on every list page goes through here, which is exactly why
+ * the sound cue lives in this component instead of in each page's handler: one
+ * wrapper covers all of them and no page can forget it. Callers keep passing a
+ * plain `onClick` and stay unaware that a sound happens at all.
+ */
 export function FilterButton({ selected, onClick, children, className = "", style }: FilterButtonProps) {
+    const handleClick = () => {
+        playHandheldSound("toggle");
+        onClick();
+    };
+
     return (
         <button
-            onClick={onClick}
+            onClick={handleClick}
             className={`pressable ${getFilterChipStateClasses(selected)} ${className}`}
             style={style}
         >
@@ -327,9 +347,14 @@ interface FilterToggleProps {
 }
 
 export function FilterToggle({ selected, onClick, label }: FilterToggleProps) {
+    const handleClick = () => {
+        playHandheldSound("toggle");
+        onClick();
+    };
+
     return (
         <button
-            onClick={onClick}
+            onClick={handleClick}
             className={`pressable w-full flex items-center justify-between px-4 py-3 rounded-2xl border border-transparent ${getFilterToggleStateClasses(selected)}`}
         >
             <span className={`text-sm font-bold type-on-glass ${selected ? "text-[var(--accent-deep)]" : "text-slate-600 dark:text-slate-300"}`}>

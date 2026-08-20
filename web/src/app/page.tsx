@@ -273,6 +273,10 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("event");
   const [showSetup, setShowSetup] = useState(false);
   const [showSettingsHint, setShowSettingsHint] = useState(false);
+  // Only the transition curve reacts to the preference here. The animated
+  // values below stay unconditional: MotionProvider's reducedMotion="user"
+  // snaps the positional keys after mount, and branching on them during render
+  // would fork SSR and client markup.
   const prefersReducedMotion = useReducedMotion();
   const hintTransition = getMotionTransition("soft", {
     reducedMotion: !!prefersReducedMotion,
@@ -312,9 +316,9 @@ export default function Home() {
       <AnimatePresence>
         {showSettingsHint && (
           <motion.div
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -24, scale: 0.98 }}
-            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -12, scale: 0.98 }}
+            initial={{ opacity: 0, y: -24, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.98 }}
             transition={hintTransition}
             className="fixed top-20 left-1/2 -translate-x-1/2 z-[999] w-[90%] max-w-md material-thick island-panel p-4 rounded-2xl flex items-center gap-3 text-left"
           >

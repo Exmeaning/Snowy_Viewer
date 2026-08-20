@@ -13,12 +13,19 @@
  * variant here would never get a frame to play: it would be dead code that
  * looks like a feature. Exits belong to things this component does not own —
  * sheets, popovers and modals, which stay mounted long enough to animate out.
+ *
+ * There is likewise only one variant set. Reduced motion keeps the fade and
+ * drops the travel, but that is done globally by MotionProvider
+ * (`reducedMotion="user"`), which snaps positional values after mount. Choosing
+ * a movement-free variant set during render would make the server emit a
+ * transform the client's first frame does not, which React reports as a
+ * hydration mismatch.
  */
 
-import { useMemo, type ReactNode } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import type { ReactNode } from "react";
+import { motion } from "framer-motion";
 
-import { hhReducedVariants, hhScreenVariants } from "@/lib/motion";
+import { hhScreenVariants } from "@/lib/motion";
 
 export type HandheldScreenTransitionProps = {
   children: ReactNode;
@@ -26,17 +33,8 @@ export type HandheldScreenTransitionProps = {
 };
 
 export default function ScreenTransition({ children, className }: HandheldScreenTransitionProps) {
-  const prefersReducedMotion = useReducedMotion();
-
-  // Reduced motion keeps the fade and drops the travel: the screen still marks
-  // that it changed, it just does not move to say so.
-  const variants = useMemo(
-    () => (prefersReducedMotion ? hhReducedVariants() : hhScreenVariants),
-    [prefersReducedMotion]
-  );
-
   return (
-    <motion.div variants={variants} initial="initial" animate="animate" className={className}>
+    <motion.div variants={hhScreenVariants} initial="initial" animate="animate" className={className}>
       {children}
     </motion.div>
   );

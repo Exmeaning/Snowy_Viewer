@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { usePathname, useRouter } from "next/navigation";
 import { localizePathForBrowser, stripRouteLocale } from "@/lib/localized-path";
 import CursorRing from "@/components/handheld/CursorRing";
-import { hhReducedVariants, hhStaggerContainer, hhStaggerItem } from "@/lib/motion";
+import { hhStaggerContainer, hhStaggerItem } from "@/lib/motion";
 import {
     ACCOUNTS_CHANGED_EVENT,
     getActiveAccount,
@@ -22,6 +22,7 @@ import {
     NAV_ITEM_LABEL_KEYS,
 } from "@/lib/navigation";
 import { LYRICS_ENTRY_VISIBLE } from "@/lib/lyrics-visibility";
+import { playHandheldSound } from "@/lib/handheld-sound";
 import {
     getShortcutById,
     isEditableEventTarget,
@@ -534,9 +535,6 @@ const SIDEBAR_GROUP_LABEL_KEYS: Record<string, string> = {
  */
 const RAIL_CURSOR_GROUP = "sidebar-rail";
 
-/** Stable identity so switching variant sets never re-triggers the cascade. */
-const REDUCED_BLOCK_VARIANTS = hhReducedVariants();
-
 /** The home row is always the first entry in `visibleItems`. */
 const HOME_NAV_INDEX = 0;
 
@@ -550,7 +548,6 @@ export default function Sidebar({
     const router = useRouter();
     const { assetSource } = useTheme();
     const { t } = useI18n();
-    const prefersReducedMotion = useReducedMotion();
     // On the home page, the mobile navbar stays single-row (~52px tall); on
     // other pages it grows by a breadcrumb row (2rem + 1px hairline). The rail
     // needs a matching top offset so it never collides with the status bar.
@@ -630,6 +627,7 @@ export default function Sidebar({
             if (SIDEBAR_FOCUS_NEXT_COMBOS.some((combo) => matchesShortcutCombo(e, combo))) {
                 if (visibleItems.length === 0) return;
                 e.preventDefault();
+                playHandheldSound("cursor");
                 setFocusedIndex(prev => {
                     const next = prev + 1;
                     return next >= visibleItems.length ? 0 : next;
@@ -637,6 +635,7 @@ export default function Sidebar({
             } else if (SIDEBAR_FOCUS_PREV_COMBOS.some((combo) => matchesShortcutCombo(e, combo))) {
                 if (visibleItems.length === 0) return;
                 e.preventDefault();
+                playHandheldSound("cursor");
                 setFocusedIndex(prev => {
                     const next = prev - 1;
                     return next < 0 ? visibleItems.length - 1 : next;
@@ -645,11 +644,13 @@ export default function Sidebar({
                 e.preventDefault();
                 const item = visibleItems[focusedIndex];
                 if (item) {
+                    playHandheldSound("confirm");
                     router.push(localizePathForBrowser(item.href));
                     setFocusedIndex(-1);
                 }
             } else if (focusedIndex >= 0 && matchesShortcutCombo(e, SIDEBAR_CLEAR_FOCUS_COMBO)) {
                 e.preventDefault();
+                playHandheldSound("back");
                 setFocusedIndex(-1);
             }
         };
@@ -673,6 +674,7 @@ export default function Sidebar({
     }, [isOpen]);
 
     const toggleGroup = (id: string) => {
+        playHandheldSound("toggle");
         setExpandedGroups((prev) =>
             prev.includes(id) ? prev.filter((groupId) => groupId !== id) : [...prev, id]
         );
@@ -705,10 +707,19 @@ export default function Sidebar({
 
     // Close the sidebar after navigation only on mobile.
     const handleNavClick = () => {
+        playHandheldSound("confirm");
         setFocusedIndex(-1);
         if (window.innerWidth < 768 || screen.width < 768) {
             onClose();
         }
+    };
+
+    // Dismissing by tapping the scrim is a "back", not a navigation. The owner of
+    // `onClose` plays the same cue, but repeat suppression collapses the pair into
+    // one blip, so the rail stays audible on its own terms.
+    const handleScrimClick = () => {
+        playHandheldSound("back");
+        onClose();
     };
 
     // Structural entrance for the rail contents.
@@ -717,7 +728,11 @@ export default function Sidebar({
     // HH_STAGGER_STEP would take ~1.6s to finish, and past roughly a dozen steps
     // a cascade stops reading as one gesture and starts reading as a queue the
     // user is waiting on. Eight blocks (home + seven sections) land in ~270ms.
-    const blockVariants = prefersReducedMotion ? REDUCED_BLOCK_VARIANTS : hhStaggerItem;
+    //
+    // Reduced motion is handled globally by MotionProvider, which snaps the
+    // travel while the fade still runs — the cascade must not be swapped for a
+    // movement-free variant set during render, or SSR and client markup diverge.
+    const blockVariants = hhStaggerItem;
 
     // Console top bar geometry. Row 1 is 3.25rem tall on phones, 3.5rem from
     // `sm` up; below `sm` a non-home page adds a 2rem breadcrumb row plus its 1px
@@ -761,7 +776,7 @@ export default function Sidebar({
             {isOpen && (
                 <div
                     className="fixed inset-0 hh-scrim z-[55] md:hidden"
-                    onClick={onClose}
+                    onClick={handleScrimClick}
                 />
             )}
 

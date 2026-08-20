@@ -37,6 +37,8 @@ const shortcutGroups = SHORTCUT_GROUP_ORDER
 export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelpProps) {
     const [mounted, setMounted] = useState(false);
     const { t } = useI18n();
+    // Curve only — never the animated values, which must match between server
+    // and client. MotionProvider handles the transform downgrade after mount.
     const prefersReducedMotion = useReducedMotion();
     const overlayTransition = getMotionTransition("snappy", {
         reducedMotion: !!prefersReducedMotion,
@@ -91,21 +93,9 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                     {/* Dialog — source-anchored from top chrome */}
                     <motion.div
                         className="relative w-full max-w-md transform-gpu will-change-transform liquid-glass-modal rounded-2xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[70vh]"
-                        initial={
-                            prefersReducedMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, scale: 0.97, y: -12 }
-                        }
-                        animate={
-                            prefersReducedMotion
-                                ? { opacity: 1 }
-                                : { opacity: 1, scale: 1, y: 0 }
-                        }
-                        exit={
-                            prefersReducedMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, scale: 0.97, y: -12 }
-                        }
+                        initial={{ opacity: 0, scale: 0.97, y: -12 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.97, y: -12 }}
                         transition={panelTransition}
                     >
                         {/* Header */}

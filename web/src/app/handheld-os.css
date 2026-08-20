@@ -861,6 +861,42 @@
 }
 
 /* ==========================================================================
+   Tailwind backdrop-blur neutralization
+
+   The legacy re-skin above declares `backdrop-filter: none` on the classes it
+   owns, but that only reaches elements that carry one of those class names. It
+   cannot reach the ~120 call sites whose blur comes purely from a Tailwind
+   utility — a modal scrim written as `bg-black/35 backdrop-blur-[8px]` has no
+   legacy class on it at all, so nothing above neutralizes it and the utility
+   still compiles and still runs. Those are the surfaces that kept live
+   per-frame compositor blur after the redesign, which is exactly the scroll and
+   overlay-open cost on phones that this change set out to remove.
+
+   Matching on [class*="backdrop-blur"] rather than enumerating the scale is
+   deliberate: it also catches arbitrary values (backdrop-blur-[8px]) and
+   variant-prefixed forms (hover:, sm:, group-hover:) without this block having
+   to track which ones components happen to use. Tailwind emits its utilities
+   inside `@layer utilities`; these rules are unlayered, and unlayered styles
+   beat any layered rule regardless of specificity, so no `!important` is
+   needed here.
+
+   ── The escape hatch ────────────────────────────────────────────────────
+   A handful of overlays use blur to genuinely obscure content rather than to
+   decorate: locked-story spoiler shields and low-opacity loading veils, where
+   the tint alone is as weak as 28% and the blur is doing the actual hiding.
+   Flattening those would leak the thing they exist to cover, so .hh-allow-blur
+   opts an element — or an entire subtree, for overlays whose blur sits on an
+   inner node — back out. It is an exception for functional obscuring, not a
+   way to reintroduce glass; modal scrims are meant to land on the flat
+   .hh-scrim treatment and should not carry it.
+   ========================================================================== */
+
+[class*="backdrop-blur"]:not(.hh-allow-blur, .hh-allow-blur *) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* ==========================================================================
    Accessibility
 
    Reduced motion keeps every state change but removes travel and overshoot:

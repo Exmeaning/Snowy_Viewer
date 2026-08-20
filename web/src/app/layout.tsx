@@ -9,6 +9,7 @@ import { TranslationProvider } from "@/contexts/TranslationContext";
 import { QuickFilterProvider } from "@/contexts/QuickFilterContext";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import MotionProvider from "@/components/MotionProvider";
 import {
   COLOR_SCHEME_STORAGE_KEY,
   DARK_MEDIA_QUERY,
@@ -203,17 +204,19 @@ export default async function RootLayout({
       </head>
       <body className="font-sans">
         <ThemeProvider>
-          <I18nProvider initialLocale={initialUiLocale} routeLocale={routeLocale}>
-            <MasterDataProvider>
-              <TranslationProvider>
-                <QuickFilterProvider>
-                  <BreadcrumbProvider>
-                    {children}
-                  </BreadcrumbProvider>
-                </QuickFilterProvider>
-              </TranslationProvider>
-            </MasterDataProvider>
-          </I18nProvider>
+          <MotionProvider>
+            <I18nProvider initialLocale={initialUiLocale} routeLocale={routeLocale}>
+              <MasterDataProvider>
+                <TranslationProvider>
+                  <QuickFilterProvider>
+                    <BreadcrumbProvider>
+                      {children}
+                    </BreadcrumbProvider>
+                  </QuickFilterProvider>
+                </TranslationProvider>
+              </MasterDataProvider>
+            </I18nProvider>
+          </MotionProvider>
         </ThemeProvider>
         <GoogleTagBootstrap />
         <ServiceWorkerRegistrar />

@@ -25,9 +25,9 @@
  *    with one layoutId is undefined behavior.
  */
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 
-import { hhSpringCursor, reducedMotionFade } from "@/lib/motion";
+import { hhSpringCursor } from "@/lib/motion";
 
 type CursorRingProps = {
   /** Stable identifier for the navigation group this cursor belongs to. */
@@ -37,20 +37,20 @@ type CursorRingProps = {
 };
 
 export default function CursorRing({ groupId, className }: CursorRingProps) {
-  const prefersReducedMotion = useReducedMotion();
-
   return (
     <motion.span
       // Shared layout identity: this is what makes the ring travel rather than
       // disappear here and reappear there.
       layoutId={`hh-cursor-${groupId}`}
-      // Reduced motion: the ring still marks the selection, it just cross-fades
-      // instead of flying. Dropping it entirely would remove the only visible
-      // indication of where the selection is.
-      layout={prefersReducedMotion ? false : "position"}
-      initial={prefersReducedMotion ? { opacity: 0 } : false}
+      // Reduced motion: the ring still marks the selection, it just stops
+      // flying. That downgrade is handled inside framer-motion's projection
+      // node, which checks the visual element's reduced-motion config set by
+      // MotionProvider — so the props below stay unconditional and server and
+      // client render identical markup.
+      layout="position"
+      initial={false}
       animate={{ opacity: 1 }}
-      transition={prefersReducedMotion ? reducedMotionFade : hhSpringCursor}
+      transition={hhSpringCursor}
       className={`hh-cursor-ring ${className ?? ""}`}
       aria-hidden="true"
     />

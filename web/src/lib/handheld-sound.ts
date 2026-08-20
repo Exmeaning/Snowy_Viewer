@@ -5,6 +5,12 @@
  * audio file is ever downloaded: nothing lands in the bundle and nothing is added
  * to the network waterfall.
  *
+ * Playback is gated on exactly one thing: the user's explicit sound preference.
+ * In particular `prefers-reduced-motion` is deliberately NOT consulted — sound
+ * is not motion, and treating it as motion silently muted the whole engine for
+ * anyone who had that OS setting on, with the switch still reading "on".
+ * Reduced-motion users who want quiet already have a dedicated switch here.
+ *
  * The whole module is decoration. It must be SSR-safe (no `window` /
  * `AudioContext` touched at module scope) and it must never throw — a broken
  * blip is not allowed to break a page.
@@ -37,7 +43,14 @@ const SILENCE_GAIN = 0.0001;
  */
 const REPEAT_SUPPRESSION_MS = 30;
 
-const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+/**
+ * A resuming `AudioContext` reports a clock that has not started advancing yet,
+ * so scheduling straight at `currentTime` can land the whole (38–120ms) envelope
+ * in the past and drop the very first sound. Nudge every schedule at least this
+ * far into the future; it is well below the ~10ms threshold where a UI tick
+ * starts to feel detached from the click that caused it.
+ */
+const SCHEDULE_LEAD_SECONDS = 0.005;
 
 interface ToneStep {
     /** Oscillator shape. `sine`/`triangle` stay soft; `square` only for the dull buzz. */
@@ -97,8 +110,8 @@ function getAudioContextConstructor(): AudioContextConstructor | null {
 }
 
 /**
- * Create the single shared `AudioContext` lazily, on the first user-initiated
- * play. Never at module load: browsers block contexts created before a gesture,
+ * Create the single shared `AudioContext` lazily, on the first play or unlock
+ * call. Never at module load: browsers block contexts created before a gesture,
  * and an eager context leaks an audio thread on every page load.
  */
 function ensureAudioContext(): AudioContext | null {
@@ -117,12 +130,51 @@ function ensureAudioContext(): AudioContext | null {
 }
 
 /**
- * Checked at play time rather than once at module load, because the user can
- * flip the OS setting while the page is open.
+ * iOS Safari treats a context as unlocked only after something has actually been
+ * rendered through it inside a real gesture; `resume()` alone is not enough.
+ * A single silent one-frame buffer satisfies that and is inaudible by
+ * construction (zero gain, straight to the destination, bypassing the master
+ * gain so it cannot be affected by anything else).
  */
-function prefersReducedMotion(): boolean {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
-    return window.matchMedia(REDUCED_MOTION_QUERY).matches;
+function primeSilentBuffer(context: AudioContext): void {
+    const buffer = context.createBuffer(1, 1, context.sampleRate);
+    const source = context.createBufferSource();
+    const silentGain = context.createGain();
+
+    silentGain.gain.value = 0;
+    source.buffer = buffer;
+    source.connect(silentGain);
+    silentGain.connect(context.destination);
+
+    source.onended = () => {
+        source.disconnect();
+        silentGain.disconnect();
+    };
+    source.start(0);
+}
+
+/**
+ * Open the audio path from inside a real user gesture.
+ *
+ * Deliberately NOT gated on `isHandheldSoundEnabled()`: the gesture that is
+ * allowed to unlock audio is usually the user's very first click, long before
+ * they find the sound switch. Unlocking early means the first sound after they
+ * turn sound on is the toggle blip itself rather than silence. Nothing is
+ * audible until a play call actually happens, so doing this unconditionally
+ * costs one idle audio thread and no noise.
+ */
+export function unlockHandheldAudio(): void {
+    try {
+        const context = ensureAudioContext();
+        if (context === null) return;
+
+        if (context.state === "suspended") {
+            void context.resume().catch(() => undefined);
+        }
+        primeSilentBuffer(context);
+    } catch {
+        // Same contract as playback: audio is never allowed to break a page.
+    }
 }
 
 function readPersistedEnabled(): boolean {
@@ -193,7 +245,6 @@ function scheduleToneStep(context: AudioContext, destination: GainNode, step: To
 export function playHandheldSound(name: HandheldSoundName): void {
     try {
         if (!isHandheldSoundEnabled()) return;
-        if (prefersReducedMotion()) return;
 
         const recipe: readonly ToneStep[] | undefined = HANDHELD_SOUND_RECIPES[name];
         if (recipe === undefined) return;
@@ -213,7 +264,9 @@ export function playHandheldSound(name: HandheldSoundName): void {
             void context.resume().catch(() => undefined);
         }
 
-        const startTime = context.currentTime;
+        // The lead offset is what keeps the first blip after a resume audible —
+        // see SCHEDULE_LEAD_SECONDS.
+        const startTime = context.currentTime + SCHEDULE_LEAD_SECONDS;
         for (const step of recipe) {
             scheduleToneStep(context, destination, step, startTime);
         }

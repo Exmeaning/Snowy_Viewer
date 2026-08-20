@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import Link from "@/components/LocalizedLink";
 import { usePathname } from "next/navigation";
 import SettingsPanel from "./SettingsPanel";
@@ -12,7 +12,6 @@ import { useI18n } from "@/contexts/I18nContext";
 import { stripRouteLocale } from "@/lib/localized-path";
 import {
     hhHoverLift,
-    hhReducedVariants,
     hhSpringPanel,
     hhSpringPress,
     hhTapPress,
@@ -27,14 +26,16 @@ import {
  * piece of hardware powering on.
  *
  * Nothing here animates on exit — the bar is mounted for the whole session.
+ *
+ * This is the only variant set the bar has. Reduced motion is handled by the
+ * global `MotionConfig reducedMotion="user"` in MotionProvider, which snaps `y`
+ * after mount instead of animating it — picking a movement-free variant set
+ * during render would fork SSR and client markup and break hydration.
  */
 const STATUS_BAR_VARIANTS: Variants = {
     initial: { opacity: 0, y: -12 },
     animate: { opacity: 1, y: 0, transition: hhSpringPanel },
 };
-
-/** Stable identity so switching variant sets never re-triggers the entrance. */
-const REDUCED_BAR_VARIANTS = hhReducedVariants();
 
 /**
  * Flat console chrome: one hairline border, no radius, no shadow.
@@ -82,24 +83,24 @@ export default function MainNavbar({
     const pathname = usePathname();
     const isHome = stripRouteLocale(pathname) === "/";
     const { t } = useI18n();
-    const prefersReducedMotion = useReducedMotion();
 
     const sidebarShortcut = getPrimaryShortcutLabel("toggle-sidebar");
     const searchShortcut = getPrimaryShortcutLabel("toggle-search");
     const settingsShortcut = getPrimaryShortcutLabel("toggle-settings");
     const helpShortcut = getPrimaryShortcutLabel("toggle-shortcuts-help");
 
-    const barVariants = prefersReducedMotion ? REDUCED_BAR_VARIANTS : STATUS_BAR_VARIANTS;
     // Reduced motion keeps every hover/press *state* (the CSS tint on .hh-press
-    // still fires); only the transform is withheld.
-    const hoverGesture = prefersReducedMotion ? undefined : hhHoverLift;
-    const tapGesture = prefersReducedMotion ? undefined : hhTapPress;
+    // still fires); only the transform is withheld, and that is done by
+    // MotionProvider's reducedMotion="user" rather than by swapping the gesture
+    // out here.
+    const hoverGesture = hhHoverLift;
+    const tapGesture = hhTapPress;
 
     return (
         <nav className="fixed inset-x-0 top-0 z-[100] pointer-events-none">
             {/* Console status bar — flat, opaque, edge-to-edge */}
             <motion.div
-                variants={barVariants}
+                variants={STATUS_BAR_VARIANTS}
                 initial="initial"
                 animate="animate"
                 className="pointer-events-auto px-3 sm:px-5 bg-[var(--hh-surface-1)] border-b border-[var(--hh-border)]"
@@ -127,7 +128,7 @@ export default function MainNavbar({
                         {/* Logo */}
                         <Link href="/" className="flex items-center gap-1.5 shrink-0" title="Moesekai">
                             <motion.span
-                                whileHover={prefersReducedMotion ? undefined : { scale: 1.04, transition: hhSpringPress }}
+                                whileHover={{ scale: 1.04, transition: hhSpringPress }}
                                 whileTap={tapGesture}
                                 className="block h-7 w-[4.5rem] sm:h-8 sm:w-[5.5rem] bg-[var(--hh-accent)]"
                                 style={{

@@ -30,19 +30,47 @@
      stack unchanged, so this is additive rather than a substitution. */
   --font-sans: ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
-  /* Console geometry: tighter than Tailwind's defaults across the board.
-     rounded-xl (436 uses) drops 12px -> 9px and rounded-2xl (337 uses) drops
-     16px -> 12px, which is the single highest-leverage line in this redesign.
-     rounded-full is not token-driven, so the 639 pill shapes stay pills by
-     design — dock icons and toggles are meant to be circular. */
+  /* Console geometry: tighter than Tailwind's defaults across the board. This
+     is what tightened the ~1700 existing rounded-* utilities without touching a
+     component, and it stays the only place the Tailwind radius scale is set —
+     defining it once here covers every generated variant for free
+     (rounded-tl-lg, sm:rounded-3xl, file:rounded-xl, hover:*, ...), which a
+     hand-written .rounded-* override block could not do without enumerating
+     them all.
+
+     The values are now aliases onto the --hh-radius-* ladder rather than
+     duplicated literals. Previously both scales were maintained by hand and had
+     drifted apart: lg/xl sat at 7px/9px, which are not rungs on the Handheld
+     ladder at all, so a rounded-xl card and an adjacent .hh-tile were quietly
+     off by a pixel or two. Aliasing makes the ladder in handheld-os.css the
+     single source of truth, so retuning a --hh-radius-* token now moves the
+     Tailwind utilities with it instead of silently leaving them behind.
+
+     Five of the seven rungs are aliases at identical values, so they are a
+     provenance fix with no visual change. lg and xl are the two real
+     corrections: both land on --hh-radius-md (8px). Collapsing them is
+     deliberate — 7px and 9px are perceptually the same corner, so the
+     "hierarchy" between those two rungs was already an illusion, and
+     Tailwind has one more rung here than the Handheld ladder does, so
+     something has to share. The result is the hh ladder exactly:
+     3 / 5 / 8 / 8 / 12 / 16 / 20, with 8px matching .hh-input and .hh-btn's
+     neighbours, which is where most rounded-lg / rounded-xl call sites live.
+
+     --radius-xs has no hh counterpart (the ladder starts at 3px) and no
+     rounded-xs call sites, so it keeps its literal.
+
+     rounded-full is deliberately absent: it compiles to calc(infinity * 1px)
+     and never reads this scale, so the 626 pill shapes stay pills. Avatars,
+     dock icons, toggles and count badges are meant to be circular, and forcing
+     them onto the ladder would deform them, not tighten them. */
   --radius-xs: 2px;
-  --radius-sm: 3px;
-  --radius-md: 5px;
-  --radius-lg: 7px;
-  --radius-xl: 9px;
-  --radius-2xl: 12px;
-  --radius-3xl: 16px;
-  --radius-4xl: 20px;
+  --radius-sm: var(--hh-radius-xs);
+  --radius-md: var(--hh-radius-sm);
+  --radius-lg: var(--hh-radius-md);
+  --radius-xl: var(--hh-radius-md);
+  --radius-2xl: var(--hh-radius-lg);
+  --radius-3xl: var(--hh-radius-xl);
+  --radius-4xl: var(--hh-radius-2xl);
 
   /* Self-references register the name with Tailwind so text-miku / bg-miku
      generate, while the actual value keeps coming from the :root block below
