@@ -228,7 +228,7 @@ export default function MysekaiFixtureDetailClient() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">{t("common.state.loading")}</p>
+                        <p className="mt-4 text-[var(--hh-text-secondary)]">{t("common.state.loading")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -240,16 +240,16 @@ export default function MysekaiFixtureDetailClient() {
             <MainLayout>
                 <div className="container mx-auto px-4 py-16">
                     <div className="max-w-md mx-auto text-center">
-                        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center">
+                        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-amber-500/15 flex items-center justify-center">
                             <svg className="w-12 h-12 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">{t("page.mysekai.notFoundTitle", { id: fixtureId })}</h2>
-                        <p className="text-slate-500 mb-6">{t("page.mysekai.notFoundDesc")}</p>
+                        <h2 className="hh-title text-2xl text-[var(--hh-text-primary)] mb-2">{t("page.mysekai.notFoundTitle", { id: fixtureId })}</h2>
+                        <p className="text-[var(--hh-text-secondary)] mb-6">{t("page.mysekai.notFoundDesc")}</p>
                         <Link
                             href="/mysekai"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
+                            className="hh-press hh-focusable inline-flex items-center gap-2 px-6 py-3 bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] font-bold rounded-[var(--hh-radius-md)]"
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -271,22 +271,22 @@ export default function MysekaiFixtureDetailClient() {
                 {/* Header Section */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-500 w-fit">
+                        <span className="hh-numeric inline-flex items-center gap-1.5 px-3 py-1 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-sm)] text-xs text-[var(--hh-text-secondary)] w-fit">
                             ID: {fixture.id}
                         </span>
                         {genreName && (
-                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-miku/10 text-miku w-fit">
+                            <span className="px-3 py-1 text-xs font-bold rounded-[var(--hh-radius-sm)] bg-[var(--hh-accent-wash)] text-miku w-fit">
                                 {genreName}
                             </span>
                         )}
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-slate-800">
+                    <h1 className="hh-display text-2xl sm:text-3xl text-[var(--hh-text-primary)]">
                         <TranslatedText
                             original={fixture.name}
                             category="mysekai"
                             field="fixtureName"
                             originalClassName=""
-                            translationClassName="block text-lg font-medium text-slate-400 mt-1"
+                            translationClassName="block text-lg font-medium text-[var(--hh-text-tertiary)] mt-1"
                         />
                     </h1>
                 </div>
@@ -295,11 +295,11 @@ export default function MysekaiFixtureDetailClient() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* LEFT Column: Image - Smaller size */}
                     <div>
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden lg:sticky lg:top-24">
-                            <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                                <span className="text-sm font-bold text-slate-600">{t("page.mysekai.detail.thumbnail")}</span>
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden lg:sticky lg:top-24">
+                            <div className="px-4 py-2 bg-[var(--hh-surface-1)] border-b border-[var(--hh-border)] flex items-center justify-between">
+                                <span className="hh-title text-sm text-[var(--hh-text-primary)]">{t("page.mysekai.detail.thumbnail")}</span>
                             </div>
-                            <div className="relative aspect-[4/3] bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+                            <div className="relative aspect-[4/3] bg-[var(--hh-surface-sunken)] flex items-center justify-center">
                                 <div className="relative w-32 h-32">
                                     <Image
                                         src={thumbnailUrl}
@@ -317,16 +317,16 @@ export default function MysekaiFixtureDetailClient() {
                     {/* RIGHT Column: Info Cards */}
                     <div className="space-y-6">
                         {/* Basic Info Card */}
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     {t("page.mysekai.detail.basicInfo")}
                                 </h2>
                             </div>
-                            <div className="divide-y divide-slate-100">
+                            <div className="divide-y divide-[var(--hh-border)]">
                                 <InfoRow label="ID" value={`#${fixture.id}`} />
                                 <InfoRow
                                     label={t("common.field.name")}
@@ -336,7 +336,7 @@ export default function MysekaiFixtureDetailClient() {
                                             category="mysekai"
                                             field="fixtureName"
                                             originalClassName=""
-                                            translationClassName="block text-xs font-normal text-slate-400 mt-0.5"
+                                            translationClassName="block text-xs font-normal text-[var(--hh-text-tertiary)] mt-0.5"
                                         />
                                     }
                                 />
@@ -353,26 +353,26 @@ export default function MysekaiFixtureDetailClient() {
                                 <InfoRow label={t("page.mysekai.detail.fields.siteType")} value={fixture.mysekaiSettableSiteType} />
                                 <InfoRow
                                     label={t("page.mysekai.detail.fields.assetBundleName")}
-                                    value={<span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{fixture.assetbundleName}</span>}
+                                    value={<span className="hh-numeric font-mono text-xs bg-[var(--hh-surface-sunken)] px-2 py-0.5 rounded-[var(--hh-radius-xs)]">{fixture.assetbundleName}</span>}
                                 />
                             </div>
                         </div>
 
                         {/* Status Info Card */}
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     {t("page.mysekai.detail.statusInfo")}
                                 </h2>
                             </div>
-                            <div className="divide-y divide-slate-100">
+                            <div className="divide-y divide-[var(--hh-border)]">
                                 <InfoRow
                                     label={t("page.mysekai.detail.fields.canAssemble")}
                                     value={
-                                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${fixture.isAssembled ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                                        <span className={`px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-xs font-bold ${fixture.isAssembled ? 'bg-green-500/15 text-green-600' : 'bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]'}`}>
                                             {fixture.isAssembled ? t("common.field.yes") : t("common.field.no")}
                                         </span>
                                     }
@@ -380,7 +380,7 @@ export default function MysekaiFixtureDetailClient() {
                                 <InfoRow
                                     label={t("page.mysekai.detail.fields.canDisassemble")}
                                     value={
-                                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${fixture.isDisassembled ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                                        <span className={`px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-xs font-bold ${fixture.isDisassembled ? 'bg-green-500/15 text-green-600' : 'bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]'}`}>
                                             {fixture.isDisassembled ? t("common.field.yes") : t("common.field.no")}
                                         </span>
                                     }
@@ -391,9 +391,9 @@ export default function MysekaiFixtureDetailClient() {
 
                         {/* Material Cost Card */}
                         {fixtureMaterialCosts.length > 0 && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-amber-500/10 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                         </svg>
@@ -407,7 +407,7 @@ export default function MysekaiFixtureDetailClient() {
                                             if (!material) return null;
                                             return (
                                                 <div key={index} className="flex flex-col items-center">
-                                                    <div className="w-16 h-16 relative bg-slate-50 rounded-lg p-1">
+                                                    <div className="w-16 h-16 relative bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] p-1">
                                                         <Image
                                                             src={getMysekaiMaterialThumbnailUrl(material.iconAssetbundleName, assetSource)}
                                                             alt={material.name}
@@ -416,10 +416,10 @@ export default function MysekaiFixtureDetailClient() {
                                                             unoptimized
                                                         />
                                                     </div>
-                                                    <span className="text-xs text-slate-600 mt-1 font-medium">
+                                                    <span className="hh-numeric text-xs text-[var(--hh-text-secondary)] mt-1 font-medium">
                                                         ×{cost.quantity}
                                                     </span>
-                                                    <span className="text-[10px] text-slate-400 max-w-[60px] text-center truncate" title={material.name}>
+                                                    <span className="text-[10px] text-[var(--hh-text-tertiary)] max-w-[60px] text-center truncate" title={material.name}>
                                                         {material.name}
                                                     </span>
                                                 </div>
@@ -432,9 +432,9 @@ export default function MysekaiFixtureDetailClient() {
 
                         {/* Character Talks Card */}
                         {fixtureCharacterTalks.length > 0 && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-purple-500/10 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                         </svg>
@@ -446,12 +446,12 @@ export default function MysekaiFixtureDetailClient() {
                                         {fixtureCharacterTalks.map((talk) => (
                                             <div
                                                 key={talk.id}
-                                                className="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded-full"
+                                                className="flex items-center gap-1 px-2 py-1 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-full)]"
                                             >
                                                 {talk.characterIds.map((charId) => (
                                                     <div
                                                         key={charId}
-                                                        className="w-8 h-8 rounded-full overflow-hidden bg-white ring-1 ring-slate-200"
+                                                        className="w-8 h-8 rounded-full overflow-hidden bg-[var(--hh-surface-2)] ring-1 ring-[var(--hh-border)]"
                                                         title={getCharacterName(t, charId)}
                                                     >
                                                         <Image
@@ -473,9 +473,9 @@ export default function MysekaiFixtureDetailClient() {
 
                         {/* Tags Card */}
                         {tagNames.length > 0 && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                         </svg>
@@ -487,7 +487,7 @@ export default function MysekaiFixtureDetailClient() {
                                         {tagNames.map((tagName, index) => (
                                             <span
                                                 key={index}
-                                                className="px-3 py-1 bg-slate-100 text-slate-600 text-sm font-medium rounded-full"
+                                                className="px-3 py-1 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] text-sm font-medium rounded-[var(--hh-radius-sm)]"
                                             >
                                                 {tagName}
                                             </span>
@@ -499,9 +499,9 @@ export default function MysekaiFixtureDetailClient() {
 
                         {/* Flavor Text Card */}
                         {fixture.flavorText && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
                                         </svg>
@@ -509,7 +509,7 @@ export default function MysekaiFixtureDetailClient() {
                                     </h2>
                                 </div>
                                 <div className="p-5">
-                                    <p className="text-slate-600 text-sm leading-relaxed">
+                                    <p className="hh-body text-[var(--hh-text-secondary)] text-sm">
                                         {fixture.flavorText}
                                     </p>
                                 </div>
@@ -524,7 +524,8 @@ export default function MysekaiFixtureDetailClient() {
                 <div className="mt-12 text-center">
                     <Link
                         href="/mysekai"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                        className="hh-btn hh-press hh-focusable inline-flex items-center gap-2 font-bold"
+                        style={{ padding: "0.75rem 1.5rem" }}
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -541,8 +542,8 @@ export default function MysekaiFixtureDetailClient() {
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <div className="px-5 py-3 flex items-center justify-between text-sm">
-            <span className="text-slate-500 font-medium">{label}</span>
-            <span className="text-slate-800 font-bold text-right max-w-[60%]">{value}</span>
+            <span className="text-[var(--hh-text-secondary)] font-medium">{label}</span>
+            <span className="text-[var(--hh-text-primary)] font-bold text-right max-w-[60%]">{value}</span>
         </div>
     );
 }

@@ -190,13 +190,13 @@ function TurnstileBox({ onToken, resetSeed }: { onToken: (token: string) => void
     }, [onToken, resetSeed]);
 
     return (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/75 p-3">
+        <div className="hh-well p-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <div className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Cloudflare Turnstile</div>
-                    <div className="mt-1 text-sm font-bold text-slate-600">{message}</div>
+                    <div className="hh-label">Cloudflare Turnstile</div>
+                    <div className="mt-1 text-sm font-bold text-[var(--hh-text-secondary)]">{message}</div>
                 </div>
-                <div ref={hostRef} className="min-h-[65px] min-w-[300px] overflow-hidden rounded-xl" />
+                <div ref={hostRef} className="min-h-[65px] min-w-[300px] overflow-hidden rounded-[var(--hh-radius-md)]" />
             </div>
         </div>
     );
@@ -216,9 +216,9 @@ function ModeTabs({ mode, onChange }: { mode: EntryMode; onChange: (mode: EntryM
                     key={item.value}
                     type="button"
                     onClick={() => onChange(item.value)}
-                    className={`rounded-2xl px-5 py-3 text-sm font-black transition active:scale-95 ${mode === item.value
-                        ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20"
-                        : "border border-slate-200 bg-white/75 text-slate-500 hover:border-miku/30 hover:text-miku"
+                    className={`hh-press hh-focusable rounded-[var(--hh-radius-md)] border px-5 py-3 text-sm font-bold ${mode === item.value
+                        ? "border-[var(--hh-accent-deep)] bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                        : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
                         }`}
                     title={item.desc}
                 >
@@ -369,19 +369,19 @@ export default function MysekaiPreviewSceneClient() {
                         <button
                             type="button"
                             onClick={() => setPreviewState(null)}
-                            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/75 px-4 py-2 text-sm font-black text-slate-500 shadow-sm backdrop-blur transition hover:-translate-x-0.5 hover:border-miku/30 hover:text-miku active:scale-95"
+                            className="hh-press hh-focusable inline-flex items-center gap-2 rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] px-4 py-2 text-sm font-bold text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
                         >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6.75 15.75 3 12m0 0 3.75-3.75M3 12h18" />
                             </svg>
                             {t("page.mysekaiPreview.scene.preview.backToEntry")}
                         </button>
-                        <div className="max-w-full truncate rounded-2xl border border-white/60 bg-white/70 px-4 py-2 text-sm font-black text-slate-500 shadow-sm backdrop-blur">
+                        <div className="hh-tile max-w-full truncate rounded-[var(--hh-radius-md)] px-4 py-2 text-sm font-bold text-[var(--hh-text-secondary)]">
                             {sourceLabel}
                         </div>
                     </div>
 
-                    <section className="overflow-hidden rounded-[2rem] border border-white/60 bg-white/65 p-4 shadow-2xl shadow-slate-900/8 backdrop-blur-2xl sm:p-5">
+                    <section className="hh-panel overflow-hidden p-4 sm:p-5">
                         <MysekaiScenePreview
                             key={previewState.layoutKey}
                             defaultLayoutUrl={layoutSource}
@@ -406,13 +406,13 @@ export default function MysekaiPreviewSceneClient() {
         <MainLayout>
             <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
                 <div className="mb-8 text-center">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-miku/30 bg-miku/5 px-4 py-2">
-                        <span className="text-xs font-bold uppercase tracking-widest text-miku">{t("page.mysekaiPreview.badges.scene")}</span>
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] px-4 py-2">
+                        <span className="hh-label text-miku">{t("page.mysekaiPreview.badges.scene")}</span>
                     </div>
-                    <h1 className="text-3xl font-black text-primary-text sm:text-4xl">
+                    <h1 className="hh-display text-3xl text-primary-text sm:text-4xl">
                         {t("page.mysekaiPreview.scene.title")} <span className="text-miku">{t("page.mysekaiPreview.scene.titleHighlight")}</span>
                     </h1>
-                    <p className="mx-auto mt-2 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
+                    <p className="hh-body mx-auto mt-2 max-w-2xl text-sm text-[var(--hh-text-secondary)] sm:text-base">
                         {t("page.mysekaiPreview.scene.description")}
                     </p>
                 </div>
@@ -420,16 +420,16 @@ export default function MysekaiPreviewSceneClient() {
                 <ModeTabs mode={mode} onChange={(nextMode) => { setMode(nextMode); setError(null); }} />
 
                 {error && (
-                    <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm font-bold text-red-600 shadow-sm">
+                    <div className="mx-auto mt-6 max-w-3xl rounded-[var(--hh-radius-md)] border border-red-500/30 bg-red-500/12 px-4 py-3 text-sm font-bold text-red-600">
                         {error}
                     </div>
                 )}
 
                 {mode === "uid" ? (
-                    <form onSubmit={handleUidSubmit} className="mx-auto mt-6 max-w-3xl rounded-[2rem] border border-white/60 bg-white/72 p-5 shadow-2xl shadow-slate-900/8 backdrop-blur-2xl sm:p-6">
+                    <form onSubmit={handleUidSubmit} className="hh-panel mx-auto mt-6 max-w-3xl p-5 sm:p-6">
                         <div className="mb-5">
-                            <h2 className="text-lg font-black text-primary-text">{t("page.mysekaiPreview.scene.uidForm.title")}</h2>
-                            <p className="mt-1 text-sm leading-6 text-slate-500">{t("page.mysekaiPreview.scene.uidForm.description")}</p>
+                            <h2 className="hh-title text-lg text-primary-text">{t("page.mysekaiPreview.scene.uidForm.title")}</h2>
+                            <p className="hh-body mt-1 text-sm text-[var(--hh-text-secondary)]">{t("page.mysekaiPreview.scene.uidForm.description")}</p>
                         </div>
 
                         <AccountSelector
@@ -444,23 +444,23 @@ export default function MysekaiPreviewSceneClient() {
 
                         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_180px]">
                             <label className="block">
-                                <span className="mb-1 block text-sm font-bold text-slate-600">UID</span>
+                                <span className="mb-1 block text-sm font-bold text-[var(--hh-text-secondary)]">UID</span>
                                 <input
                                     value={uid}
                                     onChange={(event) => setUid(event.target.value)}
                                     inputMode="numeric"
                                     placeholder={t("page.mysekaiPreview.scene.uidForm.uidPlaceholder")}
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none transition focus:border-miku focus:ring-2 focus:ring-miku/20"
+                                    className="hh-input hh-numeric w-full px-4 py-3 text-sm font-bold"
                                 />
                             </label>
                             <div className="block">
-                                <span className="mb-1 block text-sm font-bold text-slate-600">{t("page.mysekaiPreview.scene.uidForm.server")}</span>
-                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-1">
-                                    <div className="rounded-lg bg-miku px-3 py-2 text-center text-sm font-black text-white shadow-sm">
+                                <span className="mb-1 block text-sm font-bold text-[var(--hh-text-secondary)]">{t("page.mysekaiPreview.scene.uidForm.server")}</span>
+                                <div className="rounded-[var(--hh-radius-md)] border border-[var(--hh-border-hairline)] bg-[var(--hh-surface-sunken)] p-1">
+                                    <div className="rounded-[var(--hh-radius-sm)] bg-[var(--hh-accent)] px-3 py-2 text-center text-sm font-bold text-[var(--hh-text-on-accent)]">
                                         {t(`common.server.${SCENE_SERVER}`)}
                                     </div>
                                 </div>
-                                <p className="mt-1 text-xs text-slate-400">{t("page.mysekaiPreview.scene.uidForm.serverJpOnly")}</p>
+                                <p className="mt-1 text-xs text-[var(--hh-text-tertiary)]">{t("page.mysekaiPreview.scene.uidForm.serverJpOnly")}</p>
                             </div>
                         </div>
 
@@ -471,16 +471,16 @@ export default function MysekaiPreviewSceneClient() {
                         <button
                             type="submit"
                             disabled={loading || !normalizeUid(uid) || !turnstileToken}
-                            className="mt-5 w-full rounded-2xl bg-gradient-to-r from-miku to-miku-dark px-5 py-3 text-sm font-black text-white shadow-lg shadow-miku/20 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg"
+                            className="hh-press hh-focusable mt-5 w-full rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-deep)] bg-[var(--hh-accent)] px-5 py-3 text-sm font-bold text-[var(--hh-text-on-accent)] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {loading ? t("page.mysekaiPreview.scene.uidForm.loading") : t("page.mysekaiPreview.scene.uidForm.submit")}
                         </button>
                     </form>
                 ) : (
-                    <form onSubmit={handleJsonSubmit} className="mx-auto mt-6 max-w-3xl rounded-[2rem] border border-white/60 bg-white/72 p-5 shadow-2xl shadow-slate-900/8 backdrop-blur-2xl sm:p-6">
+                    <form onSubmit={handleJsonSubmit} className="hh-panel mx-auto mt-6 max-w-3xl p-5 sm:p-6">
                         <div className="mb-5">
-                            <h2 className="text-lg font-black text-primary-text">{t("page.mysekaiPreview.scene.jsonForm.title")}</h2>
-                            <p className="mt-1 text-sm leading-6 text-slate-500">
+                            <h2 className="hh-title text-lg text-primary-text">{t("page.mysekaiPreview.scene.jsonForm.title")}</h2>
+                            <p className="hh-body mt-1 text-sm text-[var(--hh-text-secondary)]">
                                 {t("page.mysekaiPreview.scene.jsonForm.description")}
                             </p>
                         </div>
@@ -494,12 +494,12 @@ export default function MysekaiPreviewSceneClient() {
                                         setJsonSourceMode(item.value);
                                         setError(null);
                                     }}
-                                    className={`rounded-2xl px-4 py-3 text-left transition active:scale-[0.99] ${jsonSourceMode === item.value
-                                        ? "border border-miku/30 bg-miku/10 text-miku shadow-sm"
-                                        : "border border-slate-200 bg-white/75 text-slate-500 hover:border-miku/25 hover:text-miku"
+                                    className={`hh-press hh-focusable rounded-[var(--hh-radius-lg)] border px-4 py-3 text-left ${jsonSourceMode === item.value
+                                        ? "border-[var(--hh-accent)] bg-[var(--hh-accent-wash)] text-miku ring-1 ring-[var(--hh-accent)]"
+                                        : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
                                         }`}
                                 >
-                                    <div className="text-sm font-black">{item.label}</div>
+                                    <div className="hh-title text-sm">{item.label}</div>
                                     <div className="mt-1 text-xs font-medium leading-relaxed opacity-75">{item.desc}</div>
                                 </button>
                             ))}
@@ -507,29 +507,29 @@ export default function MysekaiPreviewSceneClient() {
 
                         {jsonSourceMode === "file" ? (
                             <label className="block">
-                                <span className="mb-1 block text-sm font-bold text-slate-600">{t("page.mysekaiPreview.scene.jsonForm.fileLabel")}</span>
+                                <span className="mb-1 block text-sm font-bold text-[var(--hh-text-secondary)]">{t("page.mysekaiPreview.scene.jsonForm.fileLabel")}</span>
                                 <input
                                     type="file"
                                     accept=".json,application/json"
                                     onChange={handleLayoutFileChange}
-                                    className="w-full rounded-xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-miku/10 file:px-4 file:py-2 file:text-sm file:font-black file:text-miku hover:border-miku/30 focus:border-miku focus:ring-2 focus:ring-miku/20"
+                                    className="hh-input w-full border-dashed px-4 py-3 text-sm font-bold file:mr-4 file:rounded-[var(--hh-radius-md)] file:border-0 file:bg-[var(--hh-accent-wash-strong)] file:px-4 file:py-2 file:text-sm file:font-bold file:text-miku"
                                 />
                                 {layoutFile && (
-                                    <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                                    <p className="mt-2 text-xs leading-relaxed text-[var(--hh-text-secondary)]">
                                         {t("page.mysekaiPreview.scene.jsonForm.selectedFile", { name: layoutFile.name, size: Math.max(1, Math.round(layoutFile.size / 1024)) })}
                                     </p>
                                 )}
                             </label>
                         ) : (
                             <label className="block">
-                                <span className="mb-1 block text-sm font-bold text-slate-600">{t("page.mysekaiPreview.scene.jsonForm.urlLabel")}</span>
+                                <span className="mb-1 block text-sm font-bold text-[var(--hh-text-secondary)]">{t("page.mysekaiPreview.scene.jsonForm.urlLabel")}</span>
                                 <input
                                     value={customLayoutUrl}
                                     onChange={(event) => setCustomLayoutUrl(event.target.value)}
                                     placeholder="https://example.com/mysekai-room.json"
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none transition focus:border-miku focus:ring-2 focus:ring-miku/20"
+                                    className="hh-input w-full px-4 py-3 text-sm font-bold"
                                 />
-                                <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                                <p className="mt-2 text-xs leading-relaxed text-[var(--hh-text-secondary)]">
                                     {t("page.mysekaiPreview.scene.jsonForm.urlHint")}
                                 </p>
                             </label>
@@ -538,7 +538,7 @@ export default function MysekaiPreviewSceneClient() {
                         <button
                             type="submit"
                             disabled={loading || (jsonSourceMode === "file" ? !layoutFile : !customLayoutUrl.trim())}
-                            className="mt-5 w-full rounded-2xl bg-gradient-to-r from-miku to-miku-dark px-5 py-3 text-sm font-black text-white shadow-lg shadow-miku/20 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg"
+                            className="hh-press hh-focusable mt-5 w-full rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-deep)] bg-[var(--hh-accent)] px-5 py-3 text-sm font-bold text-[var(--hh-text-on-accent)] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {loading ? t("page.mysekaiPreview.scene.jsonForm.loading") : t("page.mysekaiPreview.scene.jsonForm.submit")}
                         </button>

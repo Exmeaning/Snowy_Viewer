@@ -417,9 +417,9 @@ function HonorsContent() {
                 <div className="grid grid-cols-5 gap-2">
                     <button
                         onClick={() => setBondsChar1(null)}
-                        className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold transition-all ${bondsChar1 === null
-                            ? "bg-miku text-white shadow-lg ring-2 ring-miku"
-                            : "bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200"
+                        className={`hh-press hh-focusable aspect-square rounded-full flex items-center justify-center text-xs font-bold ${bondsChar1 === null
+                            ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] ring-2 ring-[var(--hh-accent)]"
+                            : "bg-[var(--hh-surface-2)] hover:bg-[var(--hh-surface-3)] text-[var(--hh-text-secondary)] border border-[var(--hh-border)]"
                             }`}
                         title={t("common.filter.unlimited")}
                     >
@@ -431,9 +431,9 @@ function HonorsContent() {
                             <button
                                 key={`bc1-${id}`}
                                 onClick={() => setBondsChar1(bondsChar1 === id ? null : id)}
-                                className={`relative aspect-square rounded-full overflow-hidden transition-all flex items-center justify-center ${bondsChar1 === id
-                                    ? "ring-2 ring-miku shadow-lg"
-                                    : "ring-1 ring-slate-200 hover:ring-miku/50"
+                                className={`hh-press hh-focusable relative aspect-square rounded-full overflow-hidden flex items-center justify-center ${bondsChar1 === id
+                                    ? "ring-2 ring-[var(--hh-accent)]"
+                                    : "ring-1 ring-[var(--hh-border)] hover:ring-[var(--hh-accent-line)]"
                                     }`}
                                 title={characterName}
                             >
@@ -454,9 +454,9 @@ function HonorsContent() {
                 <div className="grid grid-cols-5 gap-2">
                     <button
                         onClick={() => setBondsChar2(null)}
-                        className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold transition-all ${bondsChar2 === null
-                            ? "bg-miku text-white shadow-lg ring-2 ring-miku"
-                            : "bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200"
+                        className={`hh-press hh-focusable aspect-square rounded-full flex items-center justify-center text-xs font-bold ${bondsChar2 === null
+                            ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] ring-2 ring-[var(--hh-accent)]"
+                            : "bg-[var(--hh-surface-2)] hover:bg-[var(--hh-surface-3)] text-[var(--hh-text-secondary)] border border-[var(--hh-border)]"
                             }`}
                         title={t("common.filter.unlimited")}
                     >
@@ -468,9 +468,9 @@ function HonorsContent() {
                             <button
                                 key={`bc2-${id}`}
                                 onClick={() => setBondsChar2(bondsChar2 === id ? null : id)}
-                                className={`relative aspect-square rounded-full overflow-hidden transition-all flex items-center justify-center ${bondsChar2 === id
-                                    ? "ring-2 ring-miku shadow-lg"
-                                    : "ring-1 ring-slate-200 hover:ring-miku/50"
+                                className={`hh-press hh-focusable relative aspect-square rounded-full overflow-hidden flex items-center justify-center ${bondsChar2 === id
+                                    ? "ring-2 ring-[var(--hh-accent)]"
+                                    : "ring-1 ring-[var(--hh-border)] hover:ring-[var(--hh-accent-line)]"
                                     }`}
                                 title={characterName}
                             >
@@ -521,37 +521,37 @@ function HonorsContent() {
         <div className="container mx-auto px-4 sm:px-6 py-8">
             {/* Page Header */}
             <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.honors.badge")}</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                    <span className="hh-label text-miku">{t("page.honors.badge")}</span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                     {t("page.honors.title")} <span className="text-miku">{t("page.honors.titleHighlight")}</span>
                 </h1>
-                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                     {t("page.honors.description")}
                 </p>
             </div>
 
             {/* Tab Switcher */}
             <div className="flex justify-center mb-6">
-                <div className="inline-flex bg-slate-100 rounded-xl p-1 gap-1">
+                {/* Shrink-to-fit: .hh-segment fills its container by default, which
+                    would stretch this centered pair across the whole row. */}
+                <div className="hh-segment w-auto grow-0 shrink-0" role="tablist">
                     <button
                         onClick={() => setActiveTab("normal")}
-                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
-                            activeTab === "normal"
-                                ? "bg-white text-miku shadow-md"
-                                : "text-slate-500 hover:text-slate-700"
-                        }`}
+                        className="hh-segment-item hh-focusable"
+                        role="tab"
+                        aria-selected={activeTab === "normal"}
+                        style={{ padding: "0.5rem 1.25rem" }}
                     >
                         {t("page.honors.tabs.normal")}
                     </button>
                     <button
                         onClick={() => setActiveTab("bonds")}
-                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
-                            activeTab === "bonds"
-                                ? "bg-white text-miku shadow-md"
-                                : "text-slate-500 hover:text-slate-700"
-                        }`}
+                        className="hh-segment-item hh-focusable"
+                        role="tab"
+                        aria-selected={activeTab === "bonds"}
+                        style={{ padding: "0.5rem 1.25rem" }}
                     >
                         {t("page.honors.tabs.bonds")}
                     </button>
@@ -560,7 +560,7 @@ function HonorsContent() {
 
             {/* Error */}
             {(activeTab === "normal" ? error : bondsError) && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-red-500/12 border border-red-500/30 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{t("page.honors.loadFailed")}</p>
                     <p>{activeTab === "normal" ? error : bondsError}</p>
                 </div>
@@ -591,7 +591,7 @@ function HonorsContent() {
                                             data-shortcut-item="true"
                                             tabIndex={0}
                                             role="button"
-                                            className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-4 cursor-pointer group"
+                                            className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden hover:border-[var(--hh-accent-line)] p-4 cursor-pointer group"
                                         >
                                             <div className="mb-3">
                                                 <DegreeImage
@@ -601,17 +601,17 @@ function HonorsContent() {
                                                     source={assetSource}
                                                 />
                                             </div>
-                                            <h3 className="font-bold text-sm text-slate-800 group-hover:text-miku transition-colors mb-1">
+                                            <h3 className="hh-title text-sm text-[var(--hh-text-primary)] group-hover:text-miku transition-colors mb-1">
                                                 {honor.name}
                                             </h3>
                                             <div className="flex flex-wrap gap-1">
                                                 {group && (
-                                                    <span className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
+                                                    <span className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-accent-wash)] text-miku rounded-[var(--hh-radius-xs)] font-medium">
                                                         {getHonorTypeLabel(group.honorType, t)}
                                                     </span>
                                                 )}
                                                 {honor.honorRarity && (
-                                                    <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
+                                                    <span className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-medium">
                                                         {getHonorRarityLabel(honor.honorRarity, t)}
                                                     </span>
                                                 )}
@@ -626,10 +626,11 @@ function HonorsContent() {
                                     <button
                                         onClick={loadMore}
                                         data-shortcut-load-more="true"
-                                        className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                        className="hh-btn hh-btn-primary hh-press hh-focusable font-bold"
+                                        style={{ padding: "0.75rem 2rem" }}
                                     >
                                         {t("page.honors.loadMore")}
-                                        <span className="ml-2 text-sm opacity-80">
+                                        <span className="hh-numeric ml-2 text-sm opacity-80">
                                             ({displayedHonors.length} / {filteredHonors.length})
                                         </span>
                                     </button>
@@ -637,7 +638,7 @@ function HonorsContent() {
                             )}
 
                             {!isLoading && filteredHonors.length === 0 && (
-                                <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                                <div className="flex flex-col items-center justify-center py-20 text-[var(--hh-text-tertiary)]">
                                     <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -674,7 +675,7 @@ function HonorsContent() {
                                             data-shortcut-item="true"
                                             tabIndex={0}
                                             role="button"
-                                            className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-4 cursor-pointer group"
+                                            className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden hover:border-[var(--hh-accent-line)] p-4 cursor-pointer group"
                                         >
                                             <div className="mb-3">
                                                 <BondsDegreeImage
@@ -686,15 +687,15 @@ function HonorsContent() {
                                                     source={assetSource}
                                                 />
                                             </div>
-                                            <h3 className="font-bold text-sm text-slate-800 group-hover:text-miku transition-colors mb-1">
+                                            <h3 className="hh-title text-sm text-[var(--hh-text-primary)] group-hover:text-miku transition-colors mb-1">
                                                 {bh.name}
                                             </h3>
                                             <div className="flex flex-wrap gap-1">
-                                                <span className="text-[10px] px-1.5 py-0.5 bg-pink-50 text-pink-500 rounded font-medium">
+                                                <span className="text-[10px] px-1.5 py-0.5 bg-pink-500/12 text-pink-500 rounded-[var(--hh-radius-xs)] font-medium">
                                                     {t("page.honors.bondsBadge")}
                                                 </span>
                                                 {bh.honorRarity && (
-                                                    <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
+                                                    <span className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-medium">
                                                         {getHonorRarityLabel(bh.honorRarity, t)}
                                                     </span>
                                                 )}
@@ -709,10 +710,11 @@ function HonorsContent() {
                                     <button
                                         onClick={bondsLoadMore}
                                         data-shortcut-load-more="true"
-                                        className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                        className="hh-btn hh-btn-primary hh-press hh-focusable font-bold"
+                                        style={{ padding: "0.75rem 2rem" }}
                                     >
                                         {t("page.honors.loadMore")}
-                                        <span className="ml-2 text-sm opacity-80">
+                                        <span className="hh-numeric ml-2 text-sm opacity-80">
                                             ({displayedBondsHonors.length} / {filteredBondsHonors.length})
                                         </span>
                                     </button>
@@ -720,7 +722,7 @@ function HonorsContent() {
                             )}
 
                             {!isBondsLoading && filteredBondsHonors.length === 0 && bondsDataLoaded && (
-                                <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                                <div className="flex flex-col items-center justify-center py-20 text-[var(--hh-text-tertiary)]">
                                     <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -758,7 +760,7 @@ function HonorsLoadingFallback() {
     const { t } = useI18n();
 
     return (
-        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+        <div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">
             {t("page.honors.loadingFallback")}
         </div>
     );

@@ -40,13 +40,13 @@ function PageHeader() {
 
     return (
         <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.exchanges.badge")}</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                <span className="hh-label text-miku">{t("page.exchanges.badge")}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+            <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                 {t("page.exchanges.title")} <span className="text-miku">{t("page.exchanges.titleHighlight")}</span>
             </h1>
-            <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm sm:text-base">
+            <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto text-sm sm:text-base">
                 {t("page.exchanges.description")}
             </p>
         </div>
@@ -61,16 +61,16 @@ function Badge({
     tone?: "miku" | "violet" | "amber" | "emerald" | "rose" | "slate";
 }) {
     const toneClasses: Record<string, string> = {
-        miku: "bg-miku/10 text-miku",
-        violet: "bg-violet-500/10 text-violet-600",
-        amber: "bg-amber-500/10 text-amber-700",
-        emerald: "bg-emerald-500/10 text-emerald-700",
-        rose: "bg-rose-500/10 text-rose-600",
-        slate: "bg-slate-100 text-slate-500",
+        miku: "bg-[var(--hh-accent-wash)] text-miku",
+        violet: "bg-violet-500/12 text-violet-500",
+        amber: "bg-amber-500/12 text-amber-600",
+        emerald: "bg-emerald-500/12 text-emerald-600",
+        rose: "bg-rose-500/12 text-rose-500",
+        slate: "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]",
     };
 
     return (
-        <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-bold ${toneClasses[tone]}`}>
+        <span className={`inline-flex items-center rounded-[var(--hh-radius-sm)] px-2 py-1 text-[10px] font-bold ${toneClasses[tone]}`}>
             {label}
         </span>
     );
@@ -96,22 +96,22 @@ function SkeletonList() {
             {Array.from({ length: 9 }).map((_, index) => (
                 <div
                     key={index}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-pulse"
+                    className="hh-tile rounded-[var(--hh-radius-lg)] p-4 animate-pulse"
                 >
                     <div className="mb-2 flex flex-wrap gap-1.5">
-                        <div className="h-5 w-16 rounded-full bg-slate-100" />
-                        <div className="h-5 w-20 rounded-full bg-slate-100" />
-                        <div className="h-5 w-14 rounded-full bg-slate-100" />
+                        <div className="h-5 w-16 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)]" />
+                        <div className="h-5 w-20 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)]" />
+                        <div className="h-5 w-14 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)]" />
                     </div>
-                    <div className="h-5 w-3/4 rounded bg-slate-200 mb-1" />
-                    <div className="h-4 w-1/2 rounded bg-slate-100 mb-3" />
+                    <div className="h-5 w-3/4 rounded-[var(--hh-radius-xs)] bg-[var(--hh-surface-sunken)] mb-1" />
+                    <div className="h-4 w-1/2 rounded-[var(--hh-radius-xs)] bg-[var(--hh-surface-sunken)] mb-3" />
                     <div className="flex gap-1.5 mb-3">
-                        <div className="h-5 w-16 rounded-full bg-slate-100" />
-                        <div className="h-5 w-20 rounded-full bg-slate-100" />
+                        <div className="h-5 w-16 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)]" />
+                        <div className="h-5 w-20 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)]" />
                     </div>
                     <div className="flex justify-between">
-                        <div className="h-3 w-24 rounded bg-slate-100" />
-                        <div className="h-3 w-12 rounded bg-slate-100" />
+                        <div className="h-3 w-24 rounded-[var(--hh-radius-xs)] bg-[var(--hh-surface-sunken)]" />
+                        <div className="h-3 w-12 rounded-[var(--hh-radius-xs)] bg-[var(--hh-surface-sunken)]" />
                     </div>
                 </div>
             ))}
@@ -121,12 +121,12 @@ function SkeletonList() {
 
 function EmptyState({ title, description }: { title: string; description?: string }) {
     return (
-        <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border border-slate-200 bg-white">
-            <svg className="mb-4 h-14 w-14 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="hh-well flex flex-col items-center justify-center py-20 text-center">
+            <svg className="mb-4 h-14 w-14 text-[var(--hh-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V7a2 2 0 00-2-2h-3V3.5A1.5 1.5 0 0013.5 2h-3A1.5 1.5 0 009 3.5V5H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2v-4M9 9h6m-6 4h4" />
             </svg>
-            <p className="text-base font-bold text-slate-500">{title}</p>
-            {description ? <p className="mt-1 text-sm text-slate-400">{description}</p> : null}
+            <p className="hh-title text-base text-[var(--hh-text-secondary)]">{title}</p>
+            {description ? <p className="mt-1 text-sm text-[var(--hh-text-tertiary)]">{description}</p> : null}
         </div>
     );
 }
@@ -147,7 +147,7 @@ function useExchangePageContext() {
 function ScrollRow({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div className="mb-2">
-            <p className="text-[10px] font-bold text-slate-400 mb-1">{label}</p>
+            <p className="hh-label mb-1">{label}</p>
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
                 {children}
             </div>
@@ -175,7 +175,7 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
             <img
                 src={getMaterialThumbnailUrl(detail.resourceId, assetSource)}
                 alt={`material-${detail.resourceId}`}
-                className="shrink-0 h-9 w-9 rounded-md bg-slate-50 object-contain p-0.5"
+                className="shrink-0 h-9 w-9 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] object-contain p-0.5"
                 loading="lazy"
             />
         );
@@ -195,7 +195,7 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
             <img
                 src={getCommonMaterialThumbnailUrl(assetName, assetSource)}
                 alt={detail.resourceType}
-                className="shrink-0 h-9 w-9 rounded-md bg-slate-50 object-contain p-0.5"
+                className="shrink-0 h-9 w-9 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] object-contain p-0.5"
                 loading="lazy"
             />
         );
@@ -210,12 +210,12 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
             <img
                 src={imgUrl}
                 alt={mat?.name ?? `mysekai-mat-${detail.resourceId}`}
-                className="shrink-0 h-9 w-9 rounded-md bg-violet-50 object-contain p-0.5"
+                className="shrink-0 h-9 w-9 rounded-[var(--hh-radius-md)] bg-violet-500/12 object-contain p-0.5"
                 loading="lazy"
                 title={mat?.name}
             />
         ) : (
-            <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-md bg-violet-50 text-[8px] font-bold text-violet-400">
+            <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-[var(--hh-radius-md)] bg-violet-500/12 text-[8px] font-bold text-violet-500">
                 MS
             </div>
         );
@@ -226,7 +226,7 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
             <img
                 src={getPracticeTicketThumbnailUrl(detail.resourceId, assetSource)}
                 alt={`practice-ticket-${detail.resourceId}`}
-                className="shrink-0 h-9 w-9 rounded-md bg-slate-50 object-contain p-0.5"
+                className="shrink-0 h-9 w-9 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] object-contain p-0.5"
                 loading="lazy"
                 title={getRewardTypeLabel(detail.resourceType, t)}
             />
@@ -238,7 +238,7 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
             <img
                 src={getSkillPracticeTicketThumbnailUrl(detail.resourceId, assetSource)}
                 alt={`skill-practice-ticket-${detail.resourceId}`}
-                className="shrink-0 h-9 w-9 rounded-md bg-slate-50 object-contain p-0.5"
+                className="shrink-0 h-9 w-9 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] object-contain p-0.5"
                 loading="lazy"
                 title={getRewardTypeLabel(detail.resourceType, t)}
             />
@@ -254,10 +254,10 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
                 <img
                     src={getCharacterIconUrl(detail.resourceId)}
                     alt={`character-rank-exp-${detail.resourceId}`}
-                    className="h-9 w-9 rounded-full border border-emerald-100 bg-white object-cover"
+                    className="h-9 w-9 rounded-full border border-emerald-500/30 bg-[var(--hh-surface-2)] object-cover"
                     loading="lazy"
                 />
-                <span className="absolute -bottom-0.5 -right-0.5 rounded bg-emerald-500 px-[3px] text-[6px] font-black text-white leading-tight select-none">
+                <span className="hh-numeric absolute -bottom-0.5 -right-0.5 rounded-[var(--hh-radius-xs)] bg-emerald-500 px-[3px] text-[6px] font-bold text-white leading-tight select-none">
                     EXP
                 </span>
             </div>
@@ -265,7 +265,7 @@ function RewardThumbnail({ detail }: { detail: { resourceType: string; resourceI
     }
 
     return (
-        <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-md bg-slate-50 text-[8px] font-bold text-slate-300">
+        <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] text-[8px] font-bold text-[var(--hh-text-tertiary)]">
             {getRewardTypeLabel(detail.resourceType, t).slice(0, 2)}
         </div>
     );
@@ -281,10 +281,10 @@ function CostThumbnail({ cost }: { cost: { resourceType: string; resourceId: num
                 <img
                     src={getMaterialThumbnailUrl(cost.resourceId, assetSource)}
                     alt={`cost-${cost.resourceId}`}
-                    className="h-7 w-7 rounded bg-slate-50 object-contain p-0.5"
+                    className="h-7 w-7 rounded-[var(--hh-radius-xs)] bg-[var(--hh-surface-sunken)] object-contain p-0.5"
                     loading="lazy"
                 />
-                <span className="absolute -bottom-0.5 -right-0.5 rounded bg-slate-700/80 px-0.5 text-[7px] font-bold text-white leading-tight">
+                <span className="hh-numeric absolute -bottom-0.5 -right-0.5 rounded-[var(--hh-radius-xs)] bg-[rgba(20,22,28,0.85)] px-0.5 text-[7px] font-bold text-white leading-tight">
                     {cost.quantity}
                 </span>
             </div>
@@ -302,13 +302,13 @@ function CostThumbnail({ cost }: { cost: { resourceType: string; resourceId: num
                     <img
                         src={imgUrl}
                         alt={`cost-ms-${cost.resourceId}`}
-                        className="h-7 w-7 rounded bg-violet-50 object-contain p-0.5"
+                        className="h-7 w-7 rounded-[var(--hh-radius-xs)] bg-violet-500/12 object-contain p-0.5"
                         loading="lazy"
                     />
                 ) : (
-                    <div className="h-7 w-7 rounded bg-violet-50 flex items-center justify-center text-[7px] font-bold text-violet-400">MS</div>
+                    <div className="h-7 w-7 rounded-[var(--hh-radius-xs)] bg-violet-500/12 flex items-center justify-center text-[7px] font-bold text-violet-500">MS</div>
                 )}
-                <span className="absolute -bottom-0.5 -right-0.5 rounded bg-slate-700/80 px-0.5 text-[7px] font-bold text-white leading-tight">
+                <span className="hh-numeric absolute -bottom-0.5 -right-0.5 rounded-[var(--hh-radius-xs)] bg-[rgba(20,22,28,0.85)] px-0.5 text-[7px] font-bold text-white leading-tight">
                     {cost.quantity}
                 </span>
             </div>
@@ -330,7 +330,7 @@ function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
         <Link
             href={`/exchanges/${entry.id}`}
             data-shortcut-item="true"
-            className="group block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-miku/40 hover:shadow-lg"
+            className="hh-tile hh-press group block rounded-[var(--hh-radius-lg)] p-4 hover:border-[var(--hh-accent-line)]"
         >
             <div className="mb-2 flex flex-wrap gap-1.5">
                 <Badge label={getExchangeStatusLabel(entry.status, t)} tone={getStatusTone(entry.status)} />
@@ -339,7 +339,7 @@ function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
                 {typeof entry.exchangeLimit === "number" ? <Badge label={t("page.exchanges.limitTimes", { count: entry.exchangeLimit })} tone="rose" /> : null}
             </div>
 
-            <h2 className="text-sm font-black leading-5 text-slate-800 transition-colors group-hover:text-miku mb-3 line-clamp-2">
+            <h2 className="hh-title text-sm text-[var(--hh-text-primary)] transition-colors group-hover:text-miku mb-3 line-clamp-2">
                 {entry.resolvedTitle}
             </h2>
 
@@ -351,7 +351,7 @@ function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
                                 <RewardThumbnail key={`r-${entry.id}-${i}`} detail={detail} />
                             ))}
                             {hiddenRewardCount > 0 && (
-                                <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-md bg-slate-100 text-[10px] font-bold text-slate-400">
+                                <div className="hh-numeric shrink-0 flex h-9 w-9 items-center justify-center rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] text-[10px] font-bold text-[var(--hh-text-tertiary)]">
                                     +{hiddenRewardCount}
                                 </div>
                             )}
@@ -366,7 +366,7 @@ function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
                                 <CostThumbnail key={`c-${entry.id}-${i}`} cost={cost} />
                             ))}
                             {hiddenCostCount > 0 && (
-                                <div className="shrink-0 flex h-7 w-7 items-center justify-center rounded bg-slate-100 text-[8px] font-bold text-slate-400">
+                                <div className="hh-numeric shrink-0 flex h-7 w-7 items-center justify-center rounded-[var(--hh-radius-xs)] bg-[var(--hh-surface-sunken)] text-[8px] font-bold text-[var(--hh-text-tertiary)]">
                                     +{hiddenCostCount}
                                 </div>
                             )}
@@ -376,7 +376,7 @@ function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
             </div>
 
             <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">{formatExchangeTime(getExchangeLastModified(entry), formatDate)}</span>
+                <span className="hh-numeric text-[var(--hh-text-tertiary)]">{formatExchangeTime(getExchangeLastModified(entry), formatDate)}</span>
                 <span className="font-bold text-miku transition-transform group-hover:translate-x-0.5">
                     {t("page.exchanges.detailLink")}
                 </span>
@@ -554,7 +554,7 @@ function ExchangesContent() {
         >
             <FilterSection label={t("common.filter.exchangeShop")}>
                 <select
-                    className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
+                    className="hh-input w-full p-2 text-sm"
                     value={filters.selectedSummaryIds.length === 1 ? String(filters.selectedSummaryIds[0]) : ""}
                     onChange={(e) => {
                         const val = e.target.value ? [Number(e.target.value)] : [];
@@ -572,7 +572,7 @@ function ExchangesContent() {
 
             <FilterSection label={t("common.filter.category")}>
                 <select
-                    className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
+                    className="hh-input w-full p-2 text-sm"
                     value={filters.selectedCategories.length === 1 ? filters.selectedCategories[0] : ""}
                     onChange={(e) => {
                         const val = e.target.value ? [e.target.value] : [];
@@ -697,7 +697,7 @@ function ExchangesContent() {
 
             <FilterSection label={t("common.filter.rewardType")}>
                 <select
-                    className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
+                    className="hh-input w-full p-2 text-sm"
                     value={filters.selectedRewardTypes.length === 1 ? filters.selectedRewardTypes[0] : ""}
                     onChange={(e) => {
                         const val = e.target.value ? [e.target.value] : [];
@@ -722,7 +722,7 @@ function ExchangesContent() {
             <div className="container mx-auto px-4 sm:px-6 py-8">
                 <PageHeader />
                 {error ? (
-                    <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">
+                    <div className="rounded-[var(--hh-radius-lg)] border border-red-500/30 bg-red-500/12 px-5 py-4 text-sm text-red-600">
                         <p className="font-bold">{t("common.state.loadingFailed")}</p>
                         <p className="mt-1">{error}</p>
                     </div>
@@ -739,14 +739,14 @@ function ExchangesContent() {
                 <PageHeader />
 
                 {error ? (
-                    <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700">
+                    <div className="mb-6 rounded-[var(--hh-radius-lg)] border border-amber-500/30 bg-amber-500/12 px-5 py-4 text-sm text-amber-600">
                         <p className="font-bold">{t("page.exchanges.loadNotice")}</p>
                         <p className="mt-1">{error}</p>
                     </div>
                 ) : null}
 
                 {!isLoading ? (
-                    <div className="mb-4 text-xs text-slate-500">
+                    <div className="hh-numeric mb-4 text-xs text-[var(--hh-text-secondary)]">
                         {t("page.exchanges.currentTotalSummary", {
                             count: filteredEntries.length,
                             total: hasActiveFilters
@@ -777,16 +777,16 @@ function ExchangesContent() {
                                     <button
                                         onClick={loadMore}
                                         data-shortcut-load-more="true"
-                                        className="rounded-xl bg-gradient-to-r from-miku to-miku-dark px-8 py-3 font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                                        className="hh-press hh-focusable rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-deep)] bg-[var(--hh-accent)] px-8 py-3 font-bold text-[var(--hh-text-on-accent)]"
                                     >
                                         {t("page.exchanges.loadMore")}
-                                        <span className="ml-2 text-sm opacity-80">
+                                        <span className="hh-numeric ml-2 text-sm opacity-80">
                                             ({displayedEntries.length} / {filteredEntries.length})
                                         </span>
                                     </button>
                                 </div>
                             ) : (
-                                <div className="mt-8 text-center text-sm text-slate-400">
+                                <div className="hh-numeric mt-8 text-center text-sm text-[var(--hh-text-tertiary)]">
                                     {t("page.exchanges.allLoaded", { count: filteredEntries.length })}
                                 </div>
                             )}
@@ -802,7 +802,7 @@ function ExchangesLoadingFallback() {
     const { t } = useI18n();
 
     return (
-        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+        <div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">
             {t("page.exchanges.loadingFallback")}
         </div>
     );

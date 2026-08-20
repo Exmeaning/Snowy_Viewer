@@ -67,7 +67,7 @@ function RangeSlider({
 }) {
     return (
         <div className="flex items-center gap-3">
-            <label className="text-xs font-bold text-slate-500 whitespace-nowrap min-w-[4rem]">
+            <label className="text-xs font-bold text-[var(--hh-text-secondary)] whitespace-nowrap min-w-[4rem]">
                 {label}
             </label>
             <input
@@ -84,12 +84,12 @@ function RangeSlider({
                         document.activeElement.blur();
                     }
                 }}
-                className="flex-1 h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-miku
+                className="flex-1 h-1.5 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-full)] appearance-none cursor-pointer accent-miku
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
-                    [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-miku [&::-webkit-slider-thumb]:shadow-md
-                    [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
+                    [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--hh-accent)]
+                    [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[var(--hh-border-strong)]"
             />
-            <span className="text-xs font-mono text-slate-400 min-w-[2rem] text-right">
+            <span className="hh-numeric text-xs text-[var(--hh-text-tertiary)] min-w-[2rem] text-right">
                 {typeof value === "number" ? (Number.isInteger(step) ? value : value.toFixed(1)) : value}
             </span>
         </div>
@@ -485,13 +485,13 @@ export default function StickerMakerContent() {
                 <div className="container mx-auto px-4 py-8">
                     {/* Page Header */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                            <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.stickerMaker.badge")}</span>
+                        <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                            <span className="hh-label text-miku">{t("page.stickerMaker.badge")}</span>
                         </div>
-                        <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                        <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                             {t("page.stickerMaker.title")} <span className="text-miku">{t("page.stickerMaker.titleHighlight")}</span>
                         </h1>
-                        <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                        <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                             {t("page.stickerMaker.description")}
                         </p>
                     </div>
@@ -500,8 +500,8 @@ export default function StickerMakerContent() {
                         {/* Left Sidebar: Filters & Selection */}
                         <div className="w-full lg:w-96 flex-shrink-0 space-y-6">
                             {/* Unit Filter */}
-                            <div className="ios-glass-card p-5 rounded-2xl">
-                                <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">{t("page.stickerMaker.sections.unitFilter")}</h3>
+                            <div className="hh-tile p-5 rounded-[var(--hh-radius-lg)]">
+                                <h3 className="hh-label mb-3 px-1">{t("page.stickerMaker.sections.unitFilter")}</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {UNIT_DATA.map(unit => {
                                         const iconName = UNIT_ICON_FILES[unit.id] || "";
@@ -510,9 +510,9 @@ export default function StickerMakerContent() {
                                             <button
                                                 key={unit.id}
                                                 onClick={() => handleUnitClick(unit.id)}
-                                                className={`p-1.5 rounded-xl transition-all ${selectedUnitIds.includes(unit.id)
-                                                    ? "ring-2 ring-miku shadow-lg bg-white/20 dark:bg-white/10"
-                                                    : "hover:bg-slate-100/50 dark:hover:bg-slate-800/50 border border-transparent"
+                                                className={`hh-press hh-focusable p-1.5 rounded-[var(--hh-radius-md)] border ${selectedUnitIds.includes(unit.id)
+                                                    ? "border-[var(--hh-accent)] bg-[var(--hh-accent-wash-strong)]"
+                                                    : "border-transparent hover:bg-[var(--hh-surface-sunken)]"
                                                     }`}
                                                 title={unitLabel}
                                             >
@@ -532,8 +532,8 @@ export default function StickerMakerContent() {
                             </div>
 
                             {/* Character Filter */}
-                            <div className="ios-glass-card p-5 rounded-2xl">
-                                <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">{t("page.stickerMaker.sections.characterSelect")}</h3>
+                            <div className="hh-tile p-5 rounded-[var(--hh-radius-lg)]">
+                                <h3 className="hh-label mb-3 px-1">{t("page.stickerMaker.sections.characterSelect")}</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {availableCharacterIds.map(charId => {
                                         const characterName = getCharacterName(t, charId);
@@ -541,13 +541,13 @@ export default function StickerMakerContent() {
                                             <button
                                                 key={charId}
                                                 onClick={() => handleCharacterClick(charId)}
-                                                className={`relative transition-all ${selectedCharacterId === charId
-                                                    ? "ring-2 ring-miku scale-110 z-10 rounded-full shadow-md"
-                                                    : "ring-2 ring-transparent hover:ring-slate-200/50 rounded-full opacity-80 hover:opacity-100 grayscale hover:grayscale-0"
+                                                className={`hh-press hh-focusable relative rounded-full ${selectedCharacterId === charId
+                                                    ? "ring-2 ring-[var(--hh-accent)] z-10"
+                                                    : "ring-2 ring-transparent opacity-80 hover:opacity-100 grayscale hover:grayscale-0"
                                                     }`}
                                                 title={characterName}
                                             >
-                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100/30">
+                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--hh-surface-sunken)]">
                                                     <NextImage
                                                         src={getCharacterIconUrl(charId)}
                                                         alt={characterName}
@@ -565,8 +565,8 @@ export default function StickerMakerContent() {
 
                              {/* Sticker Grid */}
                              {selectedCharacterId && (
-                                 <div className="ios-glass-card p-5 rounded-2xl">
-                                     <h3 className="text-sm font-bold text-slate-500 mb-3 px-1">
+                                 <div className="hh-tile p-5 rounded-[var(--hh-radius-lg)]">
+                                     <h3 className="hh-label mb-3 px-1">
                                          {t("page.stickerMaker.sections.stickerSelect", { count: formatNumber(filteredStickers.length) })}
                                      </h3>
                                      <div className="max-h-[400px] overflow-y-auto pr-1 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -574,7 +574,7 @@ export default function StickerMakerContent() {
                                              {/* Custom Upload Button */}
                                              <button
                                                  onClick={() => stickerFileInputRef.current?.click()}
-                                                 className="relative rounded-lg overflow-hidden transition-all border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-miku hover:bg-white/10 flex flex-col items-center justify-center gap-1 aspect-[296/256] text-slate-400 hover:text-miku"
+                                                 className="hh-press hh-focusable relative rounded-[var(--hh-radius-md)] overflow-hidden border-2 border-dashed border-[var(--hh-border-strong)] hover:border-[var(--hh-accent)] flex flex-col items-center justify-center gap-1 aspect-[296/256] text-[var(--hh-text-tertiary)] hover:text-miku"
                                                  title={t("page.stickerMaker.uploadCustomImageTitle")}
                                              >
                                                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -594,16 +594,16 @@ export default function StickerMakerContent() {
                                                  <button
                                                      key={sticker.id}
                                                      onClick={() => handleStickerClick(sticker)}
-                                                     className={`relative rounded-lg overflow-hidden transition-all border-2 ${selectedSticker?.id === sticker.id
-                                                         ? "border-miku shadow-md"
-                                                         : "border-transparent hover:border-slate-200/50"
+                                                     className={`hh-press hh-focusable relative rounded-[var(--hh-radius-md)] overflow-hidden border-2 ${selectedSticker?.id === sticker.id
+                                                         ? "border-[var(--hh-accent)]"
+                                                         : "border-transparent hover:border-[var(--hh-border-strong)]"
                                                          }`}
                                                  >
                                                      <img
                                                          src={`${STICKER_MAKER_BASE_URL}/img/${sticker.img}`}
                                                          alt={sticker.name}
                                                          loading="lazy"
-                                                         className="w-full aspect-[296/256] object-contain bg-slate-50/10"
+                                                         className="w-full aspect-[296/256] object-contain bg-[var(--hh-surface-sunken)]"
                                                      />
                                                  </button>
                                              ))}
@@ -616,24 +616,24 @@ export default function StickerMakerContent() {
                          {/* Right Area: Editor */}
                          <div className="flex-1" ref={editorRef}>
                              {!selectedSticker ? (
-                                 <div className="h-full min-h-[400px] flex flex-col items-center justify-center text-slate-400 ios-glass-card border-dashed p-8 rounded-3xl">
+                                 <div className="h-full min-h-[400px] flex flex-col items-center justify-center text-[var(--hh-text-tertiary)] hh-well border-dashed p-8 rounded-[var(--hh-radius-xl)]">
                                      <div className="w-16 h-16 mb-4 opacity-20">
                                          <svg fill="currentColor" viewBox="0 0 24 24">
                                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
                                          </svg>
                                      </div>
-                                     <p className="text-lg font-medium">{t("page.stickerMaker.emptyTitle")}</p>
-                                     <p className="text-sm mt-1">{t("page.stickerMaker.emptyDescription")}</p>
+                                     <p className="hh-title text-lg">{t("page.stickerMaker.emptyTitle")}</p>
+                                     <p className="hh-body text-sm mt-1">{t("page.stickerMaker.emptyDescription")}</p>
                                  </div>
                              ) : (
-                                 <div className="ios-glass-card rounded-3xl p-6 lg:p-8 sticker-editor-container grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 <div className="hh-tile rounded-[var(--hh-radius-xl)] p-6 lg:p-8 sticker-editor-container grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Canvas Area */}
                                     <div className="flex flex-col items-center gap-6 order-2 md:order-1 md:col-span-2 mt-4 md:mt-0 mb-4 md:mb-8">
                                         <div className="relative group">
                                             {/* Canvas Wrapper */}
                                             <div className="flex items-center gap-4">
                                                 <div
-                                                    className="rounded-xl overflow-hidden shadow-2xl border-4 border-white bg-slate-100 relative"
+                                                    className="relative overflow-hidden rounded-[var(--hh-radius-md)] border-4 border-[var(--hh-surface-2)] bg-[var(--hh-surface-sunken)] shadow-[var(--hh-shadow-raised)]"
                                                     style={{ width: 296, height: 256 }}
                                                 >
                                                     <canvas
@@ -645,7 +645,7 @@ export default function StickerMakerContent() {
                                                 </div>
 
                                                  {/* Vertical Y Control */}
-                                                 <div className="h-[256px] py-4 ios-glass-panel rounded-full w-8 flex justify-center">
+                                                 <div className="h-[256px] py-4 w-8 flex justify-center rounded-[var(--hh-radius-full)] border border-[var(--hh-border-hairline)] bg-[var(--hh-surface-sunken)]">
                                                      <input
                                                          type="range"
                                                          min={0}
@@ -691,7 +691,7 @@ export default function StickerMakerContent() {
                                                              document.activeElement.blur();
                                                          }
                                                      }}
-                                                     className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full appearance-none cursor-pointer accent-miku"
+                                                     className="w-full h-2 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-full)] appearance-none cursor-pointer accent-miku"
                                                  />
                                              </div>
                                         </div>
@@ -700,19 +700,19 @@ export default function StickerMakerContent() {
                                     {/* Text & Font Controls */}
                                     <div className="space-y-4 order-1 md:order-2">
                                          <div>
-                                             <label className="block text-xs font-bold text-slate-500 mb-2">
+                                             <label className="hh-label block mb-2">
                                                  {t("page.stickerMaker.textContent")}
                                              </label>
                                              <textarea
                                                  value={text}
                                                  onChange={(e) => setText(e.target.value)}
                                                  rows={3}
-                                                 className="w-full px-4 py-3 text-base ios-glass-input rounded-xl focus:outline-none focus:ring-2 focus:ring-miku/30 resize-none"
+                                                 className="hh-input w-full px-4 py-3 text-base resize-none"
                                                  placeholder={t("page.stickerMaker.textPlaceholder")}
                                              />
                                          </div>
                                          <div>
-                                             <label className="block text-xs font-bold text-slate-500 mb-2">
+                                             <label className="hh-label block mb-2">
                                                  {t("page.stickerMaker.fontSelect")}
                                              </label>
                                              <div className="grid grid-cols-2 gap-2">
@@ -720,9 +720,9 @@ export default function StickerMakerContent() {
                                                      <button
                                                          key={font.name}
                                                          onClick={() => setFontFamily(font.name)}
-                                                         className={`px-3 py-2 text-sm rounded-lg border transition-all truncate ${fontFamily === font.name
-                                                             ? "ios-glass-tab-active text-miku font-bold"
-                                                             : "ios-glass-tab text-slate-600 hover:bg-white/60"
+                                                         className={`hh-press hh-focusable px-3 py-2 text-sm rounded-[var(--hh-radius-md)] border truncate ${fontFamily === font.name
+                                                            ? "border-[var(--hh-accent)] bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] font-bold"
+                                                            : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
                                                              }`}
                                                          title={font.labelKey ? t(font.labelKey) : font.label}
                                                      >
@@ -733,7 +733,7 @@ export default function StickerMakerContent() {
                                                  {/* Custom Font Upload Button */}
                                                  <button
                                                      onClick={() => fileInputRef.current?.click()}
-                                                     className="px-3 py-2 text-sm rounded-lg border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-miku hover:text-miku hover:bg-white/10 transition-all flex items-center justify-center gap-1"
+                                                     className="hh-press hh-focusable px-3 py-2 text-sm rounded-[var(--hh-radius-md)] border border-dashed border-[var(--hh-border-strong)] text-[var(--hh-text-secondary)] hover:border-[var(--hh-accent)] hover:text-miku flex items-center justify-center gap-1"
                                                  >
                                                      <span className="text-lg">+</span> {t("page.stickerMaker.customFont")}
                                                  </button>
@@ -749,7 +749,7 @@ export default function StickerMakerContent() {
                                      </div>
  
                                      {/* Param Sliders */}
-                                     <div className="space-y-5 ios-glass-panel p-5 rounded-xl order-3 md:order-3">
+                                     <div className="space-y-5 hh-well p-5 order-3 md:order-3">
                                         <RangeSlider
                                             label={t("page.stickerMaker.sliders.rotate")}
                                             value={rotate}
@@ -781,25 +781,23 @@ export default function StickerMakerContent() {
                                             step={0.5}
                                         />
 
-                                        <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-                                            <span className="text-xs font-bold text-slate-500">
-                                                {t("page.stickerMaker.curveText")}
-                                            </span>
-                                            <button
-                                                onClick={() => setCurve(!curve)}
-                                                className={`relative w-11 h-6 rounded-full transition-colors ${curve ? "bg-miku" : "bg-slate-300"
-                                                    }`}
-                                            >
-                                                <span
-                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${curve ? "translate-x-5" : ""
-                                                        }`}
-                                                />
-                                            </button>
-                                        </div>
+                                       <div className="flex items-center justify-between pt-2 border-t border-[var(--hh-border)]">
+                                           <span className="hh-label">
+                                               {t("page.stickerMaker.curveText")}
+                                           </span>
+                                           <button
+                                               onClick={() => setCurve(!curve)}
+                                               className={`hh-switch hh-focusable ${curve ? "hh-switch-active" : ""}`}
+                                               role="switch"
+                                               aria-checked={curve}
+                                           >
+                                               <span className="hh-switch-thumb" />
+                                           </button>
+                                       </div>
 
-                                        <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
-                                            <span className="text-xs font-bold text-slate-500 whitespace-nowrap">{t("page.stickerMaker.textColor")}</span>
-                                            <label className="relative w-7 h-7 rounded-full border-2 border-slate-200 shadow-sm cursor-pointer overflow-hidden flex-shrink-0 hover:border-miku transition-colors" title={t("page.stickerMaker.chooseTextColor")}>
+                                       <div className="flex items-center gap-2 pt-2 border-t border-[var(--hh-border)]">
+                                           <span className="hh-label whitespace-nowrap">{t("page.stickerMaker.textColor")}</span>
+                                           <label className="relative w-7 h-7 rounded-full border-2 border-[var(--hh-border)] cursor-pointer overflow-hidden flex-shrink-0 hover:border-[var(--hh-accent)] transition-colors" title={t("page.stickerMaker.chooseTextColor")}>
                                                 <div
                                                     className="absolute inset-0 rounded-full"
                                                     style={{ backgroundColor: textColor || selectedSticker?.color }}
@@ -811,13 +809,13 @@ export default function StickerMakerContent() {
                                                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                                                 />
                                             </label>
-                                            <span className="text-xs font-mono text-slate-400">
-                                                {textColor || selectedSticker?.color}
-                                            </span>
-                                            {textColor && (
-                                                <button
-                                                    onClick={() => setTextColor("")}
-                                                    className="text-xs text-slate-400 hover:text-miku transition-colors whitespace-nowrap"
+                                           <span className="hh-numeric text-xs text-[var(--hh-text-tertiary)]">
+                                               {textColor || selectedSticker?.color}
+                                           </span>
+                                           {textColor && (
+                                               <button
+                                                   onClick={() => setTextColor("")}
+                                                   className="text-xs text-[var(--hh-text-tertiary)] hover:text-miku transition-colors whitespace-nowrap"
                                                     title={t("page.stickerMaker.resetDefaultColor")}
                                                 >
                                                     {t("page.stickerMaker.reset")}
@@ -825,26 +823,26 @@ export default function StickerMakerContent() {
                                             )}
                                         </div>
 
-                                         <div className="flex items-center justify-between pt-2 border-t border-slate-200/20">
-                                             <span className="text-xs font-bold text-slate-500">
+                                         <div className="flex items-center justify-between pt-2 border-t border-[var(--hh-border)]">
+                                             <span className="hh-label">
                                                  {t("page.stickerMaker.backgroundColor")}
                                              </span>
-                                             <div className="flex ios-glass-panel rounded-lg p-1 gap-1">
+                                             {/* Shrink-to-fit: .hh-segment defaults to flex:1 1 auto for the side
+                                                 rail, which would eat this row's label. */}
+                                             <div className="hh-segment w-auto grow-0 shrink-0" role="tablist">
                                                  <button
                                                      onClick={() => setBgColor("transparent")}
-                                                     className={`px-3 py-1 text-xs rounded-md transition-all ${bgColor === "transparent"
-                                                         ? "ios-glass-tab-active text-slate-700 dark:text-white shadow-sm font-bold"
-                                                         : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                                                         }`}
+                                                     className="hh-segment-item hh-focusable"
+                                                     role="tab"
+                                                     aria-selected={bgColor === "transparent"}
                                                  >
                                                      {t("page.stickerMaker.transparent")}
                                                  </button>
                                                  <button
                                                      onClick={() => setBgColor("white")}
-                                                     className={`px-3 py-1 text-xs rounded-md transition-all ${bgColor === "white"
-                                                         ? "ios-glass-tab-active text-slate-700 dark:text-white shadow-sm font-bold"
-                                                         : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                                                         }`}
+                                                     className="hh-segment-item hh-focusable"
+                                                     role="tab"
+                                                     aria-selected={bgColor === "white"}
                                                  >
                                                      {t("page.stickerMaker.white")}
                                                  </button>
@@ -853,10 +851,14 @@ export default function StickerMakerContent() {
                                      </div>
  
                                      {/* Action Buttons */}
-                                     <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-slate-200/20 order-4 md:order-4 md:col-span-2">
+                                     <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-[var(--hh-border)] order-4 md:order-4 md:col-span-2">
                                          <button
                                              onClick={handleCopy}
-                                             className="flex items-center gap-2 px-6 py-3 ios-glass-btn rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:text-miku hover:border-miku/50 active:scale-95 transition-all shadow-sm"
+                                             /* .hh-btn's own padding is unlayered and beats Tailwind's
+                                                padding utilities, so the larger action-button sizing
+                                                has to be inline. */
+                                             style={{ padding: "0.75rem 1.5rem" }}
+                                             className="hh-btn hh-press hh-focusable font-bold"
                                          >
                                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -866,7 +868,8 @@ export default function StickerMakerContent() {
  
                                          <button
                                              onClick={handleDownload}
-                                             className="flex items-center gap-2 px-8 py-3 ios-glass-btn ios-glass-btn-primary text-white rounded-xl font-bold shadow-lg shadow-miku/20 active:scale-95 transition-all"
+                                             style={{ padding: "0.75rem 2rem" }}
+                                             className="hh-btn hh-btn-primary hh-press hh-focusable font-bold"
                                          >
                                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -880,7 +883,7 @@ export default function StickerMakerContent() {
                     </div>
 
                     {/* Footer / Credits */}
-                    <div className="mt-12 pt-8 border-t border-slate-200 text-center text-slate-400 text-sm space-y-2">
+                    <div className="mt-12 pt-8 border-t border-[var(--hh-border)] text-center text-[var(--hh-text-tertiary)] text-sm space-y-2">
                         <p>
                             {t("page.stickerMaker.credits.sourcePrefix")}{" "}
                             <ExternalLink
@@ -895,7 +898,7 @@ export default function StickerMakerContent() {
                         <p>
                             {t("page.stickerMaker.credits.fontLicensePrefix")} <ExternalLink href="https://scripts.sil.org/OFL" target="_blank" rel="noopener noreferrer" className="hover:underline">SIL Open Font License 1.1</ExternalLink>{t("page.stickerMaker.credits.fontLicenseSuffix") ? ` ${t("page.stickerMaker.credits.fontLicenseSuffix")}` : ""}
                         </p>
-                        <p className="text-xs text-slate-300 mt-4">
+                        <p className="text-xs text-[var(--hh-text-tertiary)] mt-4">
                             {t("page.stickerMaker.credits.localNotice")}
                         </p>
                     </div>

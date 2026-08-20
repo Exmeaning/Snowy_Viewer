@@ -249,14 +249,14 @@ function ChartPreviewInner() {
 
     const renderHeader = (showDescription = false) => (
         <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.chartPreview.badge")}</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                <span className="hh-label text-miku">{t("page.chartPreview.badge")}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+            <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                 {t("page.chartPreview.title")} <span className="text-miku">{t("page.chartPreview.titleHighlight")}</span>
             </h1>
             {showDescription && (
-                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                     {t("page.chartPreview.description")}
                 </p>
             )}
@@ -299,7 +299,7 @@ function ChartPreviewInner() {
                             <>
                                 <button
                                     onClick={() => router.back()}
-                                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border-2 border-miku text-miku rounded-xl font-bold hover:bg-miku hover:text-white active:scale-95 transition-all text-sm"
+                                    className="hh-press hh-focusable shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border border-[var(--hh-accent)] text-miku rounded-[var(--hh-radius-md)] font-bold hover:bg-[var(--hh-accent)] hover:text-[var(--hh-text-on-accent)] text-sm"
                                 >
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -308,7 +308,7 @@ function ChartPreviewInner() {
                                 </button>
                                 <button
                                     onClick={handleBack}
-                                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border-2 border-slate-300 text-slate-600 rounded-xl font-bold hover:bg-slate-100 active:scale-95 transition-all text-sm"
+                                    className="hh-press hh-focusable shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border border-[var(--hh-border)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-md)] font-bold hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)] text-sm"
                                 >
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4" />
@@ -319,7 +319,7 @@ function ChartPreviewInner() {
                         ) : (
                             <button
                                 onClick={handleBack}
-                                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border-2 border-miku text-miku rounded-xl font-bold hover:bg-miku hover:text-white active:scale-95 transition-all text-sm"
+                                className="hh-press hh-focusable shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border border-[var(--hh-accent)] text-miku rounded-[var(--hh-radius-md)] font-bold hover:bg-[var(--hh-accent)] hover:text-[var(--hh-text-on-accent)] text-sm"
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -329,7 +329,7 @@ function ChartPreviewInner() {
                         )}
                         {selectedMusic ? (
                             <>
-                                <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden relative shadow-md">
+                                <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-[var(--hh-radius-md)] overflow-hidden relative bg-[var(--hh-surface-sunken)]">
                                     <Image
                                         src={getMusicJacketUrl(selectedMusic.assetbundleName, assetSource)}
                                         alt={selectedMusic.title}
@@ -339,20 +339,20 @@ function ChartPreviewInner() {
                                     />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <h1 className="text-base sm:text-xl font-black text-primary-text truncate">
+                                    <h1 className="hh-title text-base sm:text-xl text-primary-text truncate">
                                         {selectedMusic.title}
                                     </h1>
                                     <div className="flex items-center gap-2 mt-0.5">
                                         {diffInfo && (
                                             <span
-                                                className="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-bold text-white"
+                                                className="shrink-0 px-2 py-0.5 rounded-[var(--hh-radius-sm)] text-[10px] font-bold text-white"
                                                 style={{ backgroundColor: diffInfo.color }}
                                             >
                                                 {getDifficultyLabel(diffInfo.value)}
                                             </span>
                                         )}
                                         {selectedDiffInfo && (
-                                            <span className="text-xs text-slate-500 truncate">
+                                            <span className="hh-numeric text-xs text-[var(--hh-text-secondary)] truncate">
                                                 {t("page.chartPreview.levelLabel", { level: selectedDiffInfo.playLevel })} · {formatNoteCount(selectedDiffInfo.totalNoteCount)}
                                             </span>
                                         )}
@@ -360,7 +360,7 @@ function ChartPreviewInner() {
                                 </div>
                             </>
                         ) : (
-                            <h1 className="text-xl sm:text-2xl font-black text-primary-text truncate min-w-0 flex-1">
+                            <h1 className="hh-title text-xl sm:text-2xl text-primary-text truncate min-w-0 flex-1">
                                 {selectedMusicId ? t("page.chartPreview.previewTitleWithId", { id: selectedMusicId }) : t("page.chartPreview.metadataTitle")}
                             </h1>
                         )}
@@ -368,16 +368,16 @@ function ChartPreviewInner() {
                     {/* Vocal switcher in preview mode */}
                     {availableVocals.length > 1 && (
                         <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
-                            <span className="shrink-0 text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t("page.chartPreview.vocalVersion")}</span>
+                            <span className="hh-label shrink-0">{t("page.chartPreview.vocalVersion")}</span>
                             {availableVocals.map((v) => {
                                 const isActive = selectedVocal?.id === v.id;
                                 return (
                                     <button
                                         key={v.id}
                                         onClick={() => setSelectedVocalId(v.id)}
-                                        className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${isActive
-                                                ? "bg-miku text-white shadow-sm"
-                                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                        className={`hh-press hh-focusable shrink-0 px-2.5 py-1 rounded-[var(--hh-radius-sm)] text-xs font-medium ${isActive
+                                                ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                                                : "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)]"
                                             }`}
                                     >
                                         {v.caption}
@@ -417,9 +417,9 @@ function ChartPreviewInner() {
                 <div className="flex gap-2 mb-6 justify-center">
                     <button
                         onClick={() => setMode("song")}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-300 ${mode === "song"
-                                ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20"
-                                : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"
+                        className={`hh-press hh-focusable flex items-center gap-2 px-5 py-2.5 rounded-[var(--hh-radius-md)] font-medium text-sm whitespace-nowrap border ${mode === "song"
+                                ? "border-[var(--hh-accent-deep)] bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                                : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
                             }`}
                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -429,9 +429,9 @@ function ChartPreviewInner() {
                     </button>
                     <button
                         onClick={() => setMode("url")}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-300 ${mode === "url"
-                                ? "bg-gradient-to-r from-miku to-miku-dark text-white shadow-lg shadow-miku/20"
-                                : "bg-white/60 text-slate-600 hover:bg-white/80 border border-slate-200/50"
+                        className={`hh-press hh-focusable flex items-center gap-2 px-5 py-2.5 rounded-[var(--hh-radius-md)] font-medium text-sm whitespace-nowrap border ${mode === "url"
+                                ? "border-[var(--hh-accent-deep)] bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                                : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
                             }`}
                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -452,7 +452,7 @@ function ChartPreviewInner() {
 
                         {/* Difficulty Selector */}
                         <div>
-                            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 text-center">
+                            <label className="hh-label block mb-2 text-center">
                                 {t("page.chartPreview.difficulty")}
                             </label>
                             {availableDifficulties.length > 0 ? (
@@ -464,9 +464,9 @@ function ChartPreviewInner() {
                                             <button
                                                 key={diff.musicDifficulty}
                                                 onClick={() => setSelectedDifficulty(diff.musicDifficulty)}
-                                                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${selectedDifficulty === diff.musicDifficulty
-                                                        ? "ring-2 shadow-lg bg-white"
-                                                        : "hover:bg-slate-50 border border-transparent"
+                                                className={`hh-press hh-focusable flex flex-col items-center px-4 py-2 rounded-[var(--hh-radius-md)] ${selectedDifficulty === diff.musicDifficulty
+                                                        ? "bg-[var(--hh-surface-2)]"
+                                                        : "border border-transparent hover:bg-[var(--hh-surface-sunken)]"
                                                     }`}
                                                 style={
                                                     selectedDifficulty === diff.musicDifficulty
@@ -481,7 +481,7 @@ function ChartPreviewInner() {
                                                     {getDifficultyLabel(meta.value)}
                                                 </span>
                                                 <span
-                                                    className="text-lg font-black"
+                                                    className="hh-numeric text-lg font-bold"
                                                     style={{ color: meta.color }}
                                                 >
                                                     {diff.playLevel}
@@ -496,9 +496,9 @@ function ChartPreviewInner() {
                                         <button
                                             key={d.value}
                                             onClick={() => setSelectedDifficulty(d.value)}
-                                            className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${selectedDifficulty === d.value
-                                                    ? "ring-2 shadow-lg bg-white"
-                                                    : "hover:bg-slate-50 border border-transparent"
+                                            className={`hh-press hh-focusable flex flex-col items-center px-4 py-2 rounded-[var(--hh-radius-md)] ${selectedDifficulty === d.value
+                                                    ? "bg-[var(--hh-surface-2)]"
+                                                    : "border border-transparent hover:bg-[var(--hh-surface-sunken)]"
                                                 }`}
                                             style={
                                                 selectedDifficulty === d.value
@@ -521,7 +521,7 @@ function ChartPreviewInner() {
                         {/* Vocal Selector */}
                         {availableVocals.length > 1 && (
                             <div>
-                                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 text-center">
+                                <label className="hh-label block mb-2 text-center">
                                     {t("page.chartPreview.vocalVersion")}
                                 </label>
                                 <div className="flex gap-2 flex-wrap justify-center">
@@ -531,9 +531,9 @@ function ChartPreviewInner() {
                                             <button
                                                 key={v.id}
                                                 onClick={() => setSelectedVocalId(v.id)}
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isSelected
-                                                        ? "bg-miku text-white shadow-sm"
-                                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                                className={`hh-press hh-focusable px-3 py-1.5 rounded-[var(--hh-radius-sm)] text-xs font-medium ${isSelected
+                                                        ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                                                        : "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)]"
                                                     }`}
                                             >
                                                 {v.caption}
@@ -548,11 +548,11 @@ function ChartPreviewInner() {
                         <button
                             onClick={handleStartPreview}
                             disabled={!selectedMusicId}
-                            className="w-full py-3 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg"
+                            className="hh-press hh-focusable w-full py-3 border border-[var(--hh-accent-deep)] bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] rounded-[var(--hh-radius-md)] font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {t("page.chartPreview.startPreview")}
                             {selectedMusicId && (
-                                <span className="ml-2 text-sm opacity-80">
+                                <span className="hh-numeric ml-2 text-sm opacity-80">
                                     {t("page.chartPreview.startPreviewSuffix", { id: selectedMusicId, difficulty: getDifficultyLabel(selectedDifficulty) })}
                                 </span>
                             )}
@@ -560,9 +560,9 @@ function ChartPreviewInner() {
                     </div>
                 ) : (
                     <div className="max-w-2xl mx-auto">
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                     </svg>
@@ -571,39 +571,39 @@ function ChartPreviewInner() {
                             </div>
                             <div className="p-5 space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">SUS URL *</label>
+                                    <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">SUS URL *</label>
                                     <input
                                         type="text"
                                         placeholder="https://..."
                                         value={customSus}
                                         onChange={(e) => setCustomSus(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-miku/30 focus:border-miku transition-all"
+                                        className="hh-input w-full px-4 py-2.5 text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.chartPreview.bgmUrlOptional")}</label>
+                                    <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">{t("page.chartPreview.bgmUrlOptional")}</label>
                                     <input
                                         type="text"
                                         placeholder="https://..."
                                         value={customBgm}
                                         onChange={(e) => setCustomBgm(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-miku/30 focus:border-miku transition-all"
+                                        className="hh-input w-full px-4 py-2.5 text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.chartPreview.offsetOptional")}</label>
+                                    <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">{t("page.chartPreview.offsetOptional")}</label>
                                     <input
                                         type="number"
                                         placeholder="0"
                                         value={customOffset}
                                         onChange={(e) => setCustomOffset(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-miku/30 focus:border-miku transition-all"
+                                        className="hh-input w-full px-4 py-2.5 text-sm"
                                     />
                                 </div>
                                 <button
                                     onClick={handleStartPreview}
                                     disabled={!customSus}
-                                    className="w-full py-3 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg"
+                                    className="hh-press hh-focusable w-full py-3 border border-[var(--hh-accent-deep)] bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] rounded-[var(--hh-radius-md)] font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {t("page.chartPreview.startPreview")}
                                 </button>
@@ -623,14 +623,14 @@ function ChartPreviewFallback() {
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                        <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.chartPreview.badge")}</span>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                        <span className="hh-label text-miku">{t("page.chartPreview.badge")}</span>
                     </div>
-                    <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                    <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                         {t("page.chartPreview.title")} <span className="text-miku">{t("page.chartPreview.titleHighlight")}</span>
                     </h1>
                 </div>
-                <div className="text-sm text-slate-400 py-8 text-center">{t("page.chartPreview.loading")}</div>
+                <div className="text-sm text-[var(--hh-text-tertiary)] py-8 text-center">{t("page.chartPreview.loading")}</div>
             </div>
         </MainLayout>
     );

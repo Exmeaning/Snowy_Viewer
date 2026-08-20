@@ -21,12 +21,12 @@ function RankingSkeleton() {
     return (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="overflow-hidden rounded-[1.75rem] border border-white/60 bg-white/70 p-3 shadow-lg shadow-slate-900/5 backdrop-blur-xl">
-                    <div className="aspect-[4/3] animate-pulse rounded-[1.35rem] bg-slate-100" />
+                <div key={index} className="hh-tile overflow-hidden rounded-[var(--hh-radius-lg)] p-3">
+                    <div className="aspect-[4/3] animate-pulse rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)]" />
                     <div className="mt-4 space-y-2 px-1 pb-2">
-                        <div className="h-4 w-2/3 animate-pulse rounded-full bg-slate-100" />
-                        <div className="h-3 w-full animate-pulse rounded-full bg-slate-100" />
-                        <div className="h-3 w-1/2 animate-pulse rounded-full bg-slate-100" />
+                        <div className="h-4 w-2/3 animate-pulse rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-sunken)]" />
+                        <div className="h-3 w-full animate-pulse rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-sunken)]" />
+                        <div className="h-3 w-1/2 animate-pulse rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-sunken)]" />
                     </div>
                 </div>
             ))}
@@ -38,14 +38,14 @@ function EmptyState({ server }: { server: BaijingServer }) {
     const { t } = useI18n();
 
     return (
-        <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white/55 p-8 text-center shadow-lg shadow-slate-900/5 backdrop-blur-xl">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-slate-400">
+        <div className="hh-well border-dashed p-8 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[var(--hh-radius-lg)] bg-[var(--hh-surface-2)] text-[var(--hh-text-tertiary)]">
                 <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10.5 12 4l9 6.5M5 10v8.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V10M8 20v-6h8v6" />
                 </svg>
             </div>
-            <h3 className="mt-4 text-lg font-black text-slate-700">{t("page.mysekaiPreview.top.emptyTitle", { server: server.toUpperCase() })}</h3>
-            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
+            <h3 className="hh-title mt-4 text-lg text-[var(--hh-text-primary)]">{t("page.mysekaiPreview.top.emptyTitle", { server: server.toUpperCase() })}</h3>
+            <p className="hh-body mx-auto mt-2 max-w-md text-sm text-[var(--hh-text-secondary)]">
                 {t("page.mysekaiPreview.top.emptyDescription")}
             </p>
         </div>
@@ -56,16 +56,16 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
     const { t } = useI18n();
 
     return (
-        <div className="rounded-[2rem] border border-red-200/70 bg-red-50/80 p-6 shadow-lg shadow-red-900/5 backdrop-blur-xl">
+        <div className="rounded-[var(--hh-radius-lg)] border border-red-500/30 bg-red-500/12 p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h3 className="text-lg font-black text-red-700">{t("page.mysekaiPreview.top.loadFailedTitle")}</h3>
+                    <h3 className="hh-title text-lg text-red-600">{t("page.mysekaiPreview.top.loadFailedTitle")}</h3>
                     <p className="mt-1 text-sm text-red-600/80">{message}</p>
                 </div>
                 <button
                     type="button"
                     onClick={onRetry}
-                    className="rounded-2xl bg-red-500 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-red-500/20 transition hover:-translate-y-0.5 hover:shadow-xl active:scale-95"
+                    className="hh-press hh-focusable rounded-[var(--hh-radius-md)] bg-red-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-600"
                 >
                     {t("page.mysekaiPreview.top.reload")}
                 </button>
@@ -100,19 +100,19 @@ function RankingCard({
         <Link
             href={href}
             data-shortcut-item="true"
-            className="group block h-full overflow-hidden rounded-[1.85rem] border border-white/60 bg-white/72 p-3 text-left shadow-lg shadow-slate-900/5 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-miku/35 hover:shadow-2xl active:scale-[0.99]"
+            className="hh-tile hh-press group block h-full overflow-hidden rounded-[var(--hh-radius-lg)] p-3 text-left hover:border-[var(--hh-accent-line)]"
         >
-            <div className="aspect-[4/3] overflow-hidden rounded-[1.35rem] bg-gradient-to-br from-slate-100 to-slate-200 shadow-inner">
+            <div className="aspect-[4/3] overflow-hidden rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)]">
                 {thumbnailUrl && !imageFailed ? (
                     <img
                         src={thumbnailUrl}
                         alt={entry.title || `Rank ${entry.rank}`}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        className="h-full w-full object-cover"
                         loading="lazy"
                         onError={() => setImageFailed(true)}
                     />
                 ) : (
-                    <div className="flex h-full w-full items-center justify-center text-slate-300">
+                    <div className="flex h-full w-full items-center justify-center text-[var(--hh-text-tertiary)]">
                         <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 19.5h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Z" />
                         </svg>
@@ -122,30 +122,30 @@ function RankingCard({
 
             <div className="px-1 pb-1 pt-4">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span className={`rounded-2xl px-3 py-1.5 text-sm font-black shadow-lg ${getRankTone(entry.rank)}`}>
+                    <span className={`hh-numeric rounded-[var(--hh-radius-sm)] px-3 py-1.5 text-sm font-bold ${getRankTone(entry.rank)}`}>
                         #{entry.rank}
                     </span>
-                    <span className="rounded-2xl border border-miku/15 bg-miku/8 px-3 py-1.5 text-[11px] font-black text-miku">
+                    <span className="rounded-[var(--hh-radius-sm)] border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] px-3 py-1.5 text-[11px] font-bold text-miku">
                         {getTabTypeLabel(entry.tabType, t)}
                     </span>
-                    <span className="ml-auto inline-flex items-center gap-1.5 rounded-2xl bg-rose-50 px-3 py-1.5 text-[11px] font-black text-rose-500 ring-1 ring-rose-100">
+                    <span className="ml-auto inline-flex items-center gap-1.5 rounded-[var(--hh-radius-sm)] border border-rose-500/25 bg-rose-500/12 px-3 py-1.5 text-[11px] font-bold text-rose-500">
                         <HeartIcon className="h-3.5 w-3.5" />
-                        <span className="text-slate-400">{t("page.mysekaiPreview.common.likes")}</span>
-                        <span>{formatNumber(Number(entry.reviewCount || 0))}</span>
+                        <span className="text-[var(--hh-text-tertiary)]">{t("page.mysekaiPreview.common.likes")}</span>
+                        <span className="hh-numeric">{formatNumber(Number(entry.reviewCount || 0))}</span>
                     </span>
                 </div>
 
-                <h3 className="line-clamp-2 min-h-[2.5rem] text-base font-black leading-snug text-slate-800 transition group-hover:text-miku">
+                <h3 className="hh-title line-clamp-2 min-h-[2.5rem] text-base text-[var(--hh-text-primary)] transition group-hover:text-miku">
                     {entry.title || t("page.mysekaiPreview.common.unnamedLayout")}
                 </h3>
                 <div className="mt-2 min-w-0">
-                    <div className="truncate text-sm font-black text-slate-700">{entry.ownerUserName || t("page.mysekaiPreview.common.unknownPlayer")}</div>
-                    <div className="mt-0.5 truncate text-[11px] font-medium text-slate-400">UID {entry.ownerUserId || "-"}</div>
+                    <div className="truncate text-sm font-bold text-[var(--hh-text-primary)]">{entry.ownerUserName || t("page.mysekaiPreview.common.unknownPlayer")}</div>
+                    <div className="hh-numeric mt-0.5 truncate text-[11px] font-medium text-[var(--hh-text-tertiary)]">UID {entry.ownerUserId || "-"}</div>
                 </div>
-                <p className="mt-3 line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-slate-500">
+                <p className="hh-body mt-3 line-clamp-2 min-h-[2.5rem] text-xs text-[var(--hh-text-secondary)]">
                     {entry.comment || t("page.mysekaiPreview.common.noComment")}
                 </p>
-                <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-50/85 px-3 py-2 text-[11px] font-bold text-slate-400 transition group-hover:bg-miku/8 group-hover:text-miku">
+                <div className="mt-4 flex items-center justify-between rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] px-3 py-2 text-[11px] font-bold text-[var(--hh-text-tertiary)] transition group-hover:bg-[var(--hh-accent-wash)] group-hover:text-miku">
                     <span>{t("page.mysekaiPreview.top.enterPreview")}</span>
                     <svg className="h-4 w-4 transition group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
@@ -215,18 +215,18 @@ export default function MysekaiPreviewClient() {
         <MainLayout>
             <div className="container mx-auto max-w-[96rem] px-4 py-8 sm:px-6 sm:py-10">
                 <div className="mb-8 text-center">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-miku/30 bg-miku/5 px-4 py-2">
-                        <span className="text-xs font-bold uppercase tracking-widest text-miku">{t("page.mysekaiPreview.badges.top")}</span>
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] px-4 py-2">
+                        <span className="hh-label text-miku">{t("page.mysekaiPreview.badges.top")}</span>
                     </div>
-                    <h1 className="text-3xl font-black text-primary-text sm:text-4xl">
+                    <h1 className="hh-display text-3xl text-primary-text sm:text-4xl">
                         {t("page.mysekaiPreview.top.title")} <span className="text-miku">{t("page.mysekaiPreview.top.titleHighlight")}</span>
                     </h1>
-                    <p className="mx-auto mt-2 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
+                    <p className="hh-body mx-auto mt-2 max-w-2xl text-sm text-[var(--hh-text-secondary)] sm:text-base">
                         {t("page.mysekaiPreview.top.description")}
                     </p>
                 </div>
 
-                <div className="mb-6 flex w-full items-center justify-center gap-2 rounded-full border border-miku/25 bg-miku/8 px-4 py-2 text-sm font-bold text-miku shadow-sm sm:w-fit sm:justify-start">
+                <div className="mb-6 flex w-full items-center justify-center gap-2 rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] px-4 py-2 text-sm font-bold text-miku sm:w-fit sm:justify-start">
                     <div
                         className="h-6 w-6 shrink-0 bg-miku"
                         style={{
@@ -243,26 +243,26 @@ export default function MysekaiPreviewClient() {
                     <span>{t("page.mysekaiPreview.top.disclaimer")}</span>
                 </div>
 
-                <section className="mb-6 rounded-[2rem] border border-white/60 bg-white/65 p-3 shadow-xl shadow-slate-900/5 backdrop-blur-2xl sm:p-4">
+                <section className="hh-panel mb-6 p-3 sm:p-4">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                         <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded-2xl bg-miku px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-miku/20">
+                            <span className="rounded-[var(--hh-radius-md)] bg-[var(--hh-accent)] px-4 py-2.5 text-sm font-bold text-[var(--hh-text-on-accent)]">
                                 {t("page.mysekaiPreview.common.topRanking")}
                             </span>
-                            <span className="rounded-2xl border border-slate-200 bg-white/75 px-4 py-2.5 text-sm font-black text-slate-500">
+                            <span className="rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] px-4 py-2.5 text-sm font-bold text-[var(--hh-text-secondary)]">
                                 {loading ? t("page.mysekaiPreview.common.loading") : t("page.mysekaiPreview.common.activityCount", { count: formatNumber(rankings.length) })}
                             </span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <span className="px-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Server</span>
+                            <span className="hh-label px-2">Server</span>
                             {(["jp", "cn"] as BaijingServer[]).map((item) => (
                                 <button
                                     key={item}
                                     type="button"
                                     onClick={() => handleServerChange(item)}
-                                    className={`rounded-2xl px-4 py-2.5 text-sm font-black transition active:scale-95 ${server === item
-                                        ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
-                                        : "border border-slate-200 bg-white/75 text-slate-500 hover:border-miku/30 hover:text-miku"
+                                    className={`hh-press hh-focusable rounded-[var(--hh-radius-md)] border px-4 py-2.5 text-sm font-bold ${server === item
+                                        ? "border-[var(--hh-accent)] bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                                        : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
                                         }`}
                                 >
                                     {item.toUpperCase()}
@@ -271,7 +271,7 @@ export default function MysekaiPreviewClient() {
                             <button
                                 type="button"
                                 onClick={() => void loadRankings(server)}
-                                className="rounded-2xl border border-slate-200 bg-white/75 px-4 py-2.5 text-sm font-black text-slate-500 transition hover:border-miku/30 hover:text-miku active:scale-95"
+                                className="hh-press hh-focusable rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] px-4 py-2.5 text-sm font-bold text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
                             >
                                 {t("page.mysekaiPreview.top.refresh")}
                             </button>
@@ -290,32 +290,32 @@ export default function MysekaiPreviewClient() {
                         rankings.map((snapshot) => {
                             const entries = snapshot.top100 || [];
                             return (
-                                <div key={snapshot.competition.id} className="rounded-[2rem] border border-white/60 bg-white/55 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-2xl sm:p-5">
+                                <div key={snapshot.competition.id} className="hh-panel p-4 sm:p-5">
                                     <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                                         <div>
                                             <div className="flex flex-wrap items-center gap-2">
-                                                <h2 className="text-2xl font-black text-slate-800">{snapshot.competition.name || t("page.mysekaiPreview.common.activityWithId", { id: snapshot.competition.id })}</h2>
-                                                <span className="rounded-full bg-miku/10 px-3 py-1 text-xs font-black text-miku ring-1 ring-miku/20">
+                                                <h2 className="hh-title text-2xl text-[var(--hh-text-primary)]">{snapshot.competition.name || t("page.mysekaiPreview.common.activityWithId", { id: snapshot.competition.id })}</h2>
+                                                <span className="hh-numeric rounded-[var(--hh-radius-sm)] border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] px-3 py-1 text-xs font-bold text-miku">
                                                     #{snapshot.competition.id}
                                                 </span>
                                             </div>
-                                            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500">
+                                            <p className="hh-body mt-2 max-w-3xl text-sm text-[var(--hh-text-secondary)]">
                                                 {snapshot.competition.description || t("page.mysekaiPreview.common.noCompetitionDescription")}
                                             </p>
-                                            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-slate-400">
-                                                <span className="rounded-full bg-slate-100/80 px-3 py-1">{t("page.mysekaiPreview.common.submission")} {formatBaijingDate(snapshot.competition.submitStartAt)} - {formatBaijingDate(snapshot.competition.submitEndAt)}</span>
-                                                <span className="rounded-full bg-slate-100/80 px-3 py-1">{t("page.mysekaiPreview.common.aggregate")} {formatBaijingDate(snapshot.competition.aggregateAt)}</span>
-                                                <span className="rounded-full bg-slate-100/80 px-3 py-1">{t("page.mysekaiPreview.common.snapshot")} {formatBaijingDate(snapshot.snapshotGeneratedAt)}</span>
+                                            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-[var(--hh-text-tertiary)]">
+                                                <span className="hh-numeric rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-3 py-1">{t("page.mysekaiPreview.common.submission")} {formatBaijingDate(snapshot.competition.submitStartAt)} - {formatBaijingDate(snapshot.competition.submitEndAt)}</span>
+                                                <span className="hh-numeric rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-3 py-1">{t("page.mysekaiPreview.common.aggregate")} {formatBaijingDate(snapshot.competition.aggregateAt)}</span>
+                                                <span className="hh-numeric rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-3 py-1">{t("page.mysekaiPreview.common.snapshot")} {formatBaijingDate(snapshot.snapshotGeneratedAt)}</span>
                                             </div>
                                         </div>
                                         <div className="flex gap-2 text-center">
-                                            <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm">
-                                                <div className="text-[10px] font-bold text-slate-400">{t("page.mysekaiPreview.common.totalEntries")}</div>
-                                                <div className="text-lg font-black text-slate-700">{formatNumber(Number(snapshot.totalUniqueEntries || 0))}</div>
+                                            <div className="hh-tile rounded-[var(--hh-radius-lg)] px-4 py-3">
+                                                <div className="hh-label">{t("page.mysekaiPreview.common.totalEntries")}</div>
+                                                <div className="hh-numeric text-lg font-bold text-[var(--hh-text-primary)]">{formatNumber(Number(snapshot.totalUniqueEntries || 0))}</div>
                                             </div>
-                                            <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm">
-                                                <div className="text-[10px] font-bold text-slate-400">{t("page.mysekaiPreview.common.topCount")}</div>
-                                                <div className="text-lg font-black text-slate-700">{formatNumber(entries.length)}</div>
+                                            <div className="hh-tile rounded-[var(--hh-radius-lg)] px-4 py-3">
+                                                <div className="hh-label">{t("page.mysekaiPreview.common.topCount")}</div>
+                                                <div className="hh-numeric text-lg font-bold text-[var(--hh-text-primary)]">{formatNumber(entries.length)}</div>
                                             </div>
                                         </div>
                                     </div>

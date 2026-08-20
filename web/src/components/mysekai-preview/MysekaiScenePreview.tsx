@@ -234,28 +234,28 @@ export default function MysekaiScenePreview({
 
     return (
         <div className={`space-y-3 ${className}`}>
-            <div className={`rounded-3xl border border-slate-200/80 bg-white/86 ${panelPadding} text-xs text-slate-700 shadow-lg shadow-slate-900/5 backdrop-blur-xl`}>
+            <div className={`hh-panel ${panelPadding} text-xs text-[var(--hh-text-primary)]`}>
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <div className="text-sm font-black text-primary-text">{resolvedHeaderTitle}</div>
-                            {resolvedHeaderBadge && <span className="rounded-full bg-miku/10 px-2 py-1 text-[10px] font-bold text-miku ring-1 ring-miku/20">{resolvedHeaderBadge}</span>}
-                            <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">{assetSource}</span>
+                            <div className="hh-title text-sm text-primary-text">{resolvedHeaderTitle}</div>
+                            {resolvedHeaderBadge && <span className="rounded-[var(--hh-radius-sm)] border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] px-2 py-1 text-[10px] font-bold text-miku">{resolvedHeaderBadge}</span>}
+                            <span className="rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-2 py-1 text-[10px] font-bold text-[var(--hh-text-secondary)]">{assetSource}</span>
                         </div>
-                        {!compact && <div className="mt-1 text-[11px] text-slate-500">{headerNote ?? t("page.mysekaiPreview.preview.assetRuleNote")}</div>}
+                        {!compact && <div className="mt-1 text-[11px] text-[var(--hh-text-secondary)]">{headerNote ?? t("page.mysekaiPreview.preview.assetRuleNote")}</div>}
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <button
                             type="button"
                             onClick={handleReload}
-                            className="rounded-xl bg-miku px-3 py-2 font-bold text-white shadow-lg shadow-miku/20 transition hover:opacity-90 active:scale-95"
+                            className="hh-press hh-focusable rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-deep)] bg-[var(--hh-accent)] px-3 py-2 font-bold text-[var(--hh-text-on-accent)]"
                         >
                             {t("page.mysekaiPreview.preview.reload")}
                         </button>
                         <button
                             type="button"
                             onClick={handleResetCamera}
-                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold text-slate-700 transition hover:bg-slate-100 active:scale-95"
+                            className="hh-press hh-focusable rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] px-3 py-2 font-bold text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)]"
                         >
                             {t("page.mysekaiPreview.preview.resetCamera")}
                         </button>
@@ -265,21 +265,21 @@ export default function MysekaiScenePreview({
                 <div className={`mt-3 grid gap-3 ${showLayoutUrlInput ? "lg:grid-cols-[minmax(0,1fr)_140px_140px_170px]" : "lg:grid-cols-[140px_140px_170px]"}`}>
                     {showLayoutUrlInput && (
                         <label className="block">
-                            <span className="mb-1 block font-bold text-slate-500">{t("page.mysekaiPreview.preview.layoutJson")}</span>
+                            <span className="hh-label mb-1 block">{t("page.mysekaiPreview.preview.layoutJson")}</span>
                             <input
                                 value={layoutUrl}
                                 onChange={(event) => setLayoutUrl(event.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none transition focus:border-miku focus:ring-2 focus:ring-miku/20"
+                                className="hh-input w-full px-3 py-2"
                                 placeholder={LOCAL_TEST_LAYOUT_URL}
                             />
                         </label>
                     )}
                     <label className="block">
-                        <span className="mb-1 block font-bold text-slate-500">{t("page.mysekaiPreview.preview.scene")}</span>
+                        <span className="hh-label mb-1 block">{t("page.mysekaiPreview.preview.scene")}</span>
                         <select
                             value={siteId}
                             onChange={(event) => setSiteId(Number(event.target.value))}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-800 outline-none transition focus:border-miku focus:ring-2 focus:ring-miku/20"
+                            className="hh-input w-full px-3 py-2"
                         >
                             {SITE_OPTIONS.map(option => (
                                 <option key={option.id} value={option.id}>{option.labelKey ? t(option.labelKey) : option.fallback}</option>
@@ -287,9 +287,9 @@ export default function MysekaiScenePreview({
                         </select>
                     </label>
                     <label className="block">
-                        <span className="mb-1 flex items-center justify-between font-bold text-slate-500">
+                        <span className="hh-label mb-1 flex items-center justify-between">
                             <span>{t("page.mysekaiPreview.preview.backWall")}</span>
-                            <span>{Math.round(backWallOpacity * 100)}%</span>
+                            <span className="hh-numeric">{Math.round(backWallOpacity * 100)}%</span>
                         </span>
                         <input
                             type="range"
@@ -301,9 +301,9 @@ export default function MysekaiScenePreview({
                         />
                     </label>
                     <label className="block">
-                        <span className="mb-1 flex items-center justify-between font-bold text-slate-500">
+                        <span className="hh-label mb-1 flex items-center justify-between">
                             <span>{t("page.mysekaiPreview.preview.sensitivity")}</span>
-                            <span>{Math.round(lookSensitivity * 100)}%</span>
+                            <span className="hh-numeric">{Math.round(lookSensitivity * 100)}%</span>
                         </span>
                         <input
                             type="range"
@@ -317,7 +317,7 @@ export default function MysekaiScenePreview({
                     </label>
                 </div>
 
-                <div className="mt-3 flex flex-wrap items-center gap-4 text-slate-600">
+                <div className="mt-3 flex flex-wrap items-center gap-4 text-[var(--hh-text-secondary)]">
                     <label className="inline-flex items-center gap-1.5 font-medium">
                         <input type="checkbox" checked={debugEnabled} onChange={(event) => setDebugEnabled(event.target.checked)} />
                         {t("page.mysekaiPreview.preview.debug")}
@@ -332,30 +332,39 @@ export default function MysekaiScenePreview({
                     </label>
                 </div>
 
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="mt-3 h-2 overflow-hidden rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-inset)]">
                     <div
-                        className="h-full rounded-full bg-gradient-to-r from-miku via-cyan-300 to-sky-300 transition-[width] duration-300"
+                        className="h-full rounded-[var(--hh-radius-full)] bg-[var(--hh-accent)] transition-[width] duration-300"
                         style={{ width: `${progressValue}%` }}
                     />
                 </div>
-                <div className={`mt-2 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-slate-50/80 p-3 font-mono text-[11px] leading-relaxed ${statusTone}`}>
+                <div className={`hh-numeric mt-2 whitespace-pre-wrap rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-sunken)] p-3 font-mono text-[11px] leading-relaxed ${statusTone}`}>
                     {status.message}
                 </div>
                 {!compact && (
-                    <div className="mt-2 text-[11px] leading-relaxed text-slate-500">
+                    <div className="mt-2 text-[11px] leading-relaxed text-[var(--hh-text-secondary)]">
                         {t("page.mysekaiPreview.preview.keyboardHint")}
                     </div>
                 )}
             </div>
 
-            <div className={`relative overflow-hidden rounded-3xl border border-white/40 bg-sky-200 shadow-2xl shadow-slate-900/10 ${heightClassName}`}>
+            {/* bg-sky-200 is the pre-paint placeholder for the scene's own sky
+                gradient; the main renderer is opaque so it only shows before the
+                first frame. */}
+            <div className={`relative overflow-hidden rounded-[var(--hh-radius-xl)] border border-[var(--hh-border)] bg-sky-200 shadow-[var(--hh-shadow-raised)] ${heightClassName}`}>
                 <div ref={hostRef} className="absolute inset-0" />
 
                 {showLoadingOverlay && (
-                    <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-slate-950/35 backdrop-blur-[6px]">
-                        <div className="w-[min(460px,calc(100%-2rem))] rounded-3xl border border-white/20 bg-slate-950/78 p-6 text-center text-white shadow-2xl shadow-slate-950/35 backdrop-blur-xl">
+                    /* Opaque veil rather than a translucent one: the tint used to be
+                       35% and relied on backdrop-blur to stay readable, so with blur
+                       dropped the half-built scene showed straight through the
+                       loading copy. Solid also avoids a per-frame compositor blur
+                       over a live WebGL canvas. Hardcoded dark on purpose — this is a
+                       loading screen over a 3D viewport, not a themed surface. */
+                    <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-[#101114]">
+                        <div className="w-[min(460px,calc(100%-2rem))] rounded-[var(--hh-radius-xl)] border border-[rgba(255,255,255,0.12)] bg-[#1b1d21] p-6 text-center text-white">
                             <div
-                                className="mx-auto h-14 w-56 bg-miku drop-shadow-[0_0_18px_rgba(57,197,187,0.45)] sm:h-16 sm:w-64"
+                                className="mx-auto h-14 w-56 bg-miku sm:h-16 sm:w-64"
                                 style={{
                                     maskImage: `url(${MOE_LOGO_URL})`,
                                     maskSize: "contain",
@@ -369,39 +378,41 @@ export default function MysekaiScenePreview({
                                 role="img"
                                 aria-label="Moe Sekai"
                             />
-                            <div className="mt-5 text-base font-black tracking-wide">{t("page.mysekaiPreview.preview.loadingOverlayTitle")}</div>
-                            <div className="mt-1 text-xs text-slate-300">{loadingTitle}</div>
-                            <div className="mt-5 h-3 overflow-hidden rounded-full border border-white/15 bg-white/10">
+                            <div className="hh-title mt-5 text-base">{t("page.mysekaiPreview.preview.loadingOverlayTitle")}</div>
+                            <div className="mt-1 text-xs text-[rgba(255,255,255,0.66)]">{loadingTitle}</div>
+                            <div className="mt-5 h-3 overflow-hidden rounded-[var(--hh-radius-full)] border border-[rgba(255,255,255,0.14)] bg-[rgba(255,255,255,0.08)]">
                                 <div
-                                    className="h-full rounded-full bg-gradient-to-r from-miku via-cyan-300 to-sky-300 shadow-[0_0_18px_rgba(57,197,187,0.65)] transition-[width] duration-300 ease-out"
+                                    className="h-full rounded-[var(--hh-radius-full)] bg-[var(--hh-accent)] transition-[width] duration-300 ease-out"
                                     style={{ width: `${progressValue}%` }}
                                 />
                             </div>
-                            <div className="mt-2 flex items-center justify-between text-[11px] font-bold text-slate-300">
+                            <div className="hh-numeric mt-2 flex items-center justify-between text-[11px] font-bold text-[rgba(255,255,255,0.66)]">
                                 <span>{progressValue}%</span>
                                 <span>{status.loaded}/{status.renderableTotal ?? status.total ?? 0}</span>
                             </div>
                             <div className="mt-4 grid grid-cols-3 gap-2 text-[11px]">
-                                <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-2">
-                                    <div className="text-slate-400">{t("page.mysekaiPreview.preview.completed")}</div>
-                                    <div className="mt-0.5 text-sm font-black text-cyan-100">{status.loaded}</div>
+                                <div className="rounded-[var(--hh-radius-md)] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.07)] px-3 py-2">
+                                    <div className="text-[rgba(255,255,255,0.55)]">{t("page.mysekaiPreview.preview.completed")}</div>
+                                    <div className="hh-numeric mt-0.5 text-sm font-bold text-cyan-200">{status.loaded}</div>
                                 </div>
-                                <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-2">
-                                    <div className="text-slate-400">{t("page.mysekaiPreview.preview.ignored")}</div>
-                                    <div className="mt-0.5 text-sm font-black text-slate-100">{status.ignored ?? 0}</div>
+                                <div className="rounded-[var(--hh-radius-md)] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.07)] px-3 py-2">
+                                    <div className="text-[rgba(255,255,255,0.55)]">{t("page.mysekaiPreview.preview.ignored")}</div>
+                                    <div className="hh-numeric mt-0.5 text-sm font-bold text-white">{status.ignored ?? 0}</div>
                                 </div>
-                                <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-2">
-                                    <div className="text-slate-400">{t("page.mysekaiPreview.preview.failed")}</div>
-                                    <div className="mt-0.5 text-sm font-black text-red-200">{status.failed ?? 0}</div>
+                                <div className="rounded-[var(--hh-radius-md)] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.07)] px-3 py-2">
+                                    <div className="text-[rgba(255,255,255,0.55)]">{t("page.mysekaiPreview.preview.failed")}</div>
+                                    <div className="hh-numeric mt-0.5 text-sm font-bold text-red-300">{status.failed ?? 0}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                <div ref={axesRef} className="absolute bottom-3 left-3 z-10 h-28 w-28 overflow-hidden rounded-2xl border border-white/25 bg-slate-950/20 backdrop-blur-sm" />
+                {/* Axis gizmo: its renderer is alpha:true, so the backing has to be
+                    opaque enough for the axis lines to read against a bright sky. */}
+                <div ref={axesRef} className="absolute bottom-3 left-3 z-10 h-28 w-28 overflow-hidden rounded-[var(--hh-radius-md)] border border-[rgba(255,255,255,0.18)] bg-[rgba(16,17,20,0.78)]" />
 
-                <div className="absolute bottom-3 right-3 z-10 max-w-[calc(100%-9rem)] rounded-2xl border border-white/30 bg-white/72 px-4 py-2 text-right text-[11px] font-medium text-slate-600 shadow-lg backdrop-blur">
+                <div className="absolute bottom-3 right-3 z-10 max-w-[calc(100%-9rem)] rounded-[var(--hh-radius-md)] border border-[rgba(0,0,0,0.08)] bg-[#f4f5f7] px-4 py-2 text-right text-[11px] font-medium text-[#3a3d44]">
                     {t("page.mysekaiPreview.preview.credit")}
                 </div>
             </div>

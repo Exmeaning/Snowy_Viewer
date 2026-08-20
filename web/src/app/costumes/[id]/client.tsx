@@ -234,7 +234,7 @@ export default function CostumeDetailClient() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">{tI18n("page.costumes.detailLoadingFallback")}</p>
+                        <p className="mt-4 text-[var(--hh-text-secondary)]">{tI18n("page.costumes.detailLoadingFallback")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -246,16 +246,16 @@ export default function CostumeDetailClient() {
             <MainLayout>
                 <div className="container mx-auto px-4 py-16">
                     <div className="max-w-md mx-auto text-center">
-                        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center">
+                        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-amber-500/15 flex items-center justify-center">
                             <svg className="w-12 h-12 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">{tI18n("page.costumes.notFoundTitle", { id: costumeNumber })}</h2>
-                        <p className="text-slate-500 mb-6">{tI18n("page.costumes.notFoundDesc")}</p>
+                        <h2 className="hh-title text-2xl text-[var(--hh-text-primary)] mb-2">{tI18n("page.costumes.notFoundTitle", { id: costumeNumber })}</h2>
+                        <p className="text-[var(--hh-text-secondary)] mb-6">{tI18n("page.costumes.notFoundDesc")}</p>
                         <Link
                             href="/costumes"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
+                            className="hh-press hh-focusable inline-flex items-center gap-2 px-6 py-3 bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] font-bold rounded-[var(--hh-radius-md)]"
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -274,26 +274,26 @@ export default function CostumeDetailClient() {
                 {/* Header Section */}
                 <div className="mb-8">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-500">
+                        <span className="hh-numeric inline-flex items-center gap-1.5 px-3 py-1 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-sm)] text-xs text-[var(--hh-text-secondary)]">
                             No. {costumeNumber}
                         </span>
-                        <span className={`px-3 py-1 text-xs font-bold rounded-full ${representative.costume3dRarity === "rare"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-slate-100 text-slate-500"
+                        <span className={`px-3 py-1 text-xs font-bold rounded-[var(--hh-radius-sm)] ${representative.costume3dRarity === "rare"
+                            ? "bg-amber-500/15 text-amber-600"
+                            : "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]"
                             }`}>
                             {translateWithFallback(RARITY_LABEL_KEYS[representative.costume3dRarity], representative.costume3dRarity)}
                         </span>
-                        <span className="px-3 py-1 text-xs font-bold rounded-full bg-miku/10 text-miku">
+                        <span className="px-3 py-1 text-xs font-bold rounded-[var(--hh-radius-sm)] bg-[var(--hh-accent-wash)] text-miku">
                             {translateWithFallback(SOURCE_LABEL_KEYS[representative.source], representative.source)}
                         </span>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-slate-800">
+                    <h1 className="hh-display text-2xl sm:text-3xl text-[var(--hh-text-primary)]">
                         <TranslatedText
                             original={representative.name}
                             category="costumes"
                             field="name"
                             originalClassName=""
-                            translationClassName="block text-lg font-medium text-slate-400 mt-1"
+                            translationClassName="block text-lg font-medium text-[var(--hh-text-tertiary)] mt-1"
                         />
                     </h1>
                 </div>
@@ -302,9 +302,12 @@ export default function CostumeDetailClient() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* LEFT Column: Visuals */}
                     <div>
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden lg:sticky lg:top-24">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden lg:sticky lg:top-24">
                             {/* Grid of Parts */}
-                            <div className="grid grid-cols-4 gap-0.5 bg-slate-100">
+                            {/* The 0.5 gap shows this background through as the grid
+                                hairlines, so it tracks the border token rather than a
+                                surface one. */}
+                            <div className="grid grid-cols-4 gap-0.5 bg-[var(--hh-border)]">
                                 {displayItems.map((item) => {
                                     let assetName = item.id;
                                     const characterName = item.characterId ? getCharacterName(tI18n, item.characterId) : "";
@@ -327,7 +330,7 @@ export default function CostumeDetailClient() {
                                     }
 
                                     return (
-                                        <div key={item.id} className="relative aspect-square bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-2 group">
+                                        <div key={item.id} className="relative aspect-square bg-[var(--hh-surface-sunken)] flex items-center justify-center p-2 group">
                                             <div className="relative w-full h-full">
                                                 <Image
                                                     src={getCostumeThumbnailUrl(assetName, assetSource)}
@@ -340,14 +343,14 @@ export default function CostumeDetailClient() {
 
                                             {/* Labels overlay */}
                                             <div className="absolute inset-x-0 bottom-0 p-1 flex flex-col gap-0.5 pointer-events-none">
-                                                <span className="self-start px-1.5 py-0.5 bg-white/90 backdrop-blur text-[9px] font-bold text-slate-600 rounded shadow-sm">
+                                                <span className="self-start px-1.5 py-0.5 bg-[var(--hh-surface-2)] border border-[var(--hh-border)] text-[9px] font-bold text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)]">
                                                     {translateWithFallback(PART_TYPE_LABEL_KEYS[item.partType], item.partType)}
                                                 </span>
                                             </div>
 
                                             {/* Character icon for extraParts items */}
                                             {item.characterId && (
-                                                <div className="absolute top-1 right-1 w-6 h-6 rounded-full overflow-hidden ring-1 ring-slate-200 bg-white shadow-sm z-10" title={characterName}>
+                                                <div className="absolute top-1 right-1 w-6 h-6 rounded-full overflow-hidden ring-1 ring-[var(--hh-border)] bg-[var(--hh-surface-2)] z-10" title={characterName}>
                                                     <Image
                                                         src={getCharacterIconUrl(item.characterId)}
                                                         alt={characterName}
@@ -362,7 +365,7 @@ export default function CostumeDetailClient() {
                                     );
                                 })}
                                 {displayItems.length === 0 && (
-                                    <div className="col-span-4 aspect-[4/1] flex items-center justify-center text-slate-400 text-sm">
+                                    <div className="col-span-4 aspect-[4/1] flex items-center justify-center bg-[var(--hh-surface-sunken)] text-[var(--hh-text-tertiary)] text-sm">
                                         {tI18n("page.costumes.noPartsData")}
                                     </div>
                                 )}
@@ -370,8 +373,8 @@ export default function CostumeDetailClient() {
 
                             {/* Color Selector */}
                             {availableColors.length > 1 && (
-                                <div className="p-4 bg-slate-50/50 border-t border-slate-100">
-                                    <p className="text-xs font-bold text-slate-500 mb-2">{tI18n("page.costumes.colorSchemesLabel")}</p>
+                                <div className="p-4 bg-[var(--hh-surface-1)] border-t border-[var(--hh-border)]">
+                                    <p className="hh-label mb-2">{tI18n("page.costumes.colorSchemesLabel")}</p>
                                     <div className="flex flex-wrap gap-2">
                                         {availableColors.map(variant => {
                                             const isSelected = selectedColorId === variant.colorId;
@@ -379,12 +382,12 @@ export default function CostumeDetailClient() {
                                                 <button
                                                     key={variant.colorId}
                                                     onClick={() => setSelectedColorId(variant.colorId)}
-                                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${isSelected
-                                                        ? "bg-miku/10 text-miku border-2 border-miku"
-                                                        : "bg-white text-slate-600 border border-slate-200 hover:border-miku/50"
+                                                    className={`hh-press hh-focusable flex items-center gap-2 px-3 py-2 rounded-[var(--hh-radius-md)] text-xs font-medium whitespace-nowrap ${isSelected
+                                                        ? "bg-[var(--hh-accent-wash)] text-miku border border-[var(--hh-accent)] ring-1 ring-[var(--hh-accent)]"
+                                                        : "bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] border border-[var(--hh-border)] hover:bg-[var(--hh-surface-3)]"
                                                         }`}
                                                 >
-                                                    <div className="w-8 h-8 rounded overflow-hidden bg-slate-100 relative shrink-0">
+                                                    <div className="w-8 h-8 rounded-[var(--hh-radius-xs)] overflow-hidden bg-[var(--hh-surface-sunken)] relative shrink-0">
                                                         <Image
                                                             src={getCostumeThumbnailUrl(variant.assetbundleName, assetSource)}
                                                             alt={variant.colorName}
@@ -406,16 +409,16 @@ export default function CostumeDetailClient() {
                     {/* RIGHT Column: Info Cards */}
                     <div className="space-y-6">
                         {/* Basic Info Card */}
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     {tI18n("page.costumes.basicInfo")}
                                 </h2>
                             </div>
-                            <div className="divide-y divide-slate-100">
+                            <div className="divide-y divide-[var(--hh-border)]">
                                 <InfoRow label={tI18n("page.costumes.fields.id")} value={`#${costumeNumber}`} />
                                 <InfoRow
                                     label={tI18n("page.costumes.fields.name")}
@@ -425,23 +428,23 @@ export default function CostumeDetailClient() {
                                             category="costumes"
                                             field="name"
                                             originalClassName=""
-                                            translationClassName="block text-xs font-normal text-slate-400 mt-0.5"
+                                            translationClassName="block text-xs font-normal text-[var(--hh-text-tertiary)] mt-0.5"
                                         />
                                     }
                                 />
                                 <InfoRow label={tI18n("page.costumes.fields.type")} value={representative.costume3dType} />
                                 <InfoRow label={tI18n("page.costumes.fields.source")} value={
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${representative.source === "card" ? "bg-blue-100 text-blue-600" :
-                                        representative.source === "shop" ? "bg-green-100 text-green-600" :
-                                            "bg-amber-100 text-amber-600"
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${representative.source === "card" ? "bg-blue-500/15 text-blue-600" :
+                                        representative.source === "shop" ? "bg-green-500/15 text-green-600" :
+                                            "bg-amber-500/15 text-amber-600"
                                         }`}>
                                         {translateWithFallback(SOURCE_LABEL_KEYS[representative.source], representative.source)}
                                     </span>
                                 } />
                                 <InfoRow label={tI18n("page.costumes.fields.rarity")} value={
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${representative.costume3dRarity === "rare"
-                                        ? "bg-amber-100 text-amber-700"
-                                        : "bg-slate-100 text-slate-500"
+                                    <span className={`px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-xs font-bold ${representative.costume3dRarity === "rare"
+                                        ? "bg-amber-500/15 text-amber-600"
+                                        : "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]"
                                         }`}>
                                         {translateWithFallback(RARITY_LABEL_KEYS[representative.costume3dRarity], representative.costume3dRarity)}
                                     </span>
@@ -459,9 +462,9 @@ export default function CostumeDetailClient() {
                         </div>
 
                         {/* Parts List Summary */}
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-purple-500/10 to-transparent">
-                                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                     <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                     </svg>
@@ -470,7 +473,7 @@ export default function CostumeDetailClient() {
                             </div>
                             <div className="p-5 flex flex-wrap gap-2">
                                 {includedPartTypes.map(tag => (
-                                    <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full bg-slate-50 text-xs font-medium text-slate-600 border border-slate-200">
+                                    <span key={tag} className="inline-flex items-center px-3 py-1 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] text-xs font-medium text-[var(--hh-text-secondary)] border border-[var(--hh-border)]">
                                         {tag}
                                     </span>
                                 ))}
@@ -479,14 +482,14 @@ export default function CostumeDetailClient() {
 
                         {/* Available Characters Card */}
                         {representative.characterIds && representative.characterIds.length > 0 && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                         </svg>
                                         {tI18n("page.costumes.charactersTitle")}
-                                        <span className="text-xs font-normal text-slate-400 ml-1">
+                                        <span className="hh-numeric text-xs font-normal text-[var(--hh-text-tertiary)] ml-1">
                                             {tI18n("page.costumes.charactersCount", { count: representative.characterIds.length })}
                                         </span>
                                     </h2>
@@ -500,10 +503,10 @@ export default function CostumeDetailClient() {
                                                 return (
                                                     <div
                                                         key={charId}
-                                                        className="flex items-center gap-2 px-2 py-1.5 bg-slate-50 rounded-full"
+                                                        className="flex items-center gap-2 px-2 py-1.5 bg-[var(--hh-surface-sunken)] rounded-full"
                                                         title={characterName}
                                                     >
-                                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-white ring-1 ring-slate-200">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--hh-surface-2)] ring-1 ring-[var(--hh-border)]">
                                                             <Image
                                                                 src={getCharacterIconUrl(charId)}
                                                                 alt={characterName}
@@ -513,7 +516,7 @@ export default function CostumeDetailClient() {
                                                                 unoptimized
                                                             />
                                                         </div>
-                                                        <span className="text-xs font-medium text-slate-700 pr-1">
+                                                        <span className="text-xs font-medium text-[var(--hh-text-primary)] pr-1">
                                                             {characterName}
                                                         </span>
                                                     </div>
@@ -526,9 +529,9 @@ export default function CostumeDetailClient() {
 
                         {/* Related Cards */}
                         {relatedCards.length > 0 && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-blue-500/10 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                         </svg>
@@ -562,7 +565,8 @@ export default function CostumeDetailClient() {
                         onClick={() => {
                             router.back();
                         }}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                        className="hh-btn hh-press hh-focusable inline-flex items-center gap-2 font-bold"
+                        style={{ padding: "0.75rem 1.5rem" }}
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -579,8 +583,8 @@ export default function CostumeDetailClient() {
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <div className="px-5 py-3 flex items-center justify-between text-sm">
-            <span className="text-slate-500 font-medium">{label}</span>
-            <span className="text-slate-800 font-bold text-right max-w-[60%]">{value}</span>
+            <span className="text-[var(--hh-text-secondary)] font-medium">{label}</span>
+            <span className="text-[var(--hh-text-primary)] font-bold text-right max-w-[60%]">{value}</span>
         </div>
     );
 }
