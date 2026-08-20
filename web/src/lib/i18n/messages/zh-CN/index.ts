@@ -748,6 +748,13 @@ export const zhCNMessages = {
             onDescription: "开启背景动画：漂浮的三角形碎片与滚动视差，轻量省电。",
             offDescription: "关闭背景动画：仅保留静态主题渐变背景，无碎片、无动画、无视差。"
         },
+        uiSound: {
+            sectionTitle: "界面音效",
+            on: "开启",
+            off: "关闭",
+            onDescription: "开启界面音效：光标移动、确认、返回等操作会播放极短的轻音提示。",
+            offDescription: "关闭界面音效：默认即为关闭，界面操作不会发出任何声音。"
+        },
         contentDisplay: {
             sectionTitle: "内容显示",
         },

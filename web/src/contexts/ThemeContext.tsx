@@ -25,6 +25,11 @@ import {
     normalizeBackgroundAnimationBudget,
     type BackgroundAnimationBudget,
 } from "@/lib/backgroundAnimation";
+import {
+    DEFAULT_HANDHELD_SOUND_ENABLED,
+    HANDHELD_SOUND_STORAGE_KEY,
+    setHandheldSoundEnabled as syncHandheldSoundEnabled,
+} from "@/lib/handheld-sound";
 import { defaultContentRegionForPathname } from "@/lib/locale-routing";
 
 export type { BackgroundAnimationBudget } from "@/lib/backgroundAnimation";
@@ -122,6 +127,8 @@ interface ThemeContextType {
     setShowAds: (enabled: boolean) => void;
     backgroundAnimationBudget: BackgroundAnimationBudget;
     setBackgroundAnimationBudget: (budget: BackgroundAnimationBudget) => void;
+    handheldSoundEnabled: boolean;
+    setHandheldSoundEnabled: (enabled: boolean) => void;
     serverSource: ServerSourceType;
     setServerSource: (source: ServerSourceType) => void;
 }
@@ -144,6 +151,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const [useLLMTranslationState, setUseLLMTranslationState] = useState(true); // Default ON
     const [showAdsState, setShowAdsState] = useState(DEFAULT_SHOW_ADS);
     const [backgroundAnimationBudgetState, setBackgroundAnimationBudgetState] = useState<BackgroundAnimationBudget>(DEFAULT_BACKGROUND_ANIMATION_BUDGET);
+    const [handheldSoundEnabledState, setHandheldSoundEnabledState] = useState(DEFAULT_HANDHELD_SOUND_ENABLED);
     const [serverSourceState, setServerSourceState] = useState<ServerSourceType>(DEFAULT_SERVER_SOURCE);
     const themeSwitchingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const effectiveShowAds = ADS_FEATURE_ENABLED && showAdsState;
@@ -206,6 +214,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
                 setBackgroundAnimationBudgetState(savedBackgroundAnimationBudget);
             }
             setDocumentBackgroundAnimationBudget(savedBackgroundAnimationBudget ?? DEFAULT_BACKGROUND_ANIMATION_BUDGET);
+            // Load UI sound setting. Opt-in, so anything other than an explicit "true" stays off.
+            // lib/handheld-sound.ts reads the same key lazily, so its cache already agrees with this.
+            const savedHandheldSound = localStorage.getItem(HANDHELD_SOUND_STORAGE_KEY);
+            if (savedHandheldSound === "true") {
+                setHandheldSoundEnabledState(true);
+            }
             // Load server source setting
             const savedServerSource = localStorage.getItem("server-source");
             const loadedServerSource: ServerSourceType = (
@@ -472,6 +486,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         }
     };
 
+    const setHandheldSoundEnabled = (enabled: boolean) => {
+        setHandheldSoundEnabledState(enabled);
+        // Keep the sound module's in-memory cache in sync with the context.
+        syncHandheldSoundEnabled(enabled);
+        try {
+            localStorage.setItem(HANDHELD_SOUND_STORAGE_KEY, enabled ? "true" : "false");
+        } catch (e) {
+            console.error("Failed to save UI sound setting to localStorage:", e);
+        }
+    };
+
     const setServerSource = (source: ServerSourceType) => {
         setServerSourceState(source);
         try {
@@ -482,7 +507,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     };
 
     return (
-        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, colorSchemePreference, resolvedColorScheme, setColorSchemePreference, isShowSpoiler, setShowSpoiler, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource, useLLMTranslation: useLLMTranslationState, setUseLLMTranslation, showAds: effectiveShowAds, setShowAds, backgroundAnimationBudget: backgroundAnimationBudgetState, setBackgroundAnimationBudget, serverSource: serverSourceState, setServerSource }}>
+        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, colorSchemePreference, resolvedColorScheme, setColorSchemePreference, isShowSpoiler, setShowSpoiler, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource, useLLMTranslation: useLLMTranslationState, setUseLLMTranslation, showAds: effectiveShowAds, setShowAds, backgroundAnimationBudget: backgroundAnimationBudgetState, setBackgroundAnimationBudget, handheldSoundEnabled: handheldSoundEnabledState, setHandheldSoundEnabled, serverSource: serverSourceState, setServerSource }}>
             {children}
         </ThemeContext.Provider>
     );

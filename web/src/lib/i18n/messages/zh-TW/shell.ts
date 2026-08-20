@@ -203,6 +203,13 @@ export const zhTWSettings = {
         onDescription: "啟用背景動畫：顯示漂浮的三角形碎片與捲動視差效果，兼顧輕量與省電。",
         offDescription: "停用背景動畫：僅保留靜態主題漸層背景，不顯示碎片、動畫或視差效果。",
     },
+    uiSound: {
+        sectionTitle: "介面音效",
+        on: "啟用",
+        off: "停用",
+        onDescription: "啟用介面音效：游標移動、確認、返回等操作會播放極短且輕柔的提示音。",
+        offDescription: "停用介面音效：預設即為停用，操作介面不會發出任何聲音。",
+    },
     contentDisplay: {
         sectionTitle: "內容顯示",
     },

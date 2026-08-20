@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import MainNavbar from "./MainNavbar";
 import Sidebar from "./Sidebar";
 import MainFooter from "./MainFooter";
@@ -12,7 +13,8 @@ import KeyboardShortcutsHelp from "./KeyboardShortcutsHelp";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { usePageListShortcuts } from "@/hooks/usePageListShortcuts";
 import { useTheme } from "@/contexts/ThemeContext";
-import { localizePathForBrowser } from "@/lib/localized-path";
+import { localizePathForBrowser, stripRouteLocale } from "@/lib/localized-path";
+import { hhReducedVariants, hhScreenVariants } from "@/lib/motion";
 import DetailSeoSummary from "@/components/seo/DetailSeoSummary";
 import { useDetailSeoSummary } from "@/contexts/DetailSeoSummaryContext";
 
@@ -34,6 +36,9 @@ function hasOverlayHistoryState() {
     return Boolean(getHistoryStateObject().moesekaiOverlay);
 }
 
+/** Stable identity so switching variant sets never re-triggers the animation. */
+const REDUCED_SCREEN_VARIANTS = hhReducedVariants();
+
 interface MainLayoutProps {
     children: React.ReactNode;
     showLoader?: boolean;
@@ -46,11 +51,13 @@ export default function MainLayout({
     immersiveMode = false,
 }: MainLayoutProps) {
     const router = useRouter();
+    const pathname = usePathname();
     const detailSeoSummary = useDetailSeoSummary();
     const { useTrainedThumbnail, setUseTrainedThumbnail, backgroundAnimationBudget } = useTheme();
+    const prefersReducedMotion = useReducedMotion();
     const pageContentRef = useRef<HTMLDivElement>(null);
-    const shouldShowAmbientBlobs = backgroundAnimationBudget === "on";
-    const shouldAnimateAmbientBlobs = shouldShowAmbientBlobs;
+    const shouldShowAmbientDrift = backgroundAnimationBudget === "on";
+    const isHome = stripRouteLocale(pathname) === "/";
 
     // Keep the initial value false to avoid hydration mismatch.
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -251,6 +258,10 @@ export default function MainLayout({
 
     const isShortcutScopeLocked = isSearchOpen || isSettingsOpen || isShortcutsHelpOpen || immersiveMode;
 
+    // Reduced motion keeps the cross-fade so a route change is still legible —
+    // only the 10px rise is withheld.
+    const screenVariants = prefersReducedMotion ? REDUCED_SCREEN_VARIANTS : hhScreenVariants;
+
     useKeyboardShortcuts(shortcutHandlers, {
         disabled: isShortcutScopeLocked,
     });
@@ -272,20 +283,29 @@ export default function MainLayout({
             {/* Background Pattern */}
             <BackgroundPattern />
 
-            {/* iOS 26 Ambient Colorful Glowing Blobs */}
-            {shouldShowAmbientBlobs && (
+            {/* Ambient drift — two very wide, very faint washes.
+                Softness comes from a radial-gradient, not from filter: blur().
+                A 90px blur on a 24rem box is a full-screen compositor pass every
+                frame; the gradient is free, and the flat/opaque design has no use
+                for a real blur anyway. Gated on the animation budget exactly as
+                before, and .hh-drift-* is already frozen by the
+                [data-overlay-open="true"] guard in globals.css and by
+                prefers-reduced-motion in handheld-os.css. */}
+            {shouldShowAmbientDrift && (
                 <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
                     <div
-                        className={`absolute top-1/4 left-10 w-72 h-72 rounded-full pointer-events-none ${shouldAnimateAmbientBlobs ? "animate-float-blob-1 will-change-transform" : ""}`}
-                        style={{ backgroundColor: "rgba(var(--color-miku-rgb, 51, 204, 187), 0.10)", filter: shouldAnimateAmbientBlobs ? "blur(90px)" : "blur(72px)" }}
+                        className="absolute -top-40 -left-40 w-[40rem] h-[40rem] rounded-full hh-drift-a will-change-transform"
+                        style={{
+                            background:
+                                "radial-gradient(circle closest-side, rgba(var(--color-miku-rgb, 51, 204, 187), 0.12), transparent 100%)",
+                        }}
                     />
                     <div
-                        className={`absolute bottom-1/3 right-10 w-96 h-96 rounded-full pointer-events-none ${shouldAnimateAmbientBlobs ? "animate-float-blob-2 will-change-transform" : ""}`}
-                        style={{ backgroundColor: "rgba(var(--color-comp-rgb, 255, 117, 168), 0.10)", filter: shouldAnimateAmbientBlobs ? "blur(100px)" : "blur(76px)" }}
-                    />
-                    <div
-                        className={`absolute top-2/3 left-1/3 w-80 h-80 rounded-full pointer-events-none ${shouldAnimateAmbientBlobs ? "animate-float-blob-1 will-change-transform" : ""}`}
-                        style={{ backgroundColor: "rgba(var(--color-mid-rgb, 255, 229, 138), 0.07)", filter: shouldAnimateAmbientBlobs ? "blur(90px)" : "blur(72px)" }}
+                        className="absolute -bottom-48 -right-40 w-[46rem] h-[46rem] rounded-full hh-drift-b will-change-transform"
+                        style={{
+                            background:
+                                "radial-gradient(circle closest-side, rgba(var(--color-comp-rgb, 255, 117, 168), 0.09), transparent 100%)",
+                        }}
                     />
                 </div>
             )}
@@ -306,7 +326,11 @@ export default function MainLayout({
             )}
 
             {/* Layout with Sidebar */}
-            <div className={`flex flex-grow relative ${immersiveMode ? "" : "pt-[5.5rem]"}`}>
+            {/* Content clears the console status bar. MainNavbar is 3.25rem tall
+                (3.5rem from `sm`); below `sm` a non-home page adds a 2rem
+                breadcrumb row plus its 1px hairline. Sidebar.tsx offsets against
+                the same numbers. */}
+            <div className={`flex flex-grow relative ${immersiveMode ? "" : isHome ? "pt-[3.25rem] sm:pt-[3.5rem]" : "pt-[calc(5.25rem+1px)] sm:pt-[3.5rem]"}`}>
                 {/* Sidebar */}
                 {!immersiveMode && (
                     <Sidebar
@@ -317,16 +341,33 @@ export default function MainLayout({
                     />
                 )}
 
-                {/* Main content area */}
+                {/* Main content area. The ref stays on this stable wrapper so the
+                    page-list shortcut root never changes identity; the screen
+                    transition lives on the keyed child inside it. */}
                 <div ref={pageContentRef} data-shortcut-page-root="true" className={`flex-grow relative z-10 w-full min-w-0 ${hasMounted ? 'transition-all duration-300' : ''} ${effectiveSidebarOpen ? 'md:ml-[18rem]' : 'md:ml-0'
                     }`}>
-                    {children}
-                    {detailSeoSummary && (
-                        <DetailSeoSummary
-                            title={detailSeoSummary.title}
-                            description={detailSeoSummary.description}
-                        />
-                    )}
+                    {/* Screen change. MainLayout is mounted per page, so this already
+                        remounts on every route change; the key is belt-and-braces in
+                        case a shared layout ever hoists MainLayout above the router.
+                        There is no exit variant because the App Router unmounts the
+                        old tree before an exit could play. The final state is y: 0, at
+                        which point framer-motion writes `transform: none`, so nothing
+                        is left holding a containing block over fixed page content. */}
+                    <motion.div
+                        key={pathname}
+                        variants={screenVariants}
+                        initial="initial"
+                        animate="animate"
+                        className="w-full min-w-0"
+                    >
+                        {children}
+                        {detailSeoSummary && (
+                            <DetailSeoSummary
+                                title={detailSeoSummary.title}
+                                description={detailSeoSummary.description}
+                            />
+                        )}
+                    </motion.div>
                 </div>
             </div>
 

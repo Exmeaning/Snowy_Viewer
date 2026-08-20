@@ -1,0 +1,949 @@
+/* ==========================================================================
+   Handheld OS — visual + motion foundation
+   ==========================================================================
+
+   A console-style handheld system UI, rebuilt as a web design layer.
+
+   Three properties define the look and are worth stating up front, because
+   every rule below follows from one of them:
+
+   1. FLAT AND OPAQUE. Solid tiles, crisp 1px borders, tight radii. Hierarchy
+      is carried by value steps between surfaces, never by translucency. This
+      is the exact inverse of the glassmorphism layer it replaces — and it is
+      why ~120 live backdrop-filter surfaces disappear, which is also the
+      single largest scroll-performance win in this change.
+
+   2. THE TRAVELING CURSOR. One selection ring physically moves between
+      targets with a slight overshoot, rather than each target lighting up on
+      its own. The travel itself is owned by the FocusRing component
+      (shared-layout spring); this file owns the ring's appearance and the
+      keyboard-only fallback for everything the cursor system doesn't manage.
+
+   3. SNAP, THEN SETTLE. Presses acknowledge in ~90ms with no easing runway.
+      Cursor moves overshoot and settle. Screens cut in ~240ms without bounce.
+      Overshoot is reserved for the cursor; everything structural is damped.
+
+   ── How this re-skins the whole app ──────────────────────────────────────
+
+   The legacy utility vocabulary (.glass-card, .ios-glass-*, .island-*,
+   .material-*, .pressable) carries roughly a thousand call sites across 287
+   component files. Those class names are kept and redefined in place at the
+   bottom of this file rather than removed, which is what turns a 287-file
+   migration into a single-file reskin. New work should prefer the .hh-*
+   primitives; the legacy names stay valid indefinitely.
+
+   Tokens are namespaced --hh-*. The accent deliberately inherits from
+   --color-miku so the existing 26-character theme picker keeps driving the
+   cursor color.
+   ========================================================================== */
+
+:root {
+    /* ── Neutral ramp — light ─────────────────────────────────────────────
+       A grey room with white tiles in it, never white-on-white. surface-0 is
+       the room; surface-2 is a tile sitting in the room. Keeping the page
+       darker than its cards is what makes flat tiles read as objects without
+       needing a shadow to separate them. */
+    --hh-surface-0: #e8e9eb;
+    --hh-surface-1: #eff0f2;
+    --hh-surface-2: #ffffff;
+    --hh-surface-3: #ffffff;
+    --hh-surface-sunken: #dcdee2;
+    --hh-surface-inset: #d3d5da;
+
+    --hh-border: #d6d8dd;
+    --hh-border-strong: #b6b9c0;
+    --hh-border-hairline: rgba(0, 0, 0, 0.08);
+
+    --hh-text-primary: #313134;
+    --hh-text-secondary: #6a6d74;
+    --hh-text-tertiary: #9b9ea5;
+    --hh-text-on-accent: #ffffff;
+
+    /* Elevation — small, tight, low-opacity. Tiles hover barely above the
+       surface. A large soft shadow immediately reads as a phone OS instead of
+       a console, so the blur radii here stay deliberately short. */
+    --hh-shadow-tile: 0 1px 2px rgba(20, 22, 28, 0.06), 0 2px 8px rgba(20, 22, 28, 0.05);
+    --hh-shadow-raised: 0 2px 4px rgba(20, 22, 28, 0.08), 0 8px 20px rgba(20, 22, 28, 0.10);
+    --hh-shadow-float: 0 6px 12px rgba(20, 22, 28, 0.10), 0 18px 44px rgba(20, 22, 28, 0.16);
+    --hh-shadow-inset: inset 0 1px 2px rgba(20, 22, 28, 0.07);
+
+    --hh-scrim: rgba(24, 26, 30, 0.42);
+
+    /* ── Fixed hardware-ish accents ──────────────────────────────────────
+       These do NOT follow the character theme. They are structural brand
+       constants for controller-glyph tinting and destructive actions, and
+       they stay put so the shell reads as one consistent system. */
+    --hh-accent-cyan: #00c3e3;
+    --hh-accent-coral: #ff3c28;
+    --hh-accent-alert: #e60012;
+
+    /* ── Accent — follows the character theme ────────────────────────────
+       ThemeContext and the pre-hydration inline script both rewrite
+       --color-miku to one of 26 character colors, so everything accent-driven
+       inherits from it and the theme picker keeps working unchanged. */
+    --hh-accent: var(--color-miku, #33ccbb);
+    --hh-accent-deep: var(--color-miku-dark, #2da89b);
+    --hh-accent-wash: color-mix(in srgb, var(--hh-accent) 12%, var(--hh-surface-2));
+    --hh-accent-wash-strong: color-mix(in srgb, var(--hh-accent) 20%, var(--hh-surface-2));
+    --hh-accent-line: color-mix(in srgb, var(--hh-accent) 55%, transparent);
+
+    /* ── Radii ───────────────────────────────────────────────────────────
+       Console geometry is crisp, not pill-soft. Software tiles are
+       near-square with a small corner; only dock icons and toggles go fully
+       round. The Tailwind --radius-* scale is retuned to match in
+       globals.css, which is what tightens the ~820 existing rounded-*
+       utilities without touching a single component. */
+    --hh-radius-xs: 3px;
+    --hh-radius-sm: 5px;
+    --hh-radius-md: 8px;
+    --hh-radius-lg: 12px;
+    --hh-radius-xl: 16px;
+    --hh-radius-2xl: 20px;
+    --hh-radius-full: 999px;
+
+    /* ── Motion ──────────────────────────────────────────────────────────
+       --hh-ease-cursor is the only easing with overshoot. Everything
+       structural uses --hh-ease-out so panels and screens never wobble. */
+    --hh-ease-cursor: cubic-bezier(0.18, 1.32, 0.38, 1);
+    --hh-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --hh-ease-in-out: cubic-bezier(0.5, 0, 0.3, 1);
+    --hh-ease-snap: cubic-bezier(0.3, 0.9, 0.25, 1);
+
+    --hh-dur-press: 90ms;
+    --hh-dur-cursor: 220ms;
+    --hh-dur-fast: 160ms;
+    --hh-dur-screen: 240ms;
+    --hh-dur-panel: 300ms;
+
+    --hh-press-scale: 0.965;
+    --hh-select-scale: 1.045;
+
+    /* Focus cursor geometry. The double ring — accent band plus a white inner
+       hairline — is what keeps the cursor legible against both a bright tile
+       and a dark card thumbnail. A single-color ring vanishes on one or the
+       other, which is why the white line is not decorative. */
+    --hh-cursor-width: 3px;
+    --hh-cursor-glow: 0 0 0 1px rgba(255, 255, 255, 0.9),
+        0 0 12px color-mix(in srgb, var(--hh-accent) 55%, transparent),
+        0 0 28px color-mix(in srgb, var(--hh-accent) 22%, transparent);
+
+    /* ── Type ────────────────────────────────────────────────────────────
+       Console text is tight, even-weight, and never light-weight at body
+       size — the previous design's 300 weight is the main thing that read as
+       "web app" rather than "system UI". */
+    --hh-tracking-display: -0.021em;
+    --hh-tracking-title: -0.012em;
+    --hh-tracking-body: -0.003em;
+    --hh-tracking-label: 0.04em;
+    --hh-leading-display: 1.08;
+    --hh-leading-title: 1.2;
+    --hh-leading-body: 1.55;
+}
+
+:root[data-theme="dark"] {
+    /* ── Neutral ramp — dark ─────────────────────────────────────────────
+       Warm-neutral charcoal, not blue-black. Tiles separate from the room by
+       lightness alone, so the ramp steps are wider here than in light mode
+       where borders do more of the work. */
+    --hh-surface-0: #1e1f22;
+    --hh-surface-1: #26272b;
+    --hh-surface-2: #2f3035;
+    --hh-surface-3: #3a3b41;
+    --hh-surface-sunken: #17181a;
+    --hh-surface-inset: #141517;
+
+    --hh-border: #414248;
+    --hh-border-strong: #55575f;
+    --hh-border-hairline: rgba(255, 255, 255, 0.07);
+
+    --hh-text-primary: #f3f3f5;
+    --hh-text-secondary: #a8abb2;
+    --hh-text-tertiary: #797c83;
+
+    --hh-shadow-tile: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.28);
+    --hh-shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.45), 0 10px 24px rgba(0, 0, 0, 0.38);
+    --hh-shadow-float: 0 8px 16px rgba(0, 0, 0, 0.5), 0 22px 50px rgba(0, 0, 0, 0.5);
+    --hh-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+
+    --hh-scrim: rgba(8, 9, 11, 0.6);
+
+    --hh-accent-wash: color-mix(in srgb, var(--hh-accent) 20%, var(--hh-surface-2));
+    --hh-accent-wash-strong: color-mix(in srgb, var(--hh-accent) 30%, var(--hh-surface-2));
+
+    /* Dimmer white hairline: at full strength it blows out against charcoal. */
+    --hh-cursor-glow: 0 0 0 1px rgba(255, 255, 255, 0.55),
+        0 0 14px color-mix(in srgb, var(--hh-accent) 65%, transparent),
+        0 0 34px color-mix(in srgb, var(--hh-accent) 30%, transparent);
+}
+
+/* ==========================================================================
+   Surfaces
+   ========================================================================== */
+
+/* A tile — the home-menu software square. */
+.hh-tile {
+    background: var(--hh-surface-2);
+    border: 1px solid var(--hh-border);
+    border-radius: var(--hh-radius-lg);
+    box-shadow: var(--hh-shadow-tile);
+    color: var(--hh-text-primary);
+}
+
+/* A panel — structural chrome (top bar, side rail, sheet). One step flatter
+   than a tile so tiles can sit on top without their shadows colliding. */
+.hh-panel {
+    background: var(--hh-surface-1);
+    border: 1px solid var(--hh-border);
+    border-radius: var(--hh-radius-xl);
+    box-shadow: var(--hh-shadow-raised);
+    color: var(--hh-text-primary);
+}
+
+/* A floating layer — dropdown, popover, dialog. */
+.hh-float {
+    background: var(--hh-surface-2);
+    border: 1px solid var(--hh-border);
+    border-radius: var(--hh-radius-xl);
+    box-shadow: var(--hh-shadow-float);
+    color: var(--hh-text-primary);
+}
+
+/* A sunken well — list backgrounds, input troughs, empty states. */
+.hh-well {
+    background: var(--hh-surface-sunken);
+    border: 1px solid var(--hh-border-hairline);
+    border-radius: var(--hh-radius-lg);
+}
+
+.hh-ground {
+    background: var(--hh-surface-0);
+}
+
+/* Modal scrim. Opaque-dark rather than blurred — consistent with dropping
+   backdrop-filter everywhere else. */
+.hh-scrim {
+    background: var(--hh-scrim);
+}
+
+/* ==========================================================================
+   Response — press feedback
+
+   Console controls acknowledge on pointer-DOWN, and the acknowledgment is a
+   fast scale with no easing runway. .pressable is the legacy name (86 call
+   sites) and .hh-press is the new one; both resolve to identical behavior so
+   either can be used during the transition.
+   ========================================================================== */
+
+.hh-press,
+.pressable {
+    transition:
+        transform var(--hh-dur-press) var(--hh-ease-snap),
+        background-color var(--hh-dur-fast) var(--hh-ease-out),
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        box-shadow var(--hh-dur-fast) var(--hh-ease-out),
+        color var(--hh-dur-fast) var(--hh-ease-out);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.hh-press:active,
+.pressable:active {
+    transform: scale(var(--hh-press-scale));
+}
+
+.hh-press:disabled,
+.hh-press[aria-disabled="true"],
+.pressable:disabled,
+.pressable[aria-disabled="true"] {
+    transform: none;
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   The traveling cursor
+
+   FocusRing renders the moving ring via shared-layout animation. The rules
+   here are its appearance plus the keyboard-only fallback.
+   ========================================================================== */
+
+.hh-cursor-ring {
+    position: absolute;
+    inset: 0;
+    border: var(--hh-cursor-width) solid var(--hh-accent);
+    border-radius: inherit;
+    box-shadow: var(--hh-cursor-glow);
+    pointer-events: none;
+}
+
+/* The tile under the cursor lifts and brightens. Paired with the ring, this
+   is what sells the cursor as landing on a physical object. */
+.hh-selected {
+    background: var(--hh-surface-3);
+    box-shadow: var(--hh-shadow-raised);
+    transform: scale(var(--hh-select-scale));
+    z-index: 1;
+}
+
+/* Keyboard-only ring: pointer users never see it, keyboard and gamepad users
+   always do. */
+.hh-focusable:focus-visible,
+.hh-press:focus-visible,
+.pressable:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 var(--hh-cursor-width) var(--hh-accent),
+        var(--hh-cursor-glow);
+}
+
+/* The app's existing keyboard-shortcut focus hook, restyled from a plain
+   outline into the same cursor treatment so there is one focus language. */
+[data-shortcut-focused="true"] {
+    outline: none !important;
+    box-shadow:
+        0 0 0 var(--hh-cursor-width) var(--hh-accent),
+        var(--hh-cursor-glow) !important;
+    border-radius: var(--hh-radius-lg);
+}
+
+/* ==========================================================================
+   Controls
+   ========================================================================== */
+
+.hh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--hh-radius-full);
+    border: 1px solid var(--hh-border);
+    background: var(--hh-surface-2);
+    color: var(--hh-text-primary);
+    font-weight: 600;
+    letter-spacing: var(--hh-tracking-body);
+    box-shadow: var(--hh-shadow-tile);
+}
+
+.hh-btn:hover {
+    background: var(--hh-surface-3);
+    border-color: var(--hh-border-strong);
+}
+
+.hh-btn-primary {
+    background: var(--hh-accent);
+    border-color: color-mix(in srgb, var(--hh-accent) 78%, black);
+    color: var(--hh-text-on-accent);
+}
+
+.hh-btn-primary:hover {
+    background: color-mix(in srgb, var(--hh-accent) 88%, white);
+    border-color: color-mix(in srgb, var(--hh-accent) 70%, black);
+}
+
+.hh-btn-danger {
+    background: var(--hh-accent-alert);
+    border-color: color-mix(in srgb, var(--hh-accent-alert) 75%, black);
+    color: #ffffff;
+}
+
+/* Segmented control — the settings tab strip. The active segment is a solid
+   slab that sits above a sunken trough, not a tinted pill. */
+.hh-segment {
+    display: inline-flex;
+    padding: 3px;
+    gap: 2px;
+    background: var(--hh-surface-sunken);
+    border: 1px solid var(--hh-border-hairline);
+    border-radius: var(--hh-radius-full);
+}
+
+.hh-segment-item {
+    padding: 0.375rem 0.9rem;
+    border-radius: var(--hh-radius-full);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--hh-text-secondary);
+    transition:
+        background-color var(--hh-dur-fast) var(--hh-ease-out),
+        color var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.hh-segment-item:hover {
+    color: var(--hh-text-primary);
+}
+
+.hh-segment-item[aria-selected="true"],
+.hh-segment-item[data-selected="true"] {
+    background: var(--hh-surface-2);
+    color: var(--hh-text-primary);
+    box-shadow: var(--hh-shadow-tile);
+}
+
+.hh-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--hh-radius-full);
+    border: 1px solid var(--hh-border);
+    background: var(--hh-surface-2);
+    color: var(--hh-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.hh-chip:hover {
+    background: var(--hh-surface-3);
+    color: var(--hh-text-primary);
+}
+
+.hh-chip-active {
+    background: var(--hh-accent);
+    border-color: color-mix(in srgb, var(--hh-accent) 76%, black);
+    color: var(--hh-text-on-accent);
+}
+
+.hh-chip-active:hover {
+    background: color-mix(in srgb, var(--hh-accent) 90%, white);
+    color: var(--hh-text-on-accent);
+}
+
+.hh-input {
+    background: var(--hh-surface-2);
+    border: 1px solid var(--hh-border);
+    border-radius: var(--hh-radius-md);
+    color: var(--hh-text-primary);
+    box-shadow: var(--hh-shadow-inset);
+    transition:
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        box-shadow var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.hh-input::placeholder {
+    color: var(--hh-text-tertiary);
+}
+
+.hh-input:focus {
+    outline: none;
+    border-color: var(--hh-accent);
+    box-shadow:
+        var(--hh-shadow-inset),
+        0 0 0 2px color-mix(in srgb, var(--hh-accent) 40%, transparent);
+}
+
+/* List rows are separated by an edge-to-edge hairline, not by gaps. */
+.hh-divider {
+    height: 1px;
+    background: var(--hh-border);
+    border: 0;
+}
+
+.hh-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: var(--hh-tracking-label);
+    text-transform: uppercase;
+    color: var(--hh-text-tertiary);
+}
+
+/* Dock — the circular icon strip along the bottom edge. */
+.hh-dock {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--hh-radius-full);
+    background: var(--hh-surface-1);
+    border: 1px solid var(--hh-border);
+    box-shadow: var(--hh-shadow-raised);
+}
+
+.hh-dock-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--hh-radius-full);
+    background: var(--hh-surface-2);
+    border: 1px solid var(--hh-border);
+    color: var(--hh-text-secondary);
+    transition:
+        transform var(--hh-dur-press) var(--hh-ease-snap),
+        background-color var(--hh-dur-fast) var(--hh-ease-out),
+        color var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.hh-dock-icon:hover {
+    background: var(--hh-surface-3);
+    color: var(--hh-text-primary);
+    transform: translateY(-2px);
+}
+
+.hh-dock-icon:active {
+    transform: scale(var(--hh-press-scale));
+}
+
+/* ==========================================================================
+   Type scale
+   ========================================================================== */
+
+.hh-display {
+    font-weight: 700;
+    line-height: var(--hh-leading-display);
+    letter-spacing: var(--hh-tracking-display);
+}
+
+.hh-title {
+    font-weight: 600;
+    line-height: var(--hh-leading-title);
+    letter-spacing: var(--hh-tracking-title);
+}
+
+.hh-body {
+    font-weight: 400;
+    line-height: var(--hh-leading-body);
+    letter-spacing: var(--hh-tracking-body);
+}
+
+/* Tabular digits for ranking tables, scores and timers — column alignment is
+   a strong part of the console-UI read, and this app is full of leaderboards. */
+.hh-numeric {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: 0;
+}
+
+/* ==========================================================================
+   Motion — keyframes
+   ========================================================================== */
+
+/* Cursor lands on a target: one tight outward pulse of the ring. */
+@keyframes hh-cursor-land {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--hh-accent) 60%, transparent), var(--hh-cursor-glow); }
+    100% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--hh-accent) 0%, transparent), var(--hh-cursor-glow); }
+}
+
+/* Confirm: the tile dips, then springs back — the launch gesture. */
+@keyframes hh-confirm-pop {
+    0% { transform: scale(1); }
+    35% { transform: scale(0.94); }
+    100% { transform: scale(1); }
+}
+
+/* Launching: the tile grows past the viewport and dissolves. */
+@keyframes hh-launch {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* Screen enters: a short rise, no bounce. */
+@keyframes hh-screen-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Sheet rises from the bottom edge. */
+@keyframes hh-sheet-in {
+    from { opacity: 0; transform: translateY(16px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Rail slides in from the left edge. */
+@keyframes hh-rail-in {
+    from { opacity: 0; transform: translateX(-14px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Grid stagger — each tile arrives a beat after the previous one. */
+@keyframes hh-tile-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Dock label surfaces under the hovered icon. */
+@keyframes hh-label-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ambient drift for the home background: slow, wide, low-contrast. */
+@keyframes hh-drift-a {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(3vw, -4vh, 0) scale(1.12); }
+}
+
+@keyframes hh-drift-b {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1.06); }
+    50% { transform: translate3d(-3.5vw, 3vh, 0) scale(0.94); }
+}
+
+.hh-animate-screen-in { animation: hh-screen-in var(--hh-dur-screen) var(--hh-ease-out) both; }
+.hh-animate-sheet-in { animation: hh-sheet-in var(--hh-dur-panel) var(--hh-ease-out) both; }
+.hh-animate-rail-in { animation: hh-rail-in var(--hh-dur-screen) var(--hh-ease-out) both; }
+.hh-animate-tile-in { animation: hh-tile-in var(--hh-dur-screen) var(--hh-ease-out) both; }
+.hh-animate-confirm { animation: hh-confirm-pop 260ms var(--hh-ease-cursor); }
+.hh-animate-cursor-land { animation: hh-cursor-land 420ms var(--hh-ease-out); }
+.hh-animate-launch { animation: hh-launch var(--hh-dur-screen) var(--hh-ease-out) both; }
+.hh-animate-label-in { animation: hh-label-in var(--hh-dur-fast) var(--hh-ease-out) both; }
+
+.hh-drift-a { animation: hh-drift-a 26s var(--hh-ease-in-out) infinite; }
+.hh-drift-b { animation: hh-drift-b 34s var(--hh-ease-in-out) infinite; }
+
+/* Stagger helper: set --hh-i on each child to index it into the sequence.
+   34ms is short enough to feel like one gesture rather than a queue. */
+.hh-stagger > * {
+    animation: hh-tile-in var(--hh-dur-screen) var(--hh-ease-out) both;
+    animation-delay: calc(var(--hh-i, 0) * 34ms);
+}
+
+/* ==========================================================================
+   Legacy class re-skin
+
+   Everything below maps the previous glassmorphism vocabulary onto Handheld
+   surfaces. The names stay because they are load-bearing across the app; only
+   their appearance changes. Translucency and backdrop-filter are dropped
+   throughout — that is the point of the redesign, and it also removes the
+   per-frame compositor blur that made scrolling and overlay-open expensive on
+   phones. The explicit `backdrop-filter: none` declarations are not
+   redundant: they neutralize the property on elements that also carry a
+   Tailwind backdrop-blur-* utility.
+   ========================================================================== */
+
+.glass-card,
+.ios-glass-card {
+    background: var(--hh-surface-2);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--hh-border);
+    box-shadow: var(--hh-shadow-tile);
+    color: var(--hh-text-primary);
+    transition:
+        transform var(--hh-dur-fast) var(--hh-ease-out),
+        background-color var(--hh-dur-fast) var(--hh-ease-out),
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        box-shadow var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.ios-glass-card-interactive:hover {
+    background: var(--hh-surface-3);
+    border-color: var(--hh-accent-line);
+    box-shadow: var(--hh-shadow-raised);
+    transform: translateY(-2px) scale(1.012);
+}
+
+.ios-glass-card-interactive:active {
+    transform: translateY(0) scale(var(--hh-press-scale));
+}
+
+.ios-glass-panel,
+.island-panel,
+.material-thick,
+.material-chrome {
+    background: var(--hh-surface-1);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--hh-border);
+    box-shadow: var(--hh-shadow-raised);
+    color: var(--hh-text-primary);
+}
+
+.material-thin {
+    background: var(--hh-surface-1);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--hh-border-hairline);
+}
+
+.material-regular {
+    background: var(--hh-surface-2);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--hh-border);
+    box-shadow: var(--hh-shadow-tile);
+}
+
+.liquid-glass-modal,
+.ios-glass-dropdown {
+    background: var(--hh-surface-2);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--hh-border);
+    box-shadow: var(--hh-shadow-float);
+    color: var(--hh-text-primary);
+}
+
+.ios-glass-btn {
+    background: var(--hh-surface-2);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--hh-border);
+    color: var(--hh-text-secondary);
+    font-weight: 600;
+    box-shadow: var(--hh-shadow-tile);
+    transition:
+        transform var(--hh-dur-press) var(--hh-ease-snap),
+        background-color var(--hh-dur-fast) var(--hh-ease-out),
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        box-shadow var(--hh-dur-fast) var(--hh-ease-out),
+        color var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.ios-glass-btn:hover {
+    background: var(--hh-surface-3);
+    border-color: var(--hh-border-strong);
+    color: var(--hh-text-primary);
+    box-shadow: var(--hh-shadow-raised);
+}
+
+.ios-glass-btn:active {
+    transform: scale(var(--hh-press-scale));
+}
+
+.ios-glass-btn-primary {
+    background: var(--hh-accent);
+    border: 1px solid color-mix(in srgb, var(--hh-accent) 76%, black);
+    color: var(--hh-text-on-accent);
+    box-shadow: var(--hh-shadow-tile);
+}
+
+.ios-glass-btn-primary:hover {
+    background: color-mix(in srgb, var(--hh-accent) 88%, white);
+    border-color: color-mix(in srgb, var(--hh-accent) 68%, black);
+    color: var(--hh-text-on-accent);
+    box-shadow: var(--hh-shadow-raised);
+}
+
+.ios-glass-btn-primary:active {
+    transform: scale(var(--hh-press-scale));
+}
+
+.ios-glass-input {
+    background: var(--hh-surface-2);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--hh-border);
+    color: var(--hh-text-primary);
+    box-shadow: var(--hh-shadow-inset);
+    transition:
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        box-shadow var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.ios-glass-input::placeholder {
+    color: var(--hh-text-tertiary);
+}
+
+.ios-glass-input:focus {
+    outline: none;
+    border-color: var(--hh-accent);
+    box-shadow:
+        var(--hh-shadow-inset),
+        0 0 0 2px color-mix(in srgb, var(--hh-accent) 40%, transparent);
+}
+
+/* Tabs become segments of the segmented control. */
+.ios-glass-tab {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid transparent;
+    color: var(--hh-text-secondary);
+    font-weight: 600;
+    transition:
+        background-color var(--hh-dur-fast) var(--hh-ease-out),
+        color var(--hh-dur-fast) var(--hh-ease-out),
+        box-shadow var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.ios-glass-tab:hover {
+    background: var(--hh-surface-sunken);
+    color: var(--hh-text-primary);
+}
+
+.ios-glass-tab-active,
+.ios-glass-tab-active:hover {
+    background: var(--hh-accent);
+    border-color: color-mix(in srgb, var(--hh-accent) 76%, black);
+    color: var(--hh-text-on-accent);
+    box-shadow: var(--hh-shadow-tile);
+}
+
+/* Nav rail row states. The active row is a solid accent slab — the rail's
+   selected entry in the system settings list. */
+.island-pill-active {
+    background: var(--hh-accent);
+    color: var(--hh-text-on-accent);
+    font-weight: 600;
+}
+
+.island-pill-active:hover {
+    background: color-mix(in srgb, var(--hh-accent) 90%, white);
+    color: var(--hh-text-on-accent);
+}
+
+.island-pill-hover {
+    transition:
+        background-color var(--hh-dur-fast) var(--hh-ease-out),
+        color var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.island-pill-hover:hover {
+    background: var(--hh-surface-sunken);
+    color: var(--hh-text-primary);
+}
+
+.island-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--hh-radius-full);
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    border: 1px solid var(--hh-border);
+    background: var(--hh-surface-2);
+    transition:
+        transform var(--hh-dur-press) var(--hh-ease-snap),
+        background-color var(--hh-dur-fast) var(--hh-ease-out),
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        color var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.island-chip:active {
+    transform: scale(var(--hh-press-scale));
+}
+
+.island-chip-active {
+    background: var(--hh-accent);
+    border-color: color-mix(in srgb, var(--hh-accent) 76%, black);
+    color: var(--hh-text-on-accent);
+}
+
+.island-chip-active:hover {
+    background: color-mix(in srgb, var(--hh-accent) 90%, white);
+    color: var(--hh-text-on-accent);
+}
+
+.island-chip-hover {
+    color: var(--hh-text-secondary);
+}
+
+.island-chip-hover:hover {
+    background: var(--hh-surface-3);
+    color: var(--hh-text-primary);
+}
+
+/* Legacy type helpers, remapped onto the Handheld scale. */
+.type-display { font-weight: 700; line-height: var(--hh-leading-display); letter-spacing: var(--hh-tracking-display); }
+.type-title { font-weight: 600; line-height: var(--hh-leading-title); letter-spacing: var(--hh-tracking-title); }
+.type-body { font-weight: 400; line-height: var(--hh-leading-body); letter-spacing: var(--hh-tracking-body); }
+.type-caption { font-weight: 500; line-height: 1.35; letter-spacing: var(--hh-tracking-body); }
+
+/* On flat opaque surfaces there is no vibrancy to compensate for, so this
+   collapses to a plain weight bump. */
+.type-on-glass { font-weight: 600; letter-spacing: var(--hh-tracking-body); }
+
+/* Legacy entrance animations, retimed onto Handheld easing. */
+.animate-island-in { animation: hh-screen-in var(--hh-dur-screen) var(--hh-ease-out) both; }
+.animate-island-in-left { animation: hh-rail-in var(--hh-dur-screen) var(--hh-ease-out) both; }
+.animate-fade-in { animation: hh-screen-in var(--hh-dur-screen) var(--hh-ease-out) both; }
+
+/* Scroll-edge fade stays: it is how floating chrome meets scrolling content
+   without a hard divider. */
+.scroll-edge-fade {
+    mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+}
+
+/* ==========================================================================
+   Accessibility
+
+   Reduced motion keeps every state change but removes travel and overshoot:
+   the cursor cross-fades between targets instead of flying to them, so
+   nothing becomes unreachable or ambiguous — only calmer.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --hh-ease-cursor: ease-out;
+        --hh-ease-out: ease-out;
+        --hh-ease-snap: ease-out;
+        --hh-dur-press: 1ms;
+        --hh-dur-cursor: 120ms;
+        --hh-dur-fast: 120ms;
+        --hh-dur-screen: 140ms;
+        --hh-dur-panel: 160ms;
+        --hh-press-scale: 1;
+        --hh-select-scale: 1;
+    }
+
+    .hh-press:active,
+    .pressable:active,
+    .island-chip:active,
+    .ios-glass-btn:active,
+    .ios-glass-btn-primary:active,
+    .ios-glass-card-interactive:hover,
+    .ios-glass-card-interactive:active,
+    .hh-dock-icon:hover,
+    .hh-dock-icon:active,
+    .hh-selected {
+        transform: none !important;
+    }
+
+    .hh-animate-confirm,
+    .hh-animate-cursor-land,
+    .hh-animate-launch,
+    .hh-drift-a,
+    .hh-drift-b,
+    .hh-stagger > * {
+        animation: none !important;
+    }
+}
+
+/* Surfaces are already opaque, so this only needs to firm up the borders. */
+@media (prefers-reduced-transparency: reduce) {
+    :root {
+        --hh-border: #c2c5cb;
+        --hh-border-hairline: rgba(0, 0, 0, 0.14);
+    }
+
+    :root[data-theme="dark"] {
+        --hh-border: #55575f;
+        --hh-border-hairline: rgba(255, 255, 255, 0.16);
+    }
+}
+
+@media (prefers-contrast: more) {
+    :root {
+        --hh-border: #8b8f97;
+        --hh-border-strong: #5f636b;
+        --hh-text-secondary: #4c5057;
+        --hh-text-tertiary: #64686f;
+        --hh-cursor-width: 4px;
+    }
+
+    :root[data-theme="dark"] {
+        --hh-border: #7e828a;
+        --hh-border-strong: #a4a8b0;
+        --hh-text-secondary: #ccced3;
+        --hh-text-tertiary: #a8abb2;
+    }
+
+    .hh-tile,
+    .hh-panel,
+    .hh-float,
+    .glass-card,
+    .ios-glass-card,
+    .ios-glass-panel,
+    .island-panel,
+    .material-regular,
+    .material-thick,
+    .material-chrome {
+        border-width: 1.5px;
+    }
+}

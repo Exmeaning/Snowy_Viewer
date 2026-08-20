@@ -1,3 +1,16 @@
+/*
+ * Console home ambient field.
+ *
+ * The visual is a lit panel, not a graphic: a barely-there accent tint, a
+ * hairline geometric grid at two parallax rates, and a handful of huge soft
+ * washes drifting behind everything. There is no opaque base gradient here on
+ * purpose -- the body's console ground (--page-bg-*) shows through, so the app
+ * reads as one flat surface rather than as content floating on a pastel poster.
+ *
+ * No filter/backdrop-filter anywhere. Softness is painted with radial-gradient,
+ * which costs one paint into the layer texture instead of a compositor pass per
+ * frame.
+ */
 .bgPatternContainer {
     --bg-layer-1-y: 0px;
     --bg-layer-2-y: 0px;
@@ -12,14 +25,12 @@
     z-index: 1;
     overflow: hidden;
     pointer-events: none;
+    /* Corner tints only, all under 0.12 alpha and all fading to transparent, so
+       the ground underneath is never covered. */
     background:
-        linear-gradient(115deg,
-            var(--theme-bg-light-start, rgba(182, 255, 252, 0.65)) 0%,
-            var(--theme-bg-light-middle, rgba(220, 238, 255, 0.6)) 45%,
-            var(--theme-bg-light-end, rgba(254, 226, 245, 0.65)) 100%),
-        radial-gradient(circle at 24% 15%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.25), transparent 22%),
-        radial-gradient(circle at 82% 20%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.18), transparent 25%),
-        radial-gradient(circle at 62% 80%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.2), transparent 28%);
+        radial-gradient(120% 90% at 16% -5%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.11), transparent 62%),
+        radial-gradient(110% 85% at 90% 4%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.07), transparent 58%),
+        radial-gradient(130% 95% at 58% 104%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.06), transparent 64%);
     contain: paint size layout style;
 }
 
@@ -38,38 +49,40 @@
     pointer-events: none;
 }
 
-/* Polka cosmic stardust grid backplate - like official PJSK subtle points */
+/* Fine hairline grid — the console system-UI backplate. Parallaxes at the
+   slowest rate (--bg-base-y), so it reads as the furthest surface. */
 .bgPatternContainer::before {
     content: "";
     position: absolute;
     inset: -30%;
     background-image:
-        radial-gradient(rgba(var(--color-miku-rgb, 51, 204, 187), 0.1) 1.5px, transparent 1.5px);
-    background-size: 50px 50px;
-    opacity: 0.72;
+        linear-gradient(to right, rgba(var(--color-miku-rgb, 51, 204, 187), 0.07) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(var(--color-miku-rgb, 51, 204, 187), 0.07) 1px, transparent 1px);
+    background-size: 64px 64px;
+    opacity: 0.7;
     transform: translate3d(0, var(--bg-base-y), 0);
     will-change: transform;
 }
 
-/* Floating colored speckles */
+/* Coarse grid at 3x the fine pitch, moving at the layer-3 rate. Exactly 3x is
+   deliberate: at a non-integer multiple the two grids beat against each other
+   and produce visible moire as they drift apart. */
 .bgPatternContainer::after {
     content: "";
     position: absolute;
     inset: -35%;
     background-image:
-        radial-gradient(circle, rgba(var(--color-comp-rgb, 255, 117, 168), 0.38) 0 3px, transparent 3.6px),
-        radial-gradient(circle, rgba(var(--color-miku-rgb, 92, 231, 220), 0.38) 0 3px, transparent 3.6px),
-        radial-gradient(circle, rgba(255, 255, 255, 0.55) 0 2px, transparent 2.8px);
-    background-size: 380px 380px, 460px 460px, 290px 290px;
-    background-position: 15% 12%, 82% 33%, 45% 22%;
-    opacity: 0.65;
+        linear-gradient(to right, rgba(var(--color-miku-rgb, 51, 204, 187), 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(var(--color-miku-rgb, 51, 204, 187), 0.06) 1px, transparent 1px);
+    background-size: 192px 192px;
+    opacity: 0.6;
     transform: translate3d(0, var(--bg-layer-3-y), 0);
     will-change: transform;
 }
 
 .parallaxLayer {
     position: absolute;
-    /* Generous overdraw so dense shard fields never reveal empty edges while parallaxing. */
+    /* Generous overdraw so the field never reveals an empty edge while parallaxing. */
     inset: -40% 0 -60%;
     z-index: 0;
     pointer-events: none;
@@ -89,22 +102,20 @@
 }
 
 /*
- * Two-layer shard architecture (official-site inspired):
- *   .shapeFloat  -> wrapper handling POSITION + float animation (transform: translate3d only).
- *   .shape       -> inner handling VISUALS (clip-path + skew/scale/rotate via inline transform).
- * Splitting transforms across two elements means the float keyframes can no longer
- * overwrite each shard's bespoke skew/scale/rotate, so every shard keeps its sharp
- * non-equilateral silhouette AND floats smoothly on the GPU compositor.
+ * Two-element architecture:
+ *   .shapeFloat  -> wrapper handling POSITION + drift animation (transform only).
+ *   .shape       -> inner handling VISUALS (gradient / border, plus a frame's
+ *                   own rotation via inline transform).
+ * Splitting transforms across two elements means the drift keyframes can never
+ * overwrite a frame's rotation.
  */
 .shapeFloat {
     position: absolute;
     display: block;
     /* NOTE: intentionally NO `will-change: transform` and NO `contain`.
-     * - `will-change` would force one compositor layer per shard (~120) and blow past
-     *   mobile GPUs' layer budget -> scroll jank + dropped clip-path (quadrilaterals).
-     * - `contain: layout paint` conflicts with clip-path on some mobile webviews and
-     *   makes triangular shards degenerate into squares after fast scrolling.
-     * Letting shards live in the parent parallax layer's texture is the stable path. */
+     * `will-change` would force one compositor layer per element and eat into
+     * mobile GPUs' layer budget for no benefit -- the parent parallax layer is
+     * already promoted, and letting these live in its texture is the stable path. */
 }
 
 .shape {
@@ -118,73 +129,75 @@
 }
 
 /*
- * Triangular shards are drawn with inline SVG <polygon>, NOT clip-path.
- * clip-path proved unreliable on older Chromium-based mobile webviews (WeChat/QQ/UC):
- * during fast scroll the clip is silently dropped and the filled box shows as a square.
- * SVG polygons are vector-drawn content (not a box clip), so they render correctly
- * everywhere regardless of compositor layer behavior. This is the robust fix.
+ * A wash. `closest-side` makes the falloff track the element box, so a wash is
+ * always a soft circular glow regardless of its vmax size. The stop at 78% keeps
+ * a little dead space inside the box, which stops the edge of the gradient from
+ * showing as a faint disc outline on wide-gamut displays.
  */
-.shapeSvg {
-    position: absolute;
-    inset: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    /* allow the non-scaling stroke to extend past the viewBox edges */
-    overflow: visible;
-    transform-origin: center;
-}
-
-/* Circular glowing orbs (border-radius is rock solid on every platform) */
-.shapeCircle {
+.shapeWash {
     border-radius: 999px;
-    background: currentColor;
+    background: radial-gradient(circle closest-side,
+            currentColor 0%,
+            transparent 78%);
 }
 
-/* Sparkle & Breathing Animations with smooth sine offsets.
- * All keyframes only touch `transform` (translate3d + rotate + scale) so the
- * browser compositor can run them on the GPU with near-zero main-thread cost. */
-@keyframes floatSlow1 {
-    0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-    50%  { transform: translate3d(8px, -30px, 0) rotate(6deg) scale(1.04); }
-    100% { transform: translate3d(-8px, 30px, 0) rotate(-6deg) scale(0.97); }
+/* A hairline geometric accent. One pixel of border and nothing else. */
+.shapeFrame {
+    border: 1px solid currentColor;
+    border-radius: var(--hh-radius-lg, 12px);
+    background: transparent;
 }
 
-@keyframes floatSlow2 {
-    0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-    50%  { transform: translate3d(-7px, 22px, 0) rotate(-5deg) scale(1.05); }
-    100% { transform: translate3d(7px, -22px, 0) rotate(5deg) scale(0.96); }
+/*
+ * Ambient drift. Wide, slow, and transform-only so the compositor runs it on the
+ * GPU at near-zero main-thread cost.
+ *
+ * No rotation: a radial wash looks identical rotated, so rotating one is pure
+ * cost. Durations are long (30-46s) because this is furniture -- anything fast
+ * enough to notice is something the eye keeps returning to, which is exactly what
+ * a background must not do.
+ */
+@keyframes ambientDrift1 {
+    0%   { transform: translate3d(0, 0, 0) scale(1); }
+    50%  { transform: translate3d(2.6vw, -3.2vh, 0) scale(1.10); }
+    100% { transform: translate3d(-2.2vw, 2.8vh, 0) scale(0.95); }
 }
 
-@keyframes floatSlow3 {
-    0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-    50%  { transform: translate3d(5px, -16px, 0) rotate(4deg) scale(1.06); }
-    100% { transform: translate3d(-5px, 16px, 0) rotate(-4deg) scale(0.95); }
+@keyframes ambientDrift2 {
+    0%   { transform: translate3d(0, 0, 0) scale(1.04); }
+    50%  { transform: translate3d(-2.2vw, 2.4vh, 0) scale(0.94); }
+    100% { transform: translate3d(1.8vw, -2.6vh, 0) scale(1.08); }
 }
 
+@keyframes ambientDrift3 {
+    0%   { transform: translate3d(0, 0, 0) scale(1); }
+    50%  { transform: translate3d(1.4vw, -1.8vh, 0) scale(1.07); }
+    100% { transform: translate3d(-1.2vw, 1.6vh, 0) scale(0.96); }
+}
+
+/* Class names are unchanged: the data-scrolling and data-overlay-open guards at
+   the bottom of this file both key off them. */
 .shapeFloat1 {
-    animation: floatSlow1 11s ease-in-out infinite alternate;
+    animation: ambientDrift1 30s ease-in-out infinite alternate;
 }
 
 .shapeFloat2 {
-    animation: floatSlow2 14s ease-in-out infinite alternate;
+    animation: ambientDrift2 38s ease-in-out infinite alternate;
 }
 
 .shapeFloat3 {
-    animation: floatSlow3 18s ease-in-out infinite alternate;
+    animation: ambientDrift3 46s ease-in-out infinite alternate;
 }
 
-/* "on" budget: the full shard field + compositor animations. Opacities are nudged
- * up so the dense shard field reads clearly. (The old "power-save" tier is gone --
- * this CSS/SVG field IS the low-cost path now.) */
+/* "on" budget: the full wash field + compositor animations. */
 .bgPatternContainer[data-budget="on"]::before {
-    opacity: 0.62;
+    opacity: 0.7;
     transform: translate3d(0, var(--bg-base-y), 0);
     will-change: transform;
 }
 
 .bgPatternContainer[data-budget="on"]::after {
-    opacity: 0.48;
+    opacity: 0.6;
     transform: translate3d(0, var(--bg-layer-3-y), 0);
     will-change: transform;
 }
@@ -192,18 +205,14 @@
 .bgPatternContainer[data-budget="off"],
 :global([data-background-animation="off"]) .bgPatternContainer {
     background:
-        linear-gradient(115deg,
-            var(--theme-bg-light-start, rgba(182, 255, 252, 0.50)) 0%,
-            var(--theme-bg-light-middle, rgba(220, 238, 255, 0.46)) 48%,
-            var(--theme-bg-light-end, rgba(254, 226, 245, 0.50)) 100%),
-        radial-gradient(circle at 20% 12%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.14), transparent 26%),
-        radial-gradient(circle at 86% 20%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.10), transparent 28%),
-        radial-gradient(circle at 58% 86%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.12), transparent 30%);
+        radial-gradient(120% 90% at 16% -5%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.08), transparent 62%),
+        radial-gradient(110% 85% at 90% 4%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.05), transparent 58%),
+        radial-gradient(130% 95% at 58% 104%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.04), transparent 64%);
 }
 
 .bgPatternContainer[data-budget="off"]::before,
 :global([data-background-animation="off"]) .bgPatternContainer::before {
-    opacity: 0.26;
+    opacity: 0.4;
     transform: none;
     will-change: auto;
 }
@@ -220,51 +229,48 @@
     display: none;
 }
 
-/* Beautiful dark mode adaptions */
+/* Dark mode: the grid needs to be lighter than the ground rather than darker,
+   and the accent tints have to come down or they glow. */
 :global([data-theme="dark"]) .bgPatternContainer {
     background:
-        linear-gradient(115deg,
-            var(--theme-bg-dark-start, rgba(28, 48, 54, 0.8)) 0%,
-            var(--theme-bg-dark-middle, rgba(32, 34, 52, 0.75)) 45%,
-            var(--theme-bg-dark-end, rgba(56, 32, 60, 0.78)) 100%),
-        radial-gradient(circle at 24% 15%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.18), transparent 22%),
-        radial-gradient(circle at 82% 20%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.12), transparent 25%),
-        radial-gradient(circle at 62% 80%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.08), transparent 28%);
+        radial-gradient(120% 90% at 16% -5%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.10), transparent 62%),
+        radial-gradient(110% 85% at 90% 4%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.06), transparent 58%),
+        radial-gradient(130% 95% at 58% 104%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.04), transparent 64%);
 }
 
 :global([data-theme="dark"]) .bgPatternContainer::before {
-    opacity: 0.28;
     background-image:
-        radial-gradient(rgba(var(--color-miku-rgb, 51, 204, 187), 0.08) 1.5px, transparent 1.5px);
+        linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    opacity: 0.6;
 }
 
 :global([data-theme="dark"]) .bgPatternContainer::after {
-    opacity: 0.28;
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    opacity: 0.5;
 }
 
 :global([data-theme="dark"]) .bgPatternContainer[data-budget="on"]::before {
-    opacity: 0.30;
+    opacity: 0.6;
 }
 
 :global([data-theme="dark"]) .bgPatternContainer[data-budget="on"]::after {
-    opacity: 0.26;
+    opacity: 0.5;
 }
 
 :global([data-theme="dark"]) .bgPatternContainer[data-budget="off"],
 :global([data-theme="dark"][data-background-animation="off"]) .bgPatternContainer {
     background:
-        linear-gradient(115deg,
-            var(--theme-bg-dark-start, rgba(28, 48, 54, 0.66)) 0%,
-            var(--theme-bg-dark-middle, rgba(32, 34, 52, 0.62)) 48%,
-            var(--theme-bg-dark-end, rgba(56, 32, 60, 0.66)) 100%),
-        radial-gradient(circle at 20% 12%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.12), transparent 26%),
-        radial-gradient(circle at 86% 20%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.08), transparent 28%),
-        radial-gradient(circle at 58% 86%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.06), transparent 30%);
+        radial-gradient(120% 90% at 16% -5%, rgba(var(--color-miku-rgb, 51, 204, 187), 0.07), transparent 62%),
+        radial-gradient(110% 85% at 90% 4%, rgba(var(--color-comp-rgb, 255, 117, 168), 0.04), transparent 58%),
+        radial-gradient(130% 95% at 58% 104%, rgba(var(--color-mid-rgb, 255, 235, 151), 0.03), transparent 64%);
 }
 
 :global([data-theme="dark"]) .bgPatternContainer[data-budget="off"]::before,
 :global([data-theme="dark"][data-background-animation="off"]) .bgPatternContainer::before {
-    opacity: 0.16;
+    opacity: 0.35;
 }
 
 :global([data-theme="dark"]) .bgPatternContainer[data-budget="off"]::after,
@@ -288,43 +294,39 @@
 
 /*
  * Mobile density control.
- * The desktop shard field is ~120 elements; on small screens that is visually noisy
- * and wasteful. Each layer renders shards in a stable deterministic order, so we can
- * keep only the first N per layer via nth-child. display:none drops them from the
- * compositor entirely (zero paint cost). Edge-biased horizontal distribution means
- * the surviving shards still cover the viewport without piling up in the center.
+ * Each layer emits its washes first and its hairline frames last (see
+ * buildAmbientField), so trimming from the end with nth-child drops the garnish
+ * before it drops the design. Edge-biased horizontal distribution means the
+ * survivors still cover the viewport without piling up in the center.
  */
-/* Tablet: ~22 shards visible. */
+/* Tablet: drop the frames, keep every wash. */
 @media (max-width: 1024px) {
-    .parallaxLayer1 .shapeFloat:nth-child(n + 10),
-    .parallaxLayer2 .shapeFloat:nth-child(n + 9),
-    .parallaxLayer3 .shapeFloat:nth-child(n + 6) {
+    .parallaxLayer1 .shapeFloat:nth-child(n + 5),
+    .parallaxLayer2 .shapeFloat:nth-child(n + 4),
+    .parallaxLayer3 .shapeFloat:nth-child(n + 4) {
         display: none;
     }
 }
 
-/* Phone: ~12 shards visible. */
+/* Phone: 6 washes total. Fewer, larger, calmer -- a phone viewport is mostly
+   content, and a wash covers proportionally far more of it. */
 @media (max-width: 640px) {
-    .parallaxLayer1 .shapeFloat:nth-child(n + 6),
-    .parallaxLayer2 .shapeFloat:nth-child(n + 5),
+    .parallaxLayer1 .shapeFloat:nth-child(n + 3),
+    .parallaxLayer2 .shapeFloat:nth-child(n + 3),
     .parallaxLayer3 .shapeFloat:nth-child(n + 3) {
         display: none;
     }
 }
 
 /*
- * Scroll-aware animation pausing (fixes the mobile "triangles turn to squares
- * after fast scroll" bug AND scroll jank).
+ * Scroll-aware animation pausing.
  *
- * Root cause: running many concurrent transform animations while the user scrolls
- * competes with the compositor for GPU layers. When layers are lost mid-scroll,
- * clip-path is silently dropped and triangular shards degenerate into full squares.
- *
- * Fix: while scrolling, pause every shard's float animation via `animation-play-state`.
- * `paused` (not `animation: none`) keeps each shard at its current keyframe position,
- * so when scrolling stops and animations resume there is no visible jump. The parallax
- * scroll itself still moves the whole field via CSS variables, so the background never
- * feels frozen. The data-scrolling attribute is toggled from BackgroundPattern.tsx.
+ * Running concurrent transform animations while the user scrolls competes with
+ * the compositor for GPU layers. `paused` (not `animation: none`) holds each
+ * element at its current keyframe position, so resuming after the scroll stops
+ * produces no visible jump. The parallax itself still moves the whole field via
+ * the CSS variables, so the background never feels frozen. The data-scrolling
+ * attribute is toggled from BackgroundPattern.tsx.
  */
 .bgPatternContainer[data-scrolling="true"] .shapeFloat1,
 .bgPatternContainer[data-scrolling="true"] .shapeFloat2,
@@ -333,15 +335,12 @@
 }
 
 /*
- * Same idea as data-scrolling, but driven from <html data-overlay-open="true">:
- * while a top-level overlay (settings panel, search, shortcuts help) is open we
- * freeze the shard float animations. The overlay's blurred backdrop otherwise
- * re-runs its blur every frame against this moving content, which is the main
- * source of jank when opening the settings panel on mobile.
+ * Same idea, driven from <html data-overlay-open="true">: while a top-level
+ * overlay (settings panel, search, shortcuts help) is open the drift freezes so
+ * it does not compete with the overlay for compositor time.
  */
 :global([data-overlay-open="true"]) .bgPatternContainer .shapeFloat1,
 :global([data-overlay-open="true"]) .bgPatternContainer .shapeFloat2,
 :global([data-overlay-open="true"]) .bgPatternContainer .shapeFloat3 {
     animation-play-state: paused;
 }
-

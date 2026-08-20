@@ -748,6 +748,13 @@ export const jaJPMessages = {
       onDescription: '背景アニメーションを有効化：浮遊する破片とスクロール視差。軽量で省電力です。',
       offDescription: '背景アニメーションを無効化：静的なグラデーション背景のみで、アニメーションや視差はありません。'
     },
+    uiSound: {
+      sectionTitle: 'UI効果音',
+      on: 'オン',
+      off: 'オフ',
+      onDescription: 'UI効果音を有効化：カーソル移動・決定・戻るなどの操作で、ごく短く控えめな音を鳴らします。',
+      offDescription: 'UI効果音を無効化：初期状態はオフで、UI操作音は一切鳴りません。'
+    },
     contentDisplay: {
       sectionTitle: 'コンテンツ表示'
     },

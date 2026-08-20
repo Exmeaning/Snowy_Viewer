@@ -746,6 +746,13 @@ export const koKRMessages = {
             onDescription: "배경 애니메이션 켜기: 떠다니는 조각들과 스크롤 효과 활성화",
             offDescription: "배경 애니메이션 끄기: 정적 테마 그라데이션 배경만 유지"
         },
+        uiSound: {
+            sectionTitle: "인터페이스 효과음",
+            on: "켜기",
+            off: "끄기",
+            onDescription: "인터페이스 효과음 켜기: 커서 이동, 확인, 뒤로 가기 등에서 아주 짧고 작은 소리가 재생됩니다.",
+            offDescription: "인터페이스 효과음 끄기: 기본값이며 인터페이스 조작 시 소리가 전혀 나지 않습니다."
+        },
         contentDisplay: {
             sectionTitle: "콘텐츠 표시"
         },

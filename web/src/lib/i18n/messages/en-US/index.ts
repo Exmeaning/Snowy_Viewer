@@ -749,6 +749,13 @@ export const enUSMessages = {
             onDescription: "Enable background animation: floating shards with scroll parallax. Lightweight and battery-friendly.",
             offDescription: "Disable background animation: keeps only a static gradient background, with no shards, animation, or parallax."
         },
+        uiSound: {
+            sectionTitle: "Interface sound",
+            on: "On",
+            off: "Off",
+            onDescription: "Enable interface sound: very short, quiet blips when the cursor moves and when you confirm or go back.",
+            offDescription: "Disable interface sound: off by default, so the interface never makes a sound."
+        },
         contentDisplay: {
             sectionTitle: "Content display",
         },

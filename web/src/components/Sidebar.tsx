@@ -1,9 +1,12 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { usePathname, useRouter } from "next/navigation";
 import { localizePathForBrowser, stripRouteLocale } from "@/lib/localized-path";
+import CursorRing from "@/components/handheld/CursorRing";
+import { hhReducedVariants, hhStaggerContainer, hhStaggerItem } from "@/lib/motion";
 import {
     ACCOUNTS_CHANGED_EVENT,
     getActiveAccount,
@@ -519,6 +522,24 @@ const SIDEBAR_GROUP_LABEL_KEYS: Record<string, string> = {
     personal: "layout.nav.groups.personal",
 };
 
+/**
+ * Shared-layout identity for the rail's traveling cursor.
+ *
+ * The rail is ONE navigation group even though it is visually divided into
+ * labelled sections: `focusedIndex` is a single flat index that walks from the
+ * home row straight through every expanded section, so a single layoutId is
+ * correct here. The ring then travels between sections instead of teleporting,
+ * which is the whole point — and it also guarantees the "only one mounted ring
+ * per layoutId" rule, because only one row can satisfy `focusedIndex === i`.
+ */
+const RAIL_CURSOR_GROUP = "sidebar-rail";
+
+/** Stable identity so switching variant sets never re-triggers the cascade. */
+const REDUCED_BLOCK_VARIANTS = hhReducedVariants();
+
+/** The home row is always the first entry in `visibleItems`. */
+const HOME_NAV_INDEX = 0;
+
 export default function Sidebar({
     isOpen,
     onClose,
@@ -529,9 +550,10 @@ export default function Sidebar({
     const router = useRouter();
     const { assetSource } = useTheme();
     const { t } = useI18n();
-    // On the home page, the mobile navbar stays single-row (~64px tall); on
-    // other pages it grows by a breadcrumb row (~32px + border). The sidebar
-    // needs a matching top offset so it never collides with the navbar.
+    const prefersReducedMotion = useReducedMotion();
+    // On the home page, the mobile navbar stays single-row (~52px tall); on
+    // other pages it grows by a breadcrumb row (2rem + 1px hairline). The rail
+    // needs a matching top offset so it never collides with the status bar.
     const isHome = stripRouteLocale(pathname) === "/";
     // Expand all groups by default.
     const [expandedGroups, setExpandedGroups] = useState<string[]>(
@@ -689,118 +711,175 @@ export default function Sidebar({
         }
     };
 
-    // Flat index counter for visible items.
-    let flatIdx = 0;
+    // Structural entrance for the rail contents.
+    //
+    // The cascade runs at the GROUP level, not the row level. ~46 rows at
+    // HH_STAGGER_STEP would take ~1.6s to finish, and past roughly a dozen steps
+    // a cascade stops reading as one gesture and starts reading as a queue the
+    // user is waiting on. Eight blocks (home + seven sections) land in ~270ms.
+    const blockVariants = prefersReducedMotion ? REDUCED_BLOCK_VARIANTS : hhStaggerItem;
+
+    // Console top bar geometry. Row 1 is 3.25rem tall on phones, 3.5rem from
+    // `sm` up; below `sm` a non-home page adds a 2rem breadcrumb row plus its 1px
+    // hairline. MainNavbar owns those numbers and MainLayout pads page content
+    // against them — keep the three files in sync.
+    const railTopClass = isHome
+        ? "top-[3.25rem] sm:top-[3.5rem]"
+        : "top-[calc(5.25rem+1px)] sm:top-[3.5rem]";
+
+    // Every row is its own positioning context because CursorRing is
+    // `absolute; inset: 0` and is rendered INSIDE the focused row. That is what
+    // lets framer-motion's shared-layout animation interpolate the ring from the
+    // previous row's box to this one; a single absolutely-positioned overlay
+    // would mean measuring rows by hand and would lose the travel for free.
+    //
+    // Note the split of roles: the accent slab marks the *active route*, the ring
+    // marks the *cursor*. Console UIs keep those two separate, which is why a
+    // focused row no longer borrows the active row's fill the way it used to.
+    const rowClassName = (active: boolean, focused: boolean) =>
+        [
+            "hh-press relative flex items-center gap-3 px-3 py-2 text-sm rounded-[var(--hh-radius-md)]",
+            active
+                ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] font-semibold"
+                : focused
+                    ? "bg-[var(--hh-surface-2)] text-[var(--hh-text-primary)] font-medium"
+                    : "font-medium text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]",
+        ].join(" ");
+
+    // Flat cursor index. Must advance in lockstep with `visibleItems`, which
+    // starts at the home row and skips collapsed sections — so rows inside a
+    // collapsed section deliberately consume no index and carry no data-nav-index.
+    let flatIdx = HOME_NAV_INDEX + 1;
+    const homeFocused = focusedIndex === HOME_NAV_INDEX;
 
     return (
         <>
-            {/* Overlay for mobile — dim to focus */}
+            {/* Mobile scrim — opaque dim, no backdrop blur. The Handheld surface
+                system separates layers by value steps rather than translucency,
+                and dropping the live blur is also what makes opening the rail
+                cheap on phones. */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[55] md:hidden"
+                    className="fixed inset-0 hh-scrim z-[55] md:hidden"
                     onClick={onClose}
                 />
             )}
 
-            {/* Sidebar — heavier structural material than chips */}
+            {/* Software rail — flat opaque chrome flush to the left edge. Its
+                `sm` width (18rem) matches MainLayout's md:ml-[18rem] content
+                offset exactly; the narrower phone width only ever applies below
+                the breakpoint where that offset kicks in. */}
             <aside
-                className={`fixed left-3 sm:left-4 ${isHome ? "top-[5rem]" : "top-[7rem]"} sm:top-[5.5rem] z-[60] w-64 island-panel material-thick rounded-3xl ${hasMounted ? "transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)]" : ""} overflow-hidden flex flex-col ${isOpen ? "translate-x-0" : "-translate-x-[18rem]"}
-                    ${isHome ? "h-[calc(100vh-6rem)]" : "h-[calc(100vh-8rem)]"} sm:h-[calc(100vh-6.5rem)]`}
+                className={`fixed left-0 bottom-0 ${railTopClass} z-[60] w-[17rem] sm:w-[18rem] flex flex-col overflow-hidden bg-[var(--hh-surface-1)] border-r border-[var(--hh-border)] ${hasMounted ? "transition-transform duration-[var(--hh-dur-panel)] ease-[var(--hh-ease-out)]" : ""} ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
             >
-                {isOpen && <div className="absolute inset-0 pointer-events-none animate-island-in-left" aria-hidden="true" />}
-
+                {/* Rail title */}
+                <div className="h-10 shrink-0 flex items-center px-4 border-b border-[var(--hh-border)]">
+                    <span className="hh-label">{t("layout.nav.groups.navigation")}</span>
+                </div>
 
                 {/* Navigation groups - scrollable area */}
-                <nav ref={navRef} className="p-3 space-y-3 flex-grow overflow-y-auto">
-                    {/* Home shortcut */}
-                    <Link
-                        href="/"
-                        prefetch={false}
-                        onClick={handleNavClick}
-                        data-nav-index={(() => { const i = flatIdx; flatIdx++; return i; })()}
-                        className={`pressable flex items-center gap-3 px-4 py-2 rounded-full text-sm type-on-glass ${focusedIndex === 0
-                            ? "island-pill-active ring-2 ring-miku/30"
-                            : isHome
-                                ? "island-pill-active"
-                                : "island-pill-hover text-slate-600 dark:text-slate-300 hover:text-miku dark:hover:text-miku"
-                            }`}
+                <nav ref={navRef} className="flex-grow overflow-y-auto px-2 py-2">
+                    <motion.div
+                        variants={hhStaggerContainer}
+                        initial="initial"
+                        // Plays once per mount, not per open/close.
+                        //
+                        // The cascade is the rail *arriving*; the slide transform is
+                        // the rail being *toggled*. Re-cascading on every toggle would
+                        // contradict the console model where the rail is one physical
+                        // object that moves in and out as a unit.
+                        animate="animate"
+                        className="space-y-1"
                     >
-                        <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
-                        <span className="font-black">{t("layout.nav.home")}</span>
-                    </Link>
+                        {/* Home shortcut */}
+                        <motion.div variants={blockVariants}>
+                            <Link
+                                href="/"
+                                prefetch={false}
+                                onClick={handleNavClick}
+                                data-nav-index={HOME_NAV_INDEX}
+                                aria-current={isHome ? "page" : undefined}
+                                className={rowClassName(isHome, homeFocused)}
+                            >
+                                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                </svg>
+                                <span className="truncate">{t("layout.nav.home")}</span>
+                                {homeFocused && <CursorRing groupId={RAIL_CURSOR_GROUP} />}
+                            </Link>
+                        </motion.div>
 
-                    <div className="border-t border-dashed border-slate-200/60 dark:border-slate-700/40 opacity-60" />
+                        <div className="hh-divider mx-1 my-1.5" />
 
-                    {/* Navigation groups */}
-                    {navigationGroups.map((group) => {
-                        const isExpanded = expandedGroups.includes(group.id);
-                        return (
-                            <div key={group.id}>
-                                <button
-                                    onClick={() => toggleGroup(group.id)}
-                                    className="pressable w-full flex items-center justify-between px-4 text-xs font-bold type-caption text-slate-400 dark:text-slate-500 uppercase tracking-wider hover:text-miku dark:hover:text-miku"
-                                >
-                                    {getGroupLabel(group.id)}
-                                    <svg
-                                        className={`w-3.5 h-3.5 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${isExpanded ? "rotate-180" : ""
-                                            }`}
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
+                        {/* Navigation groups */}
+                        {navigationGroups.map((group) => {
+                            const isExpanded = expandedGroups.includes(group.id);
+                            return (
+                                <motion.div key={group.id} variants={blockVariants}>
+                                    <button
+                                        onClick={() => toggleGroup(group.id)}
+                                        // Hover highlights the row's background rather than its
+                                        // text: .hh-label is unlayered CSS and therefore outranks
+                                        // Tailwind's layered hover:text-* utility, so a text-color
+                                        // hover would silently do nothing here.
+                                        className="hh-press hh-label w-full flex items-center justify-between px-3 py-1.5 rounded-[var(--hh-radius-sm)] hover:bg-[var(--hh-surface-sunken)]"
                                     >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-                                <div
-                                    className={`space-y-0.5 overflow-hidden transition-[max-height,opacity] duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${isExpanded ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
-                                        }`}
-                                >
-                                    {group.items.map((item) => {
-                                        const active = isActive(item.href);
-                                        const thisIdx = flatIdx;
-                                        flatIdx++;
-                                        const isFocused = focusedIndex === thisIdx;
-                                        return (
-                                            <div key={item.href}>
-                                                <div className={`pressable flex items-center rounded-full ${isFocused
-                                                    ? "island-pill-active ring-2 ring-miku/30"
-                                                    : active
-                                                        ? "island-pill-active"
-                                                        : "island-pill-hover text-slate-600 dark:text-slate-300 hover:text-miku dark:hover:text-miku"
-                                                    }`}>
-                                                    <Link
-                                                        href={item.href}
-                                                        prefetch={false}
-                                                        onClick={handleNavClick}
-                                                        data-nav-index={thisIdx}
-                                                        className="flex items-center gap-3 px-4 py-2 text-sm font-medium type-on-glass flex-1 min-w-0"
-                                                    >
-                                                        {item.icon}
-                                                        <span className="truncate">{getItemLabel(item.href, item.id)}</span>
-                                                    </Link>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        );
-                    })}
+                                        {getGroupLabel(group.id)}
+                                        <svg
+                                            className={`w-3.5 h-3.5 transition-transform duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] ${isExpanded ? "rotate-180" : ""
+                                                }`}
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div
+                                        className={`space-y-0.5 overflow-hidden transition-[max-height,opacity] duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] ${isExpanded ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
+                                            }`}
+                                    >
+                                        {group.items.map((item) => {
+                                            const active = isActive(item.href);
+                                            // Collapsed sections are absent from `visibleItems`, so
+                                            // their rows must not consume a cursor index either.
+                                            const thisIdx = isExpanded ? flatIdx : -1;
+                                            if (isExpanded) flatIdx++;
+                                            const focused = isExpanded && focusedIndex === thisIdx;
+                                            return (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    prefetch={false}
+                                                    onClick={handleNavClick}
+                                                    data-nav-index={isExpanded ? thisIdx : undefined}
+                                                    aria-current={active ? "page" : undefined}
+                                                    className={rowClassName(active, focused)}
+                                                >
+                                                    <span className="shrink-0">{item.icon}</span>
+                                                    <span className="truncate">{getItemLabel(item.href, item.id)}</span>
+                                                    {focused && <CursorRing groupId={RAIL_CURSOR_GROUP} />}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </motion.div>
                 </nav>
 
                 {/* Bottom section - user info */}
-                <div className="border-t border-slate-200/50 dark:border-slate-700/40 flex-shrink-0 p-2">
+                <div className="border-t border-[var(--hh-border)] flex-shrink-0 p-2">
                     {/* User Info Card */}
                     <Link
                         href="/profile"
                         prefetch={false}
                         onClick={handleNavClick}
-                        className="pressable flex items-center gap-3 p-2 rounded-2xl hover:bg-miku/8 dark:hover:bg-miku/12 group"
+                        className="hh-press group flex items-center gap-3 p-2 rounded-[var(--hh-radius-md)] border border-transparent hover:border-[var(--hh-border)] hover:bg-[var(--hh-surface-2)]"
                     >
                         {/* Avatar */}
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-miku to-blue-400 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/40 dark:ring-white/10">
+                        <div className="w-9 h-9 rounded-[var(--hh-radius-sm)] bg-[var(--hh-accent)] flex items-center justify-center flex-shrink-0 overflow-hidden border border-[var(--hh-border)]">
                             {activeAccount ? (
                                 <Image
                                     src={
@@ -818,7 +897,7 @@ export default function Sidebar({
                                     unoptimized
                                 />
                             ) : (
-                                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-5 h-5 text-[var(--hh-text-on-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                             )}
@@ -826,16 +905,16 @@ export default function Sidebar({
 
                         {/* User Info */}
                         <div className="flex-grow min-w-0">
-                            <div className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate group-hover:text-miku transition-colors">
+                            <div className="text-sm font-semibold text-[var(--hh-text-primary)] truncate">
                                 {activeAccount?.userGamedata?.name || activeAccount?.nickname || t("settings.sidebar.notLoggedIn")}
                             </div>
-                            <div className="text-xs text-slate-400 dark:text-slate-500 truncate">
+                            <div className="text-xs text-[var(--hh-text-tertiary)] truncate">
                                 {activeAccount ? t("settings.sidebar.manageAccount") : t("settings.sidebar.bindAccount")}
                             </div>
                         </div>
 
                         {/* Arrow Icon */}
-                        <svg className="w-5 h-5 text-slate-400 group-hover:text-miku transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-[var(--hh-text-tertiary)] group-hover:text-[var(--hh-accent-deep)] transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                     </Link>

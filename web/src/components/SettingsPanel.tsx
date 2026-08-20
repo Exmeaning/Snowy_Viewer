@@ -8,6 +8,7 @@ import { getMotionTransition } from "@/lib/motion";
 import { UNIT_DATA, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { useMasterData } from "@/contexts/MasterDataContext";
 import { ADS_SETTINGS_VISIBLE } from "@/lib/ads";
+import { playHandheldSound } from "@/lib/handheld-sound";
 import { MOE_LOGO_URL } from "@/lib/assets";
 import {
     getShortcutById,
@@ -202,6 +203,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         setShowAds,
         backgroundAnimationBudget,
         setBackgroundAnimationBudget,
+        handheldSoundEnabled,
+        setHandheldSoundEnabled,
         serverSource,
         setServerSource,
     } = useTheme();
@@ -455,6 +458,51 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                         );
                                                     })}
                                                 </div>
+                                            </div>
+
+                                            {/* UI Sound Segmented Control */}
+                                            <div>
+                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    {t("settings.uiSound.sectionTitle")}
+                                                </div>
+                                                <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60 relative">
+                                                    {[
+                                                        { id: "on", labelKey: "settings.uiSound.on" },
+                                                        { id: "off", labelKey: "settings.uiSound.off" },
+                                                    ].map((option) => {
+                                                        const isSelected = handheldSoundEnabled === (option.id === "on");
+                                                        return (
+                                                            <button
+                                                                key={option.id}
+                                                                onClick={() => {
+                                                                    const nextEnabled = option.id === "on";
+                                                                    setHandheldSoundEnabled(nextEnabled);
+                                                                    // Let the user hear what they just turned on.
+                                                                    if (nextEnabled) playHandheldSound("toggle");
+                                                                }}
+                                                                className={`relative flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors duration-150 select-none ${
+                                                                    isSelected
+                                                                        ? "text-white"
+                                                                        : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                                                                }`}
+                                                            >
+                                                                {isSelected && (
+                                                                    <motion.div
+                                                                        layoutId="activeUiSoundPill"
+                                                                        className="absolute inset-0 bg-miku rounded-lg shadow-sm"
+                                                                        transition={overlayTransition}
+                                                                    />
+                                                                )}
+                                                                <span className="relative z-10">{t(option.labelKey)}</span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                                <p className="mt-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                                                    {handheldSoundEnabled
+                                                        ? t("settings.uiSound.onDescription")
+                                                        : t("settings.uiSound.offDescription")}
+                                                </p>
                                             </div>
 
                                             {/* Theme Color Dropdown */}
