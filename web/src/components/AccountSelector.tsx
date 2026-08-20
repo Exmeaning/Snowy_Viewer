@@ -44,8 +44,8 @@ export default function AccountSelector({ onSelect, currentUserId, currentServer
     return (
         <div className="mb-3">
             <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs font-medium text-slate-500">{t("common.account.savedAccounts")}</span>
-                <span className="text-[10px] text-slate-400">{t("common.account.quickFill")}</span>
+                <span className="text-xs font-medium text-[var(--hh-text-secondary)]">{t("common.account.savedAccounts")}</span>
+                <span className="text-[10px] text-[var(--hh-text-tertiary)]">{t("common.account.quickFill")}</span>
             </div>
             <div className="flex gap-2 flex-wrap">
                 {accounts.map((acc) => {
@@ -61,13 +61,16 @@ export default function AccountSelector({ onSelect, currentUserId, currentServer
                                 setActiveAccount(acc.id);
                                 onSelect(acc.gameId, acc.server);
                             }}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                            /* Same pill recipe as AccountSelectorBar: these two
+                               controls appear on the same pages and must not read as
+                               two different components. */
+                            className={`hh-press hh-focusable flex items-center gap-2 px-3 py-1.5 rounded-[var(--hh-radius-md)] text-xs font-medium border cursor-pointer transition-colors duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] ${
                                 isActive
-                                    ? "bg-miku/10 border-miku/40 text-miku shadow-sm"
-                                    : "bg-white/60 border-slate-200/60 text-slate-600 hover:border-miku/30 hover:bg-miku/5"
+                                    ? "bg-[var(--hh-accent-wash)] border-[var(--hh-accent)] text-[var(--hh-accent-deep)]"
+                                    : "bg-[var(--hh-surface-2)] border-[var(--hh-border)] text-[var(--hh-text-secondary)] hover:border-[var(--hh-accent)] hover:bg-[var(--hh-surface-3)]"
                             }`}
                         >
-                            <div className="w-5 h-5 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">
+                            <div className="w-5 h-5 rounded-[var(--hh-radius-full)] overflow-hidden bg-[var(--hh-surface-sunken)] flex-shrink-0">
                                 <Image
                                     src={avatarUrl}
                                     alt=""
@@ -80,9 +83,11 @@ export default function AccountSelector({ onSelect, currentUserId, currentServer
                             {displayName && (
                                 <span className="font-bold truncate max-w-[80px]">{displayName}</span>
                             )}
-                            <span className="font-mono">{acc.gameId}</span>
-                            <span className={`px-1 py-0.5 rounded text-[10px] font-bold ${
-                                isActive ? "bg-miku/20 text-miku" : "bg-slate-100 text-slate-500"
+                            <span className="hh-numeric">{acc.gameId}</span>
+                            <span className={`px-1 py-0.5 rounded-[var(--hh-radius-xs)] text-[10px] font-bold ${
+                                isActive
+                                    ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                                    : "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]"
                             }`}>
                                 {t(`common.server.${acc.server}`)}
                             </span>

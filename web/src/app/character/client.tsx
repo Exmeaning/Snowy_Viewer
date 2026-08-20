@@ -73,8 +73,8 @@ function CharacterListContent() {
         return (
             <div className="flex h-[50vh] w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-miku border-t-transparent rounded-full animate-spin" />
-                    <span className="text-slate-500">{t("page.character.loadingData")}</span>
+                    <div className="w-12 h-12 border-4 border-[var(--hh-border)] border-t-[var(--hh-accent)] rounded-[var(--hh-radius-full)] animate-spin" />
+                    <span className="text-[var(--hh-text-secondary)]">{t("page.character.loadingData")}</span>
                 </div>
             </div>
         );
@@ -83,12 +83,12 @@ function CharacterListContent() {
     if (error) {
         return (
             <div className="container mx-auto px-4 py-8">
-                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">{t("page.character.loadFailed")}</p>
-                    <p>{error}</p>
+                <div className="p-4 bg-[var(--hh-surface-2)] border border-[var(--hh-accent-alert)] rounded-[var(--hh-radius-lg)] text-sm text-[var(--hh-text-primary)]">
+                    <p className="font-bold text-[var(--hh-accent-alert)]">{t("page.character.loadFailed")}</p>
+                    <p className="text-[var(--hh-text-secondary)]">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="mt-2 text-red-500 underline hover:no-underline"
+                        className="hh-press hh-focusable mt-2 rounded-[var(--hh-radius-sm)] text-[var(--hh-accent-deep)] underline hover:no-underline"
                     >
                         {t("common.action.retry")}
                     </button>
@@ -101,13 +101,13 @@ function CharacterListContent() {
         <div className="container mx-auto px-4 sm:px-6 py-8">
             {/* Page Header */}
             <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.character.badge")}</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                    <span className="hh-label text-[var(--hh-accent-deep)] text-xs">{t("page.character.badge")}</span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    {t("page.character.title")} <span className="text-miku">{t("page.character.titleHighlight")}</span>
+                <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">
+                    {t("page.character.title")} <span className="text-[var(--hh-accent-deep)]">{t("page.character.titleHighlight")}</span>
                 </h1>
-                    <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                     {t("page.character.description")}
                 </p>
             </div>
@@ -118,9 +118,9 @@ function CharacterListContent() {
                     const iconName = UNIT_FIELD_ICONS[unitId] || "vs.webp";
 
                     return (
-                        <div key={unitId} className="ios-glass-card rounded-2xl overflow-hidden">
+                        <div key={unitId} className="hh-tile overflow-hidden">
                             {/* Unit Header */}
-                            <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center gap-4">
+                            <div className="px-6 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] flex items-center gap-4">
                                 <div className="w-12 h-12 relative shrink-0">
                                     <Image
                                         src={`/data/icon/${iconName}`}
@@ -131,16 +131,16 @@ function CharacterListContent() {
                                     />
                                 </div>
                                 <div>
-                                    <h2 className="font-bold text-lg text-slate-800">
+                                    <h2 className="hh-title font-bold text-lg text-[var(--hh-text-primary)]">
                                         <TranslatedText
                                             original={unit.unitName}
                                             category="units"
                                             field="unitName"
                                             inline
-                                            translationClassName="text-sm text-slate-500 font-normal ml-2"
+                                            translationClassName="text-sm text-[var(--hh-text-secondary)] font-normal ml-2"
                                         />
                                     </h2>
-                                    <div className="text-xs text-slate-500 line-clamp-1">
+                                    <div className="text-xs text-[var(--hh-text-secondary)] line-clamp-1">
                                         <TranslatedText
                                             original={unit.profileSentence}
                                             category="units"
@@ -167,7 +167,11 @@ function CharacterListContent() {
                                                 <Link
                                                     key={chara.id}
                                                     href={`/character/${chara.id}`}
-                                                    className="group relative h-[160px] sm:h-[220px] md:h-[280px] lg:h-[320px] rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive flex items-center justify-center p-1 sm:p-2"
+                                                    /* The portrait sits in a sunken well rather than on a
+                                                       raised card: the artwork is the object here, and a
+                                                       second tile inside the unit tile would stack two
+                                                       identical surfaces with nothing between them. */
+                                                    className="hh-press hh-focusable group relative h-[160px] sm:h-[220px] md:h-[280px] lg:h-[320px] rounded-[var(--hh-radius-md)] overflow-hidden bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)] hover:border-[var(--hh-accent)] transition-colors duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] flex items-center justify-center p-1 sm:p-2"
                                                 >
                                                     <div className="relative w-full h-full">
                                                         <Image
@@ -178,8 +182,9 @@ function CharacterListContent() {
                                                             unoptimized
                                                         />
                                                     </div>
-                                                    {/* Character name overlay on hover */}
-                                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {/* Name overlay. The dark ramp is functional: it is white
+                                                        text over character key art of unknown brightness. */}
+                                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <p className="text-white text-xs font-bold text-center truncate">
                                                             {characterName}
                                                         </p>
@@ -203,7 +208,7 @@ export default function CharacterClient() {
 
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.character.loadingFallback")}</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("page.character.loadingFallback")}</div>}>
                 <CharacterListContent />
             </Suspense>
         </MainLayout>

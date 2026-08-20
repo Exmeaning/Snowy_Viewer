@@ -23,10 +23,13 @@ interface QuickBindFormProps {
 }
 
 const DefaultIcon = () => (
-    <svg className="w-8 h-8 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg className="w-8 h-8 text-[var(--hh-accent-deep)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
     </svg>
 );
+
+/** Field label. */
+const FIELD_LABEL_CLASS = "block text-sm font-medium text-[var(--hh-text-primary)] mb-1.5";
 
 export default function QuickBindForm({
     onAccountAdded,
@@ -82,19 +85,19 @@ export default function QuickBindForm({
     }, [returnTo, t]);
 
     return (
-        <div className="glass-card p-6 sm:p-8 rounded-2xl">
+        <div className="hh-tile p-6 sm:p-8">
             <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-miku/10 flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-[var(--hh-radius-full)] bg-[var(--hh-accent-wash)] border border-[var(--hh-accent-line)] flex items-center justify-center">
                     {icon || <DefaultIcon />}
                 </div>
-                <h2 className="text-lg font-bold text-primary-text mb-1">{t("common.account.quickBindTitle")}</h2>
-                <p className="text-xs text-slate-400">{resolvedDescription}</p>
+                <h2 className="hh-title text-lg text-[var(--hh-text-primary)] mb-1">{t("common.account.quickBindTitle")}</h2>
+                <p className="text-xs text-[var(--hh-text-tertiary)]">{resolvedDescription}</p>
             </div>
 
             <div className="space-y-4 max-w-sm mx-auto">
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                        {t("common.form.gameUid")} <span className="text-red-400">*</span>
+                    <label className={FIELD_LABEL_CLASS}>
+                        {t("common.form.gameUid")} <span className="text-[var(--hh-accent-alert)]">*</span>
                     </label>
                     <input
                         type="text"
@@ -102,22 +105,22 @@ export default function QuickBindForm({
                         onChange={(e) => setGameId(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                         placeholder={t("common.account.inputGameUid")}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                        className="hh-input w-full px-4 py-2.5 text-sm"
                         disabled={isVerifying}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("common.form.server")}</label>
+                    <label className={FIELD_LABEL_CLASS}>{t("common.form.server")}</label>
                     <div className="grid grid-cols-3 gap-2">
                         {SERVER_OPTIONS.map((s) => (
                             <button
                                 key={s.value}
                                 onClick={() => setServer(s.value)}
                                 disabled={isVerifying}
-                                className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${server === s.value
-                                    ? "bg-miku text-white shadow-md shadow-miku/20"
-                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                    }`}
+                                // No px/py/text-* alongside .hh-chip: handheld-os.css is
+                                // unlayered and outranks Tailwind's layered utilities, so
+                                // those would compile and then do nothing.
+                                className={`hh-chip hh-press hh-focusable cursor-pointer ${server === s.value ? "hh-chip-active" : ""}`}
                             >
                                 {t(`common.server.${s.value}`)}
                             </button>
@@ -126,14 +129,14 @@ export default function QuickBindForm({
                 </div>
 
                 {(error || oauthError) && (
-                    <div className="p-3 rounded-xl bg-red-50 border border-red-200/50">
+                    <div className="p-3 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-2)] border border-[var(--hh-accent-alert)]">
                         <div className="flex items-start gap-2">
-                            <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-4 h-4 text-[var(--hh-accent-alert)] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <div>
-                                <p className="text-xs font-medium text-red-700">{error || oauthError}</p>
-                                <ExternalLink href="https://haruki.seiunx.com" className="text-xs text-miku hover:underline mt-1 inline-block">
+                                <p className="text-xs font-medium text-[var(--hh-text-primary)]">{error || oauthError}</p>
+                                <ExternalLink href="https://haruki.seiunx.com" className="text-xs text-[var(--hh-accent-deep)] hover:underline mt-1 inline-block">
                                     {t("common.account.goHaruki")}
                                 </ExternalLink>
                             </div>
@@ -145,11 +148,11 @@ export default function QuickBindForm({
                     <button
                         onClick={handleSubmit}
                         disabled={!gameId.trim() || isVerifying}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold text-sm shadow-lg shadow-miku/20 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="hh-btn hh-btn-primary hh-press hh-focusable w-full text-sm cursor-pointer disabled:opacity-50"
                     >
                         {isVerifying ? (
                             <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <div className="w-4 h-4 border-2 border-[var(--hh-text-on-accent)]/30 border-t-[var(--hh-text-on-accent)] rounded-[var(--hh-radius-full)] animate-spin" />
                                 {t("common.account.verifyingWithDots")}
                             </>
                         ) : (
@@ -159,15 +162,15 @@ export default function QuickBindForm({
                     <button
                         onClick={() => void handleOAuthBind()}
                         disabled={isVerifying}
-                        className="w-full px-6 py-3 border border-miku/30 text-miku rounded-xl font-bold text-sm hover:bg-miku/5 transition-all disabled:opacity-50"
+                        className="hh-btn hh-press hh-focusable w-full text-sm cursor-pointer disabled:opacity-50"
                     >
                         {t("common.account.oauthAuthorizeBind")}
                     </button>
                 </div>
 
-                <p className="text-[10px] text-slate-400 text-center">
+                <p className="text-[10px] text-[var(--hh-text-tertiary)] text-center">
                     {t("common.account.manualBindHintStart")}{" "}
-                    <ExternalLink href="https://haruki.seiunx.com" className="text-miku hover:underline">
+                    <ExternalLink href="https://haruki.seiunx.com" className="text-[var(--hh-accent-deep)] hover:underline">
                         {t("common.account.manualBindHintHaruki")}
                     </ExternalLink>
                     {" "}{t("common.account.manualBindHintEnd")}

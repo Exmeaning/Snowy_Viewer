@@ -249,17 +249,17 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
 
     return (
         <div className="w-full">
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">
                 {t("page.deckRecommend.selector.music")} <span className="text-red-400">*</span>
             </label>
 
             <button
                 onClick={() => setModalOpen(true)}
-                className="w-full flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-miku/50 transition-all text-left shadow-sm group"
+                className="hh-press hh-focusable w-full flex items-center gap-3 p-3 bg-[var(--hh-surface-2)] border border-[var(--hh-border)] rounded-[var(--hh-radius-md)] hover:border-[var(--hh-accent-line)] transition-colors text-left group"
             >
                 {selectedMusic ? (
                     <>
-                        <div className="relative w-16 aspect-square bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100">
+                        <div className="relative w-16 aspect-square bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-sm)] overflow-hidden flex-shrink-0 border border-[var(--hh-border)]">
                             <Image
                                 src={getMusicJacketUrl(selectedMusic.assetbundleName, assetSource)}
                                 alt={selectedMusic.title}
@@ -270,29 +270,29 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
-                                <span className="text-xs font-mono text-slate-400 bg-slate-100 px-1.5 rounded-md">
+                                <span className="hh-numeric text-xs font-mono text-[var(--hh-text-secondary)] bg-[var(--hh-surface-sunken)] px-1.5 rounded-[var(--hh-radius-xs)]">
                                     #{selectedMusic.id}
                                 </span>
                             </div>
-                            <div className="text-sm font-bold text-slate-700 truncate group-hover:text-miku transition-colors">
+                            <div className="text-sm font-bold text-[var(--hh-text-primary)] truncate group-hover:text-miku transition-colors">
                                 {selectedMusic.title}
                             </div>
-                            <div className="text-xs text-slate-400 truncate">
+                            <div className="text-xs text-[var(--hh-text-tertiary)] truncate">
                                 {selectedMusic.lyricist} / {selectedMusic.composer}
                             </div>
                         </div>
                     </>
                 ) : (
                     <>
-                        <div className="w-16 aspect-square bg-slate-100 rounded-lg flex items-center justify-center text-slate-300">
+                        <div className="w-16 aspect-square bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-sm)] flex items-center justify-center text-[var(--hh-text-tertiary)]">
                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                             </svg>
                         </div>
-                        <span className="text-slate-400 text-sm">{t("page.deckRecommend.selector.selectMusicPlaceholder")}</span>
+                        <span className="text-[var(--hh-text-tertiary)] text-sm">{t("page.deckRecommend.selector.selectMusicPlaceholder")}</span>
                     </>
                 )}
-                <div className="text-slate-300">
+                <div className="text-[var(--hh-text-tertiary)]">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
                     </svg>
@@ -307,44 +307,43 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                 <div>
                     {/* Recommendations Section */}
                     {showRecommendations && recommendedMusics.length > 0 && !searchQuery && (
-                        <div className="mb-6 bg-slate-50/50 rounded-xl border border-slate-100 p-4">
+                        <div className="hh-well mb-6 p-4">
                             <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                                    <span className="w-1 h-3 bg-miku rounded-full"></span>
+                                <h3 className="hh-title text-sm text-[var(--hh-text-primary)] flex items-center gap-2">
+                                    <span className="w-[3px] h-3 rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent)]"></span>
                                     {t("page.deckRecommend.selector.recommendations")}
-                                    <span className="text-xs font-normal text-slate-400 ml-1">
+                                    <span className="text-xs font-normal text-[var(--hh-text-tertiary)] ml-1">
                                         {t("page.deckRecommend.selector.basedOnMode", { mode: liveType === "cheerful" ? "Multi" : liveType.charAt(0).toUpperCase() + liveType.slice(1) })}
                                     </span>
                                 </h3>
 
-                                {/* Tabs */}
-                                <div className="flex bg-slate-100 rounded-lg p-0.5">
+                                {/* Metric tabs. .hh-segment is authored to fill its row, which
+                                    would stretch it across this header, so it is pinned to
+                                    shrink-to-fit here. */}
+                                <div className="hh-segment w-auto grow-0 shrink-0" role="tablist">
                                     {metaMode !== "solo" && (
                                         <button
+                                            role="tab"
+                                            aria-selected={effectiveRecommendType === "efficiency"}
                                             onClick={() => setRecommendType("efficiency")}
-                                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${effectiveRecommendType === "efficiency"
-                                                ? "bg-white text-miku shadow-sm"
-                                                : "text-slate-500 hover:text-slate-700"
-                                                }`}
+                                            className="hh-segment-item hh-press cursor-pointer"
                                         >
                                             {t("page.deckRecommend.selector.efficiency")}
                                         </button>
                                     )}
                                     <button
+                                        role="tab"
+                                        aria-selected={effectiveRecommendType === "pt"}
                                         onClick={() => setRecommendType("pt")}
-                                        className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${effectiveRecommendType === "pt"
-                                            ? "bg-white text-miku shadow-sm"
-                                            : "text-slate-500 hover:text-slate-700"
-                                            }`}
+                                        className="hh-segment-item hh-press cursor-pointer"
                                     >
                                         PT
                                     </button>
                                     <button
+                                        role="tab"
+                                        aria-selected={effectiveRecommendType === "score"}
                                         onClick={() => setRecommendType("score")}
-                                        className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${effectiveRecommendType === "score"
-                                            ? "bg-white text-miku shadow-sm"
-                                            : "text-slate-500 hover:text-slate-700"
-                                            }`}
+                                        className="hh-segment-item hh-press cursor-pointer"
                                     >
                                         {t("page.deckRecommend.selector.score")}
                                     </button>
@@ -357,19 +356,20 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                                     <div
                                         key={item.music.id}
                                         onClick={() => handleSelect(item.music)}
-                                        className="cursor-pointer bg-white rounded-lg border border-slate-200 hover:border-miku/50 hover:shadow-md transition-all active:scale-[0.99] flex items-center gap-3 p-2 group"
+                                        className="hh-press cursor-pointer bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] hover:border-[var(--hh-accent-line)] transition-colors flex items-center gap-3 p-2 group"
                                     >
-                                        {/* Rank */}
-                                        <div className={`w-6 h-6 flex-shrink-0 flex items-center justify-center text-xs font-bold rounded ${item.rank === 1 ? "bg-yellow-100 text-yellow-600" :
-                                            item.rank === 2 ? "bg-slate-100 text-slate-500" :
-                                                item.rank === 3 ? "bg-amber-100 text-amber-700" :
-                                                    "bg-slate-50 text-slate-400"
+                                        {/* Rank. Gold / silver / bronze are medal semantics, so those
+                                            three tints stay literal; rank 4+ falls back to a neutral. */}
+                                        <div className={`hh-numeric w-6 h-6 flex-shrink-0 flex items-center justify-center text-xs font-bold rounded-[var(--hh-radius-xs)] ${item.rank === 1 ? "bg-yellow-400/20 text-yellow-600" :
+                                            item.rank === 2 ? "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]" :
+                                                item.rank === 3 ? "bg-amber-500/20 text-amber-700" :
+                                                    "bg-[var(--hh-surface-1)] text-[var(--hh-text-tertiary)]"
                                             }`}>
                                             #{item.rank}
                                         </div>
 
                                         {/* Image */}
-                                        <div className="relative w-10 h-10 rounded-md overflow-hidden bg-slate-100 flex-shrink-0">
+                                        <div className="relative w-10 h-10 rounded-[var(--hh-radius-xs)] overflow-hidden bg-[var(--hh-surface-sunken)] flex-shrink-0">
                                             <Image
                                                 src={getMusicJacketUrl(item.music.assetbundleName, assetSource)}
                                                 alt={item.music.title}
@@ -381,16 +381,16 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
 
                                         {/* Info */}
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-bold text-slate-700 truncate group-hover:text-miku transition-colors">
+                                            <div className="text-sm font-bold text-[var(--hh-text-primary)] truncate group-hover:text-miku transition-colors">
                                                 {item.music.title}
                                             </div>
                                             {translations?.music?.title?.[item.music.title] && (
-                                                <div className="text-xs text-slate-500 truncate mb-0.5">
+                                                <div className="text-xs text-[var(--hh-text-secondary)] truncate mb-0.5">
                                                     {translations.music.title[item.music.title]}
                                                 </div>
                                             )}
                                             <div className="flex items-center gap-2">
-                                                <div className="text-[10px] text-slate-400 truncate">
+                                                <div className="text-[10px] text-[var(--hh-text-tertiary)] truncate">
                                                     {item.music.composer}
                                                 </div>
                                             </div>
@@ -398,10 +398,10 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
 
                                         {/* Value */}
                                         <div className="text-right">
-                                            <div className="text-sm font-black text-miku font-mono">
+                                            <div className="hh-numeric text-sm font-bold text-miku font-mono">
                                                 {item.value.toFixed(0)}
                                             </div>
-                                            <div className="text-[10px] text-slate-400">
+                                            <div className="text-[10px] text-[var(--hh-text-tertiary)]">
                                                 PSPI
                                             </div>
                                         </div>
@@ -442,7 +442,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                         />
 
                         {loading ? (
-                            <div className="py-20 text-center text-slate-400">{t("common.state.loading")}</div>
+                            <div className="py-20 text-center text-[var(--hh-text-tertiary)]">{t("common.state.loading")}</div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {filteredMusics.slice(0, 50).map(music => (
@@ -455,7 +455,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                                     </div>
                                 ))}
                                 {filteredMusics.length > 50 && (
-                                    <div className="col-span-full py-4 text-center text-slate-400 text-sm">
+                                    <div className="col-span-full py-4 text-center text-[var(--hh-text-tertiary)] text-sm">
                                         {t("page.deckRecommend.selector.first50Only")}
                                     </div>
                                 )}
@@ -474,8 +474,8 @@ function MusicSelectionItem({ music, translations }: { music: IMusicInfo, transl
     const jacketUrl = getMusicJacketUrl(music.assetbundleName, assetSource);
 
     return (
-        <div className="group bg-white rounded-xl shadow-sm ring-1 ring-slate-200 overflow-hidden transition-all hover:shadow-md hover:ring-miku/50 active:scale-[0.98] flex items-center gap-3 p-2">
-            <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+        <div className="group hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden hover:border-[var(--hh-accent-line)] flex items-center gap-3 p-2">
+            <div className="relative w-14 h-14 rounded-[var(--hh-radius-sm)] overflow-hidden flex-shrink-0 bg-[var(--hh-surface-sunken)]">
                 <Image
                     src={jacketUrl}
                     alt={music.title}
@@ -487,7 +487,7 @@ function MusicSelectionItem({ music, translations }: { music: IMusicInfo, transl
 
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-0.5">
-                    <div className="text-xs font-mono text-slate-400 bg-slate-50 px-1 rounded">
+                    <div className="hh-numeric text-xs font-mono text-[var(--hh-text-secondary)] bg-[var(--hh-surface-sunken)] px-1 rounded-[var(--hh-radius-xs)]">
                         #{music.id}
                     </div>
                     {/* Categories Badges */}
@@ -501,16 +501,16 @@ function MusicSelectionItem({ music, translations }: { music: IMusicInfo, transl
                     </div>
                 </div>
 
-                <h3 className="font-bold text-slate-700 text-sm line-clamp-1 group-hover:text-miku transition-colors custom-font-jp">
+                <h3 className="hh-title text-[var(--hh-text-primary)] text-sm line-clamp-1 group-hover:text-miku transition-colors custom-font-jp">
                     {music.title}
                 </h3>
                 {translations?.music?.title?.[music.title] && (
-                    <div className="text-xs text-slate-500 line-clamp-1 mb-0.5">
+                    <div className="text-xs text-[var(--hh-text-secondary)] line-clamp-1 mb-0.5">
                         {translations.music.title[music.title]}
                     </div>
                 )}
 
-                <div className="text-xs text-slate-400 line-clamp-1">
+                <div className="text-xs text-[var(--hh-text-tertiary)] line-clamp-1">
                     {music.composer}
                 </div>
             </div>

@@ -41,6 +41,29 @@ type Slide = EventSlide | GachaSlide | BirthdaySlide;
 // ─── Auto-play interval ───
 const AUTO_PLAY_INTERVAL = 5000;
 
+/**
+ * Carousel arrow. Shared by prev/next so only the edge offset differs.
+ *
+ * bg-black/55 rather than the previous /30 + backdrop-blur-sm: the blur was
+ * carrying the contrast, and once it is dropped a 30% tint leaves the white
+ * chevron unreadable over a bright slide. The tint now does that job alone.
+ */
+const CAROUSEL_ARROW_CLASS =
+    "hh-press hh-focusable absolute top-1/2 -translate-y-1/2 z-20 w-8 h-8 " +
+    "rounded-[var(--hh-radius-full)] bg-black/55 text-white flex items-center justify-center " +
+    "opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-opacity hover:bg-black/75";
+
+/**
+ * Scrim over slide artwork.
+ *
+ * This gradient is FUNCTIONAL and stays: every slide renders white text and
+ * white badges directly on top of user-facing key art whose brightness is
+ * unknown, so without the dark ramp the bottom info bar is unreadable on light
+ * artwork. It is deliberately hardcoded black rather than surface-derived —
+ * it darkens a photo, it is not a surface, so it must not flip with the theme.
+ */
+const SLIDE_SCRIM_CLASS = "absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10";
+
 export default function HeroCarousel() {
     const { assetSource, themeColor, isShowSpoiler } = useTheme();
     const { t, formatDate: formatLocaleDate } = useI18n();
@@ -214,13 +237,13 @@ export default function HeroCarousel() {
 
     if (isLoading) {
         return (
-            <div className="w-full h-[180px] lg:h-[260px] rounded-2xl animate-pulse bg-gradient-to-br from-slate-100 to-slate-200" />
+            <div className="w-full h-[180px] lg:h-[260px] rounded-[var(--hh-radius-lg)] animate-pulse bg-[var(--hh-surface-sunken)]" />
         );
     }
 
     if (slides.length === 0) {
         return (
-            <div className="w-full h-[180px] lg:h-[260px] rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
+            <div className="w-full h-[180px] lg:h-[260px] hh-well flex items-center justify-center text-[var(--hh-text-tertiary)]">
                 <p className="font-medium">{t("page.home.hero.noContent")}</p>
             </div>
         );
@@ -228,7 +251,7 @@ export default function HeroCarousel() {
 
     return (
         <div
-            className="relative w-full h-[180px] lg:h-[260px] rounded-2xl overflow-hidden group/carousel select-none"
+            className="relative w-full h-[180px] lg:h-[260px] rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] overflow-hidden group/carousel select-none"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
             onTouchStart={handleTouchStart}
@@ -284,12 +307,15 @@ export default function HeroCarousel() {
                 </div>
             ))}
 
-            {/* Navigation Arrows */}
+            {/* Navigation Arrows. Round is right here — they are circular hit
+                targets, the same exception the dock icons claim. The blur is gone;
+                the tint is raised to a solid-enough black that the white glyph
+                stays legible over any slide artwork on its own. */}
             {slides.length > 1 && (
                 <>
                     <button
                         onClick={(e) => { e.preventDefault(); goPrev(); }}
-                        className="pressable absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/50"
+                        className={`${CAROUSEL_ARROW_CLASS} left-2`}
                         aria-label={t("page.home.hero.previousSlide")}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -298,7 +324,7 @@ export default function HeroCarousel() {
                     </button>
                     <button
                         onClick={(e) => { e.preventDefault(); goNext(); }}
-                        className="pressable absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/50"
+                        className={`${CAROUSEL_ARROW_CLASS} right-2`}
                         aria-label={t("page.home.hero.nextSlide")}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,10 +341,10 @@ export default function HeroCarousel() {
                         <button
                             key={index}
                             onClick={() => goTo(index)}
-                            className={`pressable rounded-full transition-[width,background-color] duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${
+                            className={`hh-press rounded-[var(--hh-radius-full)] transition-[width,background-color] duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] ${
                                 index === currentIndex
-                                    ? "w-6 h-2 bg-white shadow-sm"
-                                    : "w-2 h-2 bg-white/50 hover:bg-white/70"
+                                    ? "w-6 h-2 bg-white"
+                                    : "w-2 h-2 bg-white/55 hover:bg-white/80"
                             }`}
                             aria-label={t("page.home.hero.goToSlide", { index: index + 1 })}
                         />
@@ -381,7 +407,7 @@ function EventSlideContent({
                 loading={isActive ? "eager" : "lazy"}
                 fetchPriority={isActive ? "high" : undefined}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+            <div className={SLIDE_SCRIM_CLASS} />
 
             {/* Event Logo (centered) */}
             <div className="absolute inset-0 flex items-center justify-center p-8 pb-16">
@@ -403,7 +429,7 @@ function EventSlideContent({
                     {/* Badges */}
                     <div className="flex items-center gap-2 flex-wrap">
                         <span
-                            className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded text-white shadow-sm"
+                            className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-white"
                             style={{ backgroundColor: statusDisplay.color }}
                         >
                             {statusLabel}
@@ -412,27 +438,30 @@ function EventSlideContent({
                             {eventTypeName}
                         </span>
                         {staminaLabel && (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/20 backdrop-blur-sm text-amber-300">
+                            /* Sits on the same artwork as the rest of the bar, so the
+                               chip needs its own opaque-enough plate now that the blur
+                               is gone. */
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] bg-black/55 text-amber-300">
                                 ⚡ {staminaLabel}
                             </span>
                         )}
                     </div>
                     {/* Title */}
-                    <h3 className="font-bold text-white text-sm sm:text-base leading-tight line-clamp-1 drop-shadow-sm">
+                    <h3 className="font-bold text-white text-sm sm:text-base leading-tight line-clamp-1">
                         {event.name}
                     </h3>
                     {translatedName && translatedName !== event.name && (
                         <p className="text-xs text-white/60 line-clamp-1">{translatedName}</p>
                     )}
                     {/* Date */}
-                    <div className="text-[10px] sm:text-xs text-white/50 font-mono">
+                    <div className="text-[10px] sm:text-xs text-white/60 hh-numeric">
                         {formatDate(event.startAt)} - {formatDate(event.aggregateAt)}
                     </div>
                 </div>
 
                 {/* Progress percentage */}
                 {status === "ongoing" && (
-                    <div className="text-3xl lg:text-4xl font-black text-white/90 select-none tracking-tighter ml-4 shrink-0 drop-shadow-sm">
+                    <div className="text-3xl lg:text-4xl font-black text-white/90 hh-numeric select-none ml-4 shrink-0">
                         {Math.floor(progressPercent)}<span className="text-xl ml-0.5">%</span>
                     </div>
                 )}
@@ -499,9 +528,11 @@ function GachaSlideContent({
                     fetchPriority={isActive ? "high" : undefined}
                 />
             ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-100 to-purple-100" />
+                /* No pickup art: fall back to a flat sunken plate rather than a
+                   decorative pink/purple wash. */
+                <div className="absolute inset-0 bg-[var(--hh-surface-sunken)]" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+            <div className={SLIDE_SCRIM_CLASS} />
 
             {/* Gacha Logo (centered) */}
             <div className="absolute inset-0 flex items-center justify-center p-8 pb-16">
@@ -522,15 +553,15 @@ function GachaSlideContent({
                 <div className="flex items-end justify-between">
                     <div className="flex flex-col gap-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                            <span className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded text-white shadow-sm ${isUpcoming ? "bg-blue-500" : "bg-pink-500"}`}>
+                            <span className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-white ${isUpcoming ? "bg-blue-500" : "bg-pink-500"}`}>
                                 {isUpcoming ? t("page.home.hero.upcomingGacha") : t("page.home.hero.currentGacha")}
                             </span>
                         </div>
-                        <h3 className="font-bold text-white text-sm sm:text-base leading-tight line-clamp-1 drop-shadow-sm">
+                        <h3 className="font-bold text-white text-sm sm:text-base leading-tight line-clamp-1">
                             {gacha.name}
                         </h3>
                     </div>
-                    <div className="text-xs sm:text-sm font-bold text-white/70 ml-4 shrink-0">
+                    <div className="text-xs sm:text-sm font-bold text-white/80 hh-numeric ml-4 shrink-0">
                         {isUpcoming ? t("page.home.hero.gachaStartsAt", { date: formatDate(gacha.startAt) }) : formatRemaining(gacha.endAt)}
                     </div>
                 </div>
@@ -581,12 +612,15 @@ function BirthdaySlideContent({
                         loading={isActive ? "eager" : "lazy"}
                         fetchPriority={isActive ? "high" : undefined}
                     />
+                    {/* Horizontal scrim — functional for the same reason as
+                        SLIDE_SCRIM_CLASS, but ramped left-to-right because this
+                        slide's text column sits on the left rather than the base. */}
                     <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
                 </>
             ) : (
                 <div
                     className="absolute inset-0"
-                    style={{ background: `linear-gradient(135deg, ${charColor}40, ${charColor}15)` }}
+                    style={{ background: charColor }}
                 />
             )}
 
@@ -595,15 +629,15 @@ function BirthdaySlideContent({
                 <div className="flex items-center gap-4 lg:gap-6">
                     {/* Character Icon */}
                     <div
-                        className="relative w-16 h-16 lg:w-20 lg:h-20 shrink-0 rounded-full p-0.5 shadow-lg"
+                        className="relative w-16 h-16 lg:w-20 lg:h-20 shrink-0 rounded-[var(--hh-radius-full)] p-0.5"
                         style={{ backgroundColor: charColor }}
                     >
-                        <div className="w-full h-full rounded-full overflow-hidden bg-white">
+                        <div className="w-full h-full rounded-[var(--hh-radius-full)] overflow-hidden bg-[var(--hh-surface-2)]">
                             <Image
                                 src={getCharacterIconUrl(birthday.id)}
                                 alt={birthday.name}
                                 fill
-                                className="object-contain rounded-full"
+                                className="object-contain rounded-[var(--hh-radius-full)]"
                                 unoptimized
                             />
                         </div>
@@ -611,12 +645,10 @@ function BirthdaySlideContent({
 
                     {/* Text */}
                     <div>
-                        <div className="text-white/70 text-xs lg:text-sm font-medium mb-1">
+                        <div className="text-white/70 text-xs lg:text-sm font-medium hh-numeric mb-1">
                             {formatDate(new Date(2000, birthday.month - 1, birthday.day).getTime())}
                         </div>
-                        <h3
-                            className="text-xl lg:text-3xl font-black text-white drop-shadow-lg"
-                        >
+                        <h3 className="text-xl lg:text-3xl font-black text-white hh-display">
                             {isVirtualSinger(birthday.id)
                                 ? t("page.home.hero.anniversaryGreeting", { name: birthday.name })
                                 : t("page.home.hero.birthdayGreeting", { name: birthday.name })}

@@ -12,6 +12,20 @@ interface BreadcrumbGroupPageProps {
     group: NavGroupData;
 }
 
+/**
+ * Nav-group tile.
+ *
+ * The .hh-tile recipe is written out instead of using the class: handheld-os.css
+ * is unlayered while Tailwind utilities sit in `@layer utilities`, so .hh-tile's
+ * `border` and `background` shorthands outrank the group-hover:* variants beside
+ * them and the hover state would compile but never apply.
+ */
+const GROUP_TILE_CLASS =
+    "bg-[var(--hh-surface-2)] border border-[var(--hh-border)] rounded-[var(--hh-radius-lg)] " +
+    "shadow-[var(--hh-shadow-tile)] p-5 h-full " +
+    "transition-colors duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] " +
+    "group-hover:border-[var(--hh-accent)] group-hover:bg-[var(--hh-surface-3)]";
+
 export default function BreadcrumbGroupPage({ group }: BreadcrumbGroupPageProps) {
     const { setDetailName } = useBreadcrumb();
     const { t } = useI18n();
@@ -29,19 +43,19 @@ export default function BreadcrumbGroupPage({ group }: BreadcrumbGroupPageProps)
             <div className="container mx-auto px-4 sm:px-6 py-8 max-w-5xl">
                 {/* Title */}
                 <div className="flex items-center gap-3 mb-8">
-                    <div className="h-8 w-1.5 rounded-full bg-miku" />
-                    <h1 className="text-2xl font-bold text-primary-text">{groupLabel}</h1>
+                    <div className="h-7 w-1.5 rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent)]" />
+                    <h1 className="hh-title text-2xl text-[var(--hh-text-primary)]">{groupLabel}</h1>
                 </div>
 
                 {/* Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {group.items.map((item) => (
-                        <Link key={item.href} href={item.href} className="group">
-                            <div className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-miku/30 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-                                <h3 className="text-base font-bold text-slate-800 group-hover:text-miku transition-colors">
+                        <Link key={item.href} href={item.href} className="hh-press hh-focusable group rounded-[var(--hh-radius-lg)]">
+                            <div className={GROUP_TILE_CLASS}>
+                                <h3 className="hh-title text-base font-bold text-[var(--hh-text-primary)]">
                                     {getItemLabel(item.href)}
                                 </h3>
-                                <p className="text-sm text-slate-400 mt-1">
+                                <p className="text-sm text-[var(--hh-text-secondary)] mt-1">
                                     {getItemDescription(item.href)}
                                 </p>
                             </div>

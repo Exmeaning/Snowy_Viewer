@@ -111,17 +111,24 @@ export default function ScrollToTop() {
             onPointerUp={handlePressEnd}
             onPointerLeave={handlePressEnd}
             onPointerCancel={handlePressEnd}
-            className={`pressable fixed bottom-10 right-8 p-3 rounded-full material-regular border border-miku/20 shadow-lg transition-[opacity,transform,background-color,box-shadow,color] duration-[var(--duration-base)] ease-[var(--ease-out-soft)] z-[100] transform group ${isVisible
+            /* Round is kept — this is one of the two genuinely circular objects in
+               the shell, the same exception .hh-dock-icon claims. What goes is the
+               glass: an opaque --hh-surface-2 face with a 1px border replaces the
+               translucent fill and the colored accent glow, and the hover lift is
+               dropped so the only transform left is the press. The active state is
+               a solid accent fill, matching how the side rail marks its current
+               row. */
+            className={`hh-press hh-focusable fixed bottom-10 right-8 p-3 rounded-[var(--hh-radius-full)] border shadow-[var(--hh-shadow-float)] transition-[opacity,transform,background-color,border-color,color] duration-[var(--hh-dur-screen)] ease-[var(--hh-ease-out)] z-[100] group ${isVisible
                 ? "opacity-100 translate-y-0 scale-100"
                 : "opacity-0 translate-y-10 scale-90 pointer-events-none"
                 } ${isInteracting
-                    ? "bg-miku text-white shadow-miku/30 -translate-y-1 scale-110"
-                    : "bg-white/80 text-miku shadow-miku/10 hover:bg-miku hover:text-white hover:shadow-miku/30 hover:-translate-y-1 hover:scale-110"
+                    ? "bg-[var(--hh-accent)] border-[var(--hh-accent-deep)] text-[var(--hh-text-on-accent)]"
+                    : "bg-[var(--hh-surface-2)] border-[var(--hh-border)] text-[var(--hh-text-secondary)] hover:bg-[var(--hh-accent)] hover:border-[var(--hh-accent-deep)] hover:text-[var(--hh-text-on-accent)]"
                 }`}
             aria-label="Scroll to top"
         >
             <svg
-                className={`w-6 h-6 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)] group-hover:-translate-y-1 ${isInteracting ? "-translate-y-1" : ""} ${isTapAnimating ? "scroll-top-icon-tap" : ""}`}
+                className={`w-6 h-6 transition-transform duration-[var(--hh-dur-screen)] ease-[var(--hh-ease-out)] ${isTapAnimating ? "scroll-top-icon-tap" : ""}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

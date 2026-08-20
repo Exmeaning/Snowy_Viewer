@@ -63,10 +63,10 @@ const TABS: { id: TabType; labelKey: string; icon: React.ReactNode }[] = [
 function TabLoading() {
   return (
     <div className="animate-pulse">
-      <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 h-48 w-full" />
+      <div className="rounded-[var(--hh-radius-lg)] bg-[var(--hh-surface-sunken)] h-48 w-full" />
       <div className="mt-4 space-y-2">
-        <div className="h-5 bg-slate-200 rounded w-3/4" />
-        <div className="h-4 bg-slate-100 rounded w-1/2" />
+        <div className="h-5 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4" />
+        <div className="h-4 bg-[var(--hh-surface-1)] rounded-[var(--hh-radius-xs)] w-1/2" />
       </div>
     </div>
   );
@@ -79,7 +79,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.cards",
     subLabel: "CARD",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <rect width="18" height="18" x="3" y="3" rx="2" />
         <path d="M7 8h10" />
         <path d="M7 12h10" />
@@ -92,7 +92,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.music",
     subLabel: "MUSIC",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="M9 18V5l12-2v13" />
         <circle cx="6" cy="18" r="3" />
         <circle cx="18" cy="16" r="3" />
@@ -104,7 +104,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.events",
     subLabel: "EVENT",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
         <line x1="16" x2="16" y1="2" y2="6" />
         <line x1="8" x2="8" y1="2" y2="6" />
@@ -117,7 +117,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.gacha",
     subLabel: "GACHA",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z" />
       </svg>
     ),
@@ -127,7 +127,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.character",
     subLabel: "CHARA",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" />
         <path d="M12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7Z" />
       </svg>
@@ -138,7 +138,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.sticker",
     subLabel: "STICKER",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <circle cx="12" cy="12" r="10" />
         <path d="M8 14s1.5 2 4 2 4-2 4-2" />
         <line x1="9" x2="9.01" y1="9" y2="9" />
@@ -151,7 +151,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.comic",
     subLabel: "COMIC",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
       </svg>
@@ -162,7 +162,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.live",
     subLabel: "LIVE",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <rect width="20" height="15" x="2" y="7" rx="2" ry="2" />
         <polyline points="17 2 12 7 7 2" />
       </svg>
@@ -173,7 +173,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.mysekai",
     subLabel: "MYSEKAI",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
         <polyline points="9 22 9 12 15 12 15 22" />
       </svg>
@@ -184,7 +184,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.costumes",
     subLabel: "COSTUME",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
       </svg>
     ),
@@ -194,7 +194,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.honors",
     subLabel: "HONOR",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138c.114.718.38 1.38.806 1.946a3.42 3.42 0 0 1 0 4.438 3.42 3.42 0 0 0-.806 1.946 3.42 3.42 0 0 1-3.138 3.138 3.42 3.42 0 0 0-1.946.806 3.42 3.42 0 0 1-4.438 0 3.42 3.42 0 0 0-1.946-.806 3.42 3.42 0 0 1-3.138-3.138 3.42 3.42 0 0 0-.806-1.946 3.42 3.42 0 0 1 0-4.438c.426-.566.692-1.228.806-1.946a3.42 3.42 0 0 1 3.138-3.138z" />
       </svg>
     ),
@@ -204,7 +204,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.profile",
     subLabel: "PROFILE",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="M5.121 17.804A13.937 13.937 0 0 1 12 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
       </svg>
     ),
@@ -214,7 +214,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.deckRecommend",
     subLabel: "DECK",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m-6 9l2 2 4-4" />
       </svg>
     ),
@@ -224,7 +224,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.prediction",
     subLabel: "PREDICT",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
       </svg>
     ),
@@ -234,7 +234,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.guessWho",
     subLabel: "GUESS",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
       </svg>
     ),
@@ -244,7 +244,7 @@ const SHORTCUTS = [
     labelKey: "page.home.shortcuts.chartPreview",
     subLabel: "CHART",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-miku">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--hh-accent)]">
         <path d="M14.752 11.168l-3.197-2.132A1 1 0 0 0 10 9.87v4.263a1 1 0 0 0 1.555.832l3.197-2.132a1 1 0 0 0 0-1.664Z" />
         <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
       </svg>
@@ -267,6 +267,46 @@ const SHORTCUTS = [
     ),
   },
 ];
+
+/**
+ * Friend-site tiles. Two of the three carry a literal site name rather than a
+ * dictionary key: "Uni Viewer" and "33kit" are proper nouns and are not
+ * translated, so they stay out of the i18n dictionaries on purpose.
+ */
+const FRIEND_LINKS: { href: string; titleKey?: string; title?: string; subLabel: string }[] = [
+  { href: "https://haruki.seiunx.com", titleKey: "page.home.friends.harukiTitle", subLabel: "Haruki Toolbox" },
+  { href: "https://viewer.unipjsk.com", title: "Uni Viewer", subLabel: "Uni PJSK" },
+  { href: "https://3-3.dev", title: "33kit", subLabel: "3-3.dev" },
+];
+
+/* Section heading: an accent tick plus a title, repeated for every block on the
+   home screen. Extracted so the five call sites cannot drift apart. */
+const SECTION_HEADER_CLASS = "flex items-center gap-2 mb-4";
+const SECTION_MARKER_CLASS = "h-5 w-1 rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent)]";
+const SECTION_TITLE_CLASS = "text-xl hh-title font-bold text-[var(--hh-text-primary)]";
+
+const CREDIT_LINK_CLASS =
+  "font-bold text-[var(--hh-text-secondary)] hover:text-[var(--hh-accent-deep)] transition-colors";
+
+/**
+ * The .hh-tile recipe, written out by hand and deliberately WITHOUT a border color.
+ *
+ * handheld-os.css is imported unlayered while Tailwind emits its utilities inside
+ * `@layer utilities`, and unlayered wins regardless of specificity. So on an
+ * element carrying `.hh-tile`, its `border` and `background` shorthands outrank
+ * every Tailwind border-* and bg-* written beside them — including the hover: and
+ * group-hover: variants. Every tile on this screen either changes its edge on
+ * hover or carries a brand-colored edge, so using `.hh-tile` here would silently
+ * discard exactly the part that matters.
+ *
+ * The border color is left to the call site rather than defaulted here: two
+ * arbitrary-value utilities for the same property (border-[var(--hh-border)] and
+ * border-[#fb7299]) have equal specificity, so which one won would depend on
+ * Tailwind's output order rather than on the order they are written in.
+ */
+const TILE_SURFACE_CLASS =
+  "bg-[var(--hh-surface-2)] border rounded-[var(--hh-radius-lg)] " +
+  "shadow-[var(--hh-shadow-tile)] text-[var(--hh-text-primary)]";
 
 export default function Home() {
   const { t } = useI18n();
@@ -320,19 +360,19 @@ export default function Home() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.98 }}
             transition={hintTransition}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-[999] w-[90%] max-w-md material-thick island-panel p-4 rounded-2xl flex items-center gap-3 text-left"
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-[999] w-[90%] max-w-md hh-float p-4 flex items-center gap-3 text-left"
           >
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-miku/15 dark:bg-miku/20 flex items-center justify-center text-xl">
+            <div className="flex-shrink-0 w-10 h-10 rounded-[var(--hh-radius-full)] bg-[var(--hh-accent-wash)] border border-[var(--hh-border)] flex items-center justify-center text-xl">
               ⚙️
             </div>
             <div className="flex-1 pr-2">
-              <p className="text-xs sm:text-sm type-title font-bold text-slate-800 dark:text-slate-100">
+              <p className="text-xs sm:text-sm hh-title font-bold text-[var(--hh-text-primary)]">
                 {t("page.setup.settingsHint")}
               </p>
             </div>
             <button
               onClick={() => setShowSettingsHint(false)}
-              className="pressable text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer shrink-0"
+              className="hh-press hh-focusable text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] p-1 cursor-pointer shrink-0 rounded-[var(--hh-radius-sm)]"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -348,7 +388,7 @@ export default function Home() {
         <div className="flex flex-col items-center gap-1 animate-fade-in-up">
           <h1 className="flex items-center gap-2">
             <div
-              className="h-10 w-40 sm:h-12 sm:w-48 bg-gradient-to-r from-miku to-miku-dark transition-all hover:brightness-110"
+              className="h-10 w-40 sm:h-12 sm:w-48 bg-[var(--hh-accent)]"
               style={{
                 maskImage: `url(${MOE_LOGO_URL})`,
                 maskSize: "contain",
@@ -364,7 +404,7 @@ export default function Home() {
             />
             <span className="sr-only">Moesekai</span>
           </h1>
-          <span className="text-xs text-slate-400 opacity-60 font-medium">{t("page.home.formerName")}</span>
+          <span className="text-xs text-[var(--hh-text-tertiary)] font-medium">{t("page.home.formerName")}</span>
         </div>
 
         {/* ─── Hero Carousel ─── */}
@@ -374,9 +414,9 @@ export default function Home() {
 
         {/* ─── Latest Tabs ─── */}
         <div className="w-full max-w-5xl">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="h-6 w-1 rounded-full bg-miku"></div>
-            <h2 className="text-xl type-title font-bold text-primary-text opacity-80">{t("page.home.sections.latest")}</h2>
+          <div className={SECTION_HEADER_CLASS}>
+            <div className={SECTION_MARKER_CLASS} />
+            <h2 className={SECTION_TITLE_CLASS}>{t("page.home.sections.latest")}</h2>
           </div>
 
           {/* Tab Navigation */}
@@ -385,13 +425,10 @@ export default function Home() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`
-                  pressable flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm whitespace-nowrap type-on-glass
-                  ${activeTab === tab.id
-                    ? "island-pill-active shadow-sm shadow-miku/15"
-                    : "material-thin text-slate-600 dark:text-slate-300 hover:text-miku"
-                  }
-                `}
+                className={`hh-press hh-focusable flex items-center gap-2 px-4 py-2 rounded-[var(--hh-radius-md)] border font-semibold text-sm whitespace-nowrap cursor-pointer ${activeTab === tab.id
+                  ? "bg-[var(--hh-accent)] border-[var(--hh-accent-deep)] text-[var(--hh-text-on-accent)]"
+                  : "bg-[var(--hh-surface-2)] border-[var(--hh-border)] text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
+                  }`}
               >
                 {tab.icon}
                 {t(tab.labelKey)}
@@ -412,39 +449,43 @@ export default function Home() {
 
         {/* ─── Shortcuts ─── */}
         <div className="w-full max-w-5xl">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="h-6 w-1 rounded-full bg-miku"></div>
-            <h2 className="text-xl type-title font-bold text-primary-text opacity-80">{t("page.home.sections.shortcuts")}</h2>
+          <div className={SECTION_HEADER_CLASS}>
+            <div className={SECTION_MARKER_CLASS} />
+            <h2 className={SECTION_TITLE_CLASS}>{t("page.home.sections.shortcuts")}</h2>
           </div>
+          {/* The software grid: opaque tiles with crisp borders, no lift on hover.
+              Selection is expressed by border/background value, which is what keeps
+              the grid reading as a row of physical objects rather than as cards. */}
           <div className="grid grid-cols-4 sm:grid-cols-8 md:grid-cols-9 gap-2">
             {SHORTCUTS.map((shortcut, index) => {
               const content = (
-                <div className={`relative p-3 rounded-2xl island-panel material-regular flex flex-col items-center gap-1.5 text-center transition-[transform,box-shadow] duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] group-hover:-translate-y-0.5 ${shortcut.isExternal ? "border border-[#fb7299]/30 hover:shadow-lg hover:shadow-[#fb7299]/15" : ""}`}>
+                <div className={`${TILE_SURFACE_CLASS} relative p-3 flex flex-col items-center gap-1.5 text-center transition-colors duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] ${shortcut.isExternal
+                  ? "border-[#fb7299] group-hover:bg-[#fb7299]/10"
+                  : "border-[var(--hh-border)] group-hover:border-[var(--hh-accent)] group-hover:bg-[var(--hh-surface-3)]"
+                  }`}>
                   {shortcut.badgeKey && (
-                    <span className="absolute -top-1.5 -right-1 bg-[#fb7299] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-sm scale-90">
+                    <span className="absolute -top-1.5 -right-1 bg-[#fb7299] text-white text-[9px] font-black px-1.5 py-0.2 rounded-[var(--hh-radius-xs)] scale-90">
                       {t(shortcut.badgeKey)}
                     </span>
                   )}
-                  <div className="transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] group-hover:scale-110">
-                    {shortcut.icon}
-                  </div>
+                  <div>{shortcut.icon}</div>
                   <div>
-                    <h3 className={`text-xs type-on-glass font-bold leading-tight ${shortcut.isExternal ? "text-[#fb7299] group-hover:text-[#e0567e]" : "text-primary-text group-hover:text-miku"}`}>{t(shortcut.labelKey)}</h3>
-                    <p className="text-[8px] type-caption text-slate-400 font-bold tracking-wider uppercase hidden sm:block">{shortcut.subLabel}</p>
+                    <h3 className={`text-xs hh-title font-bold leading-tight ${shortcut.isExternal ? "text-[#fb7299]" : "text-[var(--hh-text-primary)]"}`}>{t(shortcut.labelKey)}</h3>
+                    <p className="hh-label text-[8px] hidden sm:block">{shortcut.subLabel}</p>
                   </div>
                 </div>
               );
 
               if (shortcut.isExternal) {
                 return (
-                  <ExternalLink key={index} href={shortcut.href} className="group pressable">
+                  <ExternalLink key={index} href={shortcut.href} className="group hh-press hh-focusable rounded-[var(--hh-radius-lg)]">
                     {content}
                   </ExternalLink>
                 );
               }
 
               return (
-                <Link key={index} href={shortcut.href} className="group pressable">
+                <Link key={index} href={shortcut.href} className="group hh-press hh-focusable rounded-[var(--hh-radius-lg)]">
                   {content}
                 </Link>
               );
@@ -456,12 +497,12 @@ export default function Home() {
         <div className="w-full max-w-5xl text-left space-y-3">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-1 rounded-full bg-miku"></div>
-              <h2 className="text-xl type-title font-bold text-primary-text opacity-80">{t("page.information.latestAnnouncements")}</h2>
+              <div className={SECTION_MARKER_CLASS} />
+              <h2 className={SECTION_TITLE_CLASS}>{t("page.information.latestAnnouncements")}</h2>
             </div>
             <Link
               href="/information"
-              className="pressable text-xs font-bold text-miku hover:text-miku-dark dark:hover:text-miku-light flex items-center gap-1 group/btn"
+              className="hh-press hh-focusable rounded-[var(--hh-radius-sm)] text-xs font-bold text-[var(--hh-accent-deep)] flex items-center gap-1 group/btn"
             >
               <span>{t("page.home.announcements.viewAll")}</span>
               <svg className="w-4 h-4 transform group-hover/btn:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -470,10 +511,12 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Scheme B: PJSK Intelligence Bureau Collaborative Banner */}
-          <div className="island-panel material-regular rounded-2xl p-3.5 sm:p-4 border-l-4 border-l-[#fb7299] bg-gradient-to-r from-[#fb7299]/10 via-transparent to-transparent flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 overflow-hidden">
+          {/* Scheme B: PJSK Intelligence Bureau Collaborative Banner.
+              #fb7299 is Bilibili's brand color, so it stays literal — it identifies
+              the destination and is not part of the theme palette. */}
+          <div className={`${TILE_SURFACE_CLASS} border-[var(--hh-border)] p-3.5 sm:p-4 border-l-4 border-l-[#fb7299] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 overflow-hidden`}>
             <div className="flex items-start sm:items-center gap-3 min-w-0 w-full">
-              <div className="w-10 h-10 rounded-xl bg-[#fb7299] text-white flex items-center justify-center shrink-0 shadow-md shadow-[#fb7299]/25">
+              <div className="w-10 h-10 rounded-[var(--hh-radius-md)] bg-[#fb7299] text-white flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                   <path
                     fillRule="evenodd"
@@ -484,19 +527,19 @@ export default function Home() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-sm text-primary-text">{t("page.home.announcements.bilibiliTitle")}</span>
-                  <span className="bg-[#fb7299]/15 text-[#fb7299] text-[10px] font-black px-1.5 py-0.5 rounded">
+                  <span className="font-bold text-sm text-[var(--hh-text-primary)]">{t("page.home.announcements.bilibiliTitle")}</span>
+                  <span className="bg-[#fb7299]/15 text-[#fb7299] text-[10px] font-black px-1.5 py-0.5 rounded-[var(--hh-radius-xs)]">
                     {t("page.home.announcements.bilibiliBadge")}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug break-words">
+                <p className="text-xs text-[var(--hh-text-secondary)] mt-0.5 leading-snug break-words">
                   {t("page.home.announcements.bilibiliDescription")}
                 </p>
               </div>
             </div>
             <ExternalLink
               href={MOESEKAI_BILIBILI_SPACE_URL}
-              className="pressable shrink-0 text-xs font-bold bg-[#fb7299] hover:bg-[#e0567e] text-white px-3.5 py-2 rounded-xl shadow-sm shadow-[#fb7299]/30 flex items-center gap-1.5 transition-all self-start sm:self-auto"
+              className="hh-press hh-focusable shrink-0 text-xs font-bold bg-[#fb7299] hover:bg-[#e0567e] text-white px-3.5 py-2 rounded-[var(--hh-radius-md)] flex items-center gap-1.5 self-start sm:self-auto"
             >
               <span>{t("page.home.announcements.bilibiliAction")}</span>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -513,20 +556,20 @@ export default function Home() {
 
         {/* ─── Friend Links ─── */}
         <div className="w-full max-w-5xl">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="h-6 w-1 rounded-full bg-miku"></div>
-            <h2 className="text-xl type-title font-bold text-primary-text opacity-80">{t("page.home.sections.friends")}</h2>
+          <div className={SECTION_HEADER_CLASS}>
+            <div className={SECTION_MARKER_CLASS} />
+            <h2 className={SECTION_TITLE_CLASS}>{t("page.home.sections.friends")}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Scheme A: Bilibili Intelligence Bureau Card */}
             <ExternalLink
               href={MOESEKAI_BILIBILI_SPACE_URL}
               target="_blank"
-              className="pressable relative group overflow-hidden rounded-2xl h-16 island-panel material-regular border border-[#fb7299]/30 bg-gradient-to-br from-transparent to-[#fb7299]/5 hover:border-[#fb7299]/60 hover:shadow-lg hover:shadow-[#fb7299]/15 transition-all"
+              className={`hh-press hh-focusable ${TILE_SURFACE_CLASS} border-[#fb7299] relative group overflow-hidden h-16 hover:bg-[#fb7299]/10`}
             >
               <div className="relative z-10 h-full flex items-center justify-between px-4">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-[#fb7299]/15 text-[#fb7299] flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-[#fb7299] group-hover:text-white transition-all duration-300">
+                  <div className="w-8 h-8 rounded-[var(--hh-radius-md)] bg-[#fb7299]/15 text-[#fb7299] flex items-center justify-center shrink-0 group-hover:bg-[#fb7299] group-hover:text-white transition-colors duration-[var(--hh-dur-fast)]">
                     <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                       <path
                         fillRule="evenodd"
@@ -536,63 +579,54 @@ export default function Home() {
                     </svg>
                   </div>
                   <div className="text-left min-w-0">
-                    <h3 className="text-sm type-title font-bold text-primary-text group-hover:text-[#fb7299] transition-colors truncate">
+                    <h3 className="text-sm hh-title font-bold text-[var(--hh-text-primary)] truncate">
                       {t("page.home.friends.bilibiliTitle")}
                     </h3>
-                    <p className="text-[9px] type-caption text-slate-400 font-bold uppercase tracking-wider truncate">
+                    <p className="hh-label text-[9px] truncate">
                       BILIBILI
                     </p>
                   </div>
                 </div>
-                <svg className="w-4 h-4 text-slate-300 group-hover:text-[#fb7299] transform group-hover:translate-x-0.5 transition-all shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-[var(--hh-text-tertiary)] group-hover:text-[#fb7299] transition-colors shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </div>
             </ExternalLink>
 
-            <ExternalLink href="https://haruki.seiunx.com" target="_blank" className="pressable relative group overflow-hidden rounded-2xl h-16 island-panel material-regular">
-              <div className="relative z-10 h-full flex items-center justify-between px-4">
-                <div className="text-left min-w-0">
-                  <h3 className="text-sm type-title font-bold text-primary-text truncate">{t("page.home.friends.harukiTitle")}</h3>
-                  <p className="text-[9px] type-caption text-slate-400 font-bold uppercase tracking-wider truncate">Haruki Toolbox</p>
+            {FRIEND_LINKS.map((friend) => (
+              <ExternalLink
+                key={friend.href}
+                href={friend.href}
+                target="_blank"
+                className={`hh-press hh-focusable ${TILE_SURFACE_CLASS} border-[var(--hh-border)] relative group overflow-hidden h-16 hover:border-[var(--hh-accent)]`}
+              >
+                <div className="relative z-10 h-full flex items-center justify-between px-4">
+                  <div className="text-left min-w-0">
+                    <h3 className="text-sm hh-title font-bold text-[var(--hh-text-primary)] truncate">
+                      {friend.titleKey ? t(friend.titleKey) : friend.title}
+                    </h3>
+                    <p className="hh-label text-[9px] truncate">{friend.subLabel}</p>
+                  </div>
+                  <svg className="w-4 h-4 text-[var(--hh-text-tertiary)] group-hover:text-[var(--hh-accent)] transition-colors shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
                 </div>
-                <svg className="w-4 h-4 text-slate-300 group-hover:text-miku shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </div>
-            </ExternalLink>
-
-            <ExternalLink href="https://viewer.unipjsk.com" target="_blank" className="pressable relative group overflow-hidden rounded-2xl h-16 island-panel material-regular">
-              <div className="relative z-10 h-full flex items-center justify-between px-4">
-                <div className="text-left min-w-0">
-                  <h3 className="text-sm type-title font-bold text-primary-text truncate">Uni Viewer</h3>
-                  <p className="text-[9px] type-caption text-slate-400 font-bold uppercase tracking-wider truncate">Uni PJSK</p>
-                </div>
-                <svg className="w-4 h-4 text-slate-300 group-hover:text-miku shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </div>
-            </ExternalLink>
-
-            <ExternalLink href="https://3-3.dev" target="_blank" className="pressable relative group overflow-hidden rounded-2xl h-16 island-panel material-regular">
-              <div className="relative z-10 h-full flex items-center justify-between px-4">
-                <div className="text-left min-w-0">
-                  <h3 className="text-sm type-title font-bold text-primary-text truncate">33kit</h3>
-                  <p className="text-[9px] type-caption text-slate-400 font-bold uppercase tracking-wider truncate">3-3.dev</p>
-                </div>
-                <svg className="w-4 h-4 text-slate-300 group-hover:text-miku shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </div>
-            </ExternalLink>
+              </ExternalLink>
+            ))}
           </div>
         </div>
 
         {/* ─── Credits ─── */}
-        <div className="w-full max-w-5xl pt-6 border-t border-slate-200/50">
+        <div className="w-full max-w-5xl pt-6 border-t border-[var(--hh-border)]">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">{t("page.home.sections.specialThanks")}</h2>
+            <h2 className="hh-label text-sm">{t("page.home.sections.specialThanks")}</h2>
             <div className="flex flex-wrap gap-x-2 gap-y-1 justify-center text-sm">
-              <span className="text-slate-400">{t("page.home.specialThanksPrefix")}</span>
-              <ExternalLink href="https://github.com/MejiroRina" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">{t("page.home.specialThanksHaruki")}</ExternalLink>
-              <span className="text-slate-300">|</span>
-              <ExternalLink href="https://sekai.best" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">Sekai.best</ExternalLink>
-              <span className="text-slate-300">|</span>
-              <ExternalLink href="https://github.com/watagashi-uni" target="_blank" className="font-bold text-slate-500 hover:text-miku transition-colors">Uni</ExternalLink>
+              <span className="text-[var(--hh-text-tertiary)]">{t("page.home.specialThanksPrefix")}</span>
+              <ExternalLink href="https://github.com/MejiroRina" target="_blank" className={CREDIT_LINK_CLASS}>{t("page.home.specialThanksHaruki")}</ExternalLink>
+              <span className="text-[var(--hh-text-tertiary)]">|</span>
+              <ExternalLink href="https://sekai.best" target="_blank" className={CREDIT_LINK_CLASS}>Sekai.best</ExternalLink>
+              <span className="text-[var(--hh-text-tertiary)]">|</span>
+              <ExternalLink href="https://github.com/watagashi-uni" target="_blank" className={CREDIT_LINK_CLASS}>Uni</ExternalLink>
             </div>
           </div>
         </div>

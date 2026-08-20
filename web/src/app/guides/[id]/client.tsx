@@ -17,87 +17,93 @@ import {
     type GuidesIndex,
 } from "@/lib/guides";
 
-// Category badge colors (same as list page)
-const categoryColors: Record<string, string> = {
-    gacha: "bg-amber-100 text-amber-700 border-amber-200",
-    event: "bg-blue-100 text-blue-700 border-blue-200",
-    team: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    beginner: "bg-purple-100 text-purple-700 border-purple-200",
-    system: "bg-slate-100 text-slate-600 border-slate-200",
-};
+/**
+ * Category badge.
+ *
+ * The list page assigned each category its own pastel pair; on a flat opaque
+ * system that reads as five unrelated sticker styles. Category is a label, not a
+ * status, so one neutral chip is used for all of them and the text carries the
+ * distinction. Kept as a single constant so this cannot drift back per-category.
+ */
+const CATEGORY_BADGE_CLASS =
+    "px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-[11px] font-bold border " +
+    "border-[var(--hh-border)] bg-[var(--hh-surface-1)] text-[var(--hh-text-secondary)]";
 
 // Custom markdown component mapping for Tailwind styling
 const markdownComponents = {
     h1: ({ children, ...props }: React.ComponentProps<"h1">) => (
-        <h1 className="text-2xl font-black text-primary-text mt-8 mb-4 first:mt-0" {...props}>{children}</h1>
+        <h1 className="hh-display text-2xl text-[var(--hh-text-primary)] mt-8 mb-4 first:mt-0" {...props}>{children}</h1>
     ),
     h2: ({ children, ...props }: React.ComponentProps<"h2">) => (
-        <h2 className="text-xl font-bold text-primary-text mt-8 mb-3 pb-2 border-b border-slate-100" {...props}>{children}</h2>
+        <h2 className="hh-title text-xl font-bold text-[var(--hh-text-primary)] mt-8 mb-3 pb-2 border-b border-[var(--hh-border)]" {...props}>{children}</h2>
     ),
     h3: ({ children, ...props }: React.ComponentProps<"h3">) => (
-        <h3 className="text-lg font-bold text-primary-text mt-6 mb-2" {...props}>{children}</h3>
+        <h3 className="hh-title text-lg font-bold text-[var(--hh-text-primary)] mt-6 mb-2" {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.ComponentProps<"p">) => (
-        <p className="text-slate-600 leading-relaxed mb-4 last:mb-0" {...props}>{children}</p>
+        <p className="hh-body text-[var(--hh-text-secondary)] mb-4 last:mb-0" {...props}>{children}</p>
     ),
     a: ({ href, children, ...props }: React.ComponentProps<"a">) => (
         <ExternalLink
             href={href ?? "#"}
-            className="text-miku font-medium hover:underline decoration-miku/30 underline-offset-2"
+            className="text-[var(--hh-accent-deep)] font-medium hover:underline underline-offset-2"
             {...props}
         >
             {children}
         </ExternalLink>
     ),
     strong: ({ children, ...props }: React.ComponentProps<"strong">) => (
-        <strong className="font-bold text-primary-text" {...props}>{children}</strong>
+        <strong className="font-bold text-[var(--hh-text-primary)]" {...props}>{children}</strong>
     ),
     em: ({ children, ...props }: React.ComponentProps<"em">) => (
-        <em className="text-slate-500" {...props}>{children}</em>
+        <em className="text-[var(--hh-text-secondary)]" {...props}>{children}</em>
     ),
     blockquote: ({ children, ...props }: React.ComponentProps<"blockquote">) => (
-        <blockquote className="border-l-4 border-miku/30 pl-4 py-1 my-4 text-slate-500 italic bg-miku/5 rounded-r-lg" {...props}>
+        <blockquote className="border-l-4 border-[var(--hh-accent)] pl-4 py-1 my-4 text-[var(--hh-text-secondary)] italic bg-[var(--hh-accent-wash)] rounded-r-[var(--hh-radius-md)]" {...props}>
             {children}
         </blockquote>
     ),
     ul: ({ children, ...props }: React.ComponentProps<"ul">) => (
-        <ul className="list-disc list-inside space-y-1 mb-4 text-slate-600" {...props}>{children}</ul>
+        <ul className="list-disc list-inside space-y-1 mb-4 text-[var(--hh-text-secondary)]" {...props}>{children}</ul>
     ),
     ol: ({ children, ...props }: React.ComponentProps<"ol">) => (
-        <ol className="list-decimal list-inside space-y-1 mb-4 text-slate-600" {...props}>{children}</ol>
+        <ol className="list-decimal list-inside space-y-1 mb-4 text-[var(--hh-text-secondary)]" {...props}>{children}</ol>
     ),
     li: ({ children, ...props }: React.ComponentProps<"li">) => (
-        <li className="leading-relaxed" {...props}>{children}</li>
+        <li className="hh-body" {...props}>{children}</li>
     ),
     table: ({ children, ...props }: React.ComponentProps<"table">) => (
-        <div className="overflow-x-auto my-4 rounded-xl border border-slate-200">
+        <div className="overflow-x-auto my-4 rounded-[var(--hh-radius-md)] border border-[var(--hh-border)]">
             <table className="w-full text-sm" {...props}>{children}</table>
         </div>
     ),
     thead: ({ children, ...props }: React.ComponentProps<"thead">) => (
-        <thead className="bg-slate-50" {...props}>{children}</thead>
+        <thead className="bg-[var(--hh-surface-1)]" {...props}>{children}</thead>
     ),
     th: ({ children, ...props }: React.ComponentProps<"th">) => (
-        <th className="px-4 py-2.5 text-left font-bold text-slate-700 border-b border-slate-200" {...props}>{children}</th>
+        <th className="px-4 py-2.5 text-left font-bold text-[var(--hh-text-primary)] border-b border-[var(--hh-border)]" {...props}>{children}</th>
     ),
     td: ({ children, ...props }: React.ComponentProps<"td">) => (
-        <td className="px-4 py-2.5 text-slate-600 border-b border-slate-100" {...props}>{children}</td>
+        <td className="px-4 py-2.5 text-[var(--hh-text-secondary)] border-b border-[var(--hh-border)]" {...props}>{children}</td>
     ),
     hr: (props: React.ComponentProps<"hr">) => (
-        <hr className="my-6 border-slate-200" {...props} />
+        <hr className="hh-divider my-6" {...props} />
     ),
     code: ({ children, className, ...props }: React.ComponentProps<"code">) => {
         // Inline code vs code block
         const isBlock = className?.includes("language-");
         if (isBlock) {
+            /* A code block is the deepest trough on the page, so it takes
+               --hh-surface-inset and inverts its text in light mode via the
+               token pair rather than a hardcoded slate-800. */
             return (
-                <code className={`block bg-slate-800 text-slate-100 rounded-xl p-4 overflow-x-auto text-sm my-4 ${className ?? ""}`} {...props}>
+                <code className={`block bg-[var(--hh-surface-inset)] text-[var(--hh-text-primary)] rounded-[var(--hh-radius-md)] p-4 overflow-x-auto text-sm my-4 ${className ?? ""}`} {...props}>
                     {children}
                 </code>
             );
         }
         return (
-            <code className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-sm font-mono" {...props}>
+            <code className="px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-primary)] rounded-[var(--hh-radius-xs)] text-sm font-mono" {...props}>
                 {children}
             </code>
         );
@@ -158,14 +164,14 @@ function GuideDetailContent() {
     if (error || !guide) {
         return (
             <div className="container mx-auto px-4 sm:px-6 py-12 text-center">
-                <div className="mb-6 p-6 bg-red-50 border border-red-200 rounded-xl text-red-600 inline-block">
-                    <p className="font-bold text-lg mb-1">{t("page.guides.loadFailed")}</p>
-                    <p className="text-sm">{error ?? t("page.guides.unknownError")}</p>
+                <div className="mb-6 p-6 bg-[var(--hh-surface-2)] border border-[var(--hh-accent-alert)] rounded-[var(--hh-radius-lg)] inline-block">
+                    <p className="hh-title font-bold text-lg mb-1 text-[var(--hh-accent-alert)]">{t("page.guides.loadFailed")}</p>
+                    <p className="text-sm text-[var(--hh-text-secondary)]">{error ?? t("page.guides.unknownError")}</p>
                 </div>
                 <div>
                     <button
                         onClick={() => router.push(localizePathForBrowser("/guides/"))}
-                        className="px-6 py-2 bg-miku text-white rounded-lg font-bold hover:opacity-90 transition-all"
+                        className="hh-btn hh-btn-primary hh-press hh-focusable cursor-pointer"
                     >
                         {t("page.guides.backToList")}
                     </button>
@@ -175,14 +181,13 @@ function GuideDetailContent() {
     }
 
     const categoryLabel = categories[guide.category] ?? guide.category;
-    const colorClass = categoryColors[guide.category] ?? "bg-slate-100 text-slate-600 border-slate-200";
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8 max-w-4xl">
             {/* Back Button */}
             <Link
                 href="/guides/"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-miku transition-colors mb-6"
+                className="hh-press hh-focusable rounded-[var(--hh-radius-sm)] inline-flex items-center gap-1.5 text-sm font-medium text-[var(--hh-text-tertiary)] hover:text-[var(--hh-accent-deep)] transition-colors mb-6"
             >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -193,18 +198,18 @@ function GuideDetailContent() {
             {/* Article Header */}
             <div className="mb-8">
                 <div className="flex items-center gap-2 mb-3">
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${colorClass}`}>
+                    <span className={CATEGORY_BADGE_CLASS}>
                         {categoryLabel}
                     </span>
-                    <span className="text-xs text-slate-400">{guide.date}</span>
+                    <span className="text-xs text-[var(--hh-text-tertiary)] hh-numeric">{guide.date}</span>
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl font-black text-primary-text mb-4">
+                <h1 className="hh-display text-2xl sm:text-3xl text-[var(--hh-text-primary)] mb-4">
                     {guide.title}
                 </h1>
 
                 {/* Meta info */}
-                <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--hh-text-secondary)]">
                     <span className="flex items-center gap-1">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -216,7 +221,7 @@ function GuideDetailContent() {
                     {guide.source && (
                         <ExternalLink
                             href={guide.source}
-                            className="flex items-center gap-1 text-miku hover:underline"
+                            className="flex items-center gap-1 text-[var(--hh-accent-deep)] hover:underline"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -232,7 +237,7 @@ function GuideDetailContent() {
                         {guide.tags.map((tag) => (
                             <span
                                 key={tag}
-                                className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-50 text-slate-400 border border-slate-100"
+                                className="px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-[11px] font-medium bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] border border-[var(--hh-border-hairline)]"
                             >
                                 {tag}
                             </span>
@@ -242,7 +247,7 @@ function GuideDetailContent() {
             </div>
 
             {/* Markdown Content */}
-            <div className="bg-white rounded-2xl shadow ring-1 ring-slate-200 p-6 sm:p-8">
+            <div className="hh-tile p-6 sm:p-8">
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={markdownComponents}
@@ -259,7 +264,7 @@ function GuideDetailContent() {
             <div className="mt-8 text-center">
                 <Link
                     href="/guides/"
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-100 text-slate-600 rounded-lg font-medium hover:bg-slate-200 transition-colors"
+                    className="hh-btn hh-press hh-focusable inline-flex items-center gap-2"
                 >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -275,7 +280,7 @@ function GuideDetailLoadingFallback() {
     const { t } = useI18n();
 
     return (
-        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+        <div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">
             {t("page.guides.loadingFallback")}
         </div>
     );

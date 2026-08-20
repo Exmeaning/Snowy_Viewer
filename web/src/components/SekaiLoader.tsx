@@ -41,22 +41,16 @@ export default function SekaiLoader() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          
-          /* Liquid Glass Background Mask */
-          background-color: rgba(255, 255, 255, 0.72);
-          backdrop-filter: blur(28px) saturate(190%);
-          -webkit-backdrop-filter: blur(28px) saturate(190%);
-          border: 1px solid rgba(255, 255, 255, 0.45);
-          
-          transition: opacity 0.4s ease, visibility 0.4s ease;
-        }
 
-        :root[data-theme="dark"] .loading-overlay {
-          /* Dark theme Liquid Glass Background Mask */
-          background-color: rgba(15, 23, 42, 0.68);
-          backdrop-filter: blur(28px) saturate(220%);
-          -webkit-backdrop-filter: blur(28px) saturate(220%);
-          border: 1px solid rgba(148, 163, 184, 0.22);
+          /* Fully opaque, no backdrop-filter. This is a boot screen, not a
+             translucent veil: it must hide the page underneath completely, and
+             28px of live blur on a full-viewport layer is exactly the compositor
+             cost the flat system exists to remove. --hh-surface-0 is the page
+             ground, so the handoff to the real page is a value match rather than
+             a visible curtain lift. */
+          background-color: var(--hh-surface-0);
+
+          transition: opacity 0.4s var(--hh-ease-out), visibility 0.4s var(--hh-ease-out);
         }
 
         .loading-overlay.hidden {
@@ -64,15 +58,15 @@ export default function SekaiLoader() {
           visibility: hidden;
           pointer-events: none;
         }
-        
-        /* Miku Loader Container */
+
+        /* Wordmark progress meter */
         .loader-container {
           position: relative;
           width: min(400px, 60vw);
           aspect-ratio: 6 / 1;
           margin-bottom: 20px;
         }
-        
+
         /* Common mask style */
         .miku-layer {
           position: absolute;
@@ -89,11 +83,11 @@ export default function SekaiLoader() {
           -webkit-mask-position: center;
           mask-position: center;
         }
-        
-        /* Base layer - light cyan (unloaded) */
+
+        /* Unfilled portion — a sunken trough, the same relationship .hh-well has
+           to a tile, so the fill below reads as a level rising in a channel. */
         .base {
-          background-color: color-mix(in srgb, var(--color-miku) 30%, var(--surface-base, white));
-          opacity: 0.8;
+          background-color: var(--hh-surface-inset);
           z-index: 1;
         }
         
@@ -106,12 +100,12 @@ export default function SekaiLoader() {
           width: 0%;
           overflow: hidden;
           z-index: 2;
-          transition: width 0.3s ease-out;
+          transition: width 0.3s var(--hh-ease-out);
         }
         
         /* Phase animations */
         .progress-wrapper.loading {
-          animation: miku-load-fast 0.5s ease-out forwards;
+          animation: miku-load-fast 0.5s var(--hh-ease-out) forwards;
         }
         .progress-wrapper.waiting {
           width: 90%;
@@ -119,13 +113,12 @@ export default function SekaiLoader() {
         .progress-wrapper.complete {
           width: 100%;
         }
-        
-        /* Progress color layer */
+
+        /* Filled portion — flat accent, no drop-shadow bloom. */
         .progress-color {
           width: min(400px, 60vw);
           height: 100%;
-          background-color: var(--color-miku);
-          filter: drop-shadow(0 0 5px var(--color-miku));
+          background-color: var(--hh-accent);
         }
         
         @keyframes miku-load-fast {
@@ -134,16 +127,25 @@ export default function SekaiLoader() {
         }
         
         .loading-text {
-          color: var(--text-body, var(--color-miku-dark));
-          font-family: sans-serif;
-          font-weight: bold;
-          font-size: 1rem;
-          letter-spacing: 0.05em;
-          animation: pulse 1.5s ease-in-out infinite;
+          color: var(--hh-text-secondary);
+          font-weight: 700;
+          font-size: 0.6875rem;
+          letter-spacing: var(--hh-tracking-label);
+          text-transform: uppercase;
+          animation: hh-loader-blink 1.5s var(--hh-ease-in-out) infinite;
         }
-        @keyframes pulse {
-          0%, 100% { opacity: 0.5; }
+        @keyframes hh-loader-blink {
+          0%, 100% { opacity: 0.55; }
           50% { opacity: 1; }
+        }
+
+        /* The blink is a status indicator, not decoration, so it degrades to a
+           steady state rather than disappearing. */
+        @media (prefers-reduced-motion: reduce) {
+          .loading-text {
+            animation: none;
+            opacity: 0.85;
+          }
         }
       `}</style>
 

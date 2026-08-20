@@ -86,9 +86,14 @@ export default function QuickFilterButton() {
                 onPointerUp={handlePressEnd}
                 onPointerLeave={handlePressEnd}
                 onPointerCancel={handlePressEnd}
-                className={`hh-press fixed bottom-[6.5rem] right-8 p-3 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-2)] text-[var(--hh-text-primary)] border border-[var(--hh-border)] shadow-[var(--hh-shadow-floating)] transition-[opacity,transform,background-color,border-color,color] duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] z-[100] transform group md:hidden ${isInteracting
-                    ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] border-[var(--hh-accent-line)] -translate-y-1 scale-105"
-                    : "hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-accent)] hover:-translate-y-1 hover:scale-105"
+                /* Same recipe as ScrollToTop, which sits directly below it: a
+                   genuinely circular floating control, opaque face, 1px border,
+                   no lift on hover. `--hh-shadow-float` (not `-floating`) is the
+                   real token name — the previous spelling resolved to nothing, so
+                   the button had no elevation at all. */
+                className={`hh-press hh-focusable fixed bottom-[6.5rem] right-8 p-3 rounded-[var(--hh-radius-full)] border shadow-[var(--hh-shadow-float)] transition-[opacity,transform,background-color,border-color,color] duration-[var(--hh-dur-screen)] ease-[var(--hh-ease-out)] z-[100] group md:hidden ${isInteracting
+                    ? "bg-[var(--hh-accent)] border-[var(--hh-accent-deep)] text-[var(--hh-text-on-accent)]"
+                    : "bg-[var(--hh-surface-2)] border-[var(--hh-border)] text-[var(--hh-text-secondary)] hover:bg-[var(--hh-accent)] hover:border-[var(--hh-accent-deep)] hover:text-[var(--hh-text-on-accent)]"
                     } ${isVisible
                         ? "opacity-100 translate-y-0 scale-100"
                         : "opacity-0 translate-y-10 scale-90 pointer-events-none"
@@ -96,7 +101,7 @@ export default function QuickFilterButton() {
                 aria-label={t("common.filter.openQuickFilter")}
             >
                 <svg
-                    className={`w-6 h-6 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)] group-hover:rotate-12 ${isInteracting ? "rotate-12" : ""} ${isTapAnimating ? "quick-filter-icon-tap" : ""}`}
+                    className={`w-6 h-6 transition-transform duration-[var(--hh-dur-screen)] ease-[var(--hh-ease-out)] ${isTapAnimating ? "quick-filter-icon-tap" : ""}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
