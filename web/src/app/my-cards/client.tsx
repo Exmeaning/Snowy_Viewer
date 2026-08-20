@@ -612,74 +612,64 @@ function MyCardsContent() {
                 </div>
             )}
 
-            {/* Two Column Layout */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filters */}
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
-                    </div>
-                </div>
-
-                {/* Card Grid */}
-                <div className="flex-1 min-w-0">
-                    {isLoading || isFetchingUser ? (
-                        <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
-                            {Array.from({ length: 12 }).map((_, i) => (
-                                <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-100 shadow-sm animate-pulse">
-                                    <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200" />
-                                    <div className="p-2 space-y-1.5">
-                                        <div className="h-3 bg-slate-200 rounded w-3/4" />
-                                        <div className="h-2.5 bg-slate-100 rounded w-1/2" />
-                                    </div>
+            {/* Card Grid */}
+            <div className="w-full min-w-0">
+                {isLoading || isFetchingUser ? (
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
+                        {Array.from({ length: 12 }).map((_, i) => (
+                            <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-100 shadow-sm animate-pulse">
+                                <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200" />
+                                <div className="p-2 space-y-1.5">
+                                    <div className="h-3 bg-slate-200 rounded w-3/4" />
+                                    <div className="h-2.5 bg-slate-100 rounded w-1/2" />
                                 </div>
-                            ))}
-                        </div>
-                    ) : filteredCards.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
-                            <p className="text-slate-400 font-medium">{t("page.myCards.noResult")}</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
-                            {displayedCards.map((card) => {
-                                const uc = userCards.get(card.id);
-                                return (
-                                    <MyCardItem
-                                        key={card.id}
-                                        card={card}
-                                        userCard={uc || null}
-                                    />
-                                );
-                            })}
-                        </div>
-                    )}
+                            </div>
+                        ))}
+                    </div>
+                ) : filteredCards.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <p className="text-slate-400 font-medium">{t("page.myCards.noResult")}</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
+                        {displayedCards.map((card) => {
+                            const uc = userCards.get(card.id);
+                            return (
+                                <MyCardItem
+                                    key={card.id}
+                                    card={card}
+                                    userCard={uc || null}
+                                />
+                            );
+                        })}
+                    </div>
+                )}
 
-                    {/* Load More Button */}
-                    {!isLoading && displayedCards.length < filteredCards.length && (
-                        <div className="mt-8 flex justify-center">
-                            <button
-                                onClick={loadMore}
-                                data-shortcut-load-more="true"
-                                className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                            >
-                                {t("page.myCards.loadMore")}
-                                <span className="ml-2 text-sm opacity-80">
-                                    ({displayedCards.length} / {filteredCards.length})
-                                </span>
-                            </button>
-                        </div>
-                    )}
+                {/* Load More Button */}
+                {!isLoading && displayedCards.length < filteredCards.length && (
+                    <div className="mt-8 flex justify-center">
+                        <button
+                            onClick={loadMore}
+                            data-shortcut-load-more="true"
+                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                        >
+                            {t("page.myCards.loadMore")}
+                            <span className="ml-2 text-sm opacity-80">
+                                ({displayedCards.length} / {filteredCards.length})
+                            </span>
+                        </button>
+                    </div>
+                )}
 
-                    {/* All loaded indicator */}
-                    {!isLoading && displayedCards.length > 0 && displayedCards.length >= filteredCards.length && (
-                        <div className="mt-8 text-center text-slate-400 text-sm">
-                            {t("page.myCards.allLoaded", { count: filteredCards.length })}
-                        </div>
-                    )}
-                </div>
+                {/* All loaded indicator */}
+                {!isLoading && displayedCards.length > 0 && displayedCards.length >= filteredCards.length && (
+                    <div className="mt-8 text-center text-slate-400 text-sm">
+                        {t("page.myCards.allLoaded", { count: filteredCards.length })}
+                    </div>
+                )}
             </div>
         </div>
     );

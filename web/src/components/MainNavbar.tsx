@@ -105,8 +105,8 @@ export default function MainNavbar({
                 animate="animate"
                 className="pointer-events-auto px-3 sm:px-5 bg-[var(--hh-surface-1)] border-b border-[var(--hh-border)]"
             >
-                {/* Row 1: Logo + buttons */}
-                <div className="h-[3.25rem] sm:h-[3.5rem] flex items-center justify-between gap-2">
+                {/* Row 1: Logo + buttons — height synced via --hh-topbar-h */}
+                <div className="h-[var(--hh-topbar-h)] flex items-center justify-between gap-2">
                     {/* Left: Menu Toggle + Logo + Breadcrumb (desktop) */}
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                         {/* Menu Toggle Button */}

@@ -7,8 +7,9 @@
    The visual language lives in ./handheld-os.css. This file is deliberately
    thin and does only four jobs:
 
-   1. Retune Tailwind's own theme scales (radius, font) so the ~820 existing
-      rounded-* utilities inherit console geometry without touching components.
+   1. Retune Tailwind's own theme scales (radius, shadow, font) so existing
+      rounded-* and shadow-* utilities inherit console geometry and elevation
+      without touching components.
    2. Bridge the previous design system's token names onto Handheld tokens, so
       any page still reading --surface-base / --island-glass / --ease-spring
       directly keeps working and gets the new look for free.
@@ -71,6 +72,41 @@
   --radius-2xl: var(--hh-radius-lg);
   --radius-3xl: var(--hh-radius-xl);
   --radius-4xl: var(--hh-radius-2xl);
+
+  /* ── Shadow scale ────────────────────────────────────────────────────────
+     Tailwind's default shadow scale is large and soft — the opposite of console
+     elevation. Aliasing the --shadow-* ladder in @theme maps all utilities
+     (.shadow, .shadow-sm..2xl, .shadow-inner) onto the Handheld elevation
+     ladder (--hh-shadow-*) directly in Tailwind's utility layer.
+
+     Why @theme instead of raw CSS class overrides (.shadow-md { ... }):
+     1. Cascade priority (CSS Cascade Level 5): Tailwind 4 generates utility
+        variants (hover:, focus:, active:, sm:, group-hover:, etc.) inside
+        @layer utilities. Raw unlayered class overrides outside @layer outrank
+        ANY layered rule regardless of selector specificity. Previously,
+        unlayered .shadow-md / .shadow-lg rules completely suppressed
+        hover:shadow-* variants throughout the app.
+     2. Ring / Inset shadow synthesis: Tailwind 4 synthesizes box-shadow via:
+        `var(--tw-inset-shadow), var(--tw-inset-ring-shadow),
+         var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)`
+        Overriding via @theme retunes --tw-shadow while preserving the full
+        composition chain, guaranteeing ring-* utilities and inset shadows
+        continue to compose cleanly instead of being wiped out by raw
+        box-shadow assignments.
+     3. Variant inheritance: All Tailwind variants (hover:shadow-*,
+        group-hover:shadow-*, disabled:hover:shadow-*, sm:shadow-*, etc.)
+        automatically compile to the retuned ladder without manual variant
+        enumeration.
+     ──────────────────────────────────────────────────────────────────────── */
+  --shadow-2xs: var(--hh-shadow-tile);
+  --shadow-xs: var(--hh-shadow-tile);
+  --shadow-sm: var(--hh-shadow-tile);
+  --shadow: var(--hh-shadow-tile);
+  --shadow-md: var(--hh-shadow-tile);
+  --shadow-lg: var(--hh-shadow-raised);
+  --shadow-xl: var(--hh-shadow-raised);
+  --shadow-2xl: var(--hh-shadow-float);
+  --shadow-inner: var(--hh-shadow-inset);
 
   /* Self-references register the name with Tailwind so text-miku / bg-miku
      generate, while the actual value keeps coming from the :root block below
@@ -217,33 +253,6 @@ body {
 
 :root[data-show-ads="false"] .moesekai-ad-slot {
   display: none !important;
-}
-
-/* ==========================================================================
-   Tailwind shadow retune
-
-   Tailwind's default shadow scale is large and soft — the opposite of console
-   elevation. These map the five sizes onto the Handheld ramp, and because the
-   Handheld tokens are theme-aware this replaces the previous dark-mode-only
-   blanket shadow override with one definition that works in both themes.
-   ========================================================================== */
-
-.shadow-sm,
-.shadow-md {
-  box-shadow: var(--hh-shadow-tile);
-}
-
-.shadow-lg,
-.shadow-xl {
-  box-shadow: var(--hh-shadow-raised);
-}
-
-.shadow-2xl {
-  box-shadow: var(--hh-shadow-float);
-}
-
-.shadow-none {
-  box-shadow: none;
 }
 
 /* ==========================================================================

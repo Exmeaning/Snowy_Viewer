@@ -1013,87 +1013,77 @@ function MyMusicsContent() {
                 </div>
             )}
 
-            {/* Two Column Layout: Filters + Content */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Sidebar Filters */}
-                <aside className="lg:w-80 flex-shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            {/* Main Content */}
+            <div className="w-full min-w-0">
+                {isLoading || isFetchingUser ? (
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
+                        {Array.from({ length: 12 }).map((_, i) => (
+                            <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-100 shadow-sm animate-pulse">
+                                <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200" />
+                            </div>
+                        ))}
                     </div>
-                </aside>
+                ) : filteredMusics.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                        </svg>
+                        <p className="text-slate-400 font-medium">{t("page.myMusics.noResult")}</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
+                        {displayedMusicsWithSeparators.map((item, _index) => {
+                            if (item.type === 'separator') {
+                                const sepData = item.data as { level: number, difficulty: string };
+                                return (
+                                    <LevelSeparatorCard
+                                        key={`sep-${sepData.difficulty}-${sepData.level}`}
+                                        level={sepData.level}
+                                        difficulty={sepData.difficulty}
+                                    />
+                                );
+                            } else {
+                                const music = item.data as Music;
+                                return (
+                                    <MusicItem
+                                        key={music.id}
+                                        music={music}
+                                        difficulties={musicDifficultiesMap[music.id] || {}}
+                                        results={userMusicResults.get(music.id) || {}}
+                                        thumbnailUrl={getMusicThumbnailUrl(music)}
+                                        hasUserData={userMusicResults.size > 0}
+                                        selectedDifficulty={selectedDifficulty}
+                                        constant={songConstantsMap[music.id]?.[selectedDifficulty]}
+                                        sortBy={sortBy}
+                                    />
+                                );
+                            }
+                        })}
+                    </div>
+                )}
 
-                {/* Main Content */}
-                <div className="flex-1 min-w-0">
-                    {isLoading || isFetchingUser ? (
-                        <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
-                            {Array.from({ length: 12 }).map((_, i) => (
-                                <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-100 shadow-sm animate-pulse">
-                                    <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200" />
-                                </div>
-                            ))}
-                        </div>
-                    ) : filteredMusics.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                            </svg>
-                            <p className="text-slate-400 font-medium">{t("page.myMusics.noResult")}</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
-                            {displayedMusicsWithSeparators.map((item, _index) => {
-                                if (item.type === 'separator') {
-                                    const sepData = item.data as { level: number, difficulty: string };
-                                    return (
-                                        <LevelSeparatorCard
-                                            key={`sep-${sepData.difficulty}-${sepData.level}`}
-                                            level={sepData.level}
-                                            difficulty={sepData.difficulty}
-                                        />
-                                    );
-                                } else {
-                                    const music = item.data as Music;
-                                    return (
-                                        <MusicItem
-                                            key={music.id}
-                                            music={music}
-                                            difficulties={musicDifficultiesMap[music.id] || {}}
-                                            results={userMusicResults.get(music.id) || {}}
-                                            thumbnailUrl={getMusicThumbnailUrl(music)}
-                                            hasUserData={userMusicResults.size > 0}
-                                            selectedDifficulty={selectedDifficulty}
-                                            constant={songConstantsMap[music.id]?.[selectedDifficulty]}
-                                            sortBy={sortBy}
-                                        />
-                                    );
-                                }
-                            })}
-                        </div>
-                    )}
+                {/* Load More Button */}
+                {!isLoading && displayedMusicsWithSeparators.filter(i => i.type === 'music').length < filteredMusics.length && (
+                    <div className="mt-8 flex justify-center">
+                        <button
+                            onClick={loadMore}
+                            data-shortcut-load-more="true"
+                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                        >
+                            {t("page.myMusics.loadMore")}
+                            <span className="ml-2 text-sm opacity-80">
+                                ({displayedMusicsWithSeparators.filter(i => i.type === 'music').length} / {filteredMusics.length})
+                            </span>
+                        </button>
+                    </div>
+                )}
 
-                    {/* Load More Button */}
-                    {!isLoading && displayedMusicsWithSeparators.filter(i => i.type === 'music').length < filteredMusics.length && (
-                        <div className="mt-8 flex justify-center">
-                            <button
-                                onClick={loadMore}
-                                data-shortcut-load-more="true"
-                                className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                            >
-                                {t("page.myMusics.loadMore")}
-                                <span className="ml-2 text-sm opacity-80">
-                                    ({displayedMusicsWithSeparators.filter(i => i.type === 'music').length} / {filteredMusics.length})
-                                </span>
-                            </button>
-                        </div>
-                    )}
-
-                    {/* All loaded indicator */}
-                    {!isLoading && displayedMusicsWithSeparators.filter(i => i.type === 'music').length > 0 && displayedMusicsWithSeparators.filter(i => i.type === 'music').length >= filteredMusics.length && (
-                        <div className="mt-8 text-center text-slate-400 text-sm">
-                            {t("page.myMusics.allLoaded", { count: filteredMusics.length })}
-                        </div>
-                    )}
-                </div>
+                {/* All loaded indicator */}
+                {!isLoading && displayedMusicsWithSeparators.filter(i => i.type === 'music').length > 0 && displayedMusicsWithSeparators.filter(i => i.type === 'music').length >= filteredMusics.length && (
+                    <div className="mt-8 text-center text-slate-400 text-sm">
+                        {t("page.myMusics.allLoaded", { count: filteredMusics.length })}
+                    </div>
+                )}
             </div>
         </div>
     );

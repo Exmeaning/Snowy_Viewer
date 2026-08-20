@@ -18,6 +18,8 @@ import {
 import { useCardThumbnail } from "@/hooks/useCardThumbnail";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
+import { useQuickFilterContext } from "@/contexts/QuickFilterContext";
+import { useIsXlScreen } from "@/hooks/useMediaQuery";
 import {
     NAV_ITEM_LABEL_KEYS,
 } from "@/lib/navigation";
@@ -552,6 +554,27 @@ export default function Sidebar({
     // other pages it grows by a breadcrumb row (2rem + 1px hairline). The rail
     // needs a matching top offset so it never collides with the status bar.
     const isHome = stripRouteLocale(pathname) === "/";
+    const { hasFilters, filterContent, filterTitle, isOpen: isModalOpen } = useQuickFilterContext();
+    const isXl = useIsXlScreen();
+
+    // Segmented mode tab on tablet/mobile (< 1280px): "nav" | "filter".
+    // On >= 1280px (xl), navigation is permanently visible here while filters live in FilterRail.
+    const [activeTab, setActiveTab] = useState<"nav" | "filter">("nav");
+
+    // Revert tab to navigation if active page has no filters or viewport expands to xl
+    useEffect(() => {
+        if ((!hasFilters || isXl) && activeTab === "filter") {
+            setActiveTab("nav");
+        }
+    }, [hasFilters, isXl, activeTab]);
+
+    const handleTabChange = (tab: "nav" | "filter") => {
+        if (tab === activeTab) return;
+        playHandheldSound("toggle");
+        setActiveTab(tab);
+        setFocusedIndex(-1);
+    };
+
     // Expand all groups by default.
     const [expandedGroups, setExpandedGroups] = useState<string[]>(
         navigationGroups.map(group => group.id)
@@ -563,8 +586,11 @@ export default function Sidebar({
     // Keyboard navigation state: -1 means no focused item.
     const [focusedIndex, setFocusedIndex] = useState(-1);
 
-    // Build the current visible navigation item list, respecting collapsed groups.
+    // Build the current visible navigation item list, respecting collapsed groups and active tab.
+    // On xl+ screens, navigation is permanently visible regardless of tablet tab state.
+    const isNavActive = isXl || activeTab === "nav";
     const visibleItems = useMemo(() => {
+        if (!isNavActive) return [];
         const items: { id: string; href: string }[] = [{ id: "home", href: "/" }];
         for (const group of navigationGroups) {
             if (expandedGroups.includes(group.id)) {
@@ -574,7 +600,7 @@ export default function Sidebar({
             }
         }
         return items;
-    }, [expandedGroups]);
+    }, [isNavActive, expandedGroups]);
 
     // Load and sync the active account.
     useEffect(() => {
@@ -734,13 +760,11 @@ export default function Sidebar({
     // movement-free variant set during render, or SSR and client markup diverge.
     const blockVariants = hhStaggerItem;
 
-    // Console top bar geometry. Row 1 is 3.25rem tall on phones, 3.5rem from
-    // `sm` up; below `sm` a non-home page adds a 2rem breadcrumb row plus its 1px
-    // hairline. MainNavbar owns those numbers and MainLayout pads page content
-    // against them — keep the three files in sync.
+    // Console top bar geometry. Synced via CSS variables --hh-topbar-h and
+    // --hh-topbar-sub-h (for the mobile breadcrumb row on non-home pages).
     const railTopClass = isHome
-        ? "top-[3.25rem] sm:top-[3.5rem]"
-        : "top-[calc(5.25rem+1px)] sm:top-[3.5rem]";
+        ? "top-[var(--hh-topbar-h)]"
+        : "top-[calc(var(--hh-topbar-h)+var(--hh-topbar-sub-h))]";
 
     // Every row is its own positioning context because CursorRing is
     // `absolute; inset: 0` and is rendered INSIDE the focused row. That is what
@@ -765,7 +789,7 @@ export default function Sidebar({
     // starts at the home row and skips collapsed sections — so rows inside a
     // collapsed section deliberately consume no index and carry no data-nav-index.
     let flatIdx = HOME_NAV_INDEX + 1;
-    const homeFocused = focusedIndex === HOME_NAV_INDEX;
+    const homeFocused = isNavActive && focusedIndex === HOME_NAV_INDEX;
 
     return (
         <>
@@ -780,20 +804,55 @@ export default function Sidebar({
                 />
             )}
 
-            {/* Software rail — flat opaque chrome flush to the left edge. Its
-                `sm` width (18rem) matches MainLayout's md:ml-[18rem] content
-                offset exactly; the narrower phone width only ever applies below
-                the breakpoint where that offset kicks in. */}
+            {/* Software rail — flat opaque chrome flush to the left edge.
+                Width is controlled by --hh-rail-w (17rem on phones, 18rem on sm+). */}
             <aside
-                className={`fixed left-0 bottom-0 ${railTopClass} z-[60] w-[17rem] sm:w-[18rem] flex flex-col overflow-hidden bg-[var(--hh-surface-1)] border-r border-[var(--hh-border)] ${hasMounted ? "transition-transform duration-[var(--hh-dur-panel)] ease-[var(--hh-ease-out)]" : ""} ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+                className={`fixed left-0 bottom-0 ${railTopClass} z-[60] w-[var(--hh-rail-w)] flex flex-col overflow-hidden bg-[var(--hh-surface-1)] border-r border-[var(--hh-border)] ${hasMounted ? "transition-transform duration-[var(--hh-dur-panel)] ease-[var(--hh-ease-out)]" : ""} ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
             >
-                {/* Rail title */}
-                <div className="h-10 shrink-0 flex items-center px-4 border-b border-[var(--hh-border)]">
-                    <span className="hh-label">{t("layout.nav.groups.navigation")}</span>
+                {/* Rail title / Segmented switcher */}
+                <div className="h-10 shrink-0 flex items-center justify-between px-3 border-b border-[var(--hh-border)]">
+                    {/* On desktop (>= 1280px, xl), navigation is always plain and separate; filters live in FilterRail.
+                        Below xl (tablet/phone), when filters exist, offer a segmented switcher between Nav & Filter. */}
+                    {!isXl && hasFilters ? (
+                        <div className="hh-segment" role="tablist" aria-label={t("layout.nav.groups.navigation")}>
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-selected={activeTab === "nav"}
+                                data-selected={activeTab === "nav"}
+                                onClick={() => handleTabChange("nav")}
+                                className="hh-segment-item cursor-pointer"
+                            >
+                                {t("layout.nav.groups.navigation")}
+                            </button>
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-selected={activeTab === "filter"}
+                                data-selected={activeTab === "filter"}
+                                onClick={() => handleTabChange("filter")}
+                                className="hh-segment-item cursor-pointer"
+                            >
+                                {filterTitle || t("common.filter.title")}
+                            </button>
+                        </div>
+                    ) : (
+                        <span className="hh-label px-1">{t("layout.nav.groups.navigation")}</span>
+                    )}
                 </div>
 
-                {/* Navigation groups - scrollable area */}
-                <nav ref={navRef} className="flex-grow overflow-y-auto px-2 py-2">
+                {/* Filter panel for tablet segmented mode (only mounted below xl when activeTab === "filter" and modal is closed) */}
+                {hasFilters && !isXl && !isModalOpen && activeTab === "filter" ? (
+                    <div className="flex-grow overflow-y-auto px-3 py-3">
+                        {filterContent}
+                    </div>
+                ) : null}
+
+                {/* Navigation groups - scrollable area (hidden on < xl when activeTab === "filter" and modal is closed) */}
+                <nav
+                    ref={navRef}
+                    className={`flex-grow overflow-y-auto px-2 py-2 ${hasFilters && !isXl && !isModalOpen && activeTab === "filter" ? "hidden" : "block"}`}
+                >
                     <motion.div
                         variants={hhStaggerContainer}
                         initial="initial"
@@ -837,7 +896,7 @@ export default function Sidebar({
                                         // text: .hh-label is unlayered CSS and therefore outranks
                                         // Tailwind's layered hover:text-* utility, so a text-color
                                         // hover would silently do nothing here.
-                                        className="hh-press hh-label w-full flex items-center justify-between px-3 py-1.5 rounded-[var(--hh-radius-sm)] hover:bg-[var(--hh-surface-sunken)]"
+                                        className="hh-press w-full flex items-center justify-between px-3 py-1.5 text-xs font-bold hh-label rounded-[var(--hh-radius-sm)] hover:bg-[var(--hh-surface-sunken)] transition-colors"
                                     >
                                         {getGroupLabel(group.id)}
                                         <svg
@@ -858,9 +917,9 @@ export default function Sidebar({
                                             const active = isActive(item.href);
                                             // Collapsed sections are absent from `visibleItems`, so
                                             // their rows must not consume a cursor index either.
-                                            const thisIdx = isExpanded ? flatIdx : -1;
-                                            if (isExpanded) flatIdx++;
-                                            const focused = isExpanded && focusedIndex === thisIdx;
+                                            const thisIdx = (isNavActive && isExpanded) ? flatIdx : -1;
+                                            if (isNavActive && isExpanded) flatIdx++;
+                                            const focused = isExpanded && isNavActive && focusedIndex === thisIdx;
                                             return (
                                                 <Link
                                                     key={item.href}

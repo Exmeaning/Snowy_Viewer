@@ -67,12 +67,12 @@ const SORT_OPTIONS_BASE = [
 ];
 
 const DIFFICULTY_OPTIONS = [
-    { id: "easy", label: "EASY", color: "from-green-400 to-green-500" },
-    { id: "normal", label: "NORMAL", color: "from-blue-400 to-blue-500" },
-    { id: "hard", label: "HARD", color: "from-yellow-400 to-yellow-500" },
-    { id: "expert", label: "EXPERT", color: "from-red-400 to-red-500" },
-    { id: "master", label: "MASTER", color: "from-purple-500 to-purple-600" },
-    { id: "append", label: "APPEND", color: "from-pink-500 to-pink-600" },
+    { id: "easy", label: "EASY" },
+    { id: "normal", label: "NORMAL" },
+    { id: "hard", label: "HARD" },
+    { id: "expert", label: "EXPERT" },
+    { id: "master", label: "MASTER" },
+    { id: "append", label: "APPEND" },
 ];
 
 export default function MusicFilters({
@@ -216,17 +216,19 @@ export default function MusicFilters({
             {/* Difficulty Filter - Only show when sorting by level */}
             {(sortBy === "level" || sortBy === "constant") && selectedDifficulty && onDifficultyChange && (
                 <FilterSection label={t("common.filter.difficulty")}>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-1.5">
                         {DIFFICULTY_OPTIONS.map((diff) => {
                             const isSelected = selectedDifficulty === diff.id;
                             return (
                                 <button
                                     key={diff.id}
+                                    type="button"
                                     onClick={() => onDifficultyChange(diff.id)}
-                                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${isSelected
-                                        ? `bg-gradient-to-r ${diff.color} text-white shadow-lg ring-1 ring-white/30 dark:ring-white/10`
-                                        : "bg-slate-50/50 border border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/80 dark:hover:border-slate-600"
-                                        }`}
+                                    className={`hh-press py-1.5 px-2 rounded-[var(--hh-radius-md)] text-xs font-bold transition-all cursor-pointer border ${
+                                        isSelected
+                                            ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] border-[var(--hh-accent-line)]"
+                                            : "bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] border-[var(--hh-border)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
+                                    }`}
                                 >
                                     {diff.label}
                                 </button>

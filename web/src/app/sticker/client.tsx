@@ -299,81 +299,71 @@ function StickerContent() {
                 </div>
             )}
 
-            {/* Two Column Layout - Same as Gacha Page */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filters - Side Panel on Large Screens */}
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            {/* Grid */}
+            <div className="w-full min-w-0">
+                {isLoading ? (
+                    <div className="flex items-center justify-center min-h-[40vh]">
+                        <div className="loading-spinner loading-spinner-sm" />
                     </div>
-                </div>
-
-                {/* Grid */}
-                <div className="flex-1 min-w-0">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center min-h-[40vh]">
-                            <div className="loading-spinner loading-spinner-sm" />
-                        </div>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-3">
-                                {displayedStamps.map(stamp => (
-                                    <button
-                                        type="button"
-                                        key={stamp.id}
-                                        onClick={() => setSelectedStamp(stamp)}
-                                        data-shortcut-item="true"
-                                        className="group block w-full text-left"
-                                    >
-                                        <div className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-2">
-                                            <div className="relative aspect-square">
-                                                <Image
-                                                    src={getStampUrl(stamp.assetbundleName, assetSource)}
-                                                    alt={stamp.name}
-                                                    fill
-                                                    className="object-contain group-hover:scale-105 transition-transform"
-                                                    unoptimized
-                                                />
-                                            </div>
-                                            <div className="mt-1 text-[10px] text-slate-500 text-center">
-                                                <TranslatedText
-                                                    original={stamp.name}
-                                                    category="sticker"
-                                                    field="name"
-                                                    originalClassName="truncate block"
-                                                    translationClassName="text-[9px] text-slate-400 truncate block"
-                                                />
-                                            </div>
+                ) : (
+                    <>
+                        <div className="grid grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-3">
+                            {displayedStamps.map(stamp => (
+                                <button
+                                    type="button"
+                                    key={stamp.id}
+                                    onClick={() => setSelectedStamp(stamp)}
+                                    data-shortcut-item="true"
+                                    className="group block w-full text-left"
+                                >
+                                    <div className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-2">
+                                        <div className="relative aspect-square">
+                                            <Image
+                                                src={getStampUrl(stamp.assetbundleName, assetSource)}
+                                                alt={stamp.name}
+                                                fill
+                                                className="object-contain group-hover:scale-105 transition-transform"
+                                                unoptimized
+                                            />
                                         </div>
-                                    </button>
-                                ))}
+                                        <div className="mt-1 text-[10px] text-slate-500 text-center">
+                                            <TranslatedText
+                                                original={stamp.name}
+                                                category="sticker"
+                                                field="name"
+                                                originalClassName="truncate block"
+                                                translationClassName="text-[9px] text-slate-400 truncate block"
+                                            />
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Load More */}
+                        {displayedStamps.length < filteredStamps.length && (
+                            <div className="mt-8 flex justify-center">
+                                <button
+                                    onClick={loadMore}
+                                    data-shortcut-load-more="true"
+                                    className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                >
+                                    {t("page.sticker.loadMore")}
+                                    <span className="ml-2 text-sm opacity-80">
+                                        ({displayedStamps.length} / {filteredStamps.length})
+                                    </span>
+                                </button>
                             </div>
+                        )}
 
-                            {/* Load More */}
-                            {displayedStamps.length < filteredStamps.length && (
-                                <div className="mt-8 flex justify-center">
-                                    <button
-                                        onClick={loadMore}
-                                        data-shortcut-load-more="true"
-                                        className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                                    >
-                                        {t("page.sticker.loadMore")}
-                                        <span className="ml-2 text-sm opacity-80">
-                                            ({displayedStamps.length} / {filteredStamps.length})
-                                        </span>
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* All loaded */}
-                            {displayedStamps.length > 0 && displayedStamps.length >= filteredStamps.length && (
-                                <div className="mt-8 text-center text-slate-400 text-sm">
-                                    {t("page.sticker.allLoaded", { count: filteredStamps.length })}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                        {/* All loaded */}
+                        {displayedStamps.length > 0 && displayedStamps.length >= filteredStamps.length && (
+                            <div className="mt-8 text-center text-slate-400 text-sm">
+                                {t("page.sticker.allLoaded", { count: filteredStamps.length })}
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

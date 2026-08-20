@@ -406,49 +406,39 @@ function CardsContent() {
                 </div>
             )}
 
-            {/* Two Column Layout */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filters - Side Panel on Large Screens */}
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            {/* Card Grid */}
+            <div className="w-full min-w-0">
+                <CardGrid cards={displayedCards} isLoading={isLoading} />
+
+                {/* Screenshot Mode Notice */}
+                {isScreenshotMode && (
+                    <div className="mt-8 text-center text-slate-500 text-sm font-medium p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        {t("page.cards.screenshotModeNotice")}
                     </div>
-                </div>
+                )}
 
-                {/* Card Grid */}
-                <div className="flex-1 min-w-0">
-                    <CardGrid cards={displayedCards} isLoading={isLoading} />
+                {/* Load More Button */}
+                {!isScreenshotMode && !isLoading && displayedCards.length < filteredCards.length && (
+                    <div className="mt-8 flex justify-center">
+                        <button
+                            onClick={loadMore}
+                            data-shortcut-load-more="true"
+                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                        >
+                            {t("page.cards.loadMore")}
+                            <span className="ml-2 text-sm opacity-80 type-caption">
+                                ({displayedCards.length} / {filteredCards.length})
+                            </span>
+                        </button>
+                    </div>
+                )}
 
-                    {/* Screenshot Mode Notice */}
-                    {isScreenshotMode && (
-                        <div className="mt-8 text-center text-slate-500 text-sm font-medium p-4 bg-slate-50 rounded-xl border border-slate-100">
-                            {t("page.cards.screenshotModeNotice")}
-                        </div>
-                    )}
-
-                    {/* Load More Button */}
-                    {!isScreenshotMode && !isLoading && displayedCards.length < filteredCards.length && (
-                        <div className="mt-8 flex justify-center">
-                            <button
-                                onClick={loadMore}
-                                data-shortcut-load-more="true"
-                                className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                            >
-                                {t("page.cards.loadMore")}
-                                <span className="ml-2 text-sm opacity-80 type-caption">
-                                    ({displayedCards.length} / {filteredCards.length})
-                                </span>
-                            </button>
-                        </div>
-                    )}
-
-                    {/* All loaded indicator */}
-                    {!isScreenshotMode && !isLoading && displayedCards.length > 0 && displayedCards.length >= filteredCards.length && (
-                        <div className="mt-8 text-center text-slate-400 text-sm">
-                            {t("page.cards.allLoaded", { count: String(filteredCards.length) })}
-                        </div>
-                    )}
-                </div>
+                {/* All loaded indicator */}
+                {!isScreenshotMode && !isLoading && displayedCards.length > 0 && displayedCards.length >= filteredCards.length && (
+                    <div className="mt-8 text-center text-slate-400 text-sm">
+                        {t("page.cards.allLoaded", { count: String(filteredCards.length) })}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -86,9 +86,9 @@ export default function QuickFilterButton() {
                 onPointerUp={handlePressEnd}
                 onPointerLeave={handlePressEnd}
                 onPointerCancel={handlePressEnd}
-                className={`pressable fixed bottom-[6.5rem] right-8 p-3 rounded-2xl material-regular border border-miku/20 shadow-lg transition-[opacity,transform,background-color,box-shadow,color] duration-[var(--duration-base)] ease-[var(--ease-out-soft)] z-[100] transform group md:hidden ${isInteracting
-                    ? "bg-miku text-white shadow-miku/30 -translate-y-1 scale-110"
-                    : "bg-white/80 text-miku shadow-miku/10 hover:bg-miku hover:text-white hover:shadow-miku/30 hover:-translate-y-1 hover:scale-110"
+                className={`hh-press fixed bottom-[6.5rem] right-8 p-3 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-2)] text-[var(--hh-text-primary)] border border-[var(--hh-border)] shadow-[var(--hh-shadow-floating)] transition-[opacity,transform,background-color,border-color,color] duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] z-[100] transform group md:hidden ${isInteracting
+                    ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] border-[var(--hh-accent-line)] -translate-y-1 scale-105"
+                    : "hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-accent)] hover:-translate-y-1 hover:scale-105"
                     } ${isVisible
                         ? "opacity-100 translate-y-0 scale-100"
                         : "opacity-0 translate-y-10 scale-90 pointer-events-none"

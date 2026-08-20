@@ -1280,71 +1280,63 @@ function MaterialsContent() {
                 </div>
             )}
 
-            <div className="flex flex-col lg:flex-row gap-6">
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
-                    </div>
-                </div>
+            <div className="w-full min-w-0">
+                {isLoading ? (
+                    <SkeletonGrid />
+                ) : currentItems.length === 0 ? (
+                    <EmptyState
+                        title={currentHasActiveFilters ? t("page.materials.noResult") : t("common.state.noData")}
+                        description={
+                            currentHasActiveFilters
+                                ? t("page.materials.resetHint")
+                                : t(`page.materials.noData.${activeTab}`)
+                        }
+                    />
+                ) : (
+                    <>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                            {activeTab === "materials"
+                                ? (displayedItems as IMaterialInfo[]).map((item) => (
+                                    <RegularMaterialCard
+                                        key={item.id}
+                                        item={item}
+                                        assetSource={assetSource}
+                                        onClick={() => setSelectedDetail({ kind: "material", item })}
+                                    />
+                                ))
+                                : (displayedItems as IMysekaiMaterial[]).map((item) => (
+                                    <MysekaiMaterialCard
+                                        key={item.id}
+                                        item={item}
+                                        assetSource={assetSource}
+                                        siteMap={mysekaiSiteMap}
+                                        onClick={() => setSelectedDetail({ kind: "mysekai", item })}
+                                    />
+                                ))}
+                        </div>
 
-                <div className="flex-1 min-w-0">
-                    {isLoading ? (
-                        <SkeletonGrid />
-                    ) : currentItems.length === 0 ? (
-                        <EmptyState
-                            title={currentHasActiveFilters ? t("page.materials.noResult") : t("common.state.noData")}
-                            description={
-                                currentHasActiveFilters
-                                    ? t("page.materials.resetHint")
-                                    : t(`page.materials.noData.${activeTab}`)
-                            }
-                        />
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-                                {activeTab === "materials"
-                                    ? (displayedItems as IMaterialInfo[]).map((item) => (
-                                        <RegularMaterialCard
-                                            key={item.id}
-                                            item={item}
-                                            assetSource={assetSource}
-                                            onClick={() => setSelectedDetail({ kind: "material", item })}
-                                        />
-                                    ))
-                                    : (displayedItems as IMysekaiMaterial[]).map((item) => (
-                                        <MysekaiMaterialCard
-                                            key={item.id}
-                                            item={item}
-                                            assetSource={assetSource}
-                                            siteMap={mysekaiSiteMap}
-                                            onClick={() => setSelectedDetail({ kind: "mysekai", item })}
-                                        />
-                                    ))}
+                        {displayedItems.length < currentItems.length && (
+                            <div className="mt-8 flex justify-center">
+                                <button
+                                    onClick={loadMore}
+                                    data-shortcut-load-more="true"
+                                    className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                >
+                                    {t("page.materials.loadMore")}
+                                    <span className="ml-2 text-sm opacity-80">
+                                        ({displayedItems.length} / {currentItems.length})
+                                    </span>
+                                </button>
                             </div>
+                        )}
 
-                            {displayedItems.length < currentItems.length && (
-                                <div className="mt-8 flex justify-center">
-                                    <button
-                                        onClick={loadMore}
-                                        data-shortcut-load-more="true"
-                                        className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                                    >
-                                        {t("page.materials.loadMore")}
-                                        <span className="ml-2 text-sm opacity-80">
-                                            ({displayedItems.length} / {currentItems.length})
-                                        </span>
-                                    </button>
-                                </div>
-                            )}
-
-                            {displayedItems.length > 0 && displayedItems.length >= currentItems.length && (
-                                <div className="mt-8 text-center text-slate-400 text-sm">
-                                    {t("page.materials.allLoaded", { count: currentItems.length, tab: currentTabLabel })}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                        {displayedItems.length > 0 && displayedItems.length >= currentItems.length && (
+                            <div className="mt-8 text-center text-slate-400 text-sm">
+                                {t("page.materials.allLoaded", { count: currentItems.length, tab: currentTabLabel })}
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

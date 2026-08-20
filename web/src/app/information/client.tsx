@@ -8,6 +8,7 @@ import BaseFilters, { FilterButton, FilterSection } from "@/components/common/Ba
 import { TranslatedText } from "@/components/common/TranslatedText";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
+import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "@/contexts/TranslationContext";
 import {
@@ -387,6 +388,81 @@ export default function InformationClient() {
         { id: "id", label: t("common.filter.sortById") },
     ];
 
+    const quickFilterContent = (
+        <BaseFilters
+            title={t("page.information.filterTitle")}
+            filteredCount={filteredItems.length}
+            totalCount={items.length}
+            countUnit={t("page.information.countUnit")}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchPlaceholder={t("page.information.searchPlaceholder")}
+            sortOptions={sortOptions}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={(nextSortBy, nextSortOrder) => {
+                setSortBy(nextSortBy as SortKey);
+                setSortOrder(nextSortOrder);
+            }}
+            hasActiveFilters={hasActiveFilters}
+            onReset={resetFilters}
+        >
+            <FilterSection label={t("page.information.statusFilter")}>
+                <div className="flex flex-wrap gap-2">
+                    <FilterButton selected={statusFilter === ALL_FILTER} onClick={() => setStatusFilter(ALL_FILTER)}>
+                        {t("common.filter.all")}
+                    </FilterButton>
+                    {STATUS_ORDER.map((status) => (
+                        <FilterButton key={status} selected={statusFilter === status} onClick={() => setStatusFilter(status)}>
+                            {t(`page.information.status.${status}`)}
+                        </FilterButton>
+                    ))}
+                </div>
+            </FilterSection>
+
+            <FilterSection label={t("page.information.tagFilter")}>
+                <div className="flex flex-wrap gap-2">
+                    <FilterButton selected={tagFilter === ALL_FILTER} onClick={() => setTagFilter(ALL_FILTER)}>
+                        {t("common.filter.all")}
+                    </FilterButton>
+                    {tagOptions.map((tag) => (
+                        <FilterButton key={tag} selected={tagFilter === tag} onClick={() => setTagFilter(tag)}>
+                            {getMessageFallback(t, `page.information.tags.${tag}`, tag)}
+                        </FilterButton>
+                    ))}
+                </div>
+            </FilterSection>
+
+            <FilterSection label={t("page.information.typeFilter")}>
+                <div className="flex flex-wrap gap-2">
+                    <FilterButton selected={typeFilter === ALL_FILTER} onClick={() => setTypeFilter(ALL_FILTER)}>
+                        {t("common.filter.all")}
+                    </FilterButton>
+                    {typeOptions.map((type) => (
+                        <FilterButton key={type} selected={typeFilter === type} onClick={() => setTypeFilter(type)}>
+                            {getMessageFallback(t, `page.information.types.${type}`, type)}
+                        </FilterButton>
+                    ))}
+                </div>
+            </FilterSection>
+        </BaseFilters>
+    );
+
+    useQuickFilter(t("page.information.filterTitle"), quickFilterContent, [
+        searchQuery,
+        tagFilter,
+        typeFilter,
+        statusFilter,
+        sortBy,
+        sortOrder,
+        hasActiveFilters,
+        tagOptions,
+        typeOptions,
+        items.length,
+        filteredItems.length,
+        t,
+    ]);
+
     return (
         <MainLayout>
             <div className="container mx-auto max-w-[96rem] px-4 py-8 sm:px-6 sm:py-10">
@@ -402,90 +478,27 @@ export default function InformationClient() {
                     </p>
                 </div>
 
-
-                <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)]">
-                    <aside className="lg:sticky lg:top-24 lg:self-start">
-                        <BaseFilters
-                            title={t("page.information.filterTitle")}
-                            filteredCount={filteredItems.length}
-                            totalCount={items.length}
-                            countUnit={t("page.information.countUnit")}
-                            searchQuery={searchQuery}
-                            onSearchChange={setSearchQuery}
-                            searchPlaceholder={t("page.information.searchPlaceholder")}
-                            sortOptions={sortOptions}
-                            sortBy={sortBy}
-                            sortOrder={sortOrder}
-                            onSortChange={(nextSortBy, nextSortOrder) => {
-                                setSortBy(nextSortBy as SortKey);
-                                setSortOrder(nextSortOrder);
-                            }}
-                            hasActiveFilters={hasActiveFilters}
-                            onReset={resetFilters}
-                        >
-                            <FilterSection label={t("page.information.statusFilter")}> 
-                                <div className="flex flex-wrap gap-2">
-                                    <FilterButton selected={statusFilter === ALL_FILTER} onClick={() => setStatusFilter(ALL_FILTER)}>
-                                        {t("common.filter.all")}
-                                    </FilterButton>
-                                    {STATUS_ORDER.map((status) => (
-                                        <FilterButton key={status} selected={statusFilter === status} onClick={() => setStatusFilter(status)}>
-                                            {t(`page.information.status.${status}`)}
-                                        </FilterButton>
-                                    ))}
-                                </div>
-                            </FilterSection>
-
-                            <FilterSection label={t("page.information.tagFilter")}> 
-                                <div className="flex flex-wrap gap-2">
-                                    <FilterButton selected={tagFilter === ALL_FILTER} onClick={() => setTagFilter(ALL_FILTER)}>
-                                        {t("common.filter.all")}
-                                    </FilterButton>
-                                    {tagOptions.map((tag) => (
-                                        <FilterButton key={tag} selected={tagFilter === tag} onClick={() => setTagFilter(tag)}>
-                                            {getMessageFallback(t, `page.information.tags.${tag}`, tag)}
-                                        </FilterButton>
-                                    ))}
-                                </div>
-                            </FilterSection>
-
-                            <FilterSection label={t("page.information.typeFilter")}> 
-                                <div className="flex flex-wrap gap-2">
-                                    <FilterButton selected={typeFilter === ALL_FILTER} onClick={() => setTypeFilter(ALL_FILTER)}>
-                                        {t("common.filter.all")}
-                                    </FilterButton>
-                                    {typeOptions.map((type) => (
-                                        <FilterButton key={type} selected={typeFilter === type} onClick={() => setTypeFilter(type)}>
-                                            {getMessageFallback(t, `page.information.types.${type}`, type)}
-                                        </FilterButton>
-                                    ))}
-                                </div>
-                            </FilterSection>
-                        </BaseFilters>
-                    </aside>
-
-                    <section className="min-w-0">
-                        {loading ? (
-                            <InformationSkeleton />
-                        ) : error ? (
-                            <ErrorState message={error} onRetry={() => void loadInformation(server)} />
-                        ) : filteredItems.length === 0 ? (
-                            <EmptyState />
-                        ) : (
-                            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                                {filteredItems.map((item) => (
-                                    <InformationCard
-                                        key={`${server}-${item.id}`}
-                                        item={item}
-                                        server={server}
-                                        now={now}
-                                        onOpen={setSelectedItem}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </section>
-                </div>
+                <section className="w-full min-w-0">
+                    {loading ? (
+                        <InformationSkeleton />
+                    ) : error ? (
+                        <ErrorState message={error} onRetry={() => void loadInformation(server)} />
+                    ) : filteredItems.length === 0 ? (
+                        <EmptyState />
+                    ) : (
+                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                            {filteredItems.map((item) => (
+                                <InformationCard
+                                    key={`${server}-${item.id}`}
+                                    item={item}
+                                    server={server}
+                                    now={now}
+                                    onOpen={setSelectedItem}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </section>
             </div>
             <AnnouncementModal
                 item={selectedItem}

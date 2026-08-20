@@ -1,6 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import React, { useCallback, useState } from "react";
 import { useI18n } from "@/contexts/I18nContext";
 import { playHandheldSound } from "@/lib/handheld-sound";
 
@@ -14,7 +13,7 @@ export interface SortOption {
 }
 
 export interface BaseFiltersProps {
-    /** Title shown in the header (default: t("common.filter.title")) */
+    /** Optional title override (if shown in legacy/custom contexts) */
     title?: string;
     /** Count display format: "filtered / total" or just "total" */
     filteredCount: number;
@@ -53,43 +52,65 @@ export interface BaseFiltersProps {
 }
 
 // ============================================================================
-// Shared filter styles
+// Shared filter styling helpers (Handheld Flat System)
 // ============================================================================
 
+/**
+ * Returns class names for standard filter chips (e.g. tag/character/rarity buttons).
+ * Tight 8px radius (--hh-radius-md), flat opaque surface, crisp active accent fill.
+ */
 export function getFilterChipStateClasses(
     selected: boolean,
     selectedClassName?: string,
     unselectedClassName?: string
-) {
-    const selectedState = selectedClassName ?? "island-chip island-chip-active";
-    const unselectedState = unselectedClassName ?? "island-chip island-chip-hover hover:text-miku";
+): string {
+    const selectedState = selectedClassName ?? "hh-chip hh-chip-active font-semibold shadow-none";
+    const unselectedState = unselectedClassName ?? "hh-chip font-medium";
 
     return selected ? selectedState : unselectedState;
 }
 
+/**
+ * Returns class names for icon-based filter chips (e.g. attribute/unit icons).
+ */
 export function getFilterIconStateClasses(
     selected: boolean,
     selectedClassName?: string,
     unselectedClassName?: string
-) {
-    const selectedState = selectedClassName ?? "island-chip island-chip-active ring-2 ring-miku/30 scale-[1.03]";
-    const unselectedState = unselectedClassName ?? "island-chip island-chip-hover";
+): string {
+    const selectedState = selectedClassName ?? "hh-chip hh-chip-active ring-2 ring-[var(--hh-accent-line)] scale-[1.03]";
+    const unselectedState = unselectedClassName ?? "hh-chip";
 
     return selected ? selectedState : unselectedState;
 }
 
-export function getFilterToggleStateClasses(selected: boolean) {
+/**
+ * Returns class names for filter toggle rows (full-width switches).
+ */
+export function getFilterToggleStateClasses(selected: boolean): string {
     return selected
-        ? "island-pill-active"
-        : "island-pill-hover text-slate-600 dark:text-slate-400 hover:text-miku";
+        ? "bg-[var(--hh-accent-wash)] border-[var(--hh-accent-line)] text-[var(--hh-accent-deep)]"
+        : "bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)]";
 }
 
 // ============================================================================
-// Component
+// BaseFilters Component
 // ============================================================================
 
+/**
+ * BaseFilters — Flat Handheld Filter Panel Component.
+ *
+ * Visual & Structural Principles:
+ * 1. Flat & Unembellished: Completely stripped of glassmorphism (no blur, no gradients,
+ *    no dashed borders, no thick 24px/32px radii). Radii are tightened to --hh-radius-md (8px).
+ * 2. Unambiguous Hierarchy: The outer rail (`FilterRail.tsx`) or modal title owns the main
+ *    structural section header. BaseFilters does not duplicate a large "Filters" header bar;
+ *    instead it renders a lightweight status strip with filtered count and fast reset.
+ * 3. Exact Hook & Keyboard Accessibility: Maintains `data-shortcut-filters` on root and
+ *    `data-shortcut-search` on input for single-mount shortcut indexing.
+ * 4. Sound Cues: Preserves all 5 standard sound cues across search, sort, toggle, and reset.
+ */
 export default function BaseFilters({
-    title,
     filteredCount,
     totalCount,
     countUnit = "",
@@ -106,184 +127,147 @@ export default function BaseFilters({
     children,
 }: BaseFiltersProps) {
     const { t } = useI18n();
-    const resolvedTitle = title ?? t("common.filter.title");
     const resolvedSearchPlaceholder = searchPlaceholder ?? t("common.filter.search") + "...";
-    const pathname = usePathname();
-    const STORAGE_KEY = `filters_collapsed:${pathname}`;
-    const [rootElement, setRootElement] = useState<HTMLDivElement | null>(null);
-    const [mobileCollapsed, setMobileCollapsed] = useState(true);
 
-    useEffect(() => {
-        const frameId = window.requestAnimationFrame(() => {
-            try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                setMobileCollapsed(saved === null ? true : saved === "true");
-            } catch {
-                setMobileCollapsed(true);
-            }
-        });
-
-        return () => window.cancelAnimationFrame(frameId);
-    }, [STORAGE_KEY]);
-
+    const [, setRootElement] = useState<HTMLDivElement | null>(null);
     const rootRef = useCallback((node: HTMLDivElement | null) => {
         setRootElement((current) => (current === node ? current : node));
     }, []);
 
-    const isInsideQuickFilter = !!rootElement?.closest(".quick-filter-modal-content");
-
-    const toggleCollapsed = () => {
-        playHandheldSound("toggle");
-        setMobileCollapsed(prev => {
-            const next = !prev;
-            try { localStorage.setItem(STORAGE_KEY, String(next)); } catch {}
-            return next;
-        });
-    };
+    // Format count display
+    const countText = filteredCount === totalCount
+        ? `${totalCount} ${countUnit}`
+        : `${filteredCount} / ${totalCount} ${countUnit}`;
 
     const handleSortClick = (optionId: string) => {
         if (!onSortChange) return;
-        playHandheldSound("toggle");
-        // Toggle order if clicking same option, otherwise default to desc
-        const newOrder = sortBy === optionId && sortOrder === "desc" ? "asc" : "desc";
-        onSortChange(optionId, newOrder);
+
+        if (sortBy === optionId) {
+            playHandheldSound("toggle");
+            onSortChange(optionId, sortOrder === "asc" ? "desc" : "asc");
+        } else {
+            playHandheldSound("confirm");
+            onSortChange(optionId, "desc");
+        }
     };
 
     const handleReset = () => {
-        if (!onReset) return;
         playHandheldSound("back");
-        onReset();
+        onReset?.();
+    };
+
+    const handleClearSearch = () => {
+        playHandheldSound("back");
+        onSearchChange?.("");
     };
 
     return (
-        <div ref={rootRef} data-shortcut-filters="true" className="ios-glass-card material-regular rounded-3xl overflow-hidden">
-            {/* Header — clickable on mobile to toggle collapse */}
-            <div
-                className="px-5 py-4 border-b border-dashed border-slate-200/60 dark:border-slate-700/40 bg-gradient-to-r from-miku/10 to-transparent dark:from-miku/15 dark:to-slate-900/10 flex items-center justify-between lg:cursor-default cursor-pointer select-none"
-                onClick={toggleCollapsed}
-            >
-                <h2 className="type-title font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                    </svg>
-                    {resolvedTitle}
-                    {/* Active filter indicator dot — mobile only, shown when collapsed with active filters */}
-                    {hasActiveFilters && mobileCollapsed && (
-                        <span className="lg:hidden w-2 h-2 rounded-full bg-miku animate-pulse" />
-                    )}
-                </h2>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs type-caption text-slate-500 dark:text-slate-400">
-                        {filteredCount === totalCount
-                            ? `${totalCount}${countUnit ? ` ${countUnit}` : ""}`
-                            : `${filteredCount} / ${totalCount}`}
-                    </span>
-                    {/* Collapse chevron — mobile only */}
+        <div
+            ref={rootRef}
+            data-shortcut-filters="true"
+            className="w-full flex flex-col gap-4 text-[var(--hh-text-primary)]"
+        >
+            {/* Status bar: item count & quick reset */}
+            <div className="flex items-center justify-between px-0.5 text-xs text-[var(--hh-text-tertiary)] font-mono">
+                <span className="font-medium tracking-tight">
+                    {countText}
+                </span>
+                {hasActiveFilters && onReset && (
+                    <button
+                        type="button"
+                        onClick={handleReset}
+                        className="hh-press text-xs font-sans font-medium text-[var(--hh-accent)] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        {t("common.filter.reset")}
+                    </button>
+                )}
+            </div>
+
+            {/* Search Box */}
+            {showSearch && onSearchChange && (
+                <div className="relative">
+                    <input
+                        data-shortcut-search="true"
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                        placeholder={resolvedSearchPlaceholder}
+                        className="hh-input w-full h-9 pl-8 pr-8 text-xs font-medium"
+                    />
                     <svg
-                        className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] lg:hidden ${mobileCollapsed ? "" : "rotate-180"}`}
+                        className="w-3.5 h-3.5 text-[var(--hh-text-tertiary)] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
                     >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={handleClearSearch}
+                            className="hh-press absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] cursor-pointer"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
-            </div>
+            )}
 
-            {/* Search — always visible */}
-            {showSearch && onSearchChange && (
-                <div className="px-5 pt-5">
-                    <label className="block text-xs font-bold type-caption text-slate-600 dark:text-slate-350 uppercase tracking-wider mb-2">
-                        {t("common.filter.search")}
+            {/* Sort Options */}
+            {sortOptions && sortOptions.length > 0 && onSortChange && (
+                <div className="space-y-1.5">
+                    <label className="hh-label block px-0.5">
+                        {t("common.filter.sort")}
                     </label>
-                    <div className="relative">
-                        <input
-                            data-shortcut-search="true"
-                            type="text"
-                            placeholder={resolvedSearchPlaceholder}
-                            value={searchQuery}
-                            onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full ios-glass-input material-thin px-4 py-2.5 pr-10 rounded-xl text-sm type-body text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                        />
-                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                    <div className={`grid gap-1.5 ${sortOptions.length <= 2 ? "grid-cols-2" : sortOptions.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+                        {sortOptions.map((opt) => {
+                            const isSelected = sortBy === opt.id;
+                            return (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => handleSortClick(opt.id)}
+                                    className={`hh-press px-2 py-1.5 flex items-center justify-center gap-1 cursor-pointer ${getFilterChipStateClasses(isSelected)}`}
+                                >
+                                    <span className="truncate">{opt.label}</span>
+                                    {isSelected && (
+                                        <svg
+                                            className={`w-3 h-3 shrink-0 transition-transform duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] ${sortOrder === "asc" ? "rotate-180" : ""}`}
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
 
-            {/* Collapsible section — collapsed on mobile by default, always visible on lg+ */}
-            <div data-filter-collapsible="true" className={`${mobileCollapsed ? "hidden" : "block"} lg:!block`}>
-                <div className="p-5 space-y-5">
-                    {/* Sort Options */}
-                    {sortOptions && sortOptions.length > 0 && onSortChange && (
-                        <div>
-                            <label className="block text-xs font-bold type-caption text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
-                                {t("common.filter.sort")}
-                            </label>
-                            <div className={`grid gap-2 ${sortOptions.length <= 2 ? "grid-cols-2" : sortOptions.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
-                                {sortOptions.map((opt) => (
-                                    <button
-                                        key={opt.id}
-                                        onClick={() => handleSortClick(opt.id)}
-                                        className={`pressable px-2 py-2 flex items-center justify-center gap-1 ${getFilterChipStateClasses(sortBy === opt.id)}`}
-                                    >
-                                        {opt.label}
-                                        {sortBy === opt.id && (
-                                            <svg className={`w-3 h-3 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${sortOrder === "asc" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+            {/* Custom Filter Sections (children) */}
+            {children}
 
-                    {/* Custom Filter Sections (children) */}
-                    {children}
-
-                    {/* Reset Button */}
-                    {hasActiveFilters && onReset && (
-                        <button
-                            onClick={handleReset}
-                            className="pressable w-full py-2.5 border border-slate-200 dark:border-slate-700 rounded-full text-sm text-slate-600 dark:text-slate-300 font-medium material-thin hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-2"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            {t("common.filter.reset")}
-                        </button>
-                    )}
-
-                    {/* "Tap to collapse" bar — mobile only, hidden in quick filter modal */}
-                    {!isInsideQuickFilter && (
-                    <div
-                        data-filter-collapse-bar="true"
-                        className="lg:hidden -mx-5 -mb-5 mt-5 flex items-center justify-center gap-1 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 cursor-pointer select-none text-xs text-slate-400 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors"
-                        onClick={toggleCollapsed}
-                    >
-                        <svg className="w-3.5 h-3.5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                        {t("common.filter.collapse")}
-                    </div>
-                    )}
-                </div>
-            </div>
-
-            {/* "Tap to expand" hint bar — mobile only, shown when collapsed */}
-            {mobileCollapsed && (
-                <div
-                    data-filter-collapse-pad="true"
-                    className="lg:hidden flex items-center justify-center gap-1 py-2.5 mt-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 cursor-pointer select-none text-xs text-slate-400 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors"
-                    onClick={toggleCollapsed}
+            {/* Bottom Full Reset Button (for accessible / touch-friendly reset action) */}
+            {hasActiveFilters && onReset && (
+                <button
+                    type="button"
+                    onClick={handleReset}
+                    className="hh-press hh-btn w-full py-2 rounded-[var(--hh-radius-md)] text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)] border border-[var(--hh-border)]"
                 >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    {t("common.filter.expand")}
-                </div>
+                    {t("common.filter.reset")}
+                </button>
             )}
         </div>
     );
@@ -293,23 +277,23 @@ export default function BaseFilters({
 // Helper Components for custom filter sections
 // ============================================================================
 
-interface FilterSectionProps {
+export interface FilterSectionProps {
     label: string;
     children: React.ReactNode;
 }
 
 export function FilterSection({ label, children }: FilterSectionProps) {
     return (
-        <div>
-            <label className="block text-xs font-bold type-caption text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
+        <div className="space-y-1.5">
+            <label className="hh-label block px-0.5">
                 {label}
             </label>
-            {children}
+            <div>{children}</div>
         </div>
     );
 }
 
-interface FilterButtonProps {
+export interface FilterButtonProps {
     selected: boolean;
     onClick: () => void;
     children: React.ReactNode;
@@ -318,10 +302,8 @@ interface FilterButtonProps {
 }
 
 /**
- * Every filter chip on every list page goes through here, which is exactly why
- * the sound cue lives in this component instead of in each page's handler: one
- * wrapper covers all of them and no page can forget it. Callers keep passing a
- * plain `onClick` and stay unaware that a sound happens at all.
+ * Every filter chip on every list page routes through FilterButton.
+ * Preserves the sound cue and passes through standard click handling.
  */
 export function FilterButton({ selected, onClick, children, className = "", style }: FilterButtonProps) {
     const handleClick = () => {
@@ -331,8 +313,9 @@ export function FilterButton({ selected, onClick, children, className = "", styl
 
     return (
         <button
+            type="button"
             onClick={handleClick}
-            className={`pressable ${getFilterChipStateClasses(selected)} ${className}`}
+            className={`hh-press cursor-pointer ${getFilterChipStateClasses(selected)} ${className}`}
             style={style}
         >
             {children}
@@ -340,7 +323,7 @@ export function FilterButton({ selected, onClick, children, className = "", styl
     );
 }
 
-interface FilterToggleProps {
+export interface FilterToggleProps {
     selected: boolean;
     onClick: () => void;
     label: string;
@@ -354,19 +337,18 @@ export function FilterToggle({ selected, onClick, label }: FilterToggleProps) {
 
     return (
         <button
+            type="button"
+            role="switch"
+            aria-checked={selected}
             onClick={handleClick}
-            className={`pressable w-full flex items-center justify-between px-4 py-3 rounded-2xl border border-transparent ${getFilterToggleStateClasses(selected)}`}
+            className="hh-press w-full flex items-center justify-between px-3 py-2 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-2)] hover:bg-[var(--hh-surface-3)] border border-[var(--hh-border)] cursor-pointer text-[var(--hh-text-primary)] transition-colors duration-[var(--hh-dur-fast)]"
         >
-            <span className={`text-sm font-bold type-on-glass ${selected ? "text-[var(--accent-deep)]" : "text-slate-600 dark:text-slate-300"}`}>
+            <span className="text-sm font-medium">
                 {label}
             </span>
-            <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors duration-[var(--duration-fast)] ${selected ? "bg-miku border-miku shadow-sm shadow-miku/20" : "border-slate-200/60 bg-white/20 dark:border-slate-700 dark:bg-slate-800/40"}`}>
-                {selected && (
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                )}
-            </div>
+            <span className={`hh-switch shrink-0 ${selected ? "hh-switch-active" : ""}`}>
+                <span className="hh-switch-thumb" />
+            </span>
         </button>
     );
 }

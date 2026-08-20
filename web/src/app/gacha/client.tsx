@@ -294,42 +294,32 @@ function GachaContent() {
                 </div>
             )}
 
-            {/* Two Column Layout */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filters - Side Panel on Large Screens */}
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            {/* Gacha Grid */}
+            <div className="w-full min-w-0">
+                <GachaGrid gachas={displayedGachas} isLoading={isLoading} />
+
+                {/* Load More Button */}
+                {!isLoading && displayedGachas.length < filteredGachas.length && (
+                    <div className="mt-8 flex justify-center">
+                        <button
+                            onClick={loadMore}
+                            data-shortcut-load-more="true"
+                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                        >
+                            {t("page.gacha.loadMore")}
+                            <span className="ml-2 text-sm opacity-80 type-caption">
+                                ({displayedGachas.length} / {filteredGachas.length})
+                            </span>
+                        </button>
                     </div>
-                </div>
+                )}
 
-                {/* Gacha Grid */}
-                <div className="flex-1 min-w-0">
-                    <GachaGrid gachas={displayedGachas} isLoading={isLoading} />
-
-                    {/* Load More Button */}
-                    {!isLoading && displayedGachas.length < filteredGachas.length && (
-                        <div className="mt-8 flex justify-center">
-                            <button
-                                onClick={loadMore}
-                                data-shortcut-load-more="true"
-                                className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                            >
-                                {t("page.gacha.loadMore")}
-                                <span className="ml-2 text-sm opacity-80 type-caption">
-                                    ({displayedGachas.length} / {filteredGachas.length})
-                                </span>
-                            </button>
-                        </div>
-                    )}
-
-                    {/* All loaded indicator */}
-                    {!isLoading && displayedGachas.length > 0 && displayedGachas.length >= filteredGachas.length && (
-                        <div className="mt-8 text-center text-slate-400 text-sm">
-                            {t("page.gacha.allLoaded", { count: filteredGachas.length })}
-                        </div>
-                    )}
-                </div>
+                {/* All loaded indicator */}
+                {!isLoading && displayedGachas.length > 0 && displayedGachas.length >= filteredGachas.length && (
+                    <div className="mt-8 text-center text-slate-400 text-sm">
+                        {t("page.gacha.allLoaded", { count: filteredGachas.length })}
+                    </div>
+                )}
             </div>
         </div>
     );

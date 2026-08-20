@@ -138,6 +138,24 @@
     --hh-leading-display: 1.08;
     --hh-leading-title: 1.2;
     --hh-leading-body: 1.55;
+
+    /* ── Layout geometry ──────────────────────────────────────────────────
+       Console structural dimensions. Kept as variables so the status bar,
+       navigation rail, filter sub-rail, and page offsets stay in sync across
+       Sidebar, MainLayout, MainNavbar, and FilterRail without magic numbers. */
+    --hh-topbar-h: 3.25rem;
+    --hh-topbar-sub-h: calc(2rem + 1px);
+    --hh-rail-w: 17rem;
+    --hh-filter-rail-w: 18rem;
+    --hh-dual-rail-w: calc(var(--hh-rail-w) + var(--hh-filter-rail-w));
+}
+
+@media (min-width: 640px) {
+    :root {
+        --hh-topbar-h: 3.5rem;
+        --hh-topbar-sub-h: 0px;
+        --hh-rail-w: 18rem;
+    }
 }
 
 :root[data-theme="dark"] {
@@ -308,6 +326,27 @@
 
 /* ==========================================================================
    Controls
+
+   ── Why interactive controls sit at 8px, not 999px ──────────────────────
+   The radius ladder is this file's vocabulary, and which rung a component
+   picks is a statement about what kind of object it is. Structure climbs:
+   .hh-well and .hh-tile take 12px, .hh-panel and .hh-float take 16px.
+   Everything the user actually presses lands one rung below the tiles, on
+   --hh-radius-md (8px) — .hh-input already did, and so do the navigation rows
+   in Sidebar and the toggle rows in BaseFilters. 8px is therefore the
+   interactive tonic of the system, and a control that ignores it does not
+   read as deliberate, it reads as imported from somewhere else.
+
+   Buttons, segmented controls and chips were originally authored at
+   --hh-radius-full. On a rectangle, 999px is not "a rounder corner" — it is a
+   different shape, a capsule, and the capsule is the signature of the
+   iOS/web-app vocabulary this redesign exists to replace. The mismatch is
+   loudest exactly where the two touch: a 999px segmented control sitting
+   directly above 8px navigation rows in the same side rail reads as two
+   design systems stacked on each other, because it was. Fully-round is now
+   reserved for elements that are genuinely round or genuinely capsule —
+   .hh-switch and its thumb, and the .hh-dock icon strip — which is also what
+   the radius token block above already claimed the rule was.
    ========================================================================== */
 
 .hh-btn {
@@ -316,7 +355,11 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    border-radius: var(--hh-radius-full);
+    /* A slab, not a pill. Call sites had already started fighting the capsule
+       by hand — BaseFilters' full-width reset button overrides this to
+       --hh-radius-md inline — which is the clearest signal that the default
+       was wrong rather than that the override was special. */
+    border-radius: var(--hh-radius-md);
     border: 1px solid var(--hh-border);
     background: var(--hh-surface-2);
     color: var(--hh-text-primary);
@@ -347,22 +390,74 @@
     color: #ffffff;
 }
 
-/* Segmented control — the settings tab strip. The active segment is a solid
-   slab that sits above a sunken trough, not a tinted pill. */
+/* Segmented control — the settings tab strip, and the Navigation/Filter
+   switch at the top of the side rail. The active segment is a solid slab that
+   sits above a sunken trough, not a tinted pill.
+
+   ── Why it spans the full width of its container ─────────────────────────
+   This was authored as `inline-flex`, i.e. shrink-to-fit. In the side rail
+   that is the wrong sizing model: the rail is a fixed 17–18rem column whose
+   every other element — nav rows, filter sections, the reset button — runs
+   edge to edge, so a control that collapses to the width of its own two
+   labels reads as a small stray object parked in the header strip rather than
+   as part of the rail. Shape was only half the problem; the other half was
+   that it did not occupy its slot.
+
+   Filling the row also fixes an asymmetry inline-flex forced: with
+   shrink-to-fit, each tab was as wide as its own text, so "Navigation" and a
+   short filter title produced two visibly unequal halves and the active slab
+   changed size as you switched. `flex: 1 1 0` with `min-width: 0` gives two
+   exactly equal blocks whose geometry is stable across tab changes and across
+   locales, which matters here because these labels are translated and the
+   Japanese and English strings differ in length.
+
+   ── Nested radii step down by exactly one rung ──────────────────────────
+   The shell and its items are concentric, so they cannot share a radius. Two
+   arcs at the same value but on different-sized boxes do not stay parallel:
+   the inner corner bulges toward the outer one and the 3px trough visibly
+   pinches at each corner while staying 3px along the flats. The fix is the
+   standard concentric rule — inner radius = outer radius − the gap between
+   them. Here the trough is 3px of padding, and 8px − 3px = 5px, which lands
+   exactly on --hh-radius-sm, one rung below --hh-radius-md. So the ladder
+   already contained the correct pair; the arcs are now truly concentric and
+   the trough reads as a constant-width channel all the way around. */
 .hh-segment {
-    display: inline-flex;
+    display: flex;
+    width: 100%;
+    /* The rail header is itself a flex row, so this control is a flex item.
+       `width: 100%` only sets its base size there and flex-shrink could still
+       compress it; `flex: 1 1 auto` makes filling the row the explicit
+       instruction in both contexts — flex parent and normal block flow. */
+    flex: 1 1 auto;
+    /* Keeps the 1px border and 3px trough inside the 100%, so the control
+       cannot overflow a padded header row. */
+    box-sizing: border-box;
     padding: 3px;
     gap: 2px;
     background: var(--hh-surface-sunken);
     border: 1px solid var(--hh-border-hairline);
-    border-radius: var(--hh-radius-full);
+    border-radius: var(--hh-radius-md);
 }
 
 .hh-segment-item {
-    padding: 0.375rem 0.9rem;
-    border-radius: var(--hh-radius-full);
+    /* Equal halves from the container, not from the text. */
+    flex: 1 1 0;
+    min-width: 0;
+    /* Horizontal padding drops to a safety margin now that width comes from
+       flex; keeping 0.9rem here would only push long labels into ellipsis
+       sooner without changing the block's size. */
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--hh-radius-sm);
     font-size: 0.8125rem;
     font-weight: 600;
+    /* 1.2 rather than the inherited body 1.55: at 1.55 the control computes to
+       ~40px, exactly the height of the h-10 header row it sits in, so it had
+       no clearance and pressed against the bottom hairline. */
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     color: var(--hh-text-secondary);
     transition:
         background-color var(--hh-dur-fast) var(--hh-ease-out),
@@ -380,19 +475,46 @@
     box-shadow: var(--hh-shadow-tile);
 }
 
+/* Filter chip — the tag/sort/attribute buttons on every list page, routed
+   through BaseFilters' FilterButton and getFilterChip/IconStateClasses.
+
+   Square-ish for the same reason as .hh-segment, but there is a second,
+   sharper argument here: this rule was silently overriding what the call
+   sites asked for. handheld-os.css is imported unlayered while Tailwind emits
+   utilities inside `@layer utilities`, and unlayered wins regardless of
+   specificity — so `rounded-xl` written on a .hh-chip never applied. Six of
+   the eight icon-chip call sites (CardFilters, EventFilters, CardSelectorModal)
+   explicitly ask for 8px via `rounded-xl` or `rounded-[var(--hh-radius-md)]`
+   and were being forced to 999px anyway. Landing on --hh-radius-md makes this
+   default agree with the intent already written at those call sites, rather
+   than defeating it.
+
+   Note this only re-shapes rectangles. The circular things nearby — character
+   avatars and the ALL button in CharacterFilter — are plain buttons carrying
+   their own `rounded-full`, not chips, so they are untouched. */
 .hh-chip {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.3rem;
     padding: 0.3rem 0.7rem;
-    border-radius: var(--hh-radius-full);
+    border-radius: var(--hh-radius-md);
     border: 1px solid var(--hh-border);
     background: var(--hh-surface-2);
     color: var(--hh-text-secondary);
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.25;
+}
+
+/* Opt a chip back into a true circle. For square icon-only chips where the
+   round shape is the intent rather than an inherited default — the same
+   escape-hatch idiom as .hh-allow-blur further down. It exists so a circular
+   icon chip is one explicit class instead of a local 999px override that
+   would quietly re-introduce the capsule vocabulary. Only meaningful on a
+   square box; on a wide chip it degrades back into a pill. */
+.hh-chip-round {
+    border-radius: var(--hh-radius-full);
 }
 
 .hh-chip:hover {
@@ -416,10 +538,10 @@
     border: 1px solid var(--hh-border);
     border-radius: var(--hh-radius-md);
     color: var(--hh-text-primary);
-    box-shadow: var(--hh-shadow-inset);
+    box-shadow: none;
     transition:
         border-color var(--hh-dur-fast) var(--hh-ease-out),
-        box-shadow var(--hh-dur-fast) var(--hh-ease-out);
+        background-color var(--hh-dur-fast) var(--hh-ease-out);
 }
 
 .hh-input::placeholder {
@@ -429,9 +551,45 @@
 .hh-input:focus {
     outline: none;
     border-color: var(--hh-accent);
-    box-shadow:
-        var(--hh-shadow-inset),
-        0 0 0 2px color-mix(in srgb, var(--hh-accent) 40%, transparent);
+    background: var(--hh-surface-1);
+    box-shadow: 0 0 0 1px var(--hh-accent);
+}
+
+/* Switch / Toggle — flat console binary switch.
+   Solid color-filled trough and a crisp flat knob. */
+.hh-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 2.5rem;
+    height: 1.375rem;
+    border-radius: var(--hh-radius-full);
+    background: var(--hh-surface-3);
+    border: 1px solid var(--hh-border-strong);
+    padding: 1px;
+    transition:
+        background-color var(--hh-dur-fast) var(--hh-ease-out),
+        border-color var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.hh-switch-active {
+    background: var(--hh-accent);
+    border-color: color-mix(in srgb, var(--hh-accent) 76%, black);
+}
+
+.hh-switch-thumb {
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: var(--hh-radius-full);
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transform: translateX(0);
+    transition: transform var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.hh-switch-active .hh-switch-thumb {
+    transform: translateX(1.125rem);
+    background: var(--hh-text-on-accent);
 }
 
 /* List rows are separated by an edge-to-edge hairline, not by gaps. */

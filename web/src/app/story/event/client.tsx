@@ -69,42 +69,35 @@ function StoryEventListContent() {
                 </div>
             )}
 
-            <div className="flex flex-col lg:flex-row gap-6">
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            <div className="w-full min-w-0">
+                <EventGrid
+                    events={data.displayedEvents}
+                    isLoading={data.isLoading}
+                    basePath="/story/event"
+                    eventUnitMap={data.eventUnitMap}
+                    eventBannerCharMap={data.eventBannerCharMap}
+                    eventBonusAttrMap={data.eventBonusAttrMap}
+                    eventStoryIds={data.eventStoryIds}
+                />
+                {!data.isLoading && data.displayedEvents.length < data.filteredEvents.length && (
+                    <div className="mt-8 flex justify-center">
+                        <button
+                            onClick={data.loadMore}
+                            data-shortcut-load-more="true"
+                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                        >
+                            {t("page.story.event.loadMore")}
+                            <span className="ml-2 text-sm opacity-80">
+                                ({data.displayedEvents.length} / {data.filteredEvents.length})
+                            </span>
+                        </button>
                     </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                    <EventGrid
-                        events={data.displayedEvents}
-                        isLoading={data.isLoading}
-                        basePath="/story/event"
-                        eventUnitMap={data.eventUnitMap}
-                        eventBannerCharMap={data.eventBannerCharMap}
-                        eventBonusAttrMap={data.eventBonusAttrMap}
-                        eventStoryIds={data.eventStoryIds}
-                    />
-                    {!data.isLoading && data.displayedEvents.length < data.filteredEvents.length && (
-                        <div className="mt-8 flex justify-center">
-                            <button
-                                onClick={data.loadMore}
-                                data-shortcut-load-more="true"
-                                className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                            >
-                                {t("page.story.event.loadMore")}
-                                <span className="ml-2 text-sm opacity-80">
-                                    ({data.displayedEvents.length} / {data.filteredEvents.length})
-                                </span>
-                            </button>
-                        </div>
-                    )}
-                    {!data.isLoading && data.displayedEvents.length > 0 && data.displayedEvents.length >= data.filteredEvents.length && (
-                        <div className="mt-8 text-center text-slate-400 text-sm">
-                            {t("page.story.event.allLoaded", { count: data.filteredEvents.length })}
-                        </div>
-                    )}
-                </div>
+                )}
+                {!data.isLoading && data.displayedEvents.length > 0 && data.displayedEvents.length >= data.filteredEvents.length && (
+                    <div className="mt-8 text-center text-slate-400 text-sm">
+                        {t("page.story.event.allLoaded", { count: data.filteredEvents.length })}
+                    </div>
+                )}
             </div>
         </div>
     );

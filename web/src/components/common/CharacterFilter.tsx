@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo } from "react";
 import Image from "next/image";
-import { FilterSection, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
+import { FilterSection, getFilterIconStateClasses } from "@/components/common/BaseFilters";
 import { UNIT_DATA, UNIT_ICON_FILES, UNIT_FIELD_TO_ID, UNIT_ID_LABEL_KEYS, ICharaUnitInfo } from "@/types/types";
 import { getCharacterIconUrl } from "@/lib/assets";
 import { useI18n } from "@/contexts/I18nContext";
@@ -224,13 +224,13 @@ export default function CharacterFilter({
                                 <button
                                     key={charId}
                                     onClick={() => toggleCharacter(charId)}
-                                    className={`relative transition-all ${selectedCharacters.includes(charId)
-                                        ? "ring-2 ring-miku scale-110 z-10 rounded-full shadow-lg"
-                                        : "ring-2 ring-transparent hover:ring-slate-200 dark:hover:ring-slate-600 rounded-full opacity-80 hover:opacity-100"
+                                    className={`relative transition-all hh-press ${selectedCharacters.includes(charId)
+                                        ? "ring-2 ring-[var(--hh-accent)] scale-105 z-10 rounded-full shadow-sm"
+                                        : "ring-1 ring-transparent hover:ring-[var(--hh-border-strong)] rounded-full opacity-80 hover:opacity-100"
                                         }`}
                                     title={charName}
                                 >
-                                    <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                                    <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--hh-surface-2)]">
                                         <Image
                                             src={getCharacterIconUrl(getCharIconId(charId))}
                                             alt={charName}
@@ -241,7 +241,7 @@ export default function CharacterFilter({
                                         />
                                     </div>
                                     {badgeIcon && (
-                                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center">
+                                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[var(--hh-surface-1)] border border-[var(--hh-border)] shadow-sm flex items-center justify-center">
                                             <Image
                                                 src={`/data/icon/${badgeIcon}`}
                                                 alt=""
@@ -262,7 +262,10 @@ export default function CharacterFilter({
                         <button
                             key="all"
                             onClick={handleAllClick}
-                            className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold transition-all ${getFilterChipStateClasses(allSelected, "bg-miku text-white shadow-lg ring-2 ring-miku border border-transparent dark:bg-miku/20 dark:text-white dark:border-miku/40 dark:ring-miku/70", "bg-slate-50 hover:bg-slate-100 text-slate-500 dark:text-slate-300 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
+                            className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold transition-all hh-press ${allSelected
+                                ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] ring-2 ring-[var(--hh-accent-line)]"
+                                : "bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] border border-[var(--hh-border)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
+                                }`}
                             title={t("common.filter.all")}
                             style={{ width: '40px', height: '40px' }}
                         >

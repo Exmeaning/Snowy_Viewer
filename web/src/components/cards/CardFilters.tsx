@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import BaseFilters, { FilterSection, getFilterChipStateClasses, getFilterIconStateClasses } from "@/components/common/BaseFilters";
+import BaseFilters, { FilterSection, getFilterIconStateClasses } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { CardRarityType, CardAttribute, ATTR_NAMES, SupportUnit, SUPPORT_UNIT_LABEL_KEYS, UNIT_ICON_FILES, UNIT_FIELD_TO_ID } from "@/types/types";
 import { useCardSupplyTypeMapping } from "@/hooks/useCardSupplyType";
@@ -334,18 +334,19 @@ export default function CardFilters({
             )}
 
             {/* Attribute and Rarity Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Attribute Filter */}
                 <FilterSection label={t("common.filter.attribute")}>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                         {ATTRIBUTES.map((attr) => (
                             <button
                                 key={attr}
+                                type="button"
                                 onClick={() => toggleAttr(attr)}
-                                className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(selectedAttrs.includes(attr))}`}
+                                className={`hh-press p-1.5 rounded-[var(--hh-radius-md)] cursor-pointer transition-all ${getFilterIconStateClasses(selectedAttrs.includes(attr))}`}
                                 title={ATTR_NAMES[attr]}
                             >
-                                <div className="w-6 h-6 relative">
+                                <div className="w-5 h-5 relative">
                                     <Image
                                         src={`/data/icon/${ATTR_ICONS[attr]}`}
                                         alt={ATTR_NAMES[attr]}
@@ -361,18 +362,23 @@ export default function CardFilters({
 
                 {/* Rarity Filter */}
                 <FilterSection label={t("common.filter.rarity")}>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                         {RARITIES.map(({ type, num }) => {
                             const isSelected = selectedRarities.includes(type);
                             return (
                                 <button
                                     key={type}
+                                    type="button"
                                     onClick={() => toggleRarity(type)}
-                                    className={`h-9 px-2.5 rounded-xl transition-all flex items-center justify-center gap-0.5 border ${getFilterIconStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white border-transparent dark:bg-miku/12 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
+                                    className={`hh-press h-8 px-2 rounded-[var(--hh-radius-md)] cursor-pointer flex items-center justify-center gap-0.5 border ${
+                                        isSelected
+                                            ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] border-[var(--hh-accent-line)] ring-1 ring-[var(--hh-accent)]"
+                                            : "bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] border-[var(--hh-border)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
+                                    }`}
                                     title={type}
                                 >
                                     {type === "rarity_birthday" ? (
-                                        <div className="w-4 h-4 relative">
+                                        <div className="w-3.5 h-3.5 relative">
                                             <Image
                                                 src="/data/icon/birthday.webp"
                                                 alt="Birthday"
@@ -383,7 +389,7 @@ export default function CardFilters({
                                         </div>
                                     ) : (
                                         Array.from({ length: num }).map((_, i) => (
-                                            <div key={i} className="w-3 h-3 relative">
+                                            <div key={i} className="w-2.5 h-2.5 relative">
                                                 <Image
                                                     src="/data/icon/star.webp"
                                                     alt="Star"
@@ -403,14 +409,19 @@ export default function CardFilters({
 
             {/* Supply Type Filter */}
             <FilterSection label={t("common.filter.cardType")}>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                     {supplyTypes.map((st) => {
                         const isSelected = selectedSupplyTypes.includes(st.type);
                         return (
                             <button
                                 key={st.type}
+                                type="button"
                                 onClick={() => toggleSupplyType(st.type)}
-                                className={`px-3 py-1.5 rounded-xl text-sm transition-all border ${getFilterChipStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white text-slate-700 border-transparent dark:bg-miku/12 dark:text-slate-100 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
+                                className={`hh-press px-2.5 py-1 rounded-[var(--hh-radius-md)] text-xs font-semibold cursor-pointer border ${
+                                    isSelected
+                                        ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] border-[var(--hh-accent-line)]"
+                                        : "bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] border-[var(--hh-border)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
+                                }`}
                             >
                                 {t(`common.cardSupplyTypes.${st.type}`)}
                             </button>
@@ -421,14 +432,19 @@ export default function CardFilters({
 
             {/* Skill Type Filter */}
             <FilterSection label={t("common.filter.skillType")}>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                     {skillTypes.map((sk) => {
                         const isSelected = selectedSkillTypes.includes(sk.descriptionSpriteName);
                         return (
                             <button
                                 key={sk.descriptionSpriteName}
+                                type="button"
                                 onClick={() => toggleSkillType(sk.descriptionSpriteName)}
-                                className={`px-3 py-1.5 rounded-xl text-sm transition-all border ${getFilterChipStateClasses(isSelected, "ring-2 ring-miku shadow-lg bg-white text-slate-700 border-transparent dark:bg-miku/12 dark:text-slate-100 dark:border-miku/40 dark:ring-miku/75", "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
+                                className={`hh-press px-2.5 py-1 rounded-[var(--hh-radius-md)] text-xs font-semibold cursor-pointer border ${
+                                    isSelected
+                                        ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] border-[var(--hh-accent-line)]"
+                                        : "bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] border-[var(--hh-border)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
+                                }`}
                             >
                                 {t(`common.skillTypes.${sk.descriptionSpriteName}`)}
                             </button>

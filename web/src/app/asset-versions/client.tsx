@@ -602,308 +602,297 @@ function AssetVersionsContent() {
                 </p>
             </div>
 
-            {/* Main Content Layout */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filters Side Panel */}
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            <div className="w-full min-w-0">
+                {/* Toolbar */}
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4 p-4 ios-glass-card rounded-2xl">
+                    <div className="flex items-center gap-2 min-w-0">
+                        {isDiffView && (
+                            <button
+                                onClick={() => setVersion("")}
+                                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
+                                title={t("page.assetVersions.backToList")}
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                        )}
+                        <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 min-w-0">
+                            <button
+                                onClick={() => setVersion("")}
+                                className={`hover:text-miku transition-colors ${!isDiffView ? "text-primary-text font-bold" : ""}`}
+                            >
+                                {t("page.assetVersions.timeline")}
+                            </button>
+                            {isDiffView && (
+                                <>
+                                    <span className="text-slate-300 dark:text-slate-700">/</span>
+                                    <span className="text-primary-text font-bold font-mono truncate">{version}</span>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <LocalizedLink
+                            href={`/asset-viewer?server=${server}`}
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
+                            title={t("layout.nav.items.assetViewer")}
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                        </LocalizedLink>
+
+                        <button
+                            onClick={isDiffView ? fetchDiff : fetchVersions}
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
+                            title={t("common.action.refresh")}
+                        >
+                            <svg className={`w-4 h-4 ${(isDiffView ? isDiffLoading : isVersionsLoading) ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
-                {/* Content Panel */}
-                <div className="flex-1 min-w-0">
-                    {/* Toolbar */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4 p-4 ios-glass-card rounded-2xl">
-                        <div className="flex items-center gap-2 min-w-0">
-                            {isDiffView && (
-                                <button
-                                    onClick={() => setVersion("")}
-                                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
-                                    title={t("page.assetVersions.backToList")}
-                                >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
-                            )}
-                            <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 min-w-0">
-                                <button
-                                    onClick={() => setVersion("")}
-                                    className={`hover:text-miku transition-colors ${!isDiffView ? "text-primary-text font-bold" : ""}`}
-                                >
-                                    {t("page.assetVersions.timeline")}
-                                </button>
-                                {isDiffView && (
-                                    <>
-                                        <span className="text-slate-300 dark:text-slate-700">/</span>
-                                        <span className="text-primary-text font-bold font-mono truncate">{version}</span>
-                                    </>
-                                )}
-                            </div>
+                {!isDiffView ? (
+                    /* ==================== Version Timeline View ==================== */
+                    isVersionsLoading ? (
+                        <div className="flex items-center justify-center min-h-[40vh]">
+                            <div className="loading-spinner loading-spinner-sm" />
                         </div>
-
-                        <div className="flex items-center gap-3">
-                            <LocalizedLink
-                                href={`/asset-viewer?server=${server}`}
-                                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
-                                title={t("layout.nav.items.assetViewer")}
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                </svg>
-                            </LocalizedLink>
-
+                    ) : versionsError ? (
+                        <div className="p-6 text-center ios-glass-card border-red-500/20 bg-red-500/5 rounded-2xl">
+                            <p className="text-red-500 font-bold mb-3">{t("page.assetVersions.loadFailed")}</p>
+                            <p className="text-slate-500 text-xs mb-4">{versionsError}</p>
                             <button
-                                onClick={isDiffView ? fetchDiff : fetchVersions}
-                                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
-                                title={t("common.action.refresh")}
+                                onClick={fetchVersions}
+                                className="ios-glass-btn ios-glass-btn-primary px-4 py-2 text-xs rounded-xl"
                             >
-                                <svg className={`w-4 h-4 ${(isDiffView ? isDiffLoading : isVersionsLoading) ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                </svg>
+                                {t("common.action.retry")}
                             </button>
                         </div>
-                    </div>
+                    ) : versions.length === 0 ? (
+                        <div className="p-12 text-center ios-glass-card rounded-2xl text-slate-400">
+                            <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p>{t("page.assetVersions.emptyVersions")}</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="relative flex flex-col gap-3">
+                                {/* Timeline rail */}
+                                <div className="absolute left-[13px] top-4 bottom-4 w-px bg-gradient-to-b from-miku/40 via-slate-200 dark:via-slate-700 to-transparent hidden sm:block" aria-hidden />
+                                {versions.map((v, index) => (
+                                    <div key={`${v.assetVersion}-${index}`} className="relative sm:pl-9">
+                                        {/* Timeline dot */}
+                                        <span
+                                            className={`absolute left-[9px] top-6 w-[9px] h-[9px] rounded-full hidden sm:block ${index === 0 ? "bg-miku ring-4 ring-miku/20" : "bg-slate-300 dark:bg-slate-600"}`}
+                                            aria-hidden
+                                        />
+                                        <div
+                                            onClick={() => setVersion(v.assetVersion)}
+                                            className="group ios-glass-card ios-glass-card-interactive p-4 sm:p-5 rounded-2xl cursor-pointer select-none"
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="text-lg sm:text-xl font-black font-mono text-primary-text group-hover:text-miku transition-colors duration-200">
+                                                            {v.assetVersion}
+                                                        </span>
+                                                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full border bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20">
+                                                            App {v.appVersion}
+                                                        </span>
+                                                        {index === 0 && (
+                                                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-miku/15 text-miku border border-miku/25">
+                                                                {t("page.assetVersions.latestBadge")}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="mt-1 text-xs text-slate-400 font-medium">
+                                                        {formatCommittedAt(v.committedAt)}
+                                                    </p>
+                                                </div>
+                                                <div className="shrink-0 flex items-center gap-1 text-xs font-bold text-slate-400 group-hover:text-miku transition-colors duration-200">
+                                                    <span className="hidden sm:inline">{t("page.assetVersions.viewDiff")}</span>
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                </div>
+                                            </div>
 
-                    {!isDiffView ? (
-                        /* ==================== Version Timeline View ==================== */
-                        isVersionsLoading ? (
+                                            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                                <span>
+                                                    {t("page.assetVersions.changedAssetsLabel")}
+                                                    <span className="ml-1.5 font-bold text-primary-text">{formatNumber(v.changedAssets)}</span>
+                                                </span>
+                                            </div>
+
+                                            {renderStatChips(v.stats, "mt-2.5")}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {versionsCursor && (
+                                <div className="mt-8 flex justify-center">
+                                    <button
+                                        onClick={fetchMoreVersions}
+                                        disabled={isVersionsLoadingMore}
+                                        className="ios-glass-btn ios-glass-btn-primary px-8 py-3 font-bold rounded-2xl flex items-center gap-2"
+                                    >
+                                        {isVersionsLoadingMore ? (
+                                            <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            t("page.assetVersions.loadMore")
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+
+                            {!versionsCursor && versions.length > 0 && (
+                                <div className="mt-8 text-center text-slate-400 text-sm font-medium">
+                                    {t("page.assetVersions.allVersionsLoaded", { count: versions.length })}
+                                </div>
+                            )}
+                        </>
+                    )
+                ) : (
+                    /* ==================== Single Version Diff View ==================== */
+                    <>
+                        {/* Version summary card */}
+                        <div className="mb-4 p-4 sm:p-5 ios-glass-card rounded-2xl">
+                            {isDiffLoading && !diffMeta ? (
+                                <div className="flex items-center gap-3 text-sm text-slate-400">
+                                    <div className="loading-spinner loading-spinner-sm" />
+                                    <span>{t("page.assetVersions.loadingDiff")}</span>
+                                </div>
+                            ) : diffMeta ? (
+                                <>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className="text-xl font-black font-mono text-primary-text">{diffMeta.assetVersion}</span>
+                                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full border bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20">
+                                            App {diffMeta.appVersion}
+                                        </span>
+                                        {(diffMeta.types || []).map(type => (
+                                            <span key={type} className="px-2 py-0.5 text-[10px] font-bold rounded-full border bg-sky-500/10 text-sky-500 dark:text-sky-400 border-sky-500/20">
+                                                {type}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                        <span>{formatCommittedAt(diffMeta.committedAt)}</span>
+                                        <span>
+                                            {t("page.assetVersions.totalChangedLabel")}
+                                            <span className="ml-1.5 font-bold text-primary-text">{formatNumber(diffMeta.totalChanged)}</span>
+                                        </span>
+                                        <span>
+                                            {t("page.assetVersions.loadedLabel")}
+                                            <span className="ml-1.5 font-bold text-primary-text">{formatNumber(diffItems.length)}</span>
+                                        </span>
+                                    </div>
+                                    {selectedVersionMeta && renderStatChips(selectedVersionMeta.stats, "mt-2.5")}
+                                    {diffMeta.assetHash && (
+                                        <p className="mt-2 text-[10px] font-mono text-slate-400 dark:text-slate-500 break-all">
+                                            {diffMeta.assetHash}
+                                        </p>
+                                    )}
+                                </>
+                            ) : null}
+                        </div>
+
+                        {/* Diff list */}
+                        {isDiffLoading ? (
                             <div className="flex items-center justify-center min-h-[40vh]">
                                 <div className="loading-spinner loading-spinner-sm" />
                             </div>
-                        ) : versionsError ? (
+                        ) : diffError ? (
                             <div className="p-6 text-center ios-glass-card border-red-500/20 bg-red-500/5 rounded-2xl">
                                 <p className="text-red-500 font-bold mb-3">{t("page.assetVersions.loadFailed")}</p>
-                                <p className="text-slate-500 text-xs mb-4">{versionsError}</p>
+                                <p className="text-slate-500 text-xs mb-4">{diffError}</p>
                                 <button
-                                    onClick={fetchVersions}
+                                    onClick={fetchDiff}
                                     className="ios-glass-btn ios-glass-btn-primary px-4 py-2 text-xs rounded-xl"
                                 >
                                     {t("common.action.retry")}
                                 </button>
                             </div>
-                        ) : versions.length === 0 ? (
+                        ) : processedDiffItems.length === 0 ? (
                             <div className="p-12 text-center ios-glass-card rounded-2xl text-slate-400">
                                 <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                                 </svg>
-                                <p>{t("page.assetVersions.emptyVersions")}</p>
+                                <p>{t("page.assetVersions.emptyDiff")}</p>
                             </div>
                         ) : (
                             <>
-                                <div className="relative flex flex-col gap-3">
-                                    {/* Timeline rail */}
-                                    <div className="absolute left-[13px] top-4 bottom-4 w-px bg-gradient-to-b from-miku/40 via-slate-200 dark:via-slate-700 to-transparent hidden sm:block" aria-hidden />
-                                    {versions.map((v, index) => (
-                                        <div key={`${v.assetVersion}-${index}`} className="relative sm:pl-9">
-                                            {/* Timeline dot */}
-                                            <span
-                                                className={`absolute left-[9px] top-6 w-[9px] h-[9px] rounded-full hidden sm:block ${index === 0 ? "bg-miku ring-4 ring-miku/20" : "bg-slate-300 dark:bg-slate-600"}`}
-                                                aria-hidden
-                                            />
-                                            <div
-                                                onClick={() => setVersion(v.assetVersion)}
-                                                className="group ios-glass-card ios-glass-card-interactive p-4 sm:p-5 rounded-2xl cursor-pointer select-none"
-                                            >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="min-w-0">
-                                                        <div className="flex flex-wrap items-center gap-2">
-                                                            <span className="text-lg sm:text-xl font-black font-mono text-primary-text group-hover:text-miku transition-colors duration-200">
-                                                                {v.assetVersion}
-                                                            </span>
-                                                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full border bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20">
-                                                                App {v.appVersion}
-                                                            </span>
-                                                            {index === 0 && (
-                                                                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-miku/15 text-miku border border-miku/25">
-                                                                    {t("page.assetVersions.latestBadge")}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="mt-1 text-xs text-slate-400 font-medium">
-                                                            {formatCommittedAt(v.committedAt)}
-                                                        </p>
-                                                    </div>
-                                                    <div className="shrink-0 flex items-center gap-1 text-xs font-bold text-slate-400 group-hover:text-miku transition-colors duration-200">
-                                                        <span className="hidden sm:inline">{t("page.assetVersions.viewDiff")}</span>
-                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
-
-                                                <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                                    <span>
-                                                        {t("page.assetVersions.changedAssetsLabel")}
-                                                        <span className="ml-1.5 font-bold text-primary-text">{formatNumber(v.changedAssets)}</span>
-                                                    </span>
-                                                </div>
-
-                                                {renderStatChips(v.stats, "mt-2.5")}
+                                <div className="flex flex-col gap-1.5">
+                                    {/* Table header */}
+                                    <div className="flex items-center px-4 py-2.5 text-xs font-bold text-slate-400 dark:text-slate-500 border-b border-slate-200/10 mb-1 select-none">
+                                        <div className="w-16">{t("page.assetVersions.changeTypeLabel")}</div>
+                                        <div className="flex-1 min-w-0 pl-3">{t("page.assetVersions.path")}</div>
+                                        <div className="w-24 text-right">{t("page.assetVersions.size")}</div>
+                                    </div>
+                                    {/* Rows */}
+                                    {processedDiffItems.map((item, index) => (
+                                        <div
+                                            key={`${item.path}-${index}`}
+                                            onClick={() => setSelectedFile(item)}
+                                            className="group ios-glass-card ios-glass-card-interactive px-4 py-3 rounded-2xl flex items-center gap-3 cursor-pointer select-none"
+                                        >
+                                            {renderChangeTypeBadge(item.changeType)}
+                                            <div className="flex-1 min-w-0 flex items-center gap-2">
+                                                <p
+                                                    className="text-xs sm:text-sm font-mono font-medium text-primary-text truncate group-hover:text-miku transition-colors duration-200"
+                                                    title={item.path}
+                                                >
+                                                    {item.path}
+                                                </p>
+                                                {item.source === "override" && (
+                                                    <span className="shrink-0 px-1.5 py-0.2 text-[9px] bg-purple-500/10 text-purple-400 rounded-full border border-purple-500/10">override</span>
+                                                )}
+                                            </div>
+                                            <div className="w-24 shrink-0 text-right text-xs text-slate-400 font-medium">
+                                                {formatBytes(item.size)}
                                             </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                {versionsCursor && (
+                                {/* Fetch next server page */}
+                                {diffCursor && (
                                     <div className="mt-8 flex justify-center">
                                         <button
-                                            onClick={fetchMoreVersions}
-                                            disabled={isVersionsLoadingMore}
+                                            onClick={fetchMoreDiff}
+                                            disabled={isDiffLoadingMore}
                                             className="ios-glass-btn ios-glass-btn-primary px-8 py-3 font-bold rounded-2xl flex items-center gap-2"
                                         >
-                                            {isVersionsLoadingMore ? (
+                                            {isDiffLoadingMore ? (
                                                 <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
                                             ) : (
-                                                t("page.assetVersions.loadMore")
+                                                <>
+                                                    {t("page.assetVersions.loadMore")}
+                                                    <span className="text-xs font-semibold opacity-75 bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded-full">
+                                                        {formatNumber(diffItems.length)} / {formatNumber(diffMeta?.totalChanged || 0)}
+                                                    </span>
+                                                </>
                                             )}
                                         </button>
                                     </div>
                                 )}
 
-                                {!versionsCursor && versions.length > 0 && (
+                                {/* All loaded message */}
+                                {!diffCursor && processedDiffItems.length > 0 && (
                                     <div className="mt-8 text-center text-slate-400 text-sm font-medium">
-                                        {t("page.assetVersions.allVersionsLoaded", { count: versions.length })}
+                                        {t("page.assetVersions.allDiffLoaded", { count: processedDiffItems.length })}
                                     </div>
                                 )}
                             </>
-                        )
-                    ) : (
-                        /* ==================== Single Version Diff View ==================== */
-                        <>
-                            {/* Version summary card */}
-                            <div className="mb-4 p-4 sm:p-5 ios-glass-card rounded-2xl">
-                                {isDiffLoading && !diffMeta ? (
-                                    <div className="flex items-center gap-3 text-sm text-slate-400">
-                                        <div className="loading-spinner loading-spinner-sm" />
-                                        <span>{t("page.assetVersions.loadingDiff")}</span>
-                                    </div>
-                                ) : diffMeta ? (
-                                    <>
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span className="text-xl font-black font-mono text-primary-text">{diffMeta.assetVersion}</span>
-                                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full border bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20">
-                                                App {diffMeta.appVersion}
-                                            </span>
-                                            {(diffMeta.types || []).map(type => (
-                                                <span key={type} className="px-2 py-0.5 text-[10px] font-bold rounded-full border bg-sky-500/10 text-sky-500 dark:text-sky-400 border-sky-500/20">
-                                                    {type}
-                                                </span>
-                                            ))}
-                                        </div>
-                                        <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                            <span>{formatCommittedAt(diffMeta.committedAt)}</span>
-                                            <span>
-                                                {t("page.assetVersions.totalChangedLabel")}
-                                                <span className="ml-1.5 font-bold text-primary-text">{formatNumber(diffMeta.totalChanged)}</span>
-                                            </span>
-                                            <span>
-                                                {t("page.assetVersions.loadedLabel")}
-                                                <span className="ml-1.5 font-bold text-primary-text">{formatNumber(diffItems.length)}</span>
-                                            </span>
-                                        </div>
-                                        {selectedVersionMeta && renderStatChips(selectedVersionMeta.stats, "mt-2.5")}
-                                        {diffMeta.assetHash && (
-                                            <p className="mt-2 text-[10px] font-mono text-slate-400 dark:text-slate-500 break-all">
-                                                {diffMeta.assetHash}
-                                            </p>
-                                        )}
-                                    </>
-                                ) : null}
-                            </div>
-
-                            {/* Diff list */}
-                            {isDiffLoading ? (
-                                <div className="flex items-center justify-center min-h-[40vh]">
-                                    <div className="loading-spinner loading-spinner-sm" />
-                                </div>
-                            ) : diffError ? (
-                                <div className="p-6 text-center ios-glass-card border-red-500/20 bg-red-500/5 rounded-2xl">
-                                    <p className="text-red-500 font-bold mb-3">{t("page.assetVersions.loadFailed")}</p>
-                                    <p className="text-slate-500 text-xs mb-4">{diffError}</p>
-                                    <button
-                                        onClick={fetchDiff}
-                                        className="ios-glass-btn ios-glass-btn-primary px-4 py-2 text-xs rounded-xl"
-                                    >
-                                        {t("common.action.retry")}
-                                    </button>
-                                </div>
-                            ) : processedDiffItems.length === 0 ? (
-                                <div className="p-12 text-center ios-glass-card rounded-2xl text-slate-400">
-                                    <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                                    </svg>
-                                    <p>{t("page.assetVersions.emptyDiff")}</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="flex flex-col gap-1.5">
-                                        {/* Table header */}
-                                        <div className="flex items-center px-4 py-2.5 text-xs font-bold text-slate-400 dark:text-slate-500 border-b border-slate-200/10 mb-1 select-none">
-                                            <div className="w-16">{t("page.assetVersions.changeTypeLabel")}</div>
-                                            <div className="flex-1 min-w-0 pl-3">{t("page.assetVersions.path")}</div>
-                                            <div className="w-24 text-right">{t("page.assetVersions.size")}</div>
-                                        </div>
-                                        {/* Rows */}
-                                        {processedDiffItems.map((item, index) => (
-                                            <div
-                                                key={`${item.path}-${index}`}
-                                                onClick={() => setSelectedFile(item)}
-                                                className="group ios-glass-card ios-glass-card-interactive px-4 py-3 rounded-2xl flex items-center gap-3 cursor-pointer select-none"
-                                            >
-                                                {renderChangeTypeBadge(item.changeType)}
-                                                <div className="flex-1 min-w-0 flex items-center gap-2">
-                                                    <p
-                                                        className="text-xs sm:text-sm font-mono font-medium text-primary-text truncate group-hover:text-miku transition-colors duration-200"
-                                                        title={item.path}
-                                                    >
-                                                        {item.path}
-                                                    </p>
-                                                    {item.source === "override" && (
-                                                        <span className="shrink-0 px-1.5 py-0.2 text-[9px] bg-purple-500/10 text-purple-400 rounded-full border border-purple-500/10">override</span>
-                                                    )}
-                                                </div>
-                                                <div className="w-24 shrink-0 text-right text-xs text-slate-400 font-medium">
-                                                    {formatBytes(item.size)}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Fetch next server page */}
-                                    {diffCursor && (
-                                        <div className="mt-8 flex justify-center">
-                                            <button
-                                                onClick={fetchMoreDiff}
-                                                disabled={isDiffLoadingMore}
-                                                className="ios-glass-btn ios-glass-btn-primary px-8 py-3 font-bold rounded-2xl flex items-center gap-2"
-                                            >
-                                                {isDiffLoadingMore ? (
-                                                    <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                                                ) : (
-                                                    <>
-                                                        {t("page.assetVersions.loadMore")}
-                                                        <span className="text-xs font-semibold opacity-75 bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded-full">
-                                                            {formatNumber(diffItems.length)} / {formatNumber(diffMeta?.totalChanged || 0)}
-                                                        </span>
-                                                    </>
-                                                )}
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* All loaded message */}
-                                    {!diffCursor && processedDiffItems.length > 0 && (
-                                        <div className="mt-8 text-center text-slate-400 text-sm font-medium">
-                                            {t("page.assetVersions.allDiffLoaded", { count: processedDiffItems.length })}
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </>
-                    )}
-                </div>
+                        )}
+                    </>
+                )}
             </div>
 
             {/* File Detail Modal */}
