@@ -35,7 +35,7 @@ export default function ParkingPeriodsModal({ userId, churnEntry, onClose }: Par
             size="md"
         >
             {periods.length === 0 ? (
-                <div className="py-8 text-center text-slate-400 dark:text-slate-500">
+                <div className="py-8 text-center text-[var(--hh-text-tertiary)]">
                     <div className="mb-2 text-2xl">🅿️</div>
                     <p className="text-sm font-medium">{t("page.realtimeRanking.churn.noParking")}</p>
                 </div>
@@ -47,17 +47,17 @@ export default function ParkingPeriodsModal({ userId, churnEntry, onClose }: Par
                         return (
                             <div
                                 key={index}
-                                className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${
+                                className={`flex items-center gap-3 rounded-[var(--hh-radius-lg)] border p-3 transition-colors ${
                                     isOngoing
                                         ? "border-miku/30 bg-miku/5"
-                                        : "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50"
+                                        : "border-[var(--hh-border)] bg-[var(--hh-surface-1)]"
                                 }`}
                             >
-                                {/* Index */}
-                                <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-black ${
+                                {/* Index — genuinely round, so it keeps radius-full. */}
+                                <div className={`hh-numeric flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
                                     isOngoing
-                                        ? "bg-miku text-white"
-                                        : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+                                        ? "bg-miku text-[var(--hh-text-on-accent)]"
+                                        : "bg-[var(--hh-surface-inset)] text-[var(--hh-text-secondary)]"
                                 }`}>
                                     {index + 1}
                                 </div>
@@ -65,22 +65,22 @@ export default function ParkingPeriodsModal({ userId, churnEntry, onClose }: Par
                                 {/* Time range */}
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 text-xs">
-                                        <span className="font-medium text-slate-600 dark:text-slate-300">
+                                        <span className="hh-numeric font-medium text-[var(--hh-text-secondary)]">
                                             {formatDate(startTime)}
                                         </span>
-                                        <span className="text-slate-400">→</span>
-                                        <span className={`font-medium ${isOngoing ? "text-miku" : "text-slate-600 dark:text-slate-300"}`}>
+                                        <span className="text-[var(--hh-text-tertiary)]">→</span>
+                                        <span className={`hh-numeric font-medium ${isOngoing ? "text-miku" : "text-[var(--hh-text-secondary)]"}`}>
                                             {isOngoing ? t("page.realtimeRanking.churn.ongoing") : formatDate(period.end_time!)}
                                         </span>
                                     </div>
-                                    <div className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+                                    <div className="hh-numeric mt-0.5 text-[11px] text-[var(--hh-text-tertiary)]">
                                         {t("page.realtimeRanking.churn.duration", { duration: formatDuration(startTime, period.end_time, period.duration_s) })}
                                     </div>
                                 </div>
 
                                 {/* Status badge */}
                                 {isOngoing && (
-                                    <span className="shrink-0 rounded-full bg-miku/10 px-2 py-0.5 text-[10px] font-bold text-miku">
+                                    <span className="shrink-0 rounded-[var(--hh-radius-sm)] bg-miku/10 px-2 py-0.5 text-[10px] font-bold text-miku">
                                         {t("page.realtimeRanking.churn.activeParking")}
                                     </span>
                                 )}

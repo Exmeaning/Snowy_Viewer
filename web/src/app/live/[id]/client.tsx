@@ -602,7 +602,7 @@ export default function VirtualLiveDetailClient() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">{t("common.state.loading")}</p>
+                        <p className="mt-4 text-[var(--hh-text-secondary)]">{t("common.state.loading")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -619,10 +619,10 @@ export default function VirtualLiveDetailClient() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                        <h2 className="hh-title text-2xl text-[var(--hh-text-primary)] mb-2">
                             {t("page.live.notFoundTitle", { id: virtualLiveId })}
                         </h2>
-                        <p className="text-slate-500 mb-6">{t("page.live.notFoundDesc")}</p>
+                        <p className="text-[var(--hh-text-secondary)] mb-6">{t("page.live.notFoundDesc")}</p>
                         <Link
                             href="/live"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
@@ -657,7 +657,7 @@ export default function VirtualLiveDetailClient() {
                 {/* Header Section */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-500 w-fit">
+                        <span className="hh-numeric inline-flex items-center gap-1.5 px-3 py-1 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-sm)] text-xs font-mono text-[var(--hh-text-secondary)] w-fit">
                             ID: {virtualLive.id}
                         </span>
                         <span
@@ -673,13 +673,13 @@ export default function VirtualLiveDetailClient() {
                             {t("common.status." + status)}
                         </span>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-slate-800">
+                    <h1 className="hh-display text-2xl sm:text-3xl text-[var(--hh-text-primary)]">
                         <TranslatedText
                             original={virtualLive.name}
                             category="virtualLive"
                             field="name"
                             originalClassName=""
-                            translationClassName="block text-lg font-medium text-slate-400 mt-1"
+                            translationClassName="block text-lg font-medium text-[var(--hh-text-tertiary)] mt-1"
                         />
                     </h1>
                 </div>
@@ -688,12 +688,12 @@ export default function VirtualLiveDetailClient() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* LEFT Column: Banner */}
                     <div>
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden lg:sticky lg:top-24">
-                            <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
-                                <span className="text-sm font-bold text-slate-600">{t("page.live.bannerTitle")}</span>
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden lg:sticky lg:top-24">
+                            <div className="px-4 py-3 bg-[var(--hh-surface-1)] border-b border-[var(--hh-border)]">
+                                <span className="hh-title text-sm text-[var(--hh-text-secondary)]">{t("page.live.bannerTitle")}</span>
                             </div>
                             <div
-                                className="relative aspect-[16/5] bg-gradient-to-br from-slate-50 to-slate-100 cursor-zoom-in"
+                                className="relative aspect-[16/5] bg-[var(--hh-surface-sunken)] cursor-zoom-in"
                                 onClick={() => setImageViewerOpen(true)}
                             >
                                 <Image
@@ -704,7 +704,7 @@ export default function VirtualLiveDetailClient() {
                                     unoptimized
                                     priority
                                 />
-                                <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1">
+                                <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-[var(--hh-radius-md)] flex items-center gap-1">
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                     </svg>
@@ -717,17 +717,17 @@ export default function VirtualLiveDetailClient() {
                     {/* RIGHT Column: Info Cards */}
                     <div className="space-y-6">
                         {/* Basic Info Card */}
-                        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     {t("page.live.basicInfo")}
                                 </h2>
                             </div>
-                            <div className="divide-y divide-slate-100">
-                                <InfoRow label="ID" value={`#${virtualLive.id}`} />
+                            <div className="divide-y divide-[var(--hh-border)]">
+                                <InfoRow label="ID" value={<span className="hh-numeric">{`#${virtualLive.id}`}</span>} />
                                 <InfoRow
                                     label={t("common.field.name")}
                                     value={
@@ -736,7 +736,7 @@ export default function VirtualLiveDetailClient() {
                                             category="virtualLive"
                                             field="name"
                                             originalClassName=""
-                                            translationClassName="block text-xs font-normal text-slate-400 mt-0.5"
+                                            translationClassName="block text-xs font-normal text-[var(--hh-text-tertiary)] mt-0.5"
                                         />
                                     }
                                 />
@@ -747,11 +747,11 @@ export default function VirtualLiveDetailClient() {
                                     }
                                 />
                                 <InfoRow label={t("page.live.platformLabel")} value={virtualLive.virtualLivePlatform} />
-                                <InfoRow label={t("page.live.startTimeLabel")} value={formatDate(virtualLive.startAt)} />
-                                <InfoRow label={t("page.live.endTimeLabel")} value={formatDate(virtualLive.endAt)} />
+                                <InfoRow label={t("page.live.startTimeLabel")} value={<span className="hh-numeric">{formatDate(virtualLive.startAt)}</span>} />
+                                <InfoRow label={t("page.live.endTimeLabel")} value={<span className="hh-numeric">{formatDate(virtualLive.endAt)}</span>} />
                                 <InfoRow
                                     label={t("page.live.assetNameLabel")}
-                                    value={<span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{virtualLive.assetbundleName}</span>}
+                                    value={<span className="font-mono text-xs bg-[var(--hh-surface-sunken)] px-2 py-0.5 rounded-[var(--hh-radius-sm)]">{virtualLive.assetbundleName}</span>}
                                 />
                             </div>
                         </div>
@@ -776,9 +776,9 @@ export default function VirtualLiveDetailClient() {
 
                         {/* Related Event Card */}
                         {relatedEvent && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
@@ -795,14 +795,16 @@ export default function VirtualLiveDetailClient() {
                                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                                                 unoptimized
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                                            {/* Functional scrim, not decoration: the white title below sits on an
+                                                arbitrary event banner and needs this fade to stay legible. */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                             <div className="absolute bottom-0 left-0 w-full p-4">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-[10px] font-mono bg-white/20 text-white px-2 py-0.5 rounded backdrop-blur-sm">
+                                                    <span className="hh-numeric text-[10px] font-mono bg-black/50 text-white px-2 py-0.5 rounded-[var(--hh-radius-sm)]">
                                                         Event #{relatedEvent.id}
                                                     </span>
                                                 </div>
-                                                <h3 className="text-white font-bold text-lg leading-tight truncate">
+                                                <h3 className="hh-title text-white text-lg truncate">
                                                     <TranslatedText
                                                         original={relatedEvent.name}
                                                         category="events"
@@ -820,20 +822,20 @@ export default function VirtualLiveDetailClient() {
 
                         {/* Setlist Card */}
                         {setlistWithMusic.length > 0 && (
-                            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                         </svg>
                                         {t("page.live.setlistTitle", { count: setlistWithMusic.length })}
                                     </h2>
                                 </div>
-                                <div className="divide-y divide-slate-50">
+                                <div className="divide-y divide-[var(--hh-border)]">
                                     {setlistWithMusic.map((item, index) => (
-                                        <div key={item.id} className="p-4 hover:bg-slate-50 transition-colors">
+                                        <div key={item.id} className="p-4 hover:bg-[var(--hh-surface-1)] transition-colors">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-500">
+                                                <div className="hh-numeric w-8 h-8 rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-sunken)] flex items-center justify-center text-sm font-bold text-[var(--hh-text-secondary)]">
                                                     {index + 1}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
@@ -842,7 +844,7 @@ export default function VirtualLiveDetailClient() {
                                                             href={`/music/${item.music.id}`}
                                                             className="flex items-center gap-3 group"
                                                         >
-                                                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-200 shrink-0 shadow-sm">
+                                                            <div className="w-10 h-10 rounded-[var(--hh-radius-md)] overflow-hidden bg-[var(--hh-surface-inset)] shrink-0">
                                                                 <Image
                                                                     src={getMusicJacketUrl(item.music.assetbundleName, assetSource)}
                                                                     alt={item.music.title}
@@ -853,33 +855,33 @@ export default function VirtualLiveDetailClient() {
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <p className="font-bold text-slate-800 group-hover:text-miku transition-colors">
+                                                                <p className="hh-title text-[var(--hh-text-primary)] group-hover:text-[var(--hh-accent-deep)] transition-colors">
                                                                     <TranslatedText
                                                                         original={item.music.title}
                                                                         category="music"
                                                                         field="title"
                                                                         originalClassName="truncate block"
-                                                                        translationClassName="text-xs text-slate-500 truncate block font-normal"
+                                                                        translationClassName="text-xs text-[var(--hh-text-secondary)] truncate block font-normal"
                                                                     />
                                                                 </p>
-                                                                <p className="text-xs text-slate-500">{t("page.live.setlistMusicLabel")}</p>
+                                                                <p className="text-xs text-[var(--hh-text-secondary)]">{t("page.live.setlistMusicLabel")}</p>
                                                             </div>
                                                         </Link>
                                                     ) : item.virtualLiveSetlistType === "mc" ? (
                                                         <div>
-                                                            <p className="font-medium text-slate-700">{t("page.live.setlistMcLabel")}</p>
-                                                            <p className="text-xs text-slate-400 font-mono">{item.assetbundleName}</p>
+                                                            <p className="font-medium text-[var(--hh-text-primary)]">{t("page.live.setlistMcLabel")}</p>
+                                                            <p className="hh-numeric text-xs text-[var(--hh-text-tertiary)] font-mono">{item.assetbundleName}</p>
                                                         </div>
                                                     ) : (
                                                         <div>
-                                                            <p className="font-medium text-slate-700">{item.virtualLiveSetlistType}</p>
-                                                            <p className="text-xs text-slate-400 font-mono">{item.assetbundleName}</p>
+                                                            <p className="font-medium text-[var(--hh-text-primary)]">{item.virtualLiveSetlistType}</p>
+                                                            <p className="hh-numeric text-xs text-[var(--hh-text-tertiary)] font-mono">{item.assetbundleName}</p>
                                                         </div>
                                                     )}
                                                 </div>
-                                                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${item.virtualLiveSetlistType === "music"
-                                                    ? "bg-miku/10 text-miku"
-                                                    : "bg-slate-100 text-slate-500"
+                                                <span className={`px-2 py-0.5 rounded-[var(--hh-radius-sm)] text-xs font-bold ${item.virtualLiveSetlistType === "music"
+                                                    ? "bg-[var(--hh-accent-wash)] text-[var(--hh-accent-deep)]"
+                                                    : "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]"
                                                     }`}>
                                                     {item.virtualLiveSetlistType === "music" ? t("page.live.setlistTypeMusic") : t("page.live.setlistTypeMc")}
                                                 </span>
@@ -898,7 +900,7 @@ export default function VirtualLiveDetailClient() {
                 <div className="mt-12 text-center">
                     <Link
                         href="/live"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                        className="hh-btn hh-press px-6 py-3 rounded-[var(--hh-radius-md)]"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -926,23 +928,23 @@ function VirtualLiveRewardsCard({
     const totalRewards = rewardBoxes.reduce((total, box) => total + box.details.length, 0);
 
     return (
-        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12v10H4V12m16 0H4m16 0h1V8h-5.5M4 12H3V8h5.5m7 0H12m3.5 0C17 6.5 17 4 15 4s-3 2-3 4m3.5 0H12m-3.5 0H12m-3.5 0C7 6.5 7 4 9 4s3 2 3 4" />
                     </svg>
                     {t("page.live.rewardsTitle", { count: totalRewards })}
                 </h2>
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-[var(--hh-border)]">
                 {rewardBoxes.map((box) => (
                     <div key={`${box.reward.virtualLiveType}-${box.reward.resourceBoxId}`} className="p-4">
                         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                            <span className="inline-flex items-center rounded-full bg-miku/10 px-2.5 py-1 text-xs font-bold text-miku">
+                            <span className="inline-flex items-center rounded-[var(--hh-radius-sm)] bg-[var(--hh-accent-wash)] px-2.5 py-1 text-xs font-bold text-[var(--hh-accent-deep)]">
                                 {getConditionLabel(box.reward.virtualLiveType)}
                             </span>
-                            <span className="font-mono text-xs text-slate-400">
+                            <span className="hh-numeric font-mono text-xs text-[var(--hh-text-tertiary)]">
                                 {t("page.live.rewardBoxLabel", { id: box.reward.resourceBoxId })}
                             </span>
                         </div>
@@ -959,7 +961,7 @@ function VirtualLiveRewardsCard({
                                 ))}
                             </div>
                         ) : (
-                            <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                            <p className="hh-well px-3 py-2 text-sm text-[var(--hh-text-secondary)]">
                                 {t("page.live.rewardEmpty")}
                             </p>
                         )}
@@ -985,20 +987,20 @@ function VirtualLiveRewardItem({
         <>
             <VirtualLiveRewardThumbnail detail={detail} assetSource={assetSource} />
             <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-sm font-bold text-slate-800 group-hover:text-miku transition-colors">
+                <p className="hh-title line-clamp-2 text-sm text-[var(--hh-text-primary)] group-hover:text-[var(--hh-accent-deep)] transition-colors">
                     {detail.name}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
                     {detail.subtitle && (
-                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+                        <span className="rounded-[var(--hh-radius-xs)] bg-[var(--hh-surface-sunken)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--hh-text-secondary)]">
                             {detail.subtitle}
                         </span>
                     )}
                     {typeof detail.resourceId === "number" && (
-                        <span className="font-mono text-[10px] text-slate-400">ID: {detail.resourceId}</span>
+                        <span className="hh-numeric font-mono text-[10px] text-[var(--hh-text-tertiary)]">ID: {detail.resourceId}</span>
                     )}
                     {showQuantity && (
-                        <span className="rounded bg-miku/10 px-1.5 py-0.5 text-[10px] font-bold text-miku">
+                        <span className="hh-numeric rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent-wash)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--hh-accent-deep)]">
                             {t("page.live.rewardQuantity", { count: formatNumber(detail.quantity) })}
                         </span>
                     )}
@@ -1007,7 +1009,7 @@ function VirtualLiveRewardItem({
         </>
     );
 
-    const className = "group flex min-h-[84px] items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3 transition-all hover:border-miku/40 hover:bg-white hover:shadow-sm";
+    const className = "hh-press group flex min-h-[84px] items-center gap-3 rounded-[var(--hh-radius-md)] border border-[var(--hh-border-hairline)] bg-[var(--hh-surface-sunken)] p-3 hover:border-[var(--hh-accent-line)] hover:bg-[var(--hh-surface-1)]";
 
     return detail.linkHref ? (
         <Link href={detail.linkHref} className={className}>
@@ -1042,7 +1044,7 @@ function VirtualLiveRewardThumbnail({
 
     if (detail.imageUrl) {
         return (
-            <div className="relative h-14 w-14 shrink-0 rounded-xl bg-white shadow-sm ring-1 ring-slate-200 overflow-hidden">
+            <div className="relative h-14 w-14 shrink-0 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-2)] ring-1 ring-[var(--hh-border)] overflow-hidden">
                 <Image
                     src={detail.imageUrl}
                     alt={detail.name}
@@ -1056,7 +1058,7 @@ function VirtualLiveRewardThumbnail({
     }
 
     return (
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white text-xs font-black text-slate-400 shadow-sm ring-1 ring-slate-200">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-2)] text-xs font-bold text-[var(--hh-text-tertiary)] ring-1 ring-[var(--hh-border)]">
             {detail.typeLabel.slice(0, 2).toUpperCase()}
         </div>
     );
@@ -1066,8 +1068,8 @@ function VirtualLiveRewardThumbnail({
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <div className="px-5 py-3 flex items-center justify-between text-sm">
-            <span className="text-slate-500 font-medium">{label}</span>
-            <span className="text-slate-800 font-bold text-right max-w-[60%]">{value}</span>
+            <span className="text-[var(--hh-text-secondary)] font-medium">{label}</span>
+            <span className="font-semibold text-[var(--hh-text-primary)] text-right max-w-[60%]">{value}</span>
         </div>
     );
 }
@@ -1090,9 +1092,9 @@ function SchedulesCard({ schedules, formatShortDate }: { schedules: ISchedule[],
     const hasMiddleSchedules = middleSchedules.length > 0;
 
     return (
-        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -1101,15 +1103,15 @@ function SchedulesCard({ schedules, formatShortDate }: { schedules: ISchedule[],
             </div>
             <div className="p-4 space-y-3">
                 {/* First Schedule */}
-                <div className="p-3 bg-miku/5 rounded-xl border border-miku/20">
+                <div className="p-3 bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-line)]">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-miku">{t("page.live.scheduleFirst")}</span>
-                        <span className="text-xs text-slate-500">{t("page.live.scheduleSeq", { seq: firstSchedule.seq })}</span>
+                        <span className="text-xs font-bold text-[var(--hh-accent-deep)]">{t("page.live.scheduleFirst")}</span>
+                        <span className="text-xs text-[var(--hh-text-secondary)]">{t("page.live.scheduleSeq", { seq: firstSchedule.seq })}</span>
                     </div>
-                    <div className="text-sm font-medium text-slate-700">
+                    <div className="hh-numeric text-sm font-medium text-[var(--hh-text-primary)]">
                         {formatShortDate(firstSchedule.startAt)}
                     </div>
-                    <div className="text-xs text-slate-400">
+                    <div className="hh-numeric text-xs text-[var(--hh-text-tertiary)]">
                         ~ {formatShortDate(firstSchedule.endAt)}
                     </div>
                 </div>
@@ -1119,7 +1121,7 @@ function SchedulesCard({ schedules, formatShortDate }: { schedules: ISchedule[],
                     <>
                         <button
                             onClick={() => setIsExpanded(!isExpanded)}
-                            className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm text-slate-600"
+                            className="hh-btn hh-press w-full py-2 px-3 rounded-[var(--hh-radius-md)] text-sm font-medium"
                         >
                             <svg
                                 className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -1135,9 +1137,9 @@ function SchedulesCard({ schedules, formatShortDate }: { schedules: ISchedule[],
                         {isExpanded && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
                                 {middleSchedules.map((schedule) => (
-                                    <div key={schedule.id} className="p-2 bg-slate-50 rounded-lg">
-                                        <div className="text-xs text-slate-500 mb-0.5">{t("page.live.scheduleSeq", { seq: schedule.seq })}</div>
-                                        <div className="text-xs font-medium text-slate-700">
+                                    <div key={schedule.id} className="hh-well p-2">
+                                        <div className="text-xs text-[var(--hh-text-secondary)] mb-0.5">{t("page.live.scheduleSeq", { seq: schedule.seq })}</div>
+                                        <div className="hh-numeric text-xs font-medium text-[var(--hh-text-primary)]">
                                             {formatShortDate(schedule.startAt)}
                                         </div>
                                     </div>
@@ -1149,15 +1151,15 @@ function SchedulesCard({ schedules, formatShortDate }: { schedules: ISchedule[],
 
                 {/* Last Schedule (if different from first) */}
                 {schedules.length > 1 && (
-                    <div className="p-3 bg-orange-50 rounded-xl border border-orange-200">
+                    <div className="p-3 bg-orange-500/10 rounded-[var(--hh-radius-md)] border border-orange-400/40">
                         <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-bold text-orange-600">{t("page.live.scheduleLast")}</span>
-                            <span className="text-xs text-slate-500">{t("page.live.scheduleSeq", { seq: lastSchedule.seq })}</span>
+                            <span className="text-xs text-[var(--hh-text-secondary)]">{t("page.live.scheduleSeq", { seq: lastSchedule.seq })}</span>
                         </div>
-                        <div className="text-sm font-medium text-slate-700">
+                        <div className="hh-numeric text-sm font-medium text-[var(--hh-text-primary)]">
                             {formatShortDate(lastSchedule.startAt)}
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="hh-numeric text-xs text-[var(--hh-text-tertiary)]">
                             ~ {formatShortDate(lastSchedule.endAt)}
                         </div>
                     </div>

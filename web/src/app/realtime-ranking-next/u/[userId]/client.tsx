@@ -41,6 +41,16 @@ const EMPTY_MASTER_DATA: RealtimeRankingMasterData = {
 
 const TIER_COLORS = ["#33CCBB", "#f59e0b", "#8b5cf6", "#ec4899", "#3b82f6", "#10b981", "#ef4444"];
 
+/* The detail page is eight instances of the same object: a tile holding one
+   readout. Naming it once keeps the surface, radius and padding identical
+   across all of them — they had already drifted apart by a padding step. */
+const PANEL = "hh-tile rounded-[var(--hh-radius-lg)] p-5";
+const PANEL_TIGHT = "hh-tile rounded-[var(--hh-radius-lg)] p-4";
+/* Section heading inside a tile. */
+const PANEL_TITLE = "hh-title mb-3 text-sm font-semibold text-[var(--hh-text-primary)]";
+/* Empty state inside a tile: a dashed well, not a filled surface. */
+const PANEL_EMPTY = "rounded-[var(--hh-radius-md)] border border-dashed border-[var(--hh-border)] px-3 py-6 text-center text-xs text-[var(--hh-text-tertiary)]";
+
 function UserDetailContent() {
     const { t, formatNumber } = useI18n();
     const params = useParams();
@@ -115,21 +125,21 @@ function UserDetailContent() {
             <div className="container mx-auto px-4 py-8 sm:px-6">
                 {/* Back link */}
                 <div className="mb-4 flex items-center gap-2 text-sm">
-                    <Link href={backHref} className="inline-flex items-center gap-1 font-bold text-slate-500 transition-colors hover:text-miku dark:text-slate-400">
+                    <Link href={backHref} className="hh-focusable inline-flex items-center gap-1 font-bold text-[var(--hh-text-secondary)] transition-colors hover:text-miku">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-4 w-4">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                         </svg>
                         {t("page.realtimeRankingNext.detail.back")}
                     </Link>
                     {worldLinkCharacterId != null && (
-                        <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-black text-emerald-600 dark:text-emerald-400">
+                        <span className="rounded-[var(--hh-radius-sm)] bg-emerald-500/12 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
                             WL · {getCharacterName(t, worldLinkCharacterId)}
                         </span>
                     )}
 
                     {/* Live indicator + manual refresh */}
                     <div className="ml-auto flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                        <span className="inline-flex items-center gap-1.5 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-2.5 py-1 text-[11px] font-bold text-[var(--hh-text-secondary)]">
                             <motion.span
                                 className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"
                                 animate={{ opacity: [1, 0.3, 1], scale: [1, 0.8, 1] }}
@@ -140,7 +150,7 @@ function UserDetailContent() {
                         <button
                             onClick={refresh}
                             disabled={isRefreshing}
-                            className="inline-flex items-center gap-1 rounded-full bg-miku px-3 py-1 text-[11px] font-black text-white shadow-sm shadow-miku/25 transition-colors hover:bg-miku-dark disabled:opacity-60"
+                            className="hh-press hh-focusable inline-flex items-center gap-1 rounded-[var(--hh-radius-md)] bg-miku px-3 py-1 text-[11px] font-bold text-[var(--hh-text-on-accent)] transition-colors hover:bg-miku-dark disabled:opacity-60"
                         >
                             {isRefreshing ? (
                                 <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 0.8, repeat: Infinity }}>
@@ -154,17 +164,17 @@ function UserDetailContent() {
                 </div>
 
                 {error && (
-                    <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+                    <div className="mb-6 rounded-[var(--hh-radius-lg)] border border-red-500/30 bg-red-500/12 p-4 text-sm text-red-600">
                         {t("page.realtimeRankingNext.loadFailed")}
                     </div>
                 )}
 
                 {isLoading && !data.self ? (
-                    <div className="ios-glass-card rounded-2xl p-10 text-center text-slate-500">
+                    <div className="hh-tile rounded-[var(--hh-radius-lg)] p-10 text-center text-[var(--hh-text-secondary)]">
                         {t("page.realtimeRankingNext.loading")}
                     </div>
                 ) : !data.self ? (
-                    <div className="ios-glass-card rounded-2xl p-10 text-center text-slate-500">
+                    <div className="hh-tile rounded-[var(--hh-radius-lg)] p-10 text-center text-[var(--hh-text-secondary)]">
                         {t("page.realtimeRankingNext.detail.notFound")}
                     </div>
                 ) : (
@@ -180,41 +190,41 @@ function UserDetailContent() {
                         {/* Left column (desktop) */}
                         <div className="contents lg:col-span-7 lg:block">
                             {/* Player card */}
-                            <div className="order-1 ios-glass-card rounded-2xl border border-slate-200/60 p-5 dark:border-slate-700/60">
+                            <div className={`order-1 ${PANEL}`}>
                                 <div className="flex items-start gap-4">
                                     <div className="w-20 shrink-0 sm:w-24">
                                         {leaderCard ? (
                                             <SekaiCardThumbnail card={leaderCard} trained={isTrained} mastery={masterRank} width={96} className="w-full" assetSource={effectiveAssetSource} />
                                         ) : derivedCharacterId ? (
-                                            <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+                                            <div className="relative aspect-square w-full overflow-hidden rounded-[var(--hh-radius-md)] border border-[var(--hh-border)]">
                                                 <Image src={getCharacterIconUrl(derivedCharacterId)} alt="" fill className="object-cover" unoptimized />
                                             </div>
                                         ) : (
-                                            <div className="flex aspect-square w-full items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
-                                                <span className="text-sm font-black text-slate-400">#{data.self.rank}</span>
+                                            <div className="flex aspect-square w-full items-center justify-center rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)]">
+                                                <span className="hh-numeric text-sm font-bold text-[var(--hh-text-tertiary)]">#{data.self.rank}</span>
                                             </div>
                                         )}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
-                                            <span className="rounded-lg bg-miku px-2 py-0.5 text-xs font-black text-white">#{data.self.rank}</span>
+                                            <span className="hh-numeric rounded-[var(--hh-radius-sm)] bg-miku px-2 py-0.5 text-xs font-bold text-[var(--hh-text-on-accent)]">#{data.self.rank}</span>
                                             {data.parking && (
-                                                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-black text-amber-600 dark:text-amber-400">
+                                                <span className="rounded-[var(--hh-radius-sm)] bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-600">
                                                     {t("page.realtimeRankingNext.detail.parkingNow")}
                                                 </span>
                                             )}
                                         </div>
-                                        <h1 className="mt-1.5 truncate text-xl font-black text-primary-text">{data.self.displayName}</h1>
+                                        <h1 className="hh-display mt-1.5 truncate text-xl text-[var(--hh-text-primary)]">{data.self.displayName}</h1>
                                         {data.self.signature && (
-                                            <p className="mt-0.5 truncate text-xs text-slate-400 dark:text-slate-500">{data.self.signature}</p>
+                                            <p className="mt-0.5 truncate text-xs text-[var(--hh-text-tertiary)]">{data.self.signature}</p>
                                         )}
                                         <div className="mt-2">
                                             <PlayerHonorPreview honors={data.self.honors} masterData={masterData} assetSource={effectiveAssetSource} compact />
                                         </div>
                                         <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                                            <div className="text-2xl font-black text-primary-text">
+                                            <div className="hh-numeric hh-display text-2xl text-[var(--hh-text-primary)]">
                                                 {formatNumber(data.self.score)}
-                                                <span className="ml-1 text-xs font-bold text-slate-400">P</span>
+                                                <span className="ml-1 text-xs font-bold text-[var(--hh-text-tertiary)]">P</span>
                                             </div>
                                             <LastChangeBadge changes={data.selfChurn?.recent_score_changes ?? []} />
                                         </div>
@@ -223,36 +233,36 @@ function UserDetailContent() {
                             </div>
 
                             {/* Speed gauge */}
-                            <div className="order-2 ios-glass-card rounded-2xl border border-slate-200/60 p-5 dark:border-slate-700/60 lg:mt-6">
-                                <h2 className="mb-3 text-sm font-black text-primary-text">{t("page.realtimeRankingNext.detail.speedTitle")}</h2>
+                            <div className={`order-2 ${PANEL} lg:mt-6`}>
+                                <h2 className={PANEL_TITLE}>{t("page.realtimeRankingNext.detail.speedTitle")}</h2>
                                 <SpeedGauge churnEntry={data.selfChurn} />
                             </div>
 
                             {/* Heatmap */}
-                            <div className="order-5 ios-glass-card rounded-2xl border border-slate-200/60 p-5 dark:border-slate-700/60 lg:mt-6">
+                            <div className={`order-5 ${PANEL} lg:mt-6`}>
                                 <ChurnHeatmap hourlyChurn={data.selfChurn?.hourly_churn ?? []} churn48h={data.selfChurn?.churn_48h} />
                             </div>
 
                             {/* Score curve */}
-                            <div className="order-6 ios-glass-card rounded-2xl border border-slate-200/60 p-5 dark:border-slate-700/60 lg:mt-6">
-                                <h2 className="mb-2 text-sm font-black text-primary-text">{t("page.realtimeRankingNext.detail.curveTitle")}</h2>
+                            <div className={`order-6 ${PANEL} lg:mt-6`}>
+                                <h2 className={`${PANEL_TITLE} mb-2`}>{t("page.realtimeRankingNext.detail.curveTitle")}</h2>
                                 <ScoreLineChart series={series} height={300} />
                             </div>
 
                             {/* Parking periods */}
                             {data.selfChurn?.parking_periods && data.selfChurn.parking_periods.length > 0 && (
-                                <div className="order-8 ios-glass-card rounded-2xl border border-slate-200/60 p-5 dark:border-slate-700/60 lg:mt-6">
-                                    <h2 className="mb-3 text-sm font-black text-primary-text">{t("page.realtimeRankingNext.detail.parkingTitle")}</h2>
+                                <div className={`order-8 ${PANEL} lg:mt-6`}>
+                                    <h2 className={PANEL_TITLE}>{t("page.realtimeRankingNext.detail.parkingTitle")}</h2>
                                     <div className="space-y-1.5">
                                         {data.selfChurn.parking_periods.slice(-8).reverse().map((p, i) => {
                                             const start = p.start_time ?? p.since_ms;
                                             const dur = p.duration_s;
                                             return (
-                                                <div key={i} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-xs dark:bg-slate-800/60">
-                                                    <span className="text-slate-500 dark:text-slate-400">
+                                                <div key={i} className="flex items-center justify-between rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] px-3 py-1.5 text-xs">
+                                                    <span className="hh-numeric text-[var(--hh-text-secondary)]">
                                                         {start ? new Date(start).toLocaleString() : "—"}
                                                     </span>
-                                                    <span className="font-black text-slate-700 dark:text-slate-200">
+                                                    <span className="hh-numeric font-bold text-[var(--hh-text-primary)]">
                                                         {dur != null ? `${Math.round(dur / 60)}m` : t("page.realtimeRankingNext.detail.parkingOngoing")}
                                                     </span>
                                                 </div>
@@ -266,10 +276,10 @@ function UserDetailContent() {
                         {/* Right column (desktop) */}
                         <div className="contents lg:col-span-5 lg:block">
                             {/* Nearby ranking */}
-                            <div className="order-3 ios-glass-card rounded-2xl border border-slate-200/60 p-4 dark:border-slate-700/60">
-                                <h2 className="mb-3 text-sm font-black text-primary-text">{t("page.realtimeRankingNext.detail.nearbyTitle")}</h2>
+                            <div className={`order-3 ${PANEL_TIGHT}`}>
+                                <h2 className={PANEL_TITLE}>{t("page.realtimeRankingNext.detail.nearbyTitle")}</h2>
                                 {data.nearby.length === 0 ? (
-                                    <div className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400 dark:border-slate-700">
+                                    <div className={PANEL_EMPTY}>
                                         {t("page.realtimeRankingNext.detail.nearbyEmpty")}
                                     </div>
                                 ) : (
@@ -282,10 +292,10 @@ function UserDetailContent() {
                             </div>
 
                             {/* Tier gradient */}
-                            <div className="order-4 ios-glass-card rounded-2xl border border-slate-200/60 p-4 dark:border-slate-700/60 lg:mt-6">
-                                <h2 className="mb-3 text-sm font-black text-primary-text">{t("page.realtimeRankingNext.detail.gradientTitle")}</h2>
+                            <div className={`order-4 ${PANEL_TIGHT} lg:mt-6`}>
+                                <h2 className={PANEL_TITLE}>{t("page.realtimeRankingNext.detail.gradientTitle")}</h2>
                                 {data.tierGradient.every((g) => g.score == null) ? (
-                                    <div className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400 dark:border-slate-700">
+                                    <div className={PANEL_EMPTY}>
                                         {t("page.realtimeRankingNext.detail.gradientEmpty")}
                                     </div>
                                 ) : (
@@ -294,22 +304,22 @@ function UserDetailContent() {
                                             {data.tierGradient.map((g) => {
                                                 const ahead = g.gapToSelf != null && g.gapToSelf > 0; // tier is ahead of self
                                                 return (
-                                                    <div key={g.tier} className="grid grid-cols-[2rem_1fr_auto_auto] items-center gap-x-2 rounded-lg bg-slate-50 px-3 py-2 text-xs dark:bg-slate-800/60">
-                                                        <span className="font-black text-slate-600 dark:text-slate-300">T{g.tier}</span>
-                                                        <span className="text-right tabular-nums text-slate-500 dark:text-slate-400">
+                                                    <div key={g.tier} className="grid grid-cols-[2rem_1fr_auto_auto] items-center gap-x-2 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] px-3 py-2 text-xs">
+                                                        <span className="hh-numeric font-bold text-[var(--hh-text-secondary)]">T{g.tier}</span>
+                                                        <span className="hh-numeric text-right text-[var(--hh-text-secondary)]">
                                                             {g.score != null ? formatNumber(g.score) : "—"}
                                                         </span>
-                                                        <span className="w-12 text-right text-[10px] font-bold text-miku tabular-nums">
+                                                        <span className="hh-numeric w-12 text-right text-[10px] font-bold text-miku">
                                                             {g.speed1h != null ? `${fmtSpeed(g.speed1h)}/h` : ""}
                                                         </span>
-                                                        <span className={`w-24 text-right text-[10px] font-black tabular-nums ${ahead ? "text-rose-500" : "text-emerald-500"}`}>
+                                                        <span className={`hh-numeric w-24 text-right text-[10px] font-bold ${ahead ? "text-rose-500" : "text-emerald-600"}`}>
                                                             {g.gapToSelf != null ? `${ahead ? "+" : ""}${formatNumber(g.gapToSelf)}` : ""}
                                                         </span>
                                                     </div>
                                                 );
                                             })}
                                         </div>
-                                        <p className="mt-2 text-[10px] text-slate-400 dark:text-slate-500">
+                                        <p className="mt-2 text-[10px] text-[var(--hh-text-tertiary)]">
                                             {t("page.realtimeRankingNext.detail.gradientHint")}
                                         </p>
                                     </>
@@ -317,7 +327,7 @@ function UserDetailContent() {
                             </div>
 
                             {/* Recent score changes (live scrolling feed) */}
-                            <div className="order-7 ios-glass-card rounded-2xl border border-slate-200/60 p-5 dark:border-slate-700/60 lg:mt-6">
+                            <div className={`order-7 ${PANEL} lg:mt-6`}>
                                 <RecentChangesFeed changes={data.selfChurn?.recent_score_changes ?? []} />
                             </div>
                         </div>
@@ -356,15 +366,15 @@ function LastChangeBadge({ changes }: { changes: { t: number; delta: number }[] 
             initial={{ opacity: 0, y: 4, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 360, damping: 22 }}
-            className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-black ${
+            className={`hh-numeric inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] px-1.5 py-0.5 text-xs font-bold ${
                 positive
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
-                    : "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
+                    ? "bg-emerald-500/15 text-emerald-700"
+                    : "bg-rose-500/15 text-rose-700"
             }`}
             title={t("page.realtimeRankingNext.detail.lastChange")}
         >
             <span className="text-[10px]">{positive ? "▲" : "▼"}</span>
-            <span className="tabular-nums">{positive ? "+" : ""}{formatNumber(last.delta)}</span>
+            <span>{positive ? "+" : ""}{formatNumber(last.delta)}</span>
             <span className="font-medium opacity-60">{rel}</span>
         </motion.span>
     );
@@ -379,7 +389,7 @@ function LiveAgeLabel({ updatedAt }: { updatedAt: number | null }) {
     }, []);
     if (updatedAt == null) return <span>{t("page.realtimeRankingNext.detail.live")}</span>;
     const sec = Math.max(0, Math.floor((now - updatedAt) / 1000));
-    return <span className="tabular-nums">{t("page.realtimeRankingNext.detail.updatedAgo", { seconds: sec })}</span>;
+    return <span className="hh-numeric">{t("page.realtimeRankingNext.detail.updatedAgo", { seconds: sec })}</span>;
 }
 
 function NearbyRow({ entry, region, worldLinkCharacterId }: {
@@ -402,28 +412,28 @@ function NearbyRow({ entry, region, worldLinkCharacterId }: {
     const delta = last?.delta ?? 0;
 
     const content = (
-        <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
+        <div className={`flex items-center gap-2 rounded-[var(--hh-radius-md)] px-2.5 py-1.5 text-xs transition-colors ${
             entry.isSelf
                 ? "bg-miku/10 ring-1 ring-miku/30"
-                : "hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                : "hover:bg-[var(--hh-surface-sunken)]"
         }`}>
-            <span className={`w-8 shrink-0 text-center font-black ${entry.isSelf ? "text-miku" : "text-slate-500 dark:text-slate-400"}`}>#{entry.rank}</span>
-            <span className="min-w-0 flex-1 tabular-nums font-bold text-primary-text">{formatNumber(entry.score)}</span>
+            <span className={`hh-numeric w-8 shrink-0 text-center font-bold ${entry.isSelf ? "text-miku" : "text-[var(--hh-text-secondary)]"}`}>#{entry.rank}</span>
+            <span className="hh-numeric min-w-0 flex-1 font-bold text-[var(--hh-text-primary)]">{formatNumber(entry.score)}</span>
             {entry.isSelf ? (
-                <span className="shrink-0 text-[10px] font-black text-miku">{t("page.realtimeRankingNext.detail.you")}</span>
+                <span className="shrink-0 text-[10px] font-bold text-miku">{t("page.realtimeRankingNext.detail.you")}</span>
             ) : (
                 <div className="flex shrink-0 items-center gap-1.5">
                     {delta !== 0 ? (
-                        <span className={`inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[10px] font-black tabular-nums ${
+                        <span className={`hh-numeric inline-flex items-center gap-0.5 rounded-[var(--hh-radius-sm)] px-1 py-0.5 text-[10px] font-bold ${
                             delta > 0
-                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
-                                : "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
+                                ? "bg-emerald-500/15 text-emerald-700"
+                                : "bg-rose-500/15 text-rose-700"
                         }`}>
                             <span className="text-[8px]">{delta > 0 ? "▲" : "▼"}</span>
                             {delta > 0 ? "+" : ""}{formatNumber(delta)}
                         </span>
                     ) : (
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500">—</span>
+                        <span className="text-[10px] text-[var(--hh-text-tertiary)]">—</span>
                     )}
                     <ChangeTime changedAt={last?.t} />
                 </div>
@@ -432,13 +442,13 @@ function NearbyRow({ entry, region, worldLinkCharacterId }: {
     );
 
     if (entry.isSelf) return content;
-    return <Link href={href}>{content}</Link>;
+    return <Link href={href} className="hh-focusable block">{content}</Link>;
 }
 
 export default function UserDetailClient() {
     const { t } = useI18n();
     return (
-        <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.realtimeRankingNext.loading")}</div>}>
+        <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("page.realtimeRankingNext.loading")}</div>}>
             <UserDetailContent />
         </Suspense>
     );

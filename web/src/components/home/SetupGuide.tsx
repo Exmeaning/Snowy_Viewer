@@ -208,57 +208,33 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
 
   const languageCopy = getLanguageGuideCopy(t, locale);
 
-  // iOS-style container variants
+  // Step transition: a short lateral slide, matching the shell's screen-change
+  // language rather than a bouncing card.
   const slideVariants = {
     initial: { opacity: 0, x: 50 },
     animate: { opacity: 1, x: 0, transition: { type: "spring" as const, stiffness: 300, damping: 30 } },
     exit: { opacity: 0, x: -50, transition: { duration: 0.2 } }
   };
 
-  // Drifting colorful blobs styling for mesh background
-  const meshStyles = `
-    @keyframes driftBlob1 {
-      0% { transform: translate(0px, 0px) scale(1); }
-      33% { transform: translate(40px, -60px) scale(1.15); }
-      66% { transform: translate(-30px, 30px) scale(0.9); }
-      100% { transform: translate(0px, 0px) scale(1); }
-    }
-    @keyframes driftBlob2 {
-      0% { transform: translate(0px, 0px) scale(1); }
-      50% { transform: translate(-50px, 50px) scale(1.1); }
-      100% { transform: translate(0px, 0px) scale(1); }
-    }
-    @keyframes driftBlob3 {
-      0% { transform: translate(0px, 0px) scale(1); }
-      40% { transform: translate(60px, 40px) scale(0.95); }
-      80% { transform: translate(-20px, -40px) scale(1.05); }
-      100% { transform: translate(0px, 0px) scale(1); }
-    }
-    .drift-blob-1 { animation: driftBlob1 25s infinite ease-in-out; }
-    .drift-blob-2 { animation: driftBlob2 20s infinite ease-in-out; }
-    .drift-blob-3 { animation: driftBlob3 22s infinite ease-in-out; }
-  `;
-
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/30 backdrop-blur-2xl p-0 sm:p-6 overflow-hidden">
-      <style dangerouslySetInnerHTML={{ __html: meshStyles }} />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center hh-scrim p-0 sm:p-6 overflow-hidden">
+      {/* Setup container — full-screen on phones, a floating dialog on desktop.
+          Matches the shared Modal's treatment (flat opaque slab, 16px corner, no
+          blur) so first-run and every later dialog read as the same system.
 
-      {/* Main setup container: Card on desktop, Full screen on mobile */}
-      <div className="relative w-full h-full sm:max-w-md sm:h-[720px] rounded-none sm:rounded-3xl border-0 sm:border border-white/20 shadow-none sm:shadow-2xl overflow-hidden bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl flex flex-col justify-between p-6 sm:p-8 text-slate-800 dark:text-slate-100 transition-all duration-300">
-        
-        {/* Shifting Mesh Gradient Background */}
-        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none opacity-40 dark:opacity-30">
-          <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] rounded-full bg-miku/30 blur-[80px] drift-blob-1" style={{ backgroundColor: `${themeColor}40` }} />
-          <div className="absolute top-[40%] -right-[15%] w-[70%] h-[75%] rounded-full bg-pink-400/25 blur-[100px] drift-blob-2" />
-          <div className="absolute -bottom-[10%] left-[20%] w-[55%] h-[55%] rounded-full bg-yellow-300/20 blur-[80px] drift-blob-3" />
-        </div>
+          The previous version layered three drifting blurred color blobs behind
+          this panel. Removed rather than toned down: an ambient gradient haze is
+          the exact vocabulary this redesign replaces, and it was also the one
+          surface still paying for a live 80–100px blur on the very first frame a
+          new visitor renders. */}
+      <div className="relative w-full h-full sm:max-w-md sm:h-[720px] rounded-none sm:rounded-[var(--hh-radius-xl)] border-0 sm:border sm:border-[var(--hh-border)] shadow-none sm:shadow-[var(--hh-shadow-float)] overflow-hidden bg-[var(--hh-surface-1)] flex flex-col justify-between p-6 sm:p-8 text-[var(--hh-text-primary)]">
 
         {/* ─── Top Header (Step counter & branding) ─── */}
         <div className="flex items-center justify-between w-full h-8 z-10">
           {currentStep > 0 && currentStep < 6 ? (
             <button
               onClick={() => handleStepChange(currentStep - 1)}
-              className="flex items-center gap-1 text-sm font-semibold transition-all hover:opacity-80"
+              className="hh-press hh-focusable flex items-center gap-1 text-sm font-semibold rounded-[var(--hh-radius-md)]"
               style={{ color: themeColor }}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,14 +247,14 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
           )}
 
           {currentStep > 0 && currentStep < 6 && (
-            <span className="text-xs font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
+            <span className="hh-label hh-numeric">
               {t("page.setup.stepIndicator", { current: String(currentStep), total: "5" })}
             </span>
           )}
           {currentStep < 6 ? (
             <button
               onClick={handleSkip}
-              className="text-xs font-bold tracking-wider text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors uppercase cursor-pointer"
+              className="hh-label hh-press hh-focusable rounded-[var(--hh-radius-sm)] hover:text-[var(--hh-text-primary)] transition-colors cursor-pointer"
             >
               {currentStep <= 1 ? t("page.setup.skipBilingual") : t("page.setup.skip")}
             </button>
@@ -309,21 +285,21 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.4 }}
-                    className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-miku to-miku-dark bg-clip-text text-transparent filter drop-shadow-sm font-sans"
-                    style={{
-                      backgroundImage: `linear-gradient(to right, ${themeColor}, var(--color-miku-dark, ${themeColor}))`
-                    }}
+                    className="hh-display text-4xl sm:text-5xl font-sans"
+                    style={{ color: themeColor }}
                   >
                     {GREETINGS[greetingIndex]}
                   </motion.h1>
                 </div>
 
-                {/* Brand Logo & Name */}
+                {/* Brand Logo & Name — the mask is filled with one flat accent
+                    rather than a two-stop gradient, matching the shell's solid
+                    accent slabs. */}
                 <div className="flex flex-col items-center gap-2">
                   <div
-                    className="h-12 w-44 bg-gradient-to-r transition-all duration-300"
+                    className="h-12 w-44"
                     style={{
-                      backgroundImage: `linear-gradient(to right, ${themeColor}, var(--color-miku-dark, ${themeColor}))`,
+                      backgroundColor: themeColor,
                       maskImage: `url(${MOE_LOGO_URL})`,
                       maskSize: "contain",
                       maskPosition: "center",
@@ -336,18 +312,18 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                     role="img"
                     aria-label="Moesekai Logo"
                   />
-                  <h2 className="text-xl font-bold tracking-wide text-slate-800 dark:text-slate-100 mt-1">
+                  <h2 className="hh-title text-xl text-[var(--hh-text-primary)] mt-1">
                     Moesekai
                   </h2>
-                  <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                  <p className="text-xs font-medium text-[var(--hh-text-tertiary)]">
                     {t("page.home.formerName")}
                   </p>
-                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  <p className="text-sm font-semibold text-[var(--hh-text-primary)]">
                     {t("page.setup.welcomeBilingual")}
                   </p>
                 </div>
 
-                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed whitespace-pre-line">
+                <p className="hh-body text-sm text-[var(--hh-text-secondary)] max-w-xs whitespace-pre-line">
                   {t("page.setup.welcomeBilingualDesc")}
                 </p>
               </motion.div>
@@ -364,10 +340,10 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                 className="flex flex-col space-y-5"
               >
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
+                  <h2 className="hh-title text-2xl text-[var(--hh-text-primary)]">
                     {languageCopy.title}
                   </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="hh-body text-sm text-[var(--hh-text-secondary)]">
                     {languageCopy.description}
                   </p>
                 </div>
@@ -385,20 +361,20 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                           }
                           handleStepChange(2);
                         }}
-                        className={`w-full p-4 rounded-2xl flex items-center justify-between border text-left font-bold transition-all duration-300 ${
+                        className={`hh-press hh-focusable w-full p-4 rounded-[var(--hh-radius-md)] flex items-center justify-between border text-left font-semibold ${
                           isSelected
-                            ? "bg-white dark:bg-slate-800 shadow-md scale-[1.01]"
-                            : "bg-white/40 dark:bg-slate-900/30 hover:bg-white/60 dark:hover:bg-slate-900/50 border-slate-200/50 dark:border-slate-800/40"
+                            ? "bg-[var(--hh-surface-2)] shadow-[var(--hh-shadow-tile)]"
+                            : "bg-[var(--hh-surface-1)] border-[var(--hh-border)] hover:bg-[var(--hh-surface-2)]"
                         }`}
                         style={{
                           borderColor: isSelected ? themeColor : undefined,
                         }}
                       >
                         <div className="flex flex-col">
-                          <span className="text-base text-slate-800 dark:text-slate-100">
+                          <span className="text-base text-[var(--hh-text-primary)]">
                             {UI_LOCALE_LABELS[l]}
                           </span>
-                          <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                          <span className="text-xs font-medium text-[var(--hh-text-tertiary)]">
                             {getLanguageGuideCopy(t, l).subtitle}
                           </span>
                         </div>
@@ -412,8 +388,8 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                   })}
                 </div>
 
-                <p className="mt-1 flex items-start gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200/30 dark:border-amber-900/30 px-2.5 py-2 text-[10px] leading-relaxed text-amber-700 dark:text-amber-500">
-                  <span className="mt-0.5 inline-flex h-3 w-3 shrink-0 items-center justify-center rounded-full bg-amber-200 dark:bg-amber-900/50 text-[8px] font-black text-amber-700 dark:text-amber-500">!</span>
+                <p className="hh-body mt-1 flex items-start gap-1.5 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)] px-2.5 py-2 text-[10px] text-[var(--hh-text-secondary)]">
+                  <span className="mt-0.5 inline-flex h-3 w-3 shrink-0 items-center justify-center rounded-[var(--hh-radius-full)] bg-[var(--hh-accent-alert)] text-[8px] font-bold text-white">!</span>
                   <span>{t("settings.uiLanguage.machineTranslationNotice")}</span>
                 </p>
               </motion.div>
@@ -430,10 +406,10 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                 className="flex flex-col space-y-5"
               >
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
+                  <h2 className="hh-title text-2xl text-[var(--hh-text-primary)]">
                     {t("page.setup.serverTitle")}
                   </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="hh-body text-sm text-[var(--hh-text-secondary)]">
                     {t("page.setup.serverDesc")}
                   </p>
                 </div>
@@ -455,20 +431,20 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                           setServerSource(srv);
                           handleStepChange(3);
                         }}
-                        className={`w-full p-4 rounded-2xl flex items-center justify-between border text-left font-bold transition-all duration-300 shrink-0 ${
+                        className={`hh-press hh-focusable w-full p-4 rounded-[var(--hh-radius-md)] flex items-center justify-between border text-left font-semibold shrink-0 ${
                           isSelected
-                            ? "bg-white dark:bg-slate-800 shadow-md scale-[1.01]"
-                            : "bg-white/40 dark:bg-slate-900/30 hover:bg-white/60 dark:hover:bg-slate-900/50 border-slate-200/50 dark:border-slate-800/40"
+                            ? "bg-[var(--hh-surface-2)] shadow-[var(--hh-shadow-tile)]"
+                            : "bg-[var(--hh-surface-1)] border-[var(--hh-border)] hover:bg-[var(--hh-surface-2)]"
                         }`}
                         style={{
                           borderColor: isSelected ? themeColor : undefined,
                         }}
                       >
                         <div className="flex flex-col">
-                          <span className="text-base text-slate-800 dark:text-slate-100">
+                          <span className="text-base text-[var(--hh-text-primary)]">
                             {t("settings.serverSource." + srv)}
                           </span>
-                          <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                          <span className="text-xs font-medium text-[var(--hh-text-tertiary)]">
                             {serverDescriptions[srv]}
                           </span>
                         </div>
@@ -495,10 +471,10 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                 className="flex flex-col space-y-5"
               >
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
+                  <h2 className="hh-title text-2xl text-[var(--hh-text-primary)]">
                     {t("page.setup.assetTitle")}
                   </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="hh-body text-sm text-[var(--hh-text-secondary)]">
                     {t("page.setup.assetDesc")}
                   </p>
                 </div>
@@ -516,30 +492,30 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                           setAssetSource(assetOpt.type);
                           handleStepChange(4);
                         }}
-                        className={`w-full p-4 rounded-2xl flex items-center justify-between border text-left font-bold transition-all duration-300 ${
+                        className={`hh-press hh-focusable w-full p-4 rounded-[var(--hh-radius-md)] flex items-center justify-between border text-left font-semibold ${
                           isSelected
-                            ? "bg-white dark:bg-slate-800 shadow-md scale-[1.01]"
-                            : "bg-white/40 dark:bg-slate-900/30 hover:bg-white/60 dark:hover:bg-slate-900/50 border-slate-200/50 dark:border-slate-800/40"
+                            ? "bg-[var(--hh-surface-2)] shadow-[var(--hh-shadow-tile)]"
+                            : "bg-[var(--hh-surface-1)] border-[var(--hh-border)] hover:bg-[var(--hh-surface-2)]"
                         }`}
                         style={{
                           borderColor: isSelected ? themeColor : undefined,
                         }}
                       >
                         <div className="flex flex-col">
-                          <span className="text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                          <span className="text-base text-[var(--hh-text-primary)] flex items-center gap-2">
                             {assetOpt.label}
                             {assetOpt.type.startsWith("main") ? (
                               pings.main === null ? (
                                 isPinging ? (
-                                  <span className="text-[10px] text-slate-400 font-normal animate-pulse">({t("page.setup.testingPing")})</span>
+                                  <span className="text-[10px] text-[var(--hh-text-tertiary)] font-normal">({t("page.setup.testingPing")})</span>
                                 ) : null
                               ) : (
-                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                                <span className={`hh-numeric px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] text-[10px] font-bold border ${
                                   pings.main === 9999
-                                    ? "text-red-500 bg-red-500/10 border-red-500/20"
+                                    ? "text-white bg-[var(--hh-accent-alert)] border-[var(--hh-accent-alert)]"
                                     : pings.main < 100
-                                    ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
-                                    : "text-amber-500 bg-amber-500/10 border-amber-500/20"
+                                    ? "text-[var(--hh-text-on-accent)] bg-[var(--hh-accent)] border-[var(--hh-accent-deep)]"
+                                    : "text-[var(--hh-text-secondary)] bg-[var(--hh-surface-sunken)] border-[var(--hh-border)]"
                                 }`}>
                                   {pings.main === 9999 ? t("page.setup.timeout") : `${pings.main} ms`}
                                 </span>
@@ -547,22 +523,22 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                             ) : (
                               pings.overseas === null ? (
                                 isPinging ? (
-                                  <span className="text-[10px] text-slate-400 font-normal animate-pulse">({t("page.setup.testingPing")})</span>
+                                  <span className="text-[10px] text-[var(--hh-text-tertiary)] font-normal">({t("page.setup.testingPing")})</span>
                                 ) : null
                               ) : (
-                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                                <span className={`hh-numeric px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] text-[10px] font-bold border ${
                                   pings.overseas === 9999
-                                    ? "text-red-500 bg-red-500/10 border-red-500/20"
+                                    ? "text-white bg-[var(--hh-accent-alert)] border-[var(--hh-accent-alert)]"
                                     : pings.overseas < 100
-                                    ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
-                                    : "text-amber-500 bg-amber-500/10 border-amber-500/20"
+                                    ? "text-[var(--hh-text-on-accent)] bg-[var(--hh-accent)] border-[var(--hh-accent-deep)]"
+                                    : "text-[var(--hh-text-secondary)] bg-[var(--hh-surface-sunken)] border-[var(--hh-border)]"
                                 }`}>
                                   {pings.overseas === 9999 ? t("page.setup.timeout") : `${pings.overseas} ms`}
                                 </span>
                               )
                             )}
                           </span>
-                          <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                          <span className="text-xs font-medium text-[var(--hh-text-tertiary)]">
                             {assetOpt.desc}
                           </span>
                         </div>
@@ -589,39 +565,44 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                 className="flex flex-col space-y-4"
               >
                 <div className="space-y-1">
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
+                  <h2 className="hh-title text-xl sm:text-2xl text-[var(--hh-text-primary)]">
                     {t("page.setup.themeTitle")}
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                  <p className="hh-body text-xs sm:text-sm text-[var(--hh-text-secondary)]">
                     {t("page.setup.themeDesc")}
                   </p>
                 </div>
 
-                {/* Appearance cards */}
+                {/* Appearance cards. These swatches are literal previews of the
+                    light and dark ramps, so their fills are pinned to the ramp's
+                    own values instead of following the active scheme — a
+                    surface-driven swatch would show the same color twice. The
+                    system card is a hard 50/50 split rather than a soft blend:
+                    it depicts two discrete schemes, not a transition. */}
                 <div className="space-y-2">
-                  <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  <h3 className="hh-label">
                     {t("page.setup.appearanceTitle")}
                   </h3>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: "light" as const, label: t("page.setup.appearanceMockLight"), bg: "bg-slate-100 border-slate-200 text-slate-800" },
-                      { id: "dark" as const, label: t("page.setup.appearanceMockDark"), bg: "bg-slate-950 border-slate-800 text-slate-200" },
-                      { id: "system" as const, label: t("page.setup.appearanceMockSystem"), bg: "bg-gradient-to-r from-slate-100 to-slate-950 border-slate-300 text-slate-500" }
+                      { id: "light" as const, label: t("page.setup.appearanceMockLight"), bg: "bg-[#eff0f2] border-[#d6d8dd] text-[#313134]" },
+                      { id: "dark" as const, label: t("page.setup.appearanceMockDark"), bg: "bg-[#1e1f22] border-[#414248] text-[#f3f3f5]" },
+                      { id: "system" as const, label: t("page.setup.appearanceMockSystem"), bg: "bg-[linear-gradient(to_right,#eff0f2_50%,#1e1f22_50%)] border-[#b6b9c0] text-[#6a6d74]" }
                     ].map((pref) => {
                       const isSelected = colorSchemePreference === pref.id;
                       return (
                         <button
                           key={pref.id}
                           onClick={() => setColorSchemePreference(pref.id)}
-                          className={`p-3 rounded-xl border text-center transition-all duration-300 flex flex-col items-center gap-1.5 ${pref.bg} ${
-                            isSelected ? "ring-2 scale-[1.02] shadow-sm font-bold" : "opacity-75 hover:opacity-100"
+                          className={`hh-press hh-focusable p-3 rounded-[var(--hh-radius-md)] border text-center flex flex-col items-center gap-1.5 ${pref.bg} ${
+                            isSelected ? "font-bold" : "opacity-75 hover:opacity-100"
                           }`}
                           style={{
                             boxShadow: isSelected ? `0 0 0 2px ${themeColor}` : undefined,
                             borderColor: isSelected ? themeColor : undefined,
                           }}
                         >
-                          <div className="w-8 h-4 rounded bg-white/20 border border-white/10" />
+                          <div className="w-8 h-4 rounded-[var(--hh-radius-xs)] bg-current opacity-20" />
                           <span className="text-[10px] leading-none truncate w-full">{pref.label}</span>
                         </button>
                       );
@@ -631,7 +612,7 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
 
                 {/* Background animation budget */}
                 <div className="space-y-2">
-                  <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  <h3 className="hh-label">
                     {t("page.setup.backgroundAnimationTitle")}
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
@@ -641,20 +622,20 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                         <button
                           key={option.id}
                           onClick={() => setBackgroundAnimationBudget(option.id)}
-                          className={`p-3 rounded-xl border text-center transition-all duration-300 flex flex-col items-center gap-1 ${
+                          className={`hh-press hh-focusable p-3 rounded-[var(--hh-radius-md)] border text-center flex flex-col items-center gap-1 ${
                             isSelected
-                              ? "bg-white dark:bg-slate-800 shadow-md scale-[1.02] font-bold"
-                              : "bg-white/40 dark:bg-slate-900/30 border-slate-200/50 dark:border-slate-800/40 opacity-75 hover:opacity-100"
+                              ? "bg-[var(--hh-surface-2)] shadow-[var(--hh-shadow-tile)] font-bold"
+                              : "bg-[var(--hh-surface-1)] border-[var(--hh-border)] opacity-75 hover:opacity-100"
                           }`}
                           style={{
                             boxShadow: isSelected ? `0 0 0 2px ${themeColor}` : undefined,
                             borderColor: isSelected ? themeColor : undefined,
                           }}
                         >
-                          <span className="text-[11px] leading-none truncate w-full text-slate-700 dark:text-slate-100">
+                          <span className="text-[11px] leading-none truncate w-full text-[var(--hh-text-primary)]">
                             {t(option.labelKey)}
                           </span>
-                          <span className="text-[9px] leading-tight text-slate-400 dark:text-slate-500 line-clamp-2">
+                          <span className="text-[9px] leading-tight text-[var(--hh-text-tertiary)] line-clamp-2">
                             {t(option.descriptionKey)}
                           </span>
                         </button>
@@ -665,7 +646,7 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
 
                 {/* Theme character color scroll list */}
                 <div className="space-y-2">
-                  <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  <h3 className="hh-label">
                     {t("page.setup.themeColorTitle")}
                   </h3>
                   <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-thin">
@@ -677,28 +658,28 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                         <button
                           key={char.id}
                           onClick={() => setThemeCharacter(char.id)}
-                          className={`flex flex-col items-center gap-1 shrink-0 p-2.5 rounded-2xl transition-all duration-300 border ${
+                          className={`hh-press hh-focusable flex flex-col items-center gap-1 shrink-0 p-2.5 rounded-[var(--hh-radius-md)] border ${
                             isSelected
-                              ? "bg-white dark:bg-slate-800 shadow-md scale-105"
-                              : "bg-white/40 dark:bg-slate-900/30 border-transparent hover:bg-white/60"
+                              ? "bg-[var(--hh-surface-2)] shadow-[var(--hh-shadow-tile)]"
+                              : "bg-[var(--hh-surface-1)] border-transparent hover:bg-[var(--hh-surface-2)]"
                           }`}
                           style={{
                             borderColor: isSelected ? themeColor : "transparent",
                           }}
                         >
                           <span
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm transition-transform duration-300"
+                            className="w-10 h-10 rounded-[var(--hh-radius-full)] flex items-center justify-center text-xs font-bold text-white"
                             style={{
                               backgroundColor: color,
                             }}
                           >
                             {isSelected && (
-                              <svg className="w-5 h-5 text-white filter drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
                             )}
                           </span>
-                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                          <span className="text-[10px] font-semibold text-[var(--hh-text-secondary)]">
                             {charName}
                           </span>
                         </button>
@@ -720,54 +701,56 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                 className="flex flex-col space-y-5"
               >
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
+                  <h2 className="hh-title text-2xl text-[var(--hh-text-primary)]">
                     {t("page.setup.contentTitle")}
                   </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="hh-body text-sm text-[var(--hh-text-secondary)]">
                     {t("page.setup.contentDesc")}
                   </p>
                 </div>
 
-                <div className="flex flex-col bg-white/40 dark:bg-slate-900/30 rounded-3xl border border-slate-200/50 dark:border-slate-800/40 divide-y divide-slate-200/50 dark:divide-slate-800/40">
+                {/* Preference rows separated by an edge-to-edge hairline, the
+                    shell's list idiom. */}
+                <div className="flex flex-col bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] divide-y divide-[var(--hh-border)]">
                   {/* Spoiler toggle */}
                   <div className="p-4 flex items-center justify-between">
                     <div className="flex flex-col pr-4 text-left">
-                      <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                      <span className="text-sm font-semibold text-[var(--hh-text-primary)]">
                         {t("settings.showSpoiler.label")}
                       </span>
-                      <span className="text-xs text-slate-400 dark:text-slate-500">
+                      <span className="text-xs text-[var(--hh-text-tertiary)]">
                         {t("settings.showSpoiler.description")}
                       </span>
                     </div>
                     <button
                       onClick={() => setShowSpoiler(!isShowSpoiler)}
-                      className="w-12 h-7 rounded-full transition-colors relative duration-200 shrink-0"
-                      style={{
-                        backgroundColor: isShowSpoiler ? themeColor : "var(--color-slate-200, #cbd5e1)",
-                      }}
+                      className={`hh-press hh-switch shrink-0 ${isShowSpoiler ? "hh-switch-active" : ""}`}
+                      role="switch"
+                      aria-checked={isShowSpoiler}
+                      aria-label={t("settings.showSpoiler.label")}
                     >
-                      <span className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform duration-200 ${isShowSpoiler ? 'translate-x-5' : ''}`} />
+                      <span className="hh-switch-thumb" />
                     </button>
                   </div>
 
                   {/* Trained thumbnail toggle */}
                   <div className="p-4 flex items-center justify-between">
                     <div className="flex flex-col pr-4 text-left">
-                      <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                      <span className="text-sm font-semibold text-[var(--hh-text-primary)]">
                         {t("settings.trainedThumbnail.label")}
                       </span>
-                      <span className="text-xs text-slate-400 dark:text-slate-500">
+                      <span className="text-xs text-[var(--hh-text-tertiary)]">
                         {t("settings.trainedThumbnail.description")}
                       </span>
                     </div>
                     <button
                       onClick={() => setUseTrainedThumbnail(!useTrainedThumbnail)}
-                      className="w-12 h-7 rounded-full transition-colors relative duration-200 shrink-0"
-                      style={{
-                        backgroundColor: useTrainedThumbnail ? themeColor : "var(--color-slate-200, #cbd5e1)",
-                      }}
+                      className={`hh-press hh-switch shrink-0 ${useTrainedThumbnail ? "hh-switch-active" : ""}`}
+                      role="switch"
+                      aria-checked={useTrainedThumbnail}
+                      aria-label={t("settings.trainedThumbnail.label")}
                     >
-                      <span className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform duration-200 ${useTrainedThumbnail ? 'translate-x-5' : ''}`} />
+                      <span className="hh-switch-thumb" />
                     </button>
                   </div>
 
@@ -775,21 +758,21 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                   {locale === "zh-CN" && (
                     <div className="p-4 flex items-center justify-between">
                       <div className="flex flex-col pr-4 text-left">
-                        <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                        <span className="text-sm font-semibold text-[var(--hh-text-primary)]">
                           {t("settings.translation.label")}
                         </span>
-                        <span className="text-xs text-slate-400 dark:text-slate-500">
+                        <span className="text-xs text-[var(--hh-text-tertiary)]">
                           {t("settings.translation.description")}
                         </span>
                       </div>
                       <button
                         onClick={() => setUseLLMTranslation(!useLLMTranslation)}
-                        className="w-12 h-7 rounded-full transition-colors relative duration-200 shrink-0"
-                        style={{
-                          backgroundColor: useLLMTranslation ? themeColor : "var(--color-slate-200, #cbd5e1)",
-                        }}
+                        className={`hh-press hh-switch shrink-0 ${useLLMTranslation ? "hh-switch-active" : ""}`}
+                        role="switch"
+                        aria-checked={useLLMTranslation}
+                        aria-label={t("settings.translation.label")}
                       >
-                        <span className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform duration-200 ${useLLMTranslation ? 'translate-x-5' : ''}`} />
+                        <span className="hh-switch-thumb" />
                       </button>
                     </div>
                   )}
@@ -812,7 +795,7 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                   initial={{ scale: 0.3, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
-                  className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg"
+                  className="w-20 h-20 rounded-[var(--hh-radius-full)] flex items-center justify-center"
                   style={{
                     backgroundColor: themeColor,
                   }}
@@ -823,10 +806,10 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
                 </motion.div>
 
                 <div className="space-y-2">
-                  <h2 className="text-3xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100">
+                  <h2 className="hh-display text-3xl text-[var(--hh-text-primary)]">
                     {t("page.setup.finishTitle")}
                   </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
+                  <p className="hh-body text-sm text-[var(--hh-text-secondary)] max-w-xs">
                     {t("page.setup.finishDesc")}
                   </p>
                 </div>
@@ -836,16 +819,17 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
           </AnimatePresence>
         </div>
 
-        {/* ─── Bottom Actions (Pill buttons) ─── */}
+        {/* ─── Bottom Actions ───
+            Solid accent slabs matching the shared Modal's action bar. The three
+            branches previously each carried a two-stop gradient plus a colored
+            drop shadow; both are gone in favor of one flat fill, so the main key
+            reads as a physical button rather than a web CTA. */}
         <div className="w-full flex flex-col gap-3 z-10">
           {currentStep === 0 ? (
             <button
               onClick={() => handleStepChange(1)}
-              className="w-full py-4 px-6 rounded-2xl text-base font-bold text-white shadow-lg shadow-miku/20 hover:brightness-105 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
-              style={{
-                backgroundImage: `linear-gradient(to right, ${themeColor}, var(--color-miku-dark, ${themeColor}))`,
-                boxShadow: `0 8px 24px -4px ${themeColor}40`,
-              }}
+              className="hh-btn hh-btn-primary hh-press hh-focusable w-full py-4 px-6 text-base"
+              style={{ backgroundColor: themeColor }}
             >
               {t("page.setup.getStartedBilingual")}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -855,12 +839,8 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
           ) : currentStep === 6 ? (
             <button
               onClick={handleFinish}
-              className="w-full py-4 px-6 rounded-2xl text-base font-bold text-white shadow-lg active:scale-[0.99] transition-all flex items-center justify-center gap-2 animate-pulse"
-              style={{
-                backgroundImage: `linear-gradient(to right, ${themeColor}, var(--color-miku-dark, ${themeColor}))`,
-                boxShadow: `0 8px 24px -4px ${themeColor}40`,
-                animationDuration: "2s",
-              }}
+              className="hh-btn hh-btn-primary hh-press hh-focusable w-full py-4 px-6 text-base"
+              style={{ backgroundColor: themeColor }}
             >
               {t("page.setup.startExploring")}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -870,11 +850,8 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
           ) : (
             <button
               onClick={() => handleStepChange(currentStep + 1)}
-              className="w-full py-4 px-6 rounded-2xl text-base font-bold text-white shadow-lg hover:brightness-105 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
-              style={{
-                backgroundImage: `linear-gradient(to right, ${themeColor}, var(--color-miku-dark, ${themeColor}))`,
-                boxShadow: `0 8px 24px -4px ${themeColor}40`,
-              }}
+              className="hh-btn hh-btn-primary hh-press hh-focusable w-full py-4 px-6 text-base"
+              style={{ backgroundColor: themeColor }}
             >
               {t("page.setup.next")}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -883,18 +860,18 @@ export default function SetupGuide({ onComplete }: SetupGuideProps) {
             </button>
           )}
 
-          {/* Indicator bar style */}
+          {/* Step indicator — the active step is a wider bar, not a glowing dot. */}
           <div className="flex justify-center gap-1.5 pt-2">
             {[0, 1, 2, 3, 4, 5, 6].map((stepIdx) => {
               const isActive = currentStep === stepIdx;
               return (
                 <span
                   key={stepIdx}
-                  className="h-1.5 rounded-full transition-all duration-300"
+                  className="h-1.5 rounded-[var(--hh-radius-xs)] transition-all duration-300"
                   style={{
                     width: isActive ? "16px" : "6px",
-                    backgroundColor: isActive ? themeColor : "var(--color-slate-200, #e2e8f0)",
-                    opacity: isActive ? 1 : 0.4,
+                    backgroundColor: isActive ? themeColor : "var(--hh-border-strong)",
+                    opacity: isActive ? 1 : 0.6,
                   }}
                 />
               );

@@ -63,22 +63,27 @@ export default function BoardHeader({
             {/* Title Header */}
             <div>
                 <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-black text-primary-text sm:text-3xl">
+                    <h1 className="hh-display text-2xl text-[var(--hh-text-primary)] sm:text-3xl">
                         {t("page.realtimeRankingNext.title")}
                     </h1>
-                    <span className="rounded-full bg-miku/15 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-miku">
+                    <span className="hh-label rounded-[var(--hh-radius-sm)] bg-miku/15 px-2.5 py-0.5 text-[11px] text-miku">
                         v2 Next
                     </span>
                 </div>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                <p className="mt-1 text-xs text-[var(--hh-text-secondary)]">
                     {t("page.realtimeRankingNext.subtitle")}
                 </p>
             </div>
 
-            {/* Controls Bar: Server (Region), Line, Churn toggle */}
+            {/* Controls Bar: Server (Region), Line, Churn toggle.
+                The three control troughs were `bg-white/70` + `backdrop-blur-sm`.
+                With backdrop-filter neutralized globally, a 70% tint would have let
+                the page gradient show through, so they are now the sunken trough of
+                a segmented control — opaque, and the shape the system already uses
+                for exactly this kind of mutually-exclusive choice. */}
             <div className="flex flex-wrap items-center gap-3">
                 {/* Server (Region) Selector */}
-                <div className="flex max-w-full overflow-x-auto rounded-xl border border-slate-200/60 bg-white/70 p-1 backdrop-blur-sm dark:border-slate-700/60 dark:bg-slate-900/70">
+                <div className="hh-segment flex max-w-full overflow-x-auto">
                     {REALTIME_RANKING_REGION_OPTIONS.map((r) => {
                         const isSelected = region === r;
                         const regionText = t(`page.realtimeRanking.regions.${r}`);
@@ -86,11 +91,8 @@ export default function BoardHeader({
                             <button
                                 key={r}
                                 onClick={() => onRegionChange(r)}
-                                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition-all whitespace-nowrap ${
-                                    isSelected
-                                        ? "bg-miku text-white shadow-sm shadow-miku/25"
-                                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white"
-                                }`}
+                                data-selected={isSelected}
+                                className="hh-segment-item hh-press flex items-center justify-center gap-1.5 whitespace-nowrap"
                                 title={regionText}
                             >
                                 <span className="uppercase">{REGION_SHORT_NAMES[r]}</span>
@@ -104,21 +106,18 @@ export default function BoardHeader({
 
                 {/* Line / Route Selector */}
                 <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                    <span className="text-xs font-medium text-[var(--hh-text-tertiary)] whitespace-nowrap">
                         {t("page.realtimeRanking.line.label")}
                     </span>
-                    <div className="flex max-w-full overflow-x-auto rounded-xl border border-slate-200/60 bg-white/70 p-1 backdrop-blur-sm dark:border-slate-700/60 dark:bg-slate-900/70">
+                    <div className="hh-segment flex max-w-full overflow-x-auto">
                         {availableLines.map((l) => {
                             const isSelected = effectiveLine === l;
                             return (
                                 <button
                                     key={l}
                                     onClick={() => onLineChange(l)}
-                                    className={`rounded-lg px-3 py-1.5 text-xs font-black transition-all whitespace-nowrap ${
-                                        isSelected
-                                            ? "bg-miku text-white shadow-sm shadow-miku/25"
-                                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white"
-                                    }`}
+                                    data-selected={isSelected}
+                                    className="hh-segment-item hh-press whitespace-nowrap"
                                 >
                                     {t(`page.realtimeRanking.line.${l}`)}
                                 </button>
@@ -130,10 +129,11 @@ export default function BoardHeader({
                 {/* Churn & Speed Toggle Button */}
                 <button
                     onClick={() => onShowChurnChange(!showChurn)}
-                    className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all whitespace-nowrap active:scale-[0.98] ${
+                    aria-pressed={showChurn}
+                    className={`hh-press hh-focusable shrink-0 flex items-center gap-1.5 rounded-[var(--hh-radius-md)] border px-3.5 py-1.5 text-xs font-bold whitespace-nowrap ${
                         showChurn
-                            ? "border-miku bg-miku text-white shadow-sm shadow-miku/25"
-                            : "border-slate-200/60 bg-white/70 text-slate-600 hover:border-miku/40 hover:text-miku dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-300"
+                            ? "border-miku bg-miku text-[var(--hh-text-on-accent)]"
+                            : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:border-miku/40 hover:text-miku"
                     }`}
                 >
                     <svg
@@ -141,16 +141,16 @@ export default function BoardHeader({
                         fill="none"
                         stroke="currentColor"
                         strokeWidth={2.2}
-                        className={`h-3.5 w-3.5 ${showChurn ? "text-white" : "text-miku"}`}
+                        className={`h-3.5 w-3.5 ${showChurn ? "text-[var(--hh-text-on-accent)]" : "text-miku"}`}
                     >
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     <span>{t("page.realtimeRanking.showChurn")}</span>
                     <div
-                        className={`ml-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border transition-colors ${
+                        className={`ml-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-[var(--hh-radius-xs)] border transition-colors ${
                             showChurn
-                                ? "border-white bg-white"
-                                : "border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800"
+                                ? "border-[var(--hh-text-on-accent)] bg-[var(--hh-text-on-accent)]"
+                                : "border-[var(--hh-border-strong)] bg-[var(--hh-surface-2)]"
                         }`}
                     >
                         {showChurn && (
@@ -162,29 +162,31 @@ export default function BoardHeader({
                 </button>
             </div>
 
-            {/* Status Bar */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-slate-200/40 bg-white/40 px-3.5 py-2 text-xs text-slate-500 backdrop-blur-sm dark:border-slate-800/60 dark:bg-slate-900/40 dark:text-slate-400">
+            {/* Status Bar — a sunken well, which is how the system reads a strip of
+                passive readouts. It was `bg-white/40` + blur; at 40% the tint was
+                not carrying the contrast on its own. */}
+            <div className="hh-well flex flex-wrap items-center gap-x-4 gap-y-2 px-3.5 py-2 text-xs text-[var(--hh-text-secondary)]">
                 {eventId != null && (
                     <span className="inline-flex items-center gap-1.5">
-                        <span className="font-medium text-slate-400 dark:text-slate-500">{t("page.realtimeRankingNext.eventId")}</span>
-                        <span className="font-black text-primary-text">#{eventId}</span>
+                        <span className="font-medium text-[var(--hh-text-tertiary)]">{t("page.realtimeRankingNext.eventId")}</span>
+                        <span className="hh-numeric font-bold text-[var(--hh-text-primary)]">#{eventId}</span>
                     </span>
                 )}
                 <span className="inline-flex items-center gap-1.5">
-                    <span className="font-medium text-slate-400 dark:text-slate-500">{t("page.realtimeRankingNext.totalEntries")}</span>
-                    <span className="font-black text-primary-text">{formatNumber(totalEntries)}</span>
+                    <span className="font-medium text-[var(--hh-text-tertiary)]">{t("page.realtimeRankingNext.totalEntries")}</span>
+                    <span className="hh-numeric font-bold text-[var(--hh-text-primary)]">{formatNumber(totalEntries)}</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                    <span className="font-medium text-slate-400 dark:text-slate-500">{t("page.realtimeRankingNext.updatedAt")}</span>
-                    <span className="font-black text-primary-text tabular-nums">{updatedLabel}</span>
+                    <span className="font-medium text-[var(--hh-text-tertiary)]">{t("page.realtimeRankingNext.updatedAt")}</span>
+                    <span className="hh-numeric font-bold text-[var(--hh-text-primary)]">{updatedLabel}</span>
                 </span>
 
                 <div className="ml-auto flex items-center gap-2">
                     <span
-                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+                        className={`rounded-[var(--hh-radius-sm)] px-2.5 py-0.5 text-[10px] font-bold border ${
                             isRefreshing
-                                ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300"
-                                : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                ? "border-amber-500/30 bg-amber-500/12 text-amber-700"
+                                : "border-emerald-500/30 bg-emerald-500/12 text-emerald-700"
                         }`}
                     >
                         {isRefreshing ? t("page.realtimeRanking.refreshing") : t("page.realtimeRanking.synced")}
@@ -192,7 +194,7 @@ export default function BoardHeader({
 
                     <button
                         onClick={onRefresh}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-miku px-3 py-1 text-[11px] font-black text-white shadow-sm shadow-miku/25 transition-all hover:bg-miku-dark active:scale-95"
+                        className="hh-press hh-focusable inline-flex items-center gap-1.5 rounded-[var(--hh-radius-md)] bg-miku px-3 py-1 text-[11px] font-bold text-[var(--hh-text-on-accent)] hover:bg-miku-dark"
                     >
                         {isRefreshing ? (
                             <motion.span
@@ -204,7 +206,7 @@ export default function BoardHeader({
                         ) : (
                             <>
                                 <span>{t("page.realtimeRankingNext.refresh")}</span>
-                                <span className="tabular-nums opacity-85">{countdown}s</span>
+                                <span className="hh-numeric opacity-85">{countdown}s</span>
                             </>
                         )}
                     </button>

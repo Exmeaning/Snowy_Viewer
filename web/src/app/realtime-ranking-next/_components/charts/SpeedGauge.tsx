@@ -15,21 +15,28 @@ interface StatCardProps {
     trend?: "up" | "down" | "flat";
 }
 
+// Single values rather than light/dark pairs: each of these clears 3:1 against
+// both the light and the dark readout surface, so the stat colors no longer
+// depend on a dark: variant — which in this app resolves from the OS preference
+// rather than from the theme switch.
 const accentClass: Record<NonNullable<StatCardProps["accent"]>, string> = {
     miku: "text-miku",
-    sky: "text-sky-600 dark:text-sky-400",
-    emerald: "text-emerald-600 dark:text-emerald-400",
-    rose: "text-rose-500 dark:text-rose-400",
-    slate: "text-slate-700 dark:text-slate-200",
+    sky: "text-sky-600",
+    emerald: "text-emerald-600",
+    rose: "text-rose-500",
+    slate: "text-[var(--hh-text-primary)]",
 };
 
 function StatCard({ label, value, accent = "slate", trend }: StatCardProps) {
     const trendIcon = trend === "up" ? "▲" : trend === "down" ? "▼" : null;
-    const trendColor = trend === "up" ? "text-emerald-500" : trend === "down" ? "text-rose-500" : "text-slate-400";
+    const trendColor = trend === "up" ? "text-emerald-600" : trend === "down" ? "text-rose-500" : "text-[var(--hh-text-tertiary)]";
     return (
-        <div className="rounded-xl border border-slate-200/60 bg-white/60 px-3 py-2.5 dark:border-slate-700/60 dark:bg-slate-900/50">
-            <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</div>
-            <div className={`mt-0.5 flex items-baseline gap-1 text-lg font-black tabular-nums ${accentClass[accent]}`}>
+        // A sunken readout block inside the enclosing tile: the previous
+        // `bg-white/60` relied on translucency for its separation, which the
+        // flat system expresses as a value step instead.
+        <div className="hh-well px-3 py-2.5">
+            <div className="hh-label">{label}</div>
+            <div className={`hh-numeric mt-0.5 flex items-baseline gap-1 text-lg font-bold ${accentClass[accent]}`}>
                 <span>{value}</span>
                 {trendIcon && <span className={`text-xs ${trendColor}`}>{trendIcon}</span>}
             </div>
@@ -42,7 +49,7 @@ export default function SpeedGauge({ churnEntry }: SpeedGaugeProps) {
 
     if (!churnEntry) {
         return (
-            <div className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400 dark:border-slate-700">
+            <div className="rounded-[var(--hh-radius-md)] border border-dashed border-[var(--hh-border)] px-3 py-6 text-center text-xs text-[var(--hh-text-tertiary)]">
                 {t("page.realtimeRankingNext.detail.noSpeedData")}
             </div>
         );

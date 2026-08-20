@@ -38,23 +38,29 @@ export default function RankingList({
 
     if (entries.length === 0) {
         return (
-            <div className="ios-glass-card rounded-2xl p-10 text-center text-slate-500">
+            <div className="hh-well rounded-[var(--hh-radius-lg)] p-10 text-center text-[var(--hh-text-secondary)]">
                 {t("page.realtimeRanking.list.empty")}
             </div>
         );
     }
 
     return (
-        <div className="overflow-hidden rounded-2xl ios-glass-card">
-            {/* Table header */}
-            <div className="flex items-center border-b border-slate-200/50 bg-slate-50/50 px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:border-slate-700/30 dark:bg-slate-800/30 dark:text-slate-500">
+        // High-density list geometry: one tile holding hairline-separated rows,
+        // rather than a stack of individually shadowed cards. `divide-y` gives
+        // every row its separator without adding a few hundred shadows to the
+        // paint. The previous divide-slate-100 was also one of the few slate
+        // utilities the dark shim in globals.css does not remap, so in dark mode
+        // the separators were rendering near-white.
+        <div className="hh-tile overflow-hidden rounded-[var(--hh-radius-lg)]">
+            {/* Table header — a sunken strip, the system's label row. */}
+            <div className="hh-label flex items-center border-b border-[var(--hh-border)] bg-[var(--hh-surface-sunken)] px-3 py-2.5">
                 <div className="w-10 shrink-0 text-center sm:w-12">{t("page.realtimeRanking.list.rank")}</div>
                 <div className="ml-2 flex-1">{t("page.realtimeRanking.list.playerInfo")}</div>
                 <div className="w-32 shrink-0 text-right sm:w-40">{t("page.realtimeRanking.list.score")}</div>
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-slate-100/50 dark:divide-slate-800/40">
+            <div className="divide-y divide-[var(--hh-border-hairline)]">
                 {entries.map((entry, index) => {
                     const prevRank = index > 0 ? entries[index - 1].rank : 0;
                     const showNotice = showExtendedWarning && entry.rank > 100 && prevRank <= 100;
@@ -65,7 +71,7 @@ export default function RankingList({
                     return (
                         <React.Fragment key={entry.userId}>
                             {showNotice && (
-                                <div className="flex items-center gap-2 border-y border-amber-200/60 bg-amber-50/70 px-4 py-2 text-[11px] text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400">
+                                <div className="flex items-center gap-2 border-y border-amber-500/30 bg-amber-500/12 px-4 py-2 text-[11px] text-amber-700">
                                     <span className="text-base leading-none">⚠️</span>
                                     <span>{t("page.realtimeRanking.list.extendedWarning")}</span>
                                 </div>

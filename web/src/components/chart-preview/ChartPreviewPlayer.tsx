@@ -1541,19 +1541,25 @@ export default function ChartPreviewPlayer({
             ? "h-full w-full bg-black"
             : "flex flex-col gap-3 w-full";
     const contentClassName = isFullscreen ? "relative h-full w-full bg-black" : "flex flex-col gap-3";
-    const panelClassName = `relative overflow-hidden bg-slate-900 ${isFullscreen ? "rounded-none" : "rounded-xl"}`;
+    // The stage is a game viewport, not a document surface: it stays dark in both
+    // themes so the chart's own contrast is preserved, and so does every control
+    // that floats on top of it in fullscreen. Those literals are deliberate and
+    // must not be routed through the light/dark surface ramp.
+    const panelClassName = `relative overflow-hidden bg-[#101114] ${isFullscreen ? "rounded-none" : "rounded-[var(--hh-radius-lg)]"}`;
     const controlsClassName = isFullscreen
-        ? "absolute bottom-0 left-0 right-0 z-30 flex flex-col gap-2.5 border-t border-slate-800 bg-slate-950/92 px-4 pt-3 backdrop-blur-md transition-all duration-300"
-        : "flex flex-col gap-3 rounded-xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm";
-    const timeClassName = `${isCompactControls ? "text-[11px]" : "text-xs"} ml-auto font-mono shrink min-w-0 truncate text-right ${isFullscreen ? "text-slate-400" : "text-slate-500"}`;
-    const secondaryButtonClassName = `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} rounded-lg font-medium transition-colors ${isFullscreen ? "bg-slate-700 text-slate-200 hover:bg-slate-600" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`;
+        ? "absolute bottom-0 left-0 right-0 z-30 flex flex-col gap-2.5 border-t border-[#2b2c31] bg-[#0c0d10] px-4 pt-3 transition-opacity duration-300"
+        : "hh-tile flex flex-col gap-3 rounded-[var(--hh-radius-lg)] p-4";
+    // Time codes run at 60fps during playback, so tabular digits are what keeps
+    // the readout from shifting under the cursor on every frame.
+    const timeClassName = `hh-numeric ${isCompactControls ? "text-[11px]" : "text-xs"} ml-auto font-mono shrink min-w-0 truncate text-right ${isFullscreen ? "text-[#a8abb2]" : "text-[var(--hh-text-secondary)]"}`;
+    const secondaryButtonClassName = `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} rounded-[var(--hh-radius-md)] font-semibold transition-colors ${isFullscreen ? "bg-[#33353b] text-[#e6e7ea] hover:bg-[#3f4147]" : "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-inset)]"}`;
     const chipClassName = isFullscreen
-        ? "border-slate-700 bg-slate-800/80 hover:bg-slate-700/80"
-        : "border-slate-200 bg-slate-50/60 hover:bg-slate-50";
-    const fieldTextClassName = `${isFullscreen ? "text-slate-300" : "text-slate-600"} ${isCompactControls ? "text-[11px]" : "text-xs"} font-bold`;
+        ? "border-[#33353b] bg-[#22242a] hover:bg-[#2b2d33]"
+        : "border-[var(--hh-border)] bg-[var(--hh-surface-1)] hover:bg-[var(--hh-surface-3)]";
+    const fieldTextClassName = `${isFullscreen ? "text-[#c9cbd1]" : "text-[var(--hh-text-secondary)]"} ${isCompactControls ? "text-[11px]" : "text-xs"} font-bold`;
     const fieldInputClassName = isFullscreen
-        ? "border-slate-700 bg-slate-800 text-slate-200"
-        : "border-slate-200 bg-white text-slate-700";
+        ? "border-[#33353b] bg-[#1a1b1f] text-[#e6e7ea]"
+        : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-primary)]";
 
     return (
         <div
@@ -1641,7 +1647,12 @@ export default function ChartPreviewPlayer({
                         </div>
 
                         {showStatus && (
-                            <div className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-[10px]" style={{ background: 'rgba(3, 7, 12, 0.28)' }}>
+                            /* Status veil. This used to be a 28% tint whose blur was doing
+                               the actual hiding of the half-drawn canvas. Rather than keep
+                               live compositor blur on the stage, the veil is now opaque in
+                               the stage's own color — it hides strictly more than the blur
+                               did, and costs nothing per frame. */
+                            <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ background: "#101114" }}>
                                 <div className={`flex flex-col items-center ${isCompactControls ? "gap-3 p-4" : "gap-4 p-6"}`}>
                                     {previewState !== "error" ? (
                                         <div
@@ -1665,22 +1676,22 @@ export default function ChartPreviewPlayer({
                                         </svg>
                                     )}
                                     <div className="text-center">
-                                        <div className={`font-medium text-white ${isCompactControls ? "mb-0.5 text-xs" : "mb-1 text-sm"}`}>{statusTitle}</div>
-                                        <div className={`text-slate-400 ${isCompactControls ? "text-[10px]" : "text-xs"}`}>{statusText}</div>
+                                        <div className={`font-semibold text-white ${isCompactControls ? "mb-0.5 text-xs" : "mb-1 text-sm"}`}>{statusTitle}</div>
+                                        <div className={`text-[#a8abb2] ${isCompactControls ? "text-[10px]" : "text-xs"}`}>{statusText}</div>
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {requiresGesture && (
-                            <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+                            <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: "rgba(16, 17, 20, 0.92)" }}>
                                 <div className={`text-center ${isCompactControls ? "p-4" : "p-6"}`}>
-                                    <div className={`font-medium text-white ${isCompactControls ? "mb-1 text-sm" : "mb-2 text-lg"}`}>{t("page.chartPreview.player.audioGestureTitle")}</div>
-                                    {!isCompactControls && <div className="mb-4 text-sm text-slate-400">{t("page.chartPreview.player.audioGestureDescription")}</div>}
+                                    <div className={`font-semibold text-white ${isCompactControls ? "mb-1 text-sm" : "mb-2 text-lg"}`}>{t("page.chartPreview.player.audioGestureTitle")}</div>
+                                    {!isCompactControls && <div className="mb-4 text-sm text-[#a8abb2]">{t("page.chartPreview.player.audioGestureDescription")}</div>}
                                     <button
                                         type="button"
                                         onClick={handleUnlock}
-                                        className={`rounded-lg bg-miku text-white transition-colors hover:bg-miku/90 ${isCompactControls ? "mt-2 px-4 py-1.5 text-sm" : "px-6 py-2"}`}
+                                        className={`hh-press rounded-[var(--hh-radius-md)] bg-[var(--hh-accent)] font-semibold text-[var(--hh-text-on-accent)] ${isCompactControls ? "mt-2 px-4 py-1.5 text-sm" : "px-6 py-2"}`}
                                     >
                                         {t("page.chartPreview.player.startAudio")}
                                     </button>
@@ -1689,10 +1700,10 @@ export default function ChartPreviewPlayer({
                         )}
 
                         {bgmLoading && (
-                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+                            <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ background: "rgba(16, 17, 20, 0.88)" }}>
                                 <div className={`text-center ${isCompactControls ? "p-4" : "p-6"}`}>
-                                    <div className={`font-medium text-white ${isCompactControls ? "mb-1 text-sm" : "mb-2 text-lg"}`}>{t("page.chartPreview.player.loadingSongTitle")}</div>
-                                    <div className={isCompactControls ? "text-xs text-slate-400" : "text-sm text-slate-400"}>{t("page.chartPreview.player.loadingSongDescription")}</div>
+                                    <div className={`font-semibold text-white ${isCompactControls ? "mb-1 text-sm" : "mb-2 text-lg"}`}>{t("page.chartPreview.player.loadingSongTitle")}</div>
+                                    <div className={isCompactControls ? "text-xs text-[#a8abb2]" : "text-sm text-[#a8abb2]"}>{t("page.chartPreview.player.loadingSongDescription")}</div>
                                 </div>
                             </div>
                         )}
@@ -1704,9 +1715,9 @@ export default function ChartPreviewPlayer({
                     <button
                         type="button"
                         onClick={handleControlsLockToggle}
-                        className={`absolute top-3 right-3 z-40 flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 ${controlsLocked
-                            ? "bg-miku/80 text-white shadow-lg"
-                            : "bg-slate-900/50 text-slate-300 hover:bg-slate-900/70"
+                        className={`hh-press absolute top-3 right-3 z-40 flex h-9 w-9 items-center justify-center rounded-full ${controlsLocked
+                            ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                            : "bg-[#22242a] text-[#c9cbd1] hover:bg-[#2b2d33]"
                             }`}
                         title={controlsLocked ? t("page.chartPreview.player.unlockControls") : t("page.chartPreview.player.lockControls")}
                     >
@@ -1740,7 +1751,7 @@ export default function ChartPreviewPlayer({
                             onClick={handlePlayToggle}
                             disabled={bgmLoading || previewState !== "ready"}
                             title={isPlaying ? t("page.chartPreview.player.pause") : t("page.chartPreview.player.play")}
-                            className={`${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-miku text-white hover:bg-miku/90" : `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-lg bg-miku font-medium text-white hover:bg-miku/90`} transition-colors disabled:cursor-not-allowed disabled:opacity-50`}
+                            className={`hh-press ${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]" : `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-[var(--hh-radius-md)] bg-[var(--hh-accent)] font-semibold text-[var(--hh-text-on-accent)]`} transition-colors disabled:cursor-not-allowed disabled:opacity-50`}
                         >
                             {isPlaying ? (
                                 <svg className={isFullscreen ? "h-4 w-4" : "hidden"} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -1757,7 +1768,7 @@ export default function ChartPreviewPlayer({
                             type="button"
                             onClick={handleStop}
                             title={t("page.chartPreview.player.stop")}
-                            className={`${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-200 hover:bg-slate-600" : `${secondaryButtonClassName}`} shrink-0 transition-colors`}
+                            className={`hh-press ${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-[#33353b] text-[#e6e7ea] hover:bg-[#3f4147]" : `${secondaryButtonClassName}`} shrink-0 transition-colors`}
                         >
                             {isFullscreen ? (
                                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -1770,7 +1781,7 @@ export default function ChartPreviewPlayer({
                             type="button"
                             onClick={handleMark}
                             title={t("page.chartPreview.player.markCurrentTime")}
-                            className={`${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-200 hover:bg-slate-600" : `${secondaryButtonClassName}`} shrink-0 transition-colors`}
+                            className={`hh-press ${isFullscreen ? "flex h-9 w-9 items-center justify-center rounded-full bg-[#33353b] text-[#e6e7ea] hover:bg-[#3f4147]" : `${secondaryButtonClassName}`} shrink-0 transition-colors`}
                         >
                             {isFullscreen ? (
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -1785,8 +1796,8 @@ export default function ChartPreviewPlayer({
                             disabled={markedTime === null}
                             title={markedTime !== null ? t("page.chartPreview.player.jumpToTime", { time: formatTime(markedTime) }) : t("page.chartPreview.player.noMarkedTime")}
                             className={`${isFullscreen
-                                ? `flex h-9 w-9 items-center justify-center rounded-full transition-colors ${markedTime !== null ? `${markFlash ? "bg-slate-700 text-slate-400" : "bg-miku text-white hover:bg-miku/90"}` : "bg-slate-700 text-slate-500 cursor-not-allowed"}`
-                                : `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-lg font-medium transition-colors ${markedTime !== null ? `${markFlash ? "bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500" : "bg-miku text-white hover:bg-miku/90"}` : "bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed"}`
+                                ? `flex h-9 w-9 items-center justify-center rounded-full transition-colors ${markedTime !== null ? `${markFlash ? "bg-[#33353b] text-[#a8abb2]" : "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"}` : "bg-[#33353b] text-[#797c83] cursor-not-allowed"}`
+                                : `${isCompactControls ? "px-3 py-1.5 text-xs" : "px-4 py-1.5 text-sm"} shrink-0 rounded-[var(--hh-radius-md)] font-semibold transition-colors ${markedTime !== null ? `${markFlash ? "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-tertiary)]" : "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"}` : "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-tertiary)] cursor-not-allowed"}`
                             }`}
                         >
                             {isFullscreen ? (
@@ -1811,7 +1822,7 @@ export default function ChartPreviewPlayer({
                                 type="button"
                                 onClick={handleFullscreenToggle}
                                 title={t("page.chartPreview.player.exitFullscreen")}
-                                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-200 transition-colors hover:bg-slate-600"
+                                className="hh-press flex h-9 w-9 items-center justify-center rounded-full bg-[#33353b] text-[#e6e7ea] transition-colors hover:bg-[#3f4147]"
                             >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 9L9 4.5M9 9L4.5 9M9 9L3.75 3.75M9 15L9 19.5M9 15L4.5 15M9 15L3.75 20.25M15 9H19.5M15 9V4.5M15 9L20.25 3.75M15 15H19.5M15 15L15 19.5M15 15L20.25 20.25" />
@@ -1827,12 +1838,12 @@ export default function ChartPreviewPlayer({
                         step={0.001}
                         value={Math.min(currentTime, duration || currentTime)}
                         onChange={handleSeek}
-                        className={`w-full cursor-pointer accent-miku ${isCompactControls ? "h-1.5" : "h-2"}`}
+                        className={`w-full cursor-pointer accent-[var(--hh-accent)] ${isCompactControls ? "h-1.5" : "h-2"}`}
                     />
 
                     {!isFullscreen && (
                         <div className={`flex flex-wrap items-center ${isCompactControls ? "gap-1.5" : "gap-2"}`}>
-                            <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                            <label className={`flex items-center gap-1.5 rounded-[var(--hh-radius-md)] border px-3 py-1.5 transition-colors ${chipClassName}`}>
                                 <span className={fieldTextClassName}>{t("page.chartPreview.player.speed")}</span>
                                 <input
                                     ref={speedInputRef}
@@ -1841,11 +1852,11 @@ export default function ChartPreviewPlayer({
                                     step={0.05}
                                     value={speedText}
                                     onChange={handleSpeedChange}
-                                    className={`${isCompactControls ? "w-14" : "w-16"} rounded-lg border px-1.5 py-0.5 text-center text-xs font-medium transition-colors ${speedError ? "border-red-400 bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 dark:border-red-500 animate-pulse" : fieldInputClassName}`}
+                                    className={`hh-numeric ${isCompactControls ? "w-14" : "w-16"} rounded-[var(--hh-radius-md)] border px-1.5 py-0.5 text-center text-xs font-medium transition-colors ${speedError ? "border-[var(--hh-accent-alert)] bg-[var(--hh-accent-alert)]/10 text-[var(--hh-accent-alert)] animate-pulse" : fieldInputClassName}`}
                                 />
                             </label>
 
-                            <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                            <label className={`flex items-center gap-1.5 rounded-[var(--hh-radius-md)] border px-3 py-1.5 transition-colors ${chipClassName}`}>
                                 <span className={fieldTextClassName}>noteSpeed</span>
                                 <input
                                     type="number"
@@ -1854,11 +1865,11 @@ export default function ChartPreviewPlayer({
                                     step={0.1}
                                     value={noteSpeed || ""}
                                     onChange={handleNoteSpeedChange}
-                                    className={`${isCompactControls ? "w-12" : "w-14"} rounded-lg border px-1.5 py-0.5 text-center text-xs font-medium ${fieldInputClassName}`}
+                                    className={`hh-numeric ${isCompactControls ? "w-12" : "w-14"} rounded-[var(--hh-radius-md)] border px-1.5 py-0.5 text-center text-xs font-medium ${fieldInputClassName}`}
                                 />
                             </label>
 
-                            <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                            <label className={`flex items-center gap-1.5 rounded-[var(--hh-radius-md)] border px-3 py-1.5 transition-colors ${chipClassName}`}>
                                 <span className={fieldTextClassName}>{t("page.chartPreview.player.seVolume")}</span>
                                 <input
                                     type="range"
@@ -1867,12 +1878,12 @@ export default function ChartPreviewPlayer({
                                     step={1}
                                     value={Math.round(seVolume * 100)}
                                     onChange={handleSeVolumeChange}
-                                    className={`${isCompactControls ? "w-14" : "w-16"} cursor-pointer accent-miku`}
+                                    className={`${isCompactControls ? "w-14" : "w-16"} cursor-pointer accent-[var(--hh-accent)]`}
                                 />
-                                <span className="text-[11px] tabular-nums text-slate-500">{Math.round(seVolume * 100)}%</span>
+                                <span className="hh-numeric text-[11px] tabular-nums text-[var(--hh-text-secondary)]">{Math.round(seVolume * 100)}%</span>
                             </label>
 
-                            <label className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
+                            <label className={`flex items-center gap-1.5 rounded-[var(--hh-radius-md)] border px-3 py-1.5 transition-colors ${chipClassName}`}>
                                 <span className={fieldTextClassName}>{t("page.chartPreview.player.bgmVolume")}</span>
                                 <input
                                     type="range"
@@ -1881,39 +1892,39 @@ export default function ChartPreviewPlayer({
                                     step={1}
                                     value={Math.round(bgmVolume * 100)}
                                     onChange={handleBgmVolumeChange}
-                                    className={`${isCompactControls ? "w-14" : "w-16"} cursor-pointer accent-miku`}
+                                    className={`${isCompactControls ? "w-14" : "w-16"} cursor-pointer accent-[var(--hh-accent)]`}
                                 />
-                                <span className="text-[11px] tabular-nums text-slate-500">{Math.round(bgmVolume * 100)}%</span>
+                                <span className="hh-numeric text-[11px] tabular-nums text-[var(--hh-text-secondary)]">{Math.round(bgmVolume * 100)}%</span>
                             </label>
 
                             <button
                                 type="button"
                                 onClick={handleLowEffectsToggle}
-                                className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${lowEffects
-                                    ? "border-transparent bg-white text-slate-800 ring-2 ring-miku shadow-lg"
-                                    : `${chipClassName} text-slate-600`}`}
+                                className={`hh-press flex items-center gap-1.5 rounded-[var(--hh-radius-md)] border px-3 py-1.5 transition-colors ${lowEffects
+                                    ? "border-[var(--hh-accent)] bg-[var(--hh-accent-wash)] text-[var(--hh-accent-deep)]"
+                                    : `${chipClassName} text-[var(--hh-text-secondary)]`}`}
                             >
                                 <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold`}>{t("page.chartPreview.player.lowEffects")}</span>
-                                <div className={`flex h-4 w-4 items-center justify-center rounded-full border transition-colors ${lowEffects ? "border-miku bg-miku" : "border-slate-300 bg-white"}`}>
+                                <div className={`flex h-4 w-4 items-center justify-center rounded-full border transition-colors ${lowEffects ? "border-[var(--hh-accent)] bg-[var(--hh-accent)]" : "border-[var(--hh-border-strong)] bg-[var(--hh-surface-2)]"}`}>
                                     {lowEffects && (
-                                        <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <svg className="h-2.5 w-2.5 text-[var(--hh-text-on-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                         </svg>
                                     )}
                                 </div>
                             </button>
 
-                            <div className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 transition-all ${chipClassName}`}>
-                                <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold text-slate-600`}>{t("page.chartPreview.player.quality")}</span>
+                            <div className={`flex items-center gap-1.5 rounded-[var(--hh-radius-md)] border px-3 py-1.5 transition-colors ${chipClassName}`}>
+                                <span className={`${isCompactControls ? "text-[11px]" : "text-xs"} font-bold text-[var(--hh-text-secondary)]`}>{t("page.chartPreview.player.quality")}</span>
                                 <div className="flex gap-1">
                                     {RENDER_SCALE_OPTIONS.map((opt) => (
                                         <button
                                             key={opt.value}
                                             type="button"
                                             onClick={() => handleRenderScaleChange(opt.value)}
-                                            className={`rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-all ${renderScale === opt.value
-                                                ? "bg-miku text-white shadow-sm"
-                                                : "text-slate-600 hover:text-slate-800"
+                                            className={`rounded-[var(--hh-radius-sm)] px-1.5 py-0.5 text-[11px] font-semibold transition-colors ${renderScale === opt.value
+                                                ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                                                : "text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)]"
                                                 }`}
                                         >
                                             {opt.label}
@@ -1927,10 +1938,10 @@ export default function ChartPreviewPlayer({
                                     type="button"
                                     onClick={handleWebFullscreenToggle}
                                     title={t("page.chartPreview.player.webFullscreenTitle")}
-                                    className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
+                                    className="hh-press flex items-center gap-1.5 rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-1)] px-3 py-1.5 transition-colors hover:bg-[var(--hh-surface-3)]"
                                 >
-                                    <span className="text-xs font-bold text-slate-600">{t("page.chartPreview.player.webFullscreen")}</span>
-                                    <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <span className="text-xs font-bold text-[var(--hh-text-secondary)]">{t("page.chartPreview.player.webFullscreen")}</span>
+                                    <svg className="h-4 w-4 text-[var(--hh-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 2h10M7 22h10M2 7v10M22 7v10" />
                                     </svg>
                                 </button>
@@ -1938,10 +1949,10 @@ export default function ChartPreviewPlayer({
                                     type="button"
                                     onClick={handleFullscreenToggle}
                                     title={t("page.chartPreview.player.enterFullscreen")}
-                                    className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 transition-all hover:bg-slate-50"
+                                    className="hh-press flex items-center gap-1.5 rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-1)] px-3 py-1.5 transition-colors hover:bg-[var(--hh-surface-3)]"
                                 >
-                                    <span className="text-xs font-bold text-slate-600">{t("page.chartPreview.player.fullscreen")}</span>
-                                    <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <span className="text-xs font-bold text-[var(--hh-text-secondary)]">{t("page.chartPreview.player.fullscreen")}</span>
+                                    <svg className="h-4 w-4 text-[var(--hh-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75V8.25M3.75 3.75H8.25M3.75 3.75L9 9M3.75 20.25V15.75M3.75 20.25H8.25M3.75 20.25L9 15M20.25 3.75L15.75 3.75M20.25 3.75V8.25M20.25 3.75L15 9M20.25 20.25H15.75M20.25 20.25V15.75M20.25 20.25L15 15" />
                                     </svg>
                                 </button>
@@ -1952,23 +1963,23 @@ export default function ChartPreviewPlayer({
                     {warningMessage && <div className={isCompactControls ? "text-[10px] text-amber-500" : "text-xs text-amber-600"}>{warningMessage}</div>}
 
                     {!isFullscreen && isIOS && (
-                        <div className="text-[11px] text-slate-400 italic text-right space-y-0.5">
+                        <div className="text-[11px] text-[var(--hh-text-tertiary)] italic text-right space-y-0.5">
                             <div>{t("page.chartPreview.player.iosWebFullscreenTip")}</div>
                             <div>{t("page.chartPreview.player.iosQualityTip")}</div>
                         </div>
                     )}
 
                     {!isFullscreen && (
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-[var(--hh-text-tertiary)]">
                             Adapted from{" "}
-                            <ExternalLink href="https://github.com/crash5band/MikuMikuWorld" className="text-miku hover:underline">
+                            <ExternalLink href="https://github.com/crash5band/MikuMikuWorld" className="text-[var(--hh-accent-deep)] hover:underline">
                                 MikuMikuWorld
                             </ExternalLink>{" "}
                             {t("page.chartPreview.player.creditMikuMikuWorldSuffix")} {t("page.chartPreview.player.creditSourcePrefix")}{" "}
-                            <ExternalLink href="https://github.com/watagashi-uni/" className="text-miku hover:underline">
+                            <ExternalLink href="https://github.com/watagashi-uni/" className="text-[var(--hh-accent-deep)] hover:underline">
                                 watagashi-uni
                             </ExternalLink>{t("page.chartPreview.player.creditSourceMiddle")}{" "}
-                            <ExternalLink href="https://github.com/watagashi-uni/sekai-mmw-preview-web" className="text-miku hover:underline">
+                            <ExternalLink href="https://github.com/watagashi-uni/sekai-mmw-preview-web" className="text-[var(--hh-accent-deep)] hover:underline">
                                 sekai-mmw-preview-web
                             </ExternalLink>
                             {t("page.chartPreview.player.creditSourceSuffix")}

@@ -40,13 +40,16 @@ function buildGrid(hourlyChurn: ChurnHourlyEntryV2[]): Cell[] {
     return grid;
 }
 
+/* Alpha tints rather than palette steps, so one class list stays legible on
+   both the light and the dark grid surface with no dark: variant — matching the
+   heat ramp the board rows use. */
 function cellColor(count: number, isCurrentHour: boolean): string {
-    if (count === 0) return "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500";
-    if (isCurrentHour) return "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300";
-    if (count >= 30) return "bg-rose-300 text-rose-900 dark:bg-rose-500/40 dark:text-rose-100";
-    if (count >= 20) return "bg-rose-200 text-rose-800 dark:bg-rose-500/30 dark:text-rose-200";
-    if (count >= 10) return "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300";
-    return "bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-400";
+    if (count === 0) return "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-tertiary)]";
+    if (isCurrentHour) return "bg-sky-500/20 text-sky-700";
+    if (count >= 30) return "bg-rose-500/45 text-rose-950";
+    if (count >= 20) return "bg-rose-500/32 text-rose-900";
+    if (count >= 10) return "bg-rose-500/20 text-rose-800";
+    return "bg-rose-500/12 text-rose-700";
 }
 
 export default function ChurnHeatmap({ hourlyChurn, churn48h }: ChurnHeatmapProps) {
@@ -59,10 +62,10 @@ export default function ChurnHeatmap({ hourlyChurn, churn48h }: ChurnHeatmapProp
     return (
         <div className="min-w-0">
             <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                <span className="text-xs font-bold text-[var(--hh-text-secondary)]">
                     {t("page.realtimeRankingNext.detail.heatmapTitle")}
                 </span>
-                <span className="text-xs font-black text-miku">
+                <span className="hh-numeric text-xs font-bold text-miku">
                     48H {total}
                 </span>
             </div>
@@ -73,7 +76,7 @@ export default function ChurnHeatmap({ hourlyChurn, churn48h }: ChurnHeatmapProp
                             <div
                                 key={`${ri}-${i}`}
                                 title={`${cell.localLabel} · ${cell.count}`}
-                                className={`flex-1 min-w-0 rounded-sm py-1 text-center text-[8px] font-bold ${cellColor(cell.count, cell.isCurrentHour)}`}
+                                className={`hh-numeric flex-1 min-w-0 rounded-[var(--hh-radius-xs)] py-1 text-center text-[8px] font-bold ${cellColor(cell.count, cell.isCurrentHour)}`}
                             >
                                 {cell.count > 0 ? `${cell.count}${cell.isCurrentHour ? "*" : ""}` : ""}
                             </div>
@@ -81,7 +84,7 @@ export default function ChurnHeatmap({ hourlyChurn, churn48h }: ChurnHeatmapProp
                     </div>
                 ))}
             </div>
-            <div className="mt-1.5 flex items-center justify-between text-[9px] text-slate-400 dark:text-slate-500">
+            <div className="mt-1.5 flex items-center justify-between text-[9px] text-[var(--hh-text-tertiary)]">
                 <span>{t("page.realtimeRankingNext.detail.heatmapNewest")}</span>
                 <span>{t("page.realtimeRankingNext.detail.heatmapOldest")}</span>
             </div>

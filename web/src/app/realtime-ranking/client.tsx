@@ -961,14 +961,14 @@ function RealtimeRankingContent() {
                 />
 
                 {(worldLinkAvailable || isWorldBloomEvent) && (
-                    <div className="mb-6 rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
+                    <div className="hh-panel mb-6 rounded-[var(--hh-radius-xl)] p-4">
                         <div className="flex flex-wrap items-center gap-2">
                             <button
                                 onClick={() => setBoardMode("overall")}
-                                className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                                className={`hh-press hh-focusable rounded-[var(--hh-radius-md)] px-4 py-2 text-sm font-bold ${
                                     boardMode === "overall"
-                                        ? "bg-miku text-white shadow-md shadow-miku/20"
-                                        : "border border-slate-200 bg-white text-slate-600 hover:border-miku/40 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                        ? "bg-miku text-[var(--hh-text-on-accent)]"
+                                        : "border border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:border-miku/40 hover:text-miku"
                                 }`}
                             >
                                 {t("page.realtimeRanking.board.overall")}
@@ -980,17 +980,17 @@ function RealtimeRankingContent() {
                                     }
                                 }}
                                 disabled={!worldLinkAvailable}
-                                className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                                className={`hh-press hh-focusable rounded-[var(--hh-radius-md)] px-4 py-2 text-sm font-bold ${
                                     boardMode === "worldlink" && worldLinkAvailable
-                                        ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                                        ? "bg-emerald-600 text-white"
                                         : worldLinkAvailable
-                                            ? "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
-                                            : "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500"
+                                            ? "border border-emerald-500/30 bg-emerald-500/12 text-emerald-700 hover:border-emerald-500/60"
+                                            : "cursor-not-allowed border border-[var(--hh-border)] bg-[var(--hh-surface-sunken)] text-[var(--hh-text-tertiary)]"
                                 }`}
                             >
                                 {t("page.realtimeRanking.board.worldlink")}
                             </button>
-                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                            <span className="text-xs text-[var(--hh-text-secondary)]">
                                 {isWorldLinkMode
                                     ? t("page.realtimeRanking.board.worldlinkHighPrecision")
                                     : t("page.realtimeRanking.board.worldlinkAvailableHint")}
@@ -1005,11 +1005,7 @@ function RealtimeRankingContent() {
                                         <button
                                             key={group.gameCharacterId}
                                             onClick={() => setSelectedWorldLinkCharacterId(group.gameCharacterId)}
-                                            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
-                                                isActive
-                                                    ? "bg-miku text-white shadow-sm shadow-miku/20"
-                                                    : "border border-slate-200 bg-white text-slate-600 hover:border-miku/40 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                                            }`}
+                                            className={`hh-chip hh-press ${isActive ? "hh-chip-active" : ""}`}
                                         >
                                             {getCharacterName(t, group.gameCharacterId)}
                                         </button>
@@ -1019,7 +1015,7 @@ function RealtimeRankingContent() {
                         )}
 
                         {isWorldLinkMode && (
-                            <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                            <div className="mt-3 text-xs text-[var(--hh-text-secondary)]">
                                 {t("page.realtimeRanking.board.worldlinkIndependentNotice")}
                             </div>
                         )}
@@ -1027,20 +1023,20 @@ function RealtimeRankingContent() {
                 )}
 
                 {isWorldBloomEvent && worldLinkConfirmedUnavailable && !isLoading && (
-                    <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                    <div className="mb-6 rounded-[var(--hh-radius-lg)] border border-amber-500/30 bg-amber-500/12 px-4 py-3 text-sm text-amber-700">
                         {t("page.realtimeRanking.board.worldlinkPendingNotice")}
                     </div>
                 )}
 
                 {error && (
-                    <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+                    <div className="mb-6 rounded-[var(--hh-radius-lg)] border border-red-500/30 bg-red-500/12 p-4 text-sm text-red-600">
                         <p className="font-bold">{t("page.realtimeRanking.loadFailedTitle")}</p>
                         <p>{error}</p>
                     </div>
                 )}
 
                 {isLoading && !activeSnapshot ? (
-                    <div className="ios-glass-card rounded-2xl p-10 text-center text-slate-500">
+                    <div className="hh-tile rounded-[var(--hh-radius-lg)] p-10 text-center text-[var(--hh-text-secondary)]">
                         {t("page.realtimeRanking.loading")}
                     </div>
                 ) : (
@@ -1068,7 +1064,7 @@ function RealtimeRankingContent() {
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ type: "spring", stiffness: 260, damping: 24, delay: 0.15 }}
-                        className="hidden md:flex fixed right-2 top-1/2 -translate-y-1/2 z-30 flex-col items-center gap-1.5 rounded-2xl ios-glass-card border border-miku/20 p-2 shadow-lg dark:border-miku/30"
+                        className="hh-float hidden md:flex fixed right-2 top-1/2 -translate-y-1/2 z-30 flex-col items-center gap-1.5 rounded-[var(--hh-radius-xl)] border-miku/20 p-2"
                     >
                         {QUICK_JUMP_RANKS.map((rank, i) => (
                             <motion.button
@@ -1082,24 +1078,24 @@ function RealtimeRankingContent() {
                                     setActiveRank(rank);
                                     scrollToRank(rank);
                                 }}
-                                className={`w-14 rounded-xl px-1.5 py-1.5 text-[11px] font-black transition-all ${
+                                className={`hh-numeric hh-focusable w-14 rounded-[var(--hh-radius-md)] px-1.5 py-1.5 text-[11px] font-bold transition-colors ${
                                     activeRank === rank
-                                        ? "border border-miku bg-miku text-white shadow-md shadow-miku/30"
-                                        : "border border-miku/20 bg-miku/5 text-miku hover:border-miku/50 hover:bg-miku hover:text-white dark:border-miku/30 dark:bg-miku/10 dark:hover:bg-miku dark:hover:text-white"
+                                        ? "border border-miku bg-miku text-[var(--hh-text-on-accent)]"
+                                        : "border border-miku/20 bg-miku/5 text-miku hover:border-miku/50 hover:bg-miku hover:text-[var(--hh-text-on-accent)]"
                                 }`}
                             >
                                 T{rank}
                             </motion.button>
                         ))}
 
-                        <div className="my-0.5 h-px w-8 bg-miku/20 dark:bg-miku/30" />
+                        <div className="my-0.5 h-px w-8 bg-miku/20" />
 
                         <motion.div
                             key={countdown}
                             initial={{ scale: 1.15, opacity: 0.6 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                            className={`text-sm font-black tabular-nums transition-colors ${hasRecentUpdate ? "text-miku" : "text-miku/60 dark:text-miku/50"}`}
+                            className={`hh-numeric text-sm font-bold transition-colors ${hasRecentUpdate ? "text-miku" : "text-miku/60"}`}
                         >
                             {isRefreshing ? (
                                 <motion.span
@@ -1117,7 +1113,7 @@ function RealtimeRankingContent() {
                             whileHover={{ scale: 1.08 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => void loadSnapshot(region, true)}
-                            className="w-14 rounded-xl bg-miku px-1.5 py-1.5 text-[11px] font-black text-white shadow-md shadow-miku/25 transition-colors hover:bg-miku-dark dark:shadow-miku/15"
+                            className="hh-focusable w-14 rounded-[var(--hh-radius-md)] bg-miku px-1.5 py-1.5 text-[11px] font-bold text-[var(--hh-text-on-accent)] transition-colors hover:bg-miku-dark"
                         >
                                 {t("page.realtimeRanking.refresh")}
                         </motion.button>
@@ -1128,7 +1124,7 @@ function RealtimeRankingContent() {
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ type: "spring", stiffness: 280, damping: 24, delay: 0.1 }}
-                        className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between gap-2 border-t border-miku/20 px-4 py-2.5 ios-glass-card dark:border-miku/30"
+                        className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between gap-2 border-t border-miku/20 bg-[var(--hh-surface-1)] px-4 py-2.5"
                     >
                         <div className="flex items-center gap-1.5">
                             {QUICK_JUMP_RANKS.map((rank) => (
@@ -1139,10 +1135,10 @@ function RealtimeRankingContent() {
                                         setActiveRank(rank);
                                         scrollToRank(rank);
                                     }}
-                                    className={`rounded-lg px-2.5 py-1.5 text-[11px] font-black transition-all ${
+                                    className={`hh-numeric hh-focusable rounded-[var(--hh-radius-md)] px-2.5 py-1.5 text-[11px] font-bold transition-colors ${
                                         activeRank === rank
-                                            ? "border border-miku bg-miku text-white"
-                                            : "border border-miku/20 bg-miku/5 text-miku active:bg-miku active:text-white dark:border-miku/30 dark:bg-miku/10"
+                                            ? "border border-miku bg-miku text-[var(--hh-text-on-accent)]"
+                                            : "border border-miku/20 bg-miku/5 text-miku active:bg-miku active:text-[var(--hh-text-on-accent)]"
                                     }`}
                                 >
                                     T{rank}
@@ -1150,13 +1146,13 @@ function RealtimeRankingContent() {
                             ))}
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={`text-xs font-black tabular-nums ${hasRecentUpdate ? "text-miku" : "text-miku/60 dark:text-miku/50"}`}>
+                            <span className={`hh-numeric text-xs font-bold ${hasRecentUpdate ? "text-miku" : "text-miku/60"}`}>
                                 {isRefreshing ? "..." : `${countdown}s`}
                             </span>
                             <motion.button
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => void loadSnapshot(region, true)}
-                                className="rounded-lg bg-miku px-3 py-1.5 text-[11px] font-black text-white shadow-sm shadow-miku/25 transition-colors active:bg-miku-dark"
+                                className="hh-focusable rounded-[var(--hh-radius-md)] bg-miku px-3 py-1.5 text-[11px] font-bold text-[var(--hh-text-on-accent)] transition-colors active:bg-miku-dark"
                             >
                             {t("page.realtimeRanking.refresh")}
                             </motion.button>
@@ -1175,28 +1171,25 @@ function RealtimeRankingContent() {
                         transition={{ type: "spring", stiffness: 300, damping: 26 }}
                         className="fixed bottom-18 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[92%] sm:w-auto sm:min-w-[480px] max-w-[640px]"
                     >
-                        <div className="ios-glass-panel rounded-2xl p-4 border border-miku/30 dark:border-miku/20 shadow-2xl flex flex-col gap-3 relative overflow-hidden">
-                            {/* Glow element */}
-                            <div className="absolute -inset-px bg-gradient-to-r from-miku/10 via-sky-500/10 to-miku/10 opacity-30 pointer-events-none rounded-2xl" />
-                            
+                        <div className="hh-float rounded-[var(--hh-radius-xl)] p-4 border-miku/30 flex flex-col gap-3 relative overflow-hidden">
                             <div className="flex items-center justify-between gap-3 relative z-10">
                                 {/* Player Info Left */}
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                    <div className="shrink-0 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 px-1.5 py-0.5 text-[10px] font-black leading-none">
+                                    <div className="hh-numeric shrink-0 flex items-center justify-center rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] px-1.5 py-0.5 text-[10px] font-bold leading-none">
                                         #{lastTrackedData.rank}
                                     </div>
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-[10px] font-bold text-miku uppercase px-1.5 py-0.5 rounded-full bg-miku/10 border border-miku/20">
+                                            <span className="hh-label text-[10px] text-miku px-1.5 py-0.5 rounded-[var(--hh-radius-sm)] bg-miku/10 border border-miku/20">
                                                 {t("page.realtimeRanking.trackingTarget")}
                                             </span>
                                             {!trackedEntry && (
-                                                <span className="text-[10px] font-bold text-amber-500 uppercase px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 animate-pulse-fast">
+                                                <span className="hh-label text-[10px] text-amber-600 px-1.5 py-0.5 rounded-[var(--hh-radius-sm)] bg-amber-500/10 border border-amber-500/20 animate-pulse-fast">
                                                     {t("page.realtimeRanking.trackingSync")}
                                                 </span>
                                             )}
                                         </div>
-                                        <h4 className="font-bold text-sm text-primary-text truncate mt-0.5">
+                                        <h4 className="hh-title font-semibold text-sm text-[var(--hh-text-primary)] truncate mt-0.5">
                                             {lastTrackedData.displayName}
                                         </h4>
                                     </div>
@@ -1204,11 +1197,11 @@ function RealtimeRankingContent() {
 
                                 {/* Score & Diff Right */}
                                 <div className="text-right shrink-0">
-                                    <div className="text-sm font-black text-primary-text">
-                                        {formatNumber(lastTrackedData.score)}<span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 ml-0.5">P</span>
+                                    <div className="hh-numeric text-sm font-bold text-[var(--hh-text-primary)]">
+                                        {formatNumber(lastTrackedData.score)}<span className="text-[9px] font-bold text-[var(--hh-text-tertiary)] ml-0.5">P</span>
                                     </div>
                                     {lastTrackedData.lastScoreDelta != null && lastTrackedData.lastScoreDelta !== 0 && (
-                                        <div className="text-[10px] font-black text-emerald-500">
+                                        <div className="hh-numeric text-[10px] font-bold text-emerald-600">
                                             +{formatNumber(lastTrackedData.lastScoreDelta)}
                                         </div>
                                     )}
@@ -1216,7 +1209,7 @@ function RealtimeRankingContent() {
                             </div>
 
                             {/* Extra stats: Churn/Speed & Actions */}
-                            <div className="flex items-center justify-between border-t border-slate-200/40 dark:border-slate-800/40 pt-2.5 gap-4 relative z-10">
+                            <div className="flex items-center justify-between border-t border-[var(--hh-border-hairline)] pt-2.5 gap-4 relative z-10">
                                 {/* Speed info if churn data is loaded */}
                                 <div className="flex items-center gap-2 min-w-0">
                                     {(() => {
@@ -1224,20 +1217,20 @@ function RealtimeRankingContent() {
                                         const churn = activeChurnData.get(key);
                                         if (churn) {
                                             return (
-                                                <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                                                    <span className="shrink-0 inline-flex items-center gap-1 rounded bg-miku/10 px-1 py-0.5 font-bold text-miku">
+                                                <div className="flex items-center gap-2 text-[11px] text-[var(--hh-text-secondary)]">
+                                                    <span className="hh-numeric shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] bg-miku/10 px-1 py-0.5 font-bold text-miku">
                                                         <span>1H:</span>
                                                         <span>{churn.growth_1h ? `${Math.round(churn.growth_1h / 1000)}k` : "0k"}</span>
                                                     </span>
-                                                    <span className="shrink-0 inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-800 px-1 py-0.5 font-bold">
+                                                    <span className="hh-numeric shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-1 py-0.5 font-bold">
                                                         <span>48H:</span>
-                                                        <span className="text-slate-700 dark:text-slate-300">{churn.churn_48h}</span>
+                                                        <span className="text-[var(--hh-text-primary)]">{churn.churn_48h}</span>
                                                     </span>
                                                 </div>
                                             );
                                         }
                                         return (
-                                            <p className="text-[10px] text-slate-400 truncate">
+                                            <p className="text-[10px] text-[var(--hh-text-tertiary)] truncate">
                                                 {t("page.realtimeRanking.trackingHelp")}
                                             </p>
                                         );
@@ -1249,14 +1242,14 @@ function RealtimeRankingContent() {
                                     {trackedEntry && (
                                         <button
                                             onClick={() => scrollToRank(lastTrackedData.rank)}
-                                            className="ios-glass-btn text-miku border border-miku/20 hover:bg-miku/10 px-2.5 py-1 text-xs font-bold rounded-lg transition-all"
+                                            className="hh-btn hh-press text-miku border-miku/20 hover:bg-miku/10 px-2.5 py-1 text-xs rounded-[var(--hh-radius-md)]"
                                         >
                                             {t("page.realtimeRanking.trackingFocus")}
                                         </button>
                                     )}
                                     <button
                                         onClick={() => handleTrackToggle(lastTrackedData.userId)}
-                                        className="ios-glass-btn text-slate-500 dark:text-slate-400 hover:text-rose-500 hover:border-rose-500/20 px-2.5 py-1 text-xs font-bold rounded-lg transition-all"
+                                        className="hh-btn hh-press text-[var(--hh-text-secondary)] hover:text-rose-500 px-2.5 py-1 text-xs rounded-[var(--hh-radius-md)]"
                                     >
                                         {t("page.realtimeRanking.untrackPlayer")}
                                     </button>
@@ -1285,7 +1278,6 @@ function RealtimeRankingContent() {
                 <div className="space-y-6 text-center">
                     {/* Celebratory header graphic or animation */}
                     <div className="flex justify-center relative py-4">
-                        <div className="absolute inset-0 bg-gradient-to-r from-miku/20 via-sky-400/20 to-luka/20 blur-xl rounded-full" />
                         <motion.div
                             animate={{
                                 scale: [1, 1.15, 1],
@@ -1302,16 +1294,19 @@ function RealtimeRankingContent() {
                         </motion.div>
                     </div>
 
-                    <h3 className="text-2xl font-black bg-gradient-to-r from-miku via-sky-500 to-luka bg-clip-text text-transparent">
+                    {/* Was a three-stop bg-clip-text gradient. Flat accent instead:
+                        gradient text is the single loudest web-app tell, and the
+                        accent already follows the character theme. */}
+                    <h3 className="hh-display text-2xl text-miku">
                         {t("page.realtimeRanking.celebrationTitle")}
                     </h3>
 
-                    <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed text-left px-2">
+                    <p className="hh-body text-[var(--hh-text-secondary)] text-sm text-left px-2">
                         {t("page.realtimeRanking.celebrationTextPart1")}
                         <Link
                             href="/patreon"
                             target="_blank"
-                            className="text-miku font-black underline decoration-dotted hover:opacity-80 transition-opacity mx-1"
+                            className="text-miku font-bold underline decoration-dotted hover:opacity-80 transition-opacity mx-1"
                         >
                             {t("page.realtimeRanking.celebrationTextLink")}
                         </Link>
@@ -1319,39 +1314,41 @@ function RealtimeRankingContent() {
                     </p>
 
                     {/* QR Code scans displayed directly in the modal per user request! */}
-                    <div className="p-4 ios-glass-panel rounded-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-4">
-                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                    <div className="hh-well p-4 rounded-[var(--hh-radius-lg)] space-y-4">
+                        <p className="text-xs font-bold text-[var(--hh-text-secondary)]">
                             {t("page.realtimeRanking.celebrationQrScanHint")}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                             {/* Alipay */}
                             <div className="flex flex-col items-center gap-2">
-                                <div className="w-32 h-32 rounded-xl overflow-hidden shadow-md border border-slate-200/70 relative bg-white">
+                                {/* Stays literal white: a QR code needs its own light
+                                    quiet zone to stay scannable under either theme. */}
+                                <div className="w-32 h-32 rounded-[var(--hh-radius-md)] overflow-hidden border border-[var(--hh-border)] relative bg-white">
                                     <img
                                         src="/patreon/alipay.png"
                                         alt="Alipay QR Code"
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
-                                <span className="text-[10px] font-bold text-slate-500">{t("page.realtimeRanking.celebrationAlipay")}</span>
+                                <span className="text-[10px] font-bold text-[var(--hh-text-secondary)]">{t("page.realtimeRanking.celebrationAlipay")}</span>
                             </div>
 
                             {/* WeChat */}
                             <div className="flex flex-col items-center gap-2">
-                                <div className="w-32 h-32 rounded-xl overflow-hidden shadow-md border border-slate-200/70 relative bg-white">
+                                <div className="w-32 h-32 rounded-[var(--hh-radius-md)] overflow-hidden border border-[var(--hh-border)] relative bg-white">
                                     <img
                                         src="/patreon/wechat.png"
                                         alt="WeChat QR Code"
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
-                                <span className="text-[10px] font-bold text-slate-500">{t("page.realtimeRanking.celebrationWechat")}</span>
+                                <span className="text-[10px] font-bold text-[var(--hh-text-secondary)]">{t("page.realtimeRanking.celebrationWechat")}</span>
                             </div>
                         </div>
 
                         {/* Ko-fi Link */}
-                        <div className="flex flex-col items-center gap-1.5 pt-3 border-t border-slate-200/40 dark:border-slate-800/40">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        <div className="flex flex-col items-center gap-1.5 pt-3 border-t border-[var(--hh-border-hairline)]">
+                            <span className="hh-label text-[10px]">
                                 {t("page.realtimeRanking.celebrationKofi")}
                             </span>
                             <ExternalLink
@@ -1372,7 +1369,7 @@ function RealtimeRankingContent() {
                         <Link
                             href="/patreon"
                             target="_blank"
-                            className="block w-full py-3 px-6 text-sm font-extrabold text-white text-center bg-gradient-to-r from-miku via-sky-500 to-luka hover:opacity-90 active:scale-[0.98] shadow-lg shadow-miku/20 rounded-2xl transition-all"
+                            className="hh-btn hh-btn-primary hh-press block w-full py-3 px-6 text-sm text-center rounded-[var(--hh-radius-md)]"
                         >
                             {t("page.realtimeRanking.celebrationButton")}
                         </Link>
@@ -1387,7 +1384,7 @@ export default function RealtimeRankingClient() {
     const { t } = useI18n();
 
     return (
-        <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.realtimeRanking.loading")}</div>}>
+        <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("page.realtimeRanking.loading")}</div>}>
             <RealtimeRankingContent />
         </Suspense>
     );

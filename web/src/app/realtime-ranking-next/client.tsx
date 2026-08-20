@@ -191,24 +191,24 @@ function RealtimeRankingNextContent() {
 
                 {/* World Link toggle */}
                 {board.worldLinkAvailable && (
-                    <div className="mb-6 rounded-2xl border border-slate-200/60 bg-white/70 p-4 backdrop-blur-sm dark:border-slate-700/60 dark:bg-slate-900/60">
+                    <div className="hh-panel mb-6 rounded-[var(--hh-radius-xl)] p-4">
                         <div className="flex flex-wrap items-center gap-2">
                             <button
                                 onClick={() => setBoardMode("overall")}
-                                className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                                className={`hh-press hh-focusable rounded-[var(--hh-radius-md)] px-4 py-2 text-sm font-bold ${
                                     boardMode === "overall"
-                                        ? "bg-miku text-white shadow-md shadow-miku/20"
-                                        : "border border-slate-200 bg-white text-slate-600 hover:border-miku/40 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                        ? "bg-miku text-[var(--hh-text-on-accent)]"
+                                        : "border border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:border-miku/40 hover:text-miku"
                                 }}`}
                             >
                                 {t("page.realtimeRankingNext.board.overall")}
                             </button>
                             <button
                                 onClick={() => setBoardMode("worldlink")}
-                                className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                                className={`hh-press hh-focusable rounded-[var(--hh-radius-md)] px-4 py-2 text-sm font-bold ${
                                     boardMode === "worldlink"
-                                        ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
-                                        : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                        ? "bg-emerald-600 text-white"
+                                        : "border border-emerald-500/30 bg-emerald-500/12 text-emerald-700 hover:border-emerald-500/60"
                                 }}`}
                             >
                                 {t("page.realtimeRankingNext.board.worldlink")}
@@ -223,11 +223,7 @@ function RealtimeRankingNextContent() {
                                         <button
                                             key={group.gameCharacterId}
                                             onClick={() => board.setSelectedCharacterId(group.gameCharacterId)}
-                                            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
-                                                isActive
-                                                    ? "bg-miku text-white shadow-sm shadow-miku/20"
-                                                    : "border border-slate-200 bg-white text-slate-600 hover:border-miku/40 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                                            }`}
+                                            className={`hh-chip hh-press ${isActive ? "hh-chip-active" : ""}`}
                                         >
                                             {getCharacterName(t, group.gameCharacterId)}
                                         </button>
@@ -239,13 +235,13 @@ function RealtimeRankingNextContent() {
                 )}
 
                 {board.error && (
-                    <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+                    <div className="mb-6 rounded-[var(--hh-radius-lg)] border border-red-500/30 bg-red-500/12 p-4 text-sm text-red-600">
                         <p className="font-bold">{t("page.realtimeRankingNext.loadFailed")}</p>
                     </div>
                 )}
 
                 {board.isLoading && board.entries.length === 0 ? (
-                    <div className="ios-glass-card rounded-2xl p-10 text-center text-slate-500">
+                    <div className="hh-tile rounded-[var(--hh-radius-lg)] p-10 text-center text-[var(--hh-text-secondary)]">
                         {t("page.realtimeRankingNext.loading")}
                     </div>
                 ) : (
@@ -278,7 +274,7 @@ function RealtimeRankingNextContent() {
 export default function RealtimeRankingNextClient() {
     const { t } = useI18n();
     return (
-        <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.realtimeRankingNext.loading")}</div>}>
+        <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("page.realtimeRankingNext.loading")}</div>}>
             <RealtimeRankingNextContent />
         </Suspense>
     );

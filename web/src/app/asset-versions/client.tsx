@@ -71,11 +71,13 @@ const STAT_LABEL_KEYS: Record<string, string> = {
     UploadedOverride: "page.assetVersions.stats.uploadedOverride",
 };
 
+// Upload-kind chips keep their semantic hues; the neutral fallback moves onto
+// system surfaces so it stops competing with them.
 const STAT_CHIP_CLASSES: Record<string, string> = {
-    UploadedOverride: "bg-purple-500/10 text-purple-500 dark:text-purple-400 border-purple-500/20",
-    UploadedShared: "bg-sky-500/10 text-sky-500 dark:text-sky-400 border-sky-500/20",
+    UploadedOverride: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+    UploadedShared: "bg-sky-500/10 text-sky-600 border-sky-500/20",
 };
-const STAT_CHIP_DEFAULT = "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20";
+const STAT_CHIP_DEFAULT = "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] border-[var(--hh-border)]";
 
 function formatBytes(bytes?: number): string {
     if (bytes === undefined || bytes === null) return "-";
@@ -493,7 +495,7 @@ function AssetVersionsContent() {
             <div className="flex items-center gap-1.5">
                 <button
                     onClick={() => handleCopyToClipboard(`${gatewayDomain}${selectedFile.url}`)}
-                    className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 island-pill-hover rounded-full transition-colors flex items-center justify-center animate-in fade-in duration-200"
+                    className="hh-press hh-focusable p-1.5 text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] transition-colors flex items-center justify-center animate-in fade-in duration-200"
                     title={copyFeedback ? t("page.assetVersions.copied") : t("page.assetVersions.copyLink")}
                 >
                     <span className="relative block w-4 h-4">
@@ -519,7 +521,7 @@ function AssetVersionsContent() {
                 </button>
                 <ExternalLink
                     href={`${gatewayDomain}${selectedFile.url}`}
-                    className="p-1.5 text-slate-400 hover:text-miku island-pill-hover rounded-full transition-colors flex items-center justify-center"
+                    className="hh-press hh-focusable p-1.5 text-[var(--hh-text-tertiary)] hover:text-[var(--hh-accent-deep)] hover:bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] transition-colors flex items-center justify-center"
                     title={t("page.assetVersions.download")}
                 >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -542,7 +544,7 @@ function AssetVersionsContent() {
                     return (
                         <span
                             key={key}
-                            className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${STAT_CHIP_CLASSES[key] || STAT_CHIP_DEFAULT}`}
+                            className={`hh-numeric px-2 py-0.5 text-[10px] font-bold rounded-[var(--hh-radius-sm)] border ${STAT_CHIP_CLASSES[key] || STAT_CHIP_DEFAULT}`}
                         >
                             {labelKey ? t(labelKey) : key} {formatNumber(value)}
                         </span>
@@ -554,10 +556,10 @@ function AssetVersionsContent() {
 
     const renderChangeTypeBadge = (changeType: AssetDiffItem["changeType"]) => (
         <span
-            className={`shrink-0 px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase tracking-wide ${
+            className={`shrink-0 px-2 py-0.5 text-[10px] font-bold rounded-[var(--hh-radius-sm)] border uppercase tracking-wide ${
                 changeType === "added"
-                    ? "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20"
-                    : "bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/20"
+                    ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                    : "bg-amber-500/10 text-amber-600 border-amber-500/20"
             }`}
         >
             {changeType === "added" ? t("page.assetVersions.changeAdded") : t("page.assetVersions.changeUpdated")}
@@ -584,17 +586,17 @@ function AssetVersionsContent() {
         <div className="container mx-auto px-4 sm:px-6 py-8">
             {/* Page Header */}
             <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 ios-glass-card border-miku/30 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.assetVersions.badge")}</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                    <span className="hh-label text-[var(--hh-accent-deep)]">{t("page.assetVersions.badge")}</span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                    {t("page.assetVersions.title")} <span className="text-miku">{t("page.assetVersions.titleHighlight")}</span>
+                <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">
+                    {t("page.assetVersions.title")} <span className="text-[var(--hh-accent-deep)]">{t("page.assetVersions.titleHighlight")}</span>
                 </h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-2xl mx-auto font-light text-sm sm:text-base">
+                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto text-sm sm:text-base">
                     {t("page.assetVersions.descriptionPrefix")}
                     <button
                         onClick={() => setShowTos(true)}
-                        className="text-miku hover:underline font-medium mx-1 focus:outline-none"
+                        className="hh-focusable text-[var(--hh-accent-deep)] hover:underline font-medium mx-1"
                     >
                         {t("page.assetVersions.descriptionLink")}
                     </button>
@@ -604,12 +606,12 @@ function AssetVersionsContent() {
 
             <div className="w-full min-w-0">
                 {/* Toolbar */}
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-4 p-4 ios-glass-card rounded-2xl">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4 p-4 hh-tile rounded-[var(--hh-radius-lg)]">
                     <div className="flex items-center gap-2 min-w-0">
                         {isDiffView && (
                             <button
                                 onClick={() => setVersion("")}
-                                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
+                                className="hh-press hh-focusable p-1.5 hover:bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] transition-colors"
                                 title={t("page.assetVersions.backToList")}
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -617,17 +619,19 @@ function AssetVersionsContent() {
                                 </svg>
                             </button>
                         )}
-                        <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-[var(--hh-text-secondary)] min-w-0">
                             <button
                                 onClick={() => setVersion("")}
-                                className={`hover:text-miku transition-colors ${!isDiffView ? "text-primary-text font-bold" : ""}`}
+                                className={`hh-focusable transition-colors hover:text-[var(--hh-accent-deep)] ${!isDiffView ? "text-[var(--hh-text-primary)] font-bold" : ""}`}
                             >
                                 {t("page.assetVersions.timeline")}
                             </button>
                             {isDiffView && (
                                 <>
-                                    <span className="text-slate-300 dark:text-slate-700">/</span>
-                                    <span className="text-primary-text font-bold font-mono truncate">{version}</span>
+                                    <span className="text-[var(--hh-text-tertiary)]">/</span>
+                                    {/* Asset versions are compared digit by digit, so the breadcrumb
+                                        copy of the version stays tabular too. */}
+                                    <span className="hh-numeric text-[var(--hh-text-primary)] font-bold truncate">{version}</span>
                                 </>
                             )}
                         </div>
@@ -636,7 +640,7 @@ function AssetVersionsContent() {
                     <div className="flex items-center gap-3">
                         <LocalizedLink
                             href={`/asset-viewer?server=${server}`}
-                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
+                            className="hh-press hh-focusable p-1.5 hover:bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] transition-colors"
                             title={t("layout.nav.items.assetViewer")}
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -646,7 +650,7 @@ function AssetVersionsContent() {
 
                         <button
                             onClick={isDiffView ? fetchDiff : fetchVersions}
-                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
+                            className="hh-press hh-focusable p-1.5 hover:bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] transition-colors"
                             title={t("common.action.refresh")}
                         >
                             <svg className={`w-4 h-4 ${(isDiffView ? isDiffLoading : isVersionsLoading) ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -663,18 +667,18 @@ function AssetVersionsContent() {
                             <div className="loading-spinner loading-spinner-sm" />
                         </div>
                     ) : versionsError ? (
-                        <div className="p-6 text-center ios-glass-card border-red-500/20 bg-red-500/5 rounded-2xl">
+                        <div className="p-6 text-center hh-tile border-red-500/30 bg-red-500/5 rounded-[var(--hh-radius-lg)]">
                             <p className="text-red-500 font-bold mb-3">{t("page.assetVersions.loadFailed")}</p>
-                            <p className="text-slate-500 text-xs mb-4">{versionsError}</p>
+                            <p className="text-[var(--hh-text-secondary)] text-xs mb-4">{versionsError}</p>
                             <button
                                 onClick={fetchVersions}
-                                className="ios-glass-btn ios-glass-btn-primary px-4 py-2 text-xs rounded-xl"
+                                className="hh-btn hh-btn-primary hh-press hh-focusable px-4 py-2 text-xs"
                             >
                                 {t("common.action.retry")}
                             </button>
                         </div>
                     ) : versions.length === 0 ? (
-                        <div className="p-12 text-center ios-glass-card rounded-2xl text-slate-400">
+                        <div className="p-12 text-center hh-tile rounded-[var(--hh-radius-lg)] text-[var(--hh-text-tertiary)]">
                             <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
@@ -683,39 +687,42 @@ function AssetVersionsContent() {
                     ) : (
                         <>
                             <div className="relative flex flex-col gap-3">
-                                {/* Timeline rail */}
-                                <div className="absolute left-[13px] top-4 bottom-4 w-px bg-gradient-to-b from-miku/40 via-slate-200 dark:via-slate-700 to-transparent hidden sm:block" aria-hidden />
+                                {/* Timeline rail — a flat hairline; the previous fade-out gradient was
+                                    decorative and read as a glass highlight. */}
+                                <div className="absolute left-[13px] top-4 bottom-4 w-px bg-[var(--hh-border)] hidden sm:block" aria-hidden />
                                 {versions.map((v, index) => (
                                     <div key={`${v.assetVersion}-${index}`} className="relative sm:pl-9">
                                         {/* Timeline dot */}
                                         <span
-                                            className={`absolute left-[9px] top-6 w-[9px] h-[9px] rounded-full hidden sm:block ${index === 0 ? "bg-miku ring-4 ring-miku/20" : "bg-slate-300 dark:bg-slate-600"}`}
+                                            className={`absolute left-[9px] top-6 w-[9px] h-[9px] rounded-[var(--hh-radius-full)] hidden sm:block ${index === 0 ? "bg-[var(--hh-accent)] ring-4 ring-[var(--hh-accent-wash)]" : "bg-[var(--hh-border-strong)]"}`}
                                             aria-hidden
                                         />
                                         <div
                                             onClick={() => setVersion(v.assetVersion)}
-                                            className="group ios-glass-card ios-glass-card-interactive p-4 sm:p-5 rounded-2xl cursor-pointer select-none"
+                                            className="hh-press group hh-tile p-4 sm:p-5 rounded-[var(--hh-radius-lg)] cursor-pointer select-none transition-colors hover:border-[var(--hh-accent)]"
                                         >
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="min-w-0">
                                                     <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="text-lg sm:text-xl font-black font-mono text-primary-text group-hover:text-miku transition-colors duration-200">
+                                                        {/* Version strings are the primary comparison target on this
+                                                            screen — tabular digits keep them aligned down the timeline. */}
+                                                        <span className="hh-display hh-numeric text-lg sm:text-xl text-[var(--hh-text-primary)] transition-colors group-hover:text-[var(--hh-accent-deep)]">
                                                             {v.assetVersion}
                                                         </span>
-                                                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full border bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20">
+                                                        <span className="hh-numeric px-2 py-0.5 text-[10px] font-bold rounded-[var(--hh-radius-sm)] border bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] border-[var(--hh-border)]">
                                                             App {v.appVersion}
                                                         </span>
                                                         {index === 0 && (
-                                                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-miku/15 text-miku border border-miku/25">
+                                                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-[var(--hh-radius-sm)] bg-[var(--hh-accent-wash-strong)] text-[var(--hh-accent-deep)] border border-[var(--hh-accent-line)]">
                                                                 {t("page.assetVersions.latestBadge")}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="mt-1 text-xs text-slate-400 font-medium">
+                                                    <p className="hh-numeric mt-1 text-xs text-[var(--hh-text-tertiary)] font-medium">
                                                         {formatCommittedAt(v.committedAt)}
                                                     </p>
                                                 </div>
-                                                <div className="shrink-0 flex items-center gap-1 text-xs font-bold text-slate-400 group-hover:text-miku transition-colors duration-200">
+                                                <div className="shrink-0 flex items-center gap-1 text-xs font-bold text-[var(--hh-text-tertiary)] transition-colors group-hover:text-[var(--hh-accent-deep)]">
                                                     <span className="hidden sm:inline">{t("page.assetVersions.viewDiff")}</span>
                                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -723,10 +730,10 @@ function AssetVersionsContent() {
                                                 </div>
                                             </div>
 
-                                            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-[var(--hh-text-secondary)] font-medium">
                                                 <span>
                                                     {t("page.assetVersions.changedAssetsLabel")}
-                                                    <span className="ml-1.5 font-bold text-primary-text">{formatNumber(v.changedAssets)}</span>
+                                                    <span className="hh-numeric ml-1.5 font-bold text-[var(--hh-text-primary)]">{formatNumber(v.changedAssets)}</span>
                                                 </span>
                                             </div>
 
@@ -741,10 +748,10 @@ function AssetVersionsContent() {
                                     <button
                                         onClick={fetchMoreVersions}
                                         disabled={isVersionsLoadingMore}
-                                        className="ios-glass-btn ios-glass-btn-primary px-8 py-3 font-bold rounded-2xl flex items-center gap-2"
+                                        className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3"
                                     >
                                         {isVersionsLoadingMore ? (
-                                            <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                                            <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-[var(--hh-radius-full)] animate-spin" />
                                         ) : (
                                             t("page.assetVersions.loadMore")
                                         )}
@@ -753,7 +760,7 @@ function AssetVersionsContent() {
                             )}
 
                             {!versionsCursor && versions.length > 0 && (
-                                <div className="mt-8 text-center text-slate-400 text-sm font-medium">
+                                <div className="mt-8 text-center text-[var(--hh-text-tertiary)] text-sm font-medium">
                                     {t("page.assetVersions.allVersionsLoaded", { count: versions.length })}
                                 </div>
                             )}
@@ -763,39 +770,41 @@ function AssetVersionsContent() {
                     /* ==================== Single Version Diff View ==================== */
                     <>
                         {/* Version summary card */}
-                        <div className="mb-4 p-4 sm:p-5 ios-glass-card rounded-2xl">
+                        <div className="mb-4 p-4 sm:p-5 hh-tile rounded-[var(--hh-radius-lg)]">
                             {isDiffLoading && !diffMeta ? (
-                                <div className="flex items-center gap-3 text-sm text-slate-400">
+                                <div className="flex items-center gap-3 text-sm text-[var(--hh-text-tertiary)]">
                                     <div className="loading-spinner loading-spinner-sm" />
                                     <span>{t("page.assetVersions.loadingDiff")}</span>
                                 </div>
                             ) : diffMeta ? (
                                 <>
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xl font-black font-mono text-primary-text">{diffMeta.assetVersion}</span>
-                                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full border bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20">
+                                        <span className="hh-display hh-numeric text-xl text-[var(--hh-text-primary)]">{diffMeta.assetVersion}</span>
+                                        <span className="hh-numeric px-2 py-0.5 text-[10px] font-bold rounded-[var(--hh-radius-sm)] border bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] border-[var(--hh-border)]">
                                             App {diffMeta.appVersion}
                                         </span>
                                         {(diffMeta.types || []).map(type => (
-                                            <span key={type} className="px-2 py-0.5 text-[10px] font-bold rounded-full border bg-sky-500/10 text-sky-500 dark:text-sky-400 border-sky-500/20">
+                                            <span key={type} className="px-2 py-0.5 text-[10px] font-bold rounded-[var(--hh-radius-sm)] border bg-sky-500/10 text-sky-600 border-sky-500/20">
                                                 {type}
                                             </span>
                                         ))}
                                     </div>
-                                    <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                        <span>{formatCommittedAt(diffMeta.committedAt)}</span>
+                                    <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-[var(--hh-text-secondary)] font-medium">
+                                        <span className="hh-numeric">{formatCommittedAt(diffMeta.committedAt)}</span>
                                         <span>
                                             {t("page.assetVersions.totalChangedLabel")}
-                                            <span className="ml-1.5 font-bold text-primary-text">{formatNumber(diffMeta.totalChanged)}</span>
+                                            <span className="hh-numeric ml-1.5 font-bold text-[var(--hh-text-primary)]">{formatNumber(diffMeta.totalChanged)}</span>
                                         </span>
                                         <span>
                                             {t("page.assetVersions.loadedLabel")}
-                                            <span className="ml-1.5 font-bold text-primary-text">{formatNumber(diffItems.length)}</span>
+                                            <span className="hh-numeric ml-1.5 font-bold text-[var(--hh-text-primary)]">{formatNumber(diffItems.length)}</span>
                                         </span>
                                     </div>
                                     {selectedVersionMeta && renderStatChips(selectedVersionMeta.stats, "mt-2.5")}
                                     {diffMeta.assetHash && (
-                                        <p className="mt-2 text-[10px] font-mono text-slate-400 dark:text-slate-500 break-all">
+                                        // A hash is only useful if it can be compared character by
+                                        // character, which needs fixed-width digits.
+                                        <p className="hh-numeric mt-2 text-[10px] font-mono text-[var(--hh-text-tertiary)] break-all">
                                             {diffMeta.assetHash}
                                         </p>
                                     )}
@@ -809,18 +818,18 @@ function AssetVersionsContent() {
                                 <div className="loading-spinner loading-spinner-sm" />
                             </div>
                         ) : diffError ? (
-                            <div className="p-6 text-center ios-glass-card border-red-500/20 bg-red-500/5 rounded-2xl">
+                            <div className="p-6 text-center hh-tile border-red-500/30 bg-red-500/5 rounded-[var(--hh-radius-lg)]">
                                 <p className="text-red-500 font-bold mb-3">{t("page.assetVersions.loadFailed")}</p>
-                                <p className="text-slate-500 text-xs mb-4">{diffError}</p>
+                                <p className="text-[var(--hh-text-secondary)] text-xs mb-4">{diffError}</p>
                                 <button
                                     onClick={fetchDiff}
-                                    className="ios-glass-btn ios-glass-btn-primary px-4 py-2 text-xs rounded-xl"
+                                    className="hh-btn hh-btn-primary hh-press hh-focusable px-4 py-2 text-xs"
                                 >
                                     {t("common.action.retry")}
                                 </button>
                             </div>
                         ) : processedDiffItems.length === 0 ? (
-                            <div className="p-12 text-center ios-glass-card rounded-2xl text-slate-400">
+                            <div className="p-12 text-center hh-tile rounded-[var(--hh-radius-lg)] text-[var(--hh-text-tertiary)]">
                                 <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                                 </svg>
@@ -828,9 +837,11 @@ function AssetVersionsContent() {
                             </div>
                         ) : (
                             <>
-                                <div className="flex flex-col gap-1.5">
+                                {/* One table, not a stack of cards: a diff can run to hundreds of
+                                    rows, so rows are hairline-separated and only tint on hover. */}
+                                <div className="flex flex-col hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
                                     {/* Table header */}
-                                    <div className="flex items-center px-4 py-2.5 text-xs font-bold text-slate-400 dark:text-slate-500 border-b border-slate-200/10 mb-1 select-none">
+                                    <div className="flex items-center px-4 py-2.5 hh-label bg-[var(--hh-surface-1)] border-b border-[var(--hh-border)] select-none">
                                         <div className="w-16">{t("page.assetVersions.changeTypeLabel")}</div>
                                         <div className="flex-1 min-w-0 pl-3">{t("page.assetVersions.path")}</div>
                                         <div className="w-24 text-right">{t("page.assetVersions.size")}</div>
@@ -840,21 +851,21 @@ function AssetVersionsContent() {
                                         <div
                                             key={`${item.path}-${index}`}
                                             onClick={() => setSelectedFile(item)}
-                                            className="group ios-glass-card ios-glass-card-interactive px-4 py-3 rounded-2xl flex items-center gap-3 cursor-pointer select-none"
+                                            className="group px-4 py-3 flex items-center gap-3 cursor-pointer select-none border-b border-[var(--hh-border-hairline)] last:border-b-0 transition-colors hover:bg-[var(--hh-surface-sunken)]"
                                         >
                                             {renderChangeTypeBadge(item.changeType)}
                                             <div className="flex-1 min-w-0 flex items-center gap-2">
                                                 <p
-                                                    className="text-xs sm:text-sm font-mono font-medium text-primary-text truncate group-hover:text-miku transition-colors duration-200"
+                                                    className="text-xs sm:text-sm font-mono font-medium text-[var(--hh-text-primary)] truncate transition-colors group-hover:text-[var(--hh-accent-deep)]"
                                                     title={item.path}
                                                 >
                                                     {item.path}
                                                 </p>
                                                 {item.source === "override" && (
-                                                    <span className="shrink-0 px-1.5 py-0.2 text-[9px] bg-purple-500/10 text-purple-400 rounded-full border border-purple-500/10">override</span>
+                                                    <span className="shrink-0 px-1.5 py-0.2 text-[9px] bg-purple-500/10 text-purple-600 rounded-[var(--hh-radius-sm)] border border-purple-500/20">override</span>
                                                 )}
                                             </div>
-                                            <div className="w-24 shrink-0 text-right text-xs text-slate-400 font-medium">
+                                            <div className="hh-numeric w-24 shrink-0 text-right text-xs text-[var(--hh-text-secondary)] font-medium">
                                                 {formatBytes(item.size)}
                                             </div>
                                         </div>
@@ -867,14 +878,14 @@ function AssetVersionsContent() {
                                         <button
                                             onClick={fetchMoreDiff}
                                             disabled={isDiffLoadingMore}
-                                            className="ios-glass-btn ios-glass-btn-primary px-8 py-3 font-bold rounded-2xl flex items-center gap-2"
+                                            className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3"
                                         >
                                             {isDiffLoadingMore ? (
-                                                <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                                                <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-[var(--hh-radius-full)] animate-spin" />
                                             ) : (
                                                 <>
                                                     {t("page.assetVersions.loadMore")}
-                                                    <span className="text-xs font-semibold opacity-75 bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded-full">
+                                                    <span className="hh-numeric text-xs font-semibold opacity-75 bg-black/15 px-2 py-0.5 rounded-[var(--hh-radius-sm)]">
                                                         {formatNumber(diffItems.length)} / {formatNumber(diffMeta?.totalChanged || 0)}
                                                     </span>
                                                 </>
@@ -885,7 +896,7 @@ function AssetVersionsContent() {
 
                                 {/* All loaded message */}
                                 {!diffCursor && processedDiffItems.length > 0 && (
-                                    <div className="mt-8 text-center text-slate-400 text-sm font-medium">
+                                    <div className="mt-8 text-center text-[var(--hh-text-tertiary)] text-sm font-medium">
                                         {t("page.assetVersions.allDiffLoaded", { count: processedDiffItems.length })}
                                     </div>
                                 )}
@@ -910,41 +921,42 @@ function AssetVersionsContent() {
                 {selectedFile && (
                     <div className="space-y-6">
                         {/* File Details Grid */}
-                        <div className="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 text-xs sm:text-sm space-y-2.5">
+                        <div className="p-4 hh-well text-xs sm:text-sm space-y-2.5">
                             <div className="flex justify-between gap-4">
-                                <span className="text-slate-400 font-medium shrink-0">{t("page.assetVersions.changeTypeLabel")}</span>
+                                <span className="text-[var(--hh-text-secondary)] font-medium shrink-0">{t("page.assetVersions.changeTypeLabel")}</span>
                                 {renderChangeTypeBadge(selectedFile.changeType)}
                             </div>
                             <div className="flex flex-col gap-1">
-                                <span className="text-slate-400 font-medium">{t("page.assetVersions.path")}</span>
-                                <span className="text-primary-text font-mono text-[10px] sm:text-xs select-all break-all">{selectedFile.path}</span>
+                                <span className="text-[var(--hh-text-secondary)] font-medium">{t("page.assetVersions.path")}</span>
+                                <span className="text-[var(--hh-text-primary)] font-mono text-[10px] sm:text-xs select-all break-all">{selectedFile.path}</span>
                             </div>
                             <div className="flex justify-between gap-4">
-                                <span className="text-slate-400 font-medium shrink-0">{t("page.assetVersions.size")}</span>
-                                <span className="text-primary-text font-bold text-right">{formatBytes(selectedFile.size)}</span>
+                                <span className="text-[var(--hh-text-secondary)] font-medium shrink-0">{t("page.assetVersions.size")}</span>
+                                <span className="hh-numeric text-[var(--hh-text-primary)] font-bold text-right">{formatBytes(selectedFile.size)}</span>
                             </div>
                             {selectedFile.source && (
                                 <div className="flex justify-between gap-4">
-                                    <span className="text-slate-400 font-medium shrink-0">{t("page.assetVersions.source")}</span>
-                                    <span className="text-primary-text capitalize text-right">{selectedFile.source}</span>
+                                    <span className="text-[var(--hh-text-secondary)] font-medium shrink-0">{t("page.assetVersions.source")}</span>
+                                    <span className="text-[var(--hh-text-primary)] capitalize text-right">{selectedFile.source}</span>
                                 </div>
                             )}
                             {selectedFile.bundlePath && (
                                 <div className="flex justify-between gap-4">
-                                    <span className="text-slate-400 font-medium shrink-0">{t("page.assetVersions.bundlePath")}</span>
-                                    <span className="text-primary-text font-mono text-right truncate max-w-[200px]" title={selectedFile.bundlePath}>{selectedFile.bundlePath}</span>
+                                    <span className="text-[var(--hh-text-secondary)] font-medium shrink-0">{t("page.assetVersions.bundlePath")}</span>
+                                    <span className="text-[var(--hh-text-primary)] font-mono text-right truncate max-w-[200px]" title={selectedFile.bundlePath}>{selectedFile.bundlePath}</span>
                                 </div>
                             )}
                             {selectedFile.fingerprint && (
                                 <div className="flex justify-between gap-4">
-                                    <span className="text-slate-400 font-medium shrink-0">{t("page.assetVersions.fingerprint")}</span>
-                                    <span className="text-primary-text font-mono text-right truncate max-w-[200px]" title={selectedFile.fingerprint}>{selectedFile.fingerprint}</span>
+                                    <span className="text-[var(--hh-text-secondary)] font-medium shrink-0">{t("page.assetVersions.fingerprint")}</span>
+                                    {/* Fingerprints and hashes are read character by character. */}
+                                    <span className="hh-numeric text-[var(--hh-text-primary)] font-mono text-right truncate max-w-[200px]" title={selectedFile.fingerprint}>{selectedFile.fingerprint}</span>
                                 </div>
                             )}
                             {selectedFile.sha256 && (
-                                <div className="flex flex-col gap-1 pt-1.5 border-t border-slate-200/40 dark:border-slate-800/40">
-                                    <span className="text-slate-400 font-medium">{t("page.assetVersions.sha256")}</span>
-                                    <span className="text-primary-text font-mono text-[10px] sm:text-xs select-all break-all">{selectedFile.sha256}</span>
+                                <div className="flex flex-col gap-1 pt-1.5 border-t border-[var(--hh-border)]">
+                                    <span className="text-[var(--hh-text-secondary)] font-medium">{t("page.assetVersions.sha256")}</span>
+                                    <span className="hh-numeric text-[var(--hh-text-primary)] font-mono text-[10px] sm:text-xs select-all break-all">{selectedFile.sha256}</span>
                                 </div>
                             )}
                         </div>
@@ -952,11 +964,11 @@ function AssetVersionsContent() {
                         {/* Inline Previews */}
                         <div className="flex flex-col items-center justify-center">
                             {isImagePath(selectedFile.path) && selectedFile.url && (
-                                <div className="relative w-full max-h-64 flex justify-center bg-slate-100/50 dark:bg-slate-900/30 p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/50">
+                                <div className="relative w-full max-h-64 flex justify-center bg-[var(--hh-surface-sunken)] p-4 rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)]">
                                     <img
                                         src={`${gatewayDomain}${selectedFile.url}`}
                                         alt={selectedFile.path}
-                                        className="max-h-56 object-contain rounded-lg"
+                                        className="max-h-56 object-contain rounded-[var(--hh-radius-md)]"
                                         onError={(e) => {
                                             (e.target as HTMLElement).style.display = "none";
                                         }}
@@ -965,8 +977,8 @@ function AssetVersionsContent() {
                             )}
 
                             {isAudioPath(selectedFile.path) && selectedFile.url && (
-                                <div className="w-full p-4 bg-slate-100/50 dark:bg-slate-900/30 rounded-2xl border border-slate-200/50 dark:border-slate-800/50">
-                                    <p className="text-xs text-slate-400 font-bold mb-2 flex items-center gap-1.5">
+                                <div className="w-full p-4 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)]">
+                                    <p className="hh-label mb-2 flex items-center gap-1.5">
                                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
                                         </svg>
@@ -985,7 +997,7 @@ function AssetVersionsContent() {
                                     {previewText === null && !isPreviewTextLoading && !previewTextError && (
                                         <button
                                             onClick={() => handleFetchPreviewText(selectedFile)}
-                                            className="w-full py-3 ios-glass-btn ios-glass-btn-primary font-bold rounded-2xl text-sm"
+                                            className="hh-btn hh-btn-primary hh-press hh-focusable w-full py-3 text-sm"
                                         >
                                             {t("page.assetVersions.previewText")}
                                         </button>
@@ -998,20 +1010,24 @@ function AssetVersionsContent() {
                                     )}
 
                                     {previewTextError && (
-                                        <p className="text-xs text-red-500 text-center font-medium bg-red-500/5 p-3 rounded-xl border border-red-500/10">
+                                        <p className="text-xs text-red-500 text-center font-medium bg-red-500/5 p-3 rounded-[var(--hh-radius-md)] border border-red-500/20">
                                             {previewTextError}
                                         </p>
                                     )}
 
                                     {previewText !== null && (
                                         <div className="relative w-full">
+                                            {/* The readout is a fixed dark terminal surface in both themes —
+                                                that is what marks it as raw machine output rather than UI —
+                                                so its two colors are literals, not theme tokens. White text
+                                                on it is correct. */}
                                             <button
                                                 onClick={() => handleCopyToClipboard(previewText)}
-                                                className="absolute right-3 top-3 px-2.5 py-1 text-[10px] font-bold bg-slate-800/80 hover:bg-slate-800 text-white rounded-lg transition-colors border border-slate-700"
+                                                className="hh-press hh-focusable absolute right-3 top-3 px-2.5 py-1 text-[10px] font-bold bg-white/15 hover:bg-white/25 text-white rounded-[var(--hh-radius-sm)] transition-colors border border-white/20"
                                             >
                                                 {copyFeedback ? t("page.assetVersions.copied") : t("common.action.copy")}
                                             </button>
-                                            <pre className="w-full overflow-auto bg-slate-950 p-4 rounded-2xl text-[10px] sm:text-xs font-mono text-emerald-400 max-h-[35vh] border border-slate-800 whitespace-pre select-all custom-scrollbar">
+                                            <pre className="w-full overflow-auto bg-[#15171b] p-4 rounded-[var(--hh-radius-lg)] text-[10px] sm:text-xs font-mono text-emerald-400 max-h-[35vh] border border-[#2c2f35] whitespace-pre select-all custom-scrollbar">
                                                 <code>{previewText}</code>
                                             </pre>
                                         </div>
@@ -1034,7 +1050,7 @@ export default function AssetVersionsClient() {
 
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.assetVersions.loadingFallback")}</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("page.assetVersions.loadingFallback")}</div>}>
                 <AssetVersionsContent />
             </Suspense>
         </MainLayout>

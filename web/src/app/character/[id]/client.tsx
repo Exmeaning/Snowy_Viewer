@@ -118,7 +118,7 @@ export default function CharacterDetailClient() {
             <div className="flex h-[50vh] w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-miku border-t-transparent rounded-full animate-spin" />
-                    <span className="text-slate-500">{t("page.character.loadingInfo")}</span>
+                    <span className="text-[var(--hh-text-secondary)]">{t("page.character.loadingInfo")}</span>
                 </div>
             </div>
         );
@@ -127,7 +127,7 @@ export default function CharacterDetailClient() {
     if (!character) {
         return (
             <div className="container mx-auto px-4 py-8 text-center">
-                <h1 className="text-2xl font-bold text-slate-800">{t("page.character.notFoundTitle")}</h1>
+                <h1 className="hh-title text-2xl text-[var(--hh-text-primary)]">{t("page.character.notFoundTitle")}</h1>
                 <Link href="/character" className="text-miku hover:underline mt-4 inline-block">
                     {t("page.character.backToList")}
                 </Link>
@@ -159,30 +159,39 @@ export default function CharacterDetailClient() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Left Column: Character Image */}
                 <div className="lg:col-span-5 xl:col-span-4">
-                    <div className="ios-glass-card rounded-2xl overflow-hidden sticky top-24">
-                        <div className="flex p-1 bg-slate-100/30 dark:bg-slate-900/30 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-800/80 gap-1">
-                            <button
-                                onClick={() => setActiveTab("trim")}
-                                className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${activeTab === "trim" ? "ios-glass-tab-active bg-miku text-white shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/20 dark:hover:bg-slate-800/40"}`}
-                            >
-                                {t("page.character.imageTabs.trim")}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("label_h")}
-                                className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${activeTab === "label_h" ? "ios-glass-tab-active bg-miku text-white shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/20 dark:hover:bg-slate-800/40"}`}
-                            >
-                                {t("page.character.imageTabs.label_h")}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("label_v")}
-                                className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${activeTab === "label_v" ? "ios-glass-tab-active bg-miku text-white shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/20 dark:hover:bg-slate-800/40"}`}
-                            >
-                                {t("page.character.imageTabs.label_v")}
-                            </button>
+                    <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden sticky top-24">
+                        {/* Segmented control rather than three independent tab buttons: the
+                            three views are mutually exclusive, and the shared sunken trough is
+                            what makes that read at a glance. */}
+                        <div className="p-3 border-b border-[var(--hh-border)]">
+                            <div className="hh-segment">
+                                <button
+                                    onClick={() => setActiveTab("trim")}
+                                    className="hh-segment-item hh-press cursor-pointer"
+                                    data-selected={activeTab === "trim" ? "true" : "false"}
+                                >
+                                    {t("page.character.imageTabs.trim")}
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab("label_h")}
+                                    className="hh-segment-item hh-press cursor-pointer"
+                                    data-selected={activeTab === "label_h" ? "true" : "false"}
+                                >
+                                    {t("page.character.imageTabs.label_h")}
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab("label_v")}
+                                    className="hh-segment-item hh-press cursor-pointer"
+                                    data-selected={activeTab === "label_v" ? "true" : "false"}
+                                >
+                                    {t("page.character.imageTabs.label_v")}
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Image Display */}
-                        <div className="p-4 bg-slate-50 min-h-[400px] flex items-center justify-center relative cursor-zoom-in"
+                        {/* Image Display. Sunken because the art is object-contain — the
+                            surrounding margin is a recessed slot, not the tile face. */}
+                        <div className="p-4 bg-[var(--hh-surface-sunken)] min-h-[400px] flex items-center justify-center relative cursor-zoom-in"
                             onClick={() => setImageViewerOpen(true)}>
                             {activeTab === "trim" && (
                                 <div className="w-full h-auto relative aspect-[3/4]">
@@ -218,7 +227,7 @@ export default function CharacterDetailClient() {
                                 </div>
                             )}
                         </div>
-                        <div className="p-3 bg-white text-center text-xs text-slate-400 border-t border-slate-100">
+                        <div className="p-3 bg-[var(--hh-surface-1)] text-center text-xs text-[var(--hh-text-tertiary)] border-t border-[var(--hh-border)]">
                             {t("page.character.clickExpand")}
                         </div>
                     </div>
@@ -227,22 +236,22 @@ export default function CharacterDetailClient() {
                 {/* Right Column: Info & Profile */}
                 <div className="lg:col-span-7 xl:col-span-8 space-y-8">
                     {/* Basic Info */}
-                    <div className="ios-glass-card rounded-2xl overflow-hidden">
-                        <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                            <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                                <span className="w-1 h-6 bg-miku rounded-full"></span>
+                    <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                        <div className="px-6 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                            <h2 className="hh-title text-lg text-[var(--hh-text-primary)] flex items-center gap-2">
+                                <span className="w-1 h-6 bg-[var(--hh-accent)] rounded-[var(--hh-radius-full)]"></span>
                                 {t("page.character.basicInfo")}
                             </h2>
                         </div>
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-                                <InfoRow label="ID" value={character.id} />
+                                <InfoRow label="ID" value={<span className="hh-numeric">{character.id}</span>} />
                                 <InfoRow
                                     label={t("page.character.nameLabel")}
                                     value={
                                         <div className="flex flex-col items-end">
                                             <span className="text-lg font-bold">{characterDisplayName}</span>
-                                            <span className="text-xs text-slate-500">{character.firstNameRuby} {character.givenNameRuby}</span>
+                                            <span className="text-xs text-[var(--hh-text-secondary)]">{character.firstNameRuby} {character.givenNameRuby}</span>
                                         </div>
                                     }
                                 />
@@ -290,17 +299,17 @@ export default function CharacterDetailClient() {
 
                     {/* Profile */}
                     {profile && (
-                        <div className="ios-glass-card rounded-2xl overflow-hidden">
-                            <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                                    <span className="w-1 h-6 bg-miku rounded-full"></span>
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                            <div className="px-6 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                <h2 className="hh-title text-lg text-[var(--hh-text-primary)] flex items-center gap-2">
+                                    <span className="w-1 h-6 bg-[var(--hh-accent)] rounded-[var(--hh-radius-full)]"></span>
                                     {t("page.character.profileTitle")}
                                 </h2>
                             </div>
                             <div className="p-6 space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-                                    <InfoRow label={t("page.character.heightLabel")} value={profile.height} />
-                                    <InfoRow label={t("page.character.birthdayLabel")} value={profile.birthday} />
+                                    <InfoRow label={t("page.character.heightLabel")} value={<span className="hh-numeric">{profile.height}</span>} />
+                                    <InfoRow label={t("page.character.birthdayLabel")} value={<span className="hh-numeric">{profile.birthday}</span>} />
                                     <InfoRow label={t("page.character.schoolLabel")} value={profile.school} />
                                     <InfoRow label={t("page.character.schoolYearLabel")} value={profile.schoolYear} />
                                     <InfoRow
@@ -354,9 +363,9 @@ export default function CharacterDetailClient() {
                                         }
                                     />
                                 </div>
-                                <div className="pt-4 border-t border-slate-100">
-                                    <p className="text-sm font-bold text-slate-500 mb-2">{t("page.character.introductionTitle")}</p>
-                                    <div className="whitespace-pre-line text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl">
+                                <div className="pt-4 border-t border-[var(--hh-border)]">
+                                    <p className="hh-label mb-2">{t("page.character.introductionTitle")}</p>
+                                    <div className="hh-well hh-body whitespace-pre-line text-[var(--hh-text-primary)] p-4">
                                         <TranslatedText
                                             original={profile.introduction}
                                             category="characters"
@@ -369,13 +378,13 @@ export default function CharacterDetailClient() {
                     )}
 
                     {/* Cards */}
-                    <div className="ios-glass-card rounded-2xl overflow-hidden">
-                        <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center justify-between">
-                            <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                                <span className="w-1 h-6 bg-miku rounded-full"></span>
+                    <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                        <div className="px-6 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] flex items-center justify-between">
+                            <h2 className="hh-title text-lg text-[var(--hh-text-primary)] flex items-center gap-2">
+                                <span className="w-1 h-6 bg-[var(--hh-accent)] rounded-[var(--hh-radius-full)]"></span>
                                 {t("page.character.relatedCardsTitle")}
                             </h2>
-                            <span className="text-sm text-slate-500 text-sm bg-white px-2 py-0.5 rounded-full border border-slate-200">
+                            <span className="hh-numeric text-sm text-[var(--hh-text-secondary)] bg-[var(--hh-surface-2)] px-2 py-0.5 rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)]">
                                 {t("page.character.relatedCardsCount", { count: cards.length })}
                             </span>
                         </div>
@@ -412,8 +421,8 @@ function InfoRow({ label, value }: { label: string, value: React.ReactNode }) {
     if (!value) return null;
     return (
         <div className="flex items-center justify-between text-sm py-1">
-            <span className="font-bold text-slate-500">{label}</span>
-            <span className="text-slate-800 text-right">{value}</span>
+            <span className="font-semibold text-[var(--hh-text-secondary)]">{label}</span>
+            <span className="text-[var(--hh-text-primary)] text-right">{value}</span>
         </div>
     );
 }

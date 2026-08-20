@@ -271,20 +271,20 @@ export default function TranslationEditionSelect({
                 onKeyDown={handleKeyDown}
                 onCompositionStart={() => { isComposingRef.current = true; }}
                 onCompositionEnd={() => { isComposingRef.current = false; }}
-                className="pressable material-thin flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-slate-700 outline-none transition-[border-color,background-color,box-shadow] duration-[var(--duration-fast)] hover:border-miku/50 focus-visible:ring-2 focus-visible:ring-miku/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent dark:text-slate-200 motion-reduce:transition-none"
+                className="hh-press hh-focusable hh-input flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-[var(--hh-radius-md)] px-3 py-2 text-left outline-none"
             >
                 <span className="min-w-0">
-                    <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</span>
+                    <span className="hh-label block">{label}</span>
                     <span className="mt-0.5 flex min-w-0 items-baseline gap-2">
                         <span className="truncate text-sm font-bold text-primary-text">{selectedOption?.label}</span>
                         {selectedOption?.isDefault && (
-                            <span className="shrink-0 text-[10px] font-bold text-miku">{defaultLabel}</span>
+                            <span className="shrink-0 text-[10px] font-bold text-[var(--hh-accent-deep)]">{defaultLabel}</span>
                         )}
                     </span>
                 </span>
                 <svg
                     aria-hidden="true"
-                    className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-[var(--duration-fast)] motion-reduce:transition-none ${isOpen ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 shrink-0 text-[var(--hh-text-tertiary)] transition-transform duration-[var(--hh-dur-fast)] motion-reduce:transition-none ${isOpen ? "rotate-180" : ""}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -305,7 +305,7 @@ export default function TranslationEditionSelect({
                     onKeyDown={handleKeyDown}
                     onCompositionStart={() => { isComposingRef.current = true; }}
                     onCompositionEnd={() => { isComposingRef.current = false; }}
-                    className="ios-glass-dropdown material-thick fixed z-[300] overflow-y-auto overscroll-contain rounded-2xl p-2 shadow-2xl outline-none motion-reduce:transition-none"
+                    className="hh-float fixed z-[300] overflow-y-auto overscroll-contain rounded-[var(--hh-radius-xl)] p-2 outline-none motion-reduce:transition-none"
                 >
                     {options.map((option, index) => {
                         const isSelected = option.key === value;
@@ -321,20 +321,20 @@ export default function TranslationEditionSelect({
                                 tabIndex={-1}
                                 onClick={() => selectIndex(index)}
                                 onPointerMove={() => setActiveIndex(index)}
-                                className={`flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-bold outline-none transition-colors duration-[var(--duration-fast)] motion-reduce:transition-none ${isSelected
-                                    ? "bg-miku/12 text-miku"
+                                className={`flex min-h-11 w-full items-center gap-3 rounded-[var(--hh-radius-md)] px-3 py-2 text-left text-sm font-bold outline-none transition-colors duration-[var(--hh-dur-fast)] motion-reduce:transition-none ${isSelected
+                                    ? "bg-[var(--hh-accent-wash-strong)] text-[var(--hh-accent-deep)]"
                                     : isActive
-                                        ? "bg-slate-100/80 text-primary-text dark:bg-slate-800/70"
-                                        : "text-slate-600 hover:bg-slate-100/70 hover:text-primary-text dark:text-slate-300 dark:hover:bg-slate-800/60"
+                                        ? "bg-[var(--hh-surface-3)] text-[var(--hh-text-primary)]"
+                                        : "text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"
                                 }`}
                             >
                                 <span className="min-w-0 flex-1 truncate">{option.label}</span>
                                 {option.isDefault && (
-                                    <span className="shrink-0 text-[10px] font-bold text-slate-400 dark:text-slate-500">{defaultLabel}</span>
+                                    <span className="shrink-0 text-[10px] font-bold text-[var(--hh-text-tertiary)]">{defaultLabel}</span>
                                 )}
                                 <svg
                                     aria-hidden="true"
-                                    className={`h-4 w-4 shrink-0 text-miku ${isSelected ? "opacity-100" : "opacity-0"}`}
+                                    className={`h-4 w-4 shrink-0 text-[var(--hh-accent-deep)] ${isSelected ? "opacity-100" : "opacity-0"}`}
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"

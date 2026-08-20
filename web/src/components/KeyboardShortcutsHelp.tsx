@@ -1,10 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { getDisplayCombos, SHORTCUT_GROUP_ORDER, SHORTCUTS } from "@/lib/shortcuts";
 import { useI18n } from "@/contexts/I18nContext";
-import { getMotionTransition } from "@/lib/motion";
+import { hhPopoverVariants, springSnappy } from "@/lib/motion";
 
 interface KeyboardShortcutsHelpProps {
     isOpen: boolean;
@@ -37,15 +37,6 @@ const shortcutGroups = SHORTCUT_GROUP_ORDER
 export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelpProps) {
     const [mounted, setMounted] = useState(false);
     const { t } = useI18n();
-    // Curve only — never the animated values, which must match between server
-    // and client. MotionProvider handles the transform downgrade after mount.
-    const prefersReducedMotion = useReducedMotion();
-    const overlayTransition = getMotionTransition("snappy", {
-        reducedMotion: !!prefersReducedMotion,
-    });
-    const panelTransition = getMotionTransition("snappy", {
-        reducedMotion: !!prefersReducedMotion,
-    });
 
     useEffect(() => {
         const raf = requestAnimationFrame(() => {
@@ -80,36 +71,48 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-[200] isolate flex items-start justify-center px-3 pt-4 sm:px-4 sm:pt-[min(20vh,8rem)]">
-                    {/* Backdrop */}
+                    {/* Scrim — flat dim, no blur. */}
                     <motion.div
-                        className="absolute inset-0 transform-gpu bg-black/35 backdrop-blur-[8px]"
+                        className="absolute inset-0 hh-scrim"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={overlayTransition}
+                        transition={springSnappy}
                         onClick={onClose}
                     />
 
-                    {/* Dialog — source-anchored from top chrome */}
+                    {/* Dialog — anchored under the top chrome that opened it, so
+                        it grows from its trigger edge rather than the viewport
+                        centre. hhPopoverVariants is that exact path. */}
                     <motion.div
-                        className="relative w-full max-w-md transform-gpu will-change-transform liquid-glass-modal rounded-2xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[70vh]"
-                        initial={{ opacity: 0, scale: 0.97, y: -12 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.97, y: -12 }}
-                        transition={panelTransition}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="shortcuts-help-title"
+                        className="relative w-full max-w-md transform-gpu will-change-transform hh-float overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[70vh]"
+                        variants={hhPopoverVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
                     >
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-700/40">
-                            <h2 className="text-sm type-title font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                                <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        {/* Title bar */}
+                        <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                            <h2
+                                id="shortcuts-help-title"
+                                className="hh-title text-sm text-[var(--hh-text-primary)] flex items-center gap-2"
+                            >
+                                <svg className="w-4 h-4 text-[var(--hh-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <rect x="2" y="6" width="20" height="12" rx="2" />
                                     <path d="M6 14h0M10 14h4M18 14h0M8 10h0M12 10h0M16 10h0" strokeLinecap="round" />
                                 </svg>
                                 {t("shortcuts.title")}
                             </h2>
+                            {/* Reference sheet, not a question: there is nothing
+                                to confirm, so close is the only action and an
+                                A/B bar would be noise. */}
                             <button
                                 onClick={onClose}
-                                className="pressable p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                                className="hh-press p-1.5 rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]"
+                                aria-label={t("common.action.close")}
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -121,7 +124,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                         <div className="overflow-y-auto flex-1 px-5 py-3">
                             {shortcutGroups.map((group) => (
                                 <div key={group.titleKey} className="mb-4 last:mb-0">
-                                    <h3 className="text-xs type-caption font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                    <h3 className="hh-label mb-2">
                                         {t(group.titleKey)}
                                     </h3>
                                     <div className="space-y-1.5">
@@ -130,28 +133,30 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                                                 key={shortcut.id}
                                                 className="flex items-center justify-between py-1.5"
                                             >
-                                                <span className="text-sm type-body text-slate-600 dark:text-slate-300">
+                                                <span className="hh-body text-sm text-[var(--hh-text-secondary)]">
                                                     {t(`shortcuts.entries.${shortcut.id}`)}
                                                 </span>
                                                 <div className="flex items-center justify-end gap-1 flex-wrap">
                                                     {shortcut.displayCombos.map((combo, comboIndex) => (
                                                         <React.Fragment key={`${shortcut.id}-${combo.combo}`}>
                                                             {comboIndex > 0 && (
-                                                                <span className="text-[10px] text-slate-300 mx-0.5">{t("common.separator.or")}</span>
+                                                                <span className="text-[10px] text-[var(--hh-text-tertiary)] mx-0.5">{t("common.separator.or")}</span>
                                                             )}
 
                                                             {combo.steps.map((step, stepIndex) => (
                                                                 <React.Fragment key={`${shortcut.id}-${combo.combo}-step-${stepIndex}`}>
                                                                     {stepIndex > 0 && (
-                                                                        <span className="text-[10px] text-slate-300 mx-0.5">{t("common.separator.then")}</span>
+                                                                        <span className="text-[10px] text-[var(--hh-text-tertiary)] mx-0.5">{t("common.separator.then")}</span>
                                                                     )}
 
                                                                     {step.keys.map((key, keyIndex) => (
                                                                         <React.Fragment key={`${shortcut.id}-${combo.combo}-step-${stepIndex}-key-${keyIndex}`}>
                                                                             {keyIndex > 0 && (
-                                                                                <span className="text-[10px] text-slate-300 mx-0.5">+</span>
+                                                                                <span className="text-[10px] text-[var(--hh-text-tertiary)] mx-0.5">+</span>
                                                                             )}
-                                                                            <kbd className="min-w-[1.5rem] px-1.5 py-0.5 text-[11px] font-medium text-slate-500 bg-slate-100 rounded border border-slate-200 text-center shadow-sm">
+                                                                            {/* Keycaps are physical objects: raised
+                                                                                slab on the panel, not a tinted chip. */}
+                                                                            <kbd className="hh-numeric min-w-[1.5rem] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--hh-text-secondary)] bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)] text-center shadow-[var(--hh-shadow-tile)]">
                                                                                 {key}
                                                                             </kbd>
                                                                         </React.Fragment>
@@ -168,8 +173,8 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                             ))}
                         </div>
 
-                        {/* Footer */}
-                        <div className="px-5 py-2.5 border-t border-slate-100 text-[11px] text-slate-400 text-center">
+                        {/* Footer hint strip */}
+                        <div className="px-5 py-2.5 border-t border-[var(--hh-border)] bg-[var(--hh-surface-1)] text-[11px] text-[var(--hh-text-tertiary)] text-center">
                             {t("shortcuts.footer")}
                         </div>
                     </motion.div>

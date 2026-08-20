@@ -72,7 +72,7 @@ export default function PlayerHonorPreview({ honors, masterData, assetSource, co
     const { t } = useI18n();
 
     if (honors.length === 0) {
-        return <div className={compact ? "text-[10px] text-slate-400" : "text-xs text-slate-400"}>{t("page.realtimeRanking.list.noHonors")}</div>;
+        return <div className={compact ? "text-[10px] text-[var(--hh-text-tertiary)]" : "text-xs text-[var(--hh-text-tertiary)]"}>{t("page.realtimeRanking.list.noHonors")}</div>;
     }
 
     const sizeClass = compact ? "w-[60px] shrink-0 sm:w-[68px]" : "w-[148px] max-w-full sm:w-[156px]";
@@ -91,11 +91,12 @@ export default function PlayerHonorPreview({ honors, masterData, assetSource, co
                 >
                     {honors.slice(0, 3).map((item, index) => renderHonorItem(item, index, sizeClass, masterData, assetSource))}
                 </div>
-                {/* Right-side fade hint for scrolling */}
+                {/* Functional fade hint: the honor strip scrolls horizontally, so this
+                    signals there is more past the edge. Must match the row surface. */}
                 <div
                     className="pointer-events-none absolute right-0 top-0 h-full w-4"
                     style={{
-                        background: "linear-gradient(to left, var(--surface-base), transparent)",
+                        background: "linear-gradient(to left, var(--hh-surface-2), transparent)",
                     }}
                 />
             </div>

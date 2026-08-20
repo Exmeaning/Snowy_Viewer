@@ -254,15 +254,15 @@ export default function ChallengeStageChart({
     }, [rows]);
 
     return (
-        <div id="profile-challenge-stage" className="scroll-mt-20 glass-card p-5 sm:p-6 rounded-2xl h-full flex flex-col">
+        <div id="profile-challenge-stage" className="scroll-mt-20 hh-tile p-5 sm:p-6 rounded-[var(--hh-radius-lg)] h-full flex flex-col">
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
-                    <span className="w-1.5 h-6 rounded-full" style={{ backgroundColor: themeColor }}></span>
+                <h2 className="hh-title text-lg text-[var(--hh-text-primary)] flex items-center gap-2">
+                    <span className="w-1.5 h-6 rounded-[var(--hh-radius-full)]" style={{ backgroundColor: themeColor }}></span>
                     {t("page.profile.stats.challengeRank")}
                 </h2>
                 <button
                     onClick={openDetail}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:border-miku/40 hover:text-miku transition-colors"
+                    className="hh-btn hh-press hh-focusable text-xs"
                 >
                     {t("page.profile.stats.viewDetails")}
                 </button>
@@ -286,45 +286,45 @@ export default function ChallengeStageChart({
                 title={t("page.profile.stats.challengeDetails")}
                 size="xl"
             >
-                {loading && <div className="text-sm text-slate-500 py-8 text-center">{t("page.profile.stats.loadingChallengeDetails")}</div>}
+                {loading && <div className="text-sm text-[var(--hh-text-secondary)] py-8 text-center">{t("page.profile.stats.loadingChallengeDetails")}</div>}
                 {error && <div className="text-sm text-red-500 py-8 text-center">{error}</div>}
                 {!loading && !error && groupedRows.length === 0 && (
-                    <div className="text-sm text-slate-500 py-8 text-center">{t("page.profile.stats.noChallengeData")}</div>
+                    <div className="text-sm text-[var(--hh-text-secondary)] py-8 text-center">{t("page.profile.stats.noChallengeData")}</div>
                 )}
                 {!loading && !error && groupedRows.length > 0 && (
                     <div>
                         {mobile ? (
                             <div className="space-y-4">
-                                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
+                                <div className="hh-well p-3 space-y-2">
                                     <div className="flex items-center justify-between gap-2">
-                                        <span className="text-sm font-black text-slate-700">{t("page.profile.stats.total")}</span>
-                                        <span className="text-xs font-bold text-slate-500">{t("page.profile.stats.allCharacters")}</span>
+                                        <span className="hh-display text-sm text-[var(--hh-text-primary)]">{t("page.profile.stats.total")}</span>
+                                        <span className="text-xs font-bold text-[var(--hh-text-secondary)]">{t("page.profile.stats.allCharacters")}</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 text-xs">
-                                        <div className="rounded-lg bg-white px-2 py-1 text-slate-600">{t("page.profile.stats.jewel")} <span className="font-bold text-slate-700">{formatNumber(remainTotals.jewel)}</span></div>
-                                        <div className="rounded-lg bg-white px-2 py-1 text-slate-600">{t("page.profile.stats.fragment")} <span className="font-bold text-slate-700">{formatNumber(remainTotals.fragment)}</span></div>
+                                        <div className="rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-2)] px-2 py-1 text-[var(--hh-text-secondary)]">{t("page.profile.stats.jewel")} <span className="hh-numeric font-bold text-[var(--hh-text-primary)]">{formatNumber(remainTotals.jewel)}</span></div>
+                                        <div className="rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-2)] px-2 py-1 text-[var(--hh-text-secondary)]">{t("page.profile.stats.fragment")} <span className="hh-numeric font-bold text-[var(--hh-text-primary)]">{formatNumber(remainTotals.fragment)}</span></div>
                                     </div>
                                 </div>
                                 {groupedRows.map((g) => (
                                     <div key={g.key} className="space-y-2">
-                                        <div className="flex items-center gap-2 px-1 py-1 text-xs font-bold text-slate-600">{g.icon && <img src={g.icon} alt={t(g.labelKey)} className="w-4 h-4 object-contain" />}<span>{t(g.labelKey)}</span></div>
+                                        <div className="flex items-center gap-2 px-1 py-1 hh-label">{g.icon && <img src={g.icon} alt={t(g.labelKey)} className="w-4 h-4 object-contain" />}<span>{t(g.labelKey)}</span></div>
                                         {g.rows.map((r) => {
                                             const prog = Math.max(0, Math.min((r.score / scoreCap(server)) * 100, 100));
                                                     const cname = getCharacterName(t, r.characterId, "short");
                                             return (
-                                                <div key={r.characterId} className="rounded-xl border border-slate-200 bg-white p-3 space-y-2">
+                                                <div key={r.characterId} className="rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] p-3 space-y-2">
                                                     <div className="flex items-center justify-between gap-2">
                                                         <div className="flex items-center gap-2 min-w-0">
-                                                            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-slate-200"><Image src={getCharacterIconUrl(r.characterId)} alt={cname} fill className="object-cover" unoptimized /></div>
-                                                            <span className="text-sm font-semibold text-slate-700 truncate">{cname}</span>
+                                                            <div className="relative w-8 h-8 rounded-[var(--hh-radius-full)] overflow-hidden border border-[var(--hh-border)]"><Image src={getCharacterIconUrl(r.characterId)} alt={cname} fill className="object-cover" unoptimized /></div>
+                                                            <span className="text-sm font-semibold text-[var(--hh-text-primary)] truncate">{cname}</span>
                                                         </div>
-                                                        <div className="text-xs font-bold text-slate-600">Lv {r.rank}</div>
+                                                        <div className="hh-numeric text-xs font-bold text-[var(--hh-text-secondary)]">Lv {r.rank}</div>
                                                     </div>
-                                                    <div className="text-sm font-bold text-slate-700">{t("page.profile.stats.highScoreValue", { value: formatNumber(r.score) })}</div>
-                                                    <div className="h-3 rounded-full bg-slate-500/75 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${prog}%`, backgroundColor: themeColor }} /></div>
+                                                    <div className="hh-numeric text-sm font-bold text-[var(--hh-text-primary)]">{t("page.profile.stats.highScoreValue", { value: formatNumber(r.score) })}</div>
+                                                    <div className="h-3 rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-inset)] overflow-hidden"><div className="h-full rounded-[var(--hh-radius-full)]" style={{ width: `${prog}%`, backgroundColor: themeColor }} /></div>
                                                     <div className="grid grid-cols-2 gap-2 text-xs">
-                                                        <div className="rounded-lg bg-slate-50 px-2 py-1 text-slate-600">{t("page.profile.stats.jewel")} <span className="font-bold text-slate-700">{formatNumber(r.remainJewel)}</span></div>
-                                                        <div className="rounded-lg bg-slate-50 px-2 py-1 text-slate-600">{t("page.profile.stats.fragment")} <span className="font-bold text-slate-700">{formatNumber(r.remainFragment)}</span></div>
+                                                        <div className="rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-1)] px-2 py-1 text-[var(--hh-text-secondary)]">{t("page.profile.stats.jewel")} <span className="hh-numeric font-bold text-[var(--hh-text-primary)]">{formatNumber(r.remainJewel)}</span></div>
+                                                        <div className="rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-1)] px-2 py-1 text-[var(--hh-text-secondary)]">{t("page.profile.stats.fragment")} <span className="hh-numeric font-bold text-[var(--hh-text-primary)]">{formatNumber(r.remainFragment)}</span></div>
                                                     </div>
                                                 </div>
                                             );
@@ -335,7 +335,7 @@ export default function ChallengeStageChart({
                         ) : (
                             <div className="overflow-x-auto">
                                 <div className="min-w-[840px] space-y-4">
-                                    <div className="grid grid-cols-[170px_70px_130px_minmax(240px,1fr)_90px_110px] items-center gap-3 px-4 py-2 text-sm font-bold text-slate-600">
+                                    <div className="grid grid-cols-[170px_70px_130px_minmax(240px,1fr)_90px_110px] items-center gap-3 px-4 py-2 hh-label border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
                                         <div className="text-left">{t("page.profile.stats.character")}</div>
                                         <div className="text-center">{t("page.profile.stats.level")}</div>
                                         <div className="text-center">{t("page.profile.stats.highScore")}</div>
@@ -343,29 +343,31 @@ export default function ChallengeStageChart({
                                         <div className="text-center">{t("page.profile.stats.remainingJewel")}</div>
                                         <div className="text-center">{t("page.profile.stats.remainingFragment")}</div>
                                     </div>
-                                    <div className="grid grid-cols-[170px_70px_130px_minmax(240px,1fr)_90px_110px] items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-2">
-                                        <div className="text-sm font-black text-slate-700">{t("page.profile.stats.total")}</div>
-                                        <div className="text-sm font-bold text-slate-400 text-center">-</div>
-                                        <div className="text-sm font-bold text-slate-400 text-center">-</div>
-                                        <div className="text-sm font-bold text-slate-400 text-center">-</div>
-                                        <div className="text-sm font-black text-slate-700 text-center">{formatNumber(remainTotals.jewel)}</div>
-                                        <div className="text-sm font-black text-slate-700 text-center">{formatNumber(remainTotals.fragment)}</div>
+                                    <div className="grid grid-cols-[170px_70px_130px_minmax(240px,1fr)_90px_110px] items-center gap-3 hh-well px-4 py-2">
+                                        <div className="hh-display text-sm text-[var(--hh-text-primary)]">{t("page.profile.stats.total")}</div>
+                                        <div className="text-sm font-bold text-[var(--hh-text-tertiary)] text-center">-</div>
+                                        <div className="text-sm font-bold text-[var(--hh-text-tertiary)] text-center">-</div>
+                                        <div className="text-sm font-bold text-[var(--hh-text-tertiary)] text-center">-</div>
+                                        <div className="hh-display hh-numeric text-sm text-[var(--hh-text-primary)] text-center">{formatNumber(remainTotals.jewel)}</div>
+                                        <div className="hh-display hh-numeric text-sm text-[var(--hh-text-primary)] text-center">{formatNumber(remainTotals.fragment)}</div>
                                     </div>
                                     {groupedRows.map((g) => (
-                                        <div key={g.key} className="space-y-2">
-                                            <div className="flex items-center gap-2 px-3 py-1 text-xs font-bold text-slate-600">{g.icon && <img src={g.icon} alt={t(g.labelKey)} className="w-4 h-4 object-contain" />}<span>{t(g.labelKey)}</span></div>
-                                            <div className="space-y-2">
+                                        <div key={g.key}>
+                                            <div className="flex items-center gap-2 px-3 py-1 hh-label">{g.icon && <img src={g.icon} alt={t(g.labelKey)} className="w-4 h-4 object-contain" />}<span>{t(g.labelKey)}</span></div>
+                                            <div>
                                                 {g.rows.map((r) => {
                                                     const prog = Math.max(0, Math.min((r.score / scoreCap(server)) * 100, 100));
                                             const cname = getCharacterName(t, r.characterId, "short");
                                                     return (
-                                                        <div key={r.characterId} className="grid grid-cols-[170px_70px_130px_minmax(240px,1fr)_90px_110px] items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2">
-                                                            <div className="flex items-center gap-2 min-w-0"><div className="relative w-9 h-9 rounded-full overflow-hidden border border-slate-200"><Image src={getCharacterIconUrl(r.characterId)} alt={cname} fill className="object-cover" unoptimized /></div><span className="text-sm font-semibold text-slate-700 truncate">{cname}</span></div>
-                                                            <div className="text-sm font-bold text-slate-700 text-center">{r.rank}</div>
-                                                            <div className="text-sm font-bold text-slate-700 text-center">{formatNumber(r.score)}</div>
-                                                            <div className="h-4 rounded-full bg-slate-500/75 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${prog}%`, backgroundColor: themeColor }} /></div>
-                                                            <div className="text-sm font-bold text-slate-700 text-center">{formatNumber(r.remainJewel)}</div>
-                                                            <div className="text-sm font-bold text-slate-700 text-center">{formatNumber(r.remainFragment)}</div>
+                                                        // Hairline-separated rows rather than per-row bordered cards: 26
+                                                        // characters in one list should read as a single table.
+                                                        <div key={r.characterId} className="grid grid-cols-[170px_70px_130px_minmax(240px,1fr)_90px_110px] items-center gap-3 border-b border-[var(--hh-border-hairline)] last:border-b-0 px-4 py-2 transition-colors hover:bg-[var(--hh-surface-sunken)]">
+                                                            <div className="flex items-center gap-2 min-w-0"><div className="relative w-9 h-9 rounded-[var(--hh-radius-full)] overflow-hidden border border-[var(--hh-border)]"><Image src={getCharacterIconUrl(r.characterId)} alt={cname} fill className="object-cover" unoptimized /></div><span className="text-sm font-semibold text-[var(--hh-text-primary)] truncate">{cname}</span></div>
+                                                            <div className="hh-numeric text-sm font-bold text-[var(--hh-text-primary)] text-center">{r.rank}</div>
+                                                            <div className="hh-numeric text-sm font-bold text-[var(--hh-text-primary)] text-center">{formatNumber(r.score)}</div>
+                                                            <div className="h-4 rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-inset)] overflow-hidden"><div className="h-full rounded-[var(--hh-radius-full)]" style={{ width: `${prog}%`, backgroundColor: themeColor }} /></div>
+                                                            <div className="hh-numeric text-sm font-bold text-[var(--hh-text-primary)] text-center">{formatNumber(r.remainJewel)}</div>
+                                                            <div className="hh-numeric text-sm font-bold text-[var(--hh-text-primary)] text-center">{formatNumber(r.remainFragment)}</div>
                                                         </div>
                                                     );
                                                 })}

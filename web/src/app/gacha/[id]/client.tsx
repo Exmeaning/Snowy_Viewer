@@ -648,7 +648,7 @@ export default function GachaDetailClient() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">{t("common.state.loading")}</p>
+                        <p className="mt-4 text-[var(--hh-text-secondary)]">{t("common.state.loading")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -665,11 +665,11 @@ export default function GachaDetailClient() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">{t("page.gacha.notFoundTitle", { id: gachaId })}</h2>
-                        <p className="text-slate-500 mb-6">{t("page.gacha.notFoundDesc")}</p>
+                        <h2 className="hh-title text-2xl text-[var(--hh-text-primary)] mb-2">{t("page.gacha.notFoundTitle", { id: gachaId })}</h2>
+                        <p className="text-[var(--hh-text-secondary)] mb-6">{t("page.gacha.notFoundDesc")}</p>
                         <Link
                             href="/gacha"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
+                            className="hh-btn hh-btn-primary hh-press px-6 py-3 rounded-[var(--hh-radius-md)]"
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -705,26 +705,26 @@ export default function GachaDetailClient() {
                 {/* Header Section */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-500 w-fit">
+                        <span className="hh-numeric inline-flex items-center gap-1.5 px-3 py-1 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-sm)] text-xs font-mono text-[var(--hh-text-secondary)] w-fit">
                             ID: {gacha.id}
                         </span>
-                        <span className="px-3 py-1 text-xs font-bold rounded-full text-white w-fit bg-purple-500">
+                        <span className="px-3 py-1 text-xs font-bold rounded-[var(--hh-radius-sm)] text-white w-fit bg-purple-500">
                             {gachaTypeLabel}
                         </span>
                         <span
-                            className="px-3 py-1 text-xs font-bold rounded-full text-white w-fit"
+                            className="px-3 py-1 text-xs font-bold rounded-[var(--hh-radius-sm)] text-white w-fit"
                             style={{ backgroundColor: status.color }}
                         >
                             {status.label}
                         </span>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-slate-800">
+                    <h1 className="hh-display text-2xl sm:text-3xl text-[var(--hh-text-primary)]">
                         <TranslatedText
                             original={gacha.name}
                             category="gacha"
                             field="name"
                             originalClassName=""
-                            translationClassName="block text-lg font-medium text-slate-400 mt-1"
+                            translationClassName="block text-lg font-medium text-[var(--hh-text-tertiary)] mt-1"
                         />
                     </h1>
                 </div>
@@ -737,11 +737,11 @@ export default function GachaDetailClient() {
                             /* Screenshot Mode: Show all images in flat layout */
                             <div className="space-y-4">
                                 {/* Logo */}
-                                <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                    <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-                                        <span className="text-sm font-bold text-slate-600">Logo</span>
+                                <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                    <div className="px-4 py-2 bg-[var(--hh-surface-1)] border-b border-[var(--hh-border)]">
+                                        <span className="hh-title text-sm text-[var(--hh-text-secondary)]">Logo</span>
                                     </div>
-                                    <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100">
+                                    <div className="relative aspect-[16/9] bg-[var(--hh-surface-sunken)]">
                                         <Image
                                             src={logoUrl}
                                             alt={`${gacha.name} Logo`}
@@ -753,11 +753,11 @@ export default function GachaDetailClient() {
                                     </div>
                                 </div>
                                 {/* Background */}
-                                <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                    <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-                                        <span className="text-sm font-bold text-slate-600">{t("page.gacha.imageTabs.bg")}</span>
+                                <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                    <div className="px-4 py-2 bg-[var(--hh-surface-1)] border-b border-[var(--hh-border)]">
+                                        <span className="hh-title text-sm text-[var(--hh-text-secondary)]">{t("page.gacha.imageTabs.bg")}</span>
                                     </div>
-                                    <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100">
+                                    <div className="relative aspect-[16/9] bg-[var(--hh-surface-sunken)]">
                                         <Image
                                             src={bgUrl}
                                             alt={`${gacha.name} Background`}
@@ -770,9 +770,9 @@ export default function GachaDetailClient() {
                             </div>
                         ) : (
                             /* Normal Mode: Tabs */
-                            <div className="ios-glass-card rounded-2xl overflow-hidden lg:sticky lg:top-24">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden lg:sticky lg:top-24">
                                 {/* Tabs */}
-                                <div className="flex border-b border-slate-200">
+                                <div className="flex border-b border-[var(--hh-border)]">
                                     {[
                                         { key: "logo", label: "Logo" },
                                         { key: "bg", label: t("page.gacha.imageTabs.bg") },
@@ -780,9 +780,9 @@ export default function GachaDetailClient() {
                                         <button
                                             key={tab.key}
                                             onClick={() => setActiveImageTab(tab.key as "logo" | "bg")}
-                                            className={`flex-1 py-3 px-4 text-sm font-bold transition-colors ${activeImageTab === tab.key
-                                                ? "text-miku border-b-2 border-miku bg-miku/5"
-                                                : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                                            className={`hh-press flex-1 py-3 px-4 text-sm font-semibold cursor-pointer ${activeImageTab === tab.key
+                                                ? "text-[var(--hh-accent-deep)] border-b-2 border-[var(--hh-accent)] bg-[var(--hh-accent-wash)]"
+                                                : "text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-1)]"
                                                 }`}
                                         >
                                             {tab.label}
@@ -791,7 +791,7 @@ export default function GachaDetailClient() {
                                 </div>
                                 {/* Image Content */}
                                 <div
-                                    className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100 cursor-zoom-in group"
+                                    className="relative aspect-[16/9] bg-[var(--hh-surface-sunken)] cursor-zoom-in group"
                                     onClick={() => setImageViewerOpen(true)}
                                 >
                                     {activeImageTab === "logo" && (
@@ -813,7 +813,7 @@ export default function GachaDetailClient() {
                                             unoptimized
                                         />
                                     )}
-                                    <div className="absolute bottom-3 right-3 z-10 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1">
+                                    <div className="absolute bottom-3 right-3 z-10 bg-black/60 text-white text-xs px-2 py-1 rounded-[var(--hh-radius-md)] flex items-center gap-1">
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                         </svg>
@@ -827,17 +827,17 @@ export default function GachaDetailClient() {
                     {/* RIGHT Column: Info Cards */}
                     <div className="space-y-6">
                         {/* Basic Info Card */}
-                        <div className="ios-glass-card rounded-2xl overflow-hidden">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     {t("page.gacha.basicInfo")}
                                 </h2>
                             </div>
-                            <div className="divide-y divide-slate-100">
-                                <InfoRow label={t("page.gacha.idLabel")} value={`#${gacha.id}`} />
+                            <div className="divide-y divide-[var(--hh-border)]">
+                                <InfoRow label={t("page.gacha.idLabel")} value={<span className="hh-numeric">{`#${gacha.id}`}</span>} />
                                 <InfoRow
                                     label={t("page.gacha.nameLabel")}
                                     value={
@@ -846,25 +846,25 @@ export default function GachaDetailClient() {
                                             category="gacha"
                                             field="name"
                                             originalClassName=""
-                                            translationClassName="block text-xs font-normal text-slate-400 mt-0.5"
+                                            translationClassName="block text-xs font-normal text-[var(--hh-text-tertiary)] mt-0.5"
                                         />
                                     }
                                 />
                                 <InfoRow label={t("page.gacha.typeLabel")} value={gachaTypeLabel} />
-                                <InfoRow label={t("page.gacha.startTimeLabel")} value={formatTimestamp(gacha.startAt)} />
-                                <InfoRow label={t("page.gacha.endTimeLabel")} value={formatTimestamp(gacha.endAt)} />
+                                <InfoRow label={t("page.gacha.startTimeLabel")} value={<span className="hh-numeric">{formatTimestamp(gacha.startAt)}</span>} />
+                                <InfoRow label={t("page.gacha.endTimeLabel")} value={<span className="hh-numeric">{formatTimestamp(gacha.endAt)}</span>} />
                                 <InfoRow
                                     label={t("page.gacha.assetNameLabel")}
-                                    value={<span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{gacha.assetbundleName}</span>}
+                                    value={<span className="font-mono text-xs bg-[var(--hh-surface-sunken)] px-2 py-0.5 rounded-[var(--hh-radius-sm)]">{gacha.assetbundleName}</span>}
                                 />
                             </div>
                         </div>
 
                         {/* Gacha Summary & Tagline Card */}
                         {(gacha.gachaInformation?.summary || gacha.gachaInformation?.bubbleText) && (
-                            <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center justify-between">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] flex items-center justify-between">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
@@ -890,28 +890,30 @@ export default function GachaDetailClient() {
                                 </div>
                                 <div className="p-5 space-y-4">
                                     {gacha.gachaInformation.bubbleText && (
-                                        <div className="px-4 py-3 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-miku/10 border border-pink-200/50 rounded-xl flex items-start gap-3">
-                                            <span className="shrink-0 px-2 py-0.5 bg-pink-500 text-white text-xs font-bold rounded-md shadow-sm">
+                                        <div className="hh-well px-4 py-3 flex items-start gap-3">
+                                            <span className="shrink-0 px-2 py-0.5 bg-pink-500 text-white text-xs font-bold rounded-[var(--hh-radius-sm)]">
                                                 {t("page.gacha.bubbleTitle")}
                                             </span>
-                                            <p className="text-sm font-medium text-slate-700 leading-snug">
+                                            <p className="hh-body text-sm font-medium text-[var(--hh-text-primary)]">
                                                 {gacha.gachaInformation.bubbleText}
                                             </p>
                                         </div>
                                     )}
                                     {gacha.gachaInformation.summary && (
                                         <div>
-                                            <div className={`text-sm text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50/50 p-4 rounded-xl border border-slate-100 ${!isSummaryExpanded ? "max-h-36 overflow-hidden relative" : ""}`}>
+                                            <div className={`hh-well hh-body text-sm text-[var(--hh-text-secondary)] whitespace-pre-line p-4 ${!isSummaryExpanded ? "max-h-36 overflow-hidden relative" : ""}`}>
                                                 {gacha.gachaInformation.summary}
                                                 {!isSummaryExpanded && (
-                                                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-50 to-transparent pointer-events-none" />
+                                                    /* Functional clip affordance: fades the truncated tail into the
+                                                       well so the cut-off line does not read as the real end. */
+                                                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[var(--hh-surface-sunken)] to-transparent pointer-events-none" />
                                                 )}
                                             </div>
                                             {!isSummaryExpanded && (
                                                 <button
                                                     type="button"
                                                     onClick={() => setIsSummaryExpanded(true)}
-                                                    className="mt-3 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold rounded-xl transition-colors border border-slate-200/60"
+                                                    className="hh-btn hh-press mt-3 w-full py-2 text-xs rounded-[var(--hh-radius-md)]"
                                                 >
                                                     {t("page.gacha.showMoreSummary")}
                                                 </button>
@@ -924,9 +926,9 @@ export default function GachaDetailClient() {
 
                         {/* Gacha Detailed Description & Rules Card */}
                         {gacha.gachaInformation?.description && (
-                            <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center justify-between">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] flex items-center justify-between">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
@@ -949,17 +951,19 @@ export default function GachaDetailClient() {
                                     </button>
                                 </div>
                                 <div className="p-5">
-                                    <div className={`text-xs text-slate-600 leading-relaxed whitespace-pre-line ${!isDescriptionExpanded ? "max-h-36 overflow-hidden relative" : ""}`}>
+                                    <div className={`hh-body text-xs text-[var(--hh-text-secondary)] whitespace-pre-line ${!isDescriptionExpanded ? "max-h-36 overflow-hidden relative" : ""}`}>
                                         {gacha.gachaInformation.description}
                                         {!isDescriptionExpanded && (
-                                            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                                            /* Functional clip affordance — fades into the tile face this text
+                                               sits directly on, not into a literal white. */
+                                            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[var(--hh-surface-2)] to-transparent pointer-events-none" />
                                         )}
                                     </div>
                                     {!isDescriptionExpanded && (
                                         <button
                                             type="button"
                                             onClick={() => setIsDescriptionExpanded(true)}
-                                            className="mt-3 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold rounded-xl transition-colors border border-slate-200/60"
+                                            className="hh-btn hh-press mt-3 w-full py-2 text-xs rounded-[var(--hh-radius-md)]"
                                         >
                                             {t("page.gacha.showMoreDescription")}
                                         </button>
@@ -970,23 +974,23 @@ export default function GachaDetailClient() {
 
                         {/* Gacha Rates Card */}
                         {gacha.gachaCardRarityRates && gacha.gachaCardRarityRates.length > 0 && (
-                            <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                         </svg>
                                         {t("page.gacha.ratesTitle")}
                                     </h2>
                                 </div>
-                                <div className="divide-y divide-slate-100">
+                                <div className="divide-y divide-[var(--hh-border)]">
                                     {gacha.gachaCardRarityRates.map((rate, idx) => {
                                         const rarityLabel = rate.cardRarityType === "rarity_birthday"
                                             ? t("page.gacha.birthdayLabel")
                                             : t("page.gacha.starLabel", { star: rate.cardRarityType.replace("rarity_", "") });
                                         return (
                                             <div key={rate.id ? `rate-${rate.id}-${idx}` : `${rate.cardRarityType}-${idx}`} className="px-5 py-3 flex items-center justify-between text-sm">
-                                                <span className="text-slate-500 font-medium">{rarityLabel}</span>
+                                                <span className="text-[var(--hh-text-secondary)] font-medium">{rarityLabel}</span>
                                                 <span className="text-miku font-bold">{rate.rate}%</span>
                                             </div>
                                         );
@@ -999,9 +1003,9 @@ export default function GachaDetailClient() {
                         {pickupCards.length > 0 && (
                             <div className="space-y-4">
                                 {isWishPickGacha && (
-                                    <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                        <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                            <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                                    <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                        <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                            <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                                 <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                                 </svg>
@@ -1009,15 +1013,15 @@ export default function GachaDetailClient() {
                                             </h2>
                                         </div>
                                         <div className="p-4 space-y-4">
-                                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+                                            <div className="hh-well p-3 sm:p-4">
                                                 <div className="flex items-center justify-between gap-3 mb-3">
                                                     <div>
-                                                        <h3 className="text-sm font-bold text-slate-800">{t("page.gacha.wishSelectSubTitle")}</h3>
+                                                        <h3 className="hh-title text-sm text-[var(--hh-text-primary)]">{t("page.gacha.wishSelectSubTitle")}</h3>
                                                     </div>
                                                     <button
                                                         type="button"
                                                         onClick={() => setIsWishModalOpen(true)}
-                                                        className="px-3.5 py-1.5 bg-miku hover:bg-miku-dark text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+                                                        className="hh-btn hh-btn-primary hh-press px-3.5 py-1.5 text-xs rounded-[var(--hh-radius-md)]"
                                                     >
                                                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1040,10 +1044,10 @@ export default function GachaDetailClient() {
                                                             href={`/cards/${card.id}`}
                                                             className="group block"
                                                         >
-                                                            <div className={`rounded-lg overflow-hidden bg-white hover:shadow-lg transition-all ${isPulled ? 'ring-2 ring-green-400' : 'ring-1 ring-slate-200 hover:ring-miku'}`}>
+                                                            <div className={`hh-press rounded-[var(--hh-radius-md)] overflow-hidden bg-[var(--hh-surface-2)] ${isPulled ? 'ring-2 ring-green-500' : 'ring-1 ring-[var(--hh-border)] hover:ring-[var(--hh-accent)]'}`}>
                                                                 <SekaiCardThumbnail card={card} trained={showTrained} className="w-full" />
                                                                 {isPulled && (
-                                                                    <div className="flex items-center justify-center gap-0.5 bg-gradient-to-r from-green-500 to-green-400 text-white text-[8px] font-black py-0.5 leading-none">
+                                                                    <div className="hh-numeric flex items-center justify-center gap-0.5 bg-green-600 text-white text-[8px] font-bold py-0.5 leading-none">
                                                                         <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                                                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                                         </svg>
@@ -1059,9 +1063,9 @@ export default function GachaDetailClient() {
                                     </div>
                                 )}
 
-                                <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                    <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                        <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                                <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                    <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                             <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                             </svg>
@@ -1074,7 +1078,7 @@ export default function GachaDetailClient() {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsCardSelectorModalOpen(true)}
-                                                className="px-3 py-1.5 bg-miku/10 hover:bg-miku hover:text-white text-miku text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shrink-0"
+                                                className="hh-chip hh-press cursor-pointer px-3 py-1.5 text-xs shrink-0 bg-[var(--hh-accent-wash)] text-[var(--hh-accent-deep)] border-[var(--hh-accent-line)] hover:bg-[var(--hh-accent)] hover:text-[var(--hh-text-on-accent)]"
                                             >
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -1098,10 +1102,10 @@ export default function GachaDetailClient() {
                                                         href={`/cards/${card.id}`}
                                                         className="group block"
                                                     >
-                                                        <div className={`rounded-lg overflow-hidden bg-white hover:shadow-lg transition-all ${isPulled ? 'ring-2 ring-green-400' : 'ring-1 ring-slate-200 hover:ring-miku'}`}>
+                                                        <div className={`hh-press rounded-[var(--hh-radius-md)] overflow-hidden bg-[var(--hh-surface-2)] ${isPulled ? 'ring-2 ring-green-500' : 'ring-1 ring-[var(--hh-border)] hover:ring-[var(--hh-accent)]'}`}>
                                                             <SekaiCardThumbnail card={card} trained={showTrained} className="w-full" />
                                                             {isPulled && (
-                                                                <div className="flex items-center justify-center gap-0.5 bg-gradient-to-r from-green-500 to-green-400 text-white text-[8px] font-black py-0.5 leading-none">
+                                                                <div className="hh-numeric flex items-center justify-center gap-0.5 bg-green-600 text-white text-[8px] font-bold py-0.5 leading-none">
                                                                     <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                                                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                                     </svg>
@@ -1120,7 +1124,7 @@ export default function GachaDetailClient() {
 
                         {/* No pickup cards message */}
                         {pickupCards.length === 0 && (
-                            <div className="ios-glass-card rounded-2xl overflow-hidden p-6 text-center text-slate-400">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden p-6 text-center text-[var(--hh-text-tertiary)]">
                                 <p>{t("page.gacha.noPickupCards")}</p>
                             </div>
                         )}
@@ -1135,9 +1139,9 @@ export default function GachaDetailClient() {
                         />
 
                         {/* Consolidated Simulator & Statistics (Sidebar Mode) */}
-                        <div className="ios-glass-card rounded-2xl overflow-hidden">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -1164,7 +1168,7 @@ export default function GachaDetailClient() {
                                                     <button
                                                         key={idx}
                                                         onClick={() => doGacha(behavior)}
-                                                        className="flex-1 py-3 bg-miku hover:bg-miku-dark text-white font-bold rounded-xl transition-all shadow-sm hover:shadow active:scale-95"
+                                                        className="hh-btn hh-btn-primary hh-press flex-1 py-3 rounded-[var(--hh-radius-md)]"
                                                     >
                                                         {label}
                                                     </button>
@@ -1173,8 +1177,8 @@ export default function GachaDetailClient() {
                                         })()}
 
                                         {/* Custom Spin Count Input */}
-                                        <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1 pl-3 w-full sm:w-auto mt-2 sm:mt-0">
-                                            <span className="text-xs font-bold text-slate-500 whitespace-nowrap">{t("page.gacha.customSpinCountLabel")}</span>
+                                        <div className="flex items-center gap-2 bg-[var(--hh-surface-sunken)] border border-[var(--hh-border-hairline)] rounded-[var(--hh-radius-md)] p-1 pl-3 w-full sm:w-auto mt-2 sm:mt-0">
+                                            <span className="hh-label whitespace-nowrap">{t("page.gacha.customSpinCountLabel")}</span>
                                             <input
                                                 type="number"
                                                 min="1"
@@ -1186,7 +1190,7 @@ export default function GachaDetailClient() {
                                                         setCustomSpinCount(val);
                                                     }
                                                 }}
-                                                className="w-16 bg-transparent text-sm font-bold text-slate-800 focus:outline-none text-center"
+                                                className="hh-numeric w-16 bg-transparent text-sm font-bold text-[var(--hh-text-primary)] focus:outline-none text-center"
                                                 placeholder="MAX"
                                             />
                                             <button
@@ -1204,7 +1208,7 @@ export default function GachaDetailClient() {
                                                     }
                                                 }}
                                                 disabled={!customSpinCount}
-                                                className="p-2 bg-slate-200 hover:bg-miku hover:text-white text-slate-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="hh-press p-2 bg-[var(--hh-surface-inset)] hover:bg-[var(--hh-accent)] hover:text-[var(--hh-text-on-accent)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-md)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                             >
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -1214,10 +1218,10 @@ export default function GachaDetailClient() {
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between w-full px-1">
-                                        <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">{t("page.gacha.totalSpinCount")} <span className="text-lg text-slate-800 ml-1">{statistic.spinCount}</span></div>
+                                        <div className="hh-label">{t("page.gacha.totalSpinCount")} <span className="hh-display hh-numeric text-lg text-[var(--hh-text-primary)] ml-1">{statistic.spinCount}</span></div>
                                         <button
                                             onClick={resetGacha}
-                                            className="text-slate-400 hover:text-slate-600 text-sm hover:underline transition-colors"
+                                            className="text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-secondary)] text-sm hover:underline transition-colors cursor-pointer"
                                         >
                                             {t("page.gacha.resetData")}
                                         </button>
@@ -1225,27 +1229,29 @@ export default function GachaDetailClient() {
                                 </div>
 
                                 {/* Divider */}
-                                <div className="h-px bg-slate-100 w-full"></div>
+                                <hr className="hh-divider w-full" />
 
-                                {/* Statistics Table */}
-                                <div className="overflow-hidden rounded-xl border border-slate-100">
+                                {/* Statistics Table. Tabular digits across every numeric cell so the
+                                    count and probability columns stay in register as values change. */}
+                                <div className="overflow-hidden rounded-[var(--hh-radius-md)] border border-[var(--hh-border)]">
                                     <table className="w-full text-sm">
                                         <thead>
-                                            <tr className="bg-slate-50 border-b border-slate-100">
-                                                <th className="text-left py-2 px-3 font-bold text-slate-600">{t("page.gacha.thRarity")}</th>
-                                                <th className="text-center py-2 px-3 font-bold text-slate-600">{t("page.gacha.thCount")}</th>
-                                                <th className="text-center py-2 px-3 font-bold text-slate-600">{t("page.gacha.thProbability")}</th>
+                                            <tr className="bg-[var(--hh-surface-1)] border-b border-[var(--hh-border)]">
+                                                <th className="text-left py-2 px-3 font-semibold text-[var(--hh-text-secondary)]">{t("page.gacha.thRarity")}</th>
+                                                <th className="text-center py-2 px-3 font-semibold text-[var(--hh-text-secondary)]">{t("page.gacha.thCount")}</th>
+                                                <th className="text-center py-2 px-3 font-semibold text-[var(--hh-text-secondary)]">{t("page.gacha.thProbability")}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {/* UP Rate Row */}
-                                            <tr className="border-b border-slate-100 last:border-0 hover:bg-pink-50/50 transition-colors bg-pink-50/30">
-                                                <td className="py-2 px-3 font-bold text-pink-500 flex items-center gap-1">
-                                                    <span className="bg-pink-500 text-white text-[10px] px-1 rounded">{t("page.gacha.upLabel")}</span>
+                                            {/* UP Rate Row. Pink is the pickup encoding used across the gacha
+                                                pages, so the tint stays as data rather than decoration. */}
+                                            <tr className="border-b border-[var(--hh-border)] last:border-0 bg-pink-500/10">
+                                                <td className="py-2 px-3 font-bold text-pink-600 flex items-center gap-1">
+                                                    <span className="bg-pink-500 text-white text-[10px] px-1 rounded-[var(--hh-radius-xs)]">{t("page.gacha.upLabel")}</span>
                                                     {isWishPickGacha ? t("page.gacha.dreamPickPuLabel") : t("page.gacha.memberLabel")}
                                                 </td>
-                                                <td className="text-center py-2 px-3 text-slate-600">{statistic.pickupCount || 0}</td>
-                                                <td className="text-center py-2 px-3 text-pink-500 font-bold">
+                                                <td className="hh-numeric text-center py-2 px-3 text-[var(--hh-text-secondary)]">{statistic.pickupCount || 0}</td>
+                                                <td className="hh-numeric text-center py-2 px-3 text-pink-600 font-bold">
                                                     {statistic.spinCount > 0 ? (((statistic.pickupCount || 0) / statistic.spinCount) * 100).toFixed(2) : "0.00"}%
                                                 </td>
                                             </tr>
@@ -1262,10 +1268,10 @@ export default function GachaDetailClient() {
                                                     ? ((count / statistic.spinCount) * 100).toFixed(2)
                                                     : "0.00";
                                                 return (
-                                                    <tr key={idx} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
-                                                        <td className="py-2 px-3 font-bold text-slate-700">{rarityLabel}</td>
-                                                        <td className="text-center py-2 px-3 text-slate-600">{count}</td>
-                                                        <td className="text-center py-2 px-3 text-miku font-bold">{percentage}%</td>
+                                                    <tr key={idx} className="border-b border-[var(--hh-border)] last:border-0">
+                                                        <td className="py-2 px-3 font-semibold text-[var(--hh-text-primary)]">{rarityLabel}</td>
+                                                        <td className="hh-numeric text-center py-2 px-3 text-[var(--hh-text-secondary)]">{count}</td>
+                                                        <td className="hh-numeric text-center py-2 px-3 text-[var(--hh-accent-deep)] font-bold">{percentage}%</td>
                                                     </tr>
                                                 );
                                             })}
@@ -1277,9 +1283,9 @@ export default function GachaDetailClient() {
 
                         {/* Current Gacha Result */}
                         {currentGachaResult.length > 0 && (
-                            <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                         </svg>
@@ -1304,15 +1310,15 @@ export default function GachaDetailClient() {
                                                     href={`/cards/${card.id}`}
                                                     className="group block"
                                                 >
-                                                    <div className={`rounded-lg overflow-hidden bg-white hover:shadow-lg transition-all ${isPickup
-                                                        ? 'ring-2 ring-pink-400'
+                                                    <div className={`hh-press rounded-[var(--hh-radius-md)] overflow-hidden bg-[var(--hh-surface-2)] ${isPickup
+                                                        ? 'ring-2 ring-pink-500'
                                                         : is4Star
-                                                            ? 'ring-2 ring-yellow-400'
-                                                            : 'ring-1 ring-slate-200 hover:ring-miku'
+                                                            ? 'ring-2 ring-yellow-500'
+                                                            : 'ring-1 ring-[var(--hh-border)] hover:ring-[var(--hh-accent)]'
                                                         }`}>
                                                         <SekaiCardThumbnail card={card} trained={showTrained} className="w-full" />
                                                         {(isPickup || is4Star) && (
-                                                            <div className={`text-center text-white text-[8px] sm:text-[9px] font-black py-0.5 leading-none ${isPickup ? 'bg-gradient-to-r from-pink-500 to-pink-400' : 'bg-gradient-to-r from-yellow-400 to-yellow-300'}`}>
+                                                            <div className={`text-center text-white text-[8px] sm:text-[9px] font-bold py-0.5 leading-none ${isPickup ? 'bg-pink-500' : 'bg-yellow-500'}`}>
                                                                 {isPickup ? t("page.gacha.upLabel") : t("page.gacha.star4Label")}
                                                             </div>
                                                         )}
@@ -1327,9 +1333,9 @@ export default function GachaDetailClient() {
 
                         {/* History 4-Star Results */}
                         {history4Stars.length > 0 && (
-                            <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                                         </svg>
@@ -1360,17 +1366,17 @@ export default function GachaDetailClient() {
                                                     href={`/cards/${card.id}`}
                                                     className="group block"
                                                 >
-                                                    <div className={`rounded-lg overflow-hidden bg-white hover:shadow-lg transition-all ${isPickup
-                                                        ? 'ring-2 ring-pink-400'
+                                                    <div className={`hh-press rounded-[var(--hh-radius-md)] overflow-hidden bg-[var(--hh-surface-2)] ${isPickup
+                                                        ? 'ring-2 ring-pink-500'
                                                         : is4Star
-                                                            ? 'ring-2 ring-yellow-400'
-                                                            : 'ring-1 ring-slate-200 hover:ring-miku'
+                                                            ? 'ring-2 ring-yellow-500'
+                                                            : 'ring-1 ring-[var(--hh-border)] hover:ring-[var(--hh-accent)]'
                                                         }`}>
                                                         <SekaiCardThumbnail card={card} trained={showTrained} className="w-full" />
-                                                        <div className={`flex items-center justify-between text-white text-[8px] sm:text-[9px] font-black py-0.5 px-1 leading-none ${isPickup ? 'bg-gradient-to-r from-pink-500 to-pink-400' : 'bg-gradient-to-r from-yellow-400 to-yellow-300'}`}>
+                                                        <div className={`flex items-center justify-between text-white text-[8px] sm:text-[9px] font-bold py-0.5 px-1 leading-none ${isPickup ? 'bg-pink-500' : 'bg-yellow-500'}`}>
                                                             <span>{isPickup ? t("page.gacha.upLabel") : t("page.gacha.star4Label")}</span>
                                                             {pityCount > 0 && (
-                                                                <span className={`px-1 py-0.5 rounded text-[8px] sm:text-[9px] font-bold ${pityColorClass} text-white`}>
+                                                                <span className={`hh-numeric px-1 py-0.5 rounded-[var(--hh-radius-xs)] text-[8px] sm:text-[9px] font-bold ${pityColorClass} text-white`}>
                                                                     {t("page.gacha.pityPull", { count: pityCount })}
                                                                 </span>
                                                             )}
@@ -1392,7 +1398,7 @@ export default function GachaDetailClient() {
                 <div className="mt-12 text-center">
                     <Link
                         href="/gacha"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                        className="hh-btn hh-press px-6 py-3 rounded-[var(--hh-radius-md)]"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -1430,8 +1436,8 @@ export default function GachaDetailClient() {
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <div className="px-5 py-3 flex items-center justify-between text-sm">
-            <span className="text-slate-500 font-medium">{label}</span>
-            <span className="text-slate-800 font-bold text-right max-w-[60%]">{value}</span>
+            <span className="text-[var(--hh-text-secondary)] font-medium">{label}</span>
+            <span className="font-semibold text-[var(--hh-text-primary)] text-right max-w-[60%]">{value}</span>
         </div>
     );
 }

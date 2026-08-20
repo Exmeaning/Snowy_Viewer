@@ -1,10 +1,10 @@
 "use client";
 import React, { useRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useTheme, CHAR_COLORS } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
-import { getMotionTransition } from "@/lib/motion";
+import { HH_DURATION, hhPopoverVariants, hhSheetVariants, hhSpringPanel, springSnappy } from "@/lib/motion";
 import { UNIT_DATA, UNIT_ID_LABEL_KEYS } from "@/types/types";
 import { useMasterData } from "@/contexts/MasterDataContext";
 import { ADS_SETTINGS_VISIBLE } from "@/lib/ads";
@@ -40,6 +40,20 @@ const appearanceOptions = [
     { id: "light", labelKey: "settings.appearance.light" },
     { id: "dark", labelKey: "settings.appearance.dark" },
 ] as const;
+
+// Hoisted out of the render tree so the three segmented controls all read from
+// stable arrays rather than rebuilding an inline literal every render.
+const backgroundAnimationOptions = [
+    { id: "on", labelKey: "settings.backgroundAnimationBudget.on" },
+    { id: "off", labelKey: "settings.backgroundAnimationBudget.off" },
+] as const;
+
+const uiSoundOptions = [
+    { id: "on", labelKey: "settings.uiSound.on" },
+    { id: "off", labelKey: "settings.uiSound.off" },
+] as const;
+
+const serverSourceRegions = ["en", "jp", "cn", "tw", "kr"] as const;
 
 const assetLineOptions = [
     {
@@ -102,13 +116,21 @@ interface FloatingDropdownProps {
     maxHeight?: number;
 }
 
+/**
+ * hhPopoverVariants grows downward from the anchor edge. When there is no room
+ * below and the dropdown flips above its trigger, the anchor edge is now the
+ * bottom one, so the travel has to invert or the panel appears to grow away
+ * from the control that opened it. Same damping and duration as the shared
+ * preset — only the sign of `y` differs.
+ */
+const popoverUpwardVariants: Variants = {
+    initial: { opacity: 0, y: 6, scale: 0.97 },
+    animate: { opacity: 1, y: 0, scale: 1, transition: { ...hhSpringPanel, duration: HH_DURATION.fast } },
+    exit: { opacity: 0, y: 4, scale: 0.98, transition: { type: "tween", duration: 0.1, ease: "easeOut" } },
+};
+
 function FloatingDropdown({ isOpen, triggerRect, onClose, children, maxHeight = 260 }: FloatingDropdownProps) {
     const dropdownRef = useRef<HTMLDivElement>(null);
-    // Reduced motion only selects the transition curve. The animated values
-    // stay unconditional so server and client render the same inline styles —
-    // MotionProvider's reducedMotion="user" snaps the transforms after mount.
-    const prefersReducedMotion = useReducedMotion();
-    const transition = getMotionTransition("snappy", { reducedMotion: !!prefersReducedMotion });
 
     useEffect(() => {
         if (!isOpen) return;
@@ -159,23 +181,11 @@ function FloatingDropdown({ isOpen, triggerRect, onClose, children, maxHeight = 
                         ref={dropdownRef}
                         style={style}
                         onClick={(e) => e.stopPropagation()}
-                        initial={{
-                            opacity: 0,
-                            scale: 0.95,
-                            y: openUpwards ? 8 : -8,
-                        }}
-                        animate={{
-                            opacity: 1,
-                            scale: 1,
-                            y: 0,
-                        }}
-                        exit={{
-                            opacity: 0,
-                            scale: 0.95,
-                            y: openUpwards ? 8 : -8,
-                        }}
-                        transition={transition}
-                        className="liquid-glass-modal rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-700/80 will-change-transform"
+                        variants={openUpwards ? popoverUpwardVariants : hhPopoverVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="hh-float overflow-hidden will-change-transform"
                     >
                         <div style={{ maxHeight }} className="overflow-y-auto p-2">
                             {children}
@@ -185,6 +195,211 @@ function FloatingDropdown({ isOpen, triggerRect, onClose, children, maxHeight = 
             )}
         </AnimatePresence>,
         document.body
+    );
+}
+
+/**
+ * A labelled segmented control for one setting whose value is a small closed
+ * set (appearance mode, background animation, UI sound).
+ *
+ * These three were authored as three copies of the same 30-line block, which is
+ * how they drifted apart in the first place. Sharing one component is also what
+ * guarantees the traveling slab behaves identically in all of them.
+ *
+ * The active slab is accent-filled rather than the neutral surface used by the
+ * panel's tab strip: a tab says "you are looking here" while these say "this is
+ * the value in force", and the accent is how the rest of the app already marks a
+ * committed choice (.hh-chip-active, the active nav row).
+ */
+function SegmentedSetting({
+    sectionTitle,
+    options,
+    selectedId,
+    onSelect,
+    layoutId,
+}: {
+    sectionTitle: string;
+    options: readonly { id: string; labelKey: string }[];
+    selectedId: string;
+    onSelect: (id: string) => void;
+    layoutId: string;
+}) {
+    const { t } = useI18n();
+    return (
+        <div>
+            <div className="hh-label mb-2">{sectionTitle}</div>
+            <div className="hh-segment relative" role="tablist" aria-label={sectionTitle}>
+                {options.map((option) => {
+                    const isSelected = selectedId === option.id;
+                    return (
+                        <button
+                            key={option.id}
+                            role="tab"
+                            aria-selected={isSelected}
+                            onClick={() => onSelect(option.id)}
+                            className={`hh-segment-item relative cursor-pointer ${
+                                isSelected
+                                    ? "text-[var(--hh-text-on-accent)]"
+                                    : "text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)]"
+                            }`}
+                        >
+                            {isSelected && (
+                                <motion.div
+                                    layoutId={layoutId}
+                                    className="absolute inset-0 rounded-[var(--hh-radius-sm)] bg-[var(--hh-accent)]"
+                                    transition={springSnappy}
+                                />
+                            )}
+                            <span className="relative z-10">{t(option.labelKey)}</span>
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+/**
+ * A settings row that opens a {@link FloatingDropdown} — theme colour, UI
+ * language, server source, asset source. All four were the same 20-line button
+ * with a different leading glyph and label.
+ */
+function DropdownSettingRow({
+    sectionTitle,
+    valueLabel,
+    isExpanded,
+    onToggle,
+    swatchColor,
+    ariaHasPopup,
+    children,
+}: {
+    sectionTitle: string;
+    valueLabel: string;
+    isExpanded: boolean;
+    onToggle: (event: React.MouseEvent<HTMLButtonElement>) => void;
+    /** Solid colour dot for the theme picker; omitted rows get the accent ring. */
+    swatchColor?: string;
+    ariaHasPopup?: boolean;
+    /** Extra content below the trigger, e.g. the machine-translation notice. */
+    children?: React.ReactNode;
+}) {
+    return (
+        <div>
+            <div className="hh-label mb-2">{sectionTitle}</div>
+            <button
+                onClick={onToggle}
+                className="hh-press w-full px-3 py-2 bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)] rounded-[var(--hh-radius-md)] flex items-center justify-between hover:border-[var(--hh-border-strong)]"
+                aria-haspopup={ariaHasPopup ? "listbox" : undefined}
+                aria-expanded={isExpanded}
+            >
+                <div className="flex items-center gap-2">
+                    {swatchColor ? (
+                        <span
+                            className="w-4 h-4 rounded-[var(--hh-radius-full)] border border-[var(--hh-border-hairline)]"
+                            style={{ backgroundColor: swatchColor }}
+                        />
+                    ) : (
+                        <span className="w-4 h-4 rounded-[var(--hh-radius-full)] bg-[var(--hh-accent-wash-strong)] flex items-center justify-center">
+                            <span className="w-2 h-2 rounded-[var(--hh-radius-full)] bg-[var(--hh-accent)]" />
+                        </span>
+                    )}
+                    <span className="text-sm font-semibold text-[var(--hh-text-primary)]">{valueLabel}</span>
+                </div>
+                <svg
+                    className={`w-4 h-4 text-[var(--hh-text-tertiary)] transition-transform duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] ${isExpanded ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            {children}
+        </div>
+    );
+}
+
+/** A label + switch row, separated from its neighbours by a hairline. */
+function ToggleSettingRow({
+    icon,
+    label,
+    checked,
+    onChange,
+    shortcutHint,
+    withDivider = true,
+}: {
+    icon: React.ReactNode;
+    label: string;
+    checked: boolean;
+    onChange: () => void;
+    shortcutHint?: string;
+    withDivider?: boolean;
+}) {
+    return (
+        <div className={`flex items-center justify-between py-2 ${withDivider ? "border-b border-[var(--hh-border-hairline)]" : ""}`}>
+            <div className="flex items-center gap-2">
+                <span className="text-[var(--hh-accent)]">{icon}</span>
+                <span className="text-sm font-medium text-[var(--hh-text-primary)]">{label}</span>
+                {shortcutHint && (
+                    <kbd className="hidden sm:inline-block min-w-[1.5rem] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--hh-text-secondary)] bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)] text-center shadow-[var(--hh-shadow-tile)]">
+                        {shortcutHint}
+                    </kbd>
+                )}
+            </div>
+            <button
+                onClick={() => {
+                    playHandheldSound("toggle");
+                    onChange();
+                }}
+                className={`hh-press hh-switch ${checked ? "hh-switch-active" : ""}`}
+                role="switch"
+                aria-checked={checked}
+                aria-label={label}
+            >
+                <span className="hh-switch-thumb" />
+            </button>
+        </div>
+    );
+}
+
+/** A selectable row inside a {@link FloatingDropdown}. */
+function DropdownOptionRow({
+    onClick,
+    isSelected,
+    swatchColor,
+    label,
+    role,
+}: {
+    onClick: () => void;
+    isSelected: boolean;
+    swatchColor?: string;
+    label: string;
+    role?: "option";
+}) {
+    return (
+        <button
+            onClick={onClick}
+            role={role}
+            aria-selected={role === "option" ? isSelected : undefined}
+            className={`hh-press w-full px-3 py-2 rounded-[var(--hh-radius-md)] text-xs font-semibold flex items-center gap-2 ${
+                isSelected
+                    ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                    : "text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]"
+            }`}
+        >
+            <span
+                className={`w-3 h-3 rounded-[var(--hh-radius-full)] shrink-0 border border-[var(--hh-border-hairline)] ${
+                    swatchColor ? "" : isSelected ? "bg-[var(--hh-text-on-accent)]" : "bg-[var(--hh-border-strong)]"
+                }`}
+                style={swatchColor ? { backgroundColor: swatchColor } : undefined}
+            />
+            <span className="truncate">{label}</span>
+            {isSelected && (
+                <svg className="w-3.5 h-3.5 ml-auto shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+            )}
+        </button>
     );
 }
 
@@ -221,15 +436,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     const panelRef = useRef<HTMLDivElement>(null);
 
     const [mounted, setMounted] = useState(false);
-    // As in FloatingDropdown: the preference picks the curve only, never the
-    // animated values.
-    const prefersReducedMotion = useReducedMotion();
-    const overlayTransition = getMotionTransition("snappy", {
-        reducedMotion: !!prefersReducedMotion,
-    });
-    const panelTransition = getMotionTransition("soft", {
-        reducedMotion: !!prefersReducedMotion,
-    });
 
     useEffect(() => {
         const raf = requestAnimationFrame(() => {
@@ -309,39 +515,48 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-[200] isolate flex items-center justify-center p-3 sm:p-4">
-                    {/* Backdrop */}
+                    {/* Scrim — flat dim, no blur. */}
                     <motion.div
-                        className="absolute inset-0 transform-gpu bg-black/45 backdrop-blur-[8px]"
+                        className="absolute inset-0 hh-scrim"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={overlayTransition}
+                        transition={springSnappy}
                         onClick={handleCloseWithSound}
                     />
 
-                    {/* Dialog - Auto-fits active content height cleanly */}
+                    {/* Dialog — auto-fits the active tab's height. */}
                     <motion.div
                         id="settings-panel-content"
                         ref={panelRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="settings-panel-title"
                         onClick={(e) => e.stopPropagation()}
-                        className="relative w-full max-w-md transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col shadow-2xl my-auto z-10"
-                        initial={{ opacity: 0, scale: 0.96, y: 12 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.96, y: 12 }}
-                        transition={panelTransition}
+                        className="relative w-full max-w-md transform-gpu will-change-transform hh-float overflow-hidden flex flex-col my-auto z-10"
+                        variants={hhSheetVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
                     >
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200/50 dark:border-slate-800/60 bg-gradient-to-r from-miku/10 to-transparent shrink-0">
-                            <h3 className="type-title font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-sm sm:text-base">
-                                <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {/* Title bar */}
+                        <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] shrink-0">
+                            <h3
+                                id="settings-panel-title"
+                                className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2 text-sm sm:text-base"
+                            >
+                                <svg className="w-4 h-4 text-[var(--hh-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                                 {t("settings.title")}
                             </h3>
+                            {/* Settings apply the moment they are touched, so
+                                there is nothing to commit and no OK/Cancel pair
+                                to render — the only exit is dismissal. */}
                             <button
                                 onClick={handleCloseWithSound}
-                                className="pressable p-1.5 text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-lg"
+                                className="hh-press p-1.5 rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]"
                                 aria-label={t("common.action.close")}
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -350,42 +565,65 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                             </button>
                         </div>
 
-                        {/* Navigation Tabs Bar */}
-                        <div className="flex bg-slate-200/40 dark:bg-slate-900/60 p-1 mx-5 mt-4 rounded-2xl gap-1 shrink-0 border border-slate-200/50 dark:border-slate-800/60 relative">
+                        {/* Tab strip — a segmented control: a sunken trough with
+                            one solid slab riding in it. The slab travels via
+                            layoutId, which is the same "one cursor moves"
+                            gesture the rest of the shell uses.
+
+                            The wrapper is load-bearing. .hh-segment carries
+                            `flex: 1 1 auto` for its intended home in the side
+                            rail's *row*; as a direct child of this column panel
+                            that same grow factor would stretch the strip
+                            vertically to eat the whole dialog. handheld-os.css
+                            is unlayered, so a Tailwind shrink-0 on the control
+                            itself cannot override it — putting a plain block
+                            between them makes the control not a flex item at
+                            all, which is the actual fix. */}
+                        <div className="mx-4 mt-4 shrink-0">
+                        <div className="hh-segment relative" role="tablist" aria-label={t("settings.title")}>
                             {tabs.map((tab) => {
                                 const isActive = activeTab === tab.id;
                                 return (
                                     <button
                                         key={tab.id}
+                                        role="tab"
+                                        aria-selected={isActive}
                                         onClick={() => {
                                             playHandheldSound("cursor");
                                             setActiveTab(tab.id);
                                             setExpandedDropdown(null);
                                             setTriggerRect(null);
                                         }}
-                                        className={`relative flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-colors duration-150 flex items-center justify-center gap-1.5 select-none ${
+                                        className={`hh-segment-item relative flex items-center justify-center gap-1.5 cursor-pointer ${
                                             isActive
-                                                ? "text-miku dark:text-miku"
-                                                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                                                ? "text-[var(--hh-text-primary)]"
+                                                : "text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)]"
                                         }`}
                                     >
                                         {isActive && (
                                             <motion.div
                                                 layoutId="activeSettingsTabPill"
-                                                className="absolute inset-0 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200/40 dark:border-slate-700/60"
-                                                transition={overlayTransition}
+                                                className="absolute inset-0 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-2)] shadow-[var(--hh-shadow-tile)]"
+                                                transition={springSnappy}
                                             />
                                         )}
                                         <span className="relative z-10 flex items-center justify-center gap-1.5">
-                                            {tab.icon}
-                                            <span>{t(tab.labelKey)}</span>
+                                            {/* Four segments share one panel width, so on the
+                                                narrowest phones the glyph is what gets dropped:
+                                                the label is the thing that has to survive, and
+                                                translated labels ("ビジュアル") are wider than
+                                                the English ones this was sized against. */}
+                                            <span className="hidden sm:inline-flex">{tab.icon}</span>
+                                            <span className="truncate">{t(tab.labelKey)}</span>
                                         </span>
                                     </button>
                                 );
                             })}
                         </div>
+                        </div>
 
-                        {/* Tab Content Body - Auto content height without giant empty bottom gap */}
+                        {/* Tab body — auto-heights to the active tab so the panel
+                            never carries a dead gap under a short tab. */}
                         <div className="p-5 overflow-y-auto max-h-[60vh] min-h-[220px]">
                             <AnimatePresence mode="wait" initial={false}>
                                 <motion.div
@@ -393,290 +631,134 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                     initial={{ opacity: 0, y: 6 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -6 }}
-                                    transition={overlayTransition}
+                                    transition={springSnappy}
                                     className="space-y-4"
                                 >
                                     {/* TAB 1: VISUAL */}
                                     {activeTab === "visual" && (
                                         <div className="space-y-4">
-                                            {/* Appearance Mode Segmented Control */}
-                                            <div>
-                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                    {t("settings.appearance.sectionTitle")}
-                                                </div>
-                                                <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60 relative">
-                                                    {appearanceOptions.map((option) => {
-                                                        const isSelected = colorSchemePreference === option.id;
-                                                        return (
-                                                            <button
-                                                                key={option.id}
-                                                                onClick={() => {
-                                                                    playHandheldSound("toggle");
-                                                                    setColorSchemePreference(option.id);
-                                                                }}
-                                                                className={`relative flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors duration-150 select-none ${
-                                                                    isSelected
-                                                                        ? "text-white"
-                                                                        : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                                                                }`}
-                                                            >
-                                                                {isSelected && (
-                                                                    <motion.div
-                                                                        layoutId="activeAppearancePill"
-                                                                        className="absolute inset-0 bg-miku rounded-lg shadow-sm"
-                                                                        transition={overlayTransition}
-                                                                    />
-                                                                )}
-                                                                <span className="relative z-10">{t(option.labelKey)}</span>
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
+                                            <SegmentedSetting
+                                                sectionTitle={t("settings.appearance.sectionTitle")}
+                                                options={appearanceOptions}
+                                                selectedId={colorSchemePreference}
+                                                layoutId="activeAppearancePill"
+                                                onSelect={(id) => {
+                                                    playHandheldSound("toggle");
+                                                    setColorSchemePreference(id as typeof colorSchemePreference);
+                                                }}
+                                            />
 
-                                            {/* Background Animation Segmented Control */}
-                                            <div>
-                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                    {t("settings.backgroundAnimationBudget.sectionTitle")}
-                                                </div>
-                                                <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60 relative">
-                                                    {[
-                                                        { id: "on", labelKey: "settings.backgroundAnimationBudget.on" },
-                                                        { id: "off", labelKey: "settings.backgroundAnimationBudget.off" },
-                                                    ].map((option) => {
-                                                        const isSelected = backgroundAnimationBudget === option.id;
-                                                        return (
-                                                            <button
-                                                                key={option.id}
-                                                                onClick={() => {
-                                                                    playHandheldSound("toggle");
-                                                                    setBackgroundAnimationBudget(option.id as "on" | "off");
-                                                                }}
-                                                                className={`relative flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors duration-150 select-none ${
-                                                                    isSelected
-                                                                        ? "text-white"
-                                                                        : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                                                                }`}
-                                                            >
-                                                                {isSelected && (
-                                                                    <motion.div
-                                                                        layoutId="activeBgAnimPill"
-                                                                        className="absolute inset-0 bg-miku rounded-lg shadow-sm"
-                                                                        transition={overlayTransition}
-                                                                    />
-                                                                )}
-                                                                <span className="relative z-10">{t(option.labelKey)}</span>
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
+                                            <SegmentedSetting
+                                                sectionTitle={t("settings.backgroundAnimationBudget.sectionTitle")}
+                                                options={backgroundAnimationOptions}
+                                                selectedId={backgroundAnimationBudget}
+                                                layoutId="activeBgAnimPill"
+                                                onSelect={(id) => {
+                                                    playHandheldSound("toggle");
+                                                    setBackgroundAnimationBudget(id as "on" | "off");
+                                                }}
+                                            />
 
-                                            {/* UI Sound Segmented Control */}
                                             <div>
-                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                    {t("settings.uiSound.sectionTitle")}
-                                                </div>
-                                                <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60 relative">
-                                                    {[
-                                                        { id: "on", labelKey: "settings.uiSound.on" },
-                                                        { id: "off", labelKey: "settings.uiSound.off" },
-                                                    ].map((option) => {
-                                                        const isSelected = handheldSoundEnabled === (option.id === "on");
-                                                        return (
-                                                            <button
-                                                                key={option.id}
-                                                                onClick={() => {
-                                                                    const nextEnabled = option.id === "on";
-                                                                    setHandheldSoundEnabled(nextEnabled);
-                                                                    // Let the user hear what they just turned on.
-                                                                    if (nextEnabled) playHandheldSound("toggle");
-                                                                }}
-                                                                className={`relative flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors duration-150 select-none ${
-                                                                    isSelected
-                                                                        ? "text-white"
-                                                                        : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                                                                }`}
-                                                            >
-                                                                {isSelected && (
-                                                                    <motion.div
-                                                                        layoutId="activeUiSoundPill"
-                                                                        className="absolute inset-0 bg-miku rounded-lg shadow-sm"
-                                                                        transition={overlayTransition}
-                                                                    />
-                                                                )}
-                                                                <span className="relative z-10">{t(option.labelKey)}</span>
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                                <p className="mt-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                                                <SegmentedSetting
+                                                    sectionTitle={t("settings.uiSound.sectionTitle")}
+                                                    options={uiSoundOptions}
+                                                    selectedId={handheldSoundEnabled ? "on" : "off"}
+                                                    layoutId="activeUiSoundPill"
+                                                    onSelect={(id) => {
+                                                        const nextEnabled = id === "on";
+                                                        setHandheldSoundEnabled(nextEnabled);
+                                                        // Let the user hear what they just turned on.
+                                                        if (nextEnabled) playHandheldSound("toggle");
+                                                    }}
+                                                />
+                                                <p className="hh-body mt-2 text-[11px] text-[var(--hh-text-secondary)]">
                                                     {handheldSoundEnabled
                                                         ? t("settings.uiSound.onDescription")
                                                         : t("settings.uiSound.offDescription")}
                                                 </p>
                                             </div>
 
-                                            {/* Theme Color Dropdown */}
-                                            <div>
-                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                    {t("settings.themeColor.sectionTitle")}
-                                                </div>
-                                                <button
-                                                    onClick={(e) => handleToggleDropdown("theme", e)}
-                                                    className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <span
-                                                            className="w-4 h-4 rounded-full"
-                                                            style={{ backgroundColor: CHAR_COLORS[themeCharId] || "#33CCBB" }}
-                                                        />
-                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                                                            {getCharacterName(t, Number(themeCharId), "short")}
-                                                        </span>
-                                                    </div>
-                                                    <svg
-                                                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "theme" ? "rotate-180" : ""}`}
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                            <DropdownSettingRow
+                                                sectionTitle={t("settings.themeColor.sectionTitle")}
+                                                valueLabel={getCharacterName(t, Number(themeCharId), "short")}
+                                                isExpanded={expandedDropdown === "theme"}
+                                                onToggle={(e) => handleToggleDropdown("theme", e)}
+                                                swatchColor={CHAR_COLORS[themeCharId] || "#33CCBB"}
+                                            />
 
-                                            {/* Interface Language Dropdown */}
-                                            <div>
-                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                    {t("settings.uiLanguage.sectionTitle")}
-                                                </div>
-                                                <button
-                                                    onClick={(e) => handleToggleDropdown("language", e)}
-                                                    className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
-                                                    aria-haspopup="listbox"
-                                                    aria-expanded={expandedDropdown === "language"}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="w-4 h-4 rounded-full bg-miku/20 flex items-center justify-center">
-                                                            <span className="w-2 h-2 rounded-full bg-miku" />
-                                                        </span>
-                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{currentLanguageLabel}</span>
-                                                    </div>
-                                                    <svg
-                                                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "language" ? "rotate-180" : ""}`}
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </button>
+                                            <DropdownSettingRow
+                                                sectionTitle={t("settings.uiLanguage.sectionTitle")}
+                                                valueLabel={currentLanguageLabel}
+                                                isExpanded={expandedDropdown === "language"}
+                                                onToggle={(e) => handleToggleDropdown("language", e)}
+                                                ariaHasPopup
+                                            >
                                                 {locale !== "zh-CN" && (
-                                                    <p className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200/30 dark:border-amber-900/30 px-2 py-1.5 text-[10px] leading-relaxed text-amber-700 dark:text-amber-500">
-                                                        <span className="mt-0.5 inline-flex h-3 w-3 shrink-0 items-center justify-center rounded-full bg-amber-200 dark:bg-amber-900/50 text-[8px] font-black text-amber-700 dark:text-amber-500">!</span>
+                                                    // Advisory, not destructive: the alert accent is a fixed
+                                                    // structural constant, so a wash of it reads as a caution
+                                                    // strip without needing its own amber palette.
+                                                    <p className="hh-body mt-1.5 flex items-start gap-1.5 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)] px-2 py-1.5 text-[10px] text-[var(--hh-text-secondary)]">
+                                                        <span className="mt-0.5 inline-flex h-3 w-3 shrink-0 items-center justify-center rounded-[var(--hh-radius-full)] bg-[var(--hh-accent-alert)] text-[8px] font-bold text-white">!</span>
                                                         <span>{t("settings.uiLanguage.machineTranslationNotice")}</span>
                                                     </p>
                                                 )}
-                                            </div>
+                                            </DropdownSettingRow>
                                         </div>
                                     )}
 
                                     {/* TAB 2: CONTENT */}
                                     {activeTab === "content" && (
                                         <div className="space-y-4">
-                                            {/* Spoiler Toggle */}
-                                            <div className="flex items-center justify-between py-2 border-b border-slate-200/40 dark:border-slate-800/40">
-                                                <div className="flex items-center gap-2">
-                                                    <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <ToggleSettingRow
+                                                label={t("settings.showSpoiler.label")}
+                                                checked={isShowSpoiler}
+                                                onChange={() => setShowSpoiler(!isShowSpoiler)}
+                                                icon={
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                                     </svg>
-                                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.showSpoiler.label")}</span>
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        playHandheldSound("toggle");
-                                                        setShowSpoiler(!isShowSpoiler);
-                                                    }}
-                                                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${isShowSpoiler ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
-                                                >
-                                                    <motion.span
-                                                        className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow"
-                                                        animate={{ x: isShowSpoiler ? 20 : 0 }}
-                                                        transition={overlayTransition}
-                                                    />
-                                                </button>
-                                            </div>
+                                                }
+                                            />
 
-                                            {/* Trained Thumbnail Toggle */}
-                                            <div className="flex items-center justify-between py-2 border-b border-slate-200/40 dark:border-slate-800/40">
-                                                <div className="flex items-center gap-2">
-                                                    <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <ToggleSettingRow
+                                                label={t("settings.trainedThumbnail.label")}
+                                                checked={useTrainedThumbnail}
+                                                onChange={() => setUseTrainedThumbnail(!useTrainedThumbnail)}
+                                                shortcutHint="]"
+                                                icon={
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                     </svg>
-                                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.trainedThumbnail.label")}</span>
-                                                    <kbd className="hidden sm:inline-block min-w-[1.5rem] px-1.5 py-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/60 rounded border border-slate-200/50 dark:border-slate-700/40 text-center shadow-sm">]</kbd>
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        playHandheldSound("toggle");
-                                                        setUseTrainedThumbnail(!useTrainedThumbnail);
-                                                    }}
-                                                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useTrainedThumbnail ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
-                                                >
-                                                    <motion.span
-                                                        className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow"
-                                                        animate={{ x: useTrainedThumbnail ? 20 : 0 }}
-                                                        transition={overlayTransition}
-                                                    />
-                                                </button>
-                                            </div>
+                                                }
+                                            />
 
-                                            {/* LLM Translation Toggle */}
-                                            <div className="flex items-center justify-between py-2 border-b border-slate-200/40 dark:border-slate-800/40">
-                                                <div className="flex items-center gap-2">
-                                                    <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <ToggleSettingRow
+                                                label={t("settings.translation.label")}
+                                                checked={useLLMTranslation}
+                                                onChange={() => setUseLLMTranslation(!useLLMTranslation)}
+                                                // The ads row below is conditional, so this one keeps its
+                                                // hairline only while something follows it.
+                                                withDivider={ADS_SETTINGS_VISIBLE}
+                                                icon={
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                                                     </svg>
-                                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.translation.label")}</span>
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        playHandheldSound("toggle");
-                                                        setUseLLMTranslation(!useLLMTranslation);
-                                                    }}
-                                                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${useLLMTranslation ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
-                                                >
-                                                    <motion.span
-                                                        className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow"
-                                                        animate={{ x: useLLMTranslation ? 20 : 0 }}
-                                                        transition={overlayTransition}
-                                                    />
-                                                </button>
-                                            </div>
+                                                }
+                                            />
 
                                             {ADS_SETTINGS_VISIBLE && (
-                                                <div className="flex items-center justify-between py-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <svg className="w-4 h-4 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <ToggleSettingRow
+                                                    label={t("settings.ads.label")}
+                                                    checked={showAds}
+                                                    onChange={() => setShowAds(!showAds)}
+                                                    withDivider={false}
+                                                    icon={
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                                                         </svg>
-                                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("settings.ads.label")}</span>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => {
-                                                            playHandheldSound("toggle");
-                                                            setShowAds(!showAds);
-                                                        }}
-                                                        className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${showAds ? 'bg-miku' : 'bg-slate-200 dark:bg-slate-700'}`}
-                                                    >
-                                                        <motion.span
-                                                            className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow"
-                                                            animate={{ x: showAds ? 20 : 0 }}
-                                                            transition={overlayTransition}
-                                                        />
-                                                    </button>
-                                                </div>
+                                                    }
+                                                />
                                             )}
                                         </div>
                                     )}
@@ -684,78 +766,42 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                     {/* TAB 3: DATA */}
                                     {activeTab === "data" && (
                                         <div className="space-y-4">
-                                            {/* Server Source / Region Select */}
-                                            <div>
-                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                    {t("settings.serverSource.sectionTitle")}
-                                                </div>
-                                                <button
-                                                    onClick={(e) => handleToggleDropdown("serverSource", e)}
-                                                    className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="w-4 h-4 rounded-full bg-miku/20 flex items-center justify-center">
-                                                            <span className="w-2 h-2 rounded-full bg-miku" />
-                                                        </span>
-                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{t(`settings.serverSource.${serverSource}`)}</span>
-                                                    </div>
-                                                    <svg
-                                                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "serverSource" ? "rotate-180" : ""}`}
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                            <DropdownSettingRow
+                                                sectionTitle={t("settings.serverSource.sectionTitle")}
+                                                valueLabel={t(`settings.serverSource.${serverSource}`)}
+                                                isExpanded={expandedDropdown === "serverSource"}
+                                                onToggle={(e) => handleToggleDropdown("serverSource", e)}
+                                            />
 
-                                            {/* Asset Source Dropdown */}
-                                            <div>
-                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                    {t("settings.assetSource.sectionTitle")}
-                                                </div>
-                                                <button
-                                                    onClick={(e) => handleToggleDropdown("asset", e)}
-                                                    className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 rounded-xl flex items-center justify-between hover:border-miku/50 transition-all group"
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="w-4 h-4 rounded-full bg-miku/20 flex items-center justify-center">
-                                                            <span className="w-2 h-2 rounded-full bg-miku" />
-                                                        </span>
-                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{t(currentAssetLabel)}</span>
-                                                    </div>
-                                                    <svg
-                                                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDropdown === "asset" ? "rotate-180" : ""}`}
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                            <DropdownSettingRow
+                                                sectionTitle={t("settings.assetSource.sectionTitle")}
+                                                valueLabel={t(currentAssetLabel)}
+                                                isExpanded={expandedDropdown === "asset"}
+                                                onToggle={(e) => handleToggleDropdown("asset", e)}
+                                            />
 
                                             {/* Data Version & Refresh */}
                                             <div>
-                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                <div className="hh-label mb-2">
                                                     {t("settings.dataVersion.sectionTitle")}
                                                 </div>
                                                 <div className="space-y-2.5">
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-xs text-slate-500 dark:text-slate-450">{t("settings.dataVersion.cloudVersion")}:</span>
-                                                        <span className="text-xs font-mono text-slate-700 dark:text-slate-300">
+                                                        <span className="text-xs text-[var(--hh-text-secondary)]">{t("settings.dataVersion.cloudVersion")}:</span>
+                                                        <span className="hh-numeric text-xs font-mono text-[var(--hh-text-primary)]">
                                                             {isLoading ? t("settings.dataVersion.checking") : (cloudVersion || t("settings.dataVersion.loadFailed"))}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-xs text-slate-500 dark:text-slate-450">{t("settings.dataVersion.localCacheVersion")}:</span>
-                                                        <span className={`text-xs font-mono ${(localVersion && localVersion !== cloudVersion) ? "text-amber-500 font-bold" : "text-slate-700 dark:text-slate-300"}`}>
+                                                        <span className="text-xs text-[var(--hh-text-secondary)]">{t("settings.dataVersion.localCacheVersion")}:</span>
+                                                        {/* A stale cache is the one state worth colouring: it
+                                                            is the reason the refresh button below exists. */}
+                                                        <span className={`hh-numeric text-xs font-mono ${(localVersion && localVersion !== cloudVersion) ? "text-[var(--hh-accent-alert)] font-bold" : "text-[var(--hh-text-primary)]"}`}>
                                                             {localVersion ? (
                                                                 localVersion === cloudVersion ? (
                                                                     <span className="flex items-center gap-1">
                                                                         {localVersion}
-                                                                        <svg className="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <svg className="w-3 h-3 text-[var(--hh-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                                         </svg>
                                                                     </span>
@@ -764,13 +810,16 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                         </span>
                                                     </div>
 
+                                                    {/* The one committing action in the whole panel, so it
+                                                        is the one primary slab. .hh-press already handles
+                                                        the disabled dim, so no disabled: palette is needed. */}
                                                     <button
                                                         onClick={() => {
                                                             playHandheldSound("confirm");
                                                             forceRefreshData();
                                                         }}
                                                         disabled={isRefreshing || isLoading}
-                                                        className="w-full px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 disabled:from-slate-300 dark:disabled:from-slate-700 disabled:to-slate-400 dark:disabled:to-slate-800 disabled:text-slate-500 dark:disabled:text-slate-650 rounded-xl transition-all flex items-center justify-center gap-2"
+                                                        className="hh-btn hh-btn-primary hh-press w-full text-xs"
                                                     >
                                                         {isRefreshing ? (
                                                             <>
@@ -797,7 +846,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                     {/* TAB 4: ABOUT */}
                                     {activeTab === "about" && (
                                         <div className="space-y-4">
-                                            <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200/40 dark:border-slate-800/30 flex flex-col items-center text-center space-y-3">
+                                            <div className="hh-well p-5 flex flex-col items-center text-center space-y-3">
                                                 {/* Dynamic Theme Mapped SVG Logo & Title as Hyperlink */}
                                                 <a
                                                     href="/about"
@@ -819,19 +868,19 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                         role="img"
                                                         aria-label="Moesekai Logo"
                                                     />
-                                                    <h4 className="text-base font-bold text-slate-800 dark:text-slate-200 group-hover:text-miku transition-colors mt-1">
+                                                    <h4 className="hh-title text-base text-[var(--hh-text-primary)] group-hover:text-[var(--hh-accent)] transition-colors mt-1">
                                                         Moesekai Viewer
                                                     </h4>
                                                 </a>
 
-                                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                                <p className="hh-body text-xs text-[var(--hh-text-secondary)]">
                                                     {t("settings.about.projectDescription")}
                                                 </p>
 
                                                 <a
                                                     href="/about"
                                                     onClick={handleNavigateAbout}
-                                                    className="pressable w-full px-4 py-2.5 text-xs font-bold text-white bg-miku hover:bg-miku-dark rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors mt-2 cursor-pointer"
+                                                    className="hh-btn hh-btn-primary hh-press w-full text-xs mt-2 cursor-pointer"
                                                 >
                                                     <span>{t("settings.about.viewDetails")}</span>
                                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -845,10 +894,12 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                             </AnimatePresence>
                         </div>
 
-                        {/* Footer with version - Fixed at bottom */}
-                        <div className="border-t border-slate-200/50 dark:border-slate-800/60 px-4 py-2.5 shrink-0 bg-white/40 dark:bg-slate-950/40">
+                        {/* Status strip — the panel's bottom chrome, matching the
+                            title bar's surface so the body reads as inset between
+                            two rails. */}
+                        <div className="border-t border-[var(--hh-border)] bg-[var(--hh-surface-1)] px-4 py-2.5 shrink-0">
                             <div className="flex items-center justify-center">
-                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                                <span className="text-[10px] font-medium text-[var(--hh-text-tertiary)]">
                                     {t("settings.footer.version")}
                                 </span>
                             </div>
@@ -865,43 +916,26 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         <div className="space-y-3">
                             {unitGroups.map((unit) => (
                                 <div key={unit.id}>
-                                    <div className="px-2 pt-1 pb-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                    <div className="hh-label px-2 pt-1 pb-1">
                                         {t(unit.labelKey)}
                                     </div>
                                     <div className="grid grid-cols-2 gap-1">
-                                        {unit.charIds.map((charId) => {
-                                            const isSelected = themeCharId === String(charId);
-                                            const color = CHAR_COLORS[String(charId)];
-                                            const name = getCharacterName(t, charId, "short");
-                                            return (
-                                                <button
-                                                    key={charId}
-                                                    onClick={() => {
-                                                        playHandheldSound("confirm");
-                                                        setThemeCharacter(String(charId));
-                                                        setExpandedDropdown(null);
-                                                    }}
-                                                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                                                        isSelected
-                                                            ? "bg-miku/15 text-miku font-bold"
-                                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-slate-800/40"
-                                                    }`}
-                                                >
-                                                    <span
-                                                        className="w-3 h-3 rounded-full shrink-0"
-                                                        style={{ backgroundColor: color }}
-                                                    />
-                                                    <span style={{ color: isSelected ? color : undefined }}>
-                                                        {name}
-                                                    </span>
-                                                    {isSelected && (
-                                                        <svg className="w-3.5 h-3.5 ml-auto text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                    )}
-                                                </button>
-                                            );
-                                        })}
+                                        {unit.charIds.map((charId) => (
+                                            // The character's own colour is the swatch, which is
+                                            // the one place a non-token colour is the content
+                                            // rather than decoration.
+                                            <DropdownOptionRow
+                                                key={charId}
+                                                isSelected={themeCharId === String(charId)}
+                                                swatchColor={CHAR_COLORS[String(charId)]}
+                                                label={getCharacterName(t, charId, "short")}
+                                                onClick={() => {
+                                                    playHandheldSound("confirm");
+                                                    setThemeCharacter(String(charId));
+                                                    setExpandedDropdown(null);
+                                                }}
+                                            />
+                                        ))}
                                     </div>
                                 </div>
                             ))}
@@ -915,39 +949,22 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         maxHeight={200}
                     >
                         <div className="space-y-1" role="listbox" aria-label={t("settings.uiLanguage.label")}>
-                            {languageOptions.map((option) => {
-                                const isSelected = locale === option.id;
-                                return (
-                                    <button
-                                        key={option.id}
-                                        onClick={() => {
-                                            playHandheldSound("confirm");
-                                            setLocale(option.id);
-                                            if (option.id !== "zh-CN") {
-                                                setUseLLMTranslation(false);
-                                            }
-                                            setExpandedDropdown(null);
-                                        }}
-                                        className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                                            isSelected
-                                                ? "bg-miku/10 text-miku"
-                                                : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30"
-                                        }`}
-                                        role="option"
-                                        aria-selected={isSelected}
-                                    >
-                                        <span
-                                            className={`w-3 h-3 rounded-full shrink-0 ${isSelected ? "bg-miku" : "bg-slate-300"}`}
-                                        />
-                                        <span>{option.label}</span>
-                                        {isSelected && (
-                                            <svg className="w-3.5 h-3.5 ml-auto text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        )}
-                                    </button>
-                                );
-                            })}
+                            {languageOptions.map((option) => (
+                                <DropdownOptionRow
+                                    key={option.id}
+                                    role="option"
+                                    isSelected={locale === option.id}
+                                    label={option.label}
+                                    onClick={() => {
+                                        playHandheldSound("confirm");
+                                        setLocale(option.id);
+                                        if (option.id !== "zh-CN") {
+                                            setUseLLMTranslation(false);
+                                        }
+                                        setExpandedDropdown(null);
+                                    }}
+                                />
+                            ))}
                         </div>
                     </FloatingDropdown>
 
@@ -958,41 +975,25 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         maxHeight={220}
                     >
                         <div className="space-y-1">
-                            {(["en", "jp", "cn", "tw", "kr"] as const).map((region) => {
-                                const isSelected = serverSource === region;
-                                return (
-                                    <button
-                                        key={region}
-                                        onClick={() => {
-                                            playHandheldSound("confirm");
-                                            setExpandedDropdown(null);
-                                            if (serverSource !== region) {
-                                                setServerSource(region);
-                                                setTimeout(() => {
-                                                    const url = new URL(window.location.href);
-                                                    url.searchParams.set('_refresh', Date.now().toString());
-                                                    window.location.href = url.toString();
-                                                }, 100);
-                                            }
-                                        }}
-                                        className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                                            isSelected
-                                                ? "bg-miku/10 text-miku"
-                                                : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30"
-                                        }`}
-                                    >
-                                        <span
-                                            className={`w-3 h-3 rounded-full shrink-0 ${isSelected ? "bg-miku" : "bg-slate-300"}`}
-                                        />
-                                        <span>{t(`settings.serverSource.${region}`)}</span>
-                                        {isSelected && (
-                                            <svg className="w-3.5 h-3.5 ml-auto text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        )}
-                                    </button>
-                                );
-                            })}
+                            {serverSourceRegions.map((region) => (
+                                <DropdownOptionRow
+                                    key={region}
+                                    isSelected={serverSource === region}
+                                    label={t(`settings.serverSource.${region}`)}
+                                    onClick={() => {
+                                        playHandheldSound("confirm");
+                                        setExpandedDropdown(null);
+                                        if (serverSource !== region) {
+                                            setServerSource(region);
+                                            setTimeout(() => {
+                                                const url = new URL(window.location.href);
+                                                url.searchParams.set('_refresh', Date.now().toString());
+                                                window.location.href = url.toString();
+                                            }, 100);
+                                        }
+                                    }}
+                                />
+                            ))}
                         </div>
                     </FloatingDropdown>
 
@@ -1005,11 +1006,11 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         <div className="space-y-1">
                             {assetLineOptions.map((option) => {
                                 const optionValue = option.value;
-                                const isSelected = assetSource === optionValue;
-
                                 return (
-                                    <button
+                                    <DropdownOptionRow
                                         key={option.key}
+                                        isSelected={assetSource === optionValue}
+                                        label={t(option.labelKey)}
                                         onClick={() => {
                                             playHandheldSound("confirm");
                                             setExpandedDropdown(null);
@@ -1022,22 +1023,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                 }, 100);
                                             }
                                         }}
-                                        className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                                            isSelected
-                                                ? "bg-miku/10 text-miku"
-                                                : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30"
-                                        }`}
-                                    >
-                                        <span
-                                            className={`w-3 h-3 rounded-full shrink-0 ${isSelected ? "bg-miku" : "bg-slate-300"}`}
-                                        />
-                                        <span>{t(option.labelKey)}</span>
-                                        {isSelected && (
-                                            <svg className="w-3.5 h-3.5 ml-auto text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        )}
-                                    </button>
+                                    />
                                 );
                             })}
                         </div>

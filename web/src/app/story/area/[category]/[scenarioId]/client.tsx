@@ -75,7 +75,7 @@ export default function StoryAreaTalkClient() {
             <div className="container mx-auto px-4 sm:px-6 py-8">
                 <Link
                     href={`/story/area/${encodeURIComponent(areaIdParam)}`}
-                    className="inline-flex items-center gap-2 text-miku hover:text-miku-dark transition-colors mb-6"
+                    className="hh-btn hh-press px-4 py-2 mb-6"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -83,14 +83,18 @@ export default function StoryAreaTalkClient() {
                     {t("page.story.area.backToDialogueList")}
                 </Link>
 
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-700">
+                <div className="hh-tile p-4 mb-6">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="font-bold text-slate-900 dark:text-slate-100">{areaName || t("page.story.area.dialogueFallback", { id: scenarioId })}</h1>
-                        <span className="text-xs text-slate-400">ID: {actionSetId}:{scenarioId}</span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                        <h1 className="hh-title text-[var(--hh-text-primary)]">{areaName || t("page.story.area.dialogueFallback", { id: scenarioId })}</h1>
+                        <span className="hh-numeric text-xs text-[var(--hh-text-tertiary)]">ID: {actionSetId}:{scenarioId}</span>
+                        {/* Server badge. The hue distinguishes the two data sources;
+                            it is carried by border + tint so the label text can stay
+                            on a theme token (dark: here is prefers-color-scheme, not
+                            this app's [data-theme], so hue pairs would desync). */}
+                        <span className={`hh-label px-1.5 py-0.5 rounded-[var(--hh-radius-sm)] border ${
                             serverSource === "cn"
-                                ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50"
-                                : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50"
+                                ? "border-rose-500/45 bg-rose-500/15"
+                                : "border-blue-500/45 bg-blue-500/15"
                         }`}>{t(`page.story.serverSource.${serverSource}`)}</span>
                     </div>
                 </div>

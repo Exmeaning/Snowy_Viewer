@@ -110,7 +110,7 @@ export default function ImagePreviewModal({
             <button
                 onClick={handleCopy}
                 disabled={isCopying || isSaving}
-                className="pressable p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 island-pill-hover rounded-full disabled:opacity-50"
+                className="hh-press p-1.5 rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)] disabled:opacity-50"
                 aria-label={t("common.imageActions.copyImage")}
                 title={isCopying ? t("common.imageActions.copying") : copySuccess ? t("common.imageActions.copySuccess") : t("common.imageActions.copyImage")}
             >
@@ -145,7 +145,7 @@ export default function ImagePreviewModal({
             <button
                 onClick={handleSave}
                 disabled={isSaving || isCopying}
-                className="pressable p-1.5 text-slate-400 hover:text-miku island-pill-hover rounded-full disabled:opacity-50"
+                className="hh-press p-1.5 rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-accent)] disabled:opacity-50"
                 aria-label={t("common.imageActions.saveImage")}
                 title={isSaving ? t("common.imageActions.saving") : saveSuccess ? t("common.imageActions.saveSuccess") : t("common.imageActions.saveImage")}
             >
@@ -181,6 +181,9 @@ export default function ImagePreviewModal({
     );
 
     return (
+        // Display-only dialog: copy and save already live in the title bar as
+        // stateful icon buttons, so a bottom action bar would only duplicate
+        // them. No `actions` prop here is deliberate, not an omission.
         <Modal
             isOpen={isOpen}
             onClose={onClose}
@@ -190,19 +193,23 @@ export default function ImagePreviewModal({
         >
             <div className="space-y-3">
                 {saveClickCount >= 2 && (
-                    <div className="rounded-2xl bg-gradient-to-r from-miku/5 to-luka/5 border border-miku/15 px-4 py-2.5 animate-in fade-in duration-300">
-                        <p className="text-xs text-slate-600 leading-relaxed">
-                            {t("common.imageActions.downloadHintPrefix")}<strong className="text-slate-700">{t("common.imageActions.downloadHintAction")}</strong>{t("common.imageActions.downloadHintSuffix")}
-                            <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer" className="text-miku font-medium hover:underline ml-1">Chrome</a>
-                            <span className="mx-0.5 text-slate-300">/</span>
-                            <a href="https://www.firefox.com/" target="_blank" rel="noopener noreferrer" className="text-miku font-medium hover:underline">Firefox</a>
+                    <div className="rounded-[var(--hh-radius-md)] bg-[var(--hh-accent-wash)] border border-[var(--hh-accent-line)] px-4 py-2.5 animate-in fade-in duration-300">
+                        <p className="hh-body text-xs text-[var(--hh-text-secondary)]">
+                            {t("common.imageActions.downloadHintPrefix")}<strong className="font-semibold text-[var(--hh-text-primary)]">{t("common.imageActions.downloadHintAction")}</strong>{t("common.imageActions.downloadHintSuffix")}
+                            <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer" className="text-[var(--hh-accent)] font-semibold hover:underline ml-1">Chrome</a>
+                            <span className="mx-0.5 text-[var(--hh-text-tertiary)]">/</span>
+                            <a href="https://www.firefox.com/" target="_blank" rel="noopener noreferrer" className="text-[var(--hh-accent)] font-semibold hover:underline">Firefox</a>
                         </p>
                     </div>
                 )}
 
-                {errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
+                {errorMessage && (
+                    <p className="text-xs font-semibold text-[var(--hh-accent-alert)]">{errorMessage}</p>
+                )}
 
-                <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 p-3 sm:p-4">
+                {/* Sunken trough: the artwork is the object, the frame around it
+                    recedes so a bright card image doesn't fight the panel. */}
+                <div className="hh-well p-3 sm:p-4">
                     <div className="max-h-[65vh] overflow-auto flex items-center justify-center">
                         <img
                             src={imageUrl}

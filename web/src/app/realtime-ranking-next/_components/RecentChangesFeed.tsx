@@ -32,15 +32,15 @@ function FeedRow({ change, now }: { change: ChurnScoreChangeV2; now: number }) {
             animate={{ opacity: 1, x: 0, height: "auto" }}
             exit={{ opacity: 0, x: 12, height: 0 }}
             transition={{ type: "spring", stiffness: 360, damping: 28 }}
-            className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-1.5 dark:bg-slate-800/60"
+            className="flex items-center justify-between gap-2 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] px-3 py-1.5"
         >
             <span className="flex items-center gap-1.5 text-xs">
-                <span className={`text-[10px] ${positive ? "text-emerald-500" : "text-rose-500"}`}>{positive ? "▲" : "▼"}</span>
-                <span className={`font-black tabular-nums ${positive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"}`}>
+                <span className={`text-[10px] ${positive ? "text-emerald-600" : "text-rose-500"}`}>{positive ? "▲" : "▼"}</span>
+                <span className={`hh-numeric font-bold ${positive ? "text-emerald-600" : "text-rose-500"}`}>
                     {positive ? "+" : ""}{formatNumber(change.delta)}
                 </span>
             </span>
-            <span className="shrink-0 text-[10px] tabular-nums text-slate-400 dark:text-slate-500">{rel}</span>
+            <span className="hh-numeric shrink-0 text-[10px] text-[var(--hh-text-tertiary)]">{rel}</span>
         </motion.div>
     );
 }
@@ -70,24 +70,24 @@ export default function RecentChangesFeed({ changes, limit = 30 }: RecentChanges
     return (
         <div>
             <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-black text-primary-text">{t("page.realtimeRankingNext.detail.feed.title")}</h2>
+                <h2 className="hh-title text-sm font-semibold text-[var(--hh-text-primary)]">{t("page.realtimeRankingNext.detail.feed.title")}</h2>
                 <div className="flex items-center gap-2 text-[11px]">
-                    <span className="rounded-full bg-miku/10 px-2 py-0.5 font-black text-miku tabular-nums">
+                    <span className="hh-numeric rounded-[var(--hh-radius-sm)] bg-miku/10 px-2 py-0.5 font-bold text-miku">
                         +{formatNumber(total1h)}
                     </span>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 font-bold text-slate-500 tabular-nums dark:bg-slate-800 dark:text-slate-400">
+                    <span className="hh-numeric rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-2 py-0.5 font-bold text-[var(--hh-text-secondary)]">
                         ×{count1h}
                     </span>
                 </div>
             </div>
             {sorted.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400 dark:border-slate-700">
+                <div className="rounded-[var(--hh-radius-md)] border border-dashed border-[var(--hh-border)] px-3 py-6 text-center text-xs text-[var(--hh-text-tertiary)]">
                     {t("page.realtimeRankingNext.detail.feed.empty")}
                 </div>
             ) : (
                 <div
                     ref={scrollRef}
-                    className="max-h-72 space-y-1 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-600"
+                    className="max-h-72 space-y-1 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--hh-border-strong)]"
                 >
                     <AnimatePresence initial={false}>
                         {sorted.map((c) => (

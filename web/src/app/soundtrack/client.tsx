@@ -66,7 +66,7 @@ const SPOILER_DURATION_THRESHOLD_SECONDS = 40;
 const MYSEKAI_SOUNDTRACK_CATEGORY_ID = 12;
 const SCENARIO_SOUNDTRACK_CATEGORY_ID = 13;
 const SPOILER_CATEGORY_FILTER = "spoiler" as const;
-const SPOILER_CATEGORY_THEME = { from: "#F97316", to: "#C2410C", shadow: "shadow-orange-500/20", bgGlow: "from-orange-950/20 to-rose-950/20", text: "text-orange-400" };
+const SPOILER_CATEGORY_THEME = { from: "#F97316", to: "#C2410C" };
 const SOUNDTRACK_INITIAL_LIST_LIMIT = 80;
 const SOUNDTRACK_LIST_BATCH_SIZE = 80;
 const SOUNDTRACK_LIST_SCROLL_THRESHOLD_PX = 280;
@@ -315,26 +315,40 @@ function setSoundtrackMediaSessionPlaybackState(
     }
 }
 
-// Color schemes matching each category group
-const CATEGORY_THEMES: Record<number, { from: string; to: string; shadow: string; bgGlow: string; text: string }> = {
-    1: { from: "#00E5CF", to: "#007D85", shadow: "shadow-cyan-500/20", bgGlow: "from-cyan-950/20 to-teal-950/20", text: "text-miku" }, // Unit overview
-    2: { from: "#FF45A4", to: "#7D1BFF", shadow: "shadow-fuchsia-500/20", bgGlow: "from-fuchsia-950/20 to-purple-950/20", text: "text-fuchsia-400" }, // Virtual Singer
-    3: { from: "#33A2FF", to: "#102E7A", shadow: "shadow-blue-500/20", bgGlow: "from-blue-950/20 to-indigo-950/20", text: "text-blue-400" }, // Leo/need
-    4: { from: "#52FF45", to: "#EBE81B", shadow: "shadow-green-500/20", bgGlow: "from-emerald-950/20 to-lime-950/20", text: "text-green-400" }, // MORE MORE JUMP!
-    5: { from: "#FF6E1A", to: "#A60E0E", shadow: "shadow-orange-500/20", bgGlow: "from-orange-950/20 to-red-950/20", text: "text-orange-400" }, // Vivid BAD SQUAD
-    6: { from: "#FFDF00", to: "#FF5E00", shadow: "shadow-yellow-500/20", bgGlow: "from-yellow-950/20 to-amber-950/20", text: "text-yellow-400" }, // Wonderlands x Showtime
-    7: { from: "#C655FF", to: "#1F0F3D", shadow: "shadow-purple-500/20", bgGlow: "from-purple-950/20 to-slate-950/20", text: "text-purple-400" }, // Nightcord
-    11: { from: "#00E5CF", to: "#007D85", shadow: "shadow-teal-500/20", bgGlow: "from-teal-950/20 to-cyan-950/20", text: "text-miku" }, // In-game
-    12: { from: "#00CCBB", to: "#006655", shadow: "shadow-cyan-500/20", bgGlow: "from-emerald-950/25 to-teal-950/25", text: "text-teal-400" }, // Mysekai
-    13: { from: "#94A3B8", to: "#334155", shadow: "shadow-slate-500/10", bgGlow: "from-slate-950/20 to-slate-900/20", text: "text-slate-400" }, // Scenario
-    14: { from: "#38BDF8", to: "#0369A1", shadow: "shadow-sky-500/20", bgGlow: "from-sky-950/20 to-blue-950/20", text: "text-sky-400" }, // Live
-    15: { from: "#F43F5E", to: "#9F1239", shadow: "shadow-rose-500/20", bgGlow: "from-rose-950/20 to-pink-950/20", text: "text-rose-400" }, // Virtual Live
-    16: { from: "#F59E0B", to: "#B45309", shadow: "shadow-amber-500/20", bgGlow: "from-amber-950/20 to-yellow-950/20", text: "text-amber-400" }, // Gacha
-    20: { from: "#64748B", to: "#1E293B", shadow: "shadow-slate-500/10", bgGlow: "from-slate-950/20 to-zinc-950/20", text: "text-slate-400" }, // Other
-    30: { from: "#EC4899", to: "#BE185D", shadow: "shadow-pink-500/20", bgGlow: "from-pink-950/20 to-rose-950/20", text: "text-pink-400" }, // Collaboration
+// Per-category identity colors. Only the two ramp stops survive the flat
+// redesign: `from` tints controls and progress on dark surfaces, `to` is the
+// deeper stop used for text on light ones. The old glow/shadow/text-class
+// fields went away with the ambient gradients they fed.
+const CATEGORY_THEMES: Record<number, { from: string; to: string }> = {
+    1: { from: "#00E5CF", to: "#007D85" }, // Unit overview
+    2: { from: "#FF45A4", to: "#7D1BFF" }, // Virtual Singer
+    3: { from: "#33A2FF", to: "#102E7A" }, // Leo/need
+    4: { from: "#52FF45", to: "#EBE81B" }, // MORE MORE JUMP!
+    5: { from: "#FF6E1A", to: "#A60E0E" }, // Vivid BAD SQUAD
+    6: { from: "#FFDF00", to: "#FF5E00" }, // Wonderlands x Showtime
+    7: { from: "#C655FF", to: "#1F0F3D" }, // Nightcord
+    11: { from: "#00E5CF", to: "#007D85" }, // In-game
+    12: { from: "#00CCBB", to: "#006655" }, // Mysekai
+    13: { from: "#94A3B8", to: "#334155" }, // Scenario
+    14: { from: "#38BDF8", to: "#0369A1" }, // Live
+    15: { from: "#F43F5E", to: "#9F1239" }, // Virtual Live
+    16: { from: "#F59E0B", to: "#B45309" }, // Gacha
+    20: { from: "#64748B", to: "#1E293B" }, // Other
+    30: { from: "#EC4899", to: "#BE185D" }, // Collaboration
 };
 
-const DEFAULT_THEME = { from: "#00CCBB", to: "#1E293B", shadow: "shadow-slate-500/10", bgGlow: "from-slate-950/20 to-zinc-950/20", text: "text-slate-400" };
+const DEFAULT_THEME = { from: "#00CCBB", to: "#1E293B" };
+
+// Readable text color for a category. On light surfaces the bright end of a
+// ramp is unusable as text, so the deep stop is used — with two hand-picked
+// overrides for the categories whose deep stop is still a highlighter color.
+function getCategoryTextColor(categoryId: number | undefined, isDark: boolean) {
+    const theme = (categoryId !== undefined ? CATEGORY_THEMES[categoryId] : undefined) ?? DEFAULT_THEME;
+    if (isDark) return theme.from;
+    if (categoryId === 4) return "#15803d"; // Deep emerald green
+    if (categoryId === 6) return "#c2410c"; // Deep sunset orange
+    return theme.to;
+}
 
 function SoundtrackContent() {
     const { t, formatNumber } = useI18n();
@@ -790,13 +804,10 @@ function SoundtrackContent() {
     }, [currentTrack]);
 
     // High contrast adaptive icon color
-    const iconColor = useMemo(() => {
-        if (isDark) return currentTheme.from;
-        // Special accessibility color fallbacks for ultra-bright categories in light mode
-        if (currentTrack?.musicSoundTrackCategoryId === 4) return "#15803d"; // Deep emerald green
-        if (currentTrack?.musicSoundTrackCategoryId === 6) return "#c2410c"; // Deep sunset orange
-        return currentTheme.to;
-    }, [isDark, currentTheme, currentTrack]);
+    const iconColor = useMemo(
+        () => getCategoryTextColor(currentTrack?.musicSoundTrackCategoryId, isDark),
+        [isDark, currentTrack],
+    );
 
     const syncCurrentTime = useCallback((force = false) => {
         const audio = audioRef.current;
@@ -1209,22 +1220,16 @@ function SoundtrackContent() {
     };
 
     const displayDuration = currentTrack?.durationSeconds ?? duration;
-    const playerCardClassName = `relative overflow-hidden rounded-3xl bg-white/88 dark:bg-slate-900/82 border border-slate-200 dark:border-white/10 p-6 sm:p-8 shadow-xl dark:shadow-2xl transition-colors duration-500 ${isPerformanceVisuals ? "backdrop-blur-sm" : ""}`;
-    const toolbarClassName = `flex flex-col sm:flex-row gap-4 items-center justify-between rounded-2xl border border-slate-200 dark:border-white/5 p-4 ${isPerformanceVisuals ? "bg-white/80 dark:bg-slate-900/75 backdrop-blur-sm" : "bg-white/92 dark:bg-slate-900/88"}`;
-    const volumePopoverCardClassName = `bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-white/10 rounded-2xl p-4 shadow-xl flex flex-col items-center gap-3 ${isPerformanceVisuals ? "backdrop-blur-md" : ""}`;
-
-    // Calculate dynamic ambient background colors based on current track category
-    const ambientBgGlow = useMemo(() => {
-        const rawGlow = currentTheme.bgGlow;
-        if (isDark) return rawGlow;
-        // Replace -950/20 or -900/20 with -200/25 or -200/25 for beautiful light ambient glow
-        return rawGlow.replace(/-950/g, "-200").replace(/-900/g, "-200");
-    }, [currentTheme, isDark]);
+    // Flat opaque surfaces: the player is the page's structural panel, the toolbar
+    // and the volume popover are a tile and a floating layer sitting on top of it.
+    const playerCardClassName = "hh-panel relative overflow-hidden rounded-[var(--hh-radius-xl)] p-6 sm:p-8";
+    const toolbarClassName = "flex flex-col sm:flex-row gap-4 items-center justify-between rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] p-4";
+    const volumePopoverCardClassName = "hh-float flex flex-col items-center gap-3 rounded-[var(--hh-radius-xl)] p-4";
 
     const progressPercent = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0;
 
     return (
-        <div className="relative w-full text-slate-800 dark:text-white select-none transition-colors duration-1000">
+        <div className="relative w-full text-[var(--hh-text-primary)] select-none">
             {/* Embedded styles for spinning CD animations to ensure smooth pause/resumes */}
             <style dangerouslySetInnerHTML={{__html: `
                 @keyframes spin-cd {
@@ -1291,28 +1296,19 @@ function SoundtrackContent() {
                 }}
             />
 
-            {/* Ambient Lighting Layers */}
-            {isPerformanceVisuals && (
-                <>
-                    <div className={`absolute inset-0 bg-gradient-to-tr ${ambientBgGlow} opacity-35 blur-2xl pointer-events-none transition-colors duration-1000`} />
-                    <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-miku/8 blur-3xl pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-purple-500/4 blur-3xl pointer-events-none" />
-                </>
-            )}
-
             <div className="container mx-auto px-4 sm:px-6 py-8 relative z-10 max-w-7xl">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 border-b border-slate-200 dark:border-white/5 pb-6">
+                <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 border-b border-[var(--hh-border)] pb-6">
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 border border-miku/30 bg-miku/10 rounded-full mb-2">
-                            <span className={`w-1.5 h-1.5 rounded-full bg-miku ${shouldAnimateIdleUi ? "animate-pulse" : ""}`} />
-                            <span className="text-miku text-[10px] font-bold tracking-widest uppercase">{t("page.soundtrack.badge")}</span>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-sm)] mb-2">
+                            <span className={`w-1.5 h-1.5 rounded-full bg-[var(--hh-accent)] ${shouldAnimateIdleUi ? "animate-pulse" : ""}`} />
+                            <span className="hh-label text-[var(--hh-accent-deep)]">{t("page.soundtrack.badge")}</span>
                         </div>
-                        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-800 dark:text-white">
-                            {t("page.soundtrack.title")} <span className="text-transparent bg-clip-text bg-gradient-to-r from-miku to-cyan-400">{t("page.soundtrack.titleHighlight")}</span>
+                        <h1 className="hh-display text-2xl sm:text-3xl text-[var(--hh-text-primary)]">
+                            {t("page.soundtrack.title")} <span className="text-[var(--hh-accent-deep)]">{t("page.soundtrack.titleHighlight")}</span>
                         </h1>
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md md:text-right hidden sm:block">
+                    <p className="hh-body text-[var(--hh-text-secondary)] text-sm max-w-md md:text-right hidden sm:block">
                         {t("page.soundtrack.description")}
                     </p>
                 </div>
@@ -1320,32 +1316,26 @@ function SoundtrackContent() {
                 {/* Main Content Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                     
-                    {/* Left Column: Premium Music Player (Glass Card) */}
+                    {/* Left Column: Music player panel */}
                     <div className="lg:col-span-5 w-full">
                         <div className={playerCardClassName}>
                             
-                            {/* Accent Glow Overlay */}
-                            <div 
-                                className="absolute top-0 inset-x-0 h-[2px] opacity-60" 
-                                style={{ background: `linear-gradient(to right, transparent, ${currentTheme.from}, transparent)` }}
+                            {/* Accent rule marking the panel's top edge */}
+                            <div
+                                className="absolute top-0 inset-x-0 h-[2px]"
+                                style={{ background: currentTheme.from }}
                             />
 
                             {/* Album Art - Rotating CD */}
                             <div className="relative w-full aspect-square max-w-[280px] sm:max-w-[320px] mx-auto mb-8 flex items-center justify-center">
-                                {/* CD Case Shadow */}
-                                <div className="absolute inset-4 bg-black/20 dark:bg-black/40 rounded-full blur-lg scale-95 pointer-events-none" />
-
-                                {/* Vinyl Track Body */}
-                                <div className="relative w-full h-full rounded-full bg-neutral-950 p-[6px] border border-slate-800 shadow-inner flex items-center justify-center select-none">
+                                {/* Vinyl Track Body. The disc depicts physical media, so it stays
+                                    dark in both themes rather than following the surface ramp. */}
+                                <div className="relative w-full h-full rounded-full bg-neutral-950 p-[6px] border border-neutral-800 flex items-center justify-center select-none">
                                     {/* Concentric Grooves */}
                                     <div className="absolute inset-2 rounded-full border border-neutral-900/60 pointer-events-none" />
                                     <div className="absolute inset-6 rounded-full border border-neutral-900/60 pointer-events-none" />
                                     <div className="absolute inset-12 rounded-full border border-neutral-900/60 pointer-events-none" />
                                     <div className="absolute inset-20 rounded-full border border-neutral-900/60 pointer-events-none" />
-
-                                    {/* Light Reflection highlights */}
-                                    <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-60 mix-blend-overlay pointer-events-none z-10" />
-                                    <div className="absolute inset-0 rounded-full bg-gradient-to-bl from-white/0 via-white/5 to-white/0 opacity-60 mix-blend-overlay pointer-events-none z-10" />
 
                                     {/* Center spinning core */}
                                     <div className={`relative w-4/5 h-4/5 rounded-full overflow-hidden bg-neutral-900 flex items-center justify-center ${isPlaying ? "animate-cd-spin" : ""}`}>
@@ -1373,8 +1363,8 @@ function SoundtrackContent() {
                                         )}
 
                                         {/* CD Hole Trim */}
-                                        <div className="absolute w-12 h-12 rounded-full bg-neutral-950 border-4 border-neutral-800/80 shadow-md flex items-center justify-center z-20">
-                                            <div className="w-4 h-4 rounded-full bg-slate-950 shadow-inner" />
+                                        <div className="absolute w-12 h-12 rounded-full bg-neutral-950 border-4 border-neutral-800/80 flex items-center justify-center z-20">
+                                            <div className="w-4 h-4 rounded-full bg-neutral-950" />
                                         </div>
                                     </div>
                                 </div>
@@ -1383,30 +1373,30 @@ function SoundtrackContent() {
                             {/* Song Meta Info */}
                             <div className="text-center mb-6 px-2">
                                 <div key={currentTrack?.id || "empty"} className="transition-opacity duration-200">
-                                    <h3 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white truncate max-w-full">
+                                    <h3 className="hh-title text-xl text-[var(--hh-text-primary)] truncate max-w-full">
                                         {getDisplayTrackTitle(currentTrack, t)}
                                     </h3>
-                                    <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 truncate">
+                                    <p className="text-[var(--hh-text-secondary)] text-xs mt-1 truncate">
                                         {currentTrack?.pronunciation || t("page.soundtrack.pronunciationLoading")}
                                     </p>
                                     <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                                        <div className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                                        <div className="px-3 py-1 bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)] rounded-[var(--hh-radius-sm)] text-[10px] font-bold text-[var(--hh-text-secondary)]">
                                             {currentTrack ? (categoryMap.get(currentTrack.musicSoundTrackCategoryId)?.name || "BGM") : "..."}
                                         </div>
                                         {currentTrack?.isSpoiler && (
-                                            <span className="px-3 py-1 bg-orange-500/10 border border-orange-400/30 rounded-full text-[10px] font-bold text-orange-600 dark:text-orange-300">
+                                            <span className="px-3 py-1 bg-orange-500/10 border border-orange-400/30 rounded-[var(--hh-radius-sm)] text-[10px] font-bold text-orange-600 dark:text-orange-300">
                                                 {t("common.badge.spoiler")}
                                             </span>
                                         )}
                                         {currentTrack && Number.isFinite(displayDuration) && displayDuration > 0 && (
-                                            <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[10px] font-mono font-bold text-slate-500 dark:text-slate-300" title={t("page.soundtrack.durationLabel")}>
+                                            <span className="hh-numeric px-3 py-1 bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)] rounded-[var(--hh-radius-sm)] text-[10px] font-mono font-bold text-[var(--hh-text-secondary)]" title={t("page.soundtrack.durationLabel")}>
                                                 {formatTime(displayDuration)}
                                             </span>
                                         )}
                                         <button
                                             onClick={handleDownloadCurrentTrack}
                                             disabled={!currentTrack || !selectedAudioUrl || isDownloading}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-all hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                                            className="hh-press hh-focusable inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[10px] font-bold text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)] disabled:cursor-not-allowed disabled:opacity-40"
                                             title={isDownloading ? t("page.soundtrack.download.preparingTitle") : t("page.soundtrack.download.currentTitle")}
                                         >
                                             {isDownloading ? (
@@ -1426,7 +1416,7 @@ function SoundtrackContent() {
                                         <button
                                             onClick={handleShareCurrentTrack}
                                             disabled={!currentTrack}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-all hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                                            className="hh-press hh-focusable inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[10px] font-bold text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)] disabled:cursor-not-allowed disabled:opacity-40"
                                             title={t("page.soundtrack.share.currentTitle")}
                                         >
                                             <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -1443,12 +1433,12 @@ function SoundtrackContent() {
                             </div>
 
                             {audioError && (
-                                <div className="mb-4 rounded-xl border border-rose-300/60 bg-rose-50/80 px-3 py-2 text-center text-xs font-medium text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                                <div className="mb-4 rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-alert)]/45 bg-[var(--hh-accent-alert)]/10 px-3 py-2 text-center text-xs font-medium text-[var(--hh-accent-alert)] dark:text-rose-300">
                                     {audioError}
                                 </div>
                             )}
                             {(downloadHint || shareHint || durationWarning) && !audioError && (
-                                <div className="mb-4 rounded-xl border border-miku/30 bg-miku/10 px-3 py-2 text-center text-xs font-medium text-teal-700 dark:text-miku">
+                                <div className="mb-4 rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] px-3 py-2 text-center text-xs font-medium text-[var(--hh-accent-deep)]">
                                     {downloadHint || shareHint || durationWarning}
                                 </div>
                             )}
@@ -1462,12 +1452,14 @@ function SoundtrackContent() {
                                     value={currentTime}
                                     onChange={handleSeek}
                                     onPointerDown={() => syncCurrentTime(true)}
-                                    className="w-full h-1 bg-slate-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-miku hover:h-1.5 transition-all outline-none custom-slider-thumb"
+                                    className="w-full h-1 rounded-[var(--hh-radius-xs)] appearance-none cursor-pointer hover:h-1.5 transition-all outline-none custom-slider-thumb"
                                     style={{
-                                        background: `linear-gradient(to right, ${currentTheme.from} 0%, ${currentTheme.from} ${progressPercent}%, ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} ${progressPercent}%, ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 100%)`
+                                        background: `linear-gradient(to right, ${currentTheme.from} 0%, ${currentTheme.from} ${progressPercent}%, var(--hh-surface-inset) ${progressPercent}%, var(--hh-surface-inset) 100%)`
                                     }}
                                 />
-                                <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 dark:text-slate-400 mt-2">
+                                {/* Time codes are tabular: without tabular-nums the digits change
+                                    width every second and the whole row jitters during playback. */}
+                                <div className="hh-numeric flex justify-between items-center text-[10px] font-mono text-[var(--hh-text-secondary)] mt-2">
                                     <span>{formatTime(currentTime)}</span>
                                     <span>{formatTime(duration)}</span>
                                 </div>
@@ -1479,9 +1471,9 @@ function SoundtrackContent() {
                                 {/* Playback Mode (Cycle Button) */}
                                 <button
                                     onClick={cyclePlaybackMode}
-                                    className={`p-2.5 rounded-full transition-all duration-300 border active:scale-95 ${
+                                    className={`hh-press hh-focusable p-2.5 rounded-[var(--hh-radius-md)] border ${
                                         playbackMode === "sequential"
-                                            ? "text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border-transparent"
+                                            ? "border-transparent text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-sunken)]"
                                             : ""
                                     }`}
                                     style={
@@ -1489,8 +1481,7 @@ function SoundtrackContent() {
                                             ? {
                                                   background: `${currentTheme.from}18`,
                                                   borderColor: `${currentTheme.from}40`,
-                                                  color: iconColor,
-                                                  boxShadow: `0 4px 12px ${currentTheme.from}15`
+                                                  color: iconColor
                                               }
                                             : undefined
                                     }
@@ -1536,7 +1527,7 @@ function SoundtrackContent() {
                                     {/* Prev Button */}
                                     <button
                                         onClick={playPrevious}
-                                        className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-all active:scale-95 border border-transparent"
+                                        className="hh-press hh-focusable p-2.5 text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] border border-transparent"
                                         title={t("page.soundtrack.controls.previous")}
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -1545,18 +1536,14 @@ function SoundtrackContent() {
                                         </svg>
                                     </button>
 
-                                    {/* Play / Pause */}
+                                    {/* Play / Pause. Round because it depicts a physical transport
+                                        button, which is the one shape the radius ladder exempts. */}
                                     <button
                                         onClick={togglePlay}
-                                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-bold hover:scale-105 transition-all active:scale-95 flex-shrink-0 border"
+                                        className="hh-press hh-focusable w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-bold flex-shrink-0 border"
                                         style={{
-                                            background: isDark 
-                                                ? `linear-gradient(135deg, ${currentTheme.from}22, ${currentTheme.to}12)`
-                                                : `linear-gradient(135deg, ${currentTheme.from}15, ${currentTheme.to}0a)`,
-                                            borderColor: `${currentTheme.from}40`,
-                                            boxShadow: isDark
-                                                ? `0 8px 24px ${currentTheme.from}15, inset 0 1px 0 rgba(255,255,255,0.05)`
-                                                : `0 8px 24px ${currentTheme.from}10, inset 0 1px 0 rgba(255,255,255,0.4)`
+                                            background: `${currentTheme.from}1a`,
+                                            borderColor: `${currentTheme.from}40`
                                         }}
                                         title={isPlaying ? t("page.soundtrack.controls.pause") : t("page.soundtrack.controls.play")}
                                     >
@@ -1589,7 +1576,7 @@ function SoundtrackContent() {
                                     {/* Next Button */}
                                     <button
                                         onClick={playNext}
-                                        className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-all active:scale-95 border border-transparent"
+                                        className="hh-press hh-focusable p-2.5 text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] border border-transparent"
                                         title={t("page.soundtrack.controls.next")}
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -1618,7 +1605,7 @@ function SoundtrackContent() {
                                             className={volumePopoverCardClassName}
                                             onClick={(e) => e.stopPropagation()}
                                         >
-                                            <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
+                                            <span className="hh-numeric text-[10px] font-mono font-bold text-[var(--hh-text-secondary)]">
                                                 {`${Math.round(volume * 100)}%`}
                                             </span>
                                             <div
@@ -1661,13 +1648,12 @@ function SoundtrackContent() {
                                                     }
                                                 }}
                                             >
-                                                <div className="h-24 w-1.5 bg-slate-200 dark:bg-white/10 rounded-full relative overflow-hidden flex items-end pointer-events-none">
+                                                <div className="h-24 w-1.5 bg-[var(--hh-surface-inset)] rounded-full relative overflow-hidden flex items-end pointer-events-none">
                                                     <div
                                                         className="w-full rounded-full transition-all duration-75"
                                                         style={{
                                                             height: `${volume * 100}%`,
-                                                            background: currentTheme.from,
-                                                            boxShadow: `0 0 8px ${currentTheme.from}60`
+                                                            background: currentTheme.from
                                                         }}
                                                     />
                                                 </div>
@@ -1680,7 +1666,7 @@ function SoundtrackContent() {
                                             e.stopPropagation();
                                             setShowVolumePopup(!showVolumePopup);
                                         }}
-                                        className="p-2.5 rounded-full transition-all duration-300 border border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 active:scale-95"
+                                        className="hh-press hh-focusable p-2.5 rounded-[var(--hh-radius-md)] border border-transparent text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-sunken)]"
                                         title={t("page.soundtrack.controls.volumeAdjust")}
                                     >
                                         {volume === 0 ? (
@@ -1712,8 +1698,8 @@ function SoundtrackContent() {
 
                         {/* Category Cards Filter Carousel */}
                         <div className="w-full">
-                            <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                                <svg className="w-4 h-4 text-miku" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <h4 className="hh-title text-sm text-[var(--hh-text-primary)] mb-3 flex items-center gap-2">
+                                <svg className="w-4 h-4 text-[var(--hh-accent-deep)]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581a2.25 2.25 0 003.182 0l5.178-5.178a2.25 2.25 0 000-3.182l-9.581-9.58a2.25 2.25 0 00-1.591-.659z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                                 </svg>
@@ -1725,35 +1711,33 @@ function SoundtrackContent() {
                                 {/* "ALL" Card */}
                                 <button
                                     onClick={() => selectCategory(null)}
-                                    className={`relative flex-shrink-0 w-24 h-16 rounded-xl overflow-hidden border transition-all text-left flex flex-col justify-between p-2.5 ${
+                                    className={`hh-press relative flex-shrink-0 w-24 h-16 rounded-[var(--hh-radius-lg)] overflow-hidden border text-left flex flex-col justify-between p-2.5 ${
                                         selectedCategoryId === null
-                                            ? "border-miku bg-miku/10 shadow-lg shadow-miku/5"
-                                            : "border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-white/20 hover:scale-[1.02]"
+                                            ? "border-[var(--hh-accent)] bg-[var(--hh-accent-wash)]"
+                                            : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] hover:bg-[var(--hh-surface-3)] hover:border-[var(--hh-border-strong)]"
                                     }`}
                                 >
-                                    <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">ALL</span>
-                                    <span className={`text-xs font-bold ${selectedCategoryId === null ? "text-miku" : "text-slate-800 dark:text-white"}`}>{t("page.soundtrack.allCategory")}</span>
+                                    <span className="hh-label">ALL</span>
+                                    <span className={`text-xs font-bold ${selectedCategoryId === null ? "text-[var(--hh-accent-deep)]" : "text-[var(--hh-text-primary)]"}`}>{t("page.soundtrack.allCategory")}</span>
                                 </button>
 
                                 {/* Spoiler-only supplemental BGM category */}
                                 {isShowSpoiler && (
                                     <button
                                         onClick={() => selectCategory(SPOILER_CATEGORY_FILTER)}
-                                        className={`relative flex-shrink-0 w-32 h-16 rounded-xl overflow-hidden border transition-all text-left flex flex-col justify-between p-2.5 group ${
+                                        className={`hh-press relative flex-shrink-0 w-32 h-16 rounded-[var(--hh-radius-lg)] overflow-hidden border text-left flex flex-col justify-between p-2.5 ${
                                             selectedCategoryId === SPOILER_CATEGORY_FILTER
-                                                ? "bg-white/90 dark:bg-slate-900/80 shadow-lg"
-                                                : "border-slate-200 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 hover:border-slate-300 dark:hover:border-white/20 hover:scale-[1.02]"
+                                                ? "bg-[var(--hh-surface-3)]"
+                                                : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] hover:bg-[var(--hh-surface-3)] hover:border-[var(--hh-border-strong)]"
                                         }`}
                                         style={{
                                             borderColor: selectedCategoryId === SPOILER_CATEGORY_FILTER ? SPOILER_CATEGORY_THEME.from : undefined,
-                                            boxShadow: selectedCategoryId === SPOILER_CATEGORY_FILTER ? `0 4px 14px ${SPOILER_CATEGORY_THEME.from}25` : undefined,
                                         }}
                                     >
-                                        <div className="absolute inset-0 opacity-15 dark:opacity-20 bg-gradient-to-br from-orange-300 via-rose-400 to-amber-500 group-hover:scale-105 transition-transform duration-500" />
-                                        <span className="text-[8px] font-bold text-orange-500 dark:text-orange-300 tracking-wider relative z-10">
-                                            {t("common.badge.spoiler")} · {formatNumber(spoilerTrackCount)}
+                                        <span className="text-[8px] font-bold text-orange-600 dark:text-orange-300 tracking-wider relative z-10">
+                                            {t("common.badge.spoiler")} · <span className="hh-numeric">{formatNumber(spoilerTrackCount)}</span>
                                         </span>
-                                        <span className={`text-xs font-bold ${selectedCategoryId === SPOILER_CATEGORY_FILTER ? "text-slate-900 dark:text-white" : "text-slate-800 dark:text-white"} relative z-10 block truncate max-w-full`}>
+                                        <span className="text-xs font-bold text-[var(--hh-text-primary)] relative z-10 block truncate max-w-full">
                                             {t("page.soundtrack.spoiler.categoryName")}
                                         </span>
                                     </button>
@@ -1768,19 +1752,19 @@ function SoundtrackContent() {
                                         <button
                                             key={cat.id}
                                             onClick={() => selectCategory(cat.id)}
-                                            className={`relative flex-shrink-0 w-32 h-16 rounded-xl overflow-hidden border transition-all text-left flex flex-col justify-between p-2.5 group ${
+                                            className={`hh-press relative flex-shrink-0 w-32 h-16 rounded-[var(--hh-radius-lg)] overflow-hidden border text-left flex flex-col justify-between p-2.5 ${
                                                 active
-                                                    ? "bg-white/90 dark:bg-slate-900/80 shadow-lg"
-                                                    : "border-slate-200 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 hover:border-slate-300 dark:hover:border-white/20 hover:scale-[1.02]"
+                                                    ? "bg-[var(--hh-surface-3)]"
+                                                    : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] hover:bg-[var(--hh-surface-3)] hover:border-[var(--hh-border-strong)]"
                                             }`}
                                             style={{
-                                                borderColor: active ? theme.from : undefined,
-                                                boxShadow: active ? `0 4px 14px ${theme.from}25` : undefined
+                                                borderColor: active ? theme.from : undefined
                                             }}
                                         >
-                                            {/* Blurred Image Background */}
+                                            {/* Jacket artwork behind the label, kept faint so the
+                                                text stays the primary read. */}
                                             {isPerformanceVisuals && (
-                                                <div className="absolute inset-0 opacity-15 dark:opacity-20 filter blur-xs group-hover:scale-105 transition-transform duration-500">
+                                                <div className="absolute inset-0 opacity-15 dark:opacity-20">
                                                     <Image
                                                         src={getMysekaiRawAssetUrl(`music_record_soundtrack/jacket/${cat.assetbundleName}/${cat.assetbundleName}.webp`, assetSource)}
                                                         alt={cat.name}
@@ -1792,12 +1776,12 @@ function SoundtrackContent() {
                                             )}
 
                                             {/* Category Indicator Tag */}
-                                            <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                                            <span className="hh-numeric text-[8px] font-bold text-[var(--hh-text-secondary)] tracking-wider relative z-10">
                                                 CAT #{cat.id}
                                             </span>
                                             
                                             {/* Name */}
-                                            <span className={`text-xs font-bold ${active ? "text-slate-900 dark:text-white" : "text-slate-800 dark:text-white"} relative z-10 block truncate max-w-full`}>
+                                            <span className="text-xs font-bold text-[var(--hh-text-primary)] relative z-10 block truncate max-w-full">
                                                 {cat.name}
                                             </span>
                                         </button>
@@ -1811,7 +1795,7 @@ function SoundtrackContent() {
                             
                             {/* Fuzzy Search Box */}
                             <div className="relative w-full sm:w-72">
-                                <svg className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <svg className="absolute left-3.5 top-3.5 w-4 h-4 text-[var(--hh-text-tertiary)] pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                                 <input
@@ -1820,12 +1804,12 @@ function SoundtrackContent() {
                                     placeholder={t("page.soundtrack.filters.searchPlaceholder")}
                                     value={searchQuery}
                                     onChange={(e) => handleSearch(e.target.value)}
-                                    className="w-full bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-miku/50 focus:ring-1 focus:ring-miku/50 transition-colors"
+                                    className="hh-input w-full py-2.5 pl-10 pr-4 text-xs"
                                 />
                                 {searchQuery && (
                                     <button
                                         onClick={() => handleSearch("")}
-                                        className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors"
+                                        className="absolute right-3.5 top-3.5 text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] transition-colors"
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1838,10 +1822,10 @@ function SoundtrackContent() {
                             <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto justify-end">
                                 <button
                                     onClick={() => toggleSort("seq")}
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border active:scale-95 ${
+                                    className={`hh-press hh-focusable px-4 py-2 rounded-[var(--hh-radius-md)] text-xs font-bold flex items-center gap-1.5 border ${
                                         sortBy === "seq"
                                             ? ""
-                                            : "bg-slate-100 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white border-slate-200 dark:border-white/5"
+                                            : "bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)] border-[var(--hh-border)]"
                                     }`}
                                     style={
                                         sortBy === "seq"
@@ -1862,10 +1846,10 @@ function SoundtrackContent() {
                                 </button>
                                 <button
                                     onClick={() => toggleSort("title")}
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border active:scale-95 ${
+                                    className={`hh-press hh-focusable px-4 py-2 rounded-[var(--hh-radius-md)] text-xs font-bold flex items-center gap-1.5 border ${
                                         sortBy === "title"
                                             ? ""
-                                            : "bg-slate-100 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white border-slate-200 dark:border-white/5"
+                                            : "bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)] border-[var(--hh-border)]"
                                     }`}
                                     style={
                                         sortBy === "title"
@@ -1888,49 +1872,55 @@ function SoundtrackContent() {
                         </div>
 
                         {/* Playlist Box */}
-                        <div className="relative rounded-3xl bg-white/50 dark:bg-slate-900/20 border border-slate-200 dark:border-white/5 overflow-hidden flex-1 flex flex-col min-h-[420px] max-h-[560px]">
+                        <div className="hh-well relative rounded-[var(--hh-radius-xl)] overflow-hidden flex-1 flex flex-col min-h-[420px] max-h-[560px]">
                             
                             {/* Inner Scroll container with custom light/dark adaptive thin scrollbar */}
                             <div className="overflow-y-auto flex-1 p-3 custom-playlist-scrollbar" onScroll={handlePlaylistScroll}>
                                 {isLoading ? (
                                     <div className="flex flex-col items-center justify-center h-80 gap-3">
                                         <div className="loading-spinner loading-spinner-sm" />
-                                        <p className="text-slate-500 dark:text-slate-400 text-xs">{t("page.soundtrack.states.loading")}</p>
+                                        <p className="text-[var(--hh-text-secondary)] text-xs">{t("page.soundtrack.states.loading")}</p>
                                     </div>
                                 ) : error ? (
-                                    <div className="flex flex-col items-center justify-center h-80 text-center p-6 border-2 border-dashed border-rose-200 dark:border-rose-500/20 rounded-2xl m-3">
-                                        <svg className="w-10 h-10 text-rose-400 dark:text-rose-300 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                                    <div className="flex flex-col items-center justify-center h-80 text-center p-6 border-2 border-dashed border-[var(--hh-accent-alert)]/40 rounded-[var(--hh-radius-lg)] m-3">
+                                        <svg className="w-10 h-10 text-[var(--hh-accent-alert)] mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                                         </svg>
-                                        <p className="text-rose-600 dark:text-rose-300 font-bold text-sm">{t("page.soundtrack.states.loadFailedTitle")}</p>
-                                        <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{error}</p>
+                                        <p className="text-[var(--hh-accent-alert)] font-bold text-sm">{t("page.soundtrack.states.loadFailedTitle")}</p>
+                                        <p className="text-[var(--hh-text-tertiary)] text-xs mt-1">{error}</p>
                                     </div>
                                 ) : filteredTracks.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center h-80 text-center p-6 border-2 border-dashed border-slate-200 dark:border-white/5 rounded-2xl m-3">
-                                        <svg className="w-10 h-10 text-slate-400 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                    <div className="flex flex-col items-center justify-center h-80 text-center p-6 border-2 border-dashed border-[var(--hh-border)] rounded-[var(--hh-radius-lg)] m-3">
+                                        <svg className="w-10 h-10 text-[var(--hh-text-tertiary)] mb-3" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                                             <circle cx="10" cy="18" r="3" />
                                             <path d="M13 18V5l7-1.5v10" />
                                             <circle cx="20" cy="14" r="2" />
                                             <path d="M3 5h5" />
                                             <path d="M3 9h3" />
                                         </svg>
-                                        <p className="text-slate-700 dark:text-slate-400 font-bold text-sm">{t("page.soundtrack.states.noResultsTitle")}</p>
-                                        <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{t("page.soundtrack.states.noResultsDescription")}</p>
+                                        <p className="text-[var(--hh-text-primary)] font-bold text-sm">{t("page.soundtrack.states.noResultsTitle")}</p>
+                                        <p className="text-[var(--hh-text-tertiary)] text-xs mt-1">{t("page.soundtrack.states.noResultsDescription")}</p>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col gap-1.5">
-                                        {displayedTracks.map((track) => {
+                                    /* Rows are separated by hairlines rather than gaps and shadows:
+                                       a few hundred individually elevated rows is both visually
+                                       noisy and expensive to composite while scrolling. */
+                                    <div className="flex flex-col rounded-[var(--hh-radius-lg)] overflow-hidden border border-[var(--hh-border-hairline)] bg-[var(--hh-surface-2)]">
+                                        {displayedTracks.map((track, trackIndex) => {
                                             const isActive = currentTrack?.id === track.id;
                                             const trackTheme = CATEGORY_THEMES[track.musicSoundTrackCategoryId] ?? DEFAULT_THEME;
+                                            const trackTextColor = getCategoryTextColor(track.musicSoundTrackCategoryId, isDark);
                                             
                                             return (
                                                 <button
                                                     key={track.id}
                                                     onClick={() => handleTrackSelect(track)}
-                                                    className={`group w-full flex items-center justify-between p-3.5 rounded-2xl text-left border transition-all ${
+                                                    className={`group w-full flex items-center justify-between p-3.5 text-left transition-colors ${
+                                                        trackIndex > 0 ? "border-t border-[var(--hh-border-hairline)]" : ""
+                                                    } ${
                                                         isActive
-                                                            ? "bg-white/80 dark:bg-white/5 border-slate-300 dark:border-white/10 shadow-sm"
-                                                            : "bg-slate-50/50 dark:bg-slate-900/10 border-transparent hover:bg-white/60 dark:hover:bg-white/5"
+                                                            ? "bg-[var(--hh-accent-wash)]"
+                                                            : "hover:bg-[var(--hh-surface-3)]"
                                                     }`}
                                                 >
                                                     <div className="flex items-center gap-3.5 min-w-0 flex-1">
@@ -1944,14 +1934,19 @@ function SoundtrackContent() {
                                                                     <div className="w-0.75 h-1 animate-pulse rounded-sm" style={{ backgroundColor: trackTheme.from, animationDuration: "0.3s" }} />
                                                                 </div>
                                                             ) : (
-                                                                <span className={`font-mono text-xs ${isActive ? trackTheme.text : "text-slate-500"} font-bold`}>
+                                                                /* Track numbers are tabular so the index column stays
+                                                                   a straight edge down a few hundred rows. */
+                                                                <span
+                                                                    className="hh-numeric font-mono text-xs font-bold"
+                                                                    style={{ color: isActive ? trackTextColor : "var(--hh-text-secondary)" }}
+                                                                >
                                                                     {track.seq.toString().padStart(3, "0")}
                                                                 </span>
                                                             )}
                                                         </div>
 
                                                         {/* Cover thumbnail */}
-                                                        <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 dark:border-white/5">
+                                                        <div className="relative w-10 h-10 rounded-[var(--hh-radius-sm)] overflow-hidden flex-shrink-0 border border-[var(--hh-border)]">
                                                             <Image
                                                                 src={(() => {
                                                                     const jacketName = categoryMap.get(track.musicSoundTrackCategoryId)?.assetbundleName ?? "jacket_s_soundtrack_1";
@@ -1967,7 +1962,8 @@ function SoundtrackContent() {
                                                                 loading="lazy"
                                                                 unoptimized
                                                             />
-                                                            {/* Hover Play Arrow Overlay */}
+                                                            {/* Hover play affordance. White-on-dark is correct here:
+                                                                the scrim sits over arbitrary jacket artwork. */}
                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                                  <svg className="w-4 h-4 text-white fill-white" viewBox="0 0 24 24">
                                                                     <path d="M8 5v14l11-7z" />
@@ -1977,10 +1973,13 @@ function SoundtrackContent() {
 
                                                         {/* Titles */}
                                                         <div className="min-w-0 flex-1">
-                                                            <h5 className={`text-sm font-bold truncate transition-colors ${isActive ? trackTheme.text : "text-slate-800 dark:text-white group-hover:text-miku"}`}>
+                                                            <h5
+                                                                className="text-sm font-bold truncate transition-colors"
+                                                                style={{ color: isActive ? trackTextColor : "var(--hh-text-primary)" }}
+                                                            >
                                                                 {getDisplayTrackTitle(track, t)}
                                                             </h5>
-                                                            <p className="text-slate-500 text-[10px] truncate mt-0.5 font-sans font-medium">
+                                                            <p className="text-[var(--hh-text-tertiary)] text-[10px] truncate mt-0.5 font-sans font-medium">
                                                                 {track.pronunciation}
                                                             </p>
                                                         </div>
@@ -1988,22 +1987,22 @@ function SoundtrackContent() {
 
                                                     {/* Right info: category tag, spoiler badge, duration, and action hint */}
                                                     <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-                                                        <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/5 max-w-[80px] truncate">
+                                                        <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-[var(--hh-radius-xs)] text-[9px] font-bold border bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] border-[var(--hh-border)] max-w-[80px] truncate">
                                                             {categoryMap.get(track.musicSoundTrackCategoryId)?.name || "BGM"}
                                                         </span>
                                                         {track.isSpoiler && (
-                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-orange-500 text-white shadow-sm">
+                                                            <span className="px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-[9px] font-bold bg-orange-500 text-white">
                                                                 {t("common.badge.spoiler")}
                                                             </span>
                                                         )}
                                                         {track.durationSeconds !== undefined && (
-                                                            <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/5">
+                                                            <span className="hh-numeric hidden sm:inline-block px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-[9px] font-mono font-bold bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] border border-[var(--hh-border)]">
                                                                 {formatTime(track.durationSeconds)}
                                                             </span>
                                                         )}
                                                         
                                                         {/* Simple chevron indicating interactive row */}
-                                                        <svg className={`w-4 h-4 transition-transform ${isActive ? "text-slate-800 dark:text-white" : "text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-300 group-hover:translate-x-0.5"}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                                        <svg className={`w-4 h-4 transition-transform ${isActive ? "text-[var(--hh-text-primary)]" : "text-[var(--hh-text-tertiary)] group-hover:text-[var(--hh-text-secondary)] group-hover:translate-x-0.5"}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                                         </svg>
                                                     </div>
@@ -2011,11 +2010,11 @@ function SoundtrackContent() {
                                             );
                                         })}
                                         {hasMoreTracks && (
-                                            <div className="flex justify-center py-3">
+                                            <div className="flex justify-center py-3 border-t border-[var(--hh-border-hairline)]">
                                                 <button
                                                     type="button"
                                                     onClick={() => setVisibleTrackLimit(limit => Math.min(limit + SOUNDTRACK_LIST_BATCH_SIZE, filteredTracks.length))}
-                                                    className="rounded-full border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-white/5 px-4 py-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-300 transition-colors hover:text-slate-800 dark:hover:text-white"
+                                                    className="hh-numeric hh-press hh-focusable rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] px-4 py-1.5 text-[10px] font-bold text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)]"
                                                 >
                                                     {formatNumber(Math.min(visibleTrackLimit, filteredTracks.length))} / {formatNumber(filteredTracks.length)}
                                                 </button>
@@ -2026,7 +2025,7 @@ function SoundtrackContent() {
                             </div>
 
                             {/* Playlist footer statistics */}
-                            <div className="bg-slate-100/80 dark:bg-slate-950/80 border-t border-slate-200 dark:border-white/5 py-3 px-6 text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            <div className="hh-label bg-[var(--hh-surface-1)] border-t border-[var(--hh-border)] py-3 px-6 text-center">
                                 {t("page.soundtrack.footer", {
                                     shown: formatNumber(filteredTracks.length),
                                     total: formatNumber(tracks.length),
@@ -2048,7 +2047,7 @@ export default function SoundtrackClient() {
     return (
         <MainLayout>
             <Suspense fallback={
-                <div className="flex h-[80vh] w-full items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-500 select-none">
+                <div className="flex h-[80vh] w-full items-center justify-center bg-[var(--hh-surface-0)] text-[var(--hh-text-secondary)] select-none">
                     <div className="flex flex-col items-center gap-3">
                         <div className="loading-spinner loading-spinner-sm" />
                         <p className="text-xs">{t("page.soundtrack.states.suspenseLoading")}</p>

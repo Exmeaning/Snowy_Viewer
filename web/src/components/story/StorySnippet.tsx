@@ -66,18 +66,22 @@ export function TalkSnippet({
     const badgeIcon = badgeUnitId ? UNIT_ICON_FILES[badgeUnitId] : null;
 
     return (
-        <div 
-            className={`ios-glass-card rounded-xl p-4 my-3 relative border-none shadow-sm overflow-hidden transition-all duration-300 ${
-                active 
-                    ? "ring-2 ring-miku shadow-[0_0_20px_rgba(51,204,187,0.3)] scale-[1.01] z-10" 
-                    : ""
+        <div
+            // A dialogue box is an opaque slab with a hairline border, not a
+            // translucent bubble. The active line is marked by an accent border
+            // and a raise rather than a ring + scale, so the reading column never
+            // shifts width while autoplay walks down it.
+            className={`rounded-[var(--hh-radius-lg)] p-4 my-3 relative overflow-hidden bg-[var(--hh-surface-2)] border transition-colors duration-200 ${
+                active
+                    ? "border-[var(--hh-accent)] shadow-[var(--hh-shadow-raised)] z-10"
+                    : "border-[var(--hh-border)] shadow-[var(--hh-shadow-tile)]"
             }`}
         >
-            {/* Smooth linear frosted brand progress bar */}
+            {/* Playback progress rail for the line currently being voiced. */}
             {active && (
-                <div 
-                    className="absolute top-0 left-0 h-[3px] bg-gradient-to-r from-miku to-cyan-400 transition-all duration-100 shadow-[0_0_8px_var(--color-miku)]" 
-                    style={{ width: `${progress}%` }} 
+                <div
+                    className="absolute top-0 left-0 h-[3px] bg-[var(--hh-accent)] transition-all duration-100"
+                    style={{ width: `${progress}%` }}
                 />
             )}
             <div className="flex items-start gap-3">
@@ -88,10 +92,10 @@ export function TalkSnippet({
                             <img
                                 src={iconUrl}
                                 alt={characterName}
-                                className="w-12 h-12 rounded-full object-cover bg-slate-100 dark:bg-slate-700 border-2 border-miku/30"
+                                className="w-12 h-12 rounded-[var(--hh-radius-full)] object-cover bg-[var(--hh-surface-sunken)] border-2 border-[var(--hh-accent-line)]"
                             />
                             {badgeIcon && (
-                                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center">
+                                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-2)] border border-[var(--hh-border)] flex items-center justify-center">
                                     <Image
                                         src={`/data/icon/${badgeIcon}`}
                                         alt=""
@@ -104,8 +108,8 @@ export function TalkSnippet({
                             )}
                         </>
                     ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center border-2 border-slate-300 dark:border-slate-600">
-                            <span className="text-white text-sm font-bold">
+                        <div className="w-12 h-12 rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-inset)] flex items-center justify-center border-2 border-[var(--hh-border-strong)]">
+                            <span className="text-[var(--hh-text-secondary)] text-sm font-bold">
                                 {characterName.charAt(0)}
                             </span>
                         </div>
@@ -116,24 +120,24 @@ export function TalkSnippet({
                 <div className="flex-1 min-w-0">
                     {/* Character Name Badge */}
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <span className="inline-block px-2.5 py-0.5 bg-miku/10 text-miku text-sm font-medium rounded-full border border-miku/20">
+                        <span className="hh-chip hh-chip-active">
                             {characterName}
                         </span>
                         {showTranslatedDisplayName && (
-                            <span className="inline-block px-2.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-full border border-slate-200 dark:border-slate-600">
+                            <span className="hh-chip">
                                 {displayNameTranslation}
                             </span>
                         )}
                     </div>
 
                     {/* Dialogue Text */}
-                    <p className="text-primary-text text-base leading-relaxed whitespace-pre-wrap">
+                    <p className="hh-body text-[var(--hh-text-primary)] text-base whitespace-pre-wrap">
                         {text}
                     </p>
 
-                    {/* CN Translation */}
+                    {/* Translated line, separated from the source by a hairline. */}
                     {showTranslatedText && (
-                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed whitespace-pre-wrap mt-1.5 pt-1.5 border-t border-slate-200/50 dark:border-slate-700/50">
+                        <p className="hh-body text-[var(--hh-text-secondary)] text-sm whitespace-pre-wrap mt-1.5 pt-1.5 border-t border-[var(--hh-border)]">
                             {displayTranslation}
                         </p>
                     )}
@@ -154,6 +158,17 @@ interface SpecialEffectSnippetProps {
     resource?: string;
 }
 
+/* Directive tag shared by every special-effect marker.
+   The hue identifies the directive type and is carried by the border and the
+   tint only — deliberately not by the text color. Two reasons: handheld-os.css
+   is imported unlayered so .hh-label's `color` would beat any Tailwind
+   `text-*` on the same element, and `dark:` here resolves to
+   prefers-color-scheme rather than this app's [data-theme] attribute, so a
+   hue/dark-hue text pair would desync from a manually chosen theme. Keeping
+   text on --hh-text-secondary lets the theme own legibility while the hue
+   still reads at a glance. */
+const SE_TAG = "hh-label px-2 py-0.5 rounded-[var(--hh-radius-sm)] border";
+
 // Helper function to check if a background is a CG
 function isCgImage(picName: string): boolean {
     if (picName.startsWith('bg_a')) {
@@ -170,21 +185,22 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
     switch (seType) {
         case "FullScreenText":
+            // In-game this is white text on a blacked-out screen, so the dark
+            // slab is content, not theming — it stays dark in light mode too and
+            // the hardcoded ink is what keeps the white text legible.
             return (
-                <div className="ios-glass-panel rounded-2xl p-6 my-4 shadow-xl border border-purple-500/30 dark:border-purple-500/20 relative overflow-hidden backdrop-blur-3xl bg-slate-950/75 dark:bg-slate-950/85">
-                    {/* Decorative glow */}
-                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
-                    <div className="flex items-center gap-2 mb-3 relative z-10">
-                        <span className="px-2.5 py-0.5 bg-purple-500/20 text-purple-300 text-xs font-semibold rounded-full border border-purple-500/30 tracking-wider shadow-sm">
+                <div className="rounded-[var(--hh-radius-lg)] p-6 my-4 border border-[#3a3b41] bg-[#1c1d21] relative overflow-hidden">
+                    <div className="flex items-center gap-2 mb-3">
+                        <span className={SE_TAG + " border-purple-400/45 bg-purple-400/15 !text-[#d6bcfa]"}>
                             {t("page.story.snippet.fullScreenText")}
                         </span>
                     </div>
-                    <p className="text-white text-lg sm:text-xl font-light leading-relaxed text-center whitespace-pre-wrap my-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] relative z-10">
+                    <p className="hh-body text-white text-lg sm:text-xl text-center whitespace-pre-wrap my-4">
                         {text?.trimStart()}
                     </p>
                     {resource && (
-                        <div className="flex justify-center mt-3 relative z-10">
-                            <AudioPlayButton url={resource} className="shadow-[0_0_15px_rgba(168,85,247,0.4)] bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30" />
+                        <div className="flex justify-center mt-3">
+                            <AudioPlayButton url={resource} className="bg-purple-400/15 text-purple-300 border border-purple-400/40 hover:bg-purple-400/25" />
                         </div>
                     )}
                 </div>
@@ -192,15 +208,13 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "Telop":
             return (
-                <div className="ios-glass-card rounded-xl p-4 my-3 border border-amber-500/30 dark:border-amber-500/20 bg-gradient-to-r from-amber-50/50 to-orange-50/50 dark:from-amber-950/40 dark:to-orange-950/40 relative overflow-hidden">
-                    {/* Subtle warm decorative glow */}
-                    <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
-                    <div className="flex items-center gap-2 mb-2 relative z-10">
-                        <span className="px-2.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-300 text-xs font-semibold rounded-full border border-amber-500/30 tracking-wider shadow-sm">
+                <div className="rounded-[var(--hh-radius-lg)] p-4 my-3 border border-[var(--hh-border)] border-l-4 border-l-amber-500 bg-[var(--hh-surface-1)]">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className={SE_TAG + " border-amber-500/45 bg-amber-500/15"}>
                             {t("page.story.snippet.telop")}
                         </span>
                     </div>
-                    <p className="text-amber-900 dark:text-amber-100 text-base leading-relaxed text-center font-medium whitespace-pre-wrap relative z-10">
+                    <p className="hh-body text-[var(--hh-text-primary)] text-base text-center font-medium whitespace-pre-wrap">
                         {text?.trimStart()}
                     </p>
                 </div>
@@ -208,13 +222,13 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "PlaceInfo":
             return (
-                <div className="ios-glass-card rounded-xl p-4 my-3 border border-blue-500/30 dark:border-blue-500/20 bg-blue-50/20 dark:bg-blue-950/20">
+                <div className="rounded-[var(--hh-radius-lg)] p-4 my-3 border border-[var(--hh-border)] border-l-4 border-l-blue-500 bg-[var(--hh-surface-1)]">
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2.5 py-0.5 bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full">
+                        <span className={SE_TAG + " border-blue-500/45 bg-blue-500/15"}>
                             {t("page.story.snippet.placeInfo")}
                         </span>
                     </div>
-                    <p className="text-slate-700 dark:text-slate-300 text-base leading-relaxed font-medium">
+                    <p className="hh-body text-[var(--hh-text-primary)] text-base font-medium">
                         {t("page.story.snippet.placeText", { place: text })}
                     </p>
                 </div>
@@ -224,28 +238,28 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
             //case "ChangeBackgroundStill":
             const isCg = isCgImage(text || '');
             return (
-                <div className="ios-glass-card rounded-xl p-4 my-3 border border-emerald-500/30 dark:border-emerald-500/20 bg-emerald-50/10 dark:bg-emerald-950/10">
+                <div className="rounded-[var(--hh-radius-lg)] p-4 my-3 border border-[var(--hh-border)] border-l-4 border-l-emerald-500 bg-[var(--hh-surface-1)]">
                     <div className="flex items-center gap-2 mb-3">
-                        <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium rounded-full">
+                        <span className={SE_TAG + " border-emerald-500/45 bg-emerald-500/15"}>
                             {isCg ? t("page.story.snippet.cgInsert") : t("page.story.snippet.backgroundChange")}
                         </span>
                     </div>
 
                     {isImageOpen && resource ? (
                         <div
-                            className="cursor-pointer overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+                            className="cursor-pointer overflow-hidden rounded-[var(--hh-radius-md)] border border-[var(--hh-border)]"
                             onClick={() => window.open(resource, "_blank")}
                         >
                             <img
                                 src={resource}
                                 alt="Background"
-                                className="w-full rounded-lg hover:scale-[1.02] transition-transform duration-500"
+                                className="w-full"
                             />
                         </div>
                     ) : (
                         <button
                             onClick={() => setIsImageOpen(true)}
-                            className="ios-glass-btn px-4 py-2 text-sm font-medium rounded-lg text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/10"
+                            className="hh-btn hh-press px-4 py-2 text-sm"
                         >
                             {isCg ? t("page.story.snippet.showCg") : t("page.story.snippet.showBackground")}
                         </button>
@@ -255,9 +269,9 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "FlashbackIn":
             return (
-                <div className="ios-glass-card rounded-xl p-3 my-3 border border-yellow-500/30 dark:border-yellow-500/20 bg-yellow-500/10">
+                <div className="rounded-[var(--hh-radius-lg)] p-3 my-3 border border-[var(--hh-border)] border-l-4 border-l-yellow-500 bg-[var(--hh-surface-1)]">
                     <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-xs font-medium rounded-full">
+                        <span className={SE_TAG + " border-yellow-500/45 bg-yellow-500/15"}>
                             {t("page.story.snippet.flashbackIn")}
                         </span>
                     </div>
@@ -266,9 +280,9 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "FlashbackOut":
             return (
-                <div className="ios-glass-card rounded-xl p-3 my-3 border border-yellow-500/30 dark:border-yellow-500/20 bg-yellow-500/10">
+                <div className="rounded-[var(--hh-radius-lg)] p-3 my-3 border border-[var(--hh-border)] border-l-4 border-l-yellow-500 bg-[var(--hh-surface-1)]">
                     <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-xs font-medium rounded-full">
+                        <span className={SE_TAG + " border-yellow-500/45 bg-yellow-500/15"}>
                             {t("page.story.snippet.flashbackOut")}
                         </span>
                     </div>
@@ -276,10 +290,12 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
             );
 
         case "BlackOut":
+            // Blackout/whiteout keep literal ink so the marker still depicts the
+            // screen transition it stands for, in either theme.
             return (
-                <div className="ios-glass-card rounded-xl p-3 my-3 border border-slate-600/30 bg-black/40">
+                <div className="rounded-[var(--hh-radius-lg)] p-3 my-3 border border-[#3a3b41] bg-[#1c1d21]">
                     <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 bg-slate-600/30 text-slate-300 text-xs font-medium rounded-full">
+                        <span className={SE_TAG + " border-white/20 bg-white/10 !text-[#c9ccd2]"}>
                             {t("page.story.snippet.blackOut")}
                         </span>
                     </div>
@@ -288,9 +304,9 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "WhiteOut":
             return (
-                <div className="ios-glass-card rounded-xl p-3 my-3 border border-white/30 bg-white/40">
+                <div className="rounded-[var(--hh-radius-lg)] p-3 my-3 border border-[#d6d8dd] bg-[#f7f7f9]">
                     <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 bg-white/30 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-full">
+                        <span className={SE_TAG + " border-black/15 bg-black/5 !text-[#5c5f66]"}>
                             {t("page.story.snippet.whiteOut")}
                         </span>
                     </div>
@@ -299,13 +315,13 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "SimpleSelectable":
             return (
-                <div className="ios-glass-card rounded-xl p-4 my-3 border border-indigo-500/30 dark:border-indigo-500/20 bg-indigo-500/10">
+                <div className="rounded-[var(--hh-radius-lg)] p-4 my-3 border border-[var(--hh-border)] border-l-4 border-l-indigo-500 bg-[var(--hh-surface-1)]">
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2.5 py-0.5 bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-medium rounded-full">
+                        <span className={SE_TAG + " border-indigo-500/45 bg-indigo-500/15"}>
                             {t("page.story.snippet.choice")}
                         </span>
                     </div>
-                    <p className="text-indigo-800 dark:text-indigo-200 text-base leading-relaxed text-center font-medium whitespace-pre-wrap">
+                    <p className="hh-body text-[var(--hh-text-primary)] text-base text-center font-medium whitespace-pre-wrap">
                         {text?.trimStart()}
                     </p>
                 </div>
@@ -313,12 +329,12 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
 
         case "Movie":
             return (
-                <div className="ios-glass-card rounded-xl p-4 my-3 border border-red-500/30 dark:border-red-500/20 bg-red-950/20">
+                <div className="rounded-[var(--hh-radius-lg)] p-4 my-3 border border-[var(--hh-border)] border-l-4 border-l-red-500 bg-[var(--hh-surface-1)]">
                     <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded-full">
+                        <span className={SE_TAG + " border-red-500/45 bg-red-500/15"}>
                             {t("page.story.snippet.movie")}
                         </span>
-                        <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">{text}</span>
+                        <span className="text-[var(--hh-text-primary)] text-sm font-medium">{text}</span>
                     </div>
                 </div>
             );
@@ -328,19 +344,19 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
             const mvParts = resource?.split(':') || [];
             const mvId = mvParts[0] || '';
             const mvName = mvParts[1] || '';
-            
+
             return (
-                <div className="ios-glass-card rounded-xl p-4 my-3 border border-purple-500/30 dark:border-purple-500/20 bg-gradient-to-r from-purple-500/10 to-pink-500/10">
+                <div className="rounded-[var(--hh-radius-lg)] p-4 my-3 border border-[var(--hh-border)] border-l-4 border-l-purple-500 bg-[var(--hh-surface-1)]">
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
-                            <span className="px-2.5 py-0.5 bg-purple-500/20 text-purple-600 dark:text-purple-300 text-xs font-semibold rounded-full border border-purple-500/20">
+                            <span className={SE_TAG + " border-purple-500/45 bg-purple-500/15"}>
                                 {t("page.story.snippet.playMv")}
                             </span>
                         </div>
                         {mvName ? (
-                            <p className="text-purple-700 dark:text-purple-300 text-base font-semibold">{mvName}</p>
+                            <p className="hh-title text-[var(--hh-text-primary)] text-base">{mvName}</p>
                         ) : (
-                            <p className="text-purple-600 dark:text-purple-400 text-sm font-medium">MV ID: {mvId}</p>
+                            <p className="hh-numeric text-[var(--hh-text-secondary)] text-sm font-medium">MV ID: {mvId}</p>
                         )}
                     </div>
                 </div>
@@ -362,17 +378,17 @@ export function SoundSnippet({ hasBgm, hasSe, audioUrl }: SoundSnippetProps) {
     const { t } = useI18n();
 
     return (
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 my-2 border border-slate-200/50 dark:border-slate-700/50">
+        <div className="hh-well p-3 my-2">
             <div className="flex items-center gap-3">
-                <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${hasBgm
-                    ? "bg-green-500/20 text-green-600 dark:text-green-400"
-                    : "bg-orange-500/20 text-orange-600 dark:text-orange-400"
+                <span className={`${SE_TAG} ${hasBgm
+                    ? "border-green-500/45 bg-green-500/15"
+                    : "border-orange-500/45 bg-orange-500/15"
                     }`}>
                     {hasBgm ? "BGM" : hasSe ? "SE" : t("page.story.snippet.soundEffect")}
                 </span>
 
                 {isNoSound ? (
-                    <span className="text-slate-400 text-sm">{t("page.story.snippet.silent")}</span>
+                    <span className="text-[var(--hh-text-tertiary)] text-sm">{t("page.story.snippet.silent")}</span>
                 ) : audioUrl ? (
                     <AudioPlayButton url={audioUrl} />
                 ) : null}
@@ -407,13 +423,21 @@ function AudioPlayButton({ url, className = "" }: AudioPlayButtonProps) {
         setIsPlaying(true);
     };
 
+    // Callers may pass a themed skin (the blacked-out FullScreenText slide does).
+    // Tailwind utilities of equal specificity resolve by stylesheet order rather
+    // than by class-string order, so the default skin is omitted entirely when a
+    // caller supplies one instead of relying on the override winning.
+    const idleSkin = className
+        ? className
+        : "bg-[var(--hh-surface-2)] border border-[var(--hh-border)] text-[var(--hh-text-secondary)]";
+
     return (
         <button
             onClick={handlePlay}
-            className={`p-2 rounded-full transition-colors ${isPlaying
-                ? "bg-miku/20 text-miku"
-                : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-miku/10 hover:text-miku"
-                } ${className}`}
+            className={`hh-press p-2 rounded-[var(--hh-radius-full)] ${isPlaying
+                ? "bg-[var(--hh-accent)] border border-[var(--hh-accent-deep)] text-[var(--hh-text-on-accent)]"
+                : idleSkin
+                }`}
             title={isPlaying ? t("page.story.snippet.stopAudio") : t("page.story.snippet.playAudio")}
         >
             {isPlaying ? (

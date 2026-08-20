@@ -1,9 +1,38 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
-import { getMotionTransition } from "@/lib/motion";
+import { getMotionTransition, hhSheetVariants } from "@/lib/motion";
+import { playHandheldSound, type HandheldSoundName } from "@/lib/handheld-sound";
+
+/**
+ * One declarative button in the dialog's action bar.
+ *
+ * A console dialog answers with buttons, not with a corner glyph, so this is
+ * the shape the action bar is authored in rather than raw JSX: the variant
+ * decides both the slab treatment and the sound, which is what keeps "confirm"
+ * and "cancel" audibly distinct across every dialog in the app without each
+ * call site remembering to wire it.
+ */
+export interface ModalAction {
+    label: string;
+    onClick?: () => void;
+    /**
+     * "primary" is the affirmative slab, "danger" the destructive one, and
+     * "neutral" (default) everything else — cancel, dismiss, secondary jumps.
+     */
+    variant?: "neutral" | "primary" | "danger";
+    disabled?: boolean;
+    /**
+     * Overrides the variant's default cue. Affirmative variants sound
+     * `confirm`, neutral ones sound `back`, matching the shell's convention
+     * that leaving and committing are different gestures.
+     */
+    sound?: HandheldSoundName;
+    /** Runs {@link ModalProps.onClose} after `onClick`. Default: false. */
+    closeOnClick?: boolean;
+}
 
 interface ModalProps {
     isOpen: boolean;
@@ -14,6 +43,18 @@ interface ModalProps {
     size?: "sm" | "md" | "lg" | "xl";
     /** Optional action buttons shown in header, left of close */
     headerActions?: React.ReactNode;
+    /**
+     * Declarative buttons for the bottom action bar, laid out trailing-aligned.
+     * Omit for a display-only dialog: the bar is not rendered at all, so every
+     * existing call site keeps its current geometry.
+     */
+    actions?: ModalAction[];
+    /**
+     * Free-form content for the leading side of the action bar — a hint line,
+     * a checkbox, a counter. Rendered next to {@link actions}; either one alone
+     * is enough to bring the bar up.
+     */
+    footer?: React.ReactNode;
     /** Whether to sync modal open state to browser history. Default: true */
     syncHistory?: boolean;
 }
@@ -25,6 +66,17 @@ const sizeClasses: Record<string, string> = {
     xl: "max-w-5xl",
 };
 
+const actionVariantClasses: Record<NonNullable<ModalAction["variant"]>, string> = {
+    neutral: "hh-btn",
+    primary: "hh-btn hh-btn-primary",
+    danger: "hh-btn hh-btn-danger",
+};
+
+/** Committing sounds different from backing out. */
+function defaultActionSound(variant: NonNullable<ModalAction["variant"]>): HandheldSoundName {
+    return variant === "neutral" ? "back" : "confirm";
+}
+
 export default function Modal({
     isOpen,
     onClose,
@@ -32,17 +84,17 @@ export default function Modal({
     children,
     size = "md",
     headerActions,
+    actions,
+    footer,
     syncHistory = true,
 }: ModalProps) {
     const { t } = useI18n();
     const [mounted, setMounted] = useState(false);
+    const titleId = useId();
     // Curve only — never the animated values, which must match between server
     // and client. MotionProvider handles the transform downgrade after mount.
     const prefersReducedMotion = useReducedMotion();
     const overlayTransition = getMotionTransition("snappy", {
-        reducedMotion: !!prefersReducedMotion,
-    });
-    const dialogTransition = getMotionTransition("soft", {
         reducedMotion: !!prefersReducedMotion,
     });
 
@@ -51,6 +103,13 @@ export default function Modal({
     const onCloseRef = useRef(onClose);
     useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
     const stableOnClose = useCallback(() => onCloseRef.current(), []);
+
+    // Every dismissal path — glyph, scrim, Escape, hardware back — is the same
+    // gesture, so they share one cue instead of only the button having sound.
+    const dismiss = useCallback(() => {
+        playHandheldSound("back");
+        onCloseRef.current();
+    }, []);
 
     useEffect(() => {
         const raf = requestAnimationFrame(() => {
@@ -75,6 +134,7 @@ export default function Modal({
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 e.preventDefault();
+                playHandheldSound("back");
                 stableOnClose();
             }
         };
@@ -116,39 +176,53 @@ export default function Modal({
 
     if (!mounted) return null;
 
+    const hasActionBar = (actions && actions.length > 0) || !!footer;
+
     return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-[200] isolate flex items-center justify-center p-4 sm:p-6">
-                    {/* Backdrop — dim to focus; materialize with blur when motion allowed */}
+                    {/* Scrim — flat dim, no blur. Layers separate by value, and
+                        dropping backdrop-filter is what makes an open dialog
+                        free to composite on phones. */}
                     <motion.div
-                        className="absolute inset-0 transform-gpu bg-black/35 backdrop-blur-[8px]"
+                        className="absolute inset-0 hh-scrim"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={overlayTransition}
-                        onClick={onClose}
+                        onClick={dismiss}
                     />
 
-                    {/* Dialog — enter/exit same path; critical spring by default */}
+                    {/* Dialog — one opaque slab. hhSheetVariants is critically
+                        damped, so it arrives without the wobble that made the
+                        old scale: 0.96 spring read as a web modal. */}
                     <motion.div
-                        className={`relative w-full ${sizeClasses[size]} transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[85vh]`}
-                        initial={{ opacity: 0, scale: 0.96, y: 12 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.96, y: 12 }}
-                        transition={dialogTransition}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby={titleId}
+                        className={`relative w-full ${sizeClasses[size]} transform-gpu will-change-transform hh-float overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[85vh]`}
+                        variants={hhSheetVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
                     >
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-dashed border-slate-200/60 dark:border-slate-700/40 bg-gradient-to-r from-miku/5 to-transparent flex-shrink-0">
-                            <h2 className="text-base type-title font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-miku rounded-full" />
-                                {title}
+                        {/* Title bar — one step darker than the body so the
+                            chrome reads as a separate strip without a gradient
+                            wash doing the work. */}
+                        <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] flex-shrink-0">
+                            <h2
+                                id={titleId}
+                                className="hh-title text-sm sm:text-base text-[var(--hh-text-primary)] flex items-center gap-2 min-w-0"
+                            >
+                                <span className="w-[3px] h-4 shrink-0 rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent)]" />
+                                <span className="truncate">{title}</span>
                             </h2>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1 shrink-0">
                                 {headerActions}
                                 <button
-                                    onClick={onClose}
-                                    className="pressable p-1.5 -mr-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 island-pill-hover rounded-full"
+                                    onClick={dismiss}
+                                    className="hh-press p-1.5 rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]"
                                     aria-label={t("common.action.close")}
                                 >
                                     <svg
@@ -169,9 +243,50 @@ export default function Modal({
                         </div>
 
                         {/* Body — scrollable */}
-                        <div className="flex-1 overflow-y-auto p-5">
+                        <div className="flex-1 overflow-y-auto p-5 text-[var(--hh-text-primary)]">
                             {children}
                         </div>
+
+                        {/* Action bar — only mounted when a caller asks for one,
+                            which is what keeps the ~20 display-only dialogs
+                            byte-identical in layout. */}
+                        {hasActionBar && (
+                            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-t border-[var(--hh-border)] bg-[var(--hh-surface-1)] flex-shrink-0">
+                                {/* Rendered only when supplied: an always-present
+                                    empty div would still be a flex child and
+                                    would push the buttons off the trailing edge
+                                    that `ml-auto` is aiming for. */}
+                                {footer && (
+                                    <div className="hh-body min-w-0 text-xs text-[var(--hh-text-secondary)]">
+                                        {footer}
+                                    </div>
+                                )}
+                                {actions && actions.length > 0 && (
+                                    <div className="flex items-center gap-2 ml-auto">
+                                        {actions.map((action, index) => {
+                                            const variant = action.variant ?? "neutral";
+                                            return (
+                                                <button
+                                                    key={`${action.label}-${index}`}
+                                                    type="button"
+                                                    disabled={action.disabled}
+                                                    onClick={() => {
+                                                        playHandheldSound(
+                                                            action.sound ?? defaultActionSound(variant)
+                                                        );
+                                                        action.onClick?.();
+                                                        if (action.closeOnClick) onCloseRef.current();
+                                                    }}
+                                                    className={`${actionVariantClasses[variant]} hh-press text-sm`}
+                                                >
+                                                    {action.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </motion.div>
                 </div>
             )}

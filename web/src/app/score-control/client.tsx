@@ -812,8 +812,10 @@ export default function ScoreControlClient() {
         const showTrained = ((rarityType === "rarity_3" || rarityType === "rarity_4") && !isBirthday);
 
         if (!masterCard) {
+            // Unresolved card: a sunken well reads as a gap in the row rather
+            // than as another card tile.
             return (
-                <div key={i} className="w-10 h-10 sm:w-12 sm:h-12 rounded bg-slate-100 flex items-center justify-center text-slate-400 text-xs flex-shrink-0">
+                <div key={i} className="hh-well w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--hh-radius-sm)] flex items-center justify-center text-[var(--hh-text-tertiary)] text-xs flex-shrink-0">
                     ?
                 </div>
             );
@@ -833,13 +835,13 @@ export default function ScoreControlClient() {
                         width={thumbWidth}
                     />
                     {i === 0 && (
-                        <div className="absolute bottom-0 right-0 bg-miku/90 text-white text-[8px] font-bold px-1 py-[1px] rounded-tl-md leading-none backdrop-blur-[1px] z-10">L</div>
+                        <div className="absolute bottom-0 right-0 bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] text-[8px] font-bold px-1 py-[1px] rounded-tl-[var(--hh-radius-xs)] leading-none z-10">L</div>
                     )}
                 </Link>
-                <div className="text-[9px] sm:text-[10px] text-slate-500 font-mono leading-none flex items-center gap-0.5">
+                <div className="hh-numeric text-[9px] sm:text-[10px] text-[var(--hh-text-secondary)] font-mono leading-none flex items-center gap-0.5">
                     <span>Lv.{level}</span>
                     {masterRank > 0 && (
-                        <span className="bg-slate-100 text-slate-600 rounded-full px-[3px] py-[1px] flex items-center gap-[1px] leading-none border border-slate-200">
+                        <span className="bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-full)] px-[3px] py-[1px] flex items-center gap-[1px] leading-none border border-[var(--hh-border)]">
                             <span className="text-[7px]">🔷</span>
                             <span className="text-[8px] font-bold">{masterRank}</span>
                         </span>
@@ -854,50 +856,53 @@ export default function ScoreControlClient() {
         <div className="overflow-x-auto">
             <table className="w-full text-sm">
                 <thead>
-                    <tr className="text-xs text-slate-400 border-b border-slate-50">
-                        <th className="text-left px-5 py-2.5 font-medium">{t("page.scoreControl.table.eventBonus")}</th>
-                        <th className="text-left px-5 py-2.5 font-medium">{t("page.scoreControl.table.scoreMin")}</th>
-                        <th className="text-left px-5 py-2.5 font-medium">{t("page.scoreControl.table.scoreMax")}</th>
-                        <th className="text-left px-5 py-2.5 font-medium">{t("page.scoreControl.table.scoreWindow")}</th>
+                    <tr className="border-b border-[var(--hh-border)]">
+                        <th className="hh-label text-left px-5 py-2.5">{t("page.scoreControl.table.eventBonus")}</th>
+                        <th className="hh-label text-left px-5 py-2.5">{t("page.scoreControl.table.scoreMin")}</th>
+                        <th className="hh-label text-left px-5 py-2.5">{t("page.scoreControl.table.scoreMax")}</th>
+                        <th className="hh-label text-left px-5 py-2.5">{t("page.scoreControl.table.scoreWindow")}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {items.map((r, i) => {
                         const isAFK = r.scoreMin === 0;
                         return (
-                            <tr key={i} className={`sc-row border-b border-slate-50 last:border-0 ${isAFK ? "bg-emerald-50/50" : ""}`}>
+                            <tr key={i} className={`sc-row border-b border-[var(--hh-border-hairline)] last:border-0 ${isAFK ? "bg-emerald-500/10" : ""}`}>
                                 <td className="px-5 py-2.5">
                                     <span className="inline-flex items-center gap-1.5">
-                                        <span className={`w-2 h-2 rounded-full ${isAFK ? "bg-emerald-500" : "bg-miku"}`}></span>
-                                        <span className="font-bold text-primary-text">{r.eventBonus}%</span>
+                                        <span className={`w-2 h-2 rounded-full ${isAFK ? "bg-emerald-500" : "bg-[var(--hh-accent)]"}`}></span>
+                                        <span className="hh-numeric font-bold text-[var(--hh-text-primary)]">{r.eventBonus}%</span>
                                         {isAFK && (
-                                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">
+                                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/15 px-1.5 py-0.5 rounded-[var(--hh-radius-xs)]">
                                                 {t("page.scoreControl.table.afk")}
                                             </span>
                                         )}
                                     </span>
                                 </td>
-                                <td className="px-5 py-2.5 font-mono text-slate-600">
+                                <td className="hh-numeric px-5 py-2.5 font-mono text-[var(--hh-text-secondary)]">
                                     {isAFK ? (
                                         <span className="text-emerald-600 font-bold">0</span>
                                     ) : (
                                         formatNumber(r.scoreMin)
                                     )}
                                 </td>
-                                <td className="px-5 py-2.5 font-mono text-slate-600">
+                                <td className="hh-numeric px-5 py-2.5 font-mono text-[var(--hh-text-secondary)]">
                                     {formatNumber(r.scoreMax)}
                                 </td>
                                 <td className="px-5 py-2.5">
                                     <div className="flex items-center gap-2">
-                                        <div className="sc-score-bar flex-1 min-w-[60px] max-w-[120px]">
+                                        {/* Window meter: solid accent in a sunken trough. The
+                                            emerald override marks an AFK-viable window, which is
+                                            information rather than decoration. */}
+                                        <div className="h-1 flex-1 min-w-[60px] max-w-[120px] overflow-hidden rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-inset)]">
                                             <div
-                                                className={`sc-score-bar-fill ${isAFK ? "!bg-gradient-to-r !from-emerald-400 !to-emerald-500" : ""}`}
+                                                className={`h-full rounded-[var(--hh-radius-full)] transition-[width] duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] ${isAFK ? "bg-emerald-500" : "bg-[var(--hh-accent)]"}`}
                                                 style={{
                                                     width: `${Math.min(100, ((r.scoreMax - r.scoreMin + 1) / 1000) * 100)}%`,
                                                 }}
                                             />
                                         </div>
-                                        <span className="text-xs text-slate-400 font-mono whitespace-nowrap">
+                                        <span className="hh-numeric text-xs text-[var(--hh-text-tertiary)] font-mono whitespace-nowrap">
                                             {isAFK ? (
                                                 <span className="text-emerald-500">{t("page.scoreControl.table.afkAvailable")}</span>
                                             ) : (
@@ -919,21 +924,21 @@ export default function ScoreControlClient() {
             <div className="container mx-auto px-4 sm:px-6 py-8 max-w-5xl">
                 {/* Page Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                        <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.scoreControl.badge")}</span>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                        <span className="hh-label text-miku">{t("page.scoreControl.badge")}</span>
                     </div>
-                    <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                    <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">
                         {t("page.scoreControl.title")}<span className="text-miku">{t("page.scoreControl.titleHighlight")}</span>
                     </h1>
-                    <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm sm:text-base">
+                    <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto text-sm sm:text-base">
                         {t("page.scoreControl.description")}
                     </p>
                 </div>
 
                 {/* Input Form */}
-                <div className="glass-card p-5 sm:p-6 rounded-2xl mb-6">
-                    <h2 className="text-lg font-bold text-primary-text mb-4 flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-miku rounded-full"></span>
+                <div className="hh-tile rounded-[var(--hh-radius-lg)] p-5 sm:p-6 mb-6">
+                    <h2 className="hh-title text-lg text-[var(--hh-text-primary)] mb-4 flex items-center gap-2">
+                        <span className="w-[3px] h-5 rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent)]"></span>
                         {t("page.scoreControl.musicAndTarget")}
                     </h2>
 
@@ -952,15 +957,15 @@ export default function ScoreControlClient() {
                                 </p>
                             )}
                             {selectedEventRate !== null && (
-                                <p className="mt-1 text-xs text-slate-400">
+                                <p className="hh-numeric mt-1 text-xs text-[var(--hh-text-tertiary)]">
                                     {t("page.scoreControl.musicRate", { rate: selectedEventRate })}
                                 </p>
                             )}
                         </div>
                         <div className="flex items-end pb-2">
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-[var(--hh-text-tertiary)]">
                                 <span className="inline-flex items-center gap-1">
-                                    <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-3.5 h-3.5 text-[var(--hh-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     {t("page.scoreControl.difficultyIrrelevant")}
@@ -972,7 +977,7 @@ export default function ScoreControlClient() {
                     {/* Target PT + Bonus Range */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                            <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">
                                 {t("page.scoreControl.targetPt")} <span className="text-red-400">*</span>
                             </label>
                             <input
@@ -981,14 +986,14 @@ export default function ScoreControlClient() {
                                 onChange={(e) => setTargetPT(Number(e.target.value))}
                                 placeholder="698"
                                 min={1}
-                                className="sc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                className="sc-number-input hh-input hh-numeric w-full px-4 py-2.5 text-sm"
                             />
-                            <p className="mt-1 text-xs text-slate-400">
+                            <p className="mt-1 text-xs text-[var(--hh-text-tertiary)]">
                                 {t("page.scoreControl.targetPtHint")}
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                            <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">
                                 {t("page.scoreControl.minBonus")}
                             </label>
                             <input
@@ -998,14 +1003,14 @@ export default function ScoreControlClient() {
                                 placeholder="5"
                                 min={0}
                                 max={415}
-                                className="sc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                className="sc-number-input hh-input hh-numeric w-full px-4 py-2.5 text-sm"
                             />
-                            <p className="mt-1 text-xs text-slate-400">
+                            <p className="mt-1 text-xs text-[var(--hh-text-tertiary)]">
                                 {t("page.scoreControl.minBonusHint")}
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                            <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">
                                 {t("page.scoreControl.maxBonus")}
                             </label>
                             <input
@@ -1015,26 +1020,28 @@ export default function ScoreControlClient() {
                                 placeholder="200"
                                 min={0}
                                 max={415}
-                                className="sc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                className="sc-number-input hh-input hh-numeric w-full px-4 py-2.5 text-sm"
                             />
-                            <p className="mt-1 text-xs text-slate-400">
+                            <p className="mt-1 text-xs text-[var(--hh-text-tertiary)]">
                                 {t("page.scoreControl.maxBonusHint")}
                             </p>
                         </div>
                     </div>
 
                     {/* ====== Deck Builder Toggle ====== */}
-                    <div className="mb-5 p-4 rounded-xl border border-slate-200/60 bg-slate-50/50">
+                    <div className="hh-well mb-5 p-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold text-primary-text">{t("page.scoreControl.deckBuilder")}</span>
-                                <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">{t("page.scoreControl.beta")}</span>
+                                <span className="hh-title text-sm text-[var(--hh-text-primary)]">{t("page.scoreControl.deckBuilder")}</span>
+                                <span className="text-[10px] font-bold text-amber-600 bg-amber-500/15 px-2 py-0.5 rounded-[var(--hh-radius-sm)]">{t("page.scoreControl.beta")}</span>
                             </div>
                             <button
                                 onClick={() => setDeckBuilderEnabled(!deckBuilderEnabled)}
-                                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${deckBuilderEnabled ? 'bg-miku' : 'bg-slate-200'}`}
+                                role="switch"
+                                aria-checked={deckBuilderEnabled}
+                                className={`hh-switch hh-focusable shrink-0 ${deckBuilderEnabled ? "hh-switch-active" : ""}`}
                             >
-                                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${deckBuilderEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                                <span className="hh-switch-thumb" />
                             </button>
                         </div>
                         {deckBuilderEnabled && (
@@ -1049,9 +1056,9 @@ export default function ScoreControlClient() {
 
                     {/* ====== Deck Builder Expanded Options ====== */}
                     {deckBuilderEnabled && (
-                        <div className="mb-5 space-y-4 p-4 rounded-xl border border-miku/20 bg-miku/5">
-                            <h3 className="text-sm font-bold text-primary-text flex items-center gap-2">
-                                <span className="w-1 h-4 bg-miku rounded-full"></span>
+                        <div className="mb-5 space-y-4 p-4 rounded-[var(--hh-radius-lg)] border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)]">
+                            <h3 className="hh-title text-sm text-[var(--hh-text-primary)] flex items-center gap-2">
+                                <span className="w-[3px] h-4 rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent)]"></span>
                                 {t("page.scoreControl.deckBuilderSettings")}
                             </h3>
 
@@ -1071,7 +1078,7 @@ export default function ScoreControlClient() {
                             />
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">
                                         {t("page.scoreControl.userId")} <span className="text-red-400">*</span>
                                     </label>
                                     <input
@@ -1082,10 +1089,10 @@ export default function ScoreControlClient() {
                                             if (dbAllowSave) localStorage.setItem("deck_recommend_userid", e.target.value);
                                         }}
                                         placeholder={t("page.scoreControl.userIdPlaceholder")}
-                                        className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
+                                        className="hh-input hh-numeric w-full px-4 py-2.5 text-sm"
                                     />
                                     <div className="flex items-center justify-between mt-2 px-1">
-                                        <span className="text-xs text-slate-500">{t("page.scoreControl.saveLocally")}</span>
+                                        <span className="text-xs text-[var(--hh-text-secondary)]">{t("page.scoreControl.saveLocally")}</span>
                                         <button
                                             onClick={() => {
                                                 const n = !dbAllowSave;
@@ -1099,17 +1106,19 @@ export default function ScoreControlClient() {
                                                     localStorage.removeItem("deck_recommend_server");
                                                 }
                                             }}
-                                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${dbAllowSave ? 'bg-miku' : 'bg-slate-200'}`}
+                                            className={`hh-switch hh-focusable shrink-0 ${dbAllowSave ? "hh-switch-active" : ""}`}
+                                            role="switch"
+                                            aria-checked={dbAllowSave}
                                         >
-                                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${dbAllowSave ? 'translate-x-5' : 'translate-x-0'}`} />
+                                            <span className="hh-switch-thumb" />
                                         </button>
                                     </div>
-                                    <p className="mt-1 text-xs text-slate-400">
+                                    <p className="mt-1 text-xs text-[var(--hh-text-tertiary)]">
                                         {t("page.scoreControl.harukiHintStart")} <ExternalLink href="https://haruki.seiunx.com" className="text-miku hover:underline">{t("page.scoreControl.harukiToolbox")}</ExternalLink> {t("page.scoreControl.harukiHintEnd")}
                                     </p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.scoreControl.server")}</label>
+                                    <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">{t("page.scoreControl.server")}</label>
                                     <div className="flex flex-wrap gap-2">
                                         {SERVER_OPTIONS.map((s) => (
                                             <button
@@ -1118,10 +1127,8 @@ export default function ScoreControlClient() {
                                                     setDbServer(s.value);
                                                     if (dbAllowSave) localStorage.setItem("deck_recommend_server", s.value);
                                                 }}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${dbServer === s.value
-                                                    ? "bg-miku text-white shadow-md shadow-miku/20"
-                                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                                    }`}
+                                                aria-pressed={dbServer === s.value}
+                                                className={`hh-chip hh-press hh-focusable ${dbServer === s.value ? "hh-chip-active" : ""}`}
                                             >
                                                 {t(s.labelKey)}
                                             </button>
@@ -1133,7 +1140,7 @@ export default function ScoreControlClient() {
                             {/* Event */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">
                                         {t("page.scoreControl.event")} <span className="text-red-400">*</span>
                                     </label>
                                     <EventSelector
@@ -1147,7 +1154,7 @@ export default function ScoreControlClient() {
                             <div>
                                 <button
                                     onClick={() => setDbShowCardConfig(!dbShowCardConfig)}
-                                    className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-miku transition-colors"
+                                    className="flex items-center gap-2 text-sm font-medium text-[var(--hh-text-secondary)] hover:text-miku transition-colors"
                                 >
                                     <svg
                                         className={`w-4 h-4 transition-transform ${dbShowCardConfig ? "rotate-180" : ""}`}
@@ -1164,19 +1171,19 @@ export default function ScoreControlClient() {
                                         <table className="dr-config-table w-full text-sm">
                                             <thead>
                                                 <tr>
-                                                    <th className="text-left py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.rarity")}</th>
-                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.disable")}</th>
-                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.maxLevel")}</th>
-                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.episodes")}</th>
-                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.maxMaster")}</th>
-                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.maxSkill")}</th>
+                                                    <th className="hh-label text-left py-2 px-2">{t("page.scoreControl.cardConfigHeaders.rarity")}</th>
+                                                    <th className="hh-label py-2 px-2">{t("page.scoreControl.cardConfigHeaders.disable")}</th>
+                                                    <th className="hh-label py-2 px-2">{t("page.scoreControl.cardConfigHeaders.maxLevel")}</th>
+                                                    <th className="hh-label py-2 px-2">{t("page.scoreControl.cardConfigHeaders.episodes")}</th>
+                                                    <th className="hh-label py-2 px-2">{t("page.scoreControl.cardConfigHeaders.maxMaster")}</th>
+                                                    <th className="hh-label py-2 px-2">{t("page.scoreControl.cardConfigHeaders.maxSkill")}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {RARITY_CONFIG_KEYS.map((rk) => {
                                                     const cfg = dbCardConfig[rk.key];
                                                     return (
-                                                        <tr key={rk.key} className="border-t border-slate-100">
+                                                        <tr key={rk.key} className="border-t border-[var(--hh-border-hairline)]">
                                                             <td className="py-2 px-2">
                                                                 <div className="flex items-center gap-0.5">
                                                                     {rk.key === "rarity_birthday" ? (
@@ -1217,33 +1224,35 @@ export default function ScoreControlClient() {
                             </div>
 
                             {/* Infinite Song Search Toggle */}
-                            <div className="mt-4 p-3 rounded-xl border border-orange-200/60 bg-orange-50/30">
+                            <div className="mt-4 p-3 rounded-[var(--hh-radius-lg)] border border-orange-500/30 bg-orange-500/10">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-sm font-bold text-primary-text">{t("page.scoreControl.infiniteSearch")}</span>
-                                        <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">{t("page.scoreControl.experimental")}</span>
+                                        <span className="hh-title text-sm text-[var(--hh-text-primary)]">{t("page.scoreControl.infiniteSearch")}</span>
+                                        <span className="text-[10px] font-bold text-orange-600 bg-orange-500/15 px-2 py-0.5 rounded-[var(--hh-radius-sm)]">{t("page.scoreControl.experimental")}</span>
                                     </div>
                                     <button
                                         onClick={() => setInfiniteSearchEnabled(!infiniteSearchEnabled)}
-                                        className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${infiniteSearchEnabled ? 'bg-orange-500' : 'bg-slate-200'}`}
+                                        role="switch"
+                                        aria-checked={infiniteSearchEnabled}
+                                        className={`hh-switch hh-focusable shrink-0 ${infiniteSearchEnabled ? "hh-switch-active" : ""}`}
                                     >
-                                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${infiniteSearchEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                                        <span className="hh-switch-thumb" />
                                     </button>
                                 </div>
                                 {infiniteSearchEnabled && (
                                     <div className="mt-2 space-y-2">
-                                        <div className="text-xs text-orange-600 flex items-start gap-1.5 bg-orange-100/60 rounded-lg p-2">
+                                        <div className="text-xs text-orange-600 flex items-start gap-1.5 bg-orange-500/12 rounded-[var(--hh-radius-md)] p-2">
                                             <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                                             </svg>
                                             <span>{t("page.scoreControl.infiniteWarning")}</span>
                                         </div>
-                                        <p className="text-[10px] text-slate-400">{t("page.scoreControl.searchRatesHint")}</p>
-                                        <p className="text-[10px] text-slate-500">{t("page.scoreControl.infiniteStartHint")}</p>
+                                        <p className="text-[10px] text-[var(--hh-text-tertiary)]">{t("page.scoreControl.searchRatesHint")}</p>
+                                        <p className="text-[10px] text-[var(--hh-text-secondary)]">{t("page.scoreControl.infiniteStartHint")}</p>
                                         {infiniteSearchRunning && (
                                             <button
                                                 onClick={handleCancelInfiniteSearch}
-                                                className="w-full px-4 py-2.5 bg-slate-600 text-white rounded-lg font-bold text-sm shadow-md hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                                className="hh-btn hh-press hh-focusable w-full px-4 py-2.5 font-bold text-sm"
                                             >
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1261,7 +1270,7 @@ export default function ScoreControlClient() {
                     <button
                         onClick={handleCalculate}
                         disabled={infiniteSearchEnabled && deckBuilderEnabled ? (infiniteSearchRunning || !dbUserId.trim() || !dbEventId.trim()) : (!selectedEventRate || isCalculating)}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-miku to-miku-dark text-white rounded-xl font-bold shadow-lg shadow-miku/20 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="hh-btn hh-btn-primary hh-press hh-focusable w-full px-6 py-3 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isCalculating || infiniteSearchRunning ? (
                             <>

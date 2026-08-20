@@ -252,13 +252,13 @@ function PageHeader() {
 
     return (
         <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.materials.badge")}</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                <span className="hh-label text-[var(--hh-accent-deep)]">{t("page.materials.badge")}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                {t("page.materials.title")} <span className="text-miku">{t("page.materials.titleHighlight")}</span>
+            <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">
+                {t("page.materials.title")} <span className="text-[var(--hh-accent-deep)]">{t("page.materials.titleHighlight")}</span>
             </h1>
-            <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm">
+            <p className="text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto text-sm">
                 {t("page.materials.description")}
             </p>
         </div>
@@ -268,26 +268,28 @@ function PageHeader() {
 function EmptyState({ title, description }: { title: string; description?: string }) {
     return (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-            <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 text-[var(--hh-text-tertiary)] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
-            <p className="text-slate-400 font-medium">{title}</p>
-            {description && <p className="text-slate-400 text-xs mt-1">{description}</p>}
+            <p className="text-[var(--hh-text-tertiary)] font-medium">{title}</p>
+            {description && <p className="text-[var(--hh-text-tertiary)] text-xs mt-1">{description}</p>}
         </div>
     );
 }
 
 function Badge({ label, tone = "slate" }: { label: string; tone?: "miku" | "violet" | "amber" | "emerald" | "slate" }) {
+    // violet/amber/emerald stay: they encode mysekai type, rarity and availability.
+    // Only the neutral tone moves onto system surfaces.
     const toneClassMap = {
-        miku: "bg-miku/10 text-miku",
+        miku: "bg-[var(--hh-accent-wash)] text-[var(--hh-accent-deep)]",
         violet: "bg-violet-500/10 text-violet-600",
         amber: "bg-amber-500/10 text-amber-700",
         emerald: "bg-emerald-500/10 text-emerald-700",
-        slate: "bg-slate-100 text-slate-500",
+        slate: "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]",
     } satisfies Record<string, string>;
 
     return (
-        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${toneClassMap[tone]}`}>
+        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] text-[10px] font-bold ${toneClassMap[tone]}`}>
             {label}
         </span>
     );
@@ -296,7 +298,7 @@ function Badge({ label, tone = "slate" }: { label: string; tone?: "miku" | "viol
 function CardImage({
     src,
     alt,
-    className = "relative aspect-square mb-3 bg-slate-50 rounded-lg overflow-hidden flex items-center justify-center",
+    className = "relative aspect-square mb-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] overflow-hidden flex items-center justify-center",
     imageClassName = "w-full h-full object-contain p-2",
 }: {
     src: string;
@@ -317,7 +319,7 @@ function CardImage({
                     onError={() => setHasError(true)}
                 />
             ) : (
-                <svg className="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-10 h-10 text-[var(--hh-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
             )}
@@ -341,21 +343,20 @@ function RegularMaterialCard({
             type="button"
             onClick={onClick}
             data-shortcut-item="true"
-            className="group block w-full text-left bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-4 h-full active:scale-[0.98]"
+            className="hh-press hh-focusable group block w-full text-left bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] overflow-hidden transition-colors hover:border-[var(--hh-accent)] p-4 h-full"
             title={t("page.materials.viewDetailTitle", { name: item.name })}
         >
             <CardImage
                 src={getMaterialThumbnailUrl(item.id, assetSource)}
                 alt={item.name}
-                imageClassName="w-full h-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
             />
 
             <div className="flex flex-col min-h-0 gap-2">
                 <div>
-                    <h3 className="font-bold text-sm text-slate-800 leading-5 break-words group-hover:text-miku transition-colors">
+                    <h3 className="hh-title text-sm text-[var(--hh-text-primary)] leading-5 break-words transition-colors group-hover:text-[var(--hh-accent-deep)]">
                         {item.name}
                     </h3>
-                    <p className="mt-1 text-[10px] font-mono text-slate-400">#{item.id}</p>
+                    <p className="hh-numeric mt-1 text-[10px] text-[var(--hh-text-tertiary)]">#{item.id}</p>
                 </div>
 
                 <div className="flex flex-wrap gap-1">
@@ -387,21 +388,20 @@ function MysekaiMaterialCard({
             type="button"
             onClick={onClick}
             data-shortcut-item="true"
-            className="group block w-full text-left bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-4 h-full active:scale-[0.98]"
+            className="hh-press hh-focusable group block w-full text-left bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] overflow-hidden transition-colors hover:border-[var(--hh-accent)] p-4 h-full"
             title={t("page.materials.viewDetailTitle", { name: item.name })}
         >
             <CardImage
                 src={getMysekaiMaterialThumbnailUrl(item.iconAssetbundleName, assetSource)}
                 alt={item.name}
-                imageClassName="w-full h-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
             />
 
             <div className="flex flex-col min-h-0 gap-2">
                 <div>
-                    <h3 className="font-bold text-sm text-slate-800 leading-5 break-words group-hover:text-miku transition-colors">
+                    <h3 className="hh-title text-sm text-[var(--hh-text-primary)] leading-5 break-words transition-colors group-hover:text-[var(--hh-accent-deep)]">
                         {item.name}
                     </h3>
-                    <p className="mt-1 text-[10px] font-mono text-slate-400">#{item.id}</p>
+                    <p className="hh-numeric mt-1 text-[10px] text-[var(--hh-text-tertiary)]">#{item.id}</p>
                 </div>
 
                 <div className="flex flex-wrap gap-1">
@@ -425,9 +425,9 @@ function MysekaiMaterialCard({
 
 function InfoRow({ label, value }: { label: string; value: string }) {
     return (
-        <div className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
-            <span className="text-sm font-bold text-slate-600">{label}</span>
-            <span className="text-sm text-slate-800 text-right max-w-[60%]">{value}</span>
+        <div className="flex items-center justify-between py-2.5 border-b border-[var(--hh-border)] last:border-0">
+            <span className="text-sm font-bold text-[var(--hh-text-secondary)]">{label}</span>
+            <span className="text-sm text-[var(--hh-text-primary)] text-right max-w-[60%]">{value}</span>
         </div>
     );
 }
@@ -447,14 +447,14 @@ function ExchangeUsageLink({ entry }: { entry: FlattenedMaterialExchange }) {
     return (
         <Link
             href={`/exchanges/${entry.id}`}
-            className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 px-3 py-2 text-sm transition-colors hover:border-miku/30 hover:bg-miku/5"
+            className="flex items-center justify-between gap-2 rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] px-3 py-2 text-sm transition-colors hover:border-[var(--hh-accent)] hover:bg-[var(--hh-accent-wash)]"
         >
-            <span className="truncate font-medium text-slate-700">{entry.resolvedTitle}</span>
-            <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
+            <span className="truncate font-medium text-[var(--hh-text-primary)]">{entry.resolvedTitle}</span>
+            <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] text-[10px] font-bold ${
                 getExchangeStatusTone(entry.status) === "emerald" ? "bg-emerald-500/10 text-emerald-700" :
                 getExchangeStatusTone(entry.status) === "amber" ? "bg-amber-500/10 text-amber-700" :
                 getExchangeStatusTone(entry.status) === "violet" ? "bg-violet-500/10 text-violet-600" :
-                "bg-slate-100 text-slate-500"
+                "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]"
             }`}>
                 {t(`common.exchange.statuses.${entry.status}`)}
             </span>
@@ -501,8 +501,8 @@ function ExchangeUsageSection({ selection }: { selection: MaterialDetailSelectio
     if (isLoading) {
         return (
             <div>
-                <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.field.exchangeRelations")}</h3>
-                <div className="rounded-xl bg-slate-50 p-4 text-center text-xs text-slate-400">{t("common.state.loading")}</div>
+                <h3 className="hh-title mb-3 text-sm text-[var(--hh-text-primary)]">{t("common.field.exchangeRelations")}</h3>
+                <div className="hh-well p-4 text-center text-xs text-[var(--hh-text-tertiary)]">{t("common.state.loading")}</div>
             </div>
         );
     }
@@ -513,30 +513,30 @@ function ExchangeUsageSection({ selection }: { selection: MaterialDetailSelectio
 
     return (
         <div>
-            <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.field.exchangeRelations")}</h3>
+            <h3 className="hh-title mb-3 text-sm text-[var(--hh-text-primary)]">{t("common.field.exchangeRelations")}</h3>
             <div className="space-y-3">
                 {usages.asCost.length > 0 && (
                     <div>
-                        <p className="mb-1.5 text-xs font-bold text-slate-500">{t("common.field.asExchangeCost", { count: usages.asCost.length })}</p>
+                        <p className="hh-label mb-1.5">{t("common.field.asExchangeCost", { count: usages.asCost.length })}</p>
                         <div className="space-y-1">
                             {usages.asCost.slice(0, 8).map((entry) => (
                                 <ExchangeUsageLink key={`cost-${entry.id}`} entry={entry} />
                             ))}
                             {usages.asCost.length > 8 && (
-                                <p className="text-xs text-slate-400 pl-3">{t("common.field.remainingItems", { count: usages.asCost.length - 8 })}</p>
+                                <p className="text-xs text-[var(--hh-text-tertiary)] pl-3">{t("common.field.remainingItems", { count: usages.asCost.length - 8 })}</p>
                             )}
                         </div>
                     </div>
                 )}
                 {usages.asReward.length > 0 && (
                     <div>
-                        <p className="mb-1.5 text-xs font-bold text-slate-500">{t("common.field.asExchangeReward", { count: usages.asReward.length })}</p>
+                        <p className="hh-label mb-1.5">{t("common.field.asExchangeReward", { count: usages.asReward.length })}</p>
                         <div className="space-y-1">
                             {usages.asReward.slice(0, 8).map((entry) => (
                                 <ExchangeUsageLink key={`reward-${entry.id}`} entry={entry} />
                             ))}
                             {usages.asReward.length > 8 && (
-                                <p className="text-xs text-slate-400 pl-3">{t("common.field.remainingItems", { count: usages.asReward.length - 8 })}</p>
+                                <p className="text-xs text-[var(--hh-text-tertiary)] pl-3">{t("common.field.remainingItems", { count: usages.asReward.length - 8 })}</p>
                             )}
                         </div>
                     </div>
@@ -594,8 +594,8 @@ function MaterialDetailModal({
             {selection && (
                 <div className="space-y-5">
                     {saveClickCount >= 2 && (
-                        <div className="rounded-xl border border-miku/15 bg-gradient-to-r from-miku/5 to-luka/5 px-4 py-2.5 animate-in fade-in duration-300">
-                            <p className="text-xs leading-relaxed text-slate-600">
+                        <div className="rounded-[var(--hh-radius-lg)] border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] px-4 py-2.5 animate-in fade-in duration-300">
+                            <p className="text-xs leading-relaxed text-[var(--hh-text-secondary)]">
                                 {t("page.materials.downloadHint")}
                             </p>
                         </div>
@@ -609,7 +609,7 @@ function MaterialDetailModal({
                                 key={`${selection.kind}-${selection.item.id}`}
                                 src={imageUrl}
                                 alt={selection.item.name}
-                                className="relative aspect-square w-full rounded-xl overflow-hidden bg-transparent flex items-center justify-center"
+                                className="relative aspect-square w-full rounded-[var(--hh-radius-lg)] overflow-hidden bg-transparent flex items-center justify-center"
                                 imageClassName="mx-auto h-full w-full object-contain p-4 sm:p-6"
                             />
                         </div>
@@ -634,7 +634,7 @@ function MaterialDetailModal({
 
                     {mysekaiMaterial && (
                         <div>
-                            <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.filter.sourceArea")}</h3>
+                            <h3 className="hh-title mb-3 text-sm text-[var(--hh-text-primary)]">{t("common.filter.sourceArea")}</h3>
                             <div className="flex flex-wrap gap-2">
                                 {mysekaiSiteLabels.map((siteLabel) => (
                                     <Badge key={`${mysekaiMaterial.id}-${siteLabel}`} label={siteLabel} tone="slate" />
@@ -645,9 +645,9 @@ function MaterialDetailModal({
 
                     {description && (
                         <div>
-                            <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.field.description")}</h3>
-                            <div className="rounded-xl bg-slate-50 p-4">
-                                <p className="whitespace-pre-line text-sm leading-6 text-slate-600">
+                            <h3 className="hh-title mb-3 text-sm text-[var(--hh-text-primary)]">{t("common.field.description")}</h3>
+                            <div className="hh-well p-4">
+                                <p className="hh-body whitespace-pre-line text-sm text-[var(--hh-text-secondary)]">
                                     {description}
                                 </p>
                             </div>
@@ -665,12 +665,12 @@ function SkeletonGrid() {
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             {Array.from({ length: 12 }).map((_, index) => (
-                <div key={index} className="rounded-xl overflow-hidden bg-white border border-slate-100 shadow-sm animate-pulse p-3">
-                    <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg mb-3" />
+                <div key={index} className="rounded-[var(--hh-radius-lg)] overflow-hidden bg-[var(--hh-surface-2)] border border-[var(--hh-border)] animate-pulse p-3">
+                    <div className="aspect-square bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] mb-3" />
                     <div className="space-y-2">
-                        <div className="h-4 bg-slate-200 rounded w-3/4" />
-                        <div className="h-3 bg-slate-100 rounded w-full" />
-                        <div className="h-3 bg-slate-100 rounded w-2/3" />
+                        <div className="h-4 bg-[var(--hh-surface-inset)] rounded-[var(--hh-radius-xs)] w-3/4" />
+                        <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-full" />
+                        <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-2/3" />
                     </div>
                 </div>
             ))}
@@ -1240,29 +1240,31 @@ function MaterialsContent() {
             <PageHeader />
 
             <div className="mb-4 flex items-center gap-2 flex-wrap">
-                {([
-                    { key: "materials" as TabType, label: t("page.materials.tabs.materials") },
-                    { key: "mysekaiMaterials" as TabType, label: t("page.materials.tabs.mysekaiMaterials") },
-                ]).map((tab) => (
-                    <button
-                        key={tab.key}
-                        onClick={() => {
-                            setSelectedDetail(null);
-                            setActiveTab(tab.key);
-                            resetDisplayCount();
-                        }}
-                        className={`px-4 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === tab.key
-                            ? "bg-miku/10 text-miku ring-1 ring-miku/30"
-                            : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                            }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
+                <div className="hh-segment max-w-xs" role="tablist">
+                    {([
+                        { key: "materials" as TabType, label: t("page.materials.tabs.materials") },
+                        { key: "mysekaiMaterials" as TabType, label: t("page.materials.tabs.mysekaiMaterials") },
+                    ]).map((tab) => (
+                        <button
+                            key={tab.key}
+                            role="tab"
+                            aria-selected={activeTab === tab.key}
+                            onClick={() => {
+                                setSelectedDetail(null);
+                                setActiveTab(tab.key);
+                                resetDisplayCount();
+                            }}
+                            className="hh-segment-item hh-press hh-focusable"
+                            data-selected={activeTab === tab.key}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {!isLoading && (
-                <div className="mb-4 text-xs text-slate-500">
+                <div className="hh-numeric mb-4 text-xs text-[var(--hh-text-secondary)]">
                     {t("page.materials.currentTabSummary", {
                         tab: currentTabLabel,
                         count: currentItems.length,
@@ -1274,7 +1276,7 @@ function MaterialsContent() {
             )}
 
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{t("page.materials.loadNotice")}</p>
                     <p>{error}</p>
                 </div>
@@ -1320,10 +1322,10 @@ function MaterialsContent() {
                                 <button
                                     onClick={loadMore}
                                     data-shortcut-load-more="true"
-                                    className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                    className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3"
                                 >
                                     {t("page.materials.loadMore")}
-                                    <span className="ml-2 text-sm opacity-80">
+                                    <span className="hh-numeric ml-2 text-sm opacity-80">
                                         ({displayedItems.length} / {currentItems.length})
                                     </span>
                                 </button>
@@ -1331,7 +1333,7 @@ function MaterialsContent() {
                         )}
 
                         {displayedItems.length > 0 && displayedItems.length >= currentItems.length && (
-                            <div className="mt-8 text-center text-slate-400 text-sm">
+                            <div className="mt-8 text-center text-[var(--hh-text-tertiary)] text-sm">
                                 {t("page.materials.allLoaded", { count: currentItems.length, tab: currentTabLabel })}
                             </div>
                         )}
@@ -1346,7 +1348,7 @@ function MaterialsLoadingFallback() {
     const { t } = useI18n();
 
     return (
-        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+        <div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">
             {t("page.materials.loadingFallback")}
         </div>
     );

@@ -298,14 +298,21 @@ function ProgressBar({ stage, percent, stageLabel }: { stage: string; percent: n
         return () => clearInterval(interval);
     }, [stage]);
 
+    // Track and fill are expressed inline rather than through the .dr-progress-*
+    // rules: those still carry the old translucent gradient plus a shimmer
+    // sweep, and a console progress meter is a solid accent bar in a sunken
+    // trough with no travelling highlight.
     return (
-        <div className="dr-progress-container">
+        <div className="py-1">
             <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-slate-500 font-medium">{stageLabel}</span>
-                <span className="text-xs text-slate-400 font-mono">{Math.round(displayPercent)}%</span>
+                <span className="text-xs font-medium text-[var(--hh-text-secondary)]">{stageLabel}</span>
+                <span className="hh-numeric text-xs font-mono text-[var(--hh-text-tertiary)]">{Math.round(displayPercent)}%</span>
             </div>
-            <div className="dr-progress-track">
-                <div className="dr-progress-bar" style={{ width: `${displayPercent}%` }} />
+            <div className="h-1.5 w-full overflow-hidden rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-inset)]">
+                <div
+                    className="h-full rounded-[var(--hh-radius-full)] bg-[var(--hh-accent)] transition-[width] duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)]"
+                    style={{ width: `${displayPercent}%` }}
+                />
             </div>
         </div>
     );
@@ -726,36 +733,36 @@ export default function DeckRecommendClient() {
             <div className="container mx-auto px-4 sm:px-6 py-8 max-w-5xl">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                        <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.deckRecommend.badge")}</span>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                        <span className="hh-label text-miku">{t("page.deckRecommend.badge")}</span>
                     </div>
-                    <h1 className="text-3xl sm:text-4xl font-black text-primary-text">{t("page.deckRecommend.title")}<span className="text-miku">{t("page.deckRecommend.titleHighlight")}</span></h1>
-                    <p className="text-slate-500 mt-2 max-w-2xl mx-auto text-sm sm:text-base">{t("page.deckRecommend.description")}</p>
+                    <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">{t("page.deckRecommend.title")}<span className="text-miku">{t("page.deckRecommend.titleHighlight")}</span></h1>
+                    <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto text-sm sm:text-base">{t("page.deckRecommend.description")}</p>
                 </div>
 
-                <div className="dr-mobile-warning ios-glass-card p-3 rounded-xl mb-6 flex items-center gap-2 text-sm text-amber-700 bg-amber-50/80 border border-amber-200/50">
+                <div className="dr-mobile-warning hh-tile rounded-[var(--hh-radius-lg)] p-3 mb-6 flex items-center gap-2 text-sm text-amber-700 bg-amber-500/12 border-amber-500/30">
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
                     <span>{t("page.deckRecommend.mobileWarning")}</span>
                 </div>
 
                 {/* Input Form */}
-                <div className="ios-glass-card p-5 sm:p-6 rounded-2xl mb-6">
-                    <h2 className="text-lg font-bold text-primary-text mb-4 flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-miku rounded-full"></span>{t("page.deckRecommend.basicSettings")}
+                <div className="hh-tile rounded-[var(--hh-radius-lg)] p-5 sm:p-6 mb-6">
+                    <h2 className="hh-title text-lg text-[var(--hh-text-primary)] mb-4 flex items-center gap-2">
+                        <span className="w-[3px] h-5 rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent)]"></span>{t("page.deckRecommend.basicSettings")}
                     </h2>
 
                     {/* Mode Tabs */}
                     <div className="mb-5">
-                        <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.recommendationMode")}</label>
+                        <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-2">{t("page.deckRecommend.recommendationMode")}</label>
                         <div className="flex gap-2 flex-wrap">
                             {modeOptions.map((m) => (
                                 <button key={m.value} onClick={() => setMode(m.value)} title={m.desc}
-                                    className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${mode === m.value ? "ios-glass-tab-active text-white shadow-lg shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60 border border-slate-200/50"}`}>
+                                    className={`hh-press hh-focusable px-4 py-2.5 rounded-[var(--hh-radius-md)] border font-medium text-sm ${mode === m.value ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] border-[var(--hh-accent-line)]" : "bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] border-[var(--hh-border)] hover:bg-[var(--hh-surface-3)] hover:text-[var(--hh-text-primary)]"}`}>
                                     {m.label}
                                 </button>
                             ))}
                         </div>
-                        <p className="text-xs text-slate-400 mt-1.5">{modeOptions.find(m => m.value === mode)?.desc}</p>
+                        <p className="text-xs text-[var(--hh-text-tertiary)] mt-1.5">{modeOptions.find(m => m.value === mode)?.desc}</p>
                     </div>
 
                     {/* Account Selector + User ID + Server */}
@@ -774,24 +781,25 @@ export default function DeckRecommendClient() {
                     />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckRecommend.userId")} <span className="text-red-400">*</span></label>
+                            <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">{t("page.deckRecommend.userId")} <span className="text-red-400">*</span></label>
                             <input type="text" value={userId} onChange={(e) => { setUserId(e.target.value); if (allowSaveUserId) localStorage.setItem("deck_recommend_userid", e.target.value); }}
-                                placeholder={t("page.deckRecommend.userIdPlaceholder")} className="ios-glass-input w-full px-4 py-2.5 rounded-lg transition-all text-sm" />
+                                placeholder={t("page.deckRecommend.userIdPlaceholder")} className="hh-input hh-numeric w-full px-4 py-2.5 text-sm" />
                             <div className="flex items-center justify-between mt-2 px-1">
-                                <span className="text-sm text-slate-500">{t("page.deckRecommend.saveLocally")}</span>
+                                <span className="text-sm text-[var(--hh-text-secondary)]">{t("page.deckRecommend.saveLocally")}</span>
                                 <button onClick={() => { const ns = !allowSaveUserId; setAllowSaveUserId(ns); if (ns) { localStorage.setItem("deck_recommend_userid", userId); localStorage.setItem("deck_recommend_server", server); saveToolState("deckRecommend", userId, server); } else { localStorage.removeItem("deck_recommend_userid"); localStorage.removeItem("deck_recommend_server"); } }}
-                                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${allowSaveUserId ? 'bg-miku' : 'bg-slate-200'}`}>
-                                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${allowSaveUserId ? 'translate-x-5' : 'translate-x-0'}`} />
+                                    role="switch" aria-checked={allowSaveUserId}
+                                    className={`hh-switch hh-focusable ${allowSaveUserId ? "hh-switch-active" : ""}`}>
+                                    <span className="hh-switch-thumb" />
                                 </button>
                             </div>
-                            <p className="mt-1 text-xs text-slate-400">{t("page.deckRecommend.harukiHintStart")} <ExternalLink href="https://haruki.seiunx.com" target="_blank" rel="noopener noreferrer" className="text-miku hover:underline">{t("page.deckRecommend.harukiToolbox")}</ExternalLink> {t("page.deckRecommend.harukiHintEnd")}</p>
+                            <p className="mt-1 text-xs text-[var(--hh-text-tertiary)]">{t("page.deckRecommend.harukiHintStart")} <ExternalLink href="https://haruki.seiunx.com" target="_blank" rel="noopener noreferrer" className="text-miku hover:underline">{t("page.deckRecommend.harukiToolbox")}</ExternalLink> {t("page.deckRecommend.harukiHintEnd")}</p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckRecommend.server")}</label>
+                            <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">{t("page.deckRecommend.server")}</label>
                             <div className="flex flex-wrap gap-2">
                                 {serverOptions.map((s) => (
                                     <button key={s.value} onClick={() => { setServer(s.value); if (allowSaveUserId) localStorage.setItem("deck_recommend_server", s.value); }}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${server === s.value ? "ios-glass-tab-active text-white shadow-md shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60"}`}>
+                                        className={`hh-chip hh-press hh-focusable ${server === s.value ? "hh-chip-active" : ""}`}>
                                         {s.label}
                                     </button>
                                 ))}
@@ -802,7 +810,7 @@ export default function DeckRecommendClient() {
                     {/* Challenge Mode */}
                     {mode === "challenge" && (
                         <div className="mb-5">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.challengeCharacter")} <span className="text-red-400">*</span></label>
+                            <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-2">{t("page.deckRecommend.challengeCharacter")} <span className="text-red-400">*</span></label>
                             <CharacterSelector selectedCharacterId={characterId} onSelect={setCharacterId} />
                         </div>
                     )}
@@ -810,18 +818,18 @@ export default function DeckRecommendClient() {
                     {/* Strongest Mode */}
                     {mode === "strongest" && (
                         <div className="mb-5">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.optimizationTarget")}</label>
-                            <div className="flex gap-2 flex-wrap">
-                                <button onClick={() => setStrongestTarget("power")}
-                                    className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${strongestTarget === "power" ? "ios-glass-tab-active text-white shadow-lg shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60 border border-slate-200/50"}`}>
+                            <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-2">{t("page.deckRecommend.optimizationTarget")}</label>
+                            <div className="hh-segment max-w-xs" role="tablist">
+                                <button role="tab" aria-selected={strongestTarget === "power"} onClick={() => setStrongestTarget("power")}
+                                    className="hh-segment-item hh-press cursor-pointer">
                                     {t("page.deckRecommend.strongestTargets.power")}
                                 </button>
-                                <button onClick={() => setStrongestTarget("skill")}
-                                    className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${strongestTarget === "skill" ? "ios-glass-tab-active text-white shadow-lg shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60 border border-slate-200/50"}`}>
+                                <button role="tab" aria-selected={strongestTarget === "skill"} onClick={() => setStrongestTarget("skill")}
+                                    className="hh-segment-item hh-press cursor-pointer">
                                     {t("page.deckRecommend.strongestTargets.skill")}
                                 </button>
                             </div>
-                            <p className="text-xs text-slate-400 mt-1.5">
+                            <p className="text-xs text-[var(--hh-text-tertiary)] mt-1.5">
                                 {t(`page.deckRecommend.strongestTargetDescriptions.${strongestTarget}`)}
                             </p>
                         </div>
@@ -830,19 +838,20 @@ export default function DeckRecommendClient() {
                     {/* Leader Character (all modes except challenge which has its own) */}
                     {mode !== "challenge" && (
                         <div className="mb-5">
-                            <div className="border border-slate-200/50 rounded-lg p-3 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
+                            <div className="hh-well p-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex flex-col">
-                                        <span className="text-sm text-slate-700 font-medium">{t("page.deckRecommend.fixedCharacter")}</span>
-                                        <span className="text-slate-400 text-xs text-left">{t("page.deckRecommend.fixedCharacterDescription")}</span>
+                                        <span className="text-sm text-[var(--hh-text-primary)] font-medium">{t("page.deckRecommend.fixedCharacter")}</span>
+                                        <span className="text-[var(--hh-text-tertiary)] text-xs text-left">{t("page.deckRecommend.fixedCharacterDescription")}</span>
                                     </div>
                                     <button onClick={() => { setShowLeaderSelect(!showLeaderSelect); if (showLeaderSelect) setLeaderCharacterId(null); }}
-                                        className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${showLeaderSelect ? 'bg-miku' : 'bg-slate-200'}`}>
-                                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${showLeaderSelect ? 'translate-x-5' : 'translate-x-0'}`} />
+                                        role="switch" aria-checked={showLeaderSelect}
+                                        className={`hh-switch hh-focusable shrink-0 ${showLeaderSelect ? "hh-switch-active" : ""}`}>
+                                        <span className="hh-switch-thumb" />
                                     </button>
                                 </div>
                                 {showLeaderSelect && (
-                                    <div className="mt-4 pt-3 border-t border-slate-200/50">
+                                    <div className="mt-4 pt-3 border-t border-[var(--hh-border)]">
                                         <CharacterSelector selectedCharacterId={leaderCharacterId} onSelect={setLeaderCharacterId} />
                                     </div>
                                 )}
@@ -855,7 +864,7 @@ export default function DeckRecommendClient() {
                         <div className="mb-5 space-y-4">
                             {/* WL3 Group Selector */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.wl3Group")} <span className="text-red-400">*</span></label>
+                                <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-2">{t("page.deckRecommend.wl3Group")} <span className="text-red-400">*</span></label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                     {WL3_SIMULATION_GROUPS.map(group => {
                                         const isSelected = wl3GroupId === group.groupId;
@@ -863,20 +872,21 @@ export default function DeckRecommendClient() {
                                             <button
                                                 key={group.groupId}
                                                 onClick={() => setWl3GroupId(isSelected ? null : group.groupId)}
-                                                className={`rounded-xl border p-3 text-left transition-all ${isSelected
-                                                    ? "border-emerald-400/80 bg-emerald-50/10 shadow-sm ring-2 ring-emerald-100/20 backdrop-blur-md"
-                                                    : "border-slate-200/50 bg-white/30 dark:bg-slate-900/30 hover:border-emerald-300 hover:bg-white/50 backdrop-blur-md"
+                                                aria-pressed={isSelected}
+                                                className={`hh-press hh-focusable rounded-[var(--hh-radius-md)] border p-3 text-left ${isSelected
+                                                    ? "border-[var(--hh-accent)] bg-[var(--hh-accent-wash)]"
+                                                    : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] hover:bg-[var(--hh-surface-3)]"
                                                 }`}
                                             >
                                                 <div className="flex items-center justify-between gap-2 mb-2">
-                                                    <div className="text-sm font-bold text-slate-700">{t("page.deckRecommend.wl3GroupTitle", { group: group.groupId })}</div>
-                                                    <span className="text-[11px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">WL3</span>
+                                                    <div className="text-sm font-bold text-[var(--hh-text-primary)]">{t("page.deckRecommend.wl3GroupTitle", { group: group.groupId })}</div>
+                                                    <span className="hh-numeric text-[11px] font-mono text-emerald-600 bg-emerald-500/12 px-1.5 py-0.5 rounded-[var(--hh-radius-sm)]">WL3</span>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1">
                                                     {group.members.map(charId => {
                                                         const characterName = getCharacterName(t, charId);
                                                         return (
-                                                            <div key={charId} className="w-7 h-7 rounded-full overflow-hidden bg-slate-100 ring-1 ring-white shadow-sm" title={characterName}>
+                                                            <div key={charId} className="w-7 h-7 rounded-full overflow-hidden bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)]" title={characterName}>
                                                                 <Image src={getCharacterIconUrl(charId)} alt={characterName} width={28} height={28} className="w-full h-full object-cover" unoptimized />
                                                             </div>
                                                         );
@@ -890,11 +900,11 @@ export default function DeckRecommendClient() {
 
                             {/* Live Type */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckRecommend.liveType")}</label>
+                                <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">{t("page.deckRecommend.liveType")}</label>
                                 <div className="flex flex-wrap gap-2">
                                     {liveTypeOptions.map((lt) => (
                                         <button key={lt.value} onClick={() => setLiveType(lt.value)}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${liveType === lt.value ? "ios-glass-tab-active text-white shadow-md shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60"}`}>
+                                            className={`hh-chip hh-press hh-focusable ${liveType === lt.value ? "hh-chip-active" : ""}`}>
                                             {lt.label}
                                         </button>
                                     ))}
@@ -904,7 +914,7 @@ export default function DeckRecommendClient() {
                             {/* Support Character — always visible, no toggle */}
                             {selectedWl3Simulation && (
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.supportCharacter")} <span className="text-red-400">*</span></label>
+                                    <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-2">{t("page.deckRecommend.supportCharacter")} <span className="text-red-400">*</span></label>
                                     <CharacterSelector
                                         selectedCharacterId={supportCharacterId}
                                         onSelect={setSupportCharacterId}
@@ -922,11 +932,11 @@ export default function DeckRecommendClient() {
                             <div><EventSelector selectedEventId={eventId} onSelect={(id) => setEventId(id)} onEventTypeChange={setSelectedEventType} onBonusCharactersChange={setEventBonusCharacterIds} /></div>
                             {mode === "event" && (
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckRecommend.liveType")}</label>
+                                    <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">{t("page.deckRecommend.liveType")}</label>
                                     <div className="flex flex-wrap gap-2">
                                         {liveTypeOptions.map((lt) => (
                                             <button key={lt.value} onClick={() => setLiveType(lt.value)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${liveType === lt.value ? "ios-glass-tab-active text-white shadow-md shadow-miku/20" : "ios-glass-tab text-slate-600 hover:bg-white/60"}`}>
+                                                className={`hh-chip hh-press hh-focusable ${liveType === lt.value ? "hh-chip-active" : ""}`}>
                                                 {lt.label}
                                             </button>
                                         ))}
@@ -935,7 +945,7 @@ export default function DeckRecommendClient() {
                             )}
                             {mode === "mysekai" && (
                                 <div className="flex items-center">
-                                    <div className="border border-amber-200/30 rounded-lg p-3 bg-amber-50/20 backdrop-blur-md w-full">
+                                    <div className="w-full rounded-[var(--hh-radius-md)] border border-amber-500/30 bg-amber-500/12 p-3">
                                         <div className="flex items-center gap-2 text-sm text-amber-700">
                                             <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                             <span>{t("page.deckRecommend.mysekaiNoMusicHint")}</span>
@@ -945,8 +955,8 @@ export default function DeckRecommendClient() {
                             )}
                             {selectedEventType === "world_bloom" && (
                                 <div className="sm:col-span-2">
-                                    <div className="border border-slate-200/50 rounded-lg p-3 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">{t("page.deckRecommend.supportCharacter")} <span className="text-red-400">*</span></label>
+                                    <div className="hh-well p-3">
+                                        <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-2">{t("page.deckRecommend.supportCharacter")} <span className="text-red-400">*</span></label>
                                         <CharacterSelector
                                             selectedCharacterId={supportCharacterId}
                                             onSelect={setSupportCharacterId}
@@ -962,19 +972,19 @@ export default function DeckRecommendClient() {
                     {/* Custom Mode */}
                     {mode === "custom" && (
                         <div className="mb-5">
-                            <div className="border border-indigo-200/30 rounded-lg p-4 bg-indigo-50/10 backdrop-blur-md">
-                                <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                                    <span className="w-1 h-4 bg-indigo-400 rounded-full"></span>{t("page.deckRecommend.customBonus")}
+                            <div className="hh-well p-4">
+                                <h3 className="hh-title text-sm text-[var(--hh-text-primary)] mb-3 flex items-center gap-2">
+                                    <span className="w-[3px] h-4 rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent)]"></span>{t("page.deckRecommend.customBonus")}
                                 </h3>
 
                                 {/* Custom bonus mode switch */}
-                                <div className="flex gap-1 p-0.5 bg-slate-100/50 dark:bg-slate-800/50 rounded-lg w-fit mb-4 backdrop-blur-sm">
-                                    <button onClick={() => setCustomSubMode("unit")}
-                                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${customSubMode === "unit" ? "bg-white text-slate-700 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
+                                <div className="hh-segment w-fit mb-4" role="tablist">
+                                    <button role="tab" aria-selected={customSubMode === "unit"} onClick={() => setCustomSubMode("unit")}
+                                        className="hh-segment-item hh-press cursor-pointer px-3">
                                         {t("page.deckRecommend.customModes.unit")}
                                     </button>
-                                    <button onClick={() => setCustomSubMode("character")}
-                                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${customSubMode === "character" ? "bg-white text-slate-700 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
+                                    <button role="tab" aria-selected={customSubMode === "character"} onClick={() => setCustomSubMode("character")}
+                                        className="hh-segment-item hh-press cursor-pointer px-3">
                                         {t("page.deckRecommend.customModes.character")}
                                     </button>
                                 </div>
@@ -982,13 +992,14 @@ export default function DeckRecommendClient() {
                                 {/* Unit bonus mode */}
                                 {customSubMode === "unit" && (
                                     <div className="mb-4">
-                                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">{t("page.deckRecommend.bonusUnit")}</label>
+                                        <label className="hh-label block mb-2">{t("page.deckRecommend.bonusUnit")}</label>
                                         <div className="flex flex-wrap gap-2">
                                             {UNIT_OPTIONS.map((u) => {
                                                 const unitLabel = t(u.labelKey);
                                                 return (
                                                     <button key={u.value} onClick={() => setCustomUnit(customUnit === u.value ? "" : u.value)}
-                                                        className={`p-1.5 rounded-xl transition-all ${customUnit === u.value ? "ring-2 ring-miku shadow-lg bg-white/60 dark:bg-slate-900/60" : "hover:bg-white/40 border border-transparent bg-slate-50/30 dark:bg-slate-900/30"}`}
+                                                        aria-pressed={customUnit === u.value}
+                                                        className={`hh-press hh-focusable p-1.5 rounded-[var(--hh-radius-md)] border ${customUnit === u.value ? "border-[var(--hh-accent)] bg-[var(--hh-accent-wash)]" : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] hover:bg-[var(--hh-surface-3)]"}`}
                                                         title={unitLabel}>
                                                         <div className="w-8 h-8 relative">
                                                             <Image src={`/data/icon/${u.icon}`} alt={unitLabel} fill className="object-contain" unoptimized />
@@ -1004,7 +1015,7 @@ export default function DeckRecommendClient() {
                                 {/* Character bonus mode */}
                                 {customSubMode === "character" && (
                                     <div className="mb-4">
-                                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                                        <label className="hh-label block mb-2">
                                             {t("page.deckRecommend.bonusCharacters", { count: customCharacterIds.length, max: MAX_CUSTOM_CHARACTERS })}
                                         </label>
                                         <div className="flex flex-wrap gap-1.5">
@@ -1034,19 +1045,20 @@ export default function DeckRecommendClient() {
                                                             }
                                                         }}
                                                         disabled={isFull}
-                                                        className={`relative transition-all ${isSelected
-                                                            ? "ring-2 ring-miku scale-110 z-10 rounded-full"
+                                                        aria-pressed={isSelected}
+                                                        className={`hh-press hh-focusable relative rounded-full ring-2 ${isSelected
+                                                            ? "ring-[var(--hh-accent)] z-10"
                                                             : isFull
-                                                                ? "opacity-30 cursor-not-allowed rounded-full"
-                                                                : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-80 hover:opacity-100"
+                                                                ? "ring-transparent opacity-30 cursor-not-allowed"
+                                                                : "ring-transparent hover:ring-[var(--hh-border-strong)]"
                                                         }`}
                                                         title={characterName}>
-                                                        <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-100">
+                                                        <div className="w-9 h-9 rounded-full overflow-hidden bg-[var(--hh-surface-sunken)]">
                                                             <Image src={getCharacterIconUrl(cid)} alt={characterName} width={36} height={36} className="w-full h-full object-cover" unoptimized />
                                                         </div>
                                                         {isSelected && (
-                                                            <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-miku rounded-full flex items-center justify-center">
-                                                                <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                                            <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-[var(--hh-accent)] rounded-full flex items-center justify-center">
+                                                                <svg className="w-2 h-2 text-[var(--hh-text-on-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                                                             </div>
                                                         )}
                                                     </button>
@@ -1056,17 +1068,17 @@ export default function DeckRecommendClient() {
 
                                         {/* Virtual singer unit selector */}
                                         {customCharacterIds.some(cid => cid >= 21 && cid <= 26) && (
-                                            <div className="mt-3 p-3 bg-teal-50/20 border border-teal-200/30 rounded-lg backdrop-blur-md">
-                                                <label className="block text-xs font-bold text-slate-600 mb-2">{t("page.deckRecommend.virtualSingerUnit")}</label>
+                                            <div className="mt-3 p-3 rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)]">
+                                                <label className="hh-label block mb-2">{t("page.deckRecommend.virtualSingerUnit")}</label>
                                                 {customCharacterIds.filter(cid => cid >= 21 && cid <= 26).map(cid => {
                                                 const characterName = getCharacterName(t, cid);
 
                                                     return (
                                                         <div key={cid} className="flex items-center gap-2 mb-2 last:mb-0">
-                                                        <div className="w-7 h-7 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">
+                                                        <div className="w-7 h-7 rounded-full overflow-hidden bg-[var(--hh-surface-sunken)] flex-shrink-0">
                                                             <Image src={getCharacterIconUrl(cid)} alt={characterName} width={28} height={28} className="w-full h-full object-cover" unoptimized />
                                                         </div>
-                                                        <span className="text-xs text-slate-600 w-16 flex-shrink-0">{characterName}</span>
+                                                        <span className="text-xs text-[var(--hh-text-secondary)] w-16 flex-shrink-0">{characterName}</span>
                                                         <div className="flex flex-wrap gap-1">
                                                             {VS_SUPPORT_UNIT_OPTIONS.map(opt => (
                                                                 <button key={opt.value}
@@ -1078,10 +1090,11 @@ export default function DeckRecommendClient() {
                                                                         }
                                                                         return { ...prev, [cid]: opt.value };
                                                                     })}
-                                                                    className={`p-1 rounded-lg transition-all ${
+                                                                    aria-pressed={customCharacterUnits[cid] === opt.value}
+                                                                    className={`hh-press hh-focusable p-1 rounded-[var(--hh-radius-sm)] border ${
                                                                         customCharacterUnits[cid] === opt.value
-                                                                            ? "ring-2 ring-miku shadow-sm bg-white/60 dark:bg-slate-900/60"
-                                                                            : "hover:bg-white/40 bg-white/20 dark:bg-slate-900/20 border border-slate-200/50"
+                                                                            ? "border-[var(--hh-accent)] bg-[var(--hh-accent-wash)]"
+                                                                            : "border-[var(--hh-border)] bg-[var(--hh-surface-1)] hover:bg-[var(--hh-surface-3)]"
                                                                     }`}
                                                                     title={opt.labelKey ? t(opt.labelKey) : opt.label}>
                                                                     <div className="w-5 h-5 relative">
@@ -1098,7 +1111,7 @@ export default function DeckRecommendClient() {
 
                                         {customCharacterIds.length > 0 && (
                                             <div className="mt-2">
-                                                <button onClick={() => { setCustomCharacterIds([]); setCustomCharacterUnits({}); }} className="text-[10px] text-slate-400 hover:text-red-400 transition-colors">{t("page.deckRecommend.clearSelection")}</button>
+                                                <button onClick={() => { setCustomCharacterIds([]); setCustomCharacterUnits({}); }} className="text-[10px] text-[var(--hh-text-tertiary)] hover:text-[var(--hh-accent-alert)] transition-colors">{t("page.deckRecommend.clearSelection")}</button>
                                             </div>
                                         )}
                                     </div>
@@ -1106,11 +1119,12 @@ export default function DeckRecommendClient() {
 
                                 {/* Bonus attribute selector */}
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">{t("page.deckRecommend.bonusAttribute")}</label>
+                                    <label className="hh-label block mb-2">{t("page.deckRecommend.bonusAttribute")}</label>
                                     <div className="flex flex-wrap gap-2">
                                         {ATTR_OPTIONS.map((a) => (
                                             <button key={a.value} onClick={() => setCustomAttr(customAttr === a.value ? "" : a.value)}
-                                                className={`p-1.5 rounded-xl transition-all ${customAttr === a.value ? "ring-2 ring-miku shadow-lg bg-white/60 dark:bg-slate-900/60" : "hover:bg-white/40 border border-transparent bg-slate-50/30 dark:bg-slate-900/30"}`}
+                                                aria-pressed={customAttr === a.value}
+                                                className={`hh-press hh-focusable p-1.5 rounded-[var(--hh-radius-md)] border ${customAttr === a.value ? "border-[var(--hh-accent)] bg-[var(--hh-accent-wash)]" : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] hover:bg-[var(--hh-surface-3)]"}`}
                                                 title={a.label}>
                                                 <div className="w-6 h-6 relative">
                                                     <Image src={`/data/icon/${a.icon}`} alt={a.label} fill className="object-contain" unoptimized />
@@ -1121,7 +1135,7 @@ export default function DeckRecommendClient() {
                                 </div>
 
                                 {((customSubMode === "unit" && !customUnit) || (customSubMode === "character" && customCharacterIds.length === 0)) && !customAttr && (
-                                    <p className="text-xs text-slate-400 mt-3">{t("page.deckRecommend.customBonusEmptyHint", { target: t(`page.deckRecommend.customBonusTargets.${customSubMode}`) })}</p>
+                                    <p className="text-xs text-[var(--hh-text-tertiary)] mt-3">{t("page.deckRecommend.customBonusEmptyHint", { target: t(`page.deckRecommend.customBonusTargets.${customSubMode}`) })}</p>
                                 )}
                             </div>
                         </div>
@@ -1132,13 +1146,17 @@ export default function DeckRecommendClient() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                             <div><MusicSelector selectedMusicId={musicId} onSelect={(id) => setMusicId(id)} recommendMode={mode === "challenge" ? "challenge" : "event"} liveType={liveType} /></div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">{t("page.deckRecommend.difficulty")}</label>
+                                <label className="block text-sm font-medium text-[var(--hh-text-secondary)] mb-1">{t("page.deckRecommend.difficulty")}</label>
                                 <div className="flex flex-wrap gap-2">
                                     {DIFFICULTY_OPTIONS.map((d) => {
-                                        const colors: Record<string, string> = { easy: "bg-blue-500 text-white shadow-blue-500/20", normal: "bg-emerald-500 text-white shadow-emerald-500/20", hard: "bg-orange-500 text-white shadow-orange-500/20", expert: "bg-red-500 text-white shadow-red-500/20", master: "bg-purple-500 text-white shadow-purple-500/20", append: "bg-fuchsia-500 text-white shadow-fuchsia-500/20" };
+                                        // Difficulty hues are game semantics, not decoration, so the
+                                        // active slab keeps them; only the elevation halo is dropped.
+                                        const colors: Record<string, string> = { easy: "bg-blue-500", normal: "bg-emerald-500", hard: "bg-orange-500", expert: "bg-red-500", master: "bg-purple-500", append: "bg-fuchsia-500" };
+                                        const isActive = difficulty === d.value;
                                         return (
                                             <button key={d.value} onClick={() => setDifficulty(d.value)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all shadow-md ${difficulty === d.value ? (colors[d.value] || "ios-glass-tab-active text-white shadow-miku/20") : "ios-glass-tab text-slate-600 hover:bg-white/60 shadow-none"}`}>
+                                                aria-pressed={isActive}
+                                                className={`hh-chip hh-press hh-focusable ${isActive ? `${colors[d.value] ?? "bg-[var(--hh-accent)]"} text-white border-black/15` : ""}`}>
                                                 {d.label}
                                             </button>
                                         );
@@ -1150,7 +1168,7 @@ export default function DeckRecommendClient() {
 
                     {/* Card Config */}
                     <div className="mb-5">
-                        <button onClick={() => setShowCardConfig(!showCardConfig)} className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-miku transition-colors">
+                        <button onClick={() => setShowCardConfig(!showCardConfig)} className="flex items-center gap-2 text-sm font-medium text-[var(--hh-text-secondary)] hover:text-miku transition-colors">
                             <svg className={`w-4 h-4 transition-transform ${showCardConfig ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
@@ -1160,16 +1178,16 @@ export default function DeckRecommendClient() {
                             <div className="mt-3 overflow-x-auto">
                                 <table className="dr-config-table w-full text-sm">
                                     <thead><tr>
-                                        <th className="text-left py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.rarity")}</th>
-                                        <th className="py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.disable")}</th>
-                                        <th className="py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.maxLevel")}</th>
-                                        <th className="py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.episodes")}</th>
-                                        <th className="py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.maxMaster")}</th>
-                                        <th className="py-2 px-2 text-slate-500 font-medium">{t("page.deckRecommend.cardConfigHeaders.maxSkill")}</th>
+                                        <th className="hh-label text-left py-2 px-2">{t("page.deckRecommend.cardConfigHeaders.rarity")}</th>
+                                        <th className="hh-label py-2 px-2">{t("page.deckRecommend.cardConfigHeaders.disable")}</th>
+                                        <th className="hh-label py-2 px-2">{t("page.deckRecommend.cardConfigHeaders.maxLevel")}</th>
+                                        <th className="hh-label py-2 px-2">{t("page.deckRecommend.cardConfigHeaders.episodes")}</th>
+                                        <th className="hh-label py-2 px-2">{t("page.deckRecommend.cardConfigHeaders.maxMaster")}</th>
+                                        <th className="hh-label py-2 px-2">{t("page.deckRecommend.cardConfigHeaders.maxSkill")}</th>
                                     </tr></thead>
                                     <tbody>
                                         {RARITY_CONFIG_KEYS.map(({ key }) => (
-                                            <tr key={key} className="border-t border-slate-100">
+                                            <tr key={key} className="border-t border-[var(--hh-border-hairline)]">
                                                 <td className="py-2 px-2">
                                                     <div className="flex items-center gap-0.5">
                                                         {key === "rarity_birthday" ? (
@@ -1197,14 +1215,14 @@ export default function DeckRecommendClient() {
                     {/* Action Buttons */}
                     <div className="flex gap-3">
                         <button onClick={handleCalculate} disabled={isCalculating}
-                            className="flex-1 px-6 py-3 ios-glass-btn ios-glass-btn-primary rounded-xl font-bold shadow-lg shadow-miku/20 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            className="hh-btn hh-btn-primary hh-press hh-focusable flex-1 px-6 py-3 font-bold disabled:opacity-50 disabled:cursor-not-allowed">
                             {isCalculating ? (<><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>{t("page.deckRecommend.calculating")}</>) : (<>
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                                 {t("page.deckRecommend.startCalculate")}
                             </>)}
                         </button>
                         {isCalculating && (
-                            <button onClick={handleCancel} className="px-6 py-3 ios-glass-btn border border-red-400/50 text-red-500 rounded-xl font-bold hover:bg-red-500/10 transition-all">{t("page.deckRecommend.cancel")}</button>
+                            <button onClick={handleCancel} className="hh-btn hh-btn-danger hh-press hh-focusable px-6 py-3 font-bold">{t("page.deckRecommend.cancel")}</button>
                         )}
                     </div>
 
@@ -1218,7 +1236,7 @@ export default function DeckRecommendClient() {
 
                 {/* Error */}
                 {error && (
-                    <div className="ios-glass-card p-4 rounded-2xl mb-6 bg-red-50/80 border border-red-200/50">
+                    <div className="hh-tile rounded-[var(--hh-radius-lg)] p-4 mb-6 bg-red-500/12 border-red-500/30">
                         <div className="flex items-start gap-3">
                             <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             <p className="text-sm font-medium text-red-700">{error}</p>
@@ -1228,25 +1246,25 @@ export default function DeckRecommendClient() {
 
                 {/* Results */}
                 {results && results.length > 0 && (
-                    <div className="ios-glass-panel p-5 sm:p-6 rounded-2xl mb-6">
+                    <div className="hh-tile rounded-[var(--hh-radius-lg)] p-5 sm:p-6 mb-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-miku rounded-full"></span>
+                            <h2 className="hh-title text-lg text-[var(--hh-text-primary)] flex items-center gap-2">
+                                <span className="w-[3px] h-5 rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent)]"></span>
                                 {t("page.deckRecommend.resultsTitle", { count: results.length })}
                             </h2>
                             {duration !== null && (
                                 <div className="flex flex-col items-end">
-                                    <span className="text-xs text-slate-400 font-mono">{t("page.deckRecommend.elapsed", { seconds: (duration / 1000).toFixed(2) })}</span>
-                                    {dataTime && <span className="text-xs text-slate-400 font-mono">{t("page.deckRecommend.dataUpdatedAt", { time: formatDate(dataTime * 1000, { dateStyle: "medium", timeStyle: "short" }) })}</span>}
+                                    <span className="hh-numeric text-xs text-[var(--hh-text-tertiary)] font-mono">{t("page.deckRecommend.elapsed", { seconds: (duration / 1000).toFixed(2) })}</span>
+                                    {dataTime && <span className="hh-numeric text-xs text-[var(--hh-text-tertiary)] font-mono">{t("page.deckRecommend.dataUpdatedAt", { time: formatDate(dataTime * 1000, { dateStyle: "medium", timeStyle: "short" }) })}</span>}
                                 </div>
                             )}
                         </div>
                         {challengeHighScore && (
-                            <div className="mb-4 px-3 py-2 bg-amber-50 rounded-lg text-sm text-amber-700">
+                            <div className="hh-numeric mb-4 px-3 py-2 rounded-[var(--hh-radius-md)] border border-amber-500/30 bg-amber-500/12 text-sm text-amber-700">
                                 {t("page.deckRecommend.challengeHighScore", { score: challengeHighScore.highScore ? formatNumber(challengeHighScore.highScore) : t("page.deckRecommend.noRecord") })}
                             </div>
                         )}
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             {results.map((deck, index: number) => (
                                 <DeckResultRow key={index} deck={deck} rank={index + 1} getCardMaster={getCardMaster} mode={mode} userCards={userCards} scoreLabel={scoreLabel} formatNumber={formatNumber} forceExpand={isScreenshotMode} strongestTarget={strongestTarget} />
                             ))}
@@ -1255,14 +1273,14 @@ export default function DeckRecommendClient() {
                 )}
 
                 {results && results.length === 0 && (
-                    <div className="ios-glass-card p-8 rounded-2xl mb-6 text-center">
-                        <p className="text-slate-500">{t("page.deckRecommend.noDecks")}</p>
+                    <div className="hh-tile rounded-[var(--hh-radius-lg)] p-8 mb-6 text-center">
+                        <p className="text-[var(--hh-text-secondary)]">{t("page.deckRecommend.noDecks")}</p>
                     </div>
                 )}
 
-                <div className="mt-12 text-center text-xs text-slate-400">
-                    <p className="mb-1">{t("page.deckRecommend.sourceCreditPrefix")} <ExternalLink href="https://github.com/xfl03/sekai-calculator" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-calculator</ExternalLink></p>
-                    <p className="mb-1">{t("page.deckRecommend.algorithmCreditPrefix")} <ExternalLink href="https://github.com/NeuraXmy/sekai-deck-recommend-cpp" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-deck-recommend-cpp</ExternalLink> {t("page.deckRecommend.algorithmCreditAuthor")}</p>
+                <div className="mt-12 text-center text-xs text-[var(--hh-text-tertiary)]">
+                    <p className="mb-1">{t("page.deckRecommend.sourceCreditPrefix")} <ExternalLink href="https://github.com/xfl03/sekai-calculator" target="_blank" rel="noopener noreferrer" className="text-[var(--hh-text-secondary)] hover:text-miku hover:underline">sekai-calculator</ExternalLink></p>
+                    <p className="mb-1">{t("page.deckRecommend.algorithmCreditPrefix")} <ExternalLink href="https://github.com/NeuraXmy/sekai-deck-recommend-cpp" target="_blank" rel="noopener noreferrer" className="text-[var(--hh-text-secondary)] hover:text-miku hover:underline">sekai-deck-recommend-cpp</ExternalLink> {t("page.deckRecommend.algorithmCreditAuthor")}</p>
                     <p>{t("page.deckRecommend.licenseNotice")}</p>
                 </div>
             </div>
@@ -1304,18 +1322,22 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
     const totalPower = deck.power?.total ?? 0;
 
     return (
-        <div className="dr-result-row rounded-xl border border-slate-100 overflow-hidden hover:border-miku/30 transition-all">
+        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
             <button onClick={() => {
                 if (forceExpand) return;
                 setShowDetails(!showDetails);
             }}
-                className="w-full p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 text-left hover:bg-slate-50/50 transition-colors">
+                aria-expanded={detailsExpanded}
+                className="hh-press w-full p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 text-left hover:bg-[var(--hh-surface-1)] transition-colors">
                 <div className="flex items-center justify-between sm:justify-start gap-3">
                     <div className="flex items-center gap-3">
-                        <div className={`dr-rank flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${rank === 1 ? "bg-amber-400 text-white" : rank === 2 ? "bg-slate-400 text-white" : rank === 3 ? "bg-amber-700 text-white" : "bg-slate-100 text-slate-500"}`}>{rank}</div>
+                        {/* Podium badge. gold / silver / bronze are medal semantics, so the
+                            literal amber-400 / slate-400 / amber-700 stay; only ranks 4+
+                            fall through to a neutral surface. */}
+                        <div className={`hh-numeric flex-shrink-0 w-8 h-8 rounded-[var(--hh-radius-md)] flex items-center justify-center font-bold text-sm ${rank === 1 ? "bg-amber-400 text-white" : rank === 2 ? "bg-slate-400 text-white" : rank === 3 ? "bg-amber-700 text-white" : "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]"}`}>{rank}</div>
                         <div className="flex-shrink-0 min-w-[80px]">
-                            <div className="text-xs text-slate-400">{scoreLabel}</div>
-                            <div className="font-bold text-primary-text text-sm">
+                            <div className="text-xs text-[var(--hh-text-tertiary)]">{scoreLabel}</div>
+                            <div className="hh-numeric font-bold text-[var(--hh-text-primary)] text-sm">
                                 {mode === "strongest" && strongestTarget === "skill" && deck.multiLiveScoreUp != null
                                     ? `${deck.multiLiveScoreUp.toFixed(1)}%`
                                     : formatNumber(Math.floor(deck.score))}
@@ -1323,28 +1345,28 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                         </div>
                         {effectiveSkill > 0 && mode !== "challenge" && mode !== "mysekai" && mode !== "strongest" && (
                             <div className="flex-shrink-0 min-w-[60px]">
-                                <div className="text-xs text-slate-400">{t("page.deckRecommend.result.effectiveSkill")}</div>
-                                <div className="font-bold text-emerald-600 text-sm">{effectiveSkill.toFixed(1)}%</div>
+                                <div className="text-xs text-[var(--hh-text-tertiary)]">{t("page.deckRecommend.result.effectiveSkill")}</div>
+                                <div className="hh-numeric font-bold text-emerald-600 text-sm">{effectiveSkill.toFixed(1)}%</div>
                             </div>
                         )}
                         {totalPower > 0 && (
                             <div className="flex-shrink-0 min-w-[60px] sm:hidden">
-                                <div className="text-xs text-slate-400">{t("page.deckRecommend.result.power")}</div>
-                                <div className="font-bold text-miku text-sm">{formatNumber(totalPower)}</div>
+                                <div className="text-xs text-[var(--hh-text-tertiary)]">{t("page.deckRecommend.result.power")}</div>
+                                <div className="hh-numeric font-bold text-miku text-sm">{formatNumber(totalPower)}</div>
                             </div>
                         )}
                         {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && totalEventBonus > 0 && (
                             <div className="flex-shrink-0 min-w-[60px] hidden sm:block">
-                                <div className="text-xs text-slate-400">{totalBonusLabel}</div>
-                                <div className="font-bold text-miku text-sm">{totalEventBonusText}</div>
+                                <div className="text-xs text-[var(--hh-text-tertiary)]">{totalBonusLabel}</div>
+                                <div className="hh-numeric font-bold text-miku text-sm">{totalEventBonusText}</div>
                                 {showSupportBonusBreakdown && (
-                                    <div className="text-[10px] text-slate-500 leading-tight">{t("page.deckRecommend.result.mainDeckPlusSupport", { base: baseEventBonusText, support: supportDeckBonusText })}</div>
+                                    <div className="hh-numeric text-[10px] text-[var(--hh-text-secondary)] leading-tight">{t("page.deckRecommend.result.mainDeckPlusSupport", { base: baseEventBonusText, support: supportDeckBonusText })}</div>
                                 )}
                             </div>
                         )}
 
                     </div>
-                    <svg className={`w-4 h-4 text-slate-400 transition-transform sm:hidden ${detailsExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className={`w-4 h-4 text-[var(--hh-text-tertiary)] transition-transform sm:hidden ${detailsExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>
@@ -1358,16 +1380,18 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                         const level = userCard?.level ?? card.level ?? 1;
                         const isPreTraining = card.skill?.isPreTrainingSkill === true;
                         const showTrained = (rarityType === "rarity_3" || rarityType === "rarity_4") && !isBirthday && !isPreTraining;
-                        if (!masterCard) return <div key={i} className="dr-card-thumb w-10 h-10 sm:w-12 sm:h-12 rounded bg-slate-100 flex items-center justify-center text-slate-400 text-xs flex-shrink-0">?</div>;
+                        // Unresolved card: an empty slot is a well, not a tile, so it
+                        // reads as a hole in the row rather than a fifth card.
+                        if (!masterCard) return <div key={i} className="hh-well w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--hh-radius-sm)] flex items-center justify-center text-[var(--hh-text-tertiary)] text-xs flex-shrink-0">?</div>;
                         return (
                             <div key={i} className="relative flex flex-col items-center gap-0.5 flex-shrink-0">
                                 <Link href={`/cards/${card.cardId}`} className="block relative" target="_blank">
                                     <SekaiCardThumbnail card={masterCard} trained={showTrained} mastery={masterRank} width={48} />
-                                    {i === 0 && <div className="absolute bottom-0 right-0 bg-miku/90 text-white text-[8px] font-bold px-1 py-[1px] rounded-tl-md leading-none backdrop-blur-[1px] z-10">L</div>}
+                                    {i === 0 && <div className="absolute bottom-0 right-0 bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] text-[8px] font-bold px-1 py-[1px] rounded-tl-[var(--hh-radius-xs)] leading-none z-10">L</div>}
                                 </Link>
-                                <div className="text-[9px] sm:text-[10px] text-slate-500 font-mono leading-none flex items-center gap-0.5">
+                                <div className="hh-numeric text-[9px] sm:text-[10px] text-[var(--hh-text-secondary)] font-mono leading-none flex items-center gap-0.5">
                                     <span>Lv.{level}</span>
-                                    {masterRank > 0 && <span className="bg-slate-100 text-slate-600 rounded-full px-[3px] py-[1px] flex items-center gap-[1px] leading-none border border-slate-200"><span className="text-[7px]">🔷</span><span className="text-[8px] font-bold">{masterRank}</span></span>}
+                                    {masterRank > 0 && <span className="bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-full)] px-[3px] py-[1px] flex items-center gap-[1px] leading-none border border-[var(--hh-border)]"><span className="text-[7px]">🔷</span><span className="text-[8px] font-bold">{masterRank}</span></span>}
                                 </div>
                             </div>
                         );
@@ -1375,25 +1399,25 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                 </div>
                 {totalPower > 0 && (
                     <div className="flex-shrink-0 text-right hidden sm:block">
-                        <div className="text-xs text-slate-400">{t("page.deckRecommend.result.power")}</div>
-                        <div className="font-bold text-sm text-miku">{formatNumber(totalPower)}</div>
+                        <div className="text-xs text-[var(--hh-text-tertiary)]">{t("page.deckRecommend.result.power")}</div>
+                        <div className="hh-numeric font-bold text-sm text-miku">{formatNumber(totalPower)}</div>
                     </div>
                 )}
-                <svg className={`w-4 h-4 text-slate-400 transition-transform flex-shrink-0 hidden sm:block ${detailsExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className={`w-4 h-4 text-[var(--hh-text-tertiary)] transition-transform flex-shrink-0 hidden sm:block ${detailsExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
             {detailsExpanded && (
-                <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-slate-100">
+                <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-[var(--hh-border)]">
                     <div className="mt-3 overflow-x-auto">
                         <table className="w-full text-xs">
-                            <thead><tr className="text-slate-400">
-                                <th className="text-left py-1 px-1">{t("page.deckRecommend.result.leader")}</th>
-                                <th className="text-left py-1 px-1">{t("page.deckRecommend.result.cardId")}</th>
-                                <th className="text-left py-1 px-1">{t("page.deckRecommend.result.cardName")}</th>
-                                <th className="text-right py-1 px-1">{t("page.deckRecommend.result.power")}</th>
-                                <th className="text-right py-1 px-1">{t("page.deckRecommend.result.skill")}</th>
-                                {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && <th className="text-right py-1 px-1">{mode === "custom" ? t("page.deckRecommend.result.customBonus") : t("page.deckRecommend.result.eventBonus")}</th>}
+                            <thead><tr>
+                                <th className="hh-label text-left py-1 px-1">{t("page.deckRecommend.result.leader")}</th>
+                                <th className="hh-label text-left py-1 px-1">{t("page.deckRecommend.result.cardId")}</th>
+                                <th className="hh-label text-left py-1 px-1">{t("page.deckRecommend.result.cardName")}</th>
+                                <th className="hh-label text-right py-1 px-1">{t("page.deckRecommend.result.power")}</th>
+                                <th className="hh-label text-right py-1 px-1">{t("page.deckRecommend.result.skill")}</th>
+                                {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && <th className="hh-label text-right py-1 px-1">{mode === "custom" ? t("page.deckRecommend.result.customBonus") : t("page.deckRecommend.result.eventBonus")}</th>}
                             </tr></thead>
                             <tbody>
                                 {deck.cards?.map((card: DeckCardResult, i: number) => {
@@ -1408,17 +1432,17 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                                             : "-";
                                     const cardName = masterCard?.prefix || (masterCard ? getCharacterName(t, masterCard.characterId, "short") : `ID:${card.characterId}`);
                                     return (
-                                        <tr key={i} className="border-t border-slate-50">
-                                            <td className="py-1.5 px-1 font-bold text-slate-500">{i === 0 ? t("page.deckRecommend.result.leader") : `#${i + 1}`}</td>
-                                            <td className="py-1.5 px-1 font-mono text-slate-600">{card.cardId}</td>
-                                            <td className="py-1.5 px-1 text-slate-600">{cardName}</td>
-                                            <td className="py-1.5 px-1 text-right font-mono text-slate-600">{formatNumber(basePower)}</td>
-                                            <td className="py-1.5 px-1 text-right text-miku font-bold">
+                                        <tr key={i} className="border-t border-[var(--hh-border-hairline)]">
+                                            <td className="py-1.5 px-1 font-bold text-[var(--hh-text-secondary)]">{i === 0 ? t("page.deckRecommend.result.leader") : `#${i + 1}`}</td>
+                                            <td className="hh-numeric py-1.5 px-1 font-mono text-[var(--hh-text-secondary)]">{card.cardId}</td>
+                                            <td className="py-1.5 px-1 text-[var(--hh-text-secondary)]">{cardName}</td>
+                                            <td className="hh-numeric py-1.5 px-1 text-right font-mono text-[var(--hh-text-secondary)]">{formatNumber(basePower)}</td>
+                                            <td className="hh-numeric py-1.5 px-1 text-right text-miku font-bold">
                                                 <span>{card.skill?.scoreUp || 0}%</span>
-                                                {card.skill?.isPreTrainingSkill && <span className="ml-1 text-[9px] font-medium text-amber-500 bg-amber-50 px-1 py-[1px] rounded" title={t("page.deckRecommend.result.preTrainingTitle")}>{t("page.deckRecommend.result.preTrainingBadge")}</span>}
+                                                {card.skill?.isPreTrainingSkill && <span className="ml-1 text-[9px] font-medium text-amber-500 bg-amber-500/12 px-1 py-[1px] rounded-[var(--hh-radius-xs)]" title={t("page.deckRecommend.result.preTrainingTitle")}>{t("page.deckRecommend.result.preTrainingBadge")}</span>}
                                             </td>
                                             {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && (
-                                                <td className="py-1.5 px-1 text-right font-bold text-amber-600">
+                                                <td className="hh-numeric py-1.5 px-1 text-right font-bold text-amber-600">
                                                     {eventBonusText}
                                                 </td>
                                             )}
@@ -1430,9 +1454,9 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                     </div>
                     <div className="mt-2 flex gap-4 sm:hidden text-xs">
                         {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && totalEventBonus > 0 && (
-                            <span className="text-slate-500">
-                                {totalBonusLabel}: <span className="font-bold text-miku">{totalEventBonusText}</span>
-                                {showSupportBonusBreakdown && <span className="text-slate-400"> ({t("page.deckRecommend.result.mainDeckPlusSupport", { base: baseEventBonusText, support: supportDeckBonusText })})</span>}
+                            <span className="text-[var(--hh-text-secondary)]">
+                                {totalBonusLabel}: <span className="hh-numeric font-bold text-miku">{totalEventBonusText}</span>
+                                {showSupportBonusBreakdown && <span className="hh-numeric text-[var(--hh-text-tertiary)]"> ({t("page.deckRecommend.result.mainDeckPlusSupport", { base: baseEventBonusText, support: supportDeckBonusText })})</span>}
                             </span>
                         )}
                     </div>

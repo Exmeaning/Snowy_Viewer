@@ -130,15 +130,15 @@ export default function StoryAreaListClient() {
                     placeholder={t("page.story.area.searchPlaceholder")}
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full mb-6 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-miku/30"
+                    className="hh-input w-full mb-6 px-4 py-2 text-sm"
                 />
 
                 {isLoading && (
                     <div className="flex justify-center py-16">
-                        <div className="w-10 h-10 border-4 border-miku/30 border-t-miku rounded-full animate-spin"></div>
+                        <div className="loading-spinner"></div>
                     </div>
                 )}
-                {error && <div className="text-red-500 text-center py-8">{error}</div>}
+                {error && <div className="hh-body text-center py-8 text-red-500">{error}</div>}
 
                 {!isLoading && !error && (
                     <div className="space-y-4">
@@ -194,9 +194,9 @@ function Section({ title, storageKey, children }: { title: string; storageKey: s
     return (
         <div>
             <button onClick={toggle} className="flex items-center gap-1.5 mb-3 group">
-                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider group-hover:text-miku transition-colors">{title}</h2>
+                <h2 className="hh-label group-hover:text-[var(--hh-accent)] transition-colors">{title}</h2>
                 <svg
-                    className={`w-4 h-4 text-slate-400 group-hover:text-miku transition-transform ${open ? "rotate-0" : "-rotate-90"}`}
+                    className={`w-4 h-4 text-[var(--hh-text-tertiary)] group-hover:text-[var(--hh-accent)] transition-transform ${open ? "rotate-0" : "-rotate-90"}`}
                     fill="none" viewBox="0 0 24 24" stroke="currentColor"
                 >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -214,10 +214,10 @@ function CategoryLink({ cat, eventMap, translations, areaMap }: { cat: AreaCateg
     return (
         <Link
             href={`/story/area/${encodeURIComponent(urlParam)}`}
-            className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-sm transition-all group"
+            className="hh-press flex items-center justify-between p-3 bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] hover:border-[var(--hh-accent-line)] hover:bg-[var(--hh-surface-3)] group"
         >
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-miku transition-colors">{label}</span>
-            <svg className="w-4 h-4 text-slate-300 group-hover:text-miku transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span className="hh-body text-sm font-medium text-[var(--hh-text-primary)] group-hover:text-[var(--hh-accent)] transition-colors">{label}</span>
+            <svg className="w-4 h-4 text-[var(--hh-text-tertiary)] group-hover:text-[var(--hh-accent)] transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
         </Link>

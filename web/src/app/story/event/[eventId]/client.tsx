@@ -181,10 +181,10 @@ function ChapterItem({
       href={`/story/event/${eventId}/${chapter.chapter_no}`}
       className="block mb-4 last:mb-0"
     >
-      <div className="ios-glass-card ios-glass-card-interactive rounded-xl p-4 border-none group overflow-hidden">
+      <div className="hh-tile hh-press p-4 group overflow-hidden hover:border-[var(--hh-accent-line)]">
         <div className="flex flex-col sm:flex-row gap-4">
           {showImage && (
-            <div className="relative w-full sm:w-64 aspect-video sm:aspect-[16/9] rounded-lg overflow-hidden shrink-0 bg-slate-200/20 dark:bg-slate-700/20 self-center sm:self-start border border-white/10">
+            <div className="relative w-full sm:w-64 aspect-video sm:aspect-[16/9] rounded-[var(--hh-radius-md)] overflow-hidden shrink-0 bg-[var(--hh-surface-sunken)] self-center sm:self-start border border-[var(--hh-border)]">
               <Image
                 src={imageUrl}
                 alt={`Episode ${chapter.chapter_no}`}
@@ -192,17 +192,17 @@ function ChapterItem({
                 className="object-contain transition-transform duration-500 group-hover:scale-105"
                 unoptimized
               />
-              <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-[2px] text-white text-[10px] px-1.5 py-0.5 rounded font-black">
+              <div className="hh-numeric absolute top-1 left-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded-[var(--hh-radius-sm)] font-bold">
                 #{chapter.chapter_no}
               </div>
             </div>
           )}
           <div className="flex-1 min-w-0 py-1">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 group-hover:text-miku transition-colors line-clamp-1">
+              <h3 className="hh-title text-lg text-[var(--hh-text-primary)] group-hover:text-[var(--hh-accent)] transition-colors line-clamp-1">
                 {displayTitle}
               </h3>
-              <div className="sm:hidden text-slate-400 group-hover:text-miku transition-all group-hover:translate-x-1">
+              <div className="sm:hidden text-[var(--hh-text-tertiary)] group-hover:text-[var(--hh-accent)] transition-all group-hover:translate-x-1">
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -219,14 +219,14 @@ function ChapterItem({
               </div>
             </div>
             {displaySummary ? (
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+              <p className="hh-body text-sm text-[var(--hh-text-secondary)] mt-2">
                 {displaySummary}
               </p>
             ) : (
-              <p className="text-sm text-slate-400 italic mt-1">{t("page.story.event.noChapterSummary")}</p>
+              <p className="hh-body text-sm text-[var(--hh-text-tertiary)] italic mt-1">{t("page.story.event.noChapterSummary")}</p>
             )}
           </div>
-          <div className="hidden sm:block text-slate-400 group-hover:text-miku transition-all group-hover:translate-x-1 self-center">
+          <div className="hidden sm:block text-[var(--hh-text-tertiary)] group-hover:text-[var(--hh-accent)] transition-all group-hover:translate-x-1 self-center">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -356,20 +356,20 @@ export default function StoryEventDetailClient() {
       <MainLayout>
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-md mx-auto text-center">
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-[var(--hh-radius-full)] bg-amber-500/15 border border-amber-500/40 flex items-center justify-center">
               <svg className="w-12 h-12 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            <h2 className="hh-display text-2xl text-[var(--hh-text-primary)] mb-2">
               {t("page.events.notFoundTitle", { id: eventId })}
             </h2>
-            <p className="text-slate-500 mb-6">
+            <p className="hh-body text-[var(--hh-text-secondary)] mb-6">
               {error || t("page.events.notFoundDesc")}
             </p>
             <Link
               href="/story/event"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
+              className="hh-btn hh-btn-primary hh-press px-6 py-3"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -411,21 +411,24 @@ export default function StoryEventDetailClient() {
   return (
     <MainLayout>
       <div className="container mx-auto px-4 sm:px-6 py-8">
-        {/* Banner */}
-        <div className="relative rounded-2xl overflow-hidden ios-glass-card mb-8 min-h-[200px] sm:min-h-[250px] flex items-center border-none">
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-miku/10 to-purple-500/10 mix-blend-multiply z-10" />
+        {/* Banner. The art is a defocused texture layer sitting at low opacity
+            directly on the opaque tile, which is what replaces the old
+            translucent + backdrop-blur veil: contrast for the title now comes
+            from the solid surface underneath rather than from a blur pass. The
+            `blur-sm` here is a plain filter on the image, not a backdrop-filter,
+            so it is the defocus effect itself and stays. */}
+        <div className="hh-tile relative overflow-hidden mb-8 min-h-[200px] sm:min-h-[250px] flex items-center">
+          <div className="absolute inset-0 z-0 opacity-20">
             <Image
               src={getEventBannerUrl(eventInfo.assetbundleName, assetSource)}
               alt={eventInfo.name}
               fill
-              className="object-cover opacity-50 blur-sm scale-105"
+              className="object-cover blur-sm scale-105"
               unoptimized
             />
-            <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-20" />
           </div>
           <div className="relative z-30 w-full p-6 sm:p-10 flex flex-col sm:flex-row items-center gap-6 sm:gap-10">
-            <div className="relative w-48 sm:w-64 aspect-[2/1] drop-shadow-xl shrink-0 transition-transform hover:scale-105 duration-500">
+            <div className="relative w-48 sm:w-64 aspect-[2/1] shrink-0">
               <Image
                 src={getEventLogoUrl(eventInfo.assetbundleName, assetSource)}
                 alt={eventInfo.name}
@@ -435,11 +438,11 @@ export default function StoryEventDetailClient() {
               />
             </div>
             <div className="flex-1 text-center sm:text-left min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white mb-2 drop-shadow-sm">
+              <h1 className="hh-display text-2xl sm:text-3xl text-[var(--hh-text-primary)] mb-2">
                 {displayTitle}
               </h1>
               {sourceTitle && sourceTitle !== displayTitle && (
-                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
+                <p className="hh-body text-sm text-[var(--hh-text-secondary)] max-w-2xl">
                   {sourceTitle}
                 </p>
               )}
@@ -450,12 +453,12 @@ export default function StoryEventDetailClient() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Left: Summary */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="ios-glass-card ios-glass-card-interactive rounded-2xl overflow-hidden border-none group">
+            <div className="hh-tile hh-press overflow-hidden group hover:border-[var(--hh-accent-line)]">
               <Link href={`/events/${eventId}`} className="block">
-                <div className="p-5 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                  <div className="w-12 h-12 rounded-xl bg-miku/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                <div className="p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-[var(--hh-radius-md)] bg-[var(--hh-accent-wash-strong)] border border-[var(--hh-accent-line)] flex items-center justify-center shrink-0">
                     <svg
-                      className="w-6 h-6 text-miku"
+                      className="w-6 h-6 text-[var(--hh-accent)]"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -469,15 +472,15 @@ export default function StoryEventDetailClient() {
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-miku transition-colors">
+                    <h3 className="hh-title text-[var(--hh-text-primary)] group-hover:text-[var(--hh-accent)] transition-colors">
                       {t("page.story.event.eventDetailTitle")}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                    <p className="hh-body text-xs text-[var(--hh-text-secondary)] mt-0.5 truncate">
                       {t("page.story.event.eventDetailDescription")}
                     </p>
                   </div>
                   <svg
-                    className="w-5 h-5 text-slate-300 group-hover:text-miku transition-colors"
+                    className="w-5 h-5 text-[var(--hh-text-tertiary)] group-hover:text-[var(--hh-accent)] transition-colors"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -494,13 +497,13 @@ export default function StoryEventDetailClient() {
             </div>
 
             {bilibiliEvent && (
-              <div className="ios-glass-card ios-glass-card-interactive rounded-2xl overflow-hidden border-none group">
+              <div className="hh-tile hh-press overflow-hidden group hover:border-[var(--hh-accent-line)]">
                 <ExternalLink
                   href={bilibiliEvent.bilibili_url!}
                   className="block"
                 >
-                  <div className="p-5 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <div className="w-12 h-12 rounded-xl bg-[#fb7299]/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                  <div className="p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-[var(--hh-radius-md)] bg-[#fb7299]/15 border border-[#fb7299]/40 flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6"
                         viewBox="0 0 24 24"
@@ -516,15 +519,15 @@ export default function StoryEventDetailClient() {
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-[#fb7299] transition-colors">
+                      <h3 className="hh-title text-[var(--hh-text-primary)] group-hover:text-[#fb7299] transition-colors">
                         {t("page.story.event.bilibiliTranslationTitle")}
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                      <p className="hh-body text-xs text-[var(--hh-text-secondary)] mt-0.5 truncate">
                         {t("page.story.event.bilibiliTranslationDescription")}
                       </p>
                     </div>
                     <svg
-                      className="w-5 h-5 text-slate-300 group-hover:text-[#fb7299] transition-colors"
+                      className="w-5 h-5 text-[var(--hh-text-tertiary)] group-hover:text-[#fb7299] transition-colors"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -541,10 +544,10 @@ export default function StoryEventDetailClient() {
               </div>
             )}
 
-            <div className="ios-glass-card rounded-2xl p-6 border-none">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+            <div className="hh-tile p-6">
+              <h2 className="hh-title text-xl text-[var(--hh-text-primary)] mb-4 flex items-center gap-2">
                 <svg
-                  className="w-5 h-5 text-miku"
+                  className="w-5 h-5 text-[var(--hh-accent)]"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -559,25 +562,25 @@ export default function StoryEventDetailClient() {
                 {t("page.story.event.summaryTitle")}
               </h2>
               {displaySummary ? (
-                <div className="prose prose-sm dark:prose-invert text-slate-600 dark:text-slate-400">
+                <div className="prose prose-sm dark:prose-invert hh-body text-[var(--hh-text-secondary)]">
                   <p>{displaySummary}</p>
                 </div>
               ) : (
-                <p className="text-slate-400 italic text-sm">{t("page.story.event.noEventSummary")}</p>
+                <p className="hh-body text-[var(--hh-text-tertiary)] italic text-sm">{t("page.story.event.noEventSummary")}</p>
               )}
               {displayOutline && (
-                <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700">
-                  <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                <div className="mt-6 pt-6 border-t border-[var(--hh-border)]">
+                  <h3 className="hh-title text-sm text-[var(--hh-text-primary)] mb-2">
                     {t("page.story.event.outlineTitle")}
                   </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                  <p className="hh-body text-sm text-[var(--hh-text-secondary)]">
                     {displayOutline}
                   </p>
                 </div>
               )}
               {showSummaryCredit && (
-                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
-                  <p className="text-xs text-slate-400 italic text-right">
+                <div className="mt-6 pt-4 border-t border-[var(--hh-border)]">
+                  <p className="text-xs text-[var(--hh-text-tertiary)] italic text-right">
                     {t("page.story.event.summaryCredit")}
                   </p>
                 </div>
@@ -588,9 +591,9 @@ export default function StoryEventDetailClient() {
           {/* Right: Chapters */}
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <h2 className="hh-title text-xl text-[var(--hh-text-primary)] flex items-center gap-2">
                 <svg
-                  className="w-5 h-5 text-miku"
+                  className="w-5 h-5 text-[var(--hh-accent)]"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -605,7 +608,7 @@ export default function StoryEventDetailClient() {
                 {t("page.story.event.chapterListTitle")}
               </h2>
               <div className="flex items-center gap-4">
-                <span className="text-sm text-slate-500 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
+                <span className="hh-chip hh-numeric">
                   {t("page.story.event.chapterCount", { count: totalChapters })}
                 </span>
               </div>
@@ -653,8 +656,8 @@ export default function StoryEventDetailClient() {
                   />
                 ))
               ) : (
-                <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
-                  <p className="text-slate-500 mb-2">{t("page.story.event.noChapters")}</p>
+                <div className="hh-well text-center py-12">
+                  <p className="hh-body text-[var(--hh-text-secondary)] mb-2">{t("page.story.event.noChapters")}</p>
                 </div>
               )}
             </div>

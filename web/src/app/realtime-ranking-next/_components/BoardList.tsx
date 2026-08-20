@@ -51,9 +51,15 @@ export default function BoardList({
     staleRanks,
 }: BoardListProps) {
     return (
+        // High-density list geometry: one tile holding hairline-separated rows,
+        // rather than a stack of individually shadowed cards. `divide-y` with the
+        // hairline token gives every row its separator without adding a few
+        // hundred shadows to the paint. The previous divide-slate-100 was also
+        // one of the few slate utilities the dark shim in globals.css does not
+        // remap, so in dark mode the separators were rendering near-white.
         <motion.div
             layout
-            className="ios-glass-card overflow-hidden rounded-2xl border border-slate-200/60 dark:border-slate-700/60 divide-y divide-slate-100 dark:divide-slate-800/70"
+            className="hh-tile overflow-hidden rounded-[var(--hh-radius-lg)] divide-y divide-[var(--hh-border-hairline)]"
         >
             {entries.map((entry) => {
                 const key = entryKey(entry.rank, entry.userId, entry.isTierLine);

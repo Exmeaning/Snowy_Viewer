@@ -12,11 +12,12 @@ function ExpandButton({ open, onClick, ariaLabel }: { open: boolean; onClick: ()
     return (
         <button
             onClick={onClick}
-            className="pressable p-0.5 -mr-0.5 rounded hover:bg-miku/10"
+            className="hh-press p-0.5 -mr-0.5 rounded-[var(--hh-radius-xs)] hover:bg-[var(--hh-surface-sunken)]"
             aria-label={ariaLabel}
+            aria-expanded={open}
         >
             <svg
-                className={`w-3 h-3 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${open ? "rotate-180" : ""}`}
+                className={`w-3 h-3 transition-transform duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] ${open ? "rotate-180" : ""}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -27,24 +28,25 @@ function ExpandButton({ open, onClick, ariaLabel }: { open: boolean; onClick: ()
     );
 }
 
-// Dropdown panel.
+// Dropdown panel. A floating layer on the top bar, so it takes .hh-float's
+// opaque surface and 16px corner rather than the old 24px glass sheet.
 function DropdownPanel({ children }: { children: React.ReactNode }) {
     return (
-        <div className="absolute top-full left-0 mt-1.5 ios-glass-dropdown material-regular rounded-2xl py-1.5 min-w-[10rem] z-[200] animate-breadcrumb-dropdown">
+        <div className="absolute top-full left-0 mt-1.5 hh-float py-1.5 min-w-[10rem] z-[200] animate-breadcrumb-dropdown">
             {children}
         </div>
     );
 }
 
-// Dropdown item.
+// Dropdown item. 8px — the interactive rung, one below the panel's own radius.
 function DropdownItem({ href, isCurrent, children }: { href: string; isCurrent: boolean; children: React.ReactNode }) {
     return (
         <Link
             href={href}
-            className={`pressable block px-3 py-1.5 mx-1 text-sm type-on-glass whitespace-nowrap rounded-lg ${
+            className={`hh-press block px-3 py-1.5 mx-1 text-sm font-medium whitespace-nowrap rounded-[var(--hh-radius-md)] ${
                 isCurrent
-                    ? "island-pill-active"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-miku/10 dark:hover:bg-miku/15 hover:text-miku dark:hover:text-miku"
+                    ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] font-semibold"
+                    : "text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]"
             }`}
         >
             {children}
@@ -116,9 +118,9 @@ export default function Breadcrumb() {
     if (groupMatch) {
         return (
             <div ref={dropdownRef} className="flex items-center gap-1.5 min-w-0">
-                <span className="text-miku/30 shrink-0">/</span>
+                <span className="text-[var(--hh-text-tertiary)] shrink-0">/</span>
                 <div className="relative flex items-center gap-0.5">
-                    <span className="text-miku font-medium shrink-0 text-sm">
+                    <span className="text-[var(--hh-accent)] font-semibold shrink-0 text-sm">
                         {getGroupLabel(groupMatch.href)}
                     </span>
                     <ExpandButton
@@ -138,9 +140,9 @@ export default function Breadcrumb() {
                 </div>
 
                 {/* Secondary navigation shortcut */}
-                <span className="text-miku/30 shrink-0">/</span>
+                <span className="text-[var(--hh-text-tertiary)] shrink-0">/</span>
                 <div className="relative flex items-center gap-0.5">
-                    <span className="text-miku/40 shrink-0 text-sm">...</span>
+                    <span className="text-[var(--hh-text-tertiary)] shrink-0 text-sm">...</span>
                     <ExpandButton
                         open={openDropdown === "item"}
                         onClick={() => toggleDropdown("item")}
@@ -168,14 +170,17 @@ export default function Breadcrumb() {
     const isDetailPage = norm !== item.href;
     const detail = detailNode || detailName;
 
+    // Only the segment the user is actually on carries the accent; ancestors and
+    // separators are neutral text. An all-accent trail reads as decoration,
+    // whereas one highlighted rung reads as "you are here".
     return (
         <div ref={dropdownRef} className="flex items-center gap-1.5 min-w-0">
             {/* First level: group label with dropdown. */}
-            <span className="text-miku/30 shrink-0">/</span>
+            <span className="text-[var(--hh-text-tertiary)] shrink-0">/</span>
             <div className="relative flex items-center gap-0.5">
                     <Link
                         href={group.href}
-                        className="text-miku/60 hover:text-miku transition-colors shrink-0 text-sm"
+                        className="text-[var(--hh-text-secondary)] hover:text-[var(--hh-accent)] transition-colors shrink-0 text-sm"
                     >
                         {getGroupLabel(group.href)}
                     </Link>
@@ -198,17 +203,17 @@ export default function Breadcrumb() {
             </div>
 
             {/* Second level: item label with dropdown. */}
-            <span className="text-miku/30 shrink-0">/</span>
+            <span className="text-[var(--hh-text-tertiary)] shrink-0">/</span>
             <div className="relative flex items-center gap-0.5">
                 {isDetailPage ? (
                     <Link
                         href={item.href}
-                        className="text-miku/60 hover:text-miku transition-colors shrink-0 text-sm"
+                        className="text-[var(--hh-text-secondary)] hover:text-[var(--hh-accent)] transition-colors shrink-0 text-sm"
                     >
                         {getItemLabel(item.href)}
                     </Link>
                 ) : (
-                    <span className="text-miku font-medium shrink-0 text-sm">
+                    <span className="text-[var(--hh-accent)] font-semibold shrink-0 text-sm">
                         {getItemLabel(item.href)}
                     </span>
                 )}
@@ -231,8 +236,8 @@ export default function Breadcrumb() {
             {/* Third level: detail label without dropdown. */}
             {isDetailPage && detail && (
                 <>
-                    <span className="text-miku/30 shrink-0">/</span>
-                    <span className="inline-block text-miku font-medium text-sm truncate max-w-[120px] sm:max-w-[200px] align-middle">
+                    <span className="text-[var(--hh-text-tertiary)] shrink-0">/</span>
+                    <span className="inline-block text-[var(--hh-accent)] font-semibold text-sm truncate max-w-[120px] sm:max-w-[200px] align-middle">
                         {detail}
                     </span>
                 </>

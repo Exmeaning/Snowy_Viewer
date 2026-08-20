@@ -149,39 +149,53 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
     const currentHourChurn = canShowChurnDetails ? getCurrentHourChurn(churnEntry) : 0;
 
     const topThreeCardDeco: Record<number, string> = {
-        1: "ring-1 ring-amber-300/70 dark:ring-amber-400/70",
-        2: "ring-1 ring-slate-300/80 dark:ring-slate-400/70",
-        3: "ring-1 ring-orange-300/70 dark:ring-orange-400/70",
+        1: "ring-1 ring-amber-400/70",
+        2: "ring-1 ring-[var(--hh-border-strong)]",
+        3: "ring-1 ring-orange-400/70",
     };
 
+    // Medal chips are solid fills, not three-stop gradients: a gradient badge
+    // reads as web decoration, while the flat system vocabulary gets its
+    // hierarchy from one saturated value. A dark on-color text pair also means
+    // one class list is legible under both themes, with no dark: variant — and
+    // in this app dark: resolves from the OS preference rather than the theme
+    // switch, so anything that relies on it is only accidentally correct.
     const topThreeBadge: Record<number, string> = {
-        1: "border-amber-200 bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-400 text-amber-950 dark:border-amber-400/40 dark:from-amber-500 dark:via-yellow-400 dark:to-amber-500 dark:text-amber-950",
-        2: "border-slate-200 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-300 text-slate-700 dark:border-slate-300/50 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 dark:text-white",
-        3: "border-orange-200 bg-gradient-to-r from-orange-200 via-amber-100 to-orange-300 text-orange-800 dark:border-orange-400/40 dark:from-orange-500 dark:via-amber-500 dark:to-orange-600 dark:text-orange-950",
+        1: "border-amber-500 bg-amber-400 text-amber-950",
+        2: "border-[var(--hh-border-strong)] bg-[var(--hh-surface-inset)] text-[var(--hh-text-primary)]",
+        3: "border-orange-500 bg-orange-400 text-orange-950",
     };
 
+    // Movement tints stay translucent so they layer over the row's own surface
+    // instead of replacing it; the tier-line rows step down to the sunken
+    // surface because they are data points rather than players.
     const rowBg = entry.isNewEntry
-        ? "bg-sky-50/40 dark:bg-sky-950/15"
+        ? "bg-sky-500/[0.08]"
         : entry.scoreDelta > 0
-            ? "bg-emerald-50/30 dark:bg-emerald-950/10"
+            ? "bg-emerald-500/[0.07]"
             : entry.scoreDelta < 0
-                ? "bg-rose-50/30 dark:bg-rose-950/10"
+                ? "bg-rose-500/[0.07]"
                 : isExtendedTier
-                    ? "bg-slate-50/60 dark:bg-slate-900/50"
+                    ? "bg-[var(--hh-surface-1)]"
                     : entry.rankDelta > 0
-                        ? "bg-emerald-50/30 dark:bg-emerald-950/10"
+                        ? "bg-emerald-500/[0.07]"
                         : entry.rankDelta < 0
-                            ? "bg-rose-50/30 dark:bg-rose-950/10"
+                            ? "bg-rose-500/[0.07]"
                             : "";
 
-    // Score color reflects movement when a change exists.
+    // Score color reflects movement when a change exists. Single values rather
+    // than light/dark pairs: emerald-600 and rose-500 both clear 3:1 against
+    // the light and the dark row surface, so the number stays legible without
+    // depending on a variant this app cannot key to its own theme switch.
     const scoreColorClass = hasCurrentChange
         ? entry.scoreDelta > 0
-            ? "text-emerald-600 dark:text-emerald-400"
-            : "text-rose-600 dark:text-rose-400"
-        : "text-primary-text";
+            ? "text-emerald-600"
+            : "text-rose-500"
+        : "text-[var(--hh-text-primary)]";
 
-    const trackedClasses = isTracked ? "ring-2 ring-miku shadow-[0_0_15px_rgba(51,204,187,0.3)] dark:shadow-[0_0_20px_rgba(51,204,187,0.2)] z-20 rounded-xl" : "";
+    const trackedClasses = isTracked
+        ? "ring-2 ring-miku z-20 rounded-[var(--hh-radius-lg)]"
+        : "";
 
     return (
         <motion.div
@@ -203,8 +217,8 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                         transition={{ duration: 1.5, ease: "easeOut" }}
                         className={`absolute inset-0 pointer-events-none z-0 ${
                             flashType === "up"
-                                ? "bg-emerald-400/20 dark:bg-emerald-500/15"
-                                : "bg-rose-400/20 dark:bg-rose-500/15"
+                                ? "bg-emerald-500/20"
+                                : "bg-rose-500/20"
                         }`}
                     />
                 )}
@@ -213,14 +227,14 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
             <div className="relative z-10 flex w-full items-center px-3 py-2.5 sm:py-3">
                 {/* Rank # */}
                 <div className="w-10 shrink-0 text-center sm:w-12">
-                    <span className={`inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 text-[11px] font-black leading-none ${isTopThree ? topThreeBadge[entry.rank] : "border-slate-200 bg-white text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"}`}>
+                    <span className={`hh-numeric inline-flex items-center justify-center rounded-[var(--hh-radius-sm)] border px-1.5 py-0.5 text-[11px] font-bold leading-none ${isTopThree ? topThreeBadge[entry.rank] : "border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)]"}`}>
                         #{entry.rank}
                     </span>
                     {isExtendedTier && (
-                        <div className="mt-0.5 text-[8px] font-medium text-slate-400 dark:text-slate-500">{t("page.realtimeRanking.list.extended")}</div>
+                        <div className="mt-0.5 text-[8px] font-medium text-[var(--hh-text-tertiary)]">{t("page.realtimeRanking.list.extended")}</div>
                     )}
                     {isStale && (
-                        <div className="mt-0.5 inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1 py-0.5 text-[7px] font-bold text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" title={t("page.realtimeRanking.list.staleTitle")}>
+                        <div className="mt-0.5 inline-flex items-center gap-0.5 rounded-[var(--hh-radius-sm)] bg-amber-500/15 px-1 py-0.5 text-[7px] font-bold text-amber-600" title={t("page.realtimeRanking.list.staleTitle")}>
                             <span className="h-1 w-1 animate-pulse rounded-full bg-amber-500" />
                             {t("page.realtimeRanking.list.stale")}
                         </div>
@@ -231,7 +245,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                             {/* Mobile: also show the 1H bubble in the rank column. */}
                             {currentHourChurn > 0 && (
                                 <span
-                                    className="sm:hidden inline-flex items-center justify-center rounded-full bg-miku/15 px-1.5 py-0.5 text-[9px] font-black text-miku tabular-nums dark:bg-miku/20"
+                                    className="hh-numeric sm:hidden inline-flex items-center justify-center rounded-[var(--hh-radius-sm)] bg-miku/15 px-1.5 py-0.5 text-[9px] font-bold text-miku"
                                     title={t("page.realtimeRanking.list.currentHourChurnTitle")}
                                 >
                                     {currentHourChurn}
@@ -239,10 +253,10 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                             )}
                             <button
                                 onClick={() => setLocalExpanded((v) => !v)}
-                                className={`inline-flex items-center justify-center w-5 h-5 rounded-full transition-colors ${
+                                className={`hh-press hh-focusable inline-flex items-center justify-center w-5 h-5 rounded-[var(--hh-radius-sm)] ${
                                     localExpanded
                                         ? "bg-miku/10 text-miku"
-                                        : "text-slate-300 hover:bg-miku/10 hover:text-miku dark:text-slate-600 dark:hover:text-miku"
+                                        : "text-[var(--hh-text-tertiary)] hover:bg-miku/10 hover:text-miku"
                                 }`}
                                 title={localExpanded ? t("page.realtimeRanking.list.collapseChurn") : t("page.realtimeRanking.list.expandChurn")}
                             >
@@ -267,12 +281,12 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                             <SekaiCardThumbnail card={leaderCard} trained={isTrained} mastery={masterRank} width={72} className="w-full" />
                         </div>
                     ) : derivedLeaderCharacterId ? (
-                        <div className={`relative h-16 w-16 overflow-hidden border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 sm:h-[72px] sm:w-[72px] ${isTopThree ? topThreeCardDeco[entry.rank] : ""}`}>
+                        <div className={`relative h-16 w-16 overflow-hidden border border-[var(--hh-border)] bg-[var(--hh-surface-2)] sm:h-[72px] sm:w-[72px] ${isTopThree ? topThreeCardDeco[entry.rank] : ""}`}>
                             <Image src={getCharacterIconUrl(derivedLeaderCharacterId)} alt={getCharacterName(t, derivedLeaderCharacterId)} fill className="object-cover" unoptimized />
                         </div>
                     ) : (
-                        <div className="flex h-16 w-16 items-center justify-center bg-slate-100 dark:bg-slate-800/80 sm:h-[72px] sm:w-[72px]">
-                            <span className="text-xs font-black text-slate-400">#{entry.rank}</span>
+                        <div className="flex h-16 w-16 items-center justify-center bg-[var(--hh-surface-sunken)] sm:h-[72px] sm:w-[72px]">
+                            <span className="hh-numeric text-xs font-bold text-[var(--hh-text-tertiary)]">#{entry.rank}</span>
                         </div>
                     )}
                 </div>
@@ -285,7 +299,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                             className="flex items-baseline gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden sm:overflow-visible"
                             style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
                         >
-                            <h3 className="shrink-0 text-sm font-bold leading-tight text-primary-text sm:shrink sm:truncate flex items-center gap-1.5">
+                            <h3 className="hh-title shrink-0 text-sm font-semibold text-[var(--hh-text-primary)] sm:shrink sm:truncate flex items-center gap-1.5">
                                 <span className="truncate">{entry.displayName}</span>
                                 {!isExtendedTier && onTrackToggle && (
                                     <button
@@ -294,10 +308,10 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                                             e.stopPropagation();
                                             onTrackToggle(entry.userId);
                                         }}
-                                        className={`inline-flex items-center justify-center p-0.5 rounded-md transition-all duration-200 hover:scale-110 active:scale-90 hover:bg-miku/15 ${
+                                        className={`hh-press hh-focusable inline-flex items-center justify-center p-0.5 rounded-[var(--hh-radius-sm)] hover:bg-miku/15 ${
                                             isTracked
                                                 ? "text-miku"
-                                                : "text-slate-300 hover:text-miku dark:text-slate-600 dark:hover:text-miku"
+                                                : "text-[var(--hh-text-tertiary)] hover:text-miku"
                                         }`}
                                         title={isTracked ? t("page.realtimeRanking.untrackPlayer") : t("page.realtimeRanking.trackPlayer")}
                                     >
@@ -319,13 +333,15 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                                 )}
                             </h3>
                             {entry.signature && (
-                                <p className="shrink-0 text-[11px] leading-tight text-slate-400 dark:text-slate-500 sm:shrink sm:truncate">{entry.signature}</p>
+                                <p className="shrink-0 text-[11px] leading-tight text-[var(--hh-text-tertiary)] sm:shrink sm:truncate">{entry.signature}</p>
                             )}
                         </div>
-                        {/* Right-side fade mask, mobile only. */}
+                        {/* Functional fade mask: the name strip scrolls horizontally on mobile,
+                            and this signals there is more text past the edge. It has to match
+                            whatever surface the row is painted on, so it stays a gradient. */}
                         <div
                             className="pointer-events-none absolute right-0 top-0 h-full w-5 sm:hidden"
-                            style={{ background: "linear-gradient(to left, var(--surface-base), transparent)" }}
+                            style={{ background: "linear-gradient(to left, var(--hh-surface-2), transparent)" }}
                         />
                     </div>
                     <div className="mt-1 max-w-full overflow-hidden">
@@ -335,16 +351,17 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
 
                 {/* Score column — stock-style feedback */}
                 <div className="w-32 shrink-0 text-right sm:w-40">
-                    {/* Score body: movement color plus bounce animation. */}
+                    {/* Score body: movement color plus bounce animation. Tabular digits
+                        keep the column's right edge from shifting as scores tick up. */}
                     <motion.div
                         key={hasCurrentChange ? entry.score : "stable"}
                         initial={hasCurrentChange ? { scale: 1.12 } : false}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                        className={`text-base font-black leading-tight sm:text-lg ${scoreColorClass}`}
+                        className={`hh-numeric hh-display text-base font-bold sm:text-lg ${scoreColorClass}`}
                     >
                         {formatNumber(entry.score)}
-                        <span className="ml-0.5 text-[10px] font-bold text-slate-400 dark:text-slate-500">P</span>
+                        <span className="ml-0.5 text-[10px] font-bold text-[var(--hh-text-tertiary)]">P</span>
                     </motion.div>
 
                     {/* Movement detail row */}
@@ -358,10 +375,10 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     transition={{ type: "spring", stiffness: 350, damping: 20 }}
-                                    className={`inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[9px] font-bold ${
+                                    className={`hh-numeric inline-flex items-center gap-0.5 rounded-[var(--hh-radius-sm)] px-1 py-0.5 text-[9px] font-bold ${
                                         displayScoreDelta > 0
-                                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
-                                            : "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
+                                            ? "bg-emerald-500/15 text-emerald-700"
+                                            : "bg-rose-500/15 text-rose-700"
                                     }`}
                                 >
                                     <span className="text-[8px]">{displayScoreDelta > 0 ? "▲" : "▼"}</span>
@@ -375,7 +392,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                                     key="no-delta"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="text-[9px] text-slate-400 dark:text-slate-500"
+                                    className="text-[9px] text-[var(--hh-text-tertiary)]"
                                 >
                                     —
                                 </motion.span>
@@ -385,7 +402,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                         {/* Desktop: place the 1H bubble next to the score row when there is room. */}
                         {canShowChurnDetails && !showChurn && currentHourChurn > 0 && (
                             <span
-                                className="hidden sm:inline-flex items-center justify-center rounded-full bg-miku/15 px-1.5 py-0.5 text-[9px] font-black text-miku tabular-nums dark:bg-miku/20"
+                                className="hh-numeric hidden sm:inline-flex items-center justify-center rounded-[var(--hh-radius-sm)] bg-miku/15 px-1.5 py-0.5 text-[9px] font-bold text-miku"
                                 title={t("page.realtimeRanking.list.currentHourChurnTitle")}
                             >
                                 {currentHourChurn}
@@ -461,13 +478,14 @@ function buildHourlyGridReversed(hourlyChurn: { hour: string; count: number }[])
 
 /** Return the background color class based on count. */
 function getChurnCellColor(count: number, isCurrentHour: boolean): string {
-    if (count === 0) return "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500";
-    if (isCurrentHour) return "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300";
-    // Darken the color as count increases.
-    if (count >= 30) return "bg-rose-300 text-rose-900 dark:bg-rose-500/40 dark:text-rose-100";
-    if (count >= 20) return "bg-rose-200 text-rose-800 dark:bg-rose-500/30 dark:text-rose-200";
-    if (count >= 10) return "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300";
-    return "bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-400";
+    if (count === 0) return "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-tertiary)]";
+    if (isCurrentHour) return "bg-sky-500/20 text-sky-700";
+    // Darken the color as count increases. Alpha tints rather than palette
+    // steps, so one class list works on both the light and the dark surface.
+    if (count >= 30) return "bg-rose-500/45 text-rose-950";
+    if (count >= 20) return "bg-rose-500/32 text-rose-900";
+    if (count >= 10) return "bg-rose-500/20 text-rose-800";
+    return "bg-rose-500/12 text-rose-700";
 }
 
 /** Calculate neighboring tier ranks from the current rank. */
@@ -548,40 +566,40 @@ function ChurnRow({ churnEntry, userId, rank, churnData, onShowParkingPeriods }:
     const upperEntry = findByRank(upperRank);
 
     const trendIcon = trend === "up"
-        ? <span className="text-emerald-500 font-black">▲</span>
+        ? <span className="text-emerald-600 font-bold">▲</span>
         : trend === "down"
-            ? <span className="text-rose-500 font-black">▼</span>
-            : <span className="text-slate-400">—</span>;
+            ? <span className="text-rose-500 font-bold">▼</span>
+            : <span className="text-[var(--hh-text-tertiary)]">—</span>;
 
     return (
-        <div className="px-3 pb-2.5 pt-0.5">
+        <div className="border-t border-[var(--hh-border-hairline)] px-3 pb-2.5 pt-1.5">
             {/* Churn grid row */}
             <div className="flex items-center gap-2">
                 {/* 48H total */}
                 <div className="shrink-0 text-center w-10 sm:w-12">
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">48H</span>
-                    <div className="text-xs font-black text-miku">{churnEntry.churn_48h}</div>
+                    <span className="hh-label text-[10px]">48H</span>
+                    <div className="hh-numeric text-xs font-bold text-miku">{churnEntry.churn_48h}</div>
                 </div>
 
                 {/* Hourly grid */}
                 <div ref={scrollRef} className="flex-1 min-w-0 overflow-x-auto">
                     <div className="flex gap-px mb-px">
                         {row1.map((cell, i) => (
-                            <div key={`h-${i}`} className="flex-1 min-w-[22px] text-center text-[8px] font-medium text-slate-400 dark:text-slate-500">
+                            <div key={`h-${i}`} className="hh-numeric flex-1 min-w-[22px] text-center text-[8px] font-medium text-[var(--hh-text-tertiary)]">
                                 {i === 0 ? "1H" : cell.hour}
                             </div>
                         ))}
                     </div>
                     <div className="flex gap-px mb-px">
                         {row1.map((cell, i) => (
-                            <div key={`r1-${i}`} className={`flex-1 min-w-[22px] text-center text-[9px] font-bold rounded-sm py-0.5 ${getChurnCellColor(cell.count, cell.isCurrentHour)}`} title={cell.localLabel}>
+                            <div key={`r1-${i}`} className={`hh-numeric flex-1 min-w-[22px] text-center text-[9px] font-bold rounded-[var(--hh-radius-xs)] py-0.5 ${getChurnCellColor(cell.count, cell.isCurrentHour)}`} title={cell.localLabel}>
                                 {cell.count > 0 ? `${cell.count}${cell.isCurrentHour ? "*" : ""}` : ""}
                             </div>
                         ))}
                     </div>
                     <div className="flex gap-px">
                         {row2.map((cell, i) => (
-                            <div key={`r2-${i}`} className={`flex-1 min-w-[22px] text-center text-[9px] font-bold rounded-sm py-0.5 ${getChurnCellColor(cell.count, cell.isCurrentHour)}`} title={cell.localLabel}>
+                            <div key={`r2-${i}`} className={`hh-numeric flex-1 min-w-[22px] text-center text-[9px] font-bold rounded-[var(--hh-radius-xs)] py-0.5 ${getChurnCellColor(cell.count, cell.isCurrentHour)}`} title={cell.localLabel}>
                                 {cell.count > 0 ? `${cell.count}${cell.isCurrentHour ? "*" : ""}` : ""}
                             </div>
                         ))}
@@ -591,7 +609,7 @@ function ChurnRow({ churnEntry, userId, rank, churnData, onShowParkingPeriods }:
                 {/* Parking button */}
                 <button
                     onClick={() => onShowParkingPeriods(userId)}
-                    className="shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold text-slate-500 transition-colors hover:border-miku/30 hover:bg-miku/5 hover:text-miku dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-miku/30 dark:hover:bg-miku/10 dark:hover:text-miku"
+                    className="hh-press hh-focusable shrink-0 rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-1)] px-2 py-1 text-[10px] font-bold text-[var(--hh-text-secondary)] hover:border-miku/40 hover:bg-miku/10 hover:text-miku"
                 >
                     {t("page.realtimeRanking.churn.parking")}
                 </button>
@@ -604,30 +622,30 @@ function ChurnRow({ churnEntry, userId, rank, churnData, onShowParkingPeriods }:
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
                 >
                 {/* Latest 1h churn */}
-                <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-miku/10 px-1.5 py-0.5 text-[10px] dark:bg-miku/15">
-                    <span className="font-medium text-slate-500 dark:text-slate-400">{t("page.realtimeRanking.churn.churn1h")}</span>
-                    <span className="font-black text-miku tabular-nums">{churn1h}</span>
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] bg-miku/10 px-1.5 py-0.5 text-[10px]">
+                    <span className="font-medium text-[var(--hh-text-secondary)]">{t("page.realtimeRanking.churn.churn1h")}</span>
+                    <span className="hh-numeric font-bold text-miku">{churn1h}</span>
                 </span>
 
                 {/* Latest 20min×3 churn */}
-                <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-sky-100 px-1.5 py-0.5 text-[10px] dark:bg-sky-500/15">
-                    <span className="font-medium text-slate-500 dark:text-slate-400">{t("page.realtimeRanking.churn.churn20min3")}</span>
-                    <span className="font-black text-sky-600 dark:text-sky-400 tabular-nums">{churn20min * 3}</span>
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] bg-sky-500/12 px-1.5 py-0.5 text-[10px]">
+                    <span className="font-medium text-[var(--hh-text-secondary)]">{t("page.realtimeRanking.churn.churn20min3")}</span>
+                    <span className="hh-numeric font-bold text-sky-600">{churn20min * 3}</span>
                 </span>
 
-                <span className="shrink-0 text-slate-300 dark:text-slate-600 select-none px-0.5">·</span>
+                <span className="shrink-0 text-[var(--hh-text-tertiary)] select-none px-0.5">·</span>
 
                 {/* Latest 1h speed and trend marker */}
-                <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] dark:bg-slate-800">
-                        <span className="font-medium text-slate-500 dark:text-slate-400">{t("page.realtimeRanking.churn.speed1h")}</span>
-                    <span className="font-black text-slate-700 dark:text-slate-200 tabular-nums">{fmtSpeed(speed1h)}</span>
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-1.5 py-0.5 text-[10px]">
+                        <span className="font-medium text-[var(--hh-text-secondary)]">{t("page.realtimeRanking.churn.speed1h")}</span>
+                    <span className="hh-numeric font-bold text-[var(--hh-text-primary)]">{fmtSpeed(speed1h)}</span>
                     <span className="text-[9px] leading-none">{trendIcon}</span>
                 </span>
 
                     {/* Latest 20min×3 speed */}
-                <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] dark:bg-slate-800">
-                        <span className="font-medium text-slate-500 dark:text-slate-400">{t("page.realtimeRanking.churn.speed20min3")}</span>
-                    <span className={`font-black tabular-nums ${trend === "up" ? "text-emerald-600 dark:text-emerald-400" : trend === "down" ? "text-rose-500 dark:text-rose-400" : "text-slate-700 dark:text-slate-200"}`}>
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-1.5 py-0.5 text-[10px]">
+                        <span className="font-medium text-[var(--hh-text-secondary)]">{t("page.realtimeRanking.churn.speed20min3")}</span>
+                    <span className={`hh-numeric font-bold ${trend === "up" ? "text-emerald-600" : trend === "down" ? "text-rose-500" : "text-[var(--hh-text-primary)]"}`}>
                         {fmtSpeed(speed20min3)}
                     </span>
                 </span>
@@ -635,24 +653,24 @@ function ChurnRow({ churnEntry, userId, rank, churnData, onShowParkingPeriods }:
                 {/* Neighbor-tier speed comparison with independent bubbles. */}
                 {(lowerRank != null || upperRank != null) && (
                     <>
-                        <span className="shrink-0 text-slate-300 dark:text-slate-600 select-none px-0.5">·</span>
+                        <span className="shrink-0 text-[var(--hh-text-tertiary)] select-none px-0.5">·</span>
                         {lowerRank != null && (() => {
                             const spd = lowerEntry?.growth_1h;
                             const faster = spd != null && speed1h > spd;
                             const slower = spd != null && speed1h < spd;
                             return (
-                                <span className={`shrink-0 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
-                                    faster ? "bg-emerald-100 dark:bg-emerald-500/15" :
-                                    slower ? "bg-rose-100 dark:bg-rose-500/15" :
-                                    "bg-slate-100 dark:bg-slate-800"
+                                <span className={`shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] px-1.5 py-0.5 text-[10px] font-bold ${
+                                    faster ? "bg-emerald-500/12" :
+                                    slower ? "bg-rose-500/12" :
+                                    "bg-[var(--hh-surface-sunken)]"
                                 }`}>
-                                    <span className={`font-medium ${faster ? "text-emerald-700 dark:text-emerald-300" : slower ? "text-rose-600 dark:text-rose-400" : "text-slate-500 dark:text-slate-400"}`}>
+                                    <span className={`hh-numeric font-medium ${faster ? "text-emerald-700" : slower ? "text-rose-600" : "text-[var(--hh-text-secondary)]"}`}>
                                         T{lowerRank}
                                     </span>
-                                    <span className={`tabular-nums ${faster ? "text-emerald-700 dark:text-emerald-300" : slower ? "text-rose-600 dark:text-rose-400" : "text-slate-600 dark:text-slate-300"}`}>
+                                    <span className={`hh-numeric ${faster ? "text-emerald-700" : slower ? "text-rose-600" : "text-[var(--hh-text-secondary)]"}`}>
                                         {spd != null ? fmtSpeed(spd) : "—"}
                                     </span>
-                                    {faster && <span className="text-emerald-500 text-[9px]">↑</span>}
+                                    {faster && <span className="text-emerald-600 text-[9px]">↑</span>}
                                     {slower && <span className="text-rose-500 text-[9px]">↓</span>}
                                 </span>
                             );
@@ -662,18 +680,18 @@ function ChurnRow({ churnEntry, userId, rank, churnData, onShowParkingPeriods }:
                             const faster = spd != null && speed1h > spd;
                             const slower = spd != null && speed1h < spd;
                             return (
-                                <span className={`shrink-0 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
-                                    faster ? "bg-emerald-100 dark:bg-emerald-500/15" :
-                                    slower ? "bg-rose-100 dark:bg-rose-500/15" :
-                                    "bg-slate-100 dark:bg-slate-800"
+                                <span className={`shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] px-1.5 py-0.5 text-[10px] font-bold ${
+                                    faster ? "bg-emerald-500/12" :
+                                    slower ? "bg-rose-500/12" :
+                                    "bg-[var(--hh-surface-sunken)]"
                                 }`}>
-                                    <span className={`font-medium ${faster ? "text-emerald-700 dark:text-emerald-300" : slower ? "text-rose-600 dark:text-rose-400" : "text-slate-500 dark:text-slate-400"}`}>
+                                    <span className={`hh-numeric font-medium ${faster ? "text-emerald-700" : slower ? "text-rose-600" : "text-[var(--hh-text-secondary)]"}`}>
                                         T{upperRank}
                                     </span>
-                                    <span className={`tabular-nums ${faster ? "text-emerald-700 dark:text-emerald-300" : slower ? "text-rose-600 dark:text-rose-400" : "text-slate-600 dark:text-slate-300"}`}>
+                                    <span className={`hh-numeric ${faster ? "text-emerald-700" : slower ? "text-rose-600" : "text-[var(--hh-text-secondary)]"}`}>
                                         {spd != null ? fmtSpeed(spd) : "—"}
                                     </span>
-                                    {faster && <span className="text-emerald-500 text-[9px]">↑</span>}
+                                    {faster && <span className="text-emerald-600 text-[9px]">↑</span>}
                                     {slower && <span className="text-rose-500 text-[9px]">↓</span>}
                                 </span>
                             );
@@ -681,10 +699,10 @@ function ChurnRow({ churnEntry, userId, rank, churnData, onShowParkingPeriods }:
                     </>
                 )}
                 </div>
-                {/* Right-side fade mask, mobile only. */}
+                {/* Functional fade mask for the horizontally scrolling stats strip. */}
                 <div
                     className="pointer-events-none absolute right-0 top-0 h-full w-6 sm:hidden"
-                    style={{ background: "linear-gradient(to left, var(--surface-base), transparent)" }}
+                    style={{ background: "linear-gradient(to left, var(--hh-surface-2), transparent)" }}
                 />
             </div>
         </div>
@@ -701,55 +719,55 @@ function TierLineChurnRow({ churnEntry }: { churnEntry: ChurnRankingEntry }) {
     const activityCount = churnEntry.recent_activity?.count ?? 0;
 
     const trendIcon = trend === "up"
-        ? <span className="text-emerald-500 font-black">▲</span>
+        ? <span className="text-emerald-600 font-bold">▲</span>
         : trend === "down"
-            ? <span className="text-rose-500 font-black">▼</span>
-            : <span className="text-slate-400">—</span>;
+            ? <span className="text-rose-500 font-bold">▼</span>
+            : <span className="text-[var(--hh-text-tertiary)]">—</span>;
 
     return (
-        <div className="px-3 pb-2.5 pt-0.5">
+        <div className="border-t border-[var(--hh-border-hairline)] px-3 pb-2.5 pt-1.5">
             <div className="relative pl-[calc(2.5rem+0.5rem)] sm:pl-[calc(3rem+0.5rem)]">
                 <div
                     className="flex flex-nowrap items-center gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:overflow-visible sm:gap-y-1"
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
                 >
                     {/* Label */}
-                    <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] dark:bg-slate-800">
-                        <span className="font-medium text-slate-400 dark:text-slate-500">{t("page.realtimeRanking.churn.tierLineSpeed")}</span>
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-1.5 py-0.5 text-[10px]">
+                        <span className="font-medium text-[var(--hh-text-tertiary)]">{t("page.realtimeRanking.churn.tierLineSpeed")}</span>
                     </span>
 
-                    <span className="shrink-0 text-slate-300 dark:text-slate-600 select-none px-0.5">·</span>
+                    <span className="shrink-0 text-[var(--hh-text-tertiary)] select-none px-0.5">·</span>
 
                     {/* Latest 1h speed and trend */}
-                    <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] dark:bg-slate-800">
-                    <span className="font-medium text-slate-500 dark:text-slate-400">{t("page.realtimeRanking.churn.speed1h")}</span>
-                        <span className="font-black text-slate-700 dark:text-slate-200 tabular-nums">{fmtSpeed(speed1h)}</span>
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-1.5 py-0.5 text-[10px]">
+                    <span className="font-medium text-[var(--hh-text-secondary)]">{t("page.realtimeRanking.churn.speed1h")}</span>
+                        <span className="hh-numeric font-bold text-[var(--hh-text-primary)]">{fmtSpeed(speed1h)}</span>
                         <span className="text-[9px] leading-none">{trendIcon}</span>
                     </span>
 
                 {/* Latest 20min×3 speed */}
-                    <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] dark:bg-slate-800">
-                    <span className="font-medium text-slate-500 dark:text-slate-400">{t("page.realtimeRanking.churn.speed20min3")}</span>
-                        <span className={`font-black tabular-nums ${trend === "up" ? "text-emerald-600 dark:text-emerald-400" : trend === "down" ? "text-rose-500 dark:text-rose-400" : "text-slate-700 dark:text-slate-200"}`}>
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] px-1.5 py-0.5 text-[10px]">
+                    <span className="font-medium text-[var(--hh-text-secondary)]">{t("page.realtimeRanking.churn.speed20min3")}</span>
+                        <span className={`hh-numeric font-bold ${trend === "up" ? "text-emerald-600" : trend === "down" ? "text-rose-500" : "text-[var(--hh-text-primary)]"}`}>
                             {fmtSpeed(speed20min3)}
                         </span>
                     </span>
 
                     {activityCount > 0 && (
                         <>
-                            <span className="shrink-0 text-slate-300 dark:text-slate-600 select-none px-0.5">·</span>
+                            <span className="shrink-0 text-[var(--hh-text-tertiary)] select-none px-0.5">·</span>
                             {/* Recent sample count */}
-                            <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-sky-100 px-1.5 py-0.5 text-[10px] dark:bg-sky-500/15">
-                                <span className="font-medium text-slate-500 dark:text-slate-400">{t("page.realtimeRanking.churn.recentSamples")}</span>
-                                <span className="font-black text-sky-600 dark:text-sky-400 tabular-nums">{activityCount}</span>
+                            <span className="shrink-0 inline-flex items-center gap-1 rounded-[var(--hh-radius-sm)] bg-sky-500/12 px-1.5 py-0.5 text-[10px]">
+                                <span className="font-medium text-[var(--hh-text-secondary)]">{t("page.realtimeRanking.churn.recentSamples")}</span>
+                                <span className="hh-numeric font-bold text-sky-600">{activityCount}</span>
                             </span>
                         </>
                     )}
                 </div>
-                {/* Right-side fade mask, mobile only. */}
+                {/* Functional fade mask for the horizontally scrolling stats strip. */}
                 <div
                     className="pointer-events-none absolute right-0 top-0 h-full w-6 sm:hidden"
-                    style={{ background: "linear-gradient(to left, var(--surface-base), transparent)" }}
+                    style={{ background: "linear-gradient(to left, var(--hh-surface-2), transparent)" }}
                 />
             </div>
         </div>

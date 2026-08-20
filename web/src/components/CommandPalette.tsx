@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useEffect, useMemo, useRef, useCallback, useDeferredValue } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { searchableNavItems, SEARCH_GROUP_LABEL_KEYS, SEARCH_GROUP_ROUTES, SEARCH_STATIC_GROUP_LABEL_KEYS, NAV_ITEM_LABEL_KEYS } from "@/lib/navigation";
 import { CHARACTER_NAMES } from "@/types/types";
 import { getPrimaryShortcutLabel, isKeyboardEventComposing } from "@/lib/shortcuts";
 import { fetchMusicAliases } from "@/lib/musicAliases";
 import { useI18n } from "@/contexts/I18nContext";
-import { getMotionTransition } from "@/lib/motion";
+import { hhPopoverVariants, springSnappy } from "@/lib/motion";
 import { playHandheldSound } from "@/lib/handheld-sound";
 
 // Dynamic search index item from search-index.json
@@ -55,17 +55,6 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
     const indexLoadedRef = useRef(false);
     const wildcardShortcut = getPrimaryShortcutLabel("toggle-search-wildcard");
     const { locale, t } = useI18n();
-    // The preference selects the transition curve only. Animated values stay
-    // unconditional so SSR and the client's first frame emit identical inline
-    // styles; MotionProvider's reducedMotion="user" snaps the transforms.
-    const prefersReducedMotion = useReducedMotion();
-    const overlayTransition = getMotionTransition("snappy", {
-        reducedMotion: !!prefersReducedMotion,
-    });
-    // Anchored from top (search trigger) — same path in/out
-    const panelTransition = getMotionTransition("snappy", {
-        reducedMotion: !!prefersReducedMotion,
-    });
 
     useEffect(() => {
         try {
@@ -354,30 +343,36 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-[200] isolate flex items-start justify-center px-3 pt-4 sm:px-4 sm:pt-[min(20vh,8rem)]">
-                    {/* Backdrop */}
+                    {/* Scrim — flat dim, no blur. */}
                     <motion.div
-                        className="absolute inset-0 transform-gpu bg-black/35 backdrop-blur-[8px]"
+                        className="absolute inset-0 hh-scrim"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={overlayTransition}
+                        transition={springSnappy}
                         onClick={onClose}
                     />
 
-                    {/* Dialog — enter/exit from top (source-anchored path) */}
+                    {/* Dialog — grows down from the search trigger in the top
+                        chrome, which is what hhPopoverVariants encodes: the
+                        shared damped popover path instead of this file's own
+                        hand-rolled drop. */}
                     <motion.div
-                        className="relative w-full max-w-lg transform-gpu will-change-transform liquid-glass-modal rounded-3xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[70vh]"
-                        initial={{ opacity: 0, scale: 0.97, y: -12 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.97, y: -12 }}
-                        transition={panelTransition}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={t("search.commandPalette.placeholder")}
+                        className="relative w-full max-w-lg transform-gpu will-change-transform hh-float overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[70vh]"
+                        variants={hhPopoverVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
                         onKeyDown={handleKeyDown}
                     >
-                        {/* Search input */}
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-2 border-b border-slate-200">
+                        {/* Search input row — the palette's own chrome strip. */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-2 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
                             <div className="flex items-center gap-3 flex-1">
                                 <svg
-                                    className="w-5 h-5 text-slate-400 flex-shrink-0"
+                                    className="w-5 h-5 text-[var(--hh-text-tertiary)] flex-shrink-0"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -395,17 +390,17 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     placeholder={t("search.commandPalette.placeholder")}
-                                    className="flex-1 py-1.5 sm:py-2.5 bg-transparent text-sm text-slate-800 placeholder-slate-400 outline-none min-w-0"
+                                    className="flex-1 py-1.5 sm:py-2.5 bg-transparent text-sm text-[var(--hh-text-primary)] placeholder:text-[var(--hh-text-tertiary)] outline-none min-w-0"
                                 />
-                                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-slate-400 bg-slate-100 rounded border border-slate-200">
+                                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-[var(--hh-text-tertiary)] bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)]">
                                     {t("common.shortcut.escape")}
                                 </kbd>
                             </div>
 
-                            <div className="flex items-center justify-between sm:justify-end gap-2 border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0 shrink-0">
-                                <span className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+                            <div className="flex items-center justify-between sm:justify-end gap-2 border-t sm:border-t-0 border-[var(--hh-border-hairline)] pt-2 sm:pt-0 shrink-0">
+                                <span className="flex items-center gap-1.5 text-xs font-semibold text-[var(--hh-text-secondary)]">
                                     {t("search.commandPalette.wildcard")}
-                                    <kbd className="hidden sm:inline-flex items-center px-1 py-0.5 text-[9px] font-mono font-medium text-slate-400 bg-slate-100 rounded border border-slate-200 shadow-sm leading-none h-4">
+                                    <kbd className="hidden sm:inline-flex items-center px-1 py-0.5 text-[9px] font-mono font-semibold text-[var(--hh-text-tertiary)] bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)] leading-none h-4">
                                         {wildcardShortcut}
                                     </kbd>
                                 </span>
@@ -414,11 +409,12 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                         playHandheldSound("toggle");
                                         setUseWildcard(!useWildcard);
                                     }}
-                                    className={`pressable relative w-11 h-6 rounded-full transition-colors duration-[var(--duration-fast)] ${useWildcard ? 'bg-miku' : 'bg-slate-200'}`}
+                                    className={`hh-press hh-switch ${useWildcard ? "hh-switch-active" : ""}`}
+                                    role="switch"
+                                    aria-checked={useWildcard}
+                                    aria-label={t("search.commandPalette.wildcard")}
                                 >
-                                    <span
-                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${useWildcard ? 'translate-x-5' : 'translate-x-0'}`}
-                                    />
+                                    <span className="hh-switch-thumb" />
                                 </button>
                             </div>
                         </div>
@@ -426,7 +422,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                         {/* Results */}
                         <div ref={listRef} className="overflow-y-auto flex-1 py-2">
                             {totalItems === 0 && !isLoadingIndex ? (
-                                <div className="px-4 py-8 text-center text-sm text-slate-400">
+                                <div className="px-4 py-8 text-center text-sm text-[var(--hh-text-tertiary)]">
                                     {t("search.commandPalette.noResults")}
                                 </div>
                             ) : (
@@ -434,7 +430,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                     {/* Static navigation results */}
                                     {grouped.map((group) => (
                                         <div key={group.titleKey}>
-                                            <div className="px-4 pt-3 pb-1 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                            <div className="hh-label px-4 pt-3 pb-1">
                                                 {t(group.titleKey)}
                                             </div>
                                             {group.items.map((item) => {
@@ -448,13 +444,13 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                                         onClick={() => navigate(item.href)}
                                                         onMouseEnter={() => setActiveIndex(idx)}
                                                         className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm transition-colors cursor-pointer ${isActive
-                                                            ? "bg-miku/10 text-miku"
-                                                            : "text-slate-600 hover:bg-slate-50"
+                                                            ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                                                            : "text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]"
                                                             }`}
                                                     >
                                                         <span className="font-medium">{t(NAV_ITEM_LABEL_KEYS[item.href] ?? item.href)}</span>
                                                         <span
-                                                            className={`text-xs ${isActive ? "text-miku/60" : "text-slate-400"
+                                                            className={`text-xs ${isActive ? "text-[var(--hh-text-on-accent)] opacity-70" : "text-[var(--hh-text-tertiary)]"
                                                                 }`}
                                                         >
                                                             {item.href}
@@ -468,11 +464,11 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                     {/* Dynamic search results */}
                                     {dynamicGrouped.map((group) => (
                                         <div key={`dyn-${group.titleKey}`}>
-                                            <div className="px-4 pt-3 pb-1 text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                            <div className="hh-label px-4 pt-3 pb-1 flex items-center gap-2">
                                                 {t(group.titleKey)}
                                                 {group.titleKey === SEARCH_GROUP_LABEL_KEYS.music && (
-                                                    <span className="font-normal normal-case text-[10px] text-slate-400/70">
-                                                        ({t("search.commandPalette.musicAliasHint")} · <a href="https://github.com/Team-Haruki" target="_blank" rel="noopener noreferrer" className="hover:text-miku">haruki</a>)
+                                                    <span className="font-normal normal-case tracking-normal text-[10px] text-[var(--hh-text-tertiary)]">
+                                                        ({t("search.commandPalette.musicAliasHint")} · <a href="https://github.com/Team-Haruki" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--hh-accent)]">haruki</a>)
                                                     </span>
                                                 )}
                                             </div>
@@ -501,8 +497,8 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                                         onClick={() => navigate(href)}
                                                         onMouseEnter={() => setActiveIndex(idx)}
                                                         className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm transition-colors cursor-pointer ${isActive
-                                                            ? "bg-miku/10 text-miku"
-                                                            : "text-slate-600 hover:bg-slate-50"
+                                                            ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
+                                                            : "text-[var(--hh-text-secondary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]"
                                                             }`}
                                                     >
                                                         <span className="flex flex-col items-start min-w-0">
@@ -511,7 +507,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                                             </span>
                                                             {(musicSubtitle || subtitle) && (
                                                                 <span
-                                                                    className={`text-xs truncate max-w-[280px] ${isActive ? "text-miku/50" : "text-slate-400"
+                                                                    className={`text-xs truncate max-w-[280px] ${isActive ? "text-[var(--hh-text-on-accent)] opacity-70" : "text-[var(--hh-text-tertiary)]"
                                                                         }`}
                                                                 >
                                                                     {musicSubtitle}
@@ -521,7 +517,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                                             )}
                                                         </span>
                                                         <span
-                                                            className={`text-xs font-mono flex-shrink-0 ${isActive ? "text-miku/60" : "text-slate-400"
+                                                            className={`hh-numeric text-xs font-mono flex-shrink-0 ${isActive ? "text-[var(--hh-text-on-accent)] opacity-70" : "text-[var(--hh-text-tertiary)]"
                                                                 }`}
                                                         >
                                                             #{item.id}
@@ -534,7 +530,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
 
                                     {/* Loading indicator for first load */}
                                     {isLoadingIndex && query && (
-                                        <div className="px-4 py-3 text-center text-xs text-slate-400">
+                                        <div className="px-4 py-3 text-center text-xs text-[var(--hh-text-tertiary)]">
                                             {t("search.commandPalette.loadingIndex")}
                                         </div>
                                     )}
@@ -542,19 +538,21 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                             )}
                         </div>
 
-                        {/* Footer hints */}
-                        <div className="flex items-center gap-4 px-4 py-2 border-t border-slate-100 text-[11px] text-slate-400">
+                        {/* Key hint strip. Not an action bar: every command here
+                            is one keystroke away, so buttons would restate the
+                            hints instead of adding an answer. */}
+                        <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--hh-border)] bg-[var(--hh-surface-1)] text-[11px] text-[var(--hh-text-tertiary)]">
                             <span className="flex items-center gap-1">
-                                <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 text-[10px]">↑</kbd>
-                                <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 text-[10px]">↓</kbd>
+                                <kbd className="px-1 py-0.5 bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)] text-[10px]">↑</kbd>
+                                <kbd className="px-1 py-0.5 bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)] text-[10px]">↓</kbd>
                                 {t("search.commandPalette.footer.navigate")}
                             </span>
                             <span className="flex items-center gap-1">
-                                <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 text-[10px]">Enter</kbd>
+                                <kbd className="px-1 py-0.5 bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)] text-[10px]">Enter</kbd>
                                 {t("search.commandPalette.footer.open")}
                             </span>
                             <span className="flex items-center gap-1">
-                                <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 text-[10px]">Esc</kbd>
+                                <kbd className="px-1 py-0.5 bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)] text-[10px]">Esc</kbd>
                                 {t("search.commandPalette.footer.close")}
                             </span>
                         </div>

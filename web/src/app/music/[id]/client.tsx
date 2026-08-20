@@ -341,7 +341,7 @@ export default function MusicDetailPage() {
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center min-h-[50vh]">
                         <div className="loading-spinner"></div>
-                        <p className="mt-4 text-slate-500">{t("common.state.loading")}</p>
+                        <p className="mt-4 text-[var(--hh-text-secondary)]">{t("common.state.loading")}</p>
                     </div>
                 </div>
             </MainLayout>
@@ -358,8 +358,8 @@ export default function MusicDetailPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">{t("page.music.notFoundTitle", { id: musicId })}</h2>
-                        <p className="text-slate-500 mb-6">{t("page.music.notFoundDesc")}</p>
+                        <h2 className="hh-title text-2xl text-[var(--hh-text-primary)] mb-2">{t("page.music.notFoundTitle", { id: musicId })}</h2>
+                        <p className="text-[var(--hh-text-secondary)] mb-6">{t("page.music.notFoundDesc")}</p>
                         <Link
                             href="/music"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-miku text-white font-bold rounded-xl hover:bg-miku-dark transition-colors"
@@ -402,7 +402,7 @@ export default function MusicDetailPage() {
                 {/* Header Section */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-500 w-fit">
+                        <span className="hh-numeric inline-flex items-center gap-1.5 px-3 py-1 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-sm)] text-xs font-mono text-[var(--hh-text-secondary)] w-fit">
                             ID: {music.id}
                         </span>
                         {/* Category Tags */}
@@ -425,19 +425,19 @@ export default function MusicDetailPage() {
                     </div>
                     <div className="mb-2">
                         <div className="inline-flex max-w-full items-start gap-2">
-                            <h1 className="min-w-0 text-2xl font-black text-slate-800 sm:text-3xl">
+                            <h1 className="hh-display min-w-0 text-2xl text-[var(--hh-text-primary)] sm:text-3xl">
                                 <TranslatedText
                                     original={music.title}
                                     category="music"
                                     field="title"
                                     originalClassName=""
-                                    translationClassName="block text-lg font-medium text-slate-400 mt-1"
+                                    translationClassName="block text-lg font-medium text-[var(--hh-text-tertiary)] mt-1"
                                 />
                             </h1>
                             {LYRICS_ENTRY_VISIBLE && hasPublishedLyrics && (
                                 <Link
                                     href={`/lyrics/${music.id}`}
-                                    className="-translate-y-1 whitespace-nowrap rounded-md border border-sky-400/35 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-bold text-sky-500 transition-colors hover:border-sky-400/60 hover:bg-sky-500/15 hover:text-sky-400 sm:text-xs"
+                                    className="hh-press -translate-y-1 whitespace-nowrap rounded-[var(--hh-radius-sm)] border border-sky-400/35 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-bold text-sky-500 hover:border-sky-400/60 hover:bg-sky-500/15 sm:text-xs"
                                 >
                                     {t("page.music.goToLyrics")}
                                     <span className="ms-0.5" aria-hidden="true">↗</span>
@@ -446,7 +446,7 @@ export default function MusicDetailPage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">
-                        <span className="text-slate-600">{music.composer}</span>
+                        <span className="text-[var(--hh-text-secondary)]">{music.composer}</span>
                         {tagNames.length > 0 && (
                             <div className="flex gap-1 flex-wrap">
                                 {tagNames.map((tag, i) => (
@@ -463,10 +463,10 @@ export default function MusicDetailPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Left Column: Jacket Image */}
                     <div className="lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        <div className="ios-glass-card rounded-2xl overflow-hidden">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
                             {/* Jacket Image */}
                             <div
-                                className="relative aspect-square bg-gradient-to-br from-slate-50 to-slate-100 cursor-zoom-in"
+                                className="relative aspect-square bg-[var(--hh-surface-sunken)] cursor-zoom-in"
                                 onClick={() => setImageViewerOpen(true)}
                             >
                                 <Image
@@ -477,7 +477,7 @@ export default function MusicDetailPage() {
                                     unoptimized
                                     priority
                                 />
-                                <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1">
+                                <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-[var(--hh-radius-md)] flex items-center gap-1">
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                     </svg>
@@ -490,16 +490,16 @@ export default function MusicDetailPage() {
                     {/* Right Column: Info Cards */}
                     <div className="space-y-6">
                         {/* Basic Info Card */}
-                        <div className="ios-glass-card rounded-2xl overflow-hidden">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     {t("page.music.basicInfo")}
                                 </h2>
                             </div>
-                            <div className="divide-y divide-slate-100">
+                            <div className="divide-y divide-[var(--hh-border)]">
                                 <InfoRow label="ID" value={`#${music.id}`} />
                                 <InfoRow
                                     label={t("page.music.fields.title")}
@@ -509,7 +509,7 @@ export default function MusicDetailPage() {
                                             category="music"
                                             field="title"
                                             originalClassName=""
-                                            translationClassName="block text-xs font-normal text-slate-400 mt-0.5"
+                                            translationClassName="block text-xs font-normal text-[var(--hh-text-tertiary)] mt-0.5"
                                         />
                                     }
                                 />
@@ -539,16 +539,16 @@ export default function MusicDetailPage() {
                                 />
                                 <InfoRow
                                     label={t("page.music.fields.assetName")}
-                                    value={<span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{music.assetbundleName}</span>}
+                                    value={<span className="font-mono text-xs bg-[var(--hh-surface-sunken)] px-2 py-0.5 rounded-[var(--hh-radius-sm)]">{music.assetbundleName}</span>}
                                 />
                             </div>
                         </div>
 
                         {/* Ranking Card */}
                         {rankings && (
-                            <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                         </svg>
@@ -557,7 +557,7 @@ export default function MusicDetailPage() {
                                 </div>
 
                                 {/* Category Tabs */}
-                                <div className="px-3 py-2 border-b border-slate-100 flex flex-wrap gap-1">
+                                <div className="px-3 py-2 border-b border-[var(--hh-border)] flex flex-wrap gap-1">
                                     {RANKING_CATEGORIES.map((cat) => {
                                         const catRanking = rankings.categories[cat.key];
                                         const isSelected = selectedRankingCategory === cat.key;
@@ -565,11 +565,11 @@ export default function MusicDetailPage() {
                                             <button
                                                 key={cat.key}
                                                 onClick={() => setSelectedRankingCategory(cat.key)}
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isSelected
-                                                    ? "bg-miku text-white shadow-sm"
+                                                className={`hh-chip hh-press px-3 py-1.5 text-xs ${isSelected
+                                                    ? "hh-chip-active"
                                                     : catRanking
-                                                        ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                                        : "bg-slate-50 text-slate-300 cursor-not-allowed"
+                                                        ? "cursor-pointer"
+                                                        : "opacity-45 cursor-not-allowed"
                                                     }`}
                                                 disabled={!catRanking}
                                             >
@@ -585,22 +585,22 @@ export default function MusicDetailPage() {
                                         {/* Left: PSPI */}
                                         <div className="flex items-center gap-3">
                                             <div>
-                                                <div className="text-xs text-slate-400 mb-0.5">PSPI</div>
-                                                <div className="text-2xl font-black text-miku">
+                                                <div className="hh-label mb-0.5">PSPI</div>
+                                                <div className="hh-display hh-numeric text-2xl text-[var(--hh-accent-deep)]">
                                                     {(rankings.categories[selectedRankingCategory]!.pspi ?? 0).toFixed(1)}
                                                 </div>
                                             </div>
-                                            <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs rounded uppercase font-mono">
+                                            <span className="px-2 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] text-xs rounded-[var(--hh-radius-sm)] uppercase font-mono">
                                                 {rankings.categories[selectedRankingCategory]!.difficulty}
                                             </span>
                                         </div>
 
                                         {/* Right: Rank */}
                                         <div className="text-right">
-                                            <span className="text-4xl sm:text-5xl font-black text-miku">
+                                            <span className="hh-display hh-numeric text-4xl sm:text-5xl text-[var(--hh-accent-deep)]">
                                                 #{rankings.categories[selectedRankingCategory]!.rank}
                                             </span>
-                                            <span className="text-slate-400 text-sm ml-1">/{rankings.total}</span>
+                                            <span className="hh-numeric text-[var(--hh-text-tertiary)] text-sm ml-1">/{rankings.total}</span>
                                         </div>
                                     </div>
                                 )}
@@ -608,9 +608,9 @@ export default function MusicDetailPage() {
                         )}
 
                         {/* Difficulty Card */}
-                        <div className="ios-glass-card rounded-2xl overflow-hidden">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                     <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                     </svg>
@@ -623,9 +623,9 @@ export default function MusicDetailPage() {
                                 {difficulties.map((diff) => (
                                     <button
                                         key={diff.musicDifficulty}
-                                        className={`flex flex-col items-center p-2 rounded-xl transition-all ${selectedDifficulty === diff.musicDifficulty
-                                            ? "ring-2 shadow-lg bg-white"
-                                            : "hover:bg-slate-50 border border-transparent"
+                                        className={`hh-press flex flex-col items-center p-2 rounded-[var(--hh-radius-md)] cursor-pointer ${selectedDifficulty === diff.musicDifficulty
+                                            ? "ring-2 bg-[var(--hh-surface-2)]"
+                                            : "border border-transparent hover:bg-[var(--hh-surface-1)]"
                                             }`}
                                         style={
                                             selectedDifficulty === diff.musicDifficulty
@@ -644,13 +644,13 @@ export default function MusicDetailPage() {
                                             {DIFFICULTY_NAMES[diff.musicDifficulty].slice(0, 3)}
                                         </span>
                                         <span
-                                            className="text-lg font-black"
+                                            className="hh-display hh-numeric text-lg"
                                             style={{ color: DIFFICULTY_COLORS[diff.musicDifficulty] }}
                                         >
                                             {diff.playLevel}
                                         </span>
                                         {songConstantsMap[musicId]?.[diff.musicDifficulty] !== undefined && (
-                                            <span className="text-[9px] font-bold text-slate-400 -mt-0.5">
+                                            <span className="hh-numeric text-[9px] font-bold text-[var(--hh-text-tertiary)] -mt-0.5">
                                                 {songConstantsMap[musicId][diff.musicDifficulty].toFixed(1)}
                                             </span>
                                         )}
@@ -661,22 +661,22 @@ export default function MusicDetailPage() {
                             {/* Selected Difficulty Details */}
                             {selectedDifficultyInfo && (
                                 <div className="px-5 pb-4">
-                                    <div className="flex items-center justify-between py-2 border-t border-slate-100">
-                                        <span className="text-sm text-slate-500">{t("page.music.fields.noteCount")}</span>
-                                        <span className="text-sm font-bold text-slate-700">
+                                    <div className="flex items-center justify-between py-2 border-t border-[var(--hh-border)]">
+                                        <span className="text-sm text-[var(--hh-text-secondary)]">{t("page.music.fields.noteCount")}</span>
+                                        <span className="hh-numeric text-sm font-bold text-[var(--hh-text-primary)]">
                                             {formatNumber(selectedDifficultyInfo.totalNoteCount)}
                                         </span>
                                     </div>
                                     {songConstantsMap[musicId]?.[selectedDifficulty] !== undefined && (
-                                        <div className="flex items-center justify-between py-2 border-t border-slate-100">
-                                            <span className="text-sm text-slate-500">{t("page.music.fields.constant")}</span>
-                                            <span className="text-sm font-black text-miku">
+                                        <div className="flex items-center justify-between py-2 border-t border-[var(--hh-border)]">
+                                            <span className="text-sm text-[var(--hh-text-secondary)]">{t("page.music.fields.constant")}</span>
+                                            <span className="hh-display hh-numeric text-sm text-[var(--hh-accent-deep)]">
                                                 {songConstantsMap[musicId][selectedDifficulty].toFixed(1)}
                                             </span>
                                         </div>
                                     )}
                                     {songConstantsMap[musicId] && Object.keys(songConstantsMap[musicId]).length > 0 && (
-                                        <div className="pt-1 pb-0.5 text-[10px] text-slate-400 text-center">
+                                        <div className="pt-1 pb-0.5 text-[10px] text-[var(--hh-text-tertiary)] text-center">
                                             {t("page.music.communityConstantNote")}
                                         </div>
                                     )}
@@ -685,7 +685,7 @@ export default function MusicDetailPage() {
                                         href={`/chart-image?musicId=${musicId}&difficulty=${selectedDifficulty}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                                        className="hh-press flex items-center justify-center gap-2 w-full py-3 rounded-[var(--hh-radius-md)] text-white text-sm font-bold"
                                         style={{ backgroundColor: DIFFICULTY_COLORS[selectedDifficulty] }}
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -695,7 +695,7 @@ export default function MusicDetailPage() {
                                     </Link>
                                     <Link
                                         href={`/chart-preview?musicId=${musicId}&difficulty=${selectedDifficulty}&preview=true&from=/music/${musicId}`}
-                                        className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold border-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all mt-2"
+                                        className="hh-press flex items-center justify-center gap-2 w-full py-3 rounded-[var(--hh-radius-md)] text-sm font-bold border-2 mt-2"
                                         style={{ borderColor: DIFFICULTY_COLORS[selectedDifficulty], color: DIFFICULTY_COLORS[selectedDifficulty] }}
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -710,16 +710,16 @@ export default function MusicDetailPage() {
 
                         {/* Vocals Card */}
                         {vocals.length > 0 && (
-                            <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                                         </svg>
                                         {t("page.music.vocalVersions", { seconds: Math.round((music.fillerSec || 0) * 10) / 10 })}
                                     </h2>
                                 </div>
-                                <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+                                <div className="divide-y divide-[var(--hh-border)] max-h-96 overflow-y-auto">
                                     {vocals.map((vocal) => (
                                         <VocalPlayer
                                             key={vocal.id}
@@ -737,9 +737,9 @@ export default function MusicDetailPage() {
 
                         {/* Related Events Card */}
                         {relatedEvents.length > 0 && (
-                            <div className="ios-glass-card rounded-2xl overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                                    <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                                    <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
@@ -748,7 +748,7 @@ export default function MusicDetailPage() {
                                 </div>
                                 <div className="p-0">
                                     {relatedEvents.map((event) => (
-                                        <Link key={event.id} href={`/events/${event.id}`} className="block group border-b border-slate-50 last:border-0 relative">
+                                        <Link key={event.id} href={`/events/${event.id}`} className="block group border-b border-[var(--hh-border)] last:border-0 relative">
                                             <div className="relative aspect-[2/1] w-full">
                                                 <Image
                                                     src={getEventBannerUrl(event.assetbundleName, assetSource)}
@@ -757,10 +757,12 @@ export default function MusicDetailPage() {
                                                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                                                     unoptimized
                                                 />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                                                {/* Functional scrim, not decoration: the white title below sits on an
+                                                    arbitrary event banner and needs this fade to stay legible. */}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                                 <div className="absolute bottom-0 left-0 w-full p-4">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-[10px] font-mono bg-white/20 text-white px-2 py-0.5 rounded backdrop-blur-sm">
+                                                        <span className="hh-numeric text-[10px] font-mono bg-black/50 text-white px-2 py-0.5 rounded-[var(--hh-radius-sm)]">
                                                             Event #{event.id}
                                                         </span>
                                                     </div>
@@ -789,7 +791,7 @@ export default function MusicDetailPage() {
                 <div className="mt-12 text-center">
                     <Link
                         href="/music"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                        className="hh-btn hh-press px-6 py-3 rounded-[var(--hh-radius-md)]"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -878,14 +880,14 @@ function VocalPlayer({
     }, []);
 
     return (
-        <div className="px-5 py-4 hover:bg-slate-50 transition-colors group">
+        <div className="px-5 py-4 group">
             <div className="flex items-center gap-4">
                 {/* Play Button */}
                 <button
                     onClick={togglePlay}
-                    className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${isPlaying
-                        ? "bg-slate-800 text-white"
-                        : "bg-miku text-white shadow-md shadow-miku/20 hover:scale-105 active:scale-95"
+                    className={`hh-press hh-focusable shrink-0 w-10 h-10 rounded-[var(--hh-radius-full)] flex items-center justify-center cursor-pointer ${isPlaying
+                        ? "bg-[var(--hh-surface-inset)] text-[var(--hh-text-primary)]"
+                        : "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)]"
                         }`}
                 >
                     {isPlaying ? (
@@ -901,13 +903,13 @@ function VocalPlayer({
 
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                        <div className="text-sm font-bold text-slate-700 truncate">
+                        <div className="hh-title text-sm text-[var(--hh-text-primary)] truncate">
                             <TranslatedText
                                 original={vocal.caption}
                                 category="music"
                                 field="vocalCaption"
                                 originalClassName="truncate block"
-                                translationClassName="text-xs text-slate-400 truncate block font-normal"
+                                translationClassName="text-xs text-[var(--hh-text-tertiary)] truncate block font-normal"
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -917,7 +919,7 @@ function VocalPlayer({
                                 download={`${vocal.caption}.mp3`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="p-1.5 text-slate-400 hover:text-miku hover:bg-miku/5 rounded-lg transition-colors"
+                                className="hh-press p-1.5 text-[var(--hh-text-tertiary)] hover:text-[var(--hh-accent-deep)] hover:bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)]"
                                 title={downloadLabel}
                                 onClick={(e) => e.stopPropagation()}
                             >
@@ -939,7 +941,7 @@ function VocalPlayer({
                             return hasIcon ? (
                                 <div
                                     key={chara.id}
-                                    className="w-6 h-6 rounded-full overflow-hidden bg-slate-100 ring-1 ring-white"
+                                    className="w-6 h-6 rounded-[var(--hh-radius-full)] overflow-hidden bg-[var(--hh-surface-sunken)] ring-1 ring-[var(--hh-surface-2)]"
                                     title={charName}
                                 >
                                     <Image
@@ -954,10 +956,10 @@ function VocalPlayer({
                             ) : (
                                 <div
                                     key={chara.id}
-                                    className="h-6 px-2 rounded-full bg-slate-100 ring-1 ring-white flex items-center"
+                                    className="h-6 px-2 rounded-[var(--hh-radius-full)] bg-[var(--hh-surface-sunken)] ring-1 ring-[var(--hh-surface-2)] flex items-center"
                                     title={charName}
                                 >
-                                    <span className="text-[10px] text-slate-500 font-medium leading-none whitespace-nowrap">
+                                    <span className="text-[10px] text-[var(--hh-text-secondary)] font-medium leading-none whitespace-nowrap">
                                         {charName}
                                     </span>
                                 </div>
@@ -973,9 +975,9 @@ function VocalPlayer({
                             max={duration || 100}
                             value={progress}
                             onChange={handleSeek}
-                            className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-miku hover:bg-slate-300 transition-colors"
+                            className="flex-1 h-1.5 bg-[var(--hh-surface-inset)] rounded-[var(--hh-radius-full)] appearance-none cursor-pointer accent-miku"
                         />
-                        <span className="text-[10px] font-mono text-slate-400 shrink-0 min-w-[60px] text-right">
+                        <span className="hh-numeric text-[10px] font-mono text-[var(--hh-text-tertiary)] shrink-0 min-w-[60px] text-right">
                             {formatTime(progress)} / {formatTime(duration)}
                         </span>
                     </div>
@@ -989,8 +991,8 @@ function VocalPlayer({
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <div className="px-5 py-3 flex items-center justify-between text-sm">
-            <span className="text-slate-500 font-medium">{label}</span>
-            <span className="text-slate-800 font-bold">{value}</span>
+            <span className="text-[var(--hh-text-secondary)] font-medium">{label}</span>
+            <span className="font-semibold text-[var(--hh-text-primary)]">{value}</span>
         </div>
     );
 }

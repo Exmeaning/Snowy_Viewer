@@ -861,16 +861,16 @@ function MyMusicsContent() {
 
             {/* User Error */}
             {userError && (
-                <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200/50">
+                <div className="mb-4 p-3 rounded-[var(--hh-radius-md)] bg-[var(--hh-accent-alert)]/10 border border-[var(--hh-accent-alert)]/40">
                     <div className="flex items-start gap-2">
-                        <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4 text-[var(--hh-accent-alert)] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <div>
-                            <p className="text-xs font-medium text-red-700">
+                            <p className="text-xs font-medium text-[var(--hh-accent-alert)]">
                                 {t(getUserErrorMessageKey(userError))}
                             </p>
-                            <ExternalLink href="https://haruki.seiunx.com" className="text-xs text-miku hover:underline mt-1 inline-block">
+                            <ExternalLink href="https://haruki.seiunx.com" className="text-xs text-[var(--hh-accent-deep)] hover:underline mt-1 inline-block">
                                 {t("common.account.goHaruki")}
                             </ExternalLink>
                         </div>
@@ -880,30 +880,32 @@ function MyMusicsContent() {
 
             {/* Progress Bar */}
             {!isLoading && !isFetchingUser && userMusicResults.size > 0 && progressStats && (
-                <div className="mb-6 glass-card p-4 rounded-2xl">
+                <div className="hh-tile mb-6 p-4 rounded-[var(--hh-radius-lg)]">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
                             <span className="text-sm font-bold text-primary-text">
                                 {t("common.progress.completionProgress", { difficulty: selectedDifficulty.toUpperCase() })}
                             </span>
                             {uploadTime && (
-                                <span className="text-[11px] text-slate-400" title={t("common.data.uploadTimeTitle")}>
+                                <span className="hh-numeric text-[11px] text-[var(--hh-text-tertiary)]" title={t("common.data.uploadTimeTitle")}>
                                     {t("common.data.dataTime", { time: formatDate(parseUploadTimeToDate(uploadTime) ?? uploadTime, { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) })}
                                 </span>
                             )}
                         </div>
                     </div>
-                    <div className="flex gap-4 text-sm font-bold mb-2">
+                    {/* Clear/FC/AP counters are tabular so the three groups keep a
+                        stable width as the numbers change between difficulties. */}
+                    <div className="hh-numeric flex gap-4 text-sm font-bold mb-2">
                         <div className="flex items-center gap-1">
-                            <Image src="/data/music/icon_clear.png" alt="Clear" width={20} height={20} className="drop-shadow-sm" />
+                            <Image src="/data/music/icon_clear.png" alt="Clear" width={20} height={20} />
                             <span>{progressStats.clear} / {progressStats.total}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            <Image src="/data/music/icon_fullCombo.png" alt="FC" width={20} height={20} className="drop-shadow-sm" />
+                            <Image src="/data/music/icon_fullCombo.png" alt="FC" width={20} height={20} />
                             <span>{progressStats.fc} / {progressStats.total}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            <Image src="/data/music/icon_allPerfect.png" alt="AP" width={20} height={20} className="drop-shadow-sm" />
+                            <Image src="/data/music/icon_allPerfect.png" alt="AP" width={20} height={20} />
                             <span>{progressStats.ap} / {progressStats.total}</span>
                         </div>
                     </div>
@@ -912,17 +914,17 @@ function MyMusicsContent() {
 
             {/* Best30 Card */}
             {!isLoading && !isFetchingUser && best30Data && best30Data.entries.length > 0 && (
-                <div className="mb-6 glass-card rounded-2xl overflow-hidden">
+                <div className="hh-tile mb-6 rounded-[var(--hh-radius-lg)] overflow-hidden">
                     <div className="p-4 flex items-center justify-between">
                         <div
                             className="flex items-center gap-3 cursor-pointer flex-1 hover:opacity-80 transition-opacity"
                             onClick={() => setBest30Expanded(!best30Expanded)}
                         >
                             <span className="text-sm font-bold text-primary-text">{t("page.myMusics.best30")}</span>
-                            <span className="text-2xl font-black text-miku">{best30Data.average.toFixed(2)}</span>
-                            <span className="text-[10px] text-slate-400">{t("page.myMusics.communityConstantHint")}</span>
+                            <span className="hh-numeric hh-display text-2xl text-[var(--hh-accent-deep)]">{best30Data.average.toFixed(2)}</span>
+                            <span className="text-[10px] text-[var(--hh-text-tertiary)]">{t("page.myMusics.communityConstantHint")}</span>
                             <svg
-                                className={`w-4 h-4 text-slate-400 transition-transform ${best30Expanded ? 'rotate-180' : ''}`}
+                                className={`w-4 h-4 text-[var(--hh-text-tertiary)] transition-transform ${best30Expanded ? 'rotate-180' : ''}`}
                                 fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             >
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -930,7 +932,7 @@ function MyMusicsContent() {
                         </div>
                         <button
                             onClick={() => setShowBest30Share(true)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-miku/10 hover:bg-miku/20 text-miku text-xs font-bold rounded-lg transition-colors"
+                            className="hh-press hh-focusable flex items-center gap-1.5 px-3 py-1.5 bg-[var(--hh-accent-wash)] hover:bg-[var(--hh-accent-wash-strong)] text-[var(--hh-accent-deep)] text-xs font-bold rounded-[var(--hh-radius-md)] transition-colors"
                         >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -939,15 +941,16 @@ function MyMusicsContent() {
                         </button>
                     </div>
                     {best30Expanded && (
-                        <div className="border-t border-slate-200/50 grid grid-cols-1 sm:grid-cols-2">
+                        /* 30 dense rows: hairline grid, no per-row elevation. */
+                        <div className="border-t border-[var(--hh-border)] grid grid-cols-1 sm:grid-cols-2">
                             {best30Data.entries.map((entry, idx) => (
                                 <Link
                                     key={`${entry.musicId}-${entry.difficulty}`}
                                     href={`/music/${entry.musicId}`}
-                                    className="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50/80 transition-colors border-b border-r border-slate-100/50"
+                                    className="flex items-center gap-2 px-3 py-1.5 hover:bg-[var(--hh-surface-3)] transition-colors border-b border-r border-[var(--hh-border-hairline)]"
                                 >
-                                    <span className="text-[10px] font-bold text-slate-400 w-5 text-right">#{idx + 1}</span>
-                                    <div className="w-8 h-8 rounded-md overflow-hidden relative flex-shrink-0">
+                                    <span className="hh-numeric text-[10px] font-bold text-[var(--hh-text-tertiary)] w-5 text-right">#{idx + 1}</span>
+                                    <div className="w-8 h-8 rounded-[var(--hh-radius-sm)] overflow-hidden relative flex-shrink-0">
                                         <Image
                                             src={getMusicThumbnailUrl({ assetbundleName: entry.assetbundleName } as Music)}
                                             alt=""
@@ -959,10 +962,10 @@ function MyMusicsContent() {
                                     <div className="flex-1 min-w-0">
                                         <div className="text-[11px] font-bold text-primary-text truncate">{entry.title}</div>
                                     </div>
-                                    <span className={`text-[9px] font-bold uppercase px-1 py-0.5 rounded ${entry.difficulty === 'master' ? 'bg-purple-100 text-purple-600' :
-                                        entry.difficulty === 'append' ? 'bg-pink-100 text-pink-600' :
-                                            entry.difficulty === 'expert' ? 'bg-red-100 text-red-600' :
-                                                'bg-slate-100 text-slate-600'
+                                    <span className={`text-[9px] font-bold uppercase px-1 py-0.5 rounded-[var(--hh-radius-xs)] ${entry.difficulty === 'master' ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300' :
+                                        entry.difficulty === 'append' ? 'bg-pink-500/15 text-pink-600 dark:text-pink-300' :
+                                            entry.difficulty === 'expert' ? 'bg-red-500/15 text-red-600 dark:text-red-300' :
+                                                'bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]'
                                         }`}>
                                         {entry.difficulty.slice(0, 3)}
                                     </span>
@@ -971,10 +974,10 @@ function MyMusicsContent() {
                                         alt={entry.playResult}
                                         width={14}
                                         height={14}
-                                        className="drop-shadow-sm flex-shrink-0"
+                                        className="flex-shrink-0"
                                     />
                                     <div className="text-right flex-shrink-0 w-10">
-                                        <div className="text-[11px] font-black text-miku">{entry.userConstant.toFixed(1)}</div>
+                                        <div className="hh-numeric text-[11px] font-bold text-[var(--hh-accent-deep)]">{entry.userConstant.toFixed(1)}</div>
                                     </div>
                                 </Link>
                             ))}
@@ -1007,7 +1010,7 @@ function MyMusicsContent() {
 
             {/* Error */}
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-[var(--hh-accent-alert)]/10 border border-[var(--hh-accent-alert)]/40 rounded-[var(--hh-radius-md)] text-[var(--hh-accent-alert)] text-sm">
                     <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{error}</p>
                 </div>
@@ -1018,17 +1021,17 @@ function MyMusicsContent() {
                 {isLoading || isFetchingUser ? (
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
                         {Array.from({ length: 12 }).map((_, i) => (
-                            <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-100 shadow-sm animate-pulse">
-                                <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200" />
+                            <div key={i} className="rounded-[var(--hh-radius-lg)] overflow-hidden bg-[var(--hh-surface-2)] border border-[var(--hh-border)] animate-pulse">
+                                <div className="aspect-square bg-[var(--hh-surface-sunken)]" />
                             </div>
                         ))}
                     </div>
                 ) : filteredMusics.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-16 h-16 text-[var(--hh-text-tertiary)] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                         </svg>
-                        <p className="text-slate-400 font-medium">{t("page.myMusics.noResult")}</p>
+                        <p className="text-[var(--hh-text-tertiary)] font-medium">{t("page.myMusics.noResult")}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
@@ -1068,10 +1071,10 @@ function MyMusicsContent() {
                         <button
                             onClick={loadMore}
                             data-shortcut-load-more="true"
-                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                            className="hh-btn hh-btn-primary hh-press px-8 py-3 rounded-[var(--hh-radius-md)] font-bold"
                         >
                             {t("page.myMusics.loadMore")}
-                            <span className="ml-2 text-sm opacity-80">
+                            <span className="hh-numeric ml-2 text-sm opacity-80">
                                 ({displayedMusicsWithSeparators.filter(i => i.type === 'music').length} / {filteredMusics.length})
                             </span>
                         </button>
@@ -1080,7 +1083,7 @@ function MyMusicsContent() {
 
                 {/* All loaded indicator */}
                 {!isLoading && displayedMusicsWithSeparators.filter(i => i.type === 'music').length > 0 && displayedMusicsWithSeparators.filter(i => i.type === 'music').length >= filteredMusics.length && (
-                    <div className="mt-8 text-center text-slate-400 text-sm">
+                    <div className="mt-8 text-center text-[var(--hh-text-tertiary)] text-sm">
                         {t("page.myMusics.allLoaded", { count: filteredMusics.length })}
                     </div>
                 )}
@@ -1092,25 +1095,31 @@ function MyMusicsContent() {
 // ==================== Sub Components ====================
 
 function LevelSeparatorCard({ level, difficulty }: { level: number; difficulty: string }) {
-    // Difficulty color mapping
+    // Difficulty color mapping. These are the game's own difficulty hues, so they
+    // stay literal rather than following the neutral surface ramp — but they are
+    // now flat fills instead of gradients.
     const difficultyColors: Record<string, string> = {
-        EASY: "from-green-400 to-green-500",
-        NORMAL: "from-blue-400 to-blue-500",
-        HARD: "from-yellow-400 to-yellow-500",
-        EXPERT: "from-red-400 to-red-500",
-        MASTER: "from-purple-500 to-purple-600",
-        APPEND: "from-pink-500 to-pink-600",
+        EASY: "#4ade80",
+        NORMAL: "#60a5fa",
+        HARD: "#facc15",
+        EXPERT: "#f87171",
+        MASTER: "#a855f7",
+        APPEND: "#ec4899",
     };
 
-    const gradientClass = difficultyColors[difficulty] || "from-slate-400 to-slate-500";
+    const fillColor = difficultyColors[difficulty] || "var(--hh-text-secondary)";
 
     return (
-        <div className={`aspect-square rounded-xl bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center shadow-lg`}>
+        <div
+            className="aspect-square rounded-[var(--hh-radius-lg)] flex flex-col items-center justify-center"
+            style={{ backgroundColor: fillColor }}
+        >
+            {/* White text over a saturated difficulty fill is intentional. */}
             <div className="text-white text-center px-2">
                 <div className="text-[10px] sm:text-xs font-bold opacity-90 mb-0.5">
                     {difficulty}
                 </div>
-                <div className="text-2xl sm:text-3xl md:text-4xl font-black">
+                <div className="hh-numeric hh-display text-2xl sm:text-3xl md:text-4xl">
                     {level}
                 </div>
             </div>
@@ -1122,13 +1131,13 @@ function PageHeader() {
     const { t } = useI18n();
     return (
         <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.myMusics.badge")}</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-sm)] mb-4">
+                <span className="hh-label text-[var(--hh-accent-deep)]">{t("page.myMusics.badge")}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                {t("page.myMusics.title")}<span className="text-miku">{t("page.myMusics.titleHighlight")}</span>
+            <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
+                {t("page.myMusics.title")}<span className="text-[var(--hh-accent-deep)]">{t("page.myMusics.titleHighlight")}</span>
             </h1>
-            <p className="text-slate-500 mt-2 text-sm">
+            <p className="hh-body text-[var(--hh-text-secondary)] mt-2 text-sm">
                 {t("page.myMusics.description")}
             </p>
         </div>
@@ -1152,20 +1161,21 @@ function MusicItem({ music, difficulties, results, thumbnailUrl, hasUserData, se
 
     return (
         <Link href={`/music/${music.id}`} className="group block" data-shortcut-item="true">
-            <div className="relative cursor-pointer rounded-xl overflow-hidden transition-all bg-white/60 ring-1 ring-slate-200/60 hover:ring-miku hover:shadow-xl hover:-translate-y-1">
+            <div className="hh-tile relative cursor-pointer rounded-[var(--hh-radius-lg)] overflow-hidden transition-colors hover:border-[var(--hh-accent-line)] hover:bg-[var(--hh-surface-3)]">
                 {/* Music Thumbnail */}
                 <div className="w-full aspect-square relative">
                     <Image
                         src={thumbnailUrl}
                         alt={music.title}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="object-cover"
                         unoptimized
                     />
 
-                    {/* Badge - top right corner */}
+                    {/* Badge - top right corner. Both variants sit on arbitrary jacket
+                        art, so the label stays white on an opaque chip. */}
                     {currentLevel !== undefined && (
-                        <div className={`absolute top-1 right-1 text-white font-bold px-1.5 py-0.5 rounded ${constant ? 'bg-miku/80 backdrop-blur-sm text-[10px] shadow-sm' : 'bg-black/70 text-xs'}`}>
+                        <div className={`hh-numeric absolute top-1 right-1 text-white font-bold px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] ${constant ? 'bg-[var(--hh-accent)] text-[10px]' : 'bg-black/70 text-xs'}`}>
                             {constant ? constant.toFixed(1) : (sortBy === 'constant' ? `${currentLevel}.?` : currentLevel)}
                         </div>
                     )}
@@ -1200,13 +1210,13 @@ function MusicItem({ music, difficulties, results, thumbnailUrl, hasUserData, se
 
                 {/* Title Info */}
                 <div className="p-3">
-                    <h3 className="text-sm font-bold text-primary-text group-hover:text-miku transition-colors">
+                    <h3 className="text-sm font-bold text-primary-text group-hover:text-[var(--hh-accent-deep)] transition-colors">
                         <TranslatedText
                             original={music.title}
                             category="music"
                             field="title"
                             originalClassName="truncate block"
-                            translationClassName="text-xs font-medium text-slate-400 truncate block"
+                            translationClassName="text-xs font-medium text-[var(--hh-text-tertiary)] truncate block"
                         />
                     </h3>
                 </div>
@@ -1219,7 +1229,7 @@ function MusicItem({ music, difficulties, results, thumbnailUrl, hasUserData, se
 
 function MyMusicsLoadingFallback() {
     const { t } = useI18n();
-    return <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("common.state.loading")}</div>;
+    return <div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("common.state.loading")}</div>;
 }
 
 export default function MyMusicsClient() {

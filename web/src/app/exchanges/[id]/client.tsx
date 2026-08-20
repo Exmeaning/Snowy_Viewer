@@ -67,11 +67,11 @@ function Badge({
         amber: "bg-amber-500/10 text-amber-700",
         emerald: "bg-emerald-500/10 text-emerald-700",
         rose: "bg-rose-500/10 text-rose-600",
-        slate: "bg-slate-100 text-slate-500",
+        slate: "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)]",
     };
 
     return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${toneClasses[tone]}`}>
+        <span className={`inline-flex items-center rounded-[var(--hh-radius-sm)] px-2.5 py-1 text-[11px] font-bold ${toneClasses[tone]}`}>
             {label}
         </span>
     );
@@ -91,8 +91,8 @@ function getStatusTone(status: ExchangeStatus): "emerald" | "amber" | "rose" | "
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <div className="px-5 py-3 flex items-center justify-between text-sm">
-            <span className="text-slate-500 font-medium">{label}</span>
-            <span className="text-slate-800 font-bold text-right max-w-[60%]">{value}</span>
+            <span className="text-[var(--hh-text-secondary)] font-medium">{label}</span>
+            <span className="font-semibold text-[var(--hh-text-primary)] text-right max-w-[60%]">{value}</span>
         </div>
     );
 }
@@ -110,15 +110,15 @@ function SectionCard({
     rowStyle?: boolean;
 }) {
     return (
-        <section className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent">
-                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+        <section className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
+                <h2 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
                     {icon}
                     {title}
                 </h2>
             </div>
             {rowStyle ? (
-                <div className="divide-y divide-slate-100">{children}</div>
+                <div className="divide-y divide-[var(--hh-border)]">{children}</div>
             ) : (
                 <div className="p-5">{children}</div>
             )}
@@ -131,11 +131,11 @@ function ResourceThumb({ src, alt }: { src?: string; alt: string }) {
         <img
             src={src}
             alt={alt}
-            className="h-14 w-14 rounded-xl bg-slate-50 object-contain p-2"
+            className="h-14 w-14 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] object-contain p-2"
             loading="lazy"
         />
     ) : (
-        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-50 text-xs font-bold text-slate-300">
+        <div className="flex h-14 w-14 items-center justify-center rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] text-xs font-bold text-[var(--hh-text-tertiary)]">
             ?
         </div>
     );
@@ -145,20 +145,20 @@ function ResourceThumb({ src, alt }: { src?: string; alt: string }) {
 
 function CostGroupBlock({ title, group }: { title?: string; group: ResolvedExchangeCostGroup }) {
     return (
-        <div className="rounded-2xl bg-slate-50 p-4">
-            {title ? <h3 className="mb-3 text-sm font-black text-slate-700">{title}</h3> : null}
+        <div className="hh-well p-4">
+            {title ? <h3 className="hh-title mb-3 text-sm text-[var(--hh-text-primary)]">{title}</h3> : null}
             <div className="space-y-3">
                 {group.costs.map((cost) => (
                     <div
                         key={`${group.costGroupId}-${cost.resourceType}-${cost.resourceId}`}
-                        className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3"
+                        className="flex items-center gap-3 rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] p-3"
                     >
                         <ResourceThumb src={cost.imageUrl} alt={cost.name} />
                         <div className="min-w-0 flex-1">
-                            <div className="break-words text-sm font-bold text-slate-800">{cost.name}</div>
-                            {cost.subtitle ? <div className="mt-1 text-xs text-slate-400">{cost.subtitle}</div> : null}
+                            <div className="hh-title break-words text-sm text-[var(--hh-text-primary)]">{cost.name}</div>
+                            {cost.subtitle ? <div className="mt-1 text-xs text-[var(--hh-text-tertiary)]">{cost.subtitle}</div> : null}
                         </div>
-                        <div className="shrink-0 text-sm font-black text-miku">× {cost.quantity}</div>
+                        <div className="hh-display hh-numeric shrink-0 text-sm text-[var(--hh-accent-deep)]">× {cost.quantity}</div>
                     </div>
                 ))}
             </div>
@@ -173,9 +173,9 @@ function RewardCard({ reward, lookups }: { reward: ResolvedExchangeReward; looku
         const cardInfo = lookups.cards.get(reward.resourceId);
         if (cardInfo) {
             const content = (
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-miku/30 hover:shadow-md h-full flex flex-col justify-between">
+                <div className="hh-press hh-tile rounded-[var(--hh-radius-lg)] p-4 hover:border-[var(--hh-accent-line)] h-full flex flex-col justify-between">
                     <div>
-                        <div className="mb-3 text-sm font-black text-slate-800 line-clamp-2">{reward.name}</div>
+                        <div className="hh-title mb-3 text-sm text-[var(--hh-text-primary)] line-clamp-2">{reward.name}</div>
                         <div className="flex justify-center">
                             <SekaiCardThumbnail card={cardInfo} width={80} />
                         </div>
@@ -185,7 +185,7 @@ function RewardCard({ reward, lookups }: { reward: ResolvedExchangeReward; looku
                             <Badge label={getRewardTypeLabel(reward.resourceType, t)} tone="miku" />
                             <Badge label={t("page.exchanges.quantity", { count: reward.quantity })} tone="slate" />
                         </div>
-                        {reward.subtitle ? <div className="mt-2 text-xs text-slate-400">{reward.subtitle}</div> : null}
+                        {reward.subtitle ? <div className="mt-2 text-xs text-[var(--hh-text-tertiary)]">{reward.subtitle}</div> : null}
                     </div>
                 </div>
             );
@@ -196,20 +196,20 @@ function RewardCard({ reward, lookups }: { reward: ResolvedExchangeReward; looku
     }
 
     const content = (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-miku/30 hover:shadow-md h-full">
+        <div className="hh-press hh-tile rounded-[var(--hh-radius-lg)] p-4 hover:border-[var(--hh-accent-line)] h-full">
             <div className="mb-3 flex items-start gap-3">
                 <ResourceThumb src={reward.imageUrl} alt={reward.name} />
                 <div className="min-w-0 flex-1">
-                    <div className="break-words text-sm font-black text-slate-800">{reward.name}</div>
+                    <div className="hh-title break-words text-sm text-[var(--hh-text-primary)]">{reward.name}</div>
                     <div className="mt-1 flex flex-wrap gap-2">
                         <Badge label={getRewardTypeLabel(reward.resourceType, t)} tone="miku" />
                         <Badge label={t("page.exchanges.quantity", { count: reward.quantity })} tone="slate" />
                     </div>
-                    {reward.subtitle ? <div className="mt-2 text-xs text-slate-400">{reward.subtitle}</div> : null}
+                    {reward.subtitle ? <div className="mt-2 text-xs text-[var(--hh-text-tertiary)]">{reward.subtitle}</div> : null}
                 </div>
             </div>
             {typeof reward.resourceId === "number" ? (
-                <div className="text-[11px] font-mono text-slate-400">resourceId: {reward.resourceId}</div>
+                <div className="hh-numeric text-[11px] font-mono text-[var(--hh-text-tertiary)]">resourceId: {reward.resourceId}</div>
             ) : null}
         </div>
     );
@@ -223,12 +223,12 @@ function DisplayResourceCard({ resource }: { resource: ResolvedExchangeDisplayRe
     const { t } = useI18n();
 
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="hh-tile rounded-[var(--hh-radius-lg)] p-4">
             <div className="mb-3 flex items-start gap-3">
                 <ResourceThumb src={resource.imageUrl} alt={resource.name} />
                 <div className="min-w-0 flex-1">
-                    <div className="break-words text-sm font-black text-slate-800">{resource.name}</div>
-                    {resource.subtitle ? <div className="mt-1 text-xs text-slate-400">{resource.subtitle}</div> : null}
+                    <div className="hh-title break-words text-sm text-[var(--hh-text-primary)]">{resource.name}</div>
+                    {resource.subtitle ? <div className="mt-1 text-xs text-[var(--hh-text-tertiary)]">{resource.subtitle}</div> : null}
                     <div className="mt-2 flex flex-wrap gap-2">
                         <Badge label={getRewardTypeLabel(resource.resourceType, t)} tone="violet" />
                         <Badge label={t("page.exchanges.groupNumber", { group: resource.groupId })} tone="slate" />
@@ -261,9 +261,9 @@ function SiblingsCard({ siblings }: { siblings: FlattenedMaterialExchange[] }) {
                     <Link
                         key={sibling.id}
                         href={`/exchanges/${sibling.id}`}
-                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition-all hover:border-miku/40 hover:bg-miku/5"
+                        className="hh-press rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-sunken)] px-4 py-3 hover:border-[var(--hh-accent-line)] hover:bg-[var(--hh-accent-wash)]"
                     >
-                        <div className="text-sm font-black text-slate-800">{sibling.resolvedTitle}</div>
+                        <div className="hh-title text-sm text-[var(--hh-text-primary)]">{sibling.resolvedTitle}</div>
                         <div className="mt-1 flex flex-wrap gap-2">
                             <Badge label={getExchangeStatusLabel(sibling.status, t)} tone={getStatusTone(sibling.status)} />
                             <Badge label={getRefreshCycleLabel(sibling.refreshCycle, t)} tone="slate" />
@@ -275,7 +275,7 @@ function SiblingsCard({ siblings }: { siblings: FlattenedMaterialExchange[] }) {
             {hasMore && (
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="mt-3 w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm text-slate-600"
+                    className="hh-btn hh-press mt-3 w-full py-2 px-3 rounded-[var(--hh-radius-md)] text-sm font-medium"
                 >
                     <svg
                         className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
@@ -297,12 +297,12 @@ function ErrorState({ message }: { message: string }) {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-600">
-                <p className="text-lg font-black">{t("page.exchanges.relationLoadFailed")}</p>
+            <div className="rounded-[var(--hh-radius-lg)] border border-red-300 bg-red-500/10 p-6 text-red-600">
+                <p className="hh-display text-lg">{t("page.exchanges.relationLoadFailed")}</p>
                 <p className="mt-2 text-sm">{message}</p>
                 <Link
                     href="/exchanges"
-                    className="mt-4 inline-flex rounded-xl bg-white px-4 py-2 text-sm font-bold text-red-500 shadow-sm transition-colors hover:bg-red-100"
+                    className="hh-press mt-4 inline-flex rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-2)] border border-red-300 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-500/10"
                 >
                         {t("page.exchanges.backToList")}
                 </Link>
@@ -430,7 +430,7 @@ export default function ExchangeDetailClient() {
                 <div className="mb-8">
                     <Link
                         href="/exchanges"
-                        className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-miku"
+                        className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-[var(--hh-text-secondary)] transition-colors hover:text-[var(--hh-accent-deep)]"
                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -440,7 +440,7 @@ export default function ExchangeDetailClient() {
 
                     {/* ID chip and badges */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-500 w-fit">
+                        <span className="hh-numeric inline-flex items-center gap-1.5 px-3 py-1 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-sm)] text-xs font-mono text-[var(--hh-text-secondary)] w-fit">
                             ID: #{entry.id}
                         </span>
                         <Badge label={getExchangeStatusLabel(entry.status, t)} tone={getStatusTone(entry.status)} />
@@ -455,8 +455,8 @@ export default function ExchangeDetailClient() {
                         )}
                     </div>
 
-                    <h1 className="text-2xl sm:text-3xl font-black text-slate-800">{entry.resolvedTitle}</h1>
-                    <p className="mt-2 text-sm text-slate-500">
+                    <h1 className="hh-display text-2xl sm:text-3xl text-[var(--hh-text-primary)]">{entry.resolvedTitle}</h1>
+                    <p className="mt-2 text-sm text-[var(--hh-text-secondary)]">
                         {t("page.exchanges.belongsToSummary", { summary: entry.summaryName })}
                     </p>
                 </div>
@@ -492,7 +492,7 @@ export default function ExchangeDetailClient() {
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-sm text-slate-400">{t("page.exchanges.noRewards")}</p>
+                                <p className="text-sm text-[var(--hh-text-tertiary)]">{t("page.exchanges.noRewards")}</p>
                             )}
                         </SectionCard>
 
@@ -540,15 +540,15 @@ export default function ExchangeDetailClient() {
                                         />
                                     ))
                                 ) : (
-                                    <p className="text-sm text-slate-400">{t("page.exchanges.noBaseCost")}</p>
+                                    <p className="text-sm text-[var(--hh-text-tertiary)]">{t("page.exchanges.noBaseCost")}</p>
                                 )}
                             </div>
 
                             {costInfo.relationParents.length > 0 && (
-                                <div className="mt-6 space-y-4 border-t border-slate-100 pt-6">
-                                    <h3 className="text-base font-black text-slate-800">{t("page.exchanges.relationCostGroups")}</h3>
+                                <div className="mt-6 space-y-4 border-t border-[var(--hh-border)] pt-6">
+                                    <h3 className="hh-title text-base text-[var(--hh-text-primary)]">{t("page.exchanges.relationCostGroups")}</h3>
                                     {costInfo.relationParents.map((parent) => (
-                                        <div key={parent.id} className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
+                                        <div key={parent.id} className="rounded-[var(--hh-radius-lg)] border border-emerald-400/40 bg-emerald-500/10 p-4">
                                             <div className="mb-4 flex flex-wrap items-center gap-2">
                                                 <Badge label={t("page.exchanges.relationCondition")} tone="emerald" />
                                                 <span className="text-sm font-bold text-emerald-700">{parent.description}</span>
@@ -583,17 +583,17 @@ export default function ExchangeDetailClient() {
                                 </svg>
                             }
                         >
-                            <InfoRow label={t("page.exchanges.fields.exchangeItemId")} value={<span className="font-mono">#{entry.id}</span>} />
-                            <InfoRow label={t("page.exchanges.fields.exchangeShopId")} value={<span className="font-mono">#{entry.summaryId}</span>} />
-                            <InfoRow label={t("common.field.seq")} value={`${entry.summarySeq}-${entry.exchangeSeq}`} />
+                            <InfoRow label={t("page.exchanges.fields.exchangeItemId")} value={<span className="hh-numeric font-mono">#{entry.id}</span>} />
+                            <InfoRow label={t("page.exchanges.fields.exchangeShopId")} value={<span className="hh-numeric font-mono">#{entry.summaryId}</span>} />
+                            <InfoRow label={t("common.field.seq")} value={<span className="hh-numeric">{`${entry.summarySeq}-${entry.exchangeSeq}`}</span>} />
                             <InfoRow label={t("page.exchanges.fields.category")} value={getExchangeCategoryLabel(entry.exchangeCategory, t)} />
                             <InfoRow label={t("page.exchanges.fields.exchangeType")} value={getExchangeTypeLabel(entry.materialExchangeType, t)} />
                             <InfoRow label={t("page.exchanges.fields.refreshCycle")} value={getRefreshCycleLabel(entry.refreshCycle, t)} />
                             <InfoRow label={t("page.exchanges.fields.status")} value={getExchangeStatusLabel(entry.status, t)} />
-                            <InfoRow label={t("page.exchanges.fields.startTime")} value={formatExchangeTime(startAt, formatDate)} />
-                            <InfoRow label={t("page.exchanges.fields.endTime")} value={formatExchangeTime(endAt, formatDate)} />
+                            <InfoRow label={t("page.exchanges.fields.startTime")} value={<span className="hh-numeric">{formatExchangeTime(startAt, formatDate)}</span>} />
+                            <InfoRow label={t("page.exchanges.fields.endTime")} value={<span className="hh-numeric">{formatExchangeTime(endAt, formatDate)}</span>} />
                             <InfoRow label={t("page.exchanges.fields.exchangeLimit")} value={typeof entry.exchangeLimit === "number" ? t("page.exchanges.times", { count: entry.exchangeLimit }) : t("page.exchanges.unlimited")} />
-                            <InfoRow label={t("page.exchanges.fields.rewardBoxId")} value={<span className="font-mono">#{entry.resourceBoxId}</span>} />
+                            <InfoRow label={t("page.exchanges.fields.rewardBoxId")} value={<span className="hh-numeric font-mono">#{entry.resourceBoxId}</span>} />
                             <InfoRow label={t("page.exchanges.fields.displayRewardQuantity")} value={entry.isDisplayQuantity ? t("common.field.yes") : t("common.field.no")} />
                             <InfoRow label={t("page.exchanges.fields.rewardTypeCount")} value={t("page.exchanges.rewardTypeCount", { count: entry.rewardTypes.length })} />
                             <InfoRow label={t("page.exchanges.fields.costItemCount")} value={t("page.exchanges.costItemCount", { count: entry.costs.length })} />
@@ -611,9 +611,9 @@ export default function ExchangeDetailClient() {
                             }
                         >
                             <InfoRow label={t("page.exchanges.fields.exchangeShopName")} value={entry.summaryName} />
-                            <InfoRow label={t("page.exchanges.fields.exchangeShopStart")} value={formatExchangeTime(entry.summaryStartAt, formatDate)} />
-                            <InfoRow label={t("page.exchanges.fields.exchangeShopEnd")} value={formatExchangeTime(entry.summaryEndAt, formatDate)} />
-                            <InfoRow label={t("page.exchanges.fields.displayResourceGroupId")} value={entry.summaryDisplayResourceGroupId ? `#${entry.summaryDisplayResourceGroupId}` : "—"} />
+                            <InfoRow label={t("page.exchanges.fields.exchangeShopStart")} value={<span className="hh-numeric">{formatExchangeTime(entry.summaryStartAt, formatDate)}</span>} />
+                            <InfoRow label={t("page.exchanges.fields.exchangeShopEnd")} value={<span className="hh-numeric">{formatExchangeTime(entry.summaryEndAt, formatDate)}</span>} />
+                            <InfoRow label={t("page.exchanges.fields.displayResourceGroupId")} value={<span className="hh-numeric">{entry.summaryDisplayResourceGroupId ? `#${entry.summaryDisplayResourceGroupId}` : "—"}</span>} />
                         </SectionCard>
 
                         {/* Sibling entries */}

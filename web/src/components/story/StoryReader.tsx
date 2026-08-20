@@ -321,21 +321,21 @@ export function StoryReader({
         return (
             <div className="flex flex-col items-center justify-center py-16">
                 <div className="loading-spinner mb-4" />
-                <p className="text-slate-500 font-semibold">{t("page.story.reader.loading")}</p>
+                <p className="text-[var(--hh-text-secondary)] font-semibold">{t("page.story.reader.loading")}</p>
             </div>
         );
     }
 
     if (missingPaths && missingPaths.length > 0) {
         return (
-            <div className="p-5 ios-glass-panel border-none rounded-xl text-sm">
-                <p className="font-bold text-amber-800 dark:text-amber-300 mb-2">{t("page.story.reader.assetMissingTitle")}</p>
-                <p className="text-amber-700 dark:text-amber-400 mb-3">
+            <div className="hh-panel p-5 text-sm">
+                <p className="hh-title text-amber-600 mb-2">{t("page.story.reader.assetMissingTitle")}</p>
+                <p className="text-[var(--hh-text-secondary)] mb-3">
                     {t("page.story.reader.assetMissingDescription")}
                 </p>
                 <ul className="space-y-1">
                     {missingPaths.map((p) => (
-                        <li key={p} className="font-mono text-xs bg-amber-100/30 dark:bg-amber-900/20 px-3 py-1.5 rounded break-all text-amber-900 dark:text-amber-200">
+                        <li key={p} className="font-mono text-xs bg-[var(--hh-surface-sunken)] px-3 py-1.5 rounded-[var(--hh-radius-sm)] break-all text-[var(--hh-text-primary)]">
                             {p}
                         </li>
                     ))}
@@ -346,12 +346,12 @@ export function StoryReader({
 
     if (error) {
         return (
-            <div className="p-4 ios-glass-panel border-none rounded-xl text-red-600 dark:text-red-400 text-sm">
-                <p className="font-bold">{t("common.state.loadingFailed")}</p>
-                <p>{error}</p>
+            <div className="hh-panel p-4 text-sm">
+                <p className="hh-title text-red-500">{t("common.state.loadingFailed")}</p>
+                <p className="text-[var(--hh-text-secondary)]">{error}</p>
                 <button
                     onClick={() => window.location.reload()}
-                    className="mt-3 px-4 py-2 ios-glass-btn border-none hover:bg-miku/10 text-miku text-xs rounded-xl"
+                    className="hh-btn hh-press mt-3 px-4 py-2 text-xs"
                 >
                     {t("common.action.retry")}
                 </button>
@@ -363,33 +363,38 @@ export function StoryReader({
 
     return (
         <div className="max-w-4xl mx-auto relative pb-20">
-            {/* Ambient Immersion Blurred Background Layer */}
+            {/* Ambient background layer. The blur here is the effect itself — the
+                scene art is deliberately defocused so it reads as atmosphere
+                behind the dialogue rather than as a competing image, so this
+                subtree opts out of the global backdrop/blur flattening. The
+                bottom gradient is functional: it fades the art into the page
+                surface so dialogue tiles near the bottom keep their contrast. */}
             {activeBgUrl && immersionMode && (
-                <div className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000 ease-in-out opacity-25 dark:opacity-20">
-                    <img 
-                        src={activeBgUrl} 
-                        alt="" 
-                        className="w-full h-full object-cover blur-md scale-[1.03]" 
+                <div className="hh-allow-blur fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000 ease-in-out opacity-20">
+                    <img
+                        src={activeBgUrl}
+                        alt=""
+                        className="w-full h-full object-cover blur-md scale-[1.03]"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-100/40 to-slate-100/90 dark:via-slate-950/40 dark:to-slate-950/90" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--hh-surface-0)]" />
                 </div>
             )}
 
             {/* Top Autoplay Onboarding Header Banner */}
             {activeIndex === -1 && (
-                <div className="ios-glass-card rounded-2xl p-5 mb-6 border-none flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in relative z-10">
+                <div className="hh-tile p-5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in relative z-10">
                     <div>
-                        <h3 className="font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-miku animate-pulse" />
+                        <h3 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-[var(--hh-radius-full)] bg-[var(--hh-accent)]" />
                             {t("page.story.reader.autoplay")} Mode
                         </h3>
-                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        <p className="hh-body text-xs text-[var(--hh-text-secondary)] mt-1">
                             {t("page.story.reader.autoplayHint")}
                         </p>
                     </div>
                     <button
                         onClick={togglePlay}
-                        className="ios-glass-btn-primary border-none hover:bg-miku font-black text-sm px-6 py-2.5 rounded-xl flex items-center gap-2 shrink-0 shadow-lg active:scale-95 transition-transform"
+                        className="hh-btn hh-btn-primary hh-press text-sm px-6 py-2.5 shrink-0"
                     >
                         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                             <path d="M8 5.14v14l11-7-11-7z" />
@@ -400,13 +405,13 @@ export function StoryReader({
             )}
 
             {scenarioData.characters.length > 0 && (
-                <div className="mb-6 p-4 ios-glass-panel border-none rounded-2xl relative z-10 shadow-sm">
-                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">{t("page.story.reader.charactersTitle")}</h3>
+                <div className="hh-panel mb-6 p-4 relative z-10">
+                    <h3 className="hh-label mb-3">{t("page.story.reader.charactersTitle")}</h3>
                     <div className="flex flex-wrap gap-2">
                         {scenarioData.characters.map((char) => (
                             <span
                                 key={char.id}
-                                className="px-3.5 py-1 ios-glass-tab border-none text-miku text-xs font-bold rounded-full"
+                                className="hh-chip"
                             >
                                 {char.name}
                             </span>
@@ -430,7 +435,7 @@ export function StoryReader({
             </div>
 
             {scenarioData.actions.length > 0 && (
-                <div className="text-center py-10 text-slate-400 relative z-10">
+                <div className="text-center py-10 text-[var(--hh-text-tertiary)] relative z-10">
                     <p>— {endLabel ?? t("page.story.reader.defaultEndLabel")} —</p>
                     {useLLMTranslation && (translationSource === "llm" || translationSource === "human") && (
                         <p className="text-xs mt-2.5 italic">
@@ -446,16 +451,18 @@ export function StoryReader({
                 </div>
             )}
 
-            {/* iOS 26 Premium Frosted Glass Floating Dialogue Audio Player */}
+            {/* Floating dialogue audio player. It sits over the scrolling story,
+                so the surface must be fully opaque — a translucent bar would let
+                dialogue text read through the transport controls. */}
             {activeIndex >= 0 && (
                 <div className="fixed bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[480px] z-50 animate-fade-in">
-                    <div className="ios-glass-panel border-none rounded-2xl py-3 px-4 shadow-xl flex items-center justify-between gap-3">
+                    <div className="hh-float py-3 px-4 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-1.5">
                             {/* Prev */}
                             <button
                                 onClick={handlePrev}
                                 disabled={activeIndex <= 0}
-                                className="p-2 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none hover:bg-white/10 dark:hover:bg-black/10 rounded-full transition-colors"
+                                className="hh-press hh-focusable p-2 rounded-[var(--hh-radius-md)] text-[var(--hh-text-secondary)] disabled:opacity-30 disabled:pointer-events-none hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -465,7 +472,7 @@ export function StoryReader({
                             {/* Play/Pause */}
                             <button
                                 onClick={togglePlay}
-                                className="w-10 h-10 bg-miku hover:bg-miku-dark text-white rounded-full flex items-center justify-center shadow-md shadow-miku/20 active:scale-95 transition-transform shrink-0"
+                                className="hh-press hh-focusable w-10 h-10 bg-[var(--hh-accent)] border border-[var(--hh-accent-deep)] text-[var(--hh-text-on-accent)] rounded-[var(--hh-radius-md)] flex items-center justify-center shrink-0"
                             >
                                 {isPlaying ? (
                                     <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
@@ -483,7 +490,7 @@ export function StoryReader({
                             <button
                                 onClick={handleNext}
                                 disabled={activeIndex >= scenarioData.actions.length - 1}
-                                className="p-2 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none hover:bg-white/10 dark:hover:bg-black/10 rounded-full transition-colors"
+                                className="hh-press hh-focusable p-2 rounded-[var(--hh-radius-md)] text-[var(--hh-text-secondary)] disabled:opacity-30 disabled:pointer-events-none hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -493,8 +500,8 @@ export function StoryReader({
 
                         {/* Player Metadata & mini-scroller */}
                         <div className="flex-1 min-w-0 text-center px-1">
-                            <span className="text-[10px] text-miku font-bold tracking-widest uppercase">Voicing Playback</span>
-                            <div className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate mt-0.5">
+                            <span className="hh-label">Voicing Playback</span>
+                            <div className="hh-numeric text-xs font-bold text-[var(--hh-text-primary)] truncate mt-0.5">
                                 Dialogue Line {activeIndex + 1} / {scenarioData.actions.length}
                             </div>
                         </div>
@@ -504,7 +511,7 @@ export function StoryReader({
                             {/* Speed */}
                             <button
                                 onClick={toggleSpeed}
-                                className="px-2 py-1 ios-glass-tab border-none hover:bg-miku/15 hover:text-miku text-[10px] font-black rounded-lg transition-colors"
+                                className="hh-press hh-focusable hh-numeric px-2 py-1 rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)] bg-[var(--hh-surface-1)] text-[10px] font-bold text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)]"
                                 title="Playback Speed"
                             >
                                 {speed}x
@@ -513,10 +520,10 @@ export function StoryReader({
                             {/* Scroll Lock */}
                             <button
                                 onClick={() => setIsScrollLocked(prev => !prev)}
-                                className={`p-2 rounded-lg transition-all ${
-                                    isScrollLocked 
-                                        ? "bg-miku/10 text-miku border border-miku/20 shadow-sm" 
-                                        : "text-slate-400 hover:bg-white/10 dark:hover:bg-black/10 border border-transparent"
+                                className={`hh-press hh-focusable p-2 rounded-[var(--hh-radius-md)] border ${
+                                    isScrollLocked
+                                        ? "bg-[var(--hh-accent)] border-[var(--hh-accent-deep)] text-[var(--hh-text-on-accent)]"
+                                        : "border-transparent text-[var(--hh-text-tertiary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]"
                                 }`}
                                 title={t("page.story.reader.autoScroll")}
                             >
@@ -529,10 +536,10 @@ export function StoryReader({
                             {/* Immersion Mode */}
                             <button
                                 onClick={() => setImmersionMode(prev => !prev)}
-                                className={`p-2 rounded-lg transition-all ${
-                                    immersionMode 
-                                        ? "bg-purple-500/15 text-purple-500 border border-purple-500/20 shadow-sm" 
-                                        : "text-slate-400 hover:bg-white/10 dark:hover:bg-black/10 border border-transparent"
+                                className={`hh-press hh-focusable p-2 rounded-[var(--hh-radius-md)] border ${
+                                    immersionMode
+                                        ? "bg-[var(--hh-accent)] border-[var(--hh-accent-deep)] text-[var(--hh-text-on-accent)]"
+                                        : "border-transparent text-[var(--hh-text-tertiary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)]"
                                 }`}
                                 title={t("page.story.reader.immersionMode")}
                             >
@@ -544,7 +551,7 @@ export function StoryReader({
                             {/* Close Stop */}
                             <button
                                 onClick={handleStop}
-                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                className="hh-press hh-focusable p-2 rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:text-[var(--hh-accent-alert)] hover:bg-[var(--hh-surface-sunken)]"
                                 title="Close Player"
                             >
                                 <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

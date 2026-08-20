@@ -402,7 +402,7 @@ function MyMaterialsContent() {
 
             {/* User Error */}
             {userError && (
-                <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200/50">
+                <div className="mb-4 p-3 rounded-[var(--hh-radius-lg)] bg-red-50 border border-red-200">
                     <div className="flex items-start gap-2">
                         <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -424,24 +424,26 @@ function MyMaterialsContent() {
 
             {/* Tab Bar */}
             <div className="mb-4 flex items-center gap-2">
-                {([
-                    { key: "materials" as TabType, label: t("page.myMaterials.tabs.materials") },
-                    { key: "mysekaiMaterials" as TabType, label: t("page.myMaterials.tabs.mysekaiMaterials") },
-                ]).map((tab) => (
-                    <button
-                        key={tab.key}
-                        onClick={() => handleTabChange(tab.key)}
-                        className={`px-4 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === tab.key
-                            ? "bg-miku/10 text-miku ring-1 ring-miku/30"
-                            : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                            }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
+                <div className="hh-segment max-w-xs" role="tablist">
+                    {([
+                        { key: "materials" as TabType, label: t("page.myMaterials.tabs.materials") },
+                        { key: "mysekaiMaterials" as TabType, label: t("page.myMaterials.tabs.mysekaiMaterials") },
+                    ]).map((tab) => (
+                        <button
+                            key={tab.key}
+                            role="tab"
+                            aria-selected={activeTab === tab.key}
+                            onClick={() => handleTabChange(tab.key)}
+                            className="hh-segment-item hh-press hh-focusable"
+                            data-selected={activeTab === tab.key}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
                 {/* Upload time badge */}
                 {uploadTime && !isLoading && !isFetchingUser && (
-                    <span className="ml-auto text-[11px] text-slate-400" title={t("common.data.uploadTimeTitle")}>
+                    <span className="hh-numeric ml-auto text-[11px] text-[var(--hh-text-tertiary)]" title={t("common.data.uploadTimeTitle")}>
                         {t("common.data.dataTime", { time: formatDate(parseUploadTimeToDate(uploadTime) ?? uploadTime, { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) })}
                     </span>
                 )}
@@ -449,14 +451,14 @@ function MyMaterialsContent() {
 
             {/* Stats summary */}
             {!isLoading && !isFetchingUser && currentItems.length > 0 && (
-                <div className="mb-4 text-xs text-slate-500">
+                <div className="hh-numeric mb-4 text-xs text-[var(--hh-text-secondary)]">
                     {t("common.progress.totalMaterialsSummary", { count: currentItems.length, total: formatNumber(totalQuantity) })}
                 </div>
             )}
 
             {/* Error */}
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{error}</p>
                 </div>
@@ -466,25 +468,25 @@ function MyMaterialsContent() {
                 {isLoading || isFetchingUser ? (
                     <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                         {Array.from({ length: 12 }).map((_, i) => (
-                            <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-100 shadow-sm animate-pulse">
-                                <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200" />
+                            <div key={i} className="rounded-[var(--hh-radius-lg)] overflow-hidden bg-[var(--hh-surface-2)] border border-[var(--hh-border)] animate-pulse">
+                                <div className="aspect-square bg-[var(--hh-surface-sunken)]" />
                                 <div className="p-2 space-y-1.5">
-                                    <div className="h-3 bg-slate-200 rounded w-3/4" />
-                                    <div className="h-2.5 bg-slate-100 rounded w-1/2" />
+                                    <div className="h-3 bg-[var(--hh-surface-inset)] rounded-[var(--hh-radius-xs)] w-3/4" />
+                                    <div className="h-2.5 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-1/2" />
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : currentItems.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-16 h-16 text-[var(--hh-text-tertiary)] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
-                        <p className="text-slate-400 font-medium">
+                        <p className="text-[var(--hh-text-tertiary)] font-medium">
                             {searchQuery ? t("page.myMaterials.noResult") : t("page.myMaterials.noData")}
                         </p>
                         {!searchQuery && (
-                            <p className="text-slate-400 text-xs mt-1">
+                            <p className="text-[var(--hh-text-tertiary)] text-xs mt-1">
                                 {t("common.data.suiteUploadHint")}
                             </p>
                         )}
@@ -503,10 +505,10 @@ function MyMaterialsContent() {
                         <button
                             onClick={loadMore}
                             data-shortcut-load-more="true"
-                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                            className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3"
                         >
                             {t("page.myMaterials.loadMore")}
-                            <span className="ml-2 text-sm opacity-80">
+                            <span className="hh-numeric ml-2 text-sm opacity-80">
                                 ({displayedItems.length} / {currentItems.length})
                             </span>
                         </button>
@@ -515,7 +517,7 @@ function MyMaterialsContent() {
 
                 {/* All loaded */}
                 {!isLoading && !isFetchingUser && displayedItems.length > 0 && displayedItems.length >= currentItems.length && (
-                    <div className="mt-8 text-center text-slate-400 text-sm">
+                    <div className="mt-8 text-center text-[var(--hh-text-tertiary)] text-sm">
                         {t("page.myMaterials.allLoaded", { count: currentItems.length })}
                     </div>
                 )}
@@ -530,13 +532,13 @@ function PageHeader() {
     const { t } = useI18n();
     return (
         <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.myMaterials.badge")}</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                <span className="hh-label text-[var(--hh-accent-deep)]">{t("page.myMaterials.badge")}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                {t("page.myMaterials.title")}<span className="text-miku">{t("page.myMaterials.titleHighlight")}</span>
+            <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">
+                {t("page.myMaterials.title")}<span className="text-[var(--hh-accent-deep)]">{t("page.myMaterials.titleHighlight")}</span>
             </h1>
-            <p className="text-slate-500 mt-2 text-sm">
+            <p className="text-[var(--hh-text-secondary)] mt-2 text-sm">
                 {t("page.myMaterials.description")}
             </p>
         </div>
@@ -547,8 +549,8 @@ function MaterialCard({ item }: { item: DisplayMaterial }) {
     const [imgError, setImgError] = useState(false);
 
     return (
-        <div className="relative rounded-xl overflow-hidden bg-white ring-1 ring-slate-200 hover:ring-miku hover:shadow-lg hover:-translate-y-0.5 transition-all">
-            <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-3">
+        <div className="relative rounded-[var(--hh-radius-lg)] overflow-hidden bg-[var(--hh-surface-2)] border border-[var(--hh-border)] transition-colors hover:border-[var(--hh-accent)]">
+            <div className="aspect-square bg-[var(--hh-surface-sunken)] flex items-center justify-center p-3">
                 {item.thumbnailUrl && !imgError ? (
                     <img
                         src={item.thumbnailUrl}
@@ -558,18 +560,19 @@ function MaterialCard({ item }: { item: DisplayMaterial }) {
                         onError={() => setImgError(true)}
                     />
                 ) : (
-                    <svg className="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-10 h-10 text-[var(--hh-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                 )}
             </div>
-            <div className="px-2 py-1.5 bg-white border-t border-slate-100">
-                <p className="text-[10px] font-bold text-slate-800 leading-tight" title={item.name}>
+            <div className="px-2 py-1.5 bg-[var(--hh-surface-2)] border-t border-[var(--hh-border)]">
+                <p className="text-[10px] font-bold text-[var(--hh-text-primary)] leading-tight" title={item.name}>
                     {item.name}
                 </p>
                 <div className="flex items-center justify-between mt-0.5">
-                    <span className="text-[9px] text-slate-400">#{item.id}</span>
-                    <span className="text-[10px] font-mono font-bold text-miku bg-miku/10 px-1.5 py-0.5 rounded leading-none">
+                    {/* Material id and owned count are both scanned down the grid column. */}
+                    <span className="hh-numeric text-[9px] text-[var(--hh-text-tertiary)]">#{item.id}</span>
+                    <span className="hh-numeric text-[10px] font-bold text-[var(--hh-accent-deep)] bg-[var(--hh-accent-wash)] px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] leading-none">
                         ×{item.quantity.toLocaleString()}
                     </span>
                 </div>
@@ -582,7 +585,7 @@ function MaterialCard({ item }: { item: DisplayMaterial }) {
 
 function MyMaterialsLoadingFallback() {
     const { t } = useI18n();
-    return <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("common.state.loading")}</div>;
+    return <div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("common.state.loading")}</div>;
 }
 
 export default function MyMaterialsClient() {

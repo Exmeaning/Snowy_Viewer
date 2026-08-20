@@ -78,7 +78,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
     if (poolNames.length === 0) {
         return (
             <MainLayout>
-                <div className="pt-4 min-h-screen flex items-center justify-center text-slate-500">
+                <div className="pt-4 min-h-screen flex items-center justify-center hh-body text-[var(--hh-text-secondary)]">
                     <p>{t("page.goodsGacha.noPools")}</p>
                 </div>
             </MainLayout>
@@ -98,33 +98,33 @@ export default function GachaClient({ pools }: GachaClientProps) {
 
                     {/* Page Header */}
                     <div className="text-center mb-10">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                            <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.goodsGacha.badge")}</span>
+                        <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                            <span className="hh-label text-[var(--hh-accent)]">{t("page.goodsGacha.badge")}</span>
                         </div>
-                        <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                            {t("page.goodsGacha.title")} <span className="text-miku">{t("page.goodsGacha.titleHighlight")}</span>
+                        <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">
+                            {t("page.goodsGacha.title")} <span className="text-[var(--hh-accent)]">{t("page.goodsGacha.titleHighlight")}</span>
                         </h1>
-                        <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                        <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                             {t("page.goodsGacha.description")}
                         </p>
                     </div>
 
                     {/* Pool Selector */}
                     <div className="mb-12">
-                        <h2 className="text-lg font-bold text-slate-700 mb-4 px-2 border-l-4 border-miku">{t("page.goodsGacha.selectPool")}</h2>
+                        <h2 className="hh-title text-lg text-[var(--hh-text-primary)] mb-4 px-2 border-l-4 border-[var(--hh-accent)]">{t("page.goodsGacha.selectPool")}</h2>
                         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {poolNames.map((poolName) => (
                                 <button
                                     key={poolName}
                                     onClick={() => handlePoolChange(poolName)}
-                                    className={`relative p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-3 group
+                                    className={`hh-press hh-focusable relative p-4 rounded-[var(--hh-radius-lg)] border flex flex-col items-center gap-3 group
                                         ${selectedPool === poolName
-                                            ? 'border-miku bg-miku/5 shadow-md scale-105'
-                                            : 'border-slate-200 bg-white hover:border-miku/50 hover:shadow-sm'
+                                            ? 'border-[var(--hh-accent)] bg-[var(--hh-accent-wash)] shadow-[var(--hh-shadow-raised)]'
+                                            : 'border-[var(--hh-border)] bg-[var(--hh-surface-2)] shadow-[var(--hh-shadow-tile)] hover:border-[var(--hh-border-strong)]'
                                         }`}
                                 >
                                     {/* Preview first image of pool if available */}
-                                    <div className="w-16 h-16 relative rounded-full overflow-hidden bg-slate-100 border border-slate-100 shadow-inner">
+                                    <div className="w-16 h-16 relative rounded-[var(--hh-radius-full)] overflow-hidden bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)]">
                                         {pools[poolName]?.[0] && (
                                             <Image
                                                 src={pools[poolName][0]}
@@ -135,11 +135,11 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                             />
                                         )}
                                     </div>
-                                    <span className={`text-sm font-bold text-center line-clamp-2 ${selectedPool === poolName ? 'text-miku' : 'text-slate-600 group-hover:text-slate-800'}`}>
+                                    <span className={`text-sm font-semibold text-center line-clamp-2 ${selectedPool === poolName ? 'text-[var(--hh-accent)]' : 'text-[var(--hh-text-secondary)] group-hover:text-[var(--hh-text-primary)]'}`}>
                                         {poolName}
                                     </span>
                                     {selectedPool === poolName && (
-                                        <div className="absolute top-2 right-2 w-3 h-3 bg-miku rounded-full animate-pulse" />
+                                        <div className="absolute top-2 right-2 w-2 h-2 bg-[var(--hh-accent)] rounded-[var(--hh-radius-full)]" />
                                     )}
                                 </button>
                             ))}
@@ -147,12 +147,15 @@ export default function GachaClient({ pools }: GachaClientProps) {
                     </div>
 
                     {/* Main Action Area */}
-                    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 md:p-10 mb-12 relative overflow-hidden min-h-[400px] flex flex-col items-center justify-center transition-all duration-500">
+                    <div className="hh-panel p-6 md:p-10 mb-12 relative overflow-hidden min-h-[400px] flex flex-col items-center justify-center">
 
-                        {/* Background Pattern */}
+                        {/* Background Pattern — neutral grey rather than the old
+                            hardcoded teal: the accent now follows the character
+                            theme, so a fixed brand tint here would drift out of
+                            sync with every non-default theme. */}
                         <div className="absolute inset-0 opacity-5 pointer-events-none"
                             style={{
-                                backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2333ccbb' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E\")",
+                                backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239b9ea5' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E\")",
                             }}
                         />
 
@@ -172,7 +175,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: index * 0.05 }}
-                                                className="aspect-square relative bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden group hover:shadow-md transition-all cursor-pointer"
+                                                className="aspect-square relative bg-[var(--hh-surface-2)] rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] shadow-[var(--hh-shadow-tile)] overflow-hidden group hover:border-[var(--hh-border-strong)] hh-press cursor-pointer"
                                                 onClick={() => window.open(src, '_blank')}
                                             >
                                                 <Image
@@ -190,10 +193,10 @@ export default function GachaClient({ pools }: GachaClientProps) {
                         </AnimatePresence>
 
                         {/* Controls */}
-                        <div className={`z-10 flex flex-col items-center gap-6 w-full max-w-md mx-auto transition-all ${showResults ? 'mt-4' : ''}`}>
+                        <div className={`z-10 flex flex-col items-center gap-6 w-full max-w-md mx-auto ${showResults ? 'mt-4' : ''}`}>
                             {!showResults && (
-                                <div className="text-xl font-bold text-slate-700">
-                                    {t("page.goodsGacha.currentPool")} <span className="text-miku">{selectedPool}</span>
+                                <div className="hh-title text-xl text-[var(--hh-text-primary)]">
+                                    {t("page.goodsGacha.currentPool")} <span className="text-[var(--hh-accent)]">{selectedPool}</span>
                                 </div>
                             )}
 
@@ -201,7 +204,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                 <button
                                     onClick={() => draw(1)}
                                     disabled={isAnimating}
-                                    className="flex-1 bg-white border-2 border-miku text-miku hover:bg-miku hover:text-white font-bold py-2 sm:py-4 rounded-2xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex flex-col items-center gap-1"
+                                    className="hh-btn hh-press hh-focusable flex-1 py-2 sm:py-4 rounded-[var(--hh-radius-md)] disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center gap-1"
                                 >
                                     <span className="text-sm sm:text-lg">{t("page.goodsGacha.singleDraw")}</span>
                                     <span className="text-[10px] sm:text-xs opacity-80 font-normal">{t("page.goodsGacha.singleDrawCost")}</span>
@@ -209,7 +212,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                 <button
                                     onClick={() => draw(10)}
                                     disabled={isAnimating}
-                                    className="flex-1 bg-gradient-to-r from-miku to-teal-400 text-white font-bold py-2 sm:py-4 rounded-2xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:brightness-110 flex flex-col items-center gap-1"
+                                    className="hh-btn hh-btn-primary hh-press hh-focusable flex-1 py-2 sm:py-4 rounded-[var(--hh-radius-md)] disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center gap-1"
                                 >
                                     <span className="text-sm sm:text-lg">{t("page.goodsGacha.tenDraw")}</span>
                                     <span className="text-[10px] sm:text-xs opacity-80 font-normal">{t("page.goodsGacha.tenDrawCost")}</span>
@@ -217,20 +220,22 @@ export default function GachaClient({ pools }: GachaClientProps) {
                             </div>
 
                             {/* Statistics Summary */}
-                            <div className="text-sm text-slate-500 font-medium flex gap-4">
-                                <span>{t("page.goodsGacha.totalDraws")} <b className="text-slate-800">{totalDraws}</b></span>
-                                <span>{t("page.goodsGacha.completionRate")} <b className="text-miku">{completionRate}%</b> ({uniqueObtained}/{currentPoolImages.length})</span>
+                            <div className="text-sm text-[var(--hh-text-secondary)] font-medium flex gap-4">
+                                <span>{t("page.goodsGacha.totalDraws")} <b className="hh-numeric text-[var(--hh-text-primary)]">{totalDraws}</b></span>
+                                <span>{t("page.goodsGacha.completionRate")} <b className="hh-numeric text-[var(--hh-accent)]">{completionRate}%</b> <span className="hh-numeric">({uniqueObtained}/{currentPoolImages.length})</span></span>
                             </div>
                         </div>
 
-                        {/* Animation Overlay */}
+                        {/* Animation Overlay — opaque fill rather than a blurred veil:
+                            the blur utility is neutralized system-wide, so a
+                            translucent tint alone would leak the grid underneath. */}
                         <AnimatePresence>
                             {isAnimating && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="absolute inset-0 z-20 bg-white/90 backdrop-blur-sm flex items-center justify-center"
+                                    className="absolute inset-0 z-20 bg-[var(--hh-surface-1)] flex items-center justify-center"
                                 >
                                     <div className="flex flex-col items-center gap-4">
                                         <motion.div
@@ -243,12 +248,12 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                                 repeat: Infinity,
                                                 ease: "linear"
                                             }}
-                                            className="w-24 h-24 rounded-full border-4 border-t-miku border-r-transparent border-b-miku border-l-transparent"
+                                            className="w-24 h-24 rounded-[var(--hh-radius-full)] border-4 border-t-[var(--hh-accent)] border-r-transparent border-b-[var(--hh-accent)] border-l-transparent"
                                         />
                                         <motion.p
                                             animate={{ opacity: [0.5, 1, 0.5] }}
                                             transition={{ duration: 1.5, repeat: Infinity }}
-                                            className="text-miku font-bold text-xl"
+                                            className="hh-title text-[var(--hh-accent)] text-xl"
                                         >
                                             {t("page.goodsGacha.praying")}
                                         </motion.p>
@@ -259,10 +264,10 @@ export default function GachaClient({ pools }: GachaClientProps) {
                     </div>
 
                     {/* Pool Details & History */}
-                    <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
-                        <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center justify-between">
-                            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="hh-panel overflow-hidden">
+                        <div className="px-6 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] flex items-center justify-between">
+                            <h2 className="hh-title text-lg text-[var(--hh-text-primary)] flex items-center gap-2">
+                                <svg className="w-5 h-5 text-[var(--hh-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                 </svg>
                                 {t("page.goodsGacha.poolDetails", { count: currentPoolImages.length })}
@@ -270,7 +275,7 @@ export default function GachaClient({ pools }: GachaClientProps) {
                             <button
                                 onClick={resetHistory}
                                 disabled={totalDraws === 0}
-                                className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-500 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold"
+                                className="hh-chip hh-press hh-focusable disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {t("page.goodsGacha.resetHistory")}
                             </button>
@@ -284,10 +289,10 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                     return (
                                         <div
                                             key={idx}
-                                            className={`relative aspect-square rounded-lg border overflow-hidden transition-all
+                                            className={`relative aspect-square rounded-[var(--hh-radius-md)] border overflow-hidden
                                                 ${isObtained
-                                                    ? 'border-green-400 bg-white shadow-sm'
-                                                    : 'border-slate-100 bg-slate-50 opacity-60 grayscale'
+                                                    ? 'border-[var(--hh-accent)] bg-[var(--hh-surface-2)]'
+                                                    : 'border-[var(--hh-border-hairline)] bg-[var(--hh-surface-sunken)] opacity-60 grayscale'
                                                 }`}
                                         >
                                             <Image
@@ -298,11 +303,11 @@ export default function GachaClient({ pools }: GachaClientProps) {
                                                 sizes="128px"
                                             />
                                             {isObtained && (
-                                                <div className="absolute bottom-0 right-0 z-10 bg-gradient-to-l from-green-500 to-green-400 text-white text-[10px] font-black px-1.5 py-0.5 rounded-tl-lg shadow-sm leading-none flex items-center gap-0.5">
+                                                <div className="absolute bottom-0 right-0 z-10 bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] text-[10px] font-bold px-1.5 py-0.5 rounded-tl-[var(--hh-radius-sm)] leading-none flex items-center gap-0.5">
                                                     <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                     </svg>
-                                                    {count > 1 && <span>×{count}</span>}
+                                                    {count > 1 && <span className="hh-numeric">×{count}</span>}
                                                 </div>
                                             )}
                                         </div>
@@ -313,18 +318,18 @@ export default function GachaClient({ pools }: GachaClientProps) {
                     </div>
 
                     {/* Disclaimer Footer */}
-                    <div className="mt-12 pt-8 border-t border-slate-200 text-center text-slate-400 text-sm space-y-2">
+                    <div className="mt-12 pt-8 border-t border-[var(--hh-border)] text-center hh-body text-[var(--hh-text-tertiary)] text-sm space-y-2">
                         <p>
                             {t("page.goodsGacha.disclaimer.unofficial")}
                         </p>
                         <p>
                             {t("page.goodsGacha.disclaimer.reference")}
                         </p>
-                        <p className="text-xs text-slate-300 mt-4">
+                        <p className="text-xs mt-4">
                             {t("page.goodsGacha.disclaimer.noRealTrade")}
                         </p>
-                        <p className="text-xs text-slate-300 mt-2">
-                            {t("page.goodsGacha.disclaimer.sourcePrefix")} <ExternalLink href="https://github.com/Caffeine-co/Shinonome_Ena" target="_blank" rel="noopener noreferrer" className="hover:text-miku transition-colors underline decoration-dotted">Caffeine-co/Shinonome_Ena</ExternalLink>
+                        <p className="text-xs mt-2">
+                            {t("page.goodsGacha.disclaimer.sourcePrefix")} <ExternalLink href="https://github.com/Caffeine-co/Shinonome_Ena" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--hh-accent)] transition-colors underline decoration-dotted">Caffeine-co/Shinonome_Ena</ExternalLink>
                         </p>
                     </div>
                 </div>

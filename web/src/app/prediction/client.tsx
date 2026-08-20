@@ -254,15 +254,15 @@ export default function PredictionClient() {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                {/* Page Header - matching events page style */}
+                {/* Page header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                        <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.prediction.badge")}</span>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-[var(--hh-radius-md)] mb-4">
+                        <span className="hh-label text-miku text-xs">{t("page.prediction.badge")}</span>
                     </div>
-                    <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                    <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">
                         {t("page.prediction.title")} <span className="text-miku">{t("page.prediction.titleHighlight")}</span>
                     </h1>
-                    <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                    <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                         {t("page.prediction.description")}
                     </p>
                 </div>
@@ -270,22 +270,18 @@ export default function PredictionClient() {
                 {/* Controls */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-8 items-center sm:items-stretch">
                     {/* Server Toggle */}
-                    <div className="flex bg-white rounded-xl border border-slate-200 p-1">
+                    <div className="hh-segment flex">
                         <button
                             onClick={() => handleServerChange('cn')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${server === 'cn'
-                                ? 'bg-miku text-white shadow-md'
-                                : 'text-slate-600 hover:bg-slate-50'
-                                }`}
+                            data-selected={server === 'cn'}
+                            className="hh-segment-item hh-press"
                         >
                             {t("page.prediction.servers.cn")}
                         </button>
                         <button
                             onClick={() => handleServerChange('jp')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${server === 'jp'
-                                ? 'bg-miku text-white shadow-md'
-                                : 'text-slate-600 hover:bg-slate-50'
-                                }`}
+                            data-selected={server === 'jp'}
+                            className="hh-segment-item hh-press"
                         >
                             {t("page.prediction.servers.jp")}
                         </button>
@@ -297,7 +293,7 @@ export default function PredictionClient() {
                             value={selectedEventId || ''}
                             onChange={(e) => handleEventChange(Number(e.target.value))}
                             disabled={eventsLoading || events.length === 0}
-                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku disabled:opacity-50"
+                            className="hh-input w-full px-4 py-2.5 text-sm disabled:opacity-50"
                         >
                             {eventsLoading ? (
                                 <option>{t("page.prediction.events.loading")}</option>
@@ -315,7 +311,7 @@ export default function PredictionClient() {
                     {isWorldBloomEvent && (
                         <button
                             onClick={() => setIsWlNoticeOpen(true)}
-                            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100 shrink-0"
+                            className="hh-press hh-focusable inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-[var(--hh-radius-md)] border border-amber-500/30 bg-amber-500/12 px-4 py-2.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-500/20 shrink-0"
                         >
                             <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
@@ -325,7 +321,7 @@ export default function PredictionClient() {
                     )}
                     {/* Warning for >99% progress */}
                     {eventState && eventState.isActive && eventState.banner.progressPercent >= 99 && (
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm w-full sm:w-auto justify-center sm:justify-start shrink-0"
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-[var(--hh-radius-md)] border w-full sm:w-auto justify-center sm:justify-start shrink-0"
                             style={{
                                 borderColor: `${themeColor}40`,
                                 backgroundColor: `${themeColor}10`,
@@ -363,7 +359,7 @@ export default function PredictionClient() {
                     <div className="flex items-center justify-center py-20">
                         <div className="flex flex-col items-center gap-3">
                             <div className="w-10 h-10 border-4 border-miku/30 border-t-miku rounded-full animate-spin" />
-                            <span className="text-slate-500">{t("page.prediction.loading")}</span>
+                            <span className="text-[var(--hh-text-secondary)]">{t("page.prediction.loading")}</span>
                         </div>
                     </div>
                 )}
@@ -380,7 +376,7 @@ export default function PredictionClient() {
                             return (
                                 <>
                                     <Link href={`/events/${banner.mockEvent.id}`} className="block group mb-6">
-                                        <div className="relative flex h-32 md:h-36 rounded-2xl overflow-hidden glass-card border border-white/40 bg-white shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99] hover:shadow-md cursor-pointer">
+                                        <div className="hh-tile relative flex h-32 md:h-36 rounded-[var(--hh-radius-lg)] overflow-hidden transition-transform active:scale-[0.99] cursor-pointer">
                                             {/* Link wrapper could be added here if needed */}
 
                                             {/* Left Side: Background & Logo */}
@@ -410,7 +406,7 @@ export default function PredictionClient() {
                                                         </div>
                                                     </>
                                                 ) : (
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-miku to-blue-400 flex items-center justify-center text-white/20 font-bold text-4xl">
+                                                    <div className="absolute inset-0 bg-[var(--hh-surface-inset)] flex items-center justify-center text-[var(--hh-text-tertiary)] font-bold text-4xl">
                                                         NO IMAGE
                                                     </div>
                                                 )}
@@ -432,33 +428,35 @@ export default function PredictionClient() {
 
                                                 <div className="space-y-1 relative z-20">
                                                     <div className="flex items-center gap-2 mb-1.5">
+                                                        {/* Status color comes from masterdata, so the label keeps
+                                                            literal white to stay legible on any of those fills. */}
                                                         <span
-                                                            className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded text-white shadow-sm"
+                                                            className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-white"
                                                             style={{ backgroundColor: banner.statusDisplay.color }}
                                                         >
                                                             {resolvedStatusLabel}
                                                         </span>
-                                                        <span className="text-[10px] font-bold text-slate-400">
+                                                        <span className="text-[10px] font-bold text-[var(--hh-text-tertiary)]">
                                                             {banner.eventTypeName}
                                                         </span>
                                                     </div>
-                                                    <h3 className="font-bold text-primary-text text-sm sm:text-base leading-tight line-clamp-1" title={banner.mockEvent.name}>
+                                                    <h3 className="hh-title font-semibold text-[var(--hh-text-primary)] text-sm sm:text-base line-clamp-1" title={banner.mockEvent.name}>
                                                         {banner.mockEvent.name}
                                                     </h3>
-                                                    <div className="pt-2 text-[10px] sm:text-xs text-slate-400 font-mono flex flex-col sm:flex-row sm:gap-2">
+                                                    <div className="hh-numeric pt-2 text-[10px] sm:text-xs text-[var(--hh-text-tertiary)] flex flex-col sm:flex-row sm:gap-2">
                                                         <span>{banner.formatEventDate(banner.mockEvent.startAt)}</span>
                                                         <span className="hidden sm:inline">-</span>
                                                         <span>{banner.formatEventDate(banner.mockEvent.aggregateAt)}</span>
                                                     </div>
                                                     {banner.updateTime && (
-                                                        <div className="text-[10px] sm:text-xs text-slate-500/80 font-mono mt-0.5">
+                                                        <div className="hh-numeric text-[10px] sm:text-xs text-[var(--hh-text-secondary)] mt-0.5">
                                                             {t("page.prediction.dataUpdate", { time: banner.updateTime })}
                                                         </div>
                                                     )}
                                                 </div>
 
                                                 {banner.status === "ongoing" && (
-                                                    <div className="absolute bottom-0 right-2 text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 select-none z-10 tracking-tighter">
+                                                    <div className="hh-numeric hh-display absolute bottom-0 right-2 text-4xl sm:text-5xl text-[var(--hh-text-primary)] select-none z-10">
                                                         {Math.floor(banner.progressPercent)}<span className="text-2xl ml-1">%</span>
                                                     </div>
                                                 )}
@@ -486,26 +484,33 @@ export default function PredictionClient() {
                                         </div>
                                     )}
 
-                                    {/* Row 2: Prediction List / Table */}
-                                    <div className="bg-white rounded-xl border border-slate-100 overflow-hidden mb-6">
-                                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                                            <h3 className="font-bold text-slate-700">
+                                    {/* Row 2: Prediction List / Table.
+                                        A tile with a sunken header strip and hairline row
+                                        separators — the console list idiom, rather than one
+                                        shadowed card per row. Every score/gap/speed cell is
+                                        .hh-numeric so the right-aligned columns keep a stable
+                                        edge as values tick during a live event; `font-mono`
+                                        was doing that job before but at the cost of a
+                                        different typeface inside a system-UI table. */}
+                                    <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden mb-6">
+                                        <div className="px-6 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-sunken)] flex justify-between items-center">
+                                            <h3 className="hh-title font-semibold text-[var(--hh-text-primary)]">
                                                 {isActive ? t("page.prediction.table.activeTitle") : t("page.prediction.table.finalTitle")}
                                             </h3>
-                                            {isActive && <span className="text-xs text-slate-400">{t("page.prediction.table.detailHint")}</span>}
+                                            {isActive && <span className="text-xs text-[var(--hh-text-tertiary)]">{t("page.prediction.table.detailHint")}</span>}
                                         </div>
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-sm">
-                                                <thead className="bg-slate-50">
+                                                <thead className="bg-[var(--hh-surface-1)]">
                                                     <tr>
-                                                        <th className="px-4 py-3 text-left text-slate-500 font-medium w-24">{t("page.prediction.table.tier")}</th>
-                                                        <th className="px-4 py-3 text-right text-slate-500 font-medium">
+                                                        <th className="hh-label px-4 py-3 text-left w-24">{t("page.prediction.table.tier")}</th>
+                                                        <th className="hh-label px-4 py-3 text-right">
                                                             {isActive ? t("page.prediction.table.currentScore") : t("page.prediction.table.finalScore")}
                                                         </th>
-                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.predictedScore")}</th>}
-                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.gap")}</th>}
-                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.speed")}</th>}
-                                                        {isActive && <th className="px-4 py-3 text-center text-slate-500 font-medium w-32">{t("page.prediction.table.trend")}</th>}
+                                                        {isActive && <th className="hh-label px-4 py-3 text-right">{t("page.prediction.table.predictedScore")}</th>}
+                                                        {isActive && <th className="hh-label px-4 py-3 text-right">{t("page.prediction.table.gap")}</th>}
+                                                        {isActive && <th className="hh-label px-4 py-3 text-right">{t("page.prediction.table.speed")}</th>}
+                                                        {isActive && <th className="hh-label px-4 py-3 text-center w-32">{t("page.prediction.table.trend")}</th>}
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -542,27 +547,27 @@ export default function PredictionClient() {
                                                         return (
                                                             <tr
                                                                 key={chart.Rank}
-                                                                className={`border-t border-slate-50 hover:bg-slate-50/50 cursor-pointer transition-colors ${isActive && chart.Rank === selectedRank ? 'bg-miku/5' : ''
+                                                                className={`border-t border-[var(--hh-border-hairline)] hover:bg-[var(--hh-surface-1)] cursor-pointer transition-colors ${isActive && chart.Rank === selectedRank ? 'bg-[var(--hh-accent-wash)]' : ''
                                                                     }`}
                                                                 onClick={() => isActive && setSelectedRank(chart.Rank)}
                                                             >
-                                                                <td className="px-4 py-3 font-bold text-miku">T{chart.Rank}</td>
-                                                                <td className="px-4 py-3 text-right text-slate-700 font-mono font-bold">
+                                                                <td className="hh-numeric px-4 py-3 font-bold text-miku">T{chart.Rank}</td>
+                                                                <td className="hh-numeric px-4 py-3 text-right text-[var(--hh-text-primary)] font-bold">
                                                                     {formatNumber(chart.CurrentScore)}
                                                                 </td>
                                                                 {isActive && (
                                                                     <>
-                                                                        <td className="px-4 py-3 text-right text-amber-600 font-mono font-bold">
+                                                                        <td className="hh-numeric px-4 py-3 text-right text-amber-600 font-bold">
                                                                             {chart.Rank > 10000 ? '-' : formatNumber(chart.PredictedScore)}
                                                                         </td>
-                                                                        <td className="px-4 py-3 text-right text-slate-500 font-mono">
+                                                                        <td className="hh-numeric px-4 py-3 text-right text-[var(--hh-text-secondary)]">
                                                                             {chart.Rank > 10000 ? '-' : `+${formatNumber(chart.PredictedScore - chart.CurrentScore)}`}
                                                                         </td>
-                                                                        <td className="px-4 py-3 text-right font-mono">
+                                                                        <td className="hh-numeric px-4 py-3 text-right">
                                                                             {tierStats ? (
                                                                                 <div className="flex flex-col items-end">
-                                                                                    <span className="text-slate-700">{tierStats.Speed != null ? formatNumber(tierStats.Speed) : '-'} /h</span>
-                                                                                    <span className={`text-[10px] ${tierStats.ChangePct >= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                                                                    <span className="text-[var(--hh-text-primary)]">{tierStats.Speed != null ? formatNumber(tierStats.Speed) : '-'} /h</span>
+                                                                                    <span className={`text-[10px] ${tierStats.ChangePct >= 0 ? 'text-red-500' : 'text-emerald-600'}`}>
                                                                                         {tierStats.ChangePct >= 0 ? '+' : ''}{tierStats.ChangePct?.toFixed(1) ?? '0'}%
                                                                                     </span>
                                                                                 </div>
@@ -592,9 +597,9 @@ export default function PredictionClient() {
                                     {/* Row 3: Large Detailed Chart (Only if Active) */}
                                     {isActive && (
                                         <div id="detailed-chart" className="scroll-mt-24 mb-6">
-                                            <div className="bg-white rounded-xl border border-slate-200 p-6">
+                                            <div className="hh-tile rounded-[var(--hh-radius-lg)] p-6">
                                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                                                    <h3 className="text-lg font-bold text-slate-800 shrink-0">
+                                                    <h3 className="hh-title text-lg text-[var(--hh-text-primary)] shrink-0">
                                                         {t("page.prediction.chart.detailTitle", { rank: selectedRank })}
                                                     </h3>
                                                     {/* Rank Selector for Chart */}
@@ -603,10 +608,7 @@ export default function PredictionClient() {
                                                             <button
                                                                 key={rank}
                                                                 onClick={() => setSelectedRank(rank)}
-                                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 snap-start ${selectedRank === rank
-                                                                    ? 'bg-miku text-white shadow-lg shadow-miku/20'
-                                                                    : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                                                                    }`}
+                                                                className={`hh-chip hh-press hh-numeric flex-shrink-0 snap-start ${selectedRank === rank ? 'hh-chip-active' : ''}`}
                                                             >
                                                                 T{rank}
                                                             </button>
@@ -617,7 +619,7 @@ export default function PredictionClient() {
                                                 {currentChart ? (
                                                     <PredictionChart data={currentChart} className="h-[350px] sm:h-[450px]" />
                                                 ) : (
-                                                    <div className="h-[350px] sm:h-[450px] flex items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl">
+                                                    <div className="hh-well h-[350px] sm:h-[450px] flex items-center justify-center text-[var(--hh-text-tertiary)]">
                                                         {t("page.prediction.chart.noTierData", { rank: selectedRank })}
                                                     </div>
                                                 )}
@@ -625,7 +627,7 @@ export default function PredictionClient() {
                                         </div>
                                     )}
                                     {/* Footer Sources */}
-                                    <div className="text-center text-xs text-slate-400 pb-8 space-y-1">
+                                    <div className="text-center text-xs text-[var(--hh-text-tertiary)] pb-8 space-y-1">
                                         <p>{t("page.prediction.sources.tier")}</p>
                                         <p>{t("page.prediction.sources.prediction")}</p>
                                     </div>
@@ -639,7 +641,7 @@ export default function PredictionClient() {
                 {/* Empty State */}
                 {
                     !loading && !predictionData && !error && selectedEventId && (
-                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                        <div className="flex flex-col items-center justify-center py-20 text-[var(--hh-text-tertiary)]">
                             <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
