@@ -1,13 +1,43 @@
+import os from "node:os";
 import type { NextConfig } from "next";
 
 const internalApiBase = (process.env.INTERNAL_API_BASE_URL || "http://127.0.0.1:8080").replace(/\/+$/, "");
 const enableLocalHarukiProxy = process.env.NODE_ENV !== "production";
 
+const getAllowedDevOrigins = (): string[] => {
+  const origins = new Set<string>(["localhost", "127.0.0.1"]);
+
+  if (process.env.ALLOWED_DEV_ORIGINS) {
+    process.env.ALLOWED_DEV_ORIGINS.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .forEach((origin) => origins.add(origin));
+  }
+
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const devName in interfaces) {
+      const iface = interfaces[devName];
+      if (iface) {
+        for (const alias of iface) {
+          if (alias.address) {
+            origins.add(alias.address);
+          }
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  return Array.from(origins);
+};
+
 const nextConfig: NextConfig = {
   output: "standalone",
   cacheMaxMemorySize: 50 * 1024 * 1024,
   trailingSlash: true,
-  allowedDevOrigins: ["localhost", "127.0.0.1"],
+  allowedDevOrigins: getAllowedDevOrigins(),
   async redirects() {
     return [
       {

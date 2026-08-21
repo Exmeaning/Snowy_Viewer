@@ -68,7 +68,6 @@ function writeSessionPreference(next: boolean) {
     if (typeof window !== "undefined") {
         window.dispatchEvent(new Event(FILTER_DRAWER_EVENT));
     }
-    listeners.forEach(cb => cb());
 }
 
 // ============================================================================

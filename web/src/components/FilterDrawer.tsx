@@ -24,35 +24,17 @@ const SCRIM_TRANSITION = { ...hhSpringPanel, duration: HH_DURATION.fast } as con
 /**
  * FilterDrawer — the single home for every page's filter panel.
  *
- * This replaces three mutually exclusive presentations (desktop sub-rail,
- * in-sidebar segmented tab, mobile bottom sheet) with one drawer that changes
- * only its *anchoring*, never its content or its interaction model. The old
- * split meant a user who resized a window met a different filter UI three
- * times, and each variant needed its own single-mount guard.
- *
  * Geometry:
  * - Slides in from the left, flush against the navigation rail's right edge
  *   (`left: --hh-rail-w` when the rail is open, `0` when it is collapsed).
- *   Left rather than right because the rail already trained the user that
- *   system furniture lives on that edge; a right-hand drawer would read as a
- *   detail inspector.
- * - `>= 1280px (xl)`: docked. The drawer sits *beside* the content, which is
+ * - `>= 1280px (xl)`: docked. The drawer sits beside the content, which is
  *   pushed over by `--hh-dual-rail-w` (see MainLayout). No scrim, no focus
  *   trap — it is a permanent panel, not a modal, so the grid stays operable
  *   while filters are visible. Layout stability beats the extra content width.
  * - `< 1280px`: floating. There is not enough room to squeeze both a filter
- *   panel and a readable grid, so the drawer overlays the content with a scrim
- *   and behaves modally (focus moves in, Escape closes, background scroll
- *   locks). Phones and tablets get the exact same treatment — one style, as
- *   requested — with the drawer simply spanning the full width below `sm`.
- *
- * Single-mount guarantee: this component is the ONLY consumer that renders
- * `filterContent`. There is no CSS-hidden second copy anywhere, so
- * `data-shortcut-filters` and `data-shortcut-search` resolve to exactly one
- * element and `usePageListShortcuts` can never target an invisible panel.
- *
- * Motion is `hhRailVariants` (bounce 0): the drawer is structural furniture and
- * arrives without wobble.
+ *   panel and the grid side-by-side, so the drawer behaves modally: a scrim
+ *   dims the page behind it, focus is trapped to the panel, Escape dismisses,
+ *   and page scroll is locked.
  */
 export default function FilterDrawer({ isRailOpen }: { isRailOpen: boolean }) {
     const { t } = useI18n();
@@ -62,12 +44,19 @@ export default function FilterDrawer({ isRailOpen }: { isRailOpen: boolean }) {
     const titleId = useId();
 
     const panelRef = useRef<HTMLDivElement>(null);
+    const mountTimeRef = useRef<number>(0);
 
     // Whether the drawer is behaving modally. Docked drawers are ordinary page
     // furniture and must NOT trap focus or eat Escape.
-    const isModal = isOpen && hasFilters && !isDocked;
-
+    const isModal = Boolean(isOpen && hasFilters && !isDocked);
     const shouldShow = Boolean(hasFilters && filterContent && isOpen);
+
+    // Track modal open timestamp to guard against click-through on mobile
+    useEffect(() => {
+        if (isModal) {
+            mountTimeRef.current = Date.now();
+        }
+    }, [isModal]);
 
     // Top edge tracks the status bar, which grows a breadcrumb row on non-home
     // pages below `sm`. Same expression as Sidebar so the two never disagree.
@@ -77,18 +66,16 @@ export default function FilterDrawer({ isRailOpen }: { isRailOpen: boolean }) {
 
     // The drawer is anchored to the rail's trailing edge, so it has to follow
     // the rail in and out rather than assuming it is always there.
-    const drawerLeftClass = isRailOpen ? "md:left-[var(--hh-rail-w)]" : "md:left-0";
+    const drawerLeftClass = isRailOpen ? "left-0 md:left-[var(--hh-rail-w)]" : "left-0";
 
     // Focus management, floating mode only.
-    //
-    // Moving focus into the panel is what makes the drawer reachable for
-    // keyboard and screen-reader users the moment it opens; returning it to the
-    // trigger on close is what stops focus falling back to <body> and losing
-    // the user's place in the page. The trigger is looked up by
-    // `aria-controls` so this component does not need a ref threaded through
-    // the whole layout.
     useEffect(() => {
         if (!isModal) return;
+
+        // Skip autofocus on touch devices to avoid virtual keyboard / viewport jump
+        if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+            return;
+        }
 
         const panel = panelRef.current;
 
@@ -103,9 +90,7 @@ export default function FilterDrawer({ isRailOpen }: { isRailOpen: boolean }) {
 
         return () => {
             cancelAnimationFrame(raf);
-            // Only reclaim focus if it is still inside the drawer we are
-            // closing. If the user has since clicked elsewhere, yanking focus
-            // back to the trigger would be a hijack.
+            // Only reclaim focus if it is still inside the drawer we are closing.
             const activeInPanel = panel?.contains(document.activeElement) ?? false;
             if (!activeInPanel) return;
             const trigger = document.querySelector<HTMLElement>(
@@ -131,9 +116,7 @@ export default function FilterDrawer({ isRailOpen }: { isRailOpen: boolean }) {
         return () => document.removeEventListener("keydown", handleKeyDown, true);
     }, [isModal, close]);
 
-    // Background scroll lock, floating mode only. A drawer that overlays the
-    // grid must not let a stray wheel gesture scroll the list behind it; a
-    // docked drawer deliberately leaves the page scrollable.
+    // Background scroll lock, floating mode only.
     useEffect(() => {
         if (!isModal) return;
         const previousOverflow = document.body.style.overflow;
@@ -143,26 +126,44 @@ export default function FilterDrawer({ isRailOpen }: { isRailOpen: boolean }) {
         };
     }, [isModal]);
 
-    const handleScrimClick = useCallback(() => {
-        close();
+    const scrimPointerDownRef = useRef(false);
+
+    const handleScrimPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+        if (e.target === e.currentTarget) {
+            scrimPointerDownRef.current = true;
+        }
+    }, []);
+
+    const handleScrimClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        // Prevent click-through / ghost clicks from triggers that just opened the modal
+        if (Date.now() - mountTimeRef.current < 400) {
+            scrimPointerDownRef.current = false;
+            return;
+        }
+        if (scrimPointerDownRef.current && e.target === e.currentTarget) {
+            scrimPointerDownRef.current = false;
+            e.preventDefault();
+            e.stopPropagation();
+            close();
+        }
+        scrimPointerDownRef.current = false;
     }, [close]);
 
     const resolvedTitle = filterTitle || t("common.filter.title");
 
     return (
         <>
-            {/* Scrim — floating mode only, and never on a docked drawer, which
-                would otherwise dim a page the user is still meant to read.
-                Flat dim, no backdrop blur, matching every other overlay. */}
+            {/* Scrim — floating mode only, and never on a docked drawer */}
             <AnimatePresence>
                 {isModal && (
                     <motion.div
                         key="filter-drawer-scrim"
-                        className={`fixed inset-x-0 bottom-0 ${drawerTopClass} hh-scrim z-[58]`}
+                        className={`fixed inset-x-0 bottom-0 ${drawerTopClass} hh-scrim z-[75]`}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={SCRIM_TRANSITION}
+                        onPointerDown={handleScrimPointerDown}
                         onClick={handleScrimClick}
                         aria-hidden="true"
                     />
@@ -181,14 +182,10 @@ export default function FilterDrawer({ isRailOpen }: { isRailOpen: boolean }) {
                         animate="animate"
                         exit="exit"
                         id={FILTER_DRAWER_ID}
-                        /* Docked: a labelled complementary region, discoverable
-                           via landmark navigation. Floating: a real dialog, so
-                           assistive tech announces the modal boundary that the
-                           scrim and focus trap imply visually. */
                         role={isModal ? "dialog" : "complementary"}
                         aria-modal={isModal ? true : undefined}
                         aria-labelledby={titleId}
-                        className={`fixed left-0 bottom-0 ${drawerTopClass} ${drawerLeftClass} z-[59] w-full sm:w-[var(--hh-filter-rail-w)] flex flex-col overflow-hidden bg-[var(--hh-surface-1)] border-r border-[var(--hh-border)]`}
+                        className={`fixed left-0 bottom-0 ${drawerTopClass} ${drawerLeftClass} ${isModal ? "z-[80]" : "z-[60]"} w-full sm:w-[var(--hh-filter-rail-w)] flex flex-col overflow-hidden bg-[var(--hh-surface-1)] border-r border-[var(--hh-border)] shadow-2xl`}
                     >
                         <div
                             ref={panelRef}
@@ -202,7 +199,11 @@ export default function FilterDrawer({ isRailOpen }: { isRailOpen: boolean }) {
                                 </span>
                                 <button
                                     type="button"
-                                    onClick={close}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        close();
+                                    }}
                                     className="hh-press hh-focusable shrink-0 p-1 rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)] cursor-pointer"
                                     title={t("common.filter.collapse")}
                                     aria-label={t("common.action.close")}
@@ -214,7 +215,7 @@ export default function FilterDrawer({ isRailOpen }: { isRailOpen: boolean }) {
                             </div>
 
                             {/* The one and only mount point for page filters. */}
-                            <div className="flex-grow min-h-0 overflow-y-auto px-3 py-3">
+                            <div className="flex-grow min-h-0 overflow-y-auto overscroll-contain px-3 py-3">
                                 {filterContent}
                             </div>
                         </div>

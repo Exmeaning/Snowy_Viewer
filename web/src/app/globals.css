@@ -25,7 +25,7 @@
    ========================================================================== */
 
 @theme {
-  /* Rounded-preferring stack. Apple platforms resolve ui-rounded to SF Rounded
+  /* Rounded-preferring stack. Supported platforms resolve ui-rounded to system rounded
      and JP text to Maru Gothic, which is most of what makes the type read as
      console system UI; every other platform falls through to the previous
      stack unchanged, so this is additive rather than a substitution. */
@@ -548,23 +548,22 @@ button[data-shortcut-load-more="true"]::after {
    ========================================================================== */
 
 /* ==========================================================================
-   Handheld OS — Custom Cursor System
+   Handheld OS — Custom Theme Cursor System
    
-   Precision geometric pointers designed for the console aesthetic. Uses crisp
+   Precision geometric pointers designed for console aesthetic. Uses crisp
    inline SVG data URIs with high-contrast dual-tone contours (dark edge + white
-   core + accent notch) so pointers remain razor-sharp across all light/dark themes
-   and high-DPI displays.
+   core + theme accent geometry) dynamically reactive to 26 character theme colors.
    
    Invariants:
-   1. Native I-beam is preserved for text elements (OS text selection accessibility).
-   2. Touch devices are excluded via `@media (pointer: fine)` query.
-   3. Every custom cursor declaration includes standard native fallback keywords.
+   1. Dynamic CSS custom properties `--hh-cursor-*` are injected by ThemeContext.
+   2. Fallbacks are embedded directly in CSS variables and property declarations.
+   3. Touch devices are excluded via `@media (pointer: fine)` query.
    ========================================================================== */
 
 @media (pointer: fine) {
   :root,
   body {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M2 2L15 8.5L9.5 10.5L7.5 16L2 2Z' fill='%23ffffff' stroke='%231a1b1e' stroke-width='1.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpolygon points='2,2 7,4.5 4.5,7' fill='%2333ccbb'/%3E%3C/svg%3E") 2 2, default;
+    cursor: var(--hh-cursor-default, default);
   }
 
   a,
@@ -573,6 +572,10 @@ button[data-shortcut-load-more="true"]::after {
   [role="button"],
   [role="link"],
   [role="tab"],
+  [role="checkbox"],
+  [role="switch"],
+  [role="menuitem"],
+  [role="option"],
   .cursor-pointer,
   .hh-btn,
   .hh-press,
@@ -580,28 +583,71 @@ button[data-shortcut-load-more="true"]::after {
   .hh-chip,
   .hh-segment-item,
   .hh-dock-btn,
+  .hh-focusable,
+  .hh-interactive,
+  [data-interactive="true"],
   input[type="checkbox"],
   input[type="radio"],
   input[type="submit"],
   input[type="button"],
-  select {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M3 2L14 7.5L9 9.5L7 14.5L3 2Z' fill='%2333ccbb' stroke='%231a1b1e' stroke-width='1.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='9.5' r='1.5' fill='%23ffffff'/%3E%3C/svg%3E") 3 2, pointer;
+  input[type="reset"],
+  input[type="file"],
+  input[type="range"],
+  input[type="color"],
+  select,
+  label[for] {
+    cursor: var(--hh-cursor-pointer, pointer);
+  }
+
+  input[type="text"],
+  input[type="search"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="url"],
+  input[type="tel"],
+  input:not([type]),
+  textarea,
+  [contenteditable="true"],
+  .cursor-text {
+    cursor: var(--hh-cursor-text, text);
   }
 
   .cursor-grab,
+  .hh-grab,
   [data-draggable="true"] {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='5.5' fill='%23ffffff' stroke='%231a1b1e' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='10' r='2' fill='%2333ccbb'/%3E%3C/svg%3E") 10 10, grab;
+    cursor: var(--hh-cursor-grab, grab);
   }
 
   .cursor-grabbing,
-  [data-dragging="true"] {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='4' fill='%2333ccbb' stroke='%231a1b1e' stroke-width='1.5'/%3E%3C/svg%3E") 10 10, grabbing;
+  .hh-grabbing,
+  [data-dragging="true"],
+  .hh-grab:active {
+    cursor: var(--hh-cursor-grabbing, grabbing);
   }
 
   :disabled,
   [aria-disabled="true"],
+  .disabled,
   .cursor-not-allowed {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='6' fill='%23ffffff' stroke='%231a1b1e' stroke-width='1.5'/%3E%3Cline x1='5.5' y1='5.5' x2='14.5' y2='14.5' stroke='%23e05666' stroke-width='1.5'/%3E%3C/svg%3E") 10 10, not-allowed;
+    cursor: var(--hh-cursor-not-allowed, not-allowed) !important;
+  }
+
+  .cursor-help,
+  [data-cursor="help"] {
+    cursor: var(--hh-cursor-help, help);
+  }
+
+  .cursor-zoom-in {
+    cursor: var(--hh-cursor-zoom-in, zoom-in);
+  }
+
+  .cursor-zoom-out {
+    cursor: var(--hh-cursor-zoom-out, zoom-out);
+  }
+
+  .cursor-default {
+    cursor: var(--hh-cursor-default, default);
   }
 }
 

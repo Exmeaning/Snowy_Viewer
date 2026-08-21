@@ -142,6 +142,7 @@ export default async function RootLayout({
         if (savedCharId && charColors[savedCharId]) {
           var color = charColors[savedCharId];
           document.documentElement.style.setProperty('--color-miku', color);
+          document.documentElement.style.setProperty('--theme-color', color);
           // Darken for dark variant
           var num = parseInt(color.replace('#', ''), 16);
           var amt = Math.round(2.55 * 15);

@@ -69,6 +69,10 @@ export default function MainLayout({
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
 
+    const { hasFilters, isOpen: isFilterDrawerOpen, close: closeFilterDrawer } = useQuickFilterContext();
+    const effectiveSidebarOpen = isScreenshotMode || immersiveMode ? false : isSidebarOpen;
+    const isDockedFilterActive = Boolean(hasFilters && isFilterDrawerOpen);
+
     // Track whether we pushed a history entry for an overlay, so the mobile
     // back button closes the overlay instead of navigating away.
     const overlayHistoryRef = useRef(false);
@@ -186,6 +190,12 @@ export default function MainLayout({
                 setIsSearchOpen(false);
                 setIsSettingsOpen(false);
                 setIsShortcutsHelpOpen(false);
+                if (effectiveSidebarOpen) {
+                    setIsSidebarOpen(false);
+                }
+                if (isFilterDrawerOpen) {
+                    closeFilterDrawer();
+                }
             }
         };
 
@@ -194,7 +204,7 @@ export default function MainLayout({
             cancelOverlayHistoryArm();
             window.removeEventListener("popstate", handlePopState);
         };
-    }, [cancelOverlayHistoryArm]);
+    }, [cancelOverlayHistoryArm, effectiveSidebarOpen, isFilterDrawerOpen, closeFilterDrawer]);
 
     useEffect(() => {
         if (!immersiveMode) return;
@@ -238,10 +248,6 @@ export default function MainLayout({
             cancelAnimationFrame(raf2);
         };
     }, [immersiveMode, isScreenshotMode]);
-
-    const { hasFilters, isOpen: isFilterDrawerOpen } = useQuickFilterContext();
-    const effectiveSidebarOpen = isScreenshotMode || immersiveMode ? false : isSidebarOpen;
-    const isDockedFilterActive = Boolean(hasFilters && isFilterDrawerOpen);
 
     const layoutOffsetClass = effectiveSidebarOpen
         ? (isDockedFilterActive ? 'md:ml-[var(--hh-rail-w)] xl:ml-[var(--hh-dual-rail-w)]' : 'md:ml-[var(--hh-rail-w)]')
@@ -384,35 +390,29 @@ export default function MainLayout({
                 />
             )}
 
-            {/* Layout with Sidebar & FilterDrawer */}
+            {/* Layout with Sidebar & Content */}
             {/* Content clears the console status bar via --hh-topbar-h and --hh-topbar-sub-h.
                 Sidebar.tsx and FilterDrawer.tsx offset against the same CSS variables. */}
             <div className={`flex flex-grow relative ${immersiveMode ? "" : isHome ? "pt-[var(--hh-topbar-h)]" : "pt-[calc(var(--hh-topbar-h)+var(--hh-topbar-sub-h))]"}`}>
-                {/* Sidebar & Filter Drawer */}
+                {/* Desktop/Layout-docked Sidebar */}
                 {!immersiveMode && (
-                    <>
-                        <Sidebar
-                            isOpen={effectiveSidebarOpen}
-                            onClose={handleSidebarClose}
-                            hasMounted={hasMounted}
-                            disableKeyboardNavigation={isShortcutScopeLocked}
-                        />
-                        <FilterDrawer isRailOpen={effectiveSidebarOpen} />
-                        <FilterTabHandle isRailOpen={effectiveSidebarOpen} />
-                    </>
+                    <Sidebar
+                        isOpen={effectiveSidebarOpen}
+                        onClose={handleSidebarClose}
+                        hasMounted={hasMounted}
+                        disableKeyboardNavigation={isShortcutScopeLocked}
+                    />
                 )}
 
                 {/* Main content area. The ref stays on this stable wrapper so the
                     page-list shortcut root never changes identity; the screen
                     transition lives on the keyed child inside it. */}
-                <div ref={pageContentRef} data-shortcut-page-root="true" className={`flex-grow relative z-10 w-full min-w-0 ${hasMounted ? 'transition-all duration-300' : ''} ${layoutOffsetClass}`}>
-                    {/* Screen change. MainLayout is mounted per page, so this already
-                        remounts on every route change; the key is belt-and-braces in
-                        case a shared layout ever hoists MainLayout above the router.
-                        There is no exit variant because the App Router unmounts the
-                        old tree before an exit could play. The final state is y: 0, at
-                        which point framer-motion writes `transform: none`, so nothing
-                        is left holding a containing block over fixed page content. */}
+                <div
+                    ref={pageContentRef}
+                    data-hh-shortcut-root="page-list"
+                    tabIndex={-1}
+                    className={`flex-grow min-w-0 min-h-screen ${layoutOffsetClass} outline-none`}
+                >
                     <motion.div
                         key={pathname}
                         variants={hhScreenVariants}
@@ -431,6 +431,14 @@ export default function MainLayout({
                         )}
                     </motion.div>
                 </div>
+
+                {/* Global floating Drawer & Handle placed AFTER main content to ensure absolute top-level stacking */}
+                {!immersiveMode && (
+                    <>
+                        <FilterDrawer isRailOpen={effectiveSidebarOpen} />
+                        <FilterTabHandle isRailOpen={effectiveSidebarOpen} />
+                    </>
+                )}
             </div>
 
             {!immersiveMode && (

@@ -25,7 +25,7 @@
 
    ── How this re-skins the whole app ──────────────────────────────────────
 
-   The legacy utility vocabulary (.glass-card, .ios-glass-*, .island-*,
+   The legacy utility vocabulary (.glass-card, .legacy-glass-*, .island-*,
    .material-*, .pressable) carries roughly a thousand call sites across 287
    component files. Those class names are kept and redefined in place at the
    bottom of this file rather than removed, which is what turns a 287-file
@@ -81,7 +81,7 @@
    Four groups must keep outranking utilities. Do not "finish the job" by
    wrapping these as well:
 
-   1. The legacy re-skin near the bottom (.ios-glass-*, .glass-card, .island-*,
+   1. The legacy re-skin near the bottom (.legacy-glass-*, .glass-card, .island-*,
       .material-*, .type-*). Its whole purpose is to DEFEAT the glassmorphism-era
       utilities still written at those call sites: `glass-card border
       border-white/40 bg-white` must not resolve to a white/40 border on a white
@@ -106,15 +106,19 @@
    ========================================================================== */
 
 :root {
-    /* ── Neutral ramp — light ─────────────────────────────────────────────
-       A grey room with white tiles in it, never white-on-white. surface-0 is
-       the room; surface-2 is a tile sitting in the room. Keeping the page
-       darker than its cards is what makes flat tiles read as objects without
-       needing a shadow to separate them. */
-    --hh-surface-0: #e8e9eb;
+    /* ── Surface hierarchy — light ─────────────────────────────────────────
+       Clean, single-direction progressive hierarchy:
+       - surface-base (surface-0): Canvas / page ground (#e8e9eb)
+       - surface-1: Shell / baseplate / outer rails / drawer chassis (#eff0f2)
+       - surface-2: Cards / tiles / floating items / modal dialogs (#ffffff)
+       - surface-3: Elevated popovers / active hover layer (#f8f9fa)
+       - surface-sunken: Recessed wells / troughs / search inputs (#dcdee2)
+       - surface-inset: Deep insets / track wells (#d3d5da) */
+    --hh-surface-base: #e8e9eb;
+    --hh-surface-0: var(--hh-surface-base);
     --hh-surface-1: #eff0f2;
     --hh-surface-2: #ffffff;
-    --hh-surface-3: #ffffff;
+    --hh-surface-3: #f8f9fa;
     --hh-surface-sunken: #dcdee2;
     --hh-surface-inset: #d3d5da;
 
@@ -128,25 +132,18 @@
     --hh-text-on-accent: #ffffff;
 
     /* Elevation — small, tight, low-opacity. Tiles hover barely above the
-       surface. A large soft shadow immediately reads as a phone OS instead of
-       a console, so the blur radii here stay deliberately short. */
-    --hh-shadow-tile: 0 1px 2px rgba(20, 22, 28, 0.06), 0 2px 8px rgba(20, 22, 28, 0.05);
-    --hh-shadow-raised: 0 2px 4px rgba(20, 22, 28, 0.08), 0 8px 20px rgba(20, 22, 28, 0.10);
-    --hh-shadow-float: 0 6px 12px rgba(20, 22, 28, 0.10), 0 18px 44px rgba(20, 22, 28, 0.16);
-    --hh-shadow-inset: inset 0 1px 2px rgba(20, 22, 28, 0.07);
+       surface. A large soft shadow immediately reads as a mobile app instead of
+       a console system. */
+    --hh-shadow-tile: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.04);
+    --hh-shadow-raised: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 20px rgba(0, 0, 0, 0.06);
+    --hh-shadow-float: 0 4px 16px rgba(0, 0, 0, 0.1), 0 16px 40px rgba(0, 0, 0, 0.08);
+    --hh-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.06);
 
-    --hh-scrim: rgba(24, 26, 30, 0.42);
+    /* Modal scrim — flat, opaque-feeling dark overlay. No blur. */
+    --hh-scrim: rgba(18, 19, 22, 0.55);
 
-    /* ── Fixed hardware-ish accents ──────────────────────────────────────
-       These do NOT follow the character theme. They are structural brand
-       constants for controller-glyph tinting and destructive actions, and
-       they stay put so the shell reads as one consistent system. */
-    --hh-accent-cyan: #00c3e3;
-    --hh-accent-coral: #ff3c28;
-    --hh-accent-alert: #e60012;
-
-    /* ── Accent — follows the character theme ────────────────────────────
-       ThemeContext and the pre-hydration inline script both rewrite
+    /* ── Accent ramp ──────────────────────────────────────────────────────
+       Base accent defaults to Miku teal. The theme picker re-binds
        --color-miku to one of 26 character colors, so everything accent-driven
        inherits from it and the theme picker keeps working unchanged. */
     --hh-accent: var(--color-miku, #33ccbb);
@@ -170,12 +167,15 @@
     --hh-radius-full: 999px;
 
     /* ── Motion ──────────────────────────────────────────────────────────
-       --hh-ease-cursor is the only easing with overshoot. Everything
-       structural uses --hh-ease-out so panels and screens never wobble. */
-    --hh-ease-cursor: cubic-bezier(0.18, 1.32, 0.38, 1);
+       Elastic spring curves with snappy response and slight overshoot:
+       - ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1) — signature fast spring
+       - ease-cursor: cursor travel and interactive overshoot
+       - ease-out: critically damped for structural elements */
+    --hh-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --hh-ease-cursor: cubic-bezier(0.34, 1.56, 0.64, 1);
     --hh-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     --hh-ease-in-out: cubic-bezier(0.5, 0, 0.3, 1);
-    --hh-ease-snap: cubic-bezier(0.3, 0.9, 0.25, 1);
+    --hh-ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
 
     --hh-dur-press: 90ms;
     --hh-dur-cursor: 220ms;
@@ -194,6 +194,17 @@
     --hh-cursor-glow: 0 0 0 1px rgba(255, 255, 255, 0.9),
         0 0 12px color-mix(in srgb, var(--hh-accent) 55%, transparent),
         0 0 28px color-mix(in srgb, var(--hh-accent) 22%, transparent);
+
+    /* ── Mouse Pointer Cursor System (Theme-reactive Console Pointers) ──── */
+    --hh-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3Cfilter id='hh-shadow-def' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0.8' dy='1.5' stdDeviation='1' flood-color='%23000000' flood-opacity='0.38' /%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23hh-shadow-def)'%3E%3Cpath d='M2.5 2L18.5 9.8L11.5 12.2L15.2 20.2L12 21.8L8.2 13.8L2.5 18.5Z' fill='%230D1117' stroke='%230D1117' stroke-width='1.2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M3.8 3.6L16.6 9.8L10.8 11.8L14.2 19L12.3 19.9L8.8 12.9L3.8 16.8Z' fill='%23FFFFFF'/%3E%3Cpolygon points='3.8,3.6 10.2,6.7 6.8,10.2' fill='%2333ccbb'/%3E%3Ccircle cx='10.8' cy='11.8' r='1.1' fill='%2333ccbb'/%3E%3C/g%3E%3C/svg%3E") 2 2, default;
+    --hh-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3Cfilter id='hh-shadow-ptr' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0.8' dy='1.5' stdDeviation='1' flood-color='%23000000' flood-opacity='0.38' /%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23hh-shadow-ptr)'%3E%3Cpath d='M7.5 1.5C6.4 1.5 5.5 2.4 5.5 3.5V11L4 10.1C3.1 9.5 1.9 9.8 1.4 10.7C0.9 11.6 1.2 12.8 2.2 13.3L6.5 16.2C7 16.5 7.4 17.2 7.4 18V21.5C7.4 22 7.8 22.5 8.4 22.5H16.5C17.6 22.5 18.5 21.6 18.5 20.5V12C18.5 10.9 17.6 10 16.5 10C16.3 10 16.1 10.05 15.9 10.1C15.6 9.2 14.8 8.5 13.8 8.5C13.5 8.5 13.3 8.55 13.1 8.65C12.8 7.8 12 7.2 11 7.2C10.8 7.2 10.6 7.25 10.4 7.3V3.5C10.4 2.4 9.5 1.5 8.4 1.5H7.5Z' fill='%230D1117' stroke='%230D1117' stroke-width='1.2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M7.5 2.5C7 2.5 6.5 3 6.5 3.5V11.8L4.8 10.9C4.2 10.5 3.5 10.7 3.2 11.3C2.9 11.9 3.1 12.6 3.7 13L8 15.8C8.6 16.2 9 17 9 17.8V21.2H16C16.6 21.2 17.2 20.7 17.2 20V12C17.2 11.4 16.7 11 16 11H14.8V10.2C14.8 9.6 14.3 9.2 13.6 9.2H12.6V9C12.6 8.4 12.1 8 11.4 8H10.4V3.5C10.4 3 9.9 2.5 9.4 2.5H7.5Z' fill='%23FFFFFF'/%3E%3Crect x='6.8' y='4.5' width='2.4' height='4' rx='1.2' fill='%2333ccbb'/%3E%3Crect x='9.2' y='18.8' width='6.6' height='2.2' rx='0.8' fill='%2333ccbb'/%3E%3C/g%3E%3C/svg%3E") 7 1, pointer;
+    --hh-cursor-text: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3Cfilter id='hh-shadow-txt' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0.5' dy='1' stdDeviation='0.8' flood-color='%23000000' flood-opacity='0.4' /%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23hh-shadow-txt)'%3E%3Cpath d='M7 4H17M7 20H17M12 4V20' stroke='%230D1117' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M7.5 4H16.5M7.5 20H16.5M12 4.5V19.5' stroke='%23FFFFFF' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='12' cy='12' r='2.2' fill='%2333ccbb' stroke='%230D1117' stroke-width='0.8'/%3E%3Ccircle cx='12' cy='4' r='1.2' fill='%2333ccbb'/%3E%3Ccircle cx='12' cy='20' r='1.2' fill='%2333ccbb'/%3E%3C/g%3E%3C/svg%3E") 12 12, text;
+    --hh-cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3Cfilter id='hh-shadow-grab' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0.8' dy='1.5' stdDeviation='1' flood-color='%23000000' flood-opacity='0.38' /%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23hh-shadow-grab)'%3E%3Ccircle cx='11.5' cy='11.5' r='7.5' fill='%230D1117' stroke='%230D1117' stroke-width='1'/%3E%3Ccircle cx='11.5' cy='11.5' r='6' fill='%23FFFFFF'/%3E%3Ccircle cx='11.5' cy='11.5' r='3.6' fill='%2333ccbb'/%3E%3Ccircle cx='11.5' cy='11.5' r='1.5' fill='%23FFFFFF'/%3E%3C/g%3E%3C/svg%3E") 11 11, grab;
+    --hh-cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3Cfilter id='hh-shadow-grabbing' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0.8' dy='1.5' stdDeviation='1' flood-color='%23000000' flood-opacity='0.38' /%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23hh-shadow-grabbing)'%3E%3Ccircle cx='11.5' cy='11.5' r='6.5' fill='%230D1117' stroke='%230D1117' stroke-width='1'/%3E%3Ccircle cx='11.5' cy='11.5' r='5' fill='%2333ccbb'/%3E%3Ccircle cx='11.5' cy='11.5' r='1.8' fill='%23FFFFFF'/%3E%3C/g%3E%3C/svg%3E") 11 11, grabbing;
+    --hh-cursor-not-allowed: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3Cfilter id='hh-shadow-na' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0.8' dy='1.5' stdDeviation='1' flood-color='%23000000' flood-opacity='0.38' /%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23hh-shadow-na)'%3E%3Ccircle cx='11.5' cy='11.5' r='8' fill='%230D1117' stroke='%230D1117' stroke-width='1'/%3E%3Ccircle cx='11.5' cy='11.5' r='6.6' fill='%23FFFFFF'/%3E%3Ccircle cx='11.5' cy='11.5' r='5.2' fill='none' stroke='%23E05666' stroke-width='2'/%3E%3Cline x1='7.8' y1='7.8' x2='15.2' y2='15.2' stroke='%23E05666' stroke-width='2' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E") 11 11, not-allowed;
+    --hh-cursor-help: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3Cfilter id='hh-shadow-help' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0.8' dy='1.5' stdDeviation='1' flood-color='%23000000' flood-opacity='0.38' /%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23hh-shadow-help)'%3E%3Cpath d='M2.5 2L14.5 8L9.5 10L7.5 15.5L2.5 2Z' fill='%230D1117' stroke='%230D1117' stroke-width='1.2' stroke-linejoin='round'/%3E%3Cpath d='M3.6 3.4L13.2 8.2L9.2 9.8L7.5 14.3L3.6 3.4Z' fill='%23FFFFFF'/%3E%3Cpolygon points='3.6,3.4 8.2,5.6 6,7.8' fill='%2333ccbb'/%3E%3Ccircle cx='16.5' cy='14.5' r='5' fill='%230D1117'/%3E%3Ccircle cx='16.5' cy='14.5' r='3.8' fill='%2333ccbb'/%3E%3Ctext x='16.5' y='17' font-size='7.5' font-weight='900' font-family='system-ui, -apple-system, sans-serif' text-anchor='middle' fill='%23FFFFFF'%3E?%3C/text%3E%3C/g%3E%3C/svg%3E") 2 2, help;
+    --hh-cursor-zoom-in: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3Cfilter id='hh-shadow-zi' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0.8' dy='1.5' stdDeviation='1' flood-color='%23000000' flood-opacity='0.38' /%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23hh-shadow-zi)'%3E%3Cpath d='M14.5 14.5L20.5 20.5' stroke='%230D1117' stroke-width='3.5' stroke-linecap='round'/%3E%3Cpath d='M14.5 14.5L20.5 20.5' stroke='%2333ccbb' stroke-width='1.8' stroke-linecap='round'/%3E%3Ccircle cx='9.5' cy='9.5' r='7' fill='%230D1117' stroke='%230D1117' stroke-width='1'/%3E%3Ccircle cx='9.5' cy='9.5' r='5.5' fill='%23FFFFFF'/%3E%3Cpath d='M6.5 9.5H12.5M9.5 6.5V12.5' stroke='%2333ccbb' stroke-width='2' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E") 9 9, zoom-in;
+    --hh-cursor-zoom-out: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3Cfilter id='hh-shadow-zo' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0.8' dy='1.5' stdDeviation='1' flood-color='%23000000' flood-opacity='0.38' /%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23hh-shadow-zo)'%3E%3Cpath d='M14.5 14.5L20.5 20.5' stroke='%230D1117' stroke-width='3.5' stroke-linecap='round'/%3E%3Cpath d='M14.5 14.5L20.5 20.5' stroke='%2333ccbb' stroke-width='1.8' stroke-linecap='round'/%3E%3Ccircle cx='9.5' cy='9.5' r='7' fill='%230D1117' stroke='%230D1117' stroke-width='1'/%3E%3Ccircle cx='9.5' cy='9.5' r='5.5' fill='%23FFFFFF'/%3E%3Cpath d='M6.5 9.5H12.5' stroke='%2333ccbb' stroke-width='2' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E") 9 9, zoom-out;
 
     /* ── Type ────────────────────────────────────────────────────────────
        Console text is tight, even-weight, and never light-weight at body
@@ -227,16 +238,21 @@
 }
 
 :root[data-theme="dark"] {
-    /* ── Neutral ramp — dark ─────────────────────────────────────────────
-       Warm-neutral charcoal, not blue-black. Tiles separate from the room by
-       lightness alone, so the ramp steps are wider here than in light mode
-       where borders do more of the work. */
-    --hh-surface-0: #1e1f22;
-    --hh-surface-1: #26272b;
-    --hh-surface-2: #2f3035;
-    --hh-surface-3: #3a3b41;
-    --hh-surface-sunken: #17181a;
-    --hh-surface-inset: #141517;
+    /* ── Surface hierarchy — dark ──────────────────────────────────────────
+       Single-direction progressive hierarchy:
+       - surface-base (surface-0): Deep base canvas (#1b1c1f)
+       - surface-1: Shell / chassis / drawer frame (#24252a)
+       - surface-2: Cards / tiles / floating dialogs (#2f3036)
+       - surface-3: Elevated popovers / active hover layer (#3a3b43)
+       - surface-sunken: Recessed wells / troughs (#161719)
+       - surface-inset: Deep insets / track wells (#121315) */
+    --hh-surface-base: #1b1c1f;
+    --hh-surface-0: var(--hh-surface-base);
+    --hh-surface-1: #24252a;
+    --hh-surface-2: #2f3036;
+    --hh-surface-3: #3a3b43;
+    --hh-surface-sunken: #161719;
+    --hh-surface-inset: #121315;
 
     --hh-border: #414248;
     --hh-border-strong: #55575f;
@@ -335,8 +351,31 @@
     border-radius: var(--hh-radius-lg);
 }
 
-.hh-ground {
-    background-color: var(--hh-surface-0);
+/* Surface progression utility classes */
+.hh-ground,
+.hh-surface-base,
+.hh-surface-0 {
+    background-color: var(--hh-surface-base);
+}
+
+.hh-surface-1 {
+    background-color: var(--hh-surface-1);
+}
+
+.hh-surface-2 {
+    background-color: var(--hh-surface-2);
+}
+
+.hh-surface-3 {
+    background-color: var(--hh-surface-3);
+}
+
+.hh-surface-sunken {
+    background-color: var(--hh-surface-sunken);
+}
+
+.hh-surface-inset {
+    background-color: var(--hh-surface-inset);
 }
 
 /* Modal scrim. Opaque-dark rather than blurred — consistent with dropping
@@ -349,7 +388,7 @@
 /* ── end @layer components ─────────────────────────────────────────────── */
 
 /* ==========================================================================
-   Response — press feedback
+   Response — press feedback and spring interactions
 
    Console controls acknowledge on pointer-DOWN, and the acknowledgment is a
    fast scale with no easing runway. .pressable is the legacy name (86 call
@@ -371,7 +410,8 @@
 .hh-press,
 .pressable {
     transition:
-        transform var(--hh-dur-press) var(--hh-ease-snap),
+        transform var(--hh-dur-cursor) var(--hh-ease-spring),
+        opacity var(--hh-dur-fast) var(--hh-ease-out),
         background-color var(--hh-dur-fast) var(--hh-ease-out),
         border-color var(--hh-dur-fast) var(--hh-ease-out),
         box-shadow var(--hh-dur-fast) var(--hh-ease-out),
@@ -383,6 +423,7 @@
 .hh-press:active,
 .pressable:active {
     transform: scale(var(--hh-press-scale));
+    transition: transform var(--hh-dur-press) var(--hh-ease-out);
 }
 
 .hh-press:disabled,
@@ -392,6 +433,25 @@
     transform: none;
     opacity: 0.45;
     pointer-events: none;
+}
+
+/* Snappy spring hover with slight overshoot */
+.hh-spring-hover {
+    transition:
+        transform var(--hh-dur-cursor) var(--hh-ease-spring),
+        box-shadow var(--hh-dur-cursor) var(--hh-ease-spring),
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        background-color var(--hh-dur-fast) var(--hh-ease-out);
+    will-change: transform;
+}
+
+.hh-spring-hover:hover {
+    transform: translateY(-2px) scale(1.012);
+}
+
+.hh-spring-hover:active {
+    transform: scale(var(--hh-press-scale));
+    transition-duration: var(--hh-dur-press);
 }
 
 /* ==========================================================================
@@ -514,7 +574,7 @@
    Buttons, segmented controls and chips were originally authored at
    --hh-radius-full. On a rectangle, 999px is not "a rounder corner" — it is a
    different shape, a capsule, and the capsule is the signature of the
-   iOS/web-app vocabulary this redesign exists to replace. The mismatch is
+   floating web-app vocabulary this redesign exists to replace. The mismatch is
    loudest exactly where the two touch: a 999px segmented control sitting
    directly above 8px navigation rows in the same side rail reads as two
    design systems stacked on each other, because it was. Fully-round is now
@@ -1405,6 +1465,301 @@
 .hh-stagger > * {
     animation: hh-tile-in var(--hh-dur-screen) var(--hh-ease-out) both;
     animation-delay: calc(var(--hh-i, 0) * 34ms);
+}
+
+/* ==========================================================================
+   Scrollbar system (.hh-scrollbar)
+   
+   Thin, low-noise console scrollbar with transparent track, 6px capsule thumb,
+   fade-in on hover, and stable gutter to prevent layout shift.
+   ========================================================================== */
+
+.hh-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    scrollbar-gutter: stable;
+    transition: scrollbar-color var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.hh-scrollbar:hover {
+    scrollbar-color: var(--hh-border-strong) transparent;
+}
+
+.hh-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.hh-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.hh-scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: var(--hh-radius-full);
+    transition: background-color var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.hh-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: var(--hh-border-strong);
+}
+
+.hh-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--hh-accent);
+}
+
+.hh-scrollbar::-webkit-scrollbar-thumb:active {
+    background: var(--hh-accent-deep);
+}
+
+/* Modifiers */
+.hh-scrollbar-always {
+    scrollbar-color: var(--hh-border-strong) transparent;
+}
+
+.hh-scrollbar-always::-webkit-scrollbar-thumb {
+    background: var(--hh-border-strong);
+}
+
+/* ==========================================================================
+   Full mask & smart inversion (.hh-full-mask, .hh-highlight-target)
+   
+   On hover, focus, or active selection, completely floods background with
+   var(--hh-accent), turns all primary text, titles, icons to pure white
+   (#FFFFFF), and subtitles / muted metadata to semi-transparent white
+   (rgba(255,255,255,0.88)) with soft matching elevation.
+   ========================================================================== */
+
+.hh-full-mask,
+.hh-highlight-target {
+    transition:
+        background-color var(--hh-dur-fast) var(--hh-ease-out),
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        box-shadow var(--hh-dur-fast) var(--hh-ease-out),
+        color var(--hh-dur-fast) var(--hh-ease-out),
+        transform var(--hh-dur-cursor) var(--hh-ease-spring);
+}
+
+.hh-full-mask *,
+.hh-highlight-target * {
+    transition:
+        color var(--hh-dur-fast) var(--hh-ease-out),
+        opacity var(--hh-dur-fast) var(--hh-ease-out),
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        background-color var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.hh-full-mask:hover,
+.hh-full-mask:focus-visible,
+.hh-full-mask:focus,
+.hh-full-mask[data-hh-focused],
+.hh-full-mask[data-selected="true"],
+.hh-full-mask[data-active="true"],
+.hh-full-mask.is-active,
+.hh-full-mask.active,
+.hh-full-mask-active,
+.hh-highlight-target:hover,
+.hh-highlight-target:focus-visible,
+.hh-highlight-target:focus,
+.hh-highlight-target[data-hh-focused],
+.hh-highlight-target[data-selected="true"],
+.hh-highlight-target[data-active="true"],
+.hh-highlight-target.is-active,
+.hh-highlight-target.active,
+.hh-highlight-target-active {
+    background-color: var(--hh-accent) !important;
+    border-color: color-mix(in srgb, var(--hh-accent) 70%, black) !important;
+    color: #ffffff !important;
+    box-shadow:
+        0 4px 16px color-mix(in srgb, var(--hh-accent) 35%, transparent),
+        0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.hh-full-mask:hover *,
+.hh-full-mask:focus-visible *,
+.hh-full-mask:focus *,
+.hh-full-mask[data-hh-focused] *,
+.hh-full-mask[data-selected="true"] *,
+.hh-full-mask[data-active="true"] *,
+.hh-full-mask.is-active *,
+.hh-full-mask.active *,
+.hh-full-mask-active *,
+.hh-highlight-target:hover *,
+.hh-highlight-target:focus-visible *,
+.hh-highlight-target:focus *,
+.hh-highlight-target[data-hh-focused] *,
+.hh-highlight-target[data-selected="true"] *,
+.hh-highlight-target[data-active="true"] *,
+.hh-highlight-target.is-active *,
+.hh-highlight-target.active *,
+.hh-highlight-target-active * {
+    color: #ffffff;
+}
+
+.hh-full-mask:hover svg,
+.hh-full-mask:focus-visible svg,
+.hh-full-mask:focus svg,
+.hh-full-mask[data-hh-focused] svg,
+.hh-full-mask[data-selected="true"] svg,
+.hh-full-mask[data-active="true"] svg,
+.hh-full-mask.is-active svg,
+.hh-full-mask.active svg,
+.hh-full-mask-active svg,
+.hh-highlight-target:hover svg,
+.hh-highlight-target:focus-visible svg,
+.hh-highlight-target:focus svg,
+.hh-highlight-target[data-hh-focused] svg,
+.hh-highlight-target[data-selected="true"] svg,
+.hh-highlight-target[data-active="true"] svg,
+.hh-highlight-target.is-active svg,
+.hh-highlight-target.active svg,
+.hh-highlight-target-active svg {
+    color: #ffffff !important;
+    fill: currentColor;
+    stroke: currentColor;
+}
+
+.hh-full-mask:hover .hh-subtitle,
+.hh-full-mask:hover .hh-meta,
+.hh-full-mask:hover .hh-subtext,
+.hh-full-mask:hover .hh-caption,
+.hh-full-mask:hover .text-muted,
+.hh-full-mask:hover .text-muted-foreground,
+.hh-full-mask:hover [class*="text-zinc-400"],
+.hh-full-mask:hover [class*="text-zinc-500"],
+.hh-full-mask:hover [class*="text-gray-400"],
+.hh-full-mask:hover [class*="text-gray-500"],
+.hh-full-mask:hover [class*="text-neutral-400"],
+.hh-full-mask:hover [class*="text-neutral-500"],
+.hh-full-mask:hover [class*="text-slate-400"],
+.hh-full-mask:hover [class*="text-slate-500"],
+.hh-full-mask:focus-visible .hh-subtitle,
+.hh-full-mask:focus-visible .hh-meta,
+.hh-full-mask:focus-visible .hh-subtext,
+.hh-full-mask:focus-visible .hh-caption,
+.hh-full-mask:focus-visible .text-muted,
+.hh-full-mask:focus-visible .text-muted-foreground,
+.hh-full-mask:focus-visible [class*="text-zinc-400"],
+.hh-full-mask:focus-visible [class*="text-zinc-500"],
+.hh-full-mask:focus-visible [class*="text-gray-400"],
+.hh-full-mask:focus-visible [class*="text-gray-500"],
+.hh-full-mask:focus-visible [class*="text-neutral-400"],
+.hh-full-mask:focus-visible [class*="text-neutral-500"],
+.hh-full-mask:focus-visible [class*="text-slate-400"],
+.hh-full-mask:focus-visible [class*="text-slate-500"],
+.hh-full-mask[data-hh-focused] .hh-subtitle,
+.hh-full-mask[data-hh-focused] .hh-meta,
+.hh-full-mask[data-hh-focused] .hh-subtext,
+.hh-full-mask[data-hh-focused] .hh-caption,
+.hh-full-mask[data-hh-focused] .text-muted,
+.hh-full-mask[data-hh-focused] .text-muted-foreground,
+.hh-full-mask[data-hh-focused] [class*="text-zinc-400"],
+.hh-full-mask[data-hh-focused] [class*="text-zinc-500"],
+.hh-full-mask[data-hh-focused] [class*="text-gray-400"],
+.hh-full-mask[data-hh-focused] [class*="text-gray-500"],
+.hh-full-mask[data-selected="true"] .hh-subtitle,
+.hh-full-mask[data-selected="true"] .hh-meta,
+.hh-full-mask[data-selected="true"] .hh-subtext,
+.hh-full-mask[data-selected="true"] .hh-caption,
+.hh-full-mask[data-selected="true"] .text-muted,
+.hh-full-mask[data-selected="true"] .text-muted-foreground,
+.hh-full-mask[data-selected="true"] [class*="text-zinc-400"],
+.hh-full-mask[data-selected="true"] [class*="text-zinc-500"],
+.hh-full-mask[data-selected="true"] [class*="text-gray-400"],
+.hh-full-mask[data-selected="true"] [class*="text-gray-500"],
+.hh-full-mask[data-active="true"] .hh-subtitle,
+.hh-full-mask[data-active="true"] .hh-meta,
+.hh-full-mask[data-active="true"] .hh-subtext,
+.hh-full-mask[data-active="true"] .hh-caption,
+.hh-full-mask[data-active="true"] .text-muted,
+.hh-full-mask[data-active="true"] .text-muted-foreground,
+.hh-full-mask[data-active="true"] [class*="text-zinc-400"],
+.hh-full-mask[data-active="true"] [class*="text-zinc-500"],
+.hh-full-mask[data-active="true"] [class*="text-gray-400"],
+.hh-full-mask[data-active="true"] [class*="text-gray-500"],
+.hh-full-mask.is-active .hh-subtitle,
+.hh-full-mask.is-active .hh-meta,
+.hh-full-mask.is-active .hh-subtext,
+.hh-full-mask.is-active .hh-caption,
+.hh-full-mask.active .hh-subtitle,
+.hh-full-mask.active .hh-meta,
+.hh-full-mask.active .hh-subtext,
+.hh-full-mask.active .hh-caption,
+.hh-full-mask-active .hh-subtitle,
+.hh-full-mask-active .hh-meta,
+.hh-full-mask-active .hh-subtext,
+.hh-full-mask-active .hh-caption,
+.hh-highlight-target:hover .hh-subtitle,
+.hh-highlight-target:hover .hh-meta,
+.hh-highlight-target:hover .hh-subtext,
+.hh-highlight-target:hover .hh-caption,
+.hh-highlight-target:hover .text-muted,
+.hh-highlight-target:hover .text-muted-foreground,
+.hh-highlight-target:hover [class*="text-zinc-400"],
+.hh-highlight-target:hover [class*="text-zinc-500"],
+.hh-highlight-target:hover [class*="text-gray-400"],
+.hh-highlight-target:hover [class*="text-gray-500"],
+.hh-highlight-target:hover [class*="text-neutral-400"],
+.hh-highlight-target:hover [class*="text-neutral-500"],
+.hh-highlight-target:hover [class*="text-slate-400"],
+.hh-highlight-target:hover [class*="text-slate-500"],
+.hh-highlight-target:focus-visible .hh-subtitle,
+.hh-highlight-target:focus-visible .hh-meta,
+.hh-highlight-target:focus-visible .hh-subtext,
+.hh-highlight-target:focus-visible .hh-caption,
+.hh-highlight-target:focus-visible .text-muted,
+.hh-highlight-target:focus-visible .text-muted-foreground,
+.hh-highlight-target:focus-visible [class*="text-zinc-400"],
+.hh-highlight-target:focus-visible [class*="text-zinc-500"],
+.hh-highlight-target:focus-visible [class*="text-gray-400"],
+.hh-highlight-target:focus-visible [class*="text-gray-500"],
+.hh-highlight-target:focus-visible [class*="text-neutral-400"],
+.hh-highlight-target:focus-visible [class*="text-neutral-500"],
+.hh-highlight-target:focus-visible [class*="text-slate-400"],
+.hh-highlight-target:focus-visible [class*="text-slate-500"],
+.hh-highlight-target[data-hh-focused] .hh-subtitle,
+.hh-highlight-target[data-hh-focused] .hh-meta,
+.hh-highlight-target[data-hh-focused] .hh-subtext,
+.hh-highlight-target[data-hh-focused] .hh-caption,
+.hh-highlight-target[data-hh-focused] .text-muted,
+.hh-highlight-target[data-hh-focused] .text-muted-foreground,
+.hh-highlight-target[data-hh-focused] [class*="text-zinc-400"],
+.hh-highlight-target[data-hh-focused] [class*="text-zinc-500"],
+.hh-highlight-target[data-hh-focused] [class*="text-gray-400"],
+.hh-highlight-target[data-hh-focused] [class*="text-gray-500"],
+.hh-highlight-target[data-selected="true"] .hh-subtitle,
+.hh-highlight-target[data-selected="true"] .hh-meta,
+.hh-highlight-target[data-selected="true"] .hh-subtext,
+.hh-highlight-target[data-selected="true"] .hh-caption,
+.hh-highlight-target[data-selected="true"] .text-muted,
+.hh-highlight-target[data-selected="true"] .text-muted-foreground,
+.hh-highlight-target[data-selected="true"] [class*="text-zinc-400"],
+.hh-highlight-target[data-selected="true"] [class*="text-zinc-500"],
+.hh-highlight-target[data-selected="true"] [class*="text-gray-400"],
+.hh-highlight-target[data-selected="true"] [class*="text-gray-500"],
+.hh-highlight-target[data-active="true"] .hh-subtitle,
+.hh-highlight-target[data-active="true"] .hh-meta,
+.hh-highlight-target[data-active="true"] .hh-subtext,
+.hh-highlight-target[data-active="true"] .hh-caption,
+.hh-highlight-target[data-active="true"] .text-muted,
+.hh-highlight-target[data-active="true"] .text-muted-foreground,
+.hh-highlight-target[data-active="true"] [class*="text-zinc-400"],
+.hh-highlight-target[data-active="true"] [class*="text-zinc-500"],
+.hh-highlight-target[data-active="true"] [class*="text-gray-400"],
+.hh-highlight-target[data-active="true"] [class*="text-gray-500"],
+.hh-highlight-target.is-active .hh-subtitle,
+.hh-highlight-target.is-active .hh-meta,
+.hh-highlight-target.is-active .hh-subtext,
+.hh-highlight-target.is-active .hh-caption,
+.hh-highlight-target.active .hh-subtitle,
+.hh-highlight-target.active .hh-meta,
+.hh-highlight-target.active .hh-subtext,
+.hh-highlight-target.active .hh-caption,
+.hh-highlight-target-active .hh-subtitle,
+.hh-highlight-target-active .hh-meta,
+.hh-highlight-target-active .hh-subtext,
+.hh-highlight-target-active .hh-caption {
+    color: rgba(255, 255, 255, 0.88) !important;
 }
 
 /* ==========================================================================

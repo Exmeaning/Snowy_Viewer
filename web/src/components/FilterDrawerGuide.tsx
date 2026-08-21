@@ -83,7 +83,7 @@ export default function FilterDrawerGuide() {
                     exit="exit"
                     role="status"
                     aria-live="polite"
-                    className="fixed left-3 sm:left-6 md:left-[calc(var(--hh-rail-w)+1rem)] top-48 z-[57] max-w-xs sm:max-w-sm p-3.5 rounded-[var(--hh-radius-lg)] bg-[var(--hh-surface-2)] border border-[var(--hh-accent)] shadow-[var(--hh-shadow-float)] flex flex-col gap-2.5"
+                    className="fixed left-3 sm:left-6 md:left-[calc(var(--hh-rail-w)+1rem)] top-48 z-[68] max-w-xs sm:max-w-sm p-3.5 rounded-[var(--hh-radius-lg)] bg-[var(--hh-surface-2)] border border-[var(--hh-accent)] shadow-[var(--hh-shadow-float)] flex flex-col gap-2.5"
                 >
                     <div className="flex items-start gap-2.5">
                         <div className="w-7 h-7 rounded-[var(--hh-radius-md)] bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] flex items-center justify-center shrink-0 mt-0.5">

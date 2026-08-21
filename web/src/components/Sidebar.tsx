@@ -775,7 +775,7 @@ export default function Sidebar({
                 cheap on phones. */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 hh-scrim z-[55] md:hidden"
+                    className="fixed inset-0 hh-scrim z-[85] md:hidden"
                     onClick={handleScrimClick}
                 />
             )}
@@ -783,7 +783,7 @@ export default function Sidebar({
             {/* Software rail — flat opaque chrome flush to the left edge.
                 Width is controlled by --hh-rail-w (17rem on phones, 18rem on sm+). */}
             <aside
-                className={`fixed left-0 bottom-0 ${railTopClass} z-[60] w-[var(--hh-rail-w)] flex flex-col overflow-hidden bg-[var(--hh-surface-1)] border-r border-[var(--hh-border)] ${hasMounted ? "transition-transform duration-[var(--hh-dur-panel)] ease-[var(--hh-ease-out)]" : ""} ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+                className={`fixed left-0 bottom-0 ${railTopClass} z-[90] w-[var(--hh-rail-w)] flex flex-col overflow-hidden bg-[var(--hh-surface-1)] border-r border-[var(--hh-border)] ${hasMounted ? "transition-transform duration-[var(--hh-dur-panel)] ease-[var(--hh-ease-out)]" : ""} ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
             >
                 {/* Rail title */}
                 <div className="h-10 shrink-0 flex items-center justify-between px-3 border-b border-[var(--hh-border)]">

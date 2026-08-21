@@ -71,12 +71,12 @@ interface TokenEntry {
  * next to each other is the only way to see that the steps are even.
  */
 const SURFACE_TOKENS: readonly TokenEntry[] = [
-    { name: "--hh-surface-0", value: "ground", note: "The room. Page background, always darker than the tiles on it." },
-    { name: "--hh-surface-1", value: "panel", note: "Structural chrome: top bar, side rail, sheet, section header strip." },
-    { name: "--hh-surface-2", value: "tile", note: "The default object. Cards, buttons, inputs, floating layers." },
-    { name: "--hh-surface-3", value: "raised", note: "Hover / selected state of a tile. One step brighter than rest." },
-    { name: "--hh-surface-sunken", value: "well", note: "Cut into the page: list wells, segmented troughs, empty states." },
-    { name: "--hh-surface-inset", value: "channel", note: "Deepest rung. Meter tracks and input troughs." },
+    { name: "--hh-surface-base", value: "canvas / ground", note: "The room ground. Single base level, always darker than the cards on it." },
+    { name: "--hh-surface-1", value: "panel / chassis", note: "Outer shell, drawer frame, navigation rail, and container backplates." },
+    { name: "--hh-surface-2", value: "tile / card", note: "Default floating item. Cards, modals, dialogs, buttons, inputs." },
+    { name: "--hh-surface-3", value: "raised / hover", note: "Elevated popovers, active hover layer, and selected item surface." },
+    { name: "--hh-surface-sunken", value: "well / trough", note: "Recessed wells, search troughs, chip wells, and empty states." },
+    { name: "--hh-surface-inset", value: "deep channel", note: "Deepest level. Slider tracks, meter wells, input insets." },
 ];
 
 const BORDER_TOKENS: readonly TokenEntry[] = [
@@ -132,12 +132,13 @@ const SHADOW_TOKENS: readonly TokenEntry[] = [
 const MOTION_TOKENS: readonly TokenEntry[] = [
     { name: "--hh-dur-press", value: "90ms", note: "Press acknowledgment. Must beat conscious perception." },
     { name: "--hh-dur-fast", value: "160ms", note: "Hover, tint, small state changes." },
-    { name: "--hh-dur-cursor", value: "220ms", note: "Cursor travel. The only motion allowed to overshoot." },
+    { name: "--hh-dur-cursor", value: "220ms", note: "Cursor travel and interactive overshoot." },
     { name: "--hh-dur-screen", value: "240ms", note: "Route and screen changes. Damped." },
     { name: "--hh-dur-panel", value: "300ms", note: "Sheets and large panels. Damped. Nothing in the system is slower." },
-    { name: "--hh-ease-cursor", value: "cubic-bezier(.18,1.32,.38,1)", note: "Overshoots. Cursor only." },
+    { name: "--hh-ease-spring", value: "cubic-bezier(.34,1.56,.64,1)", note: "Snappy spring response with micro overshoot." },
+    { name: "--hh-ease-cursor", value: "cubic-bezier(.34,1.56,.64,1)", note: "Cursor travel and interactive springs." },
     { name: "--hh-ease-out", value: "cubic-bezier(.22,1,.36,1)", note: "The structural default. Arrives, never wobbles." },
-    { name: "--hh-ease-snap", value: "cubic-bezier(.3,.9,.25,1)", note: "Press transforms." },
+    { name: "--hh-ease-snap", value: "cubic-bezier(.34,1.56,.64,1)", note: "Press & snap transforms." },
     { name: "--hh-press-scale", value: "0.965", note: "How far a pressed control sinks." },
     { name: "--hh-select-scale", value: "1.045", note: "How far the tile under the cursor lifts." },
 ];

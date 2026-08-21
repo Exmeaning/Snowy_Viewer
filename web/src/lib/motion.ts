@@ -26,7 +26,7 @@
  * 500ms ease feels more sluggish than no animation at all. Short and shaped
  * beats long and smooth.
  *
- * The legacy Apple-era exports (springSnappy, springSoft, springSheet,
+ * The legacy motion exports (springSnappy, springSoft, springSheet,
  * springMomentum, getMotionTransition, projectMomentum, rubberband) are kept
  * with identical names and signatures — 16 modules import them — but their
  * values are retuned to this ladder, so every existing call site inherits the
@@ -36,9 +36,9 @@
 import type { Transition, Variants } from "framer-motion";
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Durations — single source of truth, mirrored by the CSS --hh-dur-* tokens
-   in app/handheld-os.css. Keep the two in sync; CSS owns pure-CSS
-   transitions, this owns spring/variant motion.
+   Durations & Curves — single source of truth, mirrored by the CSS
+   --hh-dur-* and --hh-ease-* tokens in app/handheld-os.css.
+   Keep the two in sync; CSS owns pure-CSS transitions, this owns spring/variant motion.
    ────────────────────────────────────────────────────────────────────────── */
 
 export const HH_DURATION = {
@@ -48,6 +48,18 @@ export const HH_DURATION = {
   screen: 0.24,
   panel: 0.3,
 } as const;
+
+/** Fast spring ease with slight overshoot: cubic-bezier(0.34, 1.56, 0.64, 1) */
+export const HH_EASE_SPRING = [0.34, 1.56, 0.64, 1] as const;
+
+/** Standard critically-damped ease-out: cubic-bezier(0.22, 1, 0.36, 1) */
+export const HH_EASE_OUT = [0.22, 1, 0.36, 1] as const;
+
+/** Standard press scale */
+export const HH_PRESS_SCALE = 0.965;
+
+/** Standard select scale */
+export const HH_SELECT_SCALE = 1.045;
 
 /** Per-item delay in a staggered grid cascade (seconds). */
 export const HH_STAGGER_STEP = 0.034;
@@ -79,6 +91,14 @@ export const hhSpringSelect: Transition = {
   type: "spring",
   bounce: 0.22,
   duration: HH_DURATION.cursor,
+};
+
+/** Fast spring hover with slight overshoot, matching cubic-bezier(0.34, 1.56, 0.64, 1). */
+export const hhSpringHover: Transition = {
+  type: "spring",
+  stiffness: 450,
+  damping: 24,
+  mass: 0.8,
 };
 
 /** Press acknowledgment. Fast enough to feel mechanical rather than animated. */
@@ -223,11 +243,11 @@ export const hhStaggerItem: Variants = {
    Interaction gestures — hand straight to whileHover / whileTap
    ────────────────────────────────────────────────────────────────────────── */
 
-/** Tile hover: lift and brighten. */
-export const hhHoverLift = { y: -2, scale: 1.012, transition: hhSpringPress } as const;
+/** Tile hover: lift and brighten with spring response. */
+export const hhHoverLift = { y: -2, scale: 1.012, transition: hhSpringHover } as const;
 
-/** Press: dip. */
-export const hhTapPress = { scale: 0.965, transition: hhSpringPress } as const;
+/** Press: dip with crisp scale(0.965). */
+export const hhTapPress = { scale: HH_PRESS_SCALE, transition: hhSpringPress } as const;
 
 /** Confirm: the launch gesture — dip hard, then overshoot back. */
 export const hhTapConfirm = { scale: 0.94, transition: hhSpringPress } as const;
@@ -244,6 +264,7 @@ export type MotionPresetName =
   | "cursor"
   | "select"
   | "press"
+  | "hover"
   | "panel"
   | "screen";
 
@@ -255,6 +276,7 @@ const PRESETS: Record<MotionPresetName, Transition> = {
   cursor: hhSpringCursor,
   select: hhSpringSelect,
   press: hhSpringPress,
+  hover: hhSpringHover,
   panel: hhSpringPanel,
   screen: hhTweenScreen,
 };

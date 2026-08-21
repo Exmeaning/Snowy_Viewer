@@ -25,6 +25,7 @@ import {
     normalizeBackgroundAnimationBudget,
     type BackgroundAnimationBudget,
 } from "@/lib/backgroundAnimation";
+import { applyThemeCursors } from "@/lib/themeCursor";
 import {
     DEFAULT_HANDHELD_SOUND_ENABLED,
     HANDHELD_SOUND_STORAGE_KEY,
@@ -322,9 +323,13 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         }
 
         document.documentElement.style.setProperty("--color-miku", themeColor);
+        document.documentElement.style.setProperty("--theme-color", themeColor);
         // Also update the dark variant (darken by ~15%)
         const darkColor = darkenColor(themeColor, 15);
         document.documentElement.style.setProperty("--color-miku-dark", darkColor);
+
+        // Dynamically update console-os custom cursors with theme accent
+        applyThemeCursors(themeColor);
 
         // Update light variant for background (mix with 95% white)
         const lightColor = mixWithWhite(themeColor, 95);

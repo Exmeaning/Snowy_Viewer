@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 0.0.0.0",
     "build": "npm run sitemap && npm run generate:metadata && next build",
     "build:next": "next build",
     "sitemap": "node scripts/generate-sitemaps.mjs",
