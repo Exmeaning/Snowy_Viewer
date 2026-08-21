@@ -118,7 +118,7 @@ export function useSvgPreviewActions({
             <button
                 onClick={handleCopy}
                 disabled={isCopying || isSaving}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                className="hh-press hh-focusable p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
                 aria-label={t("common.imageActions.copyImage")}
                 title={isCopying ? t("common.imageActions.copying") : copySuccess ? t("common.imageActions.copySuccess") : t("common.imageActions.copyImage")}
             >
@@ -153,7 +153,7 @@ export function useSvgPreviewActions({
             <button
                 onClick={handleSave}
                 disabled={isSaving || isCopying}
-                className="p-1.5 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                className="hh-press hh-focusable p-1.5 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
                 aria-label={t("common.imageActions.saveImage")}
                 title={isSaving ? t("common.imageActions.saving") : saveSuccess ? t("common.imageActions.saveSuccess") : t("common.imageActions.saveImage")}
             >

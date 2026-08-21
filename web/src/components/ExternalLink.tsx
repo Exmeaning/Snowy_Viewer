@@ -3,6 +3,7 @@
 
 import React from 'react';
 import Link from "@/components/LocalizedLink";
+import { playHandheldSound } from "@/lib/handheld-sound";
 
 interface ExternalLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
     href: string;
@@ -60,6 +61,7 @@ const ExternalLink: React.FC<ExternalLinkProps> = ({
     };
 
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        playHandheldSound("confirm");
         if (onClick) onClick(e);
         if (e.defaultPrevented) return;
 

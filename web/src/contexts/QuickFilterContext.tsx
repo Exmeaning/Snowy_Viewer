@@ -1,6 +1,75 @@
 "use client";
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, useSyncExternalStore } from "react";
 import { useI18n } from "./I18nContext";
+import { useIsXlScreen } from "@/hooks/useMediaQuery";
+import { playHandheldSound } from "@/lib/handheld-sound";
+
+// ============================================================================
+// Storage & Store
+// ============================================================================
+
+/**
+ * The user's explicit drawer preference, remembered for the browser session.
+ *
+ * sessionStorage rather than localStorage, matching `sidebar_open` in
+ * MainLayout: a collapsed filter drawer is a transient working posture ("I am
+ * scrolling the grid right now"), not a durable setting.
+ */
+const FILTER_DRAWER_STORAGE_KEY = "filter_drawer_open";
+const FILTER_DRAWER_EVENT = "moesekai_filter_drawer_change";
+
+export const FILTER_DRAWER_HINT_STORAGE_KEY = "moesekai_filter_drawer_hint_seen";
+
+type UserPreference = boolean | null;
+
+let memoryPreference: UserPreference = null;
+let hasInitializedMemory = false;
+
+function readSessionPreference(): UserPreference {
+    if (typeof window === "undefined") return null;
+    if (!hasInitializedMemory) {
+        hasInitializedMemory = true;
+        try {
+            const saved = sessionStorage.getItem(FILTER_DRAWER_STORAGE_KEY);
+            memoryPreference = saved === null ? null : saved === "true";
+        } catch {
+            memoryPreference = null;
+        }
+    }
+    return memoryPreference;
+}
+
+const listeners = new Set<() => void>();
+
+function subscribePreference(callback: () => void) {
+    listeners.add(callback);
+    const handleStorage = (e: StorageEvent) => {
+        if (e.key === FILTER_DRAWER_STORAGE_KEY) {
+            memoryPreference = e.newValue === null ? null : e.newValue === "true";
+            callback();
+        }
+    };
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener(FILTER_DRAWER_EVENT, callback);
+    return () => {
+        listeners.delete(callback);
+        window.removeEventListener("storage", handleStorage);
+        window.removeEventListener(FILTER_DRAWER_EVENT, callback);
+    };
+}
+
+function writeSessionPreference(next: boolean) {
+    memoryPreference = next;
+    try {
+        sessionStorage.setItem(FILTER_DRAWER_STORAGE_KEY, String(next));
+    } catch {
+        // Storage quota or Safari private-mode errors ignored.
+    }
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(FILTER_DRAWER_EVENT));
+    }
+    listeners.forEach(cb => cb());
+}
 
 // ============================================================================
 // Types
@@ -11,19 +80,24 @@ interface QuickFilterContextValue {
     filterContent: React.ReactNode | null;
     /** Whether filter content has been registered by the active page. */
     hasFilters: boolean;
-    /** Title for the quick filter modal. */
+    /** Title for the filter drawer. */
     filterTitle: string;
     /** Register filter content from a page. */
     registerFilters: (title: string, content: React.ReactNode) => void;
     /** Unregister filter content (usually on unmount). */
     unregisterFilters: () => void;
-    /** Whether the quick filter modal is open. */
+    /** Whether the filter drawer is currently expanded. */
     isOpen: boolean;
-    /** Open the quick filter modal. */
+    /**
+     * Whether the drawer is wide enough to sit beside the content instead of
+     * floating over it. True at `>= 1280px (xl)`.
+     */
+    isDocked: boolean;
+    /** Expand the drawer. */
     open: () => void;
-    /** Close the quick filter modal. */
+    /** Collapse the drawer. */
     close: () => void;
-    /** Toggle the quick filter modal. */
+    /** Toggle the drawer, playing the matching cue for the resulting state. */
     toggle: () => void;
 }
 
@@ -42,7 +116,21 @@ export function QuickFilterProvider({ children }: { children: React.ReactNode })
     const defaultFilterTitle = t("common.filter.title");
     const [filterContent, setFilterContent] = useState<React.ReactNode | null>(null);
     const [filterTitle, setFilterTitle] = useState(defaultFilterTitle);
-    const [isOpen, setIsOpen] = useState(false);
+
+    // Docking state from the SSR-safe media query hook.
+    const isDocked = useIsXlScreen();
+
+    // User preference subscribed via useSyncExternalStore (SSR safe, avoids
+    // setState cascades in effects).
+    const userPreference = useSyncExternalStore(
+        subscribePreference,
+        readSessionPreference,
+        () => null
+    );
+
+    // When the user has not expressed an explicit preference in this session,
+    // auto-open on wide screens ("isDocked"). Explicit preference always wins.
+    const isOpen = userPreference !== null ? userPreference : isDocked;
 
     const registerFilters = useCallback((title: string, content: React.ReactNode) => {
         setFilterTitle(title);
@@ -52,26 +140,49 @@ export function QuickFilterProvider({ children }: { children: React.ReactNode })
     const unregisterFilters = useCallback(() => {
         setFilterContent(null);
         setFilterTitle(defaultFilterTitle);
-        setIsOpen(false);
     }, [defaultFilterTitle]);
 
-    const open = useCallback(() => setIsOpen(true), []);
-    const close = useCallback(() => setIsOpen(false), []);
-    const toggle = useCallback(() => setIsOpen(prev => !prev), []);
+    const open = useCallback(() => {
+        playHandheldSound("toggle");
+        writeSessionPreference(true);
+    }, []);
+
+    const close = useCallback(() => {
+        playHandheldSound("back");
+        writeSessionPreference(false);
+    }, []);
+
+    const toggle = useCallback(() => {
+        const next = !isOpen;
+        playHandheldSound(next ? "toggle" : "back");
+        writeSessionPreference(next);
+    }, [isOpen]);
 
     const hasFilters = filterContent !== null;
 
-    const value: QuickFilterContextValue = {
+    const value = useMemo<QuickFilterContextValue>(() => ({
         filterContent,
         hasFilters,
         filterTitle,
         registerFilters,
         unregisterFilters,
         isOpen,
+        isDocked,
         open,
         close,
         toggle,
-    };
+    }), [
+        filterContent,
+        hasFilters,
+        filterTitle,
+        registerFilters,
+        unregisterFilters,
+        isOpen,
+        isDocked,
+        open,
+        close,
+        toggle,
+    ]);
 
     return (
         <QuickFilterContext.Provider value={value}>
@@ -84,9 +195,6 @@ export function QuickFilterProvider({ children }: { children: React.ReactNode })
 // Hook
 // ============================================================================
 
-/**
- * Access the QuickFilter context (for the button/modal components and filter rails).
- */
 export function useQuickFilterContext() {
     const ctx = useContext(QuickFilterContext);
     if (!ctx) {
@@ -95,30 +203,18 @@ export function useQuickFilterContext() {
     return ctx;
 }
 
-/**
- * Register filter content from a page component.
- * Content is registered unconditionally regardless of viewport size, allowing
- * consumers (mobile drawer QuickFilterButton, tablet Sidebar tabs, desktop FilterRail)
- * to control visibility purely via CSS breakpoints without SSR hydration mismatches.
- *
- * Automatically unregisters on unmount.
- *
- * @param title  Modal / rail title
- * @param content  The filter JSX to show in the quick filter modal / rail
- * @param deps  Dependency array — content is re-registered when deps change
- */
 export function useQuickFilter(title: string, content: React.ReactNode, deps: React.DependencyList = []) {
     const ctx = useContext(QuickFilterContext);
     const registerFilters = ctx?.registerFilters;
     const unregisterFilters = ctx?.unregisterFilters;
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (!registerFilters || !unregisterFilters) return;
         registerFilters(title, content);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [registerFilters, unregisterFilters, title, ...deps]);
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (!unregisterFilters) return;
         return () => {
             unregisterFilters();

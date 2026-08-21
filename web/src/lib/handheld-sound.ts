@@ -101,7 +101,20 @@ let masterGainNode: GainNode | null = null;
  */
 let cachedEnabled: boolean | null = null;
 
+/** Per-sound timestamp tracker for same-recipe burst suppression. */
 const lastPlayedAtMs = new Map<HandheldSoundName, number>();
+
+/** Global timestamp tracker of the most recent sound playback of any type. */
+let lastAnySoundTimeMs = 0;
+
+/**
+ * Returns the timestamp (performance.now or Date.now) when ANY handheld sound
+ * was last triggered. Used by the global interaction feedback listener to
+ * deduplicate clicks on elements with explicit playHandheldSound calls.
+ */
+export function getLastSoundPlayedAtMs(): number {
+    return lastAnySoundTimeMs;
+}
 
 function getAudioContextConstructor(): AudioContextConstructor | null {
     if (typeof window === "undefined") return null;
@@ -253,6 +266,7 @@ export function playHandheldSound(name: HandheldSoundName): void {
         const previousMs = lastPlayedAtMs.get(name);
         if (previousMs !== undefined && nowMs - previousMs < REPEAT_SUPPRESSION_MS) return;
         lastPlayedAtMs.set(name, nowMs);
+        lastAnySoundTimeMs = nowMs;
 
         const context = ensureAudioContext();
         const destination = masterGainNode;

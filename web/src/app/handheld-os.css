@@ -209,8 +209,8 @@
 
     /* ── Layout geometry ──────────────────────────────────────────────────
        Console structural dimensions. Kept as variables so the status bar,
-       navigation rail, filter sub-rail, and page offsets stay in sync across
-       Sidebar, MainLayout, MainNavbar, and FilterRail without magic numbers. */
+       navigation rail, filter drawer, and page offsets stay in sync across
+       Sidebar, MainLayout, MainNavbar, and FilterDrawer without magic numbers. */
     --hh-topbar-h: 3.25rem;
     --hh-topbar-sub-h: calc(2rem + 1px);
     --hh-rail-w: 17rem;

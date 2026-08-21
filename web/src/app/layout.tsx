@@ -9,6 +9,7 @@ import { TranslationProvider } from "@/contexts/TranslationContext";
 import { QuickFilterProvider } from "@/contexts/QuickFilterContext";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import InteractionFeedbackRegistrar from "@/components/InteractionFeedbackRegistrar";
 import MotionProvider from "@/components/MotionProvider";
 import {
   COLOR_SCHEME_STORAGE_KEY,
@@ -220,6 +221,7 @@ export default async function RootLayout({
         </ThemeProvider>
         <GoogleTagBootstrap />
         <ServiceWorkerRegistrar />
+        <InteractionFeedbackRegistrar />
       </body>
     </html>
   );

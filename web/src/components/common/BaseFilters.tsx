@@ -103,7 +103,7 @@ export function getFilterToggleStateClasses(selected: boolean): string {
  * Visual & Structural Principles:
  * 1. Flat & Unembellished: Completely stripped of glassmorphism (no blur, no gradients,
  *    no dashed borders, no thick 24px/32px radii). Radii are tightened to --hh-radius-md (8px).
- * 2. Unambiguous Hierarchy: The outer rail (`FilterRail.tsx`) or modal title owns the main
+ * 2. Unambiguous Hierarchy: The outer drawer (`FilterDrawer.tsx`) owns the main
  *    structural section header. BaseFilters does not duplicate a large "Filters" header bar;
  *    instead it renders a lightweight status strip with filtered count and fast reset.
  * 3. Exact Hook & Keyboard Accessibility: Maintains `data-shortcut-filters` on root and

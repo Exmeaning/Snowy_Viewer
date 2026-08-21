@@ -4,10 +4,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import MainNavbar from "./MainNavbar";
 import Sidebar from "./Sidebar";
-import FilterRail from "./FilterRail";
+import FilterDrawer from "./FilterDrawer";
+import FilterTabHandle from "./FilterTabHandle";
+import FilterDrawerGuide from "./FilterDrawerGuide";
 import MainFooter from "./MainFooter";
 import ScrollToTop from "./ScrollToTop";
-import QuickFilterButton from "./QuickFilterButton";
 import SekaiLoader from "./SekaiLoader";
 import BackgroundPattern from "./BackgroundPattern";
 import KeyboardShortcutsHelp from "./KeyboardShortcutsHelp";
@@ -238,12 +239,13 @@ export default function MainLayout({
         };
     }, [immersiveMode, isScreenshotMode]);
 
-    const { hasFilters } = useQuickFilterContext();
+    const { hasFilters, isOpen: isFilterDrawerOpen } = useQuickFilterContext();
     const effectiveSidebarOpen = isScreenshotMode || immersiveMode ? false : isSidebarOpen;
+    const isDockedFilterActive = Boolean(hasFilters && isFilterDrawerOpen);
 
     const layoutOffsetClass = effectiveSidebarOpen
-        ? (hasFilters ? 'md:ml-[var(--hh-rail-w)] xl:ml-[var(--hh-dual-rail-w)]' : 'md:ml-[var(--hh-rail-w)]')
-        : 'md:ml-0';
+        ? (isDockedFilterActive ? 'md:ml-[var(--hh-rail-w)] xl:ml-[var(--hh-dual-rail-w)]' : 'md:ml-[var(--hh-rail-w)]')
+        : (isDockedFilterActive ? 'md:ml-0 xl:ml-[var(--hh-filter-rail-w)]' : 'md:ml-0');
 
     const handleMenuToggle = useCallback(() => {
         if (isScreenshotMode || immersiveMode) return;
@@ -363,21 +365,30 @@ export default function MainLayout({
                 <MainNavbar
                     onMenuToggle={handleMenuToggle}
                     isSearchOpen={isSearchOpen}
-                    onSearchToggle={() => setIsSearchOpen(prev => !prev)}
+                    onSearchToggle={() => {
+                        playHandheldSound("toggle");
+                        setIsSearchOpen(prev => !prev);
+                    }}
                     onSearchClose={handleSearchClose}
                     onSearchNavigate={handleSearchNavigate}
                     isSettingsOpen={isSettingsOpen}
-                    onSettingsToggle={() => setIsSettingsOpen(prev => !prev)}
+                    onSettingsToggle={() => {
+                        playHandheldSound("toggle");
+                        setIsSettingsOpen(prev => !prev);
+                    }}
                     onSettingsClose={() => setIsSettingsOpen(false)}
-                    onShortcutsHelpToggle={() => setIsShortcutsHelpOpen(prev => !prev)}
+                    onShortcutsHelpToggle={() => {
+                        playHandheldSound("toggle");
+                        setIsShortcutsHelpOpen(prev => !prev);
+                    }}
                 />
             )}
 
-            {/* Layout with Sidebar & FilterRail */}
+            {/* Layout with Sidebar & FilterDrawer */}
             {/* Content clears the console status bar via --hh-topbar-h and --hh-topbar-sub-h.
-                Sidebar.tsx and FilterRail.tsx offset against the same CSS variables. */}
+                Sidebar.tsx and FilterDrawer.tsx offset against the same CSS variables. */}
             <div className={`flex flex-grow relative ${immersiveMode ? "" : isHome ? "pt-[var(--hh-topbar-h)]" : "pt-[calc(var(--hh-topbar-h)+var(--hh-topbar-sub-h))]"}`}>
-                {/* Sidebar & Filter Rail */}
+                {/* Sidebar & Filter Drawer */}
                 {!immersiveMode && (
                     <>
                         <Sidebar
@@ -386,7 +397,8 @@ export default function MainLayout({
                             hasMounted={hasMounted}
                             disableKeyboardNavigation={isShortcutScopeLocked}
                         />
-                        <FilterRail isOpen={effectiveSidebarOpen} />
+                        <FilterDrawer isRailOpen={effectiveSidebarOpen} />
+                        <FilterTabHandle isRailOpen={effectiveSidebarOpen} />
                     </>
                 )}
 
@@ -431,8 +443,8 @@ export default function MainLayout({
                     {/* Scroll To Top */}
                     <ScrollToTop />
 
-                    {/* Quick Filter floating button + modal */}
-                    <QuickFilterButton />
+                    {/* First-run filter drawer coach mark */}
+                    <FilterDrawerGuide />
 
                     {/* Keyboard Shortcuts Help */}
                     <KeyboardShortcutsHelp isOpen={isShortcutsHelpOpen} onClose={() => setIsShortcutsHelpOpen(false)} />

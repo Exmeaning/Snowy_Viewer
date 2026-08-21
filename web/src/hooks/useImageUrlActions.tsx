@@ -119,9 +119,35 @@ export function useImageUrlActions({
             <button
                 onClick={handleCopy}
                 disabled={isCopying || isSaving}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                className="hh-press hh-focusable p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
                 aria-label={t("common.imageActions.copyImage")}
                 title={isCopying ? t("common.imageActions.copying") : copySuccess ? t("common.imageActions.copySuccess") : t("common.imageActions.copyImage")}
+            >
+                <span className="relative block w-4 h-4">
+                    <svg
+                        className={`absolute inset-0 w-4 h-4 transition-all duration-200 ${isCopying || copySuccess ? "opacity-0 scale-75" : "opacity-100 scale-100"}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <svg
+                        className={`absolute inset-0 w-4 h-4 text-emerald-500 transition-all duration-200 ${copySuccess ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                </span>
+            </button>
+            <button
+                onClick={handleSave}
+                disabled={isSaving || isCopying}
+                className="hh-press hh-focusable p-1.5 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                aria-label={t("common.imageActions.downloadImage")}
+                title={isSaving ? t("common.imageActions.downloading") : saveSuccess ? t("common.imageActions.downloadSuccess") : t("common.imageActions.downloadImage")}
             >
                 <span className="relative block w-4 h-4">
                     <svg
