@@ -5,6 +5,7 @@ import Link from "@/components/LocalizedLink";
 import { useSearchParams } from "next/navigation";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import ExternalLink from "@/components/ExternalLink";
 import CardFilters from "@/components/cards/CardFilters";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -509,7 +510,7 @@ function MyCardsContent() {
     if (accounts.length === 0) {
         return (
             <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
-                <PageHeader />
+                <MyCardsHeader />
                 <QuickBindForm
                     onAccountAdded={() => {
                         setAccountsList(getAccounts());
@@ -526,7 +527,7 @@ function MyCardsContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            <PageHeader />
+            <MyCardsHeader />
 
             {/* Account Selector with Quick Add */}
             <AccountSelectorBar
@@ -679,20 +680,18 @@ function MyCardsContent() {
 
 // ==================== Sub Components ====================
 
-function PageHeader() {
+// Local wrapper so the two render branches (no-account and main view) keep
+// sharing one header definition instead of repeating the prop list.
+function MyCardsHeader() {
     const { t } = useI18n();
     return (
-        <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                <span className="hh-label text-miku">{t("page.myCards.badge")}</span>
-            </div>
-            <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
-                {t("page.myCards.title")}<span className="text-miku">{t("page.myCards.titleHighlight")}</span>
-            </h1>
-            <p className="hh-body text-[var(--hh-text-secondary)] mt-2 text-sm">
-                {t("page.myCards.description")}
-            </p>
-        </div>
+        <PageHeader
+            badge={t("page.myCards.badge")}
+            title={t("page.myCards.title")}
+            titleHighlight={t("page.myCards.titleHighlight")}
+            spaceBeforeHighlight={false}
+            description={t("page.myCards.description")}
+        />
     );
 }
 

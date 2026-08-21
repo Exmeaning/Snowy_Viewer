@@ -5,6 +5,7 @@ import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import CostumeFilters from "@/components/costumes/CostumeFilters";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "@/contexts/TranslationContext";
@@ -328,18 +329,12 @@ function CostumesContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Page Header */}
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                    <span className="hh-label text-miku">{tI18n("page.costumes.badge")}</span>
-                </div>
-                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
-                    {tI18n("page.costumes.title")} <span className="text-miku">{tI18n("page.costumes.titleHighlight")}</span>
-                </h1>
-                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
-                    {tI18n("page.costumes.description")}
-                </p>
-            </div>
+            <PageHeader
+                badge={tI18n("page.costumes.badge")}
+                title={tI18n("page.costumes.title")}
+                titleHighlight={tI18n("page.costumes.titleHighlight")}
+                description={tI18n("page.costumes.description")}
+            />
 
             {/* Error State */}
             {error && (

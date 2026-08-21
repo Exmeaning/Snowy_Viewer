@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import GachaGrid from "@/components/gacha/GachaGrid";
 import GachaFilters from "@/components/gacha/GachaFilters";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -267,18 +268,12 @@ function GachaContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Page Header */}
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                    <span className="hh-label text-miku">{t("page.gacha.badge")}</span>
-                </div>
-                <h1 className="hh-display text-3xl sm:text-4xl font-black text-primary-text">
-                    {t("page.gacha.title")} <span className="text-miku">{t("page.gacha.titleHighlight")}</span>
-                </h1>
-                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
-                    {t("page.gacha.description")}
-                </p>
-            </div>
+            <PageHeader
+                badge={t("page.gacha.badge")}
+                title={t("page.gacha.title")}
+                titleHighlight={t("page.gacha.titleHighlight")}
+                description={t("page.gacha.description")}
+            />
 
             {/* Error State */}
             {error && (

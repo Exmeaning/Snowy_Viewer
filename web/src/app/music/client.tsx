@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, useCallback, useDeferredValue, Suspense }
 import { useSearchParams } from "next/navigation";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import MusicFilters from "@/components/music/MusicFilters";
 import MusicItem from "@/components/music/MusicItem";
 import { MUSIC_GRID_CLASS } from "@/components/music/music-layout";
@@ -476,23 +477,20 @@ function MusicContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Page Header */}
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                    <span className="hh-label text-miku">
-                        {t("page.music.badge")}
-                    </span>
-                </div>
-                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
-                    {t("page.music.title")} <span className="text-miku">{t("page.music.titleHighlight")}</span>
-                </h1>
-                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
-                    {t("page.music.description")}
-                </p>
-                <p className="text-xs text-[var(--hh-text-tertiary)] mt-1">
-                    {t("page.music.aliasHint")}<a href="https://github.com/Team-Haruki" target="_blank" rel="noopener noreferrer" className="text-miku hover:underline">{t("page.music.aliasSource")}</a>{t("page.music.aliasDisclaimer")}
-                </p>
-            </div>
+            {/* The alias-source attribution cites where the searchable song
+                aliases come from, so it belongs to the header's description
+                rather than to the list below it. */}
+            <PageHeader
+                badge={t("page.music.badge")}
+                title={t("page.music.title")}
+                titleHighlight={t("page.music.titleHighlight")}
+                description={t("page.music.description")}
+                extra={
+                    <p className="text-xs text-[var(--hh-text-tertiary)]">
+                        {t("page.music.aliasHint")}<a href="https://github.com/Team-Haruki" target="_blank" rel="noopener noreferrer" className="text-miku hover:underline">{t("page.music.aliasSource")}</a>{t("page.music.aliasDisclaimer")}
+                    </p>
+                }
+            />
 
             {/* Error State */}
             {error && (

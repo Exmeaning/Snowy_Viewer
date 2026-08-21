@@ -5,6 +5,7 @@ import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import BaseFilters, { FilterSection } from "@/components/common/BaseFilters";
 import CharacterFilter from "@/components/common/CharacterFilter";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -381,18 +382,12 @@ function MysekaiContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Page Header */}
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                    <span className="hh-label text-miku">{t("page.mysekai.badge")}</span>
-                </div>
-                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
-                    {t("page.mysekai.title")} <span className="text-miku">{t("page.mysekai.titleHighlight")}</span>
-                </h1>
-                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
-                    {t("page.mysekai.description")}
-                </p>
-            </div>
+            <PageHeader
+                badge={t("page.mysekai.badge")}
+                title={t("page.mysekai.title")}
+                titleHighlight={t("page.mysekai.titleHighlight")}
+                description={t("page.mysekai.description")}
+            />
 
             {/* Error State */}
             {error && (

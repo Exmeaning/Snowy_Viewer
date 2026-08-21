@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import ExternalLink from "@/components/ExternalLink";
 import BaseFilters, { FilterSection, FilterToggle } from "@/components/common/BaseFilters";
 import {
@@ -368,7 +369,7 @@ function MyMaterialsContent() {
     if (accounts.length === 0) {
         return (
             <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
-                <PageHeader />
+                <MyMaterialsHeader />
                 <QuickBindForm
                     onAccountAdded={() => {
                         setAccountsList(getAccounts());
@@ -385,7 +386,7 @@ function MyMaterialsContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            <PageHeader />
+            <MyMaterialsHeader />
 
             <AccountSelectorBar
                 accounts={accounts}
@@ -528,20 +529,18 @@ function MyMaterialsContent() {
 
 // ==================== Sub Components ====================
 
-function PageHeader() {
+// Local wrapper so the two render branches (no-account and main view) keep
+// sharing one header definition instead of repeating the prop list.
+function MyMaterialsHeader() {
     const { t } = useI18n();
     return (
-        <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                <span className="hh-label text-[var(--hh-accent-deep)]">{t("page.myMaterials.badge")}</span>
-            </div>
-            <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">
-                {t("page.myMaterials.title")}<span className="text-[var(--hh-accent-deep)]">{t("page.myMaterials.titleHighlight")}</span>
-            </h1>
-            <p className="text-[var(--hh-text-secondary)] mt-2 text-sm">
-                {t("page.myMaterials.description")}
-            </p>
-        </div>
+        <PageHeader
+            badge={t("page.myMaterials.badge")}
+            title={t("page.myMaterials.title")}
+            titleHighlight={t("page.myMaterials.titleHighlight")}
+            spaceBeforeHighlight={false}
+            description={t("page.myMaterials.description")}
+        />
     );
 }
 

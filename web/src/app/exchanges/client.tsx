@@ -4,6 +4,7 @@ import Link from "@/components/LocalizedLink";
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import BaseFilters, { FilterButton, FilterSection } from "@/components/common/BaseFilters";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
@@ -35,21 +36,18 @@ import { getCharacterName } from "@/lib/i18n";
 import type { ExchangeStatus, FlattenedMaterialExchange } from "@/types/exchange";
 import type { ICardInfo } from "@/types/types";
 
-function PageHeader() {
+// Local wrapper so the loading and loaded branches keep sharing one header
+// definition instead of repeating the prop list.
+function ExchangesHeader() {
     const { t } = useI18n();
 
     return (
-        <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                <span className="hh-label text-miku">{t("page.exchanges.badge")}</span>
-            </div>
-            <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
-                {t("page.exchanges.title")} <span className="text-miku">{t("page.exchanges.titleHighlight")}</span>
-            </h1>
-            <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto text-sm sm:text-base">
-                {t("page.exchanges.description")}
-            </p>
-        </div>
+        <PageHeader
+            badge={t("page.exchanges.badge")}
+            title={t("page.exchanges.title")}
+            titleHighlight={t("page.exchanges.titleHighlight")}
+            description={t("page.exchanges.description")}
+        />
     );
 }
 
@@ -720,7 +718,7 @@ function ExchangesContent() {
     if (!coreData) {
         return (
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                <PageHeader />
+                <ExchangesHeader />
                 {error ? (
                     <div className="rounded-[var(--hh-radius-lg)] border border-red-500/30 bg-red-500/12 px-5 py-4 text-sm text-red-600">
                         <p className="font-bold">{t("common.state.loadingFailed")}</p>
@@ -736,7 +734,7 @@ function ExchangesContent() {
     return (
         <ExchangePageContext.Provider value={{ coreData, cardsMap }}>
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                <PageHeader />
+                <ExchangesHeader />
 
                 {error ? (
                     <div className="mb-6 rounded-[var(--hh-radius-lg)] border border-amber-500/30 bg-amber-500/12 px-5 py-4 text-sm text-amber-600">

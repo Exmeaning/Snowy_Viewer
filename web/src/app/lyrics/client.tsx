@@ -4,6 +4,7 @@ import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation";
 
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import MusicFilters from "@/components/music/MusicFilters";
 import MusicItem from "@/components/music/MusicItem";
 import { MUSIC_GRID_CLASS } from "@/components/music/music-layout";
@@ -250,15 +251,12 @@ function LyricsContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                    <span className="hh-label text-miku">{t("page.lyrics.badge")}</span>
-                </div>
-                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
-                    {t("page.lyrics.title")} <span className="text-miku">{t("page.lyrics.titleHighlight")}</span>
-                </h1>
-                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">{t("page.lyrics.description")}</p>
-            </div>
+            <PageHeader
+                badge={t("page.lyrics.badge")}
+                title={t("page.lyrics.title")}
+                titleHighlight={t("page.lyrics.titleHighlight")}
+                description={t("page.lyrics.description")}
+            />
 
             {error && (
                 <div role="alert" className="mb-6 p-4 bg-red-500/12 border border-red-500/30 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">

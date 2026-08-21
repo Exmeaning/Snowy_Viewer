@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import VirtualLiveGrid from "@/components/live/VirtualLiveGrid";
 import VirtualLiveFilters from "@/components/live/VirtualLiveFilters";
 import { IVirtualLiveInfo, VirtualLiveType } from "@/types/virtualLive";
@@ -218,18 +219,12 @@ function VirtualLiveContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Page Header */}
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                    <span className="hh-label text-miku">{t("page.live.badge")}</span>
-                </div>
-                <h1 className="hh-display text-3xl sm:text-4xl font-black text-primary-text">
-                    {t("page.live.title")} <span className="text-miku">{t("page.live.titleHighlight")}</span>
-                </h1>
-                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
-                    {t("page.live.description")}
-                </p>
-            </div>
+            <PageHeader
+                badge={t("page.live.badge")}
+                title={t("page.live.title")}
+                titleHighlight={t("page.live.titleHighlight")}
+                description={t("page.live.description")}
+            />
 
             {/* Error State */}
             {error && (

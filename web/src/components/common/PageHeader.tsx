@@ -8,6 +8,21 @@ export interface PageHeaderProps {
     title: string;
     /** Optional highlighted word or phrase appended to the title (accent colored). */
     titleHighlight?: string;
+    /**
+     * Whether to insert a space between `title` and `titleHighlight`.
+     *
+     * Most pages wrote `{title} <span>{highlight}</span>`, but the three
+     * personal-progress pages wrote them adjacent with no separator. Keeping
+     * that as a prop lets those pages migrate without their rendered title
+     * changing, rather than the component silently restyling them.
+     *
+     * NOTE: the no-space variant only reads correctly for CJK dictionaries,
+     * where the two halves form one word. Those same pages' en-US entries are
+     * separate Latin words and currently render glued together — a pre-existing
+     * defect this refactor preserves rather than hides. Fixing it is a content
+     * decision, not a layout one.
+     */
+    spaceBeforeHighlight?: boolean;
     /** Page description. ReactNode is supported for embedded links, buttons, or terms modals. */
     description?: React.ReactNode;
     /** Optional return / back link displayed above or alongside the header. */
@@ -34,6 +49,7 @@ export default function PageHeader({
     badge,
     title,
     titleHighlight,
+    spaceBeforeHighlight = true,
     description,
     backLink,
     extra,
@@ -80,7 +96,7 @@ export default function PageHeader({
                 {title}
                 {titleHighlight ? (
                     <>
-                        {" "}
+                        {spaceBeforeHighlight ? " " : null}
                         <span className="text-[var(--hh-accent-deep)] dark:text-[var(--hh-accent)]">
                             {titleHighlight}
                         </span>

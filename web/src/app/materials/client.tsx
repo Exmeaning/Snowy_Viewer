@@ -4,6 +4,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from "reac
 import Link from "@/components/LocalizedLink";
 import { useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import Modal from "@/components/common/Modal";
 import BaseFilters, {
     FilterButton,
@@ -245,24 +246,6 @@ function getMysekaiSiteLabel(siteId: number, siteMap: Map<number, IMysekaiSiteIn
     const labelKey = MYSEKAI_SITE_LABEL_KEYS[siteId];
     if (labelKey) return t(labelKey);
     return siteMap.get(siteId)?.name || t("common.mysekaiSites.areaFallback", { id: siteId });
-}
-
-function PageHeader() {
-    const { t } = useI18n();
-
-    return (
-        <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                <span className="hh-label text-[var(--hh-accent-deep)]">{t("page.materials.badge")}</span>
-            </div>
-            <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">
-                {t("page.materials.title")} <span className="text-[var(--hh-accent-deep)]">{t("page.materials.titleHighlight")}</span>
-            </h1>
-            <p className="text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto text-sm">
-                {t("page.materials.description")}
-            </p>
-        </div>
-    );
 }
 
 function EmptyState({ title, description }: { title: string; description?: string }) {
@@ -1237,7 +1220,12 @@ function MaterialsContent() {
                 onClose={() => setSelectedDetail(null)}
             />
 
-            <PageHeader />
+            <PageHeader
+                badge={t("page.materials.badge")}
+                title={t("page.materials.title")}
+                titleHighlight={t("page.materials.titleHighlight")}
+                description={t("page.materials.description")}
+            />
 
             <div className="mb-4 flex items-center gap-2 flex-wrap">
                 <div className="hh-segment max-w-xs" role="tablist">

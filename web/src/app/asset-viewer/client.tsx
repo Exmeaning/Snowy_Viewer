@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from "react";
 
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import BaseFilters, { FilterSection, FilterButton } from "@/components/common/BaseFilters";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
@@ -903,25 +904,25 @@ function AssetViewerContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Page Header */}
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                    <span className="hh-label text-[var(--hh-accent-deep)]">{t("page.assetViewer.badge")}</span>
-                </div>
-                <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">
-                    {t("page.assetViewer.title")} <span className="text-[var(--hh-accent-deep)]">{t("page.assetViewer.titleHighlight")}</span>
-                </h1>
-                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto text-sm sm:text-base">
-                    {t("page.assetViewer.descriptionPrefix")}
-                    <button
-                        onClick={() => setShowTos(true)}
-                        className="hh-focusable text-[var(--hh-accent-deep)] hover:underline font-medium mx-1"
-                    >
-                        {t("page.assetViewer.descriptionLink")}
-                    </button>
-                    {t("page.assetViewer.descriptionSuffix")}
-                </p>
-            </div>
+            {/* The ToS trigger is embedded mid-sentence in the description, which
+                is why `description` takes a ReactNode instead of a string. */}
+            <PageHeader
+                badge={t("page.assetViewer.badge")}
+                title={t("page.assetViewer.title")}
+                titleHighlight={t("page.assetViewer.titleHighlight")}
+                description={
+                    <>
+                        {t("page.assetViewer.descriptionPrefix")}
+                        <button
+                            onClick={() => setShowTos(true)}
+                            className="hh-focusable text-[var(--hh-accent-deep)] hover:underline font-medium mx-1"
+                        >
+                            {t("page.assetViewer.descriptionLink")}
+                        </button>
+                        {t("page.assetViewer.descriptionSuffix")}
+                    </>
+                }
+            />
 
             <div className="w-full min-w-0">
                 {/* Breadcrumbs Navigation & Actions */}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import BaseFilters, { FilterSection, FilterButton } from "@/components/common/BaseFilters";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -584,25 +585,25 @@ function AssetVersionsContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Page Header */}
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                    <span className="hh-label text-[var(--hh-accent-deep)]">{t("page.assetVersions.badge")}</span>
-                </div>
-                <h1 className="hh-display text-3xl sm:text-4xl text-[var(--hh-text-primary)]">
-                    {t("page.assetVersions.title")} <span className="text-[var(--hh-accent-deep)]">{t("page.assetVersions.titleHighlight")}</span>
-                </h1>
-                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto text-sm sm:text-base">
-                    {t("page.assetVersions.descriptionPrefix")}
-                    <button
-                        onClick={() => setShowTos(true)}
-                        className="hh-focusable text-[var(--hh-accent-deep)] hover:underline font-medium mx-1"
-                    >
-                        {t("page.assetVersions.descriptionLink")}
-                    </button>
-                    {t("page.assetVersions.descriptionSuffix")}
-                </p>
-            </div>
+            {/* The ToS trigger is embedded mid-sentence in the description, which
+                is why `description` takes a ReactNode instead of a string. */}
+            <PageHeader
+                badge={t("page.assetVersions.badge")}
+                title={t("page.assetVersions.title")}
+                titleHighlight={t("page.assetVersions.titleHighlight")}
+                description={
+                    <>
+                        {t("page.assetVersions.descriptionPrefix")}
+                        <button
+                            onClick={() => setShowTos(true)}
+                            className="hh-focusable text-[var(--hh-accent-deep)] hover:underline font-medium mx-1"
+                        >
+                            {t("page.assetVersions.descriptionLink")}
+                        </button>
+                        {t("page.assetVersions.descriptionSuffix")}
+                    </>
+                }
+            />
 
             <div className="w-full min-w-0">
                 {/* Toolbar */}

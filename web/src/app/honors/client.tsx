@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import HonorFilters from "@/components/honor/HonorFilters";
 import HonorDetailDialog from "@/components/honor/HonorDetailDialog";
 import BondsHonorDetailDialog from "@/components/honor/BondsHonorDetailDialog";
@@ -519,20 +520,15 @@ function HonorsContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Page Header */}
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                    <span className="hh-label text-miku">{t("page.honors.badge")}</span>
-                </div>
-                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
-                    {t("page.honors.title")} <span className="text-miku">{t("page.honors.titleHighlight")}</span>
-                </h1>
-                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
-                    {t("page.honors.description")}
-                </p>
-            </div>
+            <PageHeader
+                badge={t("page.honors.badge")}
+                title={t("page.honors.title")}
+                titleHighlight={t("page.honors.titleHighlight")}
+                description={t("page.honors.description")}
+            />
 
-            {/* Tab Switcher */}
+            {/* Tab Switcher — a content view control, not header copy, so it
+                stays outside PageHeader. */}
             <div className="flex justify-center mb-6">
                 {/* Shrink-to-fit: .hh-segment fills its container by default, which
                     would stretch this centered pair across the whole row. */}

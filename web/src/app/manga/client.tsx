@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import BaseFilters from "@/components/common/BaseFilters";
 import { useI18n } from "@/contexts/I18nContext";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
@@ -104,18 +105,12 @@ function MangaContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Page Header */}
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                    <span className="hh-label text-miku">{t("page.manga.badge")}</span>
-                </div>
-                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
-                    {t("page.manga.title")} <span className="text-miku">{t("page.manga.titleHighlight")}</span>
-                </h1>
-                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
-                    {t("page.manga.description")}
-                </p>
-            </div>
+            <PageHeader
+                badge={t("page.manga.badge")}
+                title={t("page.manga.title")}
+                titleHighlight={t("page.manga.titleHighlight")}
+                description={t("page.manga.description")}
+            />
 
             {/* Error State */}
             {error && (

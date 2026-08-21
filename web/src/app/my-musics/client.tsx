@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import ExternalLink from "@/components/ExternalLink";
 import MyMusicFilters from "@/components/music/MyMusicFilters";
 import Best30ShareImage from "@/components/music/Best30ShareImage";
@@ -826,7 +827,7 @@ function MyMusicsContent() {
     if (accounts.length === 0) {
         return (
             <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
-                <PageHeader />
+                <MyMusicsHeader />
                 <QuickBindForm
                     onAccountAdded={() => {
                         setAccountsList(getAccounts());
@@ -843,7 +844,7 @@ function MyMusicsContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            <PageHeader />
+            <MyMusicsHeader />
 
             {/* Account Selector */}
             <AccountSelectorBar
@@ -1127,20 +1128,18 @@ function LevelSeparatorCard({ level, difficulty }: { level: number; difficulty: 
     );
 }
 
-function PageHeader() {
+// Local wrapper so the two render branches (no-account and main view) keep
+// sharing one header definition instead of repeating the prop list.
+function MyMusicsHeader() {
     const { t } = useI18n();
     return (
-        <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-sm)] mb-4">
-                <span className="hh-label text-[var(--hh-accent-deep)]">{t("page.myMusics.badge")}</span>
-            </div>
-            <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
-                {t("page.myMusics.title")}<span className="text-[var(--hh-accent-deep)]">{t("page.myMusics.titleHighlight")}</span>
-            </h1>
-            <p className="hh-body text-[var(--hh-text-secondary)] mt-2 text-sm">
-                {t("page.myMusics.description")}
-            </p>
-        </div>
+        <PageHeader
+            badge={t("page.myMusics.badge")}
+            title={t("page.myMusics.title")}
+            titleHighlight={t("page.myMusics.titleHighlight")}
+            spaceBeforeHighlight={false}
+            description={t("page.myMusics.description")}
+        />
     );
 }
 

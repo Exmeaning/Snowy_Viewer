@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import BaseFilters, { FilterSection, FilterButton } from "@/components/common/BaseFilters";
 import ExternalLink from "@/components/ExternalLink";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
@@ -177,22 +178,21 @@ function GuidesContent() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
-            {/* Page Header */}
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
-                    <span className="hh-label text-miku">{t("page.guides.badge")}</span>
-                </div>
-                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
-                    {t("page.guides.title")} <span className="text-miku">{t("page.guides.titleHighlight")}</span>
-                </h1>
-                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
-                    {t("page.guides.description")}
-                </p>
-                <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-amber-600 bg-amber-500/12 border border-amber-500/30 rounded-[var(--hh-radius-md)] px-3 py-1.5 mx-auto">
-                    <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500/20 text-[9px] font-bold">!</span>
-                    <span>{t("page.guides.machineTranslationNotice")}</span>
-                </div>
-            </div>
+            {/* The machine-translation notice qualifies the guide text this page
+                serves, so it stays attached to the header. The tool-site card
+                below is a separate recommendation and remains body content. */}
+            <PageHeader
+                badge={t("page.guides.badge")}
+                title={t("page.guides.title")}
+                titleHighlight={t("page.guides.titleHighlight")}
+                description={t("page.guides.description")}
+                extra={
+                    <div className="inline-flex items-center gap-1.5 text-xs text-amber-600 bg-amber-500/12 border border-amber-500/30 rounded-[var(--hh-radius-md)] px-3 py-1.5">
+                        <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500/20 text-[9px] font-bold">!</span>
+                        <span>{t("page.guides.machineTranslationNotice")}</span>
+                    </div>
+                }
+            />
 
             {/* Tool Site Card */}
             <div className="mb-8 max-w-2xl mx-auto">

@@ -7,6 +7,7 @@ import Modal from "@/components/common/Modal";
 import BaseFilters, { FilterButton, FilterSection } from "@/components/common/BaseFilters";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/common/PageHeader";
 import { useI18n } from "@/contexts/I18nContext";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -470,17 +471,12 @@ export default function InformationClient() {
     return (
         <MainLayout>
             <div className="container mx-auto max-w-[96rem] px-4 py-8 sm:px-6 sm:py-10">
-                <div className="mb-8 text-center">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] px-4 py-2">
-                        <span className="hh-label text-miku">{t("page.information.badge")}</span>
-                    </div>
-                    <h1 className="hh-display text-3xl text-primary-text sm:text-4xl">
-                        {t("page.information.title")} <span className="text-miku">{t("page.information.titleHighlight")}</span>
-                    </h1>
-                    <p className="hh-body mx-auto mt-2 max-w-2xl text-sm text-[var(--hh-text-secondary)] sm:text-base">
-                        {t("page.information.description")}
-                    </p>
-                </div>
+                <PageHeader
+                    badge={t("page.information.badge")}
+                    title={t("page.information.title")}
+                    titleHighlight={t("page.information.titleHighlight")}
+                    description={t("page.information.description")}
+                />
 
                 <section className="w-full min-w-0">
                     {loading ? (
