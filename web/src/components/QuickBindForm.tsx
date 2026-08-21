@@ -152,7 +152,7 @@ export default function QuickBindForm({
                     >
                         {isVerifying ? (
                             <>
-                                <div className="w-4 h-4 border-2 border-[var(--hh-text-on-accent)]/30 border-t-[var(--hh-text-on-accent)] rounded-[var(--hh-radius-full)] animate-spin" />
+                                <div className="hh-spinner hh-spinner-on-accent w-4 h-4" />
                                 {t("common.account.verifyingWithDots")}
                             </>
                         ) : (

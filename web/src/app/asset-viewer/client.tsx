@@ -1073,7 +1073,7 @@ function AssetViewerContent() {
                         </button>
                     </div>
                 ) : (bundlePath ? processedAssetFiles.length === 0 : processedBundleItems.length === 0) ? (
-                    <div className="p-12 text-center hh-tile rounded-[var(--hh-radius-lg)] text-[var(--hh-text-tertiary)]">
+                    <div className="p-12 text-center hh-well rounded-[var(--hh-radius-lg)] text-[var(--hh-text-tertiary)]">
                         <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
                         </svg>
@@ -1293,7 +1293,7 @@ function AssetViewerContent() {
                                     className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3"
                                 >
                                     {isLoadingMore ? (
-                                        <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-[var(--hh-radius-full)] animate-spin" />
+                                        <div className="hh-spinner hh-spinner-on-accent w-4 h-4" />
                                     ) : (
                                         <>
                                             {t("page.assetViewer.loadMore")}

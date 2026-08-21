@@ -286,7 +286,7 @@ function LyricsContent() {
                         ))}
                     </div>
                 ) : filteredMusics.length === 0 ? (
-                    <div className="py-16 text-center">
+                    <div className="hh-well py-16 text-center">
                         <div className="mb-4 text-6xl" aria-hidden="true">🎼</div>
                         <h3 className="hh-title mb-2 text-xl text-[var(--hh-text-secondary)]">{t("page.lyrics.empty")}</h3>
                         <p className="hh-body text-[var(--hh-text-secondary)]">{t("page.lyrics.emptyHint")}</p>

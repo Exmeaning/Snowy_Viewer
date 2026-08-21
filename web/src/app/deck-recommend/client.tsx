@@ -1216,7 +1216,7 @@ export default function DeckRecommendClient() {
                     <div className="flex gap-3">
                         <button onClick={handleCalculate} disabled={isCalculating}
                             className="hh-btn hh-btn-primary hh-press hh-focusable flex-1 px-6 py-3 font-bold disabled:opacity-50 disabled:cursor-not-allowed">
-                            {isCalculating ? (<><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>{t("page.deckRecommend.calculating")}</>) : (<>
+                            {isCalculating ? (<><div className="hh-spinner hh-spinner-on-accent w-4 h-4"></div>{t("page.deckRecommend.calculating")}</>) : (<>
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                                 {t("page.deckRecommend.startCalculate")}
                             </>)}

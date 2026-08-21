@@ -109,13 +109,15 @@ export default function MainLayout({
         };
     }, []);
 
-    // Mark overlays on <html> so CSS can pause heavy background animations and
-    // tone down backdrop blur on mobile while an overlay is present. This is the
-    // main lever for keeping the "open settings panel" interaction smooth on phones:
-    // a live blurred backdrop (liquid-glass-modal, 28px blur) sitting on top of a
-    // continuously animating background forces the compositor to re-run the blur
-    // every frame. Freezing the background while an overlay is up removes that
-    // per-frame cost entirely.
+    // Mark overlays on <html> so CSS can pause heavy background animations while
+    // an overlay is present. This is the main lever for keeping the "open
+    // settings panel" interaction smooth on phones: the ambient drift layers
+    // animate continuously, and running them under a full-screen overlay makes
+    // the compositor redraw the background every frame for something the user
+    // cannot see. Freezing them while an overlay is up removes that cost.
+    //
+    // The guard used to also dial backdrop blur down on touch devices; that half
+    // is gone because the flat redesign has no backdrop-filter left to reduce.
     useEffect(() => {
         if (typeof document === "undefined") return;
         document.documentElement.dataset.overlayOpen = anyOverlayOpen ? "true" : "false";

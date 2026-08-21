@@ -37,7 +37,7 @@ export default function GachaGrid({ gachas, isLoading = false }: GachaGridProps)
 
     if (gachas.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-[var(--hh-text-tertiary)]">
+            <div className="hh-well flex flex-col items-center justify-center py-16 text-[var(--hh-text-tertiary)]">
                 <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>

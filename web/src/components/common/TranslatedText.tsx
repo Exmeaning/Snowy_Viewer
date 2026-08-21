@@ -29,7 +29,7 @@ export function TranslatedText({
     category,
     field,
     originalClassName = "",
-    translationClassName = "text-xs text-slate-400 mt-0.5",
+    translationClassName = "text-xs text-[var(--hh-text-tertiary)] mt-0.5",
     inline = false,
 }: TranslatedTextProps) {
     const { t } = useTranslation();

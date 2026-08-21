@@ -14,7 +14,7 @@ const bulletGroups = [
 export default function PrivacyPolicyClient() {
     const { t } = useI18n();
     const bullets = (group: number) => (
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-600 dark:text-slate-300">
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-[var(--hh-text-secondary)]">
             {bulletGroups[group]!.map((key) => <li key={key}>{t(`page.privacy.${key}`)}</li>)}
         </ul>
     );
@@ -23,8 +23,8 @@ export default function PrivacyPolicyClient() {
         <MainLayout>
             <div className="container mx-auto max-w-4xl flex-grow px-4 py-10 sm:px-6 sm:py-12">
                 <header className="mb-8">
-                    <h1 className="text-3xl font-black text-primary-text">{t("page.privacy.title")}</h1>
-                    <p className="mt-2 text-sm text-slate-400">{t("page.privacy.updated")}</p>
+                    <h1 className="hh-display text-3xl font-black text-primary-text">{t("page.privacy.title")}</h1>
+                    <p className="mt-2 text-sm text-[var(--hh-text-tertiary)]">{t("page.privacy.updated")}</p>
                 </header>
 
                 <div className="space-y-5">
@@ -72,14 +72,14 @@ export default function PrivacyPolicyClient() {
                     </Section>
                     <Section title={t("page.privacy.contact.title")}>
                         <p>{t("page.privacy.contact.body")}</p>
-                        <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-600 dark:text-slate-300">
+                        <ul className="mt-3 list-disc space-y-2 pl-5 text-[var(--hh-text-secondary)]">
                             <li>
                                 {t("page.privacy.contact.github")}: {" "}
                                 <ExternalLink href="https://github.com/moe-sekai/Moesekai" target="_blank" rel="noopener noreferrer" className="font-medium text-miku hover:underline">
                                     moe-sekai/Moesekai
                                 </ExternalLink>
                             </li>
-                            <li>{t("page.privacy.contact.qq")}: 1075068454</li>
+                            <li>{t("page.privacy.contact.qq")}: <span className="hh-numeric">1075068454</span></li>
                         </ul>
                     </Section>
                 </div>
@@ -90,9 +90,12 @@ export default function PrivacyPolicyClient() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <section className="ios-glass-card rounded-2xl p-5 sm:p-6">
-            <h2 className="mb-3 text-xl font-bold text-primary-text">{title}</h2>
-            <div className="text-sm leading-7 text-slate-600 dark:text-slate-300">{children}</div>
+        <section className="hh-tile p-5 sm:p-6">
+            <h2 className="hh-title mb-3 text-xl font-bold text-primary-text">{title}</h2>
+            {/* leading-7 rather than .hh-body: this is a long-form legal
+                document, where the looser line height is the readability
+                choice, not the tighter UI-body default. */}
+            <div className="text-sm leading-7 text-[var(--hh-text-secondary)]">{children}</div>
         </section>
     );
 }

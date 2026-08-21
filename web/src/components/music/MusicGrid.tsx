@@ -40,7 +40,7 @@ export default function MusicGrid({ musics, isLoading }: MusicGridProps) {
 
     if (musics.length === 0) {
         return (
-            <div className="text-center py-16">
+            <div className="hh-well text-center py-16">
                 <div className="text-6xl mb-4">🎵</div>
                 <h3 className="hh-title text-xl font-bold text-[var(--hh-text-primary)] mb-2">
                     {t("page.music.noResult")}

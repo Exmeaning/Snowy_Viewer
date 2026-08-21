@@ -227,7 +227,7 @@ function StoryCardContent() {
             <StoryPageHeader storyKey="card" />
 
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-red-500/12 border border-red-500/30 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{t("common.state.loadingFailed")}</p><p>{error}</p>
                 </div>
             )}
@@ -239,15 +239,15 @@ function StoryCardContent() {
                         <button
                             data-shortcut-load-more="true"
                             onClick={loadMore}
-                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                            className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3 font-bold"
                         >
                             {t("page.story.card.loadMore")}
-                            <span className="ml-2 text-sm opacity-80">({displayedCards.length} / {filteredCards.length})</span>
+                            <span className="hh-numeric ml-2 text-sm opacity-80">({displayedCards.length} / {filteredCards.length})</span>
                         </button>
                     </div>
                 )}
                 {!isLoading && displayedCards.length > 0 && displayedCards.length >= filteredCards.length && (
-                    <div className="mt-8 text-center text-slate-400 text-sm">{t("page.story.card.allLoaded", { count: filteredCards.length })}</div>
+                    <div className="mt-8 text-center text-[var(--hh-text-tertiary)] text-sm">{t("page.story.card.allLoaded", { count: filteredCards.length })}</div>
                 )}
             </div>
         </div>
@@ -259,7 +259,7 @@ export default function StoryCardListClient() {
 
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.story.card.loadingFallback")}</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("page.story.card.loadingFallback")}</div>}>
                 <StoryCardContent />
             </Suspense>
         </MainLayout>

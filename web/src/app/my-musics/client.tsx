@@ -1021,13 +1021,13 @@ function MyMusicsContent() {
                 {isLoading || isFetchingUser ? (
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
                         {Array.from({ length: 12 }).map((_, i) => (
-                            <div key={i} className="rounded-[var(--hh-radius-lg)] overflow-hidden bg-[var(--hh-surface-2)] border border-[var(--hh-border)] animate-pulse">
+                            <div key={i} className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden animate-pulse">
                                 <div className="aspect-square bg-[var(--hh-surface-sunken)]" />
                             </div>
                         ))}
                     </div>
                 ) : filteredMusics.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="hh-well flex flex-col items-center justify-center py-20 text-center">
                         <svg className="w-16 h-16 text-[var(--hh-text-tertiary)] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                         </svg>

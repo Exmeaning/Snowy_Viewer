@@ -182,7 +182,7 @@ export default function AccountSelectorBar({
                                 className="hh-btn hh-btn-primary hh-press hh-focusable text-xs cursor-pointer disabled:opacity-50"
                             >
                                 {isVerifying ? (
-                                    <div className="w-3 h-3 border-2 border-[var(--hh-text-on-accent)]/30 border-t-[var(--hh-text-on-accent)] rounded-[var(--hh-radius-full)] animate-spin" />
+                                    <div className="hh-spinner hh-spinner-on-accent w-3 h-3" />
                                 ) : (
                                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

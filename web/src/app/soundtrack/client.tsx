@@ -1890,7 +1890,7 @@ function SoundtrackContent() {
                                         <p className="text-[var(--hh-text-tertiary)] text-xs mt-1">{error}</p>
                                     </div>
                                 ) : filteredTracks.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center h-80 text-center p-6 border-2 border-dashed border-[var(--hh-border)] rounded-[var(--hh-radius-lg)] m-3">
+                                    <div className="hh-well border-dashed flex flex-col items-center justify-center h-80 text-center p-6 m-3">
                                         <svg className="w-10 h-10 text-[var(--hh-text-tertiary)] mb-3" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                                             <circle cx="10" cy="18" r="3" />
                                             <path d="M13 18V5l7-1.5v10" />

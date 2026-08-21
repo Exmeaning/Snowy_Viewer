@@ -55,7 +55,7 @@ export default function StorySelfListClient() {
 
                 {isLoading && (
                     <div className="flex justify-center py-16">
-                        <div className="w-10 h-10 border-4 border-miku/30 border-t-miku rounded-full animate-spin"></div>
+                        <div className="hh-spinner w-10 h-10"></div>
                     </div>
                 )}
                 {error && <div className="text-red-500 text-center py-8">{error}</div>}
@@ -64,7 +64,7 @@ export default function StorySelfListClient() {
                     <div className="space-y-8">
                         {unitGroups.map(({ unit, labelKey, charas: unitCharas }) => (
                             <div key={unit}>
-                                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 text-center">{labelKey ? t(labelKey) : unit}</h2>
+                                <h2 className="hh-label text-sm mb-3 text-center">{labelKey ? t(labelKey) : unit}</h2>
                                 <div className="flex flex-wrap justify-center gap-3">
                                     {unitCharas.map(c => {
                                         const charaName = `${c.firstName ?? ""}${c.givenName}`;
@@ -72,14 +72,14 @@ export default function StorySelfListClient() {
                                             <Link
                                                 key={c.id}
                                                 href={`/story/self/${c.id}`}
-                                                className="group flex flex-col items-center gap-2 p-3 w-[calc(50%-6px)] sm:w-28 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-md transition-all"
+                                                className="hh-tile hh-press hh-focusable group flex flex-col items-center gap-2 p-3 w-[calc(50%-6px)] sm:w-28 transition-colors hover:border-[var(--hh-accent-line)]"
                                             >
                                                 <img
                                                     src={getCharacterIconUrl(c.id)}
                                                     alt={charaName}
-                                                    className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 dark:border-slate-600 group-hover:border-miku/50 transition-colors"
+                                                    className="w-14 h-14 rounded-full object-cover border-2 border-[var(--hh-border)] group-hover:border-miku/50 transition-colors"
                                                 />
-                                                <span className="text-xs font-medium text-slate-700 dark:text-slate-300 group-hover:text-miku transition-colors text-center leading-tight">
+                                                <span className="text-xs font-medium text-[var(--hh-text-primary)] group-hover:text-miku transition-colors text-center leading-tight">
                                                     {charaName}
                                                 </span>
                                             </Link>

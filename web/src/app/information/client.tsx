@@ -253,7 +253,7 @@ function AnnouncementModal({
                         /* Opaque: the iframe renders untinted third-party HTML, so a
                            translucent veil would show a half-painted announcement. */
                         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[var(--hh-surface-1)] text-sm font-bold text-[var(--hh-text-secondary)]">
-                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--hh-border)] border-t-[var(--hh-accent)]" />
+                            <div className="hh-spinner h-8 w-8" />
                             <span>{t("page.information.loadingAnnouncement")}</span>
                         </div>
                     )}

@@ -70,9 +70,9 @@ export default function CharacterSelector({
                         <button
                             key={unit.id}
                             onClick={() => handleUnitClick(unit.id)}
-                            className={`p-1.5 rounded-xl transition-all ${isSelected
-                                ? "ring-2 ring-miku shadow-lg bg-white"
-                                : "hover:bg-slate-100 border border-transparent bg-slate-50"
+                            className={`p-1.5 rounded-[var(--hh-radius-md)] transition-all hh-press ${isSelected
+                                ? "hh-selected-outline border bg-[var(--hh-surface-3)]"
+                                : "border border-[var(--hh-border)] bg-[var(--hh-surface-2)] hover:bg-[var(--hh-surface-3)]"
                                 }`}
                             title={unitLabel}
                         >
@@ -98,13 +98,13 @@ export default function CharacterSelector({
                         <button
                             key={charId}
                             onClick={() => onSelect(charId)}
-                            className={`relative transition-all ${selectedCharacterId === charId
-                                ? "ring-2 ring-miku scale-110 z-10 rounded-full"
-                                : "ring-2 ring-transparent hover:ring-slate-200 rounded-full opacity-80 hover:opacity-100"
+                            className={`relative transition-all hh-press ${selectedCharacterId === charId
+                                ? "ring-2 ring-[var(--hh-accent)] scale-105 z-10 rounded-full"
+                                : "ring-1 ring-transparent hover:ring-[var(--hh-border-strong)] rounded-full opacity-80 hover:opacity-100"
                                 }`}
                             title={characterName}
                         >
-                            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--hh-surface-2)]">
                                 <Image
                                     src={getCharacterIconUrl(charId)}
                                     alt={characterName}

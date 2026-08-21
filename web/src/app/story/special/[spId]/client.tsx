@@ -82,11 +82,11 @@ export default function StorySpecialReaderClient() {
                     {t("page.story.special.backToList")}
                 </Link>
 
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-700">
+                <div className="hh-tile p-4 mb-6">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs text-miku font-medium">SP{spId}</span>
-                        <h1 className="font-bold text-slate-900 dark:text-slate-100">{storyTitle}</h1>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${serverSource === "cn" ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50" : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50"}`}>
+                        <span className="hh-numeric text-xs text-miku font-medium">SP{spId}</span>
+                        <h1 className="hh-title font-bold text-[var(--hh-text-primary)]">{storyTitle}</h1>
+                        <span className={`hh-label px-1.5 py-0.5 rounded-[var(--hh-radius-sm)] border ${serverSource === "cn" ? "border-rose-500/45 bg-rose-500/15" : "border-blue-500/45 bg-blue-500/15"}`}>
                             {t(`page.story.serverSource.${serverSource}`)}
                         </span>
                     </div>
@@ -94,8 +94,8 @@ export default function StorySpecialReaderClient() {
 
                 {isLoading && (
                     <div className="flex flex-col items-center justify-center py-16">
-                        <div className="w-12 h-12 border-4 border-miku/30 border-t-miku rounded-full animate-spin mb-4" />
-                        <p className="text-slate-500">{t("page.story.special.loading")}</p>
+                        <div className="hh-spinner w-12 h-12 mb-4" />
+                        <p className="text-[var(--hh-text-secondary)]">{t("page.story.special.loading")}</p>
                     </div>
                 )}
 
@@ -107,8 +107,8 @@ export default function StorySpecialReaderClient() {
                                 <div key={ep.id}>
                                     {multiEp && (
                                         <div className="flex items-center gap-3 mb-4">
-                                            <span className="px-3 py-1 bg-miku/10 text-miku text-sm font-bold rounded-full border border-miku/20">{t("page.story.special.episodeLabel", { episode: ep.episodeNo })}</span>
-                                            <h2 className="font-bold text-slate-800 dark:text-slate-200">{ep.title}</h2>
+                                            <span className="hh-numeric px-3 py-1 bg-[var(--hh-accent-wash)] text-miku text-sm font-bold rounded-[var(--hh-radius-md)] border border-miku/20">{t("page.story.special.episodeLabel", { episode: ep.episodeNo })}</span>
+                                            <h2 className="hh-title font-bold text-[var(--hh-text-primary)]">{ep.title}</h2>
                                         </div>
                                     )}
                                     <StoryReader

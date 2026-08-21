@@ -57,7 +57,7 @@ export default function StorySpecialListClient() {
 
                 {isLoading && (
                     <div className="flex justify-center py-16">
-                        <div className="w-10 h-10 border-4 border-miku/30 border-t-miku rounded-full animate-spin"></div>
+                        <div className="hh-spinner w-10 h-10"></div>
                     </div>
                 )}
                 {error && <div className="text-red-500 text-center py-8">{error}</div>}
@@ -68,16 +68,16 @@ export default function StorySpecialListClient() {
                             <Link
                                 key={s.id}
                                 href={`/story/special/${s.id}`}
-                                className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-sm transition-all group"
+                                className="hh-tile hh-press hh-focusable flex items-center justify-between p-4 transition-colors hover:border-[var(--hh-accent-line)] group"
                             >
                                 <div>
-                                    <span className="text-xs text-miku font-medium">SP{s.id}</span>
-                                    <p className="font-medium text-slate-800 dark:text-slate-200 group-hover:text-miku transition-colors mt-0.5">
+                                    <span className="hh-numeric text-xs text-miku font-medium">SP{s.id}</span>
+                                    <p className="font-medium text-[var(--hh-text-primary)] group-hover:text-miku transition-colors mt-0.5">
                                         {getTitle(s)}
                                     </p>
-                                    <p className="text-xs text-slate-400 mt-0.5">{t("page.story.special.episodeCount", { count: s.episodes.length })}</p>
+                                    <p className="hh-numeric text-xs text-[var(--hh-text-tertiary)] mt-0.5">{t("page.story.special.episodeCount", { count: s.episodes.length })}</p>
                                 </div>
-                                <svg className="w-5 h-5 text-slate-300 group-hover:text-miku transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-5 h-5 text-[var(--hh-text-tertiary)] group-hover:text-miku transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                             </Link>

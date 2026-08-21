@@ -66,7 +66,7 @@ function TabLoading() {
       <div className="rounded-[var(--hh-radius-lg)] bg-[var(--hh-surface-sunken)] h-48 w-full" />
       <div className="mt-4 space-y-2">
         <div className="h-5 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4" />
-        <div className="h-4 bg-[var(--hh-surface-1)] rounded-[var(--hh-radius-xs)] w-1/2" />
+        <div className="h-4 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-1/2" />
       </div>
     </div>
   );

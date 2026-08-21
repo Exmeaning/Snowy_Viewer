@@ -525,7 +525,7 @@ function MusicContent() {
                         ))}
                     </div>
                 ) : displayedMusicsWithSeparators.filter(item => item.type === 'music').length === 0 ? (
-                    <div className="text-center py-16">
+                    <div className="hh-well text-center py-16">
                         <div className="text-6xl mb-4">🎵</div>
                         <h3 className="hh-title text-xl text-[var(--hh-text-secondary)] mb-2">
                             {t("page.music.noResult")}

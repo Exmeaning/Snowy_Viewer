@@ -117,7 +117,7 @@ export default function CharacterDetailClient() {
         return (
             <div className="flex h-[50vh] w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-miku border-t-transparent rounded-full animate-spin" />
+                    <div className="hh-spinner w-12 h-12" />
                     <span className="text-[var(--hh-text-secondary)]">{t("page.character.loadingInfo")}</span>
                 </div>
             </div>

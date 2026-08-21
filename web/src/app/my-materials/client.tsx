@@ -468,17 +468,17 @@ function MyMaterialsContent() {
                 {isLoading || isFetchingUser ? (
                     <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                         {Array.from({ length: 12 }).map((_, i) => (
-                            <div key={i} className="rounded-[var(--hh-radius-lg)] overflow-hidden bg-[var(--hh-surface-2)] border border-[var(--hh-border)] animate-pulse">
+                            <div key={i} className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden animate-pulse">
                                 <div className="aspect-square bg-[var(--hh-surface-sunken)]" />
                                 <div className="p-2 space-y-1.5">
-                                    <div className="h-3 bg-[var(--hh-surface-inset)] rounded-[var(--hh-radius-xs)] w-3/4" />
+                                    <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4" />
                                     <div className="h-2.5 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-1/2" />
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : currentItems.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="hh-well flex flex-col items-center justify-center py-20 text-center">
                         <svg className="w-16 h-16 text-[var(--hh-text-tertiary)] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>

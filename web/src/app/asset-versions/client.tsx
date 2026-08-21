@@ -678,7 +678,7 @@ function AssetVersionsContent() {
                             </button>
                         </div>
                     ) : versions.length === 0 ? (
-                        <div className="p-12 text-center hh-tile rounded-[var(--hh-radius-lg)] text-[var(--hh-text-tertiary)]">
+                        <div className="p-12 text-center hh-well rounded-[var(--hh-radius-lg)] text-[var(--hh-text-tertiary)]">
                             <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
@@ -751,7 +751,7 @@ function AssetVersionsContent() {
                                         className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3"
                                     >
                                         {isVersionsLoadingMore ? (
-                                            <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-[var(--hh-radius-full)] animate-spin" />
+                                            <div className="hh-spinner hh-spinner-on-accent w-4 h-4" />
                                         ) : (
                                             t("page.assetVersions.loadMore")
                                         )}
@@ -829,7 +829,7 @@ function AssetVersionsContent() {
                                 </button>
                             </div>
                         ) : processedDiffItems.length === 0 ? (
-                            <div className="p-12 text-center hh-tile rounded-[var(--hh-radius-lg)] text-[var(--hh-text-tertiary)]">
+                            <div className="p-12 text-center hh-well rounded-[var(--hh-radius-lg)] text-[var(--hh-text-tertiary)]">
                                 <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                                 </svg>
@@ -881,7 +881,7 @@ function AssetVersionsContent() {
                                             className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3"
                                         >
                                             {isDiffLoadingMore ? (
-                                                <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-[var(--hh-radius-full)] animate-spin" />
+                                                <div className="hh-spinner hh-spinner-on-accent w-4 h-4" />
                                             ) : (
                                                 <>
                                                     {t("page.assetVersions.loadMore")}

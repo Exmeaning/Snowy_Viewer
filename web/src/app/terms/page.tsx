@@ -10,8 +10,8 @@ export default function TermsPage() {
         <MainLayout>
             <div className="container mx-auto px-6 py-12 max-w-4xl flex-grow z-10">
                 <div className="mb-10">
-                    <h1 className="text-3xl font-black text-primary-text mb-2">服务条款</h1>
-                    <p className="text-sm text-slate-400">最后更新日期：2025 年 7 月</p>
+                    <h1 className="hh-display text-3xl font-black text-primary-text mb-2">服务条款</h1>
+                    <p className="text-sm text-[var(--hh-text-tertiary)]">最后更新日期：<span className="hh-numeric">2025 年 7 月</span></p>
                 </div>
 
                 <div className="space-y-6">
@@ -36,7 +36,7 @@ export default function TermsPage() {
 
                     <Section title="3. 用户行为">
                         <p>在使用本站时，您同意不会：</p>
-                        <ul className="list-disc list-inside space-y-1 mt-2 text-slate-600">
+                        <ul className="list-disc list-inside space-y-1 mt-2 text-[var(--hh-text-secondary)]">
                             <li>对本站进行任何形式的恶意攻击或干扰</li>
                             <li>使用自动化工具大量抓取本站数据</li>
                             <li>将本站内容用于任何违法或侵权用途</li>
@@ -48,7 +48,7 @@ export default function TermsPage() {
                         <p>
                             本站提供的所有游戏数据和信息均按 &quot;原样&quot; 提供，不作任何明示或暗示的保证。
                         </p>
-                        <ul className="list-disc list-inside space-y-1 mt-2 text-slate-600">
+                        <ul className="list-disc list-inside space-y-1 mt-2 text-[var(--hh-text-secondary)]">
                             <li>我们不保证数据的完全准确性、完整性或时效性</li>
                             <li>游戏数据可能因版本更新而发生变化，本站可能无法实时同步</li>
                             <li>对于因使用本站信息而造成的任何损失，我们不承担责任</li>
@@ -86,7 +86,7 @@ export default function TermsPage() {
                         <p>
                             如果您对本服务条款有任何疑问，可以通过以下方式联系我们：
                         </p>
-                        <ul className="list-disc list-inside space-y-1 mt-2 text-slate-600">
+                        <ul className="list-disc list-inside space-y-1 mt-2 text-[var(--hh-text-secondary)]">
                             <li>
                                 GitHub：{" "}
                                 <a
@@ -98,7 +98,7 @@ export default function TermsPage() {
                                     moe-sekai/Moesekai
                                 </a>
                             </li>
-                            <li>QQ 群：1075068454</li>
+                            <li>QQ 群：<span className="hh-numeric">1075068454</span></li>
                         </ul>
                     </Section>
                 </div>
@@ -106,7 +106,7 @@ export default function TermsPage() {
                 <div className="mt-12 text-center">
                     <Link
                         href="/"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                        className="hh-btn hh-press hh-focusable px-6 py-3 font-bold"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -121,9 +121,11 @@ export default function TermsPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <div className="bg-white rounded-xl shadow-md border border-slate-100 p-6">
-            <h2 className="text-lg font-bold text-primary-text mb-3">{title}</h2>
-            <div className="text-sm text-slate-600 leading-relaxed">{children}</div>
+        <div className="hh-tile p-6">
+            <h2 className="hh-title text-lg font-bold text-primary-text mb-3">{title}</h2>
+            {/* leading-relaxed rather than .hh-body: long-form legal prose, where
+                the looser line height is the readability choice. */}
+            <div className="text-sm text-[var(--hh-text-secondary)] leading-relaxed">{children}</div>
         </div>
     );
 }

@@ -76,7 +76,7 @@ export default function StoryUnitListClient() {
 
                 {isLoading && (
                     <div className="flex justify-center py-16">
-                        <div className="w-10 h-10 border-4 border-miku/30 border-t-miku rounded-full animate-spin"></div>
+                        <div className="hh-spinner w-10 h-10"></div>
                     </div>
                 )}
                 {error && <div className="text-red-500 text-center py-8">{error}</div>}
@@ -90,9 +90,9 @@ export default function StoryUnitListClient() {
                                 <Link
                                     key={profile.seq}
                                     href={`/story/unit/${profile.seq}`}
-                                    className="ios-glass-card ios-glass-card-interactive border-none p-5 flex flex-col items-center gap-3 text-center group"
+                                    className="hh-tile hh-press hh-focusable p-5 flex flex-col items-center gap-3 text-center group transition-colors hover:border-[var(--hh-accent-line)]"
                                 >
-                                    <div className="w-full h-14 flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
+                                    <div className="w-full h-14 flex items-center justify-center">
                                         <img
                                             src={logoUrl}
                                             alt={profile.unitName}
@@ -100,10 +100,10 @@ export default function StoryUnitListClient() {
                                         />
                                     </div>
                                     <div>
-                                        <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-miku transition-colors leading-tight">
+                                        <h2 className="hh-title text-sm font-bold text-[var(--hh-text-primary)] group-hover:text-miku transition-colors">
                                             {profile.unitName}
                                         </h2>
-                                        <p className="text-xs text-slate-400 mt-0.5">{t("page.story.unit.episodeCount", { count: episodeCount })}</p>
+                                        <p className="hh-numeric text-xs text-[var(--hh-text-tertiary)] mt-0.5">{t("page.story.unit.episodeCount", { count: episodeCount })}</p>
                                     </div>
                                 </Link>
                             );

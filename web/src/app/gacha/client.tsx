@@ -269,20 +269,20 @@ function GachaContent() {
         <div className="container mx-auto px-4 sm:px-6 py-8">
             {/* Page Header */}
             <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.gacha.badge")}</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                    <span className="hh-label text-miku">{t("page.gacha.badge")}</span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                <h1 className="hh-display text-3xl sm:text-4xl font-black text-primary-text">
                     {t("page.gacha.title")} <span className="text-miku">{t("page.gacha.titleHighlight")}</span>
                 </h1>
-                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                     {t("page.gacha.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-red-500/12 border border-red-500/30 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{error}</p>
                     <button
@@ -304,10 +304,10 @@ function GachaContent() {
                         <button
                             onClick={loadMore}
                             data-shortcut-load-more="true"
-                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                            className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3 font-bold"
                         >
                             {t("page.gacha.loadMore")}
-                            <span className="ml-2 text-sm opacity-80 type-caption">
+                            <span className="hh-numeric ml-2 text-sm opacity-80">
                                 ({displayedGachas.length} / {filteredGachas.length})
                             </span>
                         </button>
@@ -316,7 +316,7 @@ function GachaContent() {
 
                 {/* All loaded indicator */}
                 {!isLoading && displayedGachas.length > 0 && displayedGachas.length >= filteredGachas.length && (
-                    <div className="mt-8 text-center text-slate-400 text-sm">
+                    <div className="mt-8 text-center text-[var(--hh-text-tertiary)] text-sm">
                         {t("page.gacha.allLoaded", { count: filteredGachas.length })}
                     </div>
                 )}
@@ -327,7 +327,7 @@ function GachaContent() {
 
 function GachaLoadingFallback() {
     const { t } = useI18n();
-    return <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.gacha.loadingFallback")}</div>;
+    return <div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("page.gacha.loadingFallback")}</div>;
 }
 
 export default function GachaClient() {

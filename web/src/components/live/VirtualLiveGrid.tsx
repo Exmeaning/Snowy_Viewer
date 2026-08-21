@@ -41,7 +41,7 @@ export default function VirtualLiveGrid({ virtualLives, isLoading = false }: Vir
     // Empty state
     if (virtualLives.length === 0) {
         return (
-            <div className="text-center py-16">
+            <div className="hh-well text-center py-16">
                 <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-[var(--hh-surface-sunken)] flex items-center justify-center">
                     <svg className="w-12 h-12 text-[var(--hh-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
