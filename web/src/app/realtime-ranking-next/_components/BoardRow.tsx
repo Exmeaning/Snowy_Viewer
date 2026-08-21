@@ -195,6 +195,16 @@ export default function BoardRow({
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
             onClick={handleRowClick}
+            // Navigates to the player detail, so it answers "confirm" like a link.
+            // Only marked when it actually is clickable; tier lines and rows with no
+            // detail href simply fail to match the delegation selector and stay
+            // silent. Deliberately NOT `data-hh-sound="none"` for those, because
+            // that is a subtree mute and would also silence the expand/track
+            // buttons and the detail link nested inside this row.
+            // `data-hh-click` not `hh-press` — this row is under a `layout`
+            // animation, and a press scale would fight the shared-layout transform.
+            data-hh-click={clickable ? true : undefined}
+            data-hh-sound={clickable ? "confirm" : undefined}
             className={`relative overflow-hidden transition-all duration-300 ${rowBg} ${trackedClasses} ${clickable ? "cursor-pointer hover:bg-miku/[0.06]" : ""} ${isStale ? "opacity-60" : ""}`}
         >
             <AnimatePresence>

@@ -176,6 +176,12 @@ function FloatingDropdown({ isOpen, triggerRect, onClose, children, maxHeight = 
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.15 }}
                         onClick={onClose}
+                        // Click-outside catcher for the dropdown. All five call sites
+                        // pass a bare `setExpandedDropdown(null)` with no sound of
+                        // their own, so dismissing by clicking away was silent while
+                        // picking an option was audible.
+                        data-hh-click
+                        data-hh-sound="back"
                     />
                     <motion.div
                         ref={dropdownRef}

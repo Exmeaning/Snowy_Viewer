@@ -14,6 +14,7 @@ import { fetchMasterData } from "@/lib/fetch";
 import { getVirtualLiveBannerUrl } from "@/lib/assets";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useI18n } from "@/contexts/I18nContext";
+import { HandheldEmptyState } from "@/components/handheld";
 
 export default function UpcomingLiveTab() {
     const { assetSource, isShowSpoiler } = useTheme();
@@ -105,9 +106,9 @@ export default function UpcomingLiveTab() {
 
     if (displayLives.length === 0) {
         return (
-            <div className="hh-well p-8 text-center text-[var(--hh-text-tertiary)]">
-                <p className="font-medium">{t("page.home.upcomingLive.noData")}</p>
-            </div>
+            <HandheldEmptyState
+                title={t("page.home.upcomingLive.noData")}
+            />
         );
     }
 

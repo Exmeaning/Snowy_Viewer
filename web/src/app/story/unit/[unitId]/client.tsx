@@ -8,6 +8,7 @@ import { getUnitStoryEpisodeImageUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { IUnitProfile } from "@/types/types";
 import { useI18n } from "@/contexts/I18nContext";
+import { playHandheldSound } from "@/lib/handheld-sound";
 
 function getUnitOutlineLogoUrl(unitCode: string, server: string): string {
     const s = server === "cn" ? "cn" : "jp";
@@ -78,6 +79,10 @@ export default function StoryUnitDetailClient() {
     const triggerUnlockEffect = (scenarioId: string, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        // Explicit, not delegated: `stopPropagation` above also stops the native
+        // event, so the document-level click listener never sees this gesture and
+        // the tap was silent despite the haptic buzz. "confirm" matches the reveal.
+        playHandheldSound("confirm");
         setUnlockingId(scenarioId);
         
         // Haptic feedback if supported

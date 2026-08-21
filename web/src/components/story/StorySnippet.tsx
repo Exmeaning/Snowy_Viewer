@@ -248,6 +248,10 @@ export function SpecialEffectSnippet({ seType, text, resource }: SpecialEffectSn
                     {isImageOpen && resource ? (
                         <div
                             className="cursor-pointer overflow-hidden rounded-[var(--hh-radius-md)] border border-[var(--hh-border)]"
+                            // Opens the full-size art in a new tab — an outbound jump,
+                            // which is the same cue a real link would get.
+                            data-hh-click
+                            data-hh-sound="confirm"
                             onClick={() => window.open(resource, "_blank")}
                         >
                             <img

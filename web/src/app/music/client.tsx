@@ -28,6 +28,7 @@ import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { fetchMusicAliases } from "@/lib/musicAliases";
 import { useI18n } from "@/contexts/I18nContext";
+import { HandheldEmptyState } from "@/components/handheld";
 
 // Search index item (from search-index.json)
 interface SearchIndexItem {
@@ -523,15 +524,11 @@ function MusicContent() {
                         ))}
                     </div>
                 ) : displayedMusicsWithSeparators.filter(item => item.type === 'music').length === 0 ? (
-                    <div className="hh-well text-center py-16">
-                        <div className="text-6xl mb-4">🎵</div>
-                        <h3 className="hh-title text-xl text-[var(--hh-text-secondary)] mb-2">
-                            {t("page.music.noResult")}
-                        </h3>
-                        <p className="hh-body text-[var(--hh-text-secondary)]">
-                            {t("page.music.noResultHint")}
-                        </p>
-                    </div>
+                    <HandheldEmptyState
+                        title={t("page.music.noResult")}
+                        description={t("page.music.noResultHint")}
+                        className="my-12"
+                    />
                 ) : (
                     <div className={MUSIC_GRID_CLASS}>
                         {displayedMusicsWithSeparators.map((item) => {

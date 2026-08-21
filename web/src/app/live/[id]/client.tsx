@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type CSSProperties } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
@@ -692,8 +692,13 @@ export default function VirtualLiveDetailClient() {
                             <div className="px-4 py-3 bg-[var(--hh-surface-1)] border-b border-[var(--hh-border)]">
                                 <span className="hh-title text-sm text-[var(--hh-text-secondary)]">{t("page.live.bannerTitle")}</span>
                             </div>
+                            {/* See cards/[id]: `hh-press` is what puts this non-button div in
+                                reach of the global click delegation, and `confirm` marks opening
+                                the viewer as an "enter" gesture. */}
                             <div
-                                className="relative aspect-[16/5] bg-[var(--hh-surface-sunken)] cursor-zoom-in"
+                                className="hh-press relative aspect-[16/5] bg-[var(--hh-surface-sunken)] cursor-zoom-in"
+                                style={{ "--hh-press-scale": "0.99" } as CSSProperties}
+                                data-hh-sound="confirm"
                                 onClick={() => setImageViewerOpen(true)}
                             >
                                 <Image

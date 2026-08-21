@@ -12,6 +12,7 @@ import { fetchMasterDataForServer } from "@/lib/fetch";
 import { loadTranslations, type TranslationData } from "@/lib/translations";
 import { useI18n } from "@/contexts/I18nContext";
 import type { IMusicInfo } from "@/types/music";
+import { playHandheldSound } from "@/lib/handheld-sound";
 
 const ROUNDS_PER_GAME = 10;
 const OPTIONS_PER_ROUND_DEFAULT = 10;
@@ -780,9 +781,13 @@ function GuessJacketContent() {
                             near-solid, so dropping to the 42% scrim token would leave the
                             HUD bleeding through behind the jacket. */}
                         {showFeedback && feedbackResult && currentCanvasImage && typeof document !== "undefined" && createPortal(
+                            // See guess-who: the overlay is mostly <CanvasImage>, and canvas
+                            // subtrees are muted by the global click delegation, so this
+                            // tap-to-advance needs an explicit cue. Placed at the click site
+                            // so the auto-advance timer path stays silent.
                             <div
                                 className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--hh-surface-inset)] cursor-pointer animate-in fade-in duration-200"
-                                onClick={handleNextRound}
+                                onClick={() => { playHandheldSound("confirm"); handleNextRound(); }}
                             >
                                 <div className="relative w-full max-w-lg aspect-square">
                                     <CanvasImage image={currentCanvasImage} objectFit="contain" />

@@ -549,6 +549,14 @@ export default function PredictionClient() {
                                                                 key={chart.Rank}
                                                                 className={`border-t border-[var(--hh-border-hairline)] hover:bg-[var(--hh-surface-1)] cursor-pointer transition-colors ${isActive && chart.Rank === selectedRank ? 'bg-[var(--hh-accent-wash)]' : ''
                                                                     }`}
+                                                                // Selects the tier to chart. Rows must not scale,
+                                                                // so this uses the `data-hh-click` escape hatch.
+                                                                // Inactive rows no-op in the handler, so they are
+                                                                // left unmarked rather than muted with
+                                                                // `data-hh-sound="none"` — that attribute mutes the
+                                                                // whole subtree, which is the wrong tool here.
+                                                                data-hh-click={isActive ? true : undefined}
+                                                                data-hh-sound={isActive ? "toggle" : undefined}
                                                                 onClick={() => isActive && setSelectedRank(chart.Rank)}
                                                             >
                                                                 <td className="hh-numeric px-4 py-3 font-bold text-miku">T{chart.Rank}</td>

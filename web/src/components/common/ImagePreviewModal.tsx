@@ -111,6 +111,11 @@ export default function ImagePreviewModal({
                 onClick={handleCopy}
                 disabled={isCopying || isSaving}
                 className="hh-press p-1.5 rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-text-primary)] disabled:opacity-50"
+                // Delegation already covers this <button>, but its inference would
+                // land on the generic "toggle": the label is a noun ("copy image"),
+                // not a submit/primary marker. Copying commits an action, so it is
+                // pinned to "confirm" to match the save button beside it.
+                data-hh-sound="confirm"
                 aria-label={t("common.imageActions.copyImage")}
                 title={isCopying ? t("common.imageActions.copying") : copySuccess ? t("common.imageActions.copySuccess") : t("common.imageActions.copyImage")}
             >
@@ -146,6 +151,9 @@ export default function ImagePreviewModal({
                 onClick={handleSave}
                 disabled={isSaving || isCopying}
                 className="hh-press p-1.5 rounded-[var(--hh-radius-md)] text-[var(--hh-text-tertiary)] hover:bg-[var(--hh-surface-sunken)] hover:text-[var(--hh-accent)] disabled:opacity-50"
+                // Same reasoning as the copy button: a download commits, so it
+                // answers "confirm" instead of the inferred generic "toggle".
+                data-hh-sound="confirm"
                 aria-label={t("common.imageActions.saveImage")}
                 title={isSaving ? t("common.imageActions.saving") : saveSuccess ? t("common.imageActions.saveSuccess") : t("common.imageActions.saveImage")}
             >

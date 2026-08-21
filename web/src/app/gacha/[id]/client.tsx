@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, type CSSProperties } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
@@ -790,8 +790,13 @@ export default function GachaDetailClient() {
                                     ))}
                                 </div>
                                 {/* Image Content */}
+                                {/* See cards/[id]: `hh-press` is what puts this non-button div in
+                                    reach of the global click delegation, and `confirm` marks
+                                    opening the viewer as an "enter" gesture. */}
                                 <div
-                                    className="relative aspect-[16/9] bg-[var(--hh-surface-sunken)] cursor-zoom-in group"
+                                    className="hh-press relative aspect-[16/9] bg-[var(--hh-surface-sunken)] cursor-zoom-in group"
+                                    style={{ "--hh-press-scale": "0.99" } as CSSProperties}
+                                    data-hh-sound="confirm"
                                     onClick={() => setImageViewerOpen(true)}
                                 >
                                     {activeImageTab === "logo" && (

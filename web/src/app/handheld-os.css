@@ -468,6 +468,36 @@
     border-radius: var(--hh-radius-lg);
 }
 
+/* Pointer & touch cursor focus state.
+   
+   Unlike keyboard focus (.hh-focusable:focus-visible), which uses a 3px double
+   ring for accessibility, pointer focus is a subtle handheld-style tactile
+   lift and crisp accent hairline glow that follows mouse hover or touch glide.
+   
+   Unlayered so it reliably outranks .hh-tile's component border and any local
+   border utility without fighting !important. */
+[data-hh-focused] {
+    border-color: var(--hh-accent);
+    box-shadow:
+        0 0 0 1px var(--hh-accent),
+        0 2px 10px color-mix(in srgb, var(--hh-accent) 20%, transparent);
+    transform: translateY(-1.5px);
+    transition:
+        transform var(--hh-dur-cursor) var(--hh-ease-cursor),
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        box-shadow var(--hh-dur-fast) var(--hh-ease-out),
+        background-color var(--hh-dur-fast) var(--hh-ease-out);
+    z-index: 1;
+}
+
+[data-hh-focused]:active {
+    transform: translateY(0) scale(var(--hh-press-scale));
+    transition:
+        transform var(--hh-dur-press) var(--hh-ease-snap),
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        box-shadow var(--hh-dur-fast) var(--hh-ease-out);
+}
+
 /* ==========================================================================
    Controls
 
@@ -1178,6 +1208,115 @@
      this file spent its effort removing.
    ========================================================================== */
 
+/* ==========================================================================
+   Geometric vocabulary — Handheld OS marks
+   
+   A closed set of four semantic geometric marks derived from Project SEKAI's
+   rhythm lane precision and console framing language, replacing ad-hoc inline
+   dots and pseudo-elements:
+
+   1. Pip (Diamond / Square): Single notes, tap targets, active beacons.
+   2. Tick / Notch: Measure lines, cadence markers, left-edge card accents.
+   3. Bracket: Viewfinder reticles, focus frames, precision corner crops.
+   4. Chevron / Prism: Directional rhythm lanes, disclosure indicator.
+   ========================================================================== */
+
+/* 1. Pip — 45° diamond note pip. Default size 7px, follows accent. */
+.hh-mark-pip {
+    display: inline-block;
+    width: 0.4375rem;
+    height: 0.4375rem;
+    transform: rotate(45deg);
+    background-color: var(--hh-accent);
+    border-radius: 1px;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
+/* Square pip variant — micro status indicator. */
+.hh-mark-square {
+    display: inline-block;
+    width: 0.4375rem;
+    height: 0.4375rem;
+    background-color: var(--hh-accent);
+    border-radius: var(--hh-radius-xs);
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
+/* 2. Tick — vertical measure tick for section headers and title prefixes. */
+.hh-mark-tick {
+    display: inline-block;
+    width: 0.25rem;
+    height: 1.125em;
+    background-color: var(--hh-accent);
+    border-radius: var(--hh-radius-xs);
+    flex-shrink: 0;
+    vertical-align: -0.15em;
+}
+
+/* Left-edge notch for cards and list items — indicates active / selected state
+   without requiring a heavy full-card border. */
+.hh-notch-left {
+    position: relative;
+}
+
+.hh-notch-left::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 3px;
+    background-color: var(--hh-accent);
+    border-top-right-radius: var(--hh-radius-xs);
+    border-bottom-right-radius: var(--hh-radius-xs);
+}
+
+/* 3. Corner Brackets — viewfinder framing reticle.
+   Draws subtle 6px corner brackets around any container (e.g. focused card,
+   hero jacket, or modal viewport) without adding opaque framing borders. */
+.hh-frame-bracket {
+    position: relative;
+}
+
+.hh-frame-bracket::before,
+.hh-frame-bracket::after {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    pointer-events: none;
+    transition: border-color var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+/* Top-left and bottom-left brackets */
+.hh-frame-bracket::before {
+    top: -1px;
+    left: -1px;
+    border-top: 2px solid var(--hh-accent);
+    border-left: 2px solid var(--hh-accent);
+    border-top-left-radius: var(--hh-radius-xs);
+}
+
+/* Bottom-right bracket */
+.hh-frame-bracket::after {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 2px solid var(--hh-accent);
+    border-right: 2px solid var(--hh-accent);
+    border-bottom-right-radius: var(--hh-radius-xs);
+}
+
+/* 4. Chevron / Prism mark — rhythmic lane indicator. */
+.hh-mark-chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--hh-accent);
+    flex-shrink: 0;
+}
+
 }
 /* ── end @layer components ─────────────────────────────────────────────── */
 
@@ -1595,8 +1734,17 @@
     .ios-glass-card-interactive:active,
     .hh-dock-icon:hover,
     .hh-dock-icon:active,
-    .hh-selected {
+    .hh-selected,
+    [data-hh-focused],
+    [data-hh-focused]:active {
         transform: none !important;
+    }
+
+    [data-hh-focused] {
+        transition:
+            border-color var(--hh-dur-fast) var(--hh-ease-out),
+            box-shadow var(--hh-dur-fast) var(--hh-ease-out),
+            background-color var(--hh-dur-fast) var(--hh-ease-out) !important;
     }
 
     .hh-animate-confirm,

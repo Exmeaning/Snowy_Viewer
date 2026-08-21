@@ -79,6 +79,12 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
                         exit={{ opacity: 0 }}
                         transition={springSnappy}
                         onClick={onClose}
+                        // Scrim dismissal, matching Modal's own "back" cue. Escape
+                        // and the close glyph route through the same `onClose`, and
+                        // neither plays a sound of its own, so there is nothing here
+                        // for the 60ms dedup window to collide with.
+                        data-hh-click
+                        data-hh-sound="back"
                     />
 
                     {/* Dialog — anchored under the top chrome that opened it, so

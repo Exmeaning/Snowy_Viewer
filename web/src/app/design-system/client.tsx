@@ -8,6 +8,8 @@ import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import Modal from "@/components/common/Modal";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import BaseFilters, { FilterSection, FilterButton, FilterToggle } from "@/components/common/BaseFilters";
+import { CursorRing, HandheldMark, HandheldEmptyState } from "@/components/handheld";
+import { useHandheldCursor } from "@/hooks/useHandheldCursor";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { playHandheldSound, type HandheldSoundName } from "@/lib/handheld-sound";
@@ -267,6 +269,70 @@ function demoCard(seed: DemoCardSeed): ICardInfo {
 }
 
 const THUMBNAIL_SIZES = [48, 64, 96] as const;
+
+function DesignSystemTravelingFocusDemo() {
+    const { index: activeIndex, setIndex, getItemProps } = useHandheldCursor({
+        count: 4,
+        columns: 4,
+        loop: true,
+        activateOnPointer: true,
+        onConfirm: () => {
+            playHandheldSound("confirm");
+        },
+    });
+
+    const demoItems = [
+        { title: "CARDS", code: "01", desc: "Member archives" },
+        { title: "MUSIC", code: "02", desc: "Track masters" },
+        { title: "EVENTS", code: "03", desc: "Active stories" },
+        { title: "GACHA", code: "04", desc: "Current banners" },
+    ];
+
+    return (
+        <div className="hh-tile p-6">
+            <div className="mb-4 flex items-center justify-between">
+                <div>
+                    <h4 className="hh-title text-sm">Interactive Traveling Cursor Ring Matrix</h4>
+                    <p className="hh-body mt-0.5 text-xs text-[var(--hh-text-secondary)]">
+                        Use Arrow keys, Gamepad stick/D-pad, or Hover/Touch over tiles below. Watch the single shared <code className="font-mono text-[var(--hh-accent-deep)]">CursorRing</code> spring-travel seamlessly.
+                    </p>
+                </div>
+                <div className="hidden sm:flex items-center gap-2">
+                    <span className="hh-chip text-[10px] font-mono">D-PAD / ARROWS</span>
+                    <span className="hh-chip text-[10px] font-mono">HOVER</span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {demoItems.map((item, idx) => {
+                    const itemProps = getItemProps(idx);
+                    const isCurrent = activeIndex === idx;
+
+                    return (
+                        <div
+                            key={item.code}
+                            {...itemProps}
+                            onClick={() => setIndex(idx)}
+                            className="hh-press relative flex h-28 flex-col justify-between rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] bg-[var(--hh-surface-1)] p-3.5 transition-colors duration-160 hover:bg-[var(--hh-surface-2)] cursor-pointer"
+                        >
+                            {isCurrent && (
+                                <CursorRing groupId="ds-traveling-cursor" />
+                            )}
+                            <div className="flex items-center justify-between">
+                                <span className="font-mono text-xs font-bold text-[var(--hh-accent-deep)]">{item.code}</span>
+                                <HandheldMark type="pip" size="sm" tone={isCurrent ? "accent" : "muted"} />
+                            </div>
+                            <div>
+                                <h5 className="font-bold text-sm text-[var(--hh-text-primary)]">{item.title}</h5>
+                                <p className="text-[11px] text-[var(--hh-text-secondary)]">{item.desc}</p>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
 
 /* ──────────────────────────────────────────────────────────────────────────
    Layout helpers
@@ -995,6 +1061,132 @@ export default function DesignSystemClient() {
                             </div>
                         </Spec>
 
+                    </div>
+                </Section>
+
+                {/* ── Geometric marks & Design Soul ───────────────────── */}
+                <Section
+                    id="geometric-marks"
+                    title="Geometric vocabulary & Semantic marks"
+                    blurb="A native 4-symbol geometric vocabulary derived from rhythm game precision, character accents, and handheld console state registers. Zero third-party proprietary glyphs."
+                >
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="hh-tile p-5">
+                            <div className="flex h-16 items-center justify-center gap-3">
+                                <HandheldMark type="pip" size="lg" tone="accent" />
+                                <HandheldMark type="pip" size="lg" />
+                                <span className="hh-mark-pip" />
+                            </div>
+                            <div className="mt-3 border-t border-[var(--hh-border)] pt-3">
+                                <code className="block font-mono text-xs font-bold text-[var(--hh-accent-deep)]">pip / diamond</code>
+                                <p className="hh-body mt-1 text-xs text-[var(--hh-text-secondary)]">45° diamond pip. Status indicator, active note beat, selection dot.</p>
+                            </div>
+                        </div>
+
+                        <div className="hh-tile p-5">
+                            <div className="flex h-16 items-center justify-center gap-3">
+                                <HandheldMark type="tick" size="lg" tone="accent" />
+                                <span className="hh-mark-tick" />
+                            </div>
+                            <div className="mt-3 border-t border-[var(--hh-border)] pt-3">
+                                <code className="block font-mono text-xs font-bold text-[var(--hh-accent-deep)]">tick / segment</code>
+                                <p className="hh-body mt-1 text-xs text-[var(--hh-text-secondary)]">Hairline tick segment. Precision tab indicator, hairline divider pip.</p>
+                            </div>
+                        </div>
+
+                        <div className="hh-tile p-5">
+                            <div className="flex h-16 items-center justify-center gap-3">
+                                <HandheldMark type="bracket" size="lg" tone="accent" />
+                                <span className="hh-mark-bracket" />
+                            </div>
+                            <div className="mt-3 border-t border-[var(--hh-border)] pt-3">
+                                <code className="block font-mono text-xs font-bold text-[var(--hh-accent-deep)]">bracket / viewfinder</code>
+                                <p className="hh-body mt-1 text-xs text-[var(--hh-text-secondary)]">Viewfinder corner bracket. Card focus, HUD targeting frame.</p>
+                            </div>
+                        </div>
+
+                        <div className="hh-tile p-5">
+                            <div className="flex h-16 items-center justify-center gap-3">
+                                <HandheldMark type="chevron" size="lg" tone="accent" />
+                                <span className="hh-mark-chevron" />
+                            </div>
+                            <div className="mt-3 border-t border-[var(--hh-border)] pt-3">
+                                <code className="block font-mono text-xs font-bold text-[var(--hh-accent-deep)]">chevron / prism</code>
+                                <p className="hh-body mt-1 text-xs text-[var(--hh-text-secondary)]">Cadence chevron. Kinetic direction, disclosure trigger, rhythm progress.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 hh-tile p-6">
+                        <h4 className="hh-title text-sm mb-4">Scalable Empty State Specimen</h4>
+                        <div className="rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] bg-[var(--hh-surface-1)] p-6">
+                            <HandheldEmptyState
+                                title="No matching entries found"
+                                description="Try adjusting your filters or clearing search queries."
+                            />
+                        </div>
+                    </div>
+                </Section>
+
+                {/* ── Traveling focus & Pointer interactions ──────────── */}
+                <Section
+                    id="traveling-focus"
+                    title="Traveling focus & Pointer interactions"
+                    blurb="Pointer hover, touch tap, and D-pad/keyboard navigation unify into a single traveling cursor system using shared-layout spring physics."
+                >
+                    <DesignSystemTravelingFocusDemo />
+                </Section>
+
+                {/* ── Console cursors & Scrollbars ────────────────────── */}
+                <Section
+                    id="cursor-and-scrollbars"
+                    title="Console cursors & Handheld scrollbars"
+                    blurb="Hardware-inspired vector cursors and clean geometric scrollbars matching the console surface ladder."
+                >
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        {/* Cursor test pads */}
+                        <div className="hh-tile p-5">
+                            <h4 className="hh-title text-sm mb-3">Custom Vector Cursors (Pointer Coarse Ignored)</h4>
+                            <p className="hh-body text-xs text-[var(--hh-text-secondary)] mb-4">
+                                Hover over each surface below to test crisp SVG reticle and pointer states.
+                            </p>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="hh-well flex h-16 flex-col items-center justify-center cursor-default rounded-[var(--hh-radius-md)] border border-[var(--hh-border)]">
+                                    <span className="font-mono text-xs font-bold">Default Arrow</span>
+                                    <span className="text-[10px] text-[var(--hh-text-tertiary)]">cursor-default</span>
+                                </div>
+                                <div className="hh-well flex h-16 flex-col items-center justify-center cursor-pointer rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] hover:bg-[var(--hh-surface-3)]">
+                                    <span className="font-mono text-xs font-bold text-[var(--hh-accent-deep)]">Interactive Pointer</span>
+                                    <span className="text-[10px] text-[var(--hh-text-tertiary)]">cursor-pointer</span>
+                                </div>
+                                <div className="hh-well flex h-16 flex-col items-center justify-center cursor-grab rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] active:cursor-grabbing">
+                                    <span className="font-mono text-xs font-bold">Draggable Reticle</span>
+                                    <span className="text-[10px] text-[var(--hh-text-tertiary)]">cursor-grab</span>
+                                </div>
+                                <div className="hh-well flex h-16 flex-col items-center justify-center cursor-not-allowed rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] opacity-60">
+                                    <span className="font-mono text-xs font-bold">Disabled Slashed</span>
+                                    <span className="text-[10px] text-[var(--hh-text-tertiary)]">cursor-not-allowed</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Scrollbar test box */}
+                        <div className="hh-tile p-5">
+                            <h4 className="hh-title text-sm mb-3">Handheld Geometric Scrollbar</h4>
+                            <p className="hh-body text-xs text-[var(--hh-text-secondary)] mb-4">
+                                Scroll the list below to inspect the 6px flat thumb and accent hover response.
+                            </p>
+                            <div className="hh-well max-h-48 overflow-y-auto rounded-[var(--hh-radius-md)] border border-[var(--hh-border)] p-3">
+                                <div className="space-y-2">
+                                    {Array.from({ length: 12 }).map((_, i) => (
+                                        <div key={i} className="flex items-center justify-between rounded bg-[var(--hh-surface-1)] px-3 py-2 text-xs">
+                                            <span className="font-mono text-[var(--hh-text-secondary)]">TRACK_ITEM_{String(i + 1).padStart(2, "0")}</span>
+                                            <HandheldMark type="pip" size="sm" tone={i % 3 === 0 ? "accent" : "muted"} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </Section>
 

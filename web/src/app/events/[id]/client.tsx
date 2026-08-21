@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
@@ -480,8 +480,13 @@ export default function EventDetailPage() {
                                     ))}
                                 </div>
                                 {/* Image Content */}
+                                {/* See cards/[id]: `hh-press` is what puts this non-button div in
+                                    reach of the global click delegation, and `confirm` marks
+                                    opening the viewer as an "enter" gesture. */}
                                 <div
-                                    className="relative aspect-[16/9] bg-[var(--hh-surface-sunken)] cursor-zoom-in group"
+                                    className="hh-press relative aspect-[16/9] bg-[var(--hh-surface-sunken)] cursor-zoom-in group"
+                                    style={{ "--hh-press-scale": "0.99" } as CSSProperties}
+                                    data-hh-sound="confirm"
                                     onClick={() => setImageViewerOpen(true)}
                                 >
                                     {effectiveTab === "event_story_banner" && (

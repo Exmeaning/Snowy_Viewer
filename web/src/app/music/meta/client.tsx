@@ -531,6 +531,12 @@ function MusicMetaContent() {
     }) => (
         <th
             className={`px-3 py-3 ${center ? "text-center" : "text-left"} cursor-pointer hover:bg-[var(--hh-surface-3)] transition-colors whitespace-nowrap bg-[var(--hh-surface-1)] ${className}`}
+            // Sortable header: a real control that no default selector matched, so
+            // the click was silent. Re-sorting is a state flip, hence "toggle".
+            // `data-hh-click` rather than `hh-press` — scaling a table header
+            // would drag the whole column with it.
+            data-hh-click
+            data-hh-sound="toggle"
             onClick={() => handleSort(field)}
         >
             <div className={`flex flex-col ${center ? "items-center" : "items-start"}`}>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, type CSSProperties } from "react";
 import Link from "@/components/LocalizedLink";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import Image from "next/image";
@@ -20,6 +20,7 @@ import {
     getCharacterLabelVUrl,
 } from "@/lib/assets";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
+import { HandheldMark } from "@/components/handheld/HandheldMark";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { fetchMasterData } from "@/lib/fetch";
@@ -191,7 +192,12 @@ export default function CharacterDetailClient() {
 
                         {/* Image Display. Sunken because the art is object-contain — the
                             surrounding margin is a recessed slot, not the tile face. */}
-                        <div className="p-4 bg-[var(--hh-surface-sunken)] min-h-[400px] flex items-center justify-center relative cursor-zoom-in"
+                        {/* See cards/[id]: `hh-press` is what puts this non-button div in reach
+                            of the global click delegation, and `confirm` marks opening the viewer
+                            as an "enter" gesture. */}
+                        <div className="hh-press p-4 bg-[var(--hh-surface-sunken)] min-h-[400px] flex items-center justify-center relative cursor-zoom-in"
+                            style={{ "--hh-press-scale": "0.99" } as CSSProperties}
+                            data-hh-sound="confirm"
                             onClick={() => setImageViewerOpen(true)}>
                             {activeTab === "trim" && (
                                 <div className="w-full h-auto relative aspect-[3/4]">
@@ -245,7 +251,10 @@ export default function CharacterDetailClient() {
                         </div>
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-                                <InfoRow label="ID" value={<span className="hh-numeric">{character.id}</span>} />
+                                <InfoRow
+                                    label="ID"
+                                    value={<HandheldMark type="bracket" size="sm" className="font-mono text-xs">{character.id}</HandheldMark>}
+                                />
                                 <InfoRow
                                     label={t("page.character.nameLabel")}
                                     value={
@@ -302,7 +311,7 @@ export default function CharacterDetailClient() {
                         <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
                             <div className="px-6 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)]">
                                 <h2 className="hh-title text-lg text-[var(--hh-text-primary)] flex items-center gap-2">
-                                    <span className="w-1 h-6 bg-[var(--hh-accent)] rounded-[var(--hh-radius-full)]"></span>
+                                    <HandheldMark type="pip" size="md" />
                                     {t("page.character.profileTitle")}
                                 </h2>
                             </div>
@@ -381,7 +390,7 @@ export default function CharacterDetailClient() {
                     <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
                         <div className="px-6 py-4 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] flex items-center justify-between">
                             <h2 className="hh-title text-lg text-[var(--hh-text-primary)] flex items-center gap-2">
-                                <span className="w-1 h-6 bg-[var(--hh-accent)] rounded-[var(--hh-radius-full)]"></span>
+                                <HandheldMark type="pip" size="md" />
                                 {t("page.character.relatedCardsTitle")}
                             </h2>
                             <span className="hh-numeric text-sm text-[var(--hh-text-secondary)] bg-[var(--hh-surface-2)] px-2 py-0.5 rounded-[var(--hh-radius-sm)] border border-[var(--hh-border)]">

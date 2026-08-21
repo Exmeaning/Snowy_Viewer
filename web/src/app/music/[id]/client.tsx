@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
@@ -465,8 +465,14 @@ export default function MusicDetailPage() {
                     <div className="lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
                         <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
                             {/* Jacket Image */}
+                            {/* See cards/[id]: `hh-press` is what puts this non-button div in
+                                reach of the global click delegation, and `confirm` marks opening
+                                the viewer as an "enter" gesture. Softened press scale so the
+                                square jacket acknowledges without visibly jumping. */}
                             <div
-                                className="relative aspect-square bg-[var(--hh-surface-sunken)] cursor-zoom-in"
+                                className="hh-press relative aspect-square bg-[var(--hh-surface-sunken)] cursor-zoom-in"
+                                style={{ "--hh-press-scale": "0.99" } as CSSProperties}
+                                data-hh-sound="confirm"
                                 onClick={() => setImageViewerOpen(true)}
                             >
                                 <Image

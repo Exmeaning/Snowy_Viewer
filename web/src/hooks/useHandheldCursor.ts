@@ -106,6 +106,8 @@ export type HandheldCursorOptions = {
   onCancel?: () => void;
   /** Every cursor move driven by input — the hook-up point for a move sound. */
   onMove?: (index: number) => void;
+  /** When true, pointer hover activates the traveling cursor ring. Default false (keys/gamepad only). */
+  activateOnPointer?: boolean;
 };
 
 export type HandheldCursorItemProps = {
@@ -220,6 +222,7 @@ export function useHandheldCursor(options: HandheldCursorOptions): HandheldCurso
     onConfirm,
     onCancel,
     onMove,
+    activateOnPointer = false,
   } = options;
   const columnCount = Math.max(1, Math.trunc(columns ?? 1));
 
@@ -240,9 +243,9 @@ export function useHandheldCursor(options: HandheldCursorOptions): HandheldCurso
    * inline callbacks. Written in an effect rather than during render so a
    * discarded concurrent render cannot publish values that never committed.
    */
-  const optionsRef = useRef({ count, columnCount, loop, onConfirm, onCancel, onMove });
+  const optionsRef = useRef({ count, columnCount, loop, onConfirm, onCancel, onMove, activateOnPointer });
   useEffect(() => {
-    optionsRef.current = { count, columnCount, loop, onConfirm, onCancel, onMove };
+    optionsRef.current = { count, columnCount, loop, onConfirm, onCancel, onMove, activateOnPointer };
   });
 
   const gamepadInputRef = useRef({
@@ -480,7 +483,7 @@ export function useHandheldCursor(options: HandheldCursorOptions): HandheldCurso
     (itemIndex: number): HandheldCursorItemProps => ({
       "data-hh-selected": itemIndex === index ? "true" : "false",
       onPointerEnter: () => {
-        commitIndex(itemIndex, false, true);
+        commitIndex(itemIndex, optionsRef.current.activateOnPointer, true);
       },
       // Focus follows clicks as well as tabbing, so it syncs the selection
       // without announcing itself as cursor input.

@@ -919,6 +919,10 @@ function MyMusicsContent() {
                     <div className="p-4 flex items-center justify-between">
                         <div
                             className="flex items-center gap-3 cursor-pointer flex-1 hover:opacity-80 transition-opacity"
+                            // Expand/collapse affordance on a non-button row. It already
+                            // has a hover cue but was silent; "toggle" matches what it does.
+                            data-hh-click
+                            data-hh-sound="toggle"
                             onClick={() => setBest30Expanded(!best30Expanded)}
                         >
                             <span className="text-sm font-bold text-primary-text">{t("page.myMusics.best30")}</span>

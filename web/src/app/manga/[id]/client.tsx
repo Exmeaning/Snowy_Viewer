@@ -523,6 +523,11 @@ export default function MangaDetailClient() {
             {isBilingualOpen && (
                 <div
                     onClick={() => setIsBilingualOpen(false)}
+                    // Tap-outside dismissal for the bilingual panel. Every other
+                    // dismissal path in the app is audible ("back"); this scrim was
+                    // the silent one, so closing by scrim felt unresponsive.
+                    data-hh-click
+                    data-hh-sound="back"
                     className="hh-scrim fixed inset-0 z-45 transition-opacity"
                 />
             )}

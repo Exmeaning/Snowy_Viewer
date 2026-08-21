@@ -4,6 +4,8 @@ import { useParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import MainLayout from "@/components/MainLayout";
 import { StoryReader } from "@/components/story/StoryReader";
+import { HandheldMark } from "@/components/handheld/HandheldMark";
+import { HandheldEmptyState } from "@/components/handheld/HandheldEmptyState";
 import { fetchMasterData } from "@/lib/fetch";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
@@ -82,9 +84,9 @@ export default function StorySpecialReaderClient() {
                     {t("page.story.special.backToList")}
                 </Link>
 
-                <div className="hh-tile p-4 mb-6">
+                <div className="hh-panel p-4 mb-6">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="hh-numeric text-xs text-miku font-medium">SP{spId}</span>
+                        <HandheldMark type="bracket" className="text-xs text-miku font-medium">SP{spId}</HandheldMark>
                         <h1 className="hh-title font-bold text-[var(--hh-text-primary)]">{storyTitle}</h1>
                         <span className={`hh-label px-1.5 py-0.5 rounded-[var(--hh-radius-sm)] border ${serverSource === "cn" ? "border-rose-500/45 bg-rose-500/15" : "border-blue-500/45 bg-blue-500/15"}`}>
                             {t(`page.story.serverSource.${serverSource}`)}
@@ -97,6 +99,17 @@ export default function StorySpecialReaderClient() {
                         <div className="hh-spinner w-12 h-12 mb-4" />
                         <p className="text-[var(--hh-text-secondary)]">{t("page.story.special.loading")}</p>
                     </div>
+                )}
+
+                {!isLoading && (!story || results.length === 0) && (
+                    <HandheldEmptyState
+                        title={t("common.state.noData")}
+                        action={
+                            <Link href="/story/special" className="hh-btn hh-btn-secondary mt-2">
+                                {t("page.story.special.backToList")}
+                            </Link>
+                        }
+                    />
                 )}
 
                 {!isLoading && story && results.length > 0 && (

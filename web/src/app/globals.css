@@ -547,6 +547,78 @@ button[data-shortcut-load-more="true"]::after {
    Scrollbars
    ========================================================================== */
 
+/* ==========================================================================
+   Handheld OS — Custom Cursor System
+   
+   Precision geometric pointers designed for the console aesthetic. Uses crisp
+   inline SVG data URIs with high-contrast dual-tone contours (dark edge + white
+   core + accent notch) so pointers remain razor-sharp across all light/dark themes
+   and high-DPI displays.
+   
+   Invariants:
+   1. Native I-beam is preserved for text elements (OS text selection accessibility).
+   2. Touch devices are excluded via `@media (pointer: fine)` query.
+   3. Every custom cursor declaration includes standard native fallback keywords.
+   ========================================================================== */
+
+@media (pointer: fine) {
+  :root,
+  body {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M2 2L15 8.5L9.5 10.5L7.5 16L2 2Z' fill='%23ffffff' stroke='%231a1b1e' stroke-width='1.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpolygon points='2,2 7,4.5 4.5,7' fill='%2333ccbb'/%3E%3C/svg%3E") 2 2, default;
+  }
+
+  a,
+  button,
+  summary,
+  [role="button"],
+  [role="link"],
+  [role="tab"],
+  .cursor-pointer,
+  .hh-btn,
+  .hh-press,
+  .hh-tile,
+  .hh-chip,
+  .hh-segment-item,
+  .hh-dock-btn,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="button"],
+  select {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M3 2L14 7.5L9 9.5L7 14.5L3 2Z' fill='%2333ccbb' stroke='%231a1b1e' stroke-width='1.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='9.5' r='1.5' fill='%23ffffff'/%3E%3C/svg%3E") 3 2, pointer;
+  }
+
+  .cursor-grab,
+  [data-draggable="true"] {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='5.5' fill='%23ffffff' stroke='%231a1b1e' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='10' r='2' fill='%2333ccbb'/%3E%3C/svg%3E") 10 10, grab;
+  }
+
+  .cursor-grabbing,
+  [data-dragging="true"] {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='4' fill='%2333ccbb' stroke='%231a1b1e' stroke-width='1.5'/%3E%3C/svg%3E") 10 10, grabbing;
+  }
+
+  :disabled,
+  [aria-disabled="true"],
+  .cursor-not-allowed {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='6' fill='%23ffffff' stroke='%231a1b1e' stroke-width='1.5'/%3E%3Cline x1='5.5' y1='5.5' x2='14.5' y2='14.5' stroke='%23e05666' stroke-width='1.5'/%3E%3C/svg%3E") 10 10, not-allowed;
+  }
+}
+
+/* ==========================================================================
+   Handheld OS — Scrollbar System
+   
+   Flat console-style scrollbars with crisp geometric thumbs and accent hover.
+   ========================================================================== */
+
+/* Firefox standard scrollbars */
+html,
+body,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--hh-border-strong) transparent;
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -556,9 +628,10 @@ button[data-shortcut-load-more="true"]::after {
   display: none;
 }
 
+/* WebKit scrollbars — desktop & nested panels */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -567,15 +640,19 @@ button[data-shortcut-load-more="true"]::after {
 
 ::-webkit-scrollbar-thumb {
   background: var(--hh-border-strong);
-  border-radius: 99px;
-  border: 2px solid transparent;
+  border-radius: var(--hh-radius-xs);
+  border: 1px solid transparent;
   background-clip: padding-box;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--hh-dur-fast) var(--hh-ease-out);
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--hh-accent);
   background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--hh-accent-deep);
 }
 
 * {

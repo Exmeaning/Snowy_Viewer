@@ -8,6 +8,7 @@ import { fetchMasterData } from "@/lib/fetch";
 import { getMusicJacketUrl } from "@/lib/assets";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTranslation } from "@/contexts/TranslationContext";
+import { HandheldEmptyState } from "@/components/handheld";
 
 export default function LatestMusicTab() {
     const { assetSource, isShowSpoiler } = useTheme();
@@ -69,12 +70,9 @@ export default function LatestMusicTab() {
 
     if (musics.length === 0) {
         return (
-            <div className="hh-well p-8 text-center text-[var(--hh-text-tertiary)]">
-                <svg className="w-12 h-12 mx-auto mb-3 text-[var(--hh-text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                </svg>
-                <p className="font-medium">{t("page.home.latestMusic.noData")}</p>
-            </div>
+            <HandheldEmptyState
+                title={t("page.home.latestMusic.noData")}
+            />
         );
     }
 

@@ -7,6 +7,8 @@ import MainLayout from "@/components/MainLayout";
 import PageHeader from "@/components/common/PageHeader";
 import BaseFilters, { FilterButton, FilterSection } from "@/components/common/BaseFilters";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
+import { HandheldMark } from "@/components/handheld/HandheldMark";
+import { HandheldEmptyState } from "@/components/handheld/HandheldEmptyState";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -119,13 +121,11 @@ function SkeletonList() {
 
 function EmptyState({ title, description }: { title: string; description?: string }) {
     return (
-        <div className="hh-well flex flex-col items-center justify-center py-20 text-center">
-            <svg className="mb-4 h-14 w-14 text-[var(--hh-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V7a2 2 0 00-2-2h-3V3.5A1.5 1.5 0 0013.5 2h-3A1.5 1.5 0 009 3.5V5H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2v-4M9 9h6m-6 4h4" />
-            </svg>
-            <p className="hh-title text-base text-[var(--hh-text-secondary)]">{title}</p>
-            {description ? <p className="mt-1 text-sm text-[var(--hh-text-tertiary)]">{description}</p> : null}
-        </div>
+        <HandheldEmptyState
+            title={title}
+            description={description}
+            className="py-12"
+        />
     );
 }
 
@@ -375,8 +375,9 @@ function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
 
             <div className="flex items-center justify-between text-xs">
                 <span className="hh-numeric text-[var(--hh-text-tertiary)]">{formatExchangeTime(getExchangeLastModified(entry), formatDate)}</span>
-                <span className="font-bold text-miku transition-transform group-hover:translate-x-0.5">
+                <span className="font-bold text-miku transition-transform group-hover:translate-x-0.5 inline-flex items-center gap-1">
                     {t("page.exchanges.detailLink")}
+                    <HandheldMark type="chevron" size="xs" />
                 </span>
             </div>
         </Link>

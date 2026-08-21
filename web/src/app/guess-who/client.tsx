@@ -10,6 +10,7 @@ import { ICardInfo, UNIT_DATA, CHAR_COLORS, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS 
 import { getCardFullUrl, getCharacterIconUrl } from "@/lib/assets";
 import { useI18n } from "@/contexts/I18nContext";
 import { getCharacterName } from "@/lib/i18n";
+import { playHandheldSound } from "@/lib/handheld-sound";
 
 // Game Constants
 const ROUNDS_PER_GAME = 10;
@@ -793,7 +794,13 @@ function GuessWhoClientPlayingAndSetup({
                             near-solid, so dropping to the 42% scrim token would leave the
                             HUD bleeding through behind the artwork. */}
                         {showFeedback && feedbackResult && currentCanvasImage && typeof document !== "undefined" && createPortal(
-                            <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--hh-surface-inset)] cursor-pointer animate-in fade-in duration-200" onClick={handleNextRound}>
+                            // Tap-to-advance. Explicit rather than delegated: the overlay is
+                            // mostly filled by <CanvasImage>, and the global click listener
+                            // deliberately mutes canvas subtrees so in-game drawing taps stay
+                            // quiet — which also swallowed this one. Sounded at the click site,
+                            // not inside handleNextRound, because the same function also fires
+                            // from the auto-advance timer, which must stay silent.
+                            <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--hh-surface-inset)] cursor-pointer animate-in fade-in duration-200" onClick={() => { playHandheldSound("confirm"); handleNextRound(); }}>
                                 <div className="relative w-full max-w-lg aspect-[4/3] sm:aspect-auto sm:h-[70vh]">
                                     <CanvasImage image={currentCanvasImage} objectFit="contain" />
                                 </div>

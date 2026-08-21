@@ -22,6 +22,7 @@ import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import HandheldEmptyState from "@/components/handheld/HandheldEmptyState";
 
 // ... imports remain the same
 
@@ -443,12 +444,10 @@ function CostumesContent() {
 
                         {/* Empty State */}
                         {!isLoading && filteredCostumes.length === 0 && (
-                            <div className="hh-well flex flex-col items-center justify-center py-20 text-[var(--hh-text-tertiary)]">
-                                <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <p>{tI18n("page.costumes.noResult")}</p>
-                            </div>
+                            <HandheldEmptyState
+                                title={tI18n("page.costumes.noResult")}
+                                className="my-12"
+                            />
                         )}
                     </>
                 )}

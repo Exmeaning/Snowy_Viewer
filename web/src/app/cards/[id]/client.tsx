@@ -29,6 +29,7 @@ import { fetchMasterData } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
+import { HandheldMark } from "@/components/handheld/HandheldMark";
 import { ICostumeInfo, IMoeCostumeData, PART_TYPE_LABEL_KEYS } from "@/types/costume";
 
 // Max levels by rarity
@@ -1280,7 +1281,10 @@ function CostumeInlineDetail({ costume, assetSource }: { costume: ICostumeInfo, 
             {/* Color Selector */}
             {availableColors.length > 1 && (
                 <div className="px-3 py-2.5 border-t border-[var(--hh-border)]">
-                    <p className="hh-label mb-1.5">{t("page.cards.costumeColorSchemes")}</p>
+                    <p className="hh-label mb-1.5 inline-flex items-center gap-1.5">
+                        <HandheldMark type="pip" size="xs" />
+                        {t("page.cards.costumeColorSchemes")}
+                    </p>
                     <div className="flex gap-1.5 overflow-x-auto md:flex-wrap md:overflow-x-visible scrollbar-hide pb-1 md:pb-0">
                         {availableColors.map(variant => {
                             const isSelected = selectedColorId === variant.colorId;

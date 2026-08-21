@@ -12,6 +12,7 @@ import Modal from "@/components/common/Modal";
 import ExternalLink from "@/components/ExternalLink";
 import AssetTosModal from "@/components/common/AssetTosModal";
 import LocalizedLink from "@/components/LocalizedLink";
+import { HandheldEmptyState } from "@/components/handheld";
 
 // ==================== Types (matching the assets gateway responses) ====================
 
@@ -830,12 +831,9 @@ function AssetVersionsContent() {
                                 </button>
                             </div>
                         ) : processedDiffItems.length === 0 ? (
-                            <div className="p-12 text-center hh-well rounded-[var(--hh-radius-lg)] text-[var(--hh-text-tertiary)]">
-                                <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                                </svg>
-                                <p>{t("page.assetVersions.emptyDiff")}</p>
-                            </div>
+                            <HandheldEmptyState
+                                title={t("page.assetVersions.emptyDiff")}
+                            />
                         ) : (
                             <>
                                 {/* One table, not a stack of cards: a diff can run to hundreds of
@@ -852,6 +850,12 @@ function AssetVersionsContent() {
                                         <div
                                             key={`${item.path}-${index}`}
                                             onClick={() => setSelectedFile(item)}
+                                            // Opens the file detail dialog. `data-hh-click` (rather
+                                            // than `hh-press`) is the escape hatch used here on
+                                            // purpose: a table row must not scale on press, which
+                                            // would shift every neighbouring row in a long diff.
+                                            data-hh-click
+                                            data-hh-sound="confirm"
                                             className="group px-4 py-3 flex items-center gap-3 cursor-pointer select-none border-b border-[var(--hh-border-hairline)] last:border-b-0 transition-colors hover:bg-[var(--hh-surface-sunken)]"
                                         >
                                             {renderChangeTypeBadge(item.changeType)}
