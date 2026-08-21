@@ -51,6 +51,17 @@ export const reducedMotionFade: Transition = {
 
 export type MotionPresetName = "snappy" | "soft" | "sheet" | "momentum";
 
+/**
+ * Filter drawer enter/exit — slides in from the left edge with a short
+ * horizontal offset. Kept subtle (14px) because the drawer is a docked panel at
+ * `lg` and up, where a large travel distance would read as a layout glitch
+ * rather than a transition. Exit is slightly shorter so dismissal feels prompt.
+ */
+export const filterDrawerVariants = {
+  initial: { opacity: 0, x: -14 },
+  animate: { opacity: 1, x: 0, transition: springSnappy },
+  exit: { opacity: 0, x: -10, transition: { type: "tween", duration: 0.16, ease: "easeOut" } },
+} as const;
 const PRESETS: Record<MotionPresetName, Transition> = {
   snappy: springSnappy,
   soft: springSoft,

@@ -918,407 +918,398 @@ function AssetViewerContent() {
                 </p>
             </div>
 
-            {/* Main Content Layout */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filters Side Panel */}
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            {/* Filters live in the global FilterDrawer (registered above via
+                useQuickFilter), so the page body is a single column. */}
+            <div className="min-w-0">
+                {/* Breadcrumbs Navigation & Actions */}
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4 p-4 ios-glass-card rounded-2xl">
+                    <div className="flex items-center gap-2">
+                        {(prefix || bundlePath) && (
+                            <button
+                                onClick={handleGoBack}
+                                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
+                                title={t("page.assetViewer.parentDir")}
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                        )}
+                        <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400">
+                            {breadcrumbs.map((bc, index) => (
+                                <div key={`${bc.path}-${index}`} className="flex items-center gap-1.5">
+                                    {index > 0 && <span className="text-slate-300 dark:text-slate-700">/</span>}
+                                    {bc.isBundle ? (
+                                        <span className="text-miku font-bold flex items-center gap-1 bg-miku/10 px-2 py-0.5 rounded-lg border border-miku/20">
+                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                            </svg>
+                                            {bc.name}
+                                        </span>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleBreadcrumbClick(bc)}
+                                            className={`hover:text-miku transition-colors ${
+                                                index === breadcrumbs.length - 1 && !bundlePath
+                                                    ? "text-primary-text font-bold"
+                                                    : ""
+                                            }`}
+                                        >
+                                            {bc.name}
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/30 p-1 rounded-xl border border-slate-200/30 dark:border-slate-800/30">
+                            <button
+                                onClick={() => handleViewModeChange("grid")}
+                                className={`p-1.5 rounded-lg transition-all ${
+                                    viewMode === "grid"
+                                        ? "bg-white dark:bg-slate-800 text-miku shadow-sm"
+                                        : "text-slate-400 hover:text-primary-text"
+                                }`}
+                                title={t("page.assetViewer.viewGrid")}
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25a2.25 2.25 0 01-2.25 2.25h-2.25A2.25 2.25 0 0113.5 8V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                                </svg>
+                            </button>
+                            <button
+                                onClick={() => handleViewModeChange("list")}
+                                className={`p-1.5 rounded-lg transition-all ${
+                                    viewMode === "list"
+                                        ? "bg-white dark:bg-slate-800 text-miku shadow-sm"
+                                        : "text-slate-400 hover:text-primary-text"
+                                }`}
+                                title={t("page.assetViewer.viewList")}
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <LocalizedLink
+                            href={`/asset-versions?server=${server}`}
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
+                            title={t("layout.nav.items.assetVersions")}
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </LocalizedLink>
+
+                        <button
+                            onClick={() => fetchCurrentView(true)}
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
+                            title={t("common.action.refresh")}
+                        >
+                            <svg className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
-                {/* File & Bundle Explorer Panel */}
-                <div className="flex-1 min-w-0">
-                    {/* Breadcrumbs Navigation & Actions */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4 p-4 ios-glass-card rounded-2xl">
-                        <div className="flex items-center gap-2">
-                            {(prefix || bundlePath) && (
-                                <button
-                                    onClick={handleGoBack}
-                                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
-                                    title={t("page.assetViewer.parentDir")}
-                                >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
-                            )}
-                            <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400">
-                                {breadcrumbs.map((bc, index) => (
-                                    <div key={`${bc.path}-${index}`} className="flex items-center gap-1.5">
-                                        {index > 0 && <span className="text-slate-300 dark:text-slate-700">/</span>}
-                                        {bc.isBundle ? (
-                                            <span className="text-miku font-bold flex items-center gap-1 bg-miku/10 px-2 py-0.5 rounded-lg border border-miku/20">
-                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                                                </svg>
-                                                {bc.name}
-                                            </span>
-                                        ) : (
-                                            <button
-                                                onClick={() => handleBreadcrumbClick(bc)}
-                                                className={`hover:text-miku transition-colors ${
-                                                    index === breadcrumbs.length - 1 && !bundlePath
-                                                        ? "text-primary-text font-bold"
-                                                        : ""
-                                                }`}
-                                            >
-                                                {bc.name}
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
+                {/* Active Bundle Details Banner */}
+                {bundlePath && activeBundleMeta && (
+                    <div className="mb-4 p-5 ios-glass-card border-miku/30 bg-gradient-to-r from-miku/5 via-transparent to-purple-500/5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-3.5">
+                            <div className="p-3 rounded-2xl bg-miku/10 text-miku border border-miku/20 shrink-0">
+                                <ArchiveBundleIcon />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-primary-text truncate max-w-xs sm:max-w-md" title={activeBundleMeta.path}>
+                                    {activeBundleMeta.path.split("/").pop()}
+                                </h2>
+                                <p className="text-xs text-slate-400 font-mono mt-0.5 truncate max-w-sm" title={activeBundleMeta.fingerprint || ""}>
+                                    {activeBundleMeta.fingerprint ? `FP: ${activeBundleMeta.fingerprint}` : activeBundleMeta.path}
+                                </p>
                             </div>
                         </div>
-
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/30 p-1 rounded-xl border border-slate-200/30 dark:border-slate-800/30">
-                                <button
-                                    onClick={() => handleViewModeChange("grid")}
-                                    className={`p-1.5 rounded-lg transition-all ${
-                                        viewMode === "grid"
-                                            ? "bg-white dark:bg-slate-800 text-miku shadow-sm"
-                                            : "text-slate-400 hover:text-primary-text"
-                                    }`}
-                                    title={t("page.assetViewer.viewGrid")}
-                                >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25a2.25 2.25 0 01-2.25 2.25h-2.25A2.25 2.25 0 0113.5 8V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                                    </svg>
-                                </button>
-                                <button
-                                    onClick={() => handleViewModeChange("list")}
-                                    className={`p-1.5 rounded-lg transition-all ${
-                                        viewMode === "list"
-                                            ? "bg-white dark:bg-slate-800 text-miku shadow-sm"
-                                            : "text-slate-400 hover:text-primary-text"
-                                    }`}
-                                    title={t("page.assetViewer.viewList")}
-                                >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
-                                    </svg>
-                                </button>
+                        <div className="flex items-center gap-4 text-xs">
+                            <div className="text-right">
+                                <span className="block text-slate-400">{t("page.assetViewer.fileCount")}</span>
+                                <span className="font-bold text-primary-text">{formatNumber(activeBundleMeta.fileCount)}</span>
                             </div>
-
-                            <LocalizedLink
-                                href={`/asset-versions?server=${server}`}
-                                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
-                                title={t("layout.nav.items.assetVersions")}
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </LocalizedLink>
-
-                            <button
-                                onClick={() => fetchCurrentView(true)}
-                                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-text transition-all duration-200"
-                                title={t("common.action.refresh")}
-                            >
-                                <svg className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                </svg>
-                            </button>
+                            <div className="w-px h-7 bg-slate-200 dark:bg-slate-800" />
+                            <div className="text-right">
+                                <span className="block text-slate-400">{t("page.assetViewer.totalSize")}</span>
+                                <span className="font-bold text-primary-text">{formatBytes(activeBundleMeta.totalSize)}</span>
+                            </div>
+                            {activeBundleMeta.source && (
+                                <>
+                                    <div className="w-px h-7 bg-slate-200 dark:bg-slate-800" />
+                                    <div className="text-right">
+                                        <span className="block text-slate-400">{t("page.assetViewer.source")}</span>
+                                        <span className="font-bold text-purple-400 uppercase text-[10px] px-1.5 py-0.5 bg-purple-500/10 rounded-md border border-purple-500/20">
+                                            {activeBundleMeta.source}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
+                )}
 
-                    {/* Active Bundle Details Banner */}
-                    {bundlePath && activeBundleMeta && (
-                        <div className="mb-4 p-5 ios-glass-card border-miku/30 bg-gradient-to-r from-miku/5 via-transparent to-purple-500/5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex items-center gap-3.5">
-                                <div className="p-3 rounded-2xl bg-miku/10 text-miku border border-miku/20 shrink-0">
-                                    <ArchiveBundleIcon />
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-bold text-primary-text truncate max-w-xs sm:max-w-md" title={activeBundleMeta.path}>
-                                        {activeBundleMeta.path.split("/").pop()}
-                                    </h2>
-                                    <p className="text-xs text-slate-400 font-mono mt-0.5 truncate max-w-sm" title={activeBundleMeta.fingerprint || ""}>
-                                        {activeBundleMeta.fingerprint ? `FP: ${activeBundleMeta.fingerprint}` : activeBundleMeta.path}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4 text-xs">
-                                <div className="text-right">
-                                    <span className="block text-slate-400">{t("page.assetViewer.fileCount")}</span>
-                                    <span className="font-bold text-primary-text">{formatNumber(activeBundleMeta.fileCount)}</span>
-                                </div>
-                                <div className="w-px h-7 bg-slate-200 dark:bg-slate-800" />
-                                <div className="text-right">
-                                    <span className="block text-slate-400">{t("page.assetViewer.totalSize")}</span>
-                                    <span className="font-bold text-primary-text">{formatBytes(activeBundleMeta.totalSize)}</span>
-                                </div>
-                                {activeBundleMeta.source && (
-                                    <>
-                                        <div className="w-px h-7 bg-slate-200 dark:bg-slate-800" />
-                                        <div className="text-right">
-                                            <span className="block text-slate-400">{t("page.assetViewer.source")}</span>
-                                            <span className="font-bold text-purple-400 uppercase text-[10px] px-1.5 py-0.5 bg-purple-500/10 rounded-md border border-purple-500/20">
-                                                {activeBundleMeta.source}
-                                            </span>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Loader */}
-                    {isLoading ? (
-                        <div className="flex items-center justify-center min-h-[40vh]">
-                            <div className="loading-spinner loading-spinner-sm" />
-                        </div>
-                    ) : error ? (
-                        <div className="p-6 text-center ios-glass-card border-red-500/20 bg-red-500/5 rounded-2xl">
-                            <p className="text-red-500 font-bold mb-3">{t("page.assetViewer.loadFailed")}</p>
-                            <p className="text-slate-500 text-xs mb-4">{error}</p>
-                            <button
-                                onClick={() => fetchCurrentView(true)}
-                                className="ios-glass-btn ios-glass-btn-primary px-4 py-2 text-xs rounded-xl"
-                            >
-                                {t("common.action.retry")}
-                            </button>
-                        </div>
-                    ) : (bundlePath ? processedAssetFiles.length === 0 : processedBundleItems.length === 0) ? (
-                        <div className="p-12 text-center ios-glass-card rounded-2xl text-slate-400">
-                            <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-                            </svg>
-                            <p>{t("page.assetViewer.emptyFolder")}</p>
-                        </div>
-                    ) : (
-                        <>
-                            {/* Directory & Bundles Tree View (Without redundant text badges) */}
-                            {!bundlePath ? (
-                                viewMode === "grid" ? (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                                        {processedBundleItems.map((item, index) => {
-                                            const isDir = item.type === "directory";
-                                            return (
-                                                <div
-                                                    key={`${item.path}-${index}`}
-                                                    onClick={() => {
-                                                        saveCurrentViewScroll();
-                                                        if (isDir) {
-                                                            setPrefix(item.path.endsWith("/") ? item.path : item.path + "/");
-                                                        } else {
-                                                            setBundlePath(item.path);
-                                                        }
-                                                    }}
-                                                    className="group ios-glass-card ios-glass-card-interactive p-4 rounded-2xl flex items-center gap-3 cursor-pointer select-none"
-                                                >
-                                                    <div className="shrink-0 p-2.5 rounded-xl bg-slate-100/50 dark:bg-slate-900/30 group-hover:scale-105 transition-transform duration-200">
-                                                        {isDir ? <FolderIcon /> : <ArchiveBundleIcon />}
-                                                    </div>
-
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="text-sm font-bold text-primary-text truncate group-hover:text-miku transition-colors duration-200" title={item.name}>
-                                                            {item.name}
-                                                        </p>
-                                                        <div className="mt-0.5 text-[11px] text-slate-400 font-medium truncate">
-                                                            {!isDir && (
-                                                                <span>
-                                                                    {formatBytes(item.totalSize)}
-                                                                    {item.fileCount !== undefined && ` • ${item.fileCount} files`}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col gap-1.5">
-                                        <div className="flex items-center px-4 py-2.5 text-xs font-bold text-slate-400 dark:text-slate-500 border-b border-slate-200/10 mb-1 select-none">
-                                            <div className="w-10"></div>
-                                            <div className="flex-1 min-w-0">{t("common.form.uid")}</div>
-                                            <div className="w-24 text-right">{t("page.assetViewer.fileCount")}</div>
-                                            <div className="w-28 text-right hidden sm:block">{t("page.assetViewer.totalSize")}</div>
-                                        </div>
-                                        {processedBundleItems.map((item, index) => {
-                                            const isDir = item.type === "directory";
-                                            return (
-                                                <div
-                                                    key={`${item.path}-${index}`}
-                                                    onClick={() => {
-                                                        saveCurrentViewScroll();
-                                                        if (isDir) {
-                                                            setPrefix(item.path.endsWith("/") ? item.path : item.path + "/");
-                                                        } else {
-                                                            setBundlePath(item.path);
-                                                        }
-                                                    }}
-                                                    className="group ios-glass-card ios-glass-card-interactive p-3 rounded-2xl flex items-center gap-3 cursor-pointer select-none"
-                                                >
-                                                    <div className="shrink-0 p-1.5 rounded-lg bg-slate-100/50 dark:bg-slate-900/30 group-hover:scale-105 transition-transform duration-200">
-                                                        {isDir ? <FolderIcon /> : <ArchiveBundleIcon />}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-bold text-primary-text truncate group-hover:text-miku transition-colors duration-200" title={item.name}>
-                                                            {item.name}
-                                                        </p>
-                                                    </div>
-                                                    <div className="w-24 shrink-0 text-right text-xs text-slate-400 font-medium">
-                                                        {isDir ? "-" : (item.fileCount !== undefined ? `${item.fileCount} files` : "-")}
-                                                    </div>
-                                                    <div className="w-28 shrink-0 text-right text-xs font-mono text-slate-400 truncate hidden sm:block">
-                                                        {isDir ? "-" : formatBytes(item.totalSize)}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )
-                            ) : (
-                                /* Files inside Bundle (with direct Image Previews & Merged PNG+WEBP formats) */
-                                viewMode === "grid" ? (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                                        {processedAssetFiles.map((item) => (
+                {/* Loader */}
+                {isLoading ? (
+                    <div className="flex items-center justify-center min-h-[40vh]">
+                        <div className="loading-spinner loading-spinner-sm" />
+                    </div>
+                ) : error ? (
+                    <div className="p-6 text-center ios-glass-card border-red-500/20 bg-red-500/5 rounded-2xl">
+                        <p className="text-red-500 font-bold mb-3">{t("page.assetViewer.loadFailed")}</p>
+                        <p className="text-slate-500 text-xs mb-4">{error}</p>
+                        <button
+                            onClick={() => fetchCurrentView(true)}
+                            className="ios-glass-btn ios-glass-btn-primary px-4 py-2 text-xs rounded-xl"
+                        >
+                            {t("common.action.retry")}
+                        </button>
+                    </div>
+                ) : (bundlePath ? processedAssetFiles.length === 0 : processedBundleItems.length === 0) ? (
+                    <div className="p-12 text-center ios-glass-card rounded-2xl text-slate-400">
+                        <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                        </svg>
+                        <p>{t("page.assetViewer.emptyFolder")}</p>
+                    </div>
+                ) : (
+                    <>
+                        {/* Directory & Bundles Tree View (Without redundant text badges) */}
+                        {!bundlePath ? (
+                            viewMode === "grid" ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+                                    {processedBundleItems.map((item, index) => {
+                                        const isDir = item.type === "directory";
+                                        return (
                                             <div
-                                                key={item.id}
+                                                key={`${item.path}-${index}`}
                                                 onClick={() => {
-                                                    setSelectedFile(item);
-                                                    setActiveFormatIndex(0);
+                                                    saveCurrentViewScroll();
+                                                    if (isDir) {
+                                                        setPrefix(item.path.endsWith("/") ? item.path : item.path + "/");
+                                                    } else {
+                                                        setBundlePath(item.path);
+                                                    }
                                                 }}
-                                                className="group ios-glass-card ios-glass-card-interactive p-3 rounded-2xl flex flex-col cursor-pointer select-none overflow-hidden"
+                                                className="group ios-glass-card ios-glass-card-interactive p-4 rounded-2xl flex items-center gap-3 cursor-pointer select-none"
                                             >
-                                                {/* Direct Thumbnail Preview for Images */}
-                                                {item.isImage && item.primaryUrl ? (
-                                                    <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-2.5 flex items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:8px_8px] bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/50">
-                                                        <img
-                                                            src={`${gatewayDomain}${item.primaryUrl}`}
-                                                            alt={item.name}
-                                                            loading="lazy"
-                                                            className="w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-200"
-                                                            onError={(e) => {
-                                                                (e.target as HTMLElement).style.display = "none";
-                                                            }}
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div className="relative w-full aspect-square rounded-xl mb-2.5 flex items-center justify-center bg-slate-100/50 dark:bg-slate-900/30 border border-slate-200/30 dark:border-slate-800/30">
-                                                        {getFileIcon(item.name)}
-                                                    </div>
-                                                )}
+                                                <div className="shrink-0 p-2.5 rounded-xl bg-slate-100/50 dark:bg-slate-900/30 group-hover:scale-105 transition-transform duration-200">
+                                                    {isDir ? <FolderIcon /> : <ArchiveBundleIcon />}
+                                                </div>
 
-                                                <div className="min-w-0 flex-1 flex flex-col justify-between">
-                                                    <p className="text-xs font-bold text-primary-text truncate group-hover:text-miku transition-colors duration-200" title={item.name}>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-bold text-primary-text truncate group-hover:text-miku transition-colors duration-200" title={item.name}>
                                                         {item.name}
                                                     </p>
-
-                                                    <div className="flex items-center justify-between gap-1 mt-1.5">
-                                                        {/* Formats Pills */}
-                                                        <div className="flex items-center gap-1">
-                                                            {item.formats.map((f) => (
-                                                                <span
-                                                                    key={f.ext}
-                                                                    className="px-1.5 py-0.2 text-[9px] font-bold rounded-md uppercase bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-300/40 dark:border-slate-700/40"
-                                                                >
-                                                                    {f.ext}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                        <span className="text-[10px] text-slate-400 font-medium">
-                                                            {formatBytes(item.totalSize)}
-                                                        </span>
+                                                    <div className="mt-0.5 text-[11px] text-slate-400 font-medium truncate">
+                                                        {!isDir && (
+                                                            <span>
+                                                                {formatBytes(item.totalSize)}
+                                                                {item.fileCount !== undefined && ` • ${item.fileCount} files`}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
-                                        ))}
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-1.5">
+                                    <div className="flex items-center px-4 py-2.5 text-xs font-bold text-slate-400 dark:text-slate-500 border-b border-slate-200/10 mb-1 select-none">
+                                        <div className="w-10"></div>
+                                        <div className="flex-1 min-w-0">{t("common.form.uid")}</div>
+                                        <div className="w-24 text-right">{t("page.assetViewer.fileCount")}</div>
+                                        <div className="w-28 text-right hidden sm:block">{t("page.assetViewer.totalSize")}</div>
                                     </div>
-                                ) : (
-                                    <div className="flex flex-col gap-1.5">
-                                        <div className="flex items-center px-4 py-2.5 text-xs font-bold text-slate-400 dark:text-slate-500 border-b border-slate-200/10 mb-1 select-none">
-                                            <div className="w-12"></div>
-                                            <div className="flex-1 min-w-0">{t("common.form.uid")}</div>
-                                            <div className="w-32 text-center font-normal">Formats</div>
-                                            <div className="w-24 text-right">{t("page.assetViewer.size")}</div>
-                                        </div>
-                                        {processedAssetFiles.map((item) => (
+                                    {processedBundleItems.map((item, index) => {
+                                        const isDir = item.type === "directory";
+                                        return (
                                             <div
-                                                key={item.id}
+                                                key={`${item.path}-${index}`}
                                                 onClick={() => {
-                                                    setSelectedFile(item);
-                                                    setActiveFormatIndex(0);
+                                                    saveCurrentViewScroll();
+                                                    if (isDir) {
+                                                        setPrefix(item.path.endsWith("/") ? item.path : item.path + "/");
+                                                    } else {
+                                                        setBundlePath(item.path);
+                                                    }
                                                 }}
-                                                className="group ios-glass-card ios-glass-card-interactive p-2.5 rounded-2xl flex items-center gap-3 cursor-pointer select-none"
+                                                className="group ios-glass-card ios-glass-card-interactive p-3 rounded-2xl flex items-center gap-3 cursor-pointer select-none"
                                             >
-                                                {/* Thumbnail preview in list mode */}
-                                                <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:6px_6px] bg-slate-100 dark:bg-slate-900 flex items-center justify-center border border-slate-200/50 dark:border-slate-800/50">
-                                                    {item.isImage && item.primaryUrl ? (
-                                                        <img
-                                                            src={`${gatewayDomain}${item.primaryUrl}`}
-                                                            alt={item.name}
-                                                            loading="lazy"
-                                                            className="w-full h-full object-contain p-0.5 group-hover:scale-105 transition-transform duration-200"
-                                                            onError={(e) => {
-                                                                (e.target as HTMLElement).style.display = "none";
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        getFileIcon(item.name)
-                                                    )}
+                                                <div className="shrink-0 p-1.5 rounded-lg bg-slate-100/50 dark:bg-slate-900/30 group-hover:scale-105 transition-transform duration-200">
+                                                    {isDir ? <FolderIcon /> : <ArchiveBundleIcon />}
                                                 </div>
-
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-bold text-primary-text truncate group-hover:text-miku transition-colors duration-200" title={item.name}>
                                                         {item.name}
                                                     </p>
                                                 </div>
-
-                                                <div className="w-32 shrink-0 flex items-center justify-center gap-1">
-                                                    {item.formats.map((f) => (
-                                                        <span
-                                                            key={f.ext}
-                                                            className="px-1.5 py-0.2 text-[9px] font-bold rounded-md uppercase bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-300/40 dark:border-slate-700/40"
-                                                        >
-                                                            {f.ext}
-                                                        </span>
-                                                    ))}
-                                                </div>
-
                                                 <div className="w-24 shrink-0 text-right text-xs text-slate-400 font-medium">
-                                                    {formatBytes(item.totalSize)}
+                                                    {isDir ? "-" : (item.fileCount !== undefined ? `${item.fileCount} files` : "-")}
+                                                </div>
+                                                <div className="w-28 shrink-0 text-right text-xs font-mono text-slate-400 truncate hidden sm:block">
+                                                    {isDir ? "-" : formatBytes(item.totalSize)}
                                                 </div>
                                             </div>
-                                        ))}
+                                        );
+                                    })}
+                                </div>
+                            )
+                        ) : (
+                            /* Files inside Bundle (with direct Image Previews & Merged PNG+WEBP formats) */
+                            viewMode === "grid" ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+                                    {processedAssetFiles.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            onClick={() => {
+                                                setSelectedFile(item);
+                                                setActiveFormatIndex(0);
+                                            }}
+                                            className="group ios-glass-card ios-glass-card-interactive p-3 rounded-2xl flex flex-col cursor-pointer select-none overflow-hidden"
+                                        >
+                                            {/* Direct Thumbnail Preview for Images */}
+                                            {item.isImage && item.primaryUrl ? (
+                                                <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-2.5 flex items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:8px_8px] bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/50">
+                                                    <img
+                                                        src={`${gatewayDomain}${item.primaryUrl}`}
+                                                        alt={item.name}
+                                                        loading="lazy"
+                                                        className="w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-200"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLElement).style.display = "none";
+                                                        }}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="relative w-full aspect-square rounded-xl mb-2.5 flex items-center justify-center bg-slate-100/50 dark:bg-slate-900/30 border border-slate-200/30 dark:border-slate-800/30">
+                                                    {getFileIcon(item.name)}
+                                                </div>
+                                            )}
+
+                                            <div className="min-w-0 flex-1 flex flex-col justify-between">
+                                                <p className="text-xs font-bold text-primary-text truncate group-hover:text-miku transition-colors duration-200" title={item.name}>
+                                                    {item.name}
+                                                </p>
+
+                                                <div className="flex items-center justify-between gap-1 mt-1.5">
+                                                    {/* Formats Pills */}
+                                                    <div className="flex items-center gap-1">
+                                                        {item.formats.map((f) => (
+                                                            <span
+                                                                key={f.ext}
+                                                                className="px-1.5 py-0.2 text-[9px] font-bold rounded-md uppercase bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-300/40 dark:border-slate-700/40"
+                                                            >
+                                                                {f.ext}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                    <span className="text-[10px] text-slate-400 font-medium">
+                                                        {formatBytes(item.totalSize)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-1.5">
+                                    <div className="flex items-center px-4 py-2.5 text-xs font-bold text-slate-400 dark:text-slate-500 border-b border-slate-200/10 mb-1 select-none">
+                                        <div className="w-12"></div>
+                                        <div className="flex-1 min-w-0">{t("common.form.uid")}</div>
+                                        <div className="w-32 text-center font-normal">Formats</div>
+                                        <div className="w-24 text-right">{t("page.assetViewer.size")}</div>
                                     </div>
-                                )
-                            )}
+                                    {processedAssetFiles.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            onClick={() => {
+                                                setSelectedFile(item);
+                                                setActiveFormatIndex(0);
+                                            }}
+                                            className="group ios-glass-card ios-glass-card-interactive p-2.5 rounded-2xl flex items-center gap-3 cursor-pointer select-none"
+                                        >
+                                            {/* Thumbnail preview in list mode */}
+                                            <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:6px_6px] bg-slate-100 dark:bg-slate-900 flex items-center justify-center border border-slate-200/50 dark:border-slate-800/50">
+                                                {item.isImage && item.primaryUrl ? (
+                                                    <img
+                                                        src={`${gatewayDomain}${item.primaryUrl}`}
+                                                        alt={item.name}
+                                                        loading="lazy"
+                                                        className="w-full h-full object-contain p-0.5 group-hover:scale-105 transition-transform duration-200"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLElement).style.display = "none";
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    getFileIcon(item.name)
+                                                )}
+                                            </div>
 
-                            {/* Load Next Page Cursor */}
-                            {nextCursor && (
-                                <div className="mt-8 flex justify-center">
-                                    <button
-                                        onClick={fetchMore}
-                                        disabled={isLoadingMore}
-                                        className="ios-glass-btn ios-glass-btn-primary px-8 py-3 font-bold rounded-2xl flex items-center gap-2"
-                                    >
-                                        {isLoadingMore ? (
-                                            <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                                        ) : (
-                                            <>
-                                                {t("page.assetViewer.loadMore")}
-                                                <span className="text-xs font-semibold opacity-75 bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded-full">
-                                                    {formatNumber(bundlePath ? mergedAssetFiles.length : bundleItems.length)}
-                                                </span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            )}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-primary-text truncate group-hover:text-miku transition-colors duration-200" title={item.name}>
+                                                    {item.name}
+                                                </p>
+                                            </div>
 
-                            {/* All Loaded Message */}
-                            {!nextCursor && (bundlePath ? processedAssetFiles.length > 0 : processedBundleItems.length > 0) && (
-                                <div className="mt-8 text-center text-slate-400 text-sm font-medium">
-                                    {t("page.assetViewer.allLoaded", { count: bundlePath ? processedAssetFiles.length : processedBundleItems.length })}
+                                            <div className="w-32 shrink-0 flex items-center justify-center gap-1">
+                                                {item.formats.map((f) => (
+                                                    <span
+                                                        key={f.ext}
+                                                        className="px-1.5 py-0.2 text-[9px] font-bold rounded-md uppercase bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-300/40 dark:border-slate-700/40"
+                                                    >
+                                                        {f.ext}
+                                                    </span>
+                                                ))}
+                                            </div>
+
+                                            <div className="w-24 shrink-0 text-right text-xs text-slate-400 font-medium">
+                                                {formatBytes(item.totalSize)}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                            )
+                        )}
+
+                        {/* Load Next Page Cursor */}
+                        {nextCursor && (
+                            <div className="mt-8 flex justify-center">
+                                <button
+                                    onClick={fetchMore}
+                                    disabled={isLoadingMore}
+                                    className="ios-glass-btn ios-glass-btn-primary px-8 py-3 font-bold rounded-2xl flex items-center gap-2"
+                                >
+                                    {isLoadingMore ? (
+                                        <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <>
+                                            {t("page.assetViewer.loadMore")}
+                                            <span className="text-xs font-semibold opacity-75 bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded-full">
+                                                {formatNumber(bundlePath ? mergedAssetFiles.length : bundleItems.length)}
+                                            </span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        )}
+
+                        {/* All Loaded Message */}
+                        {!nextCursor && (bundlePath ? processedAssetFiles.length > 0 : processedBundleItems.length > 0) && (
+                            <div className="mt-8 text-center text-slate-400 text-sm font-medium">
+                                {t("page.assetViewer.allLoaded", { count: bundlePath ? processedAssetFiles.length : processedBundleItems.length })}
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
 
             {/* File Detail & Preview Modal */}

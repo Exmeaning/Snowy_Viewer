@@ -756,50 +756,44 @@ function ExchangesContent() {
                     </div>
                 ) : null}
 
-                <div className="flex flex-col gap-6 lg:flex-row">
-                    <div className="w-full lg:w-80 lg:shrink-0">
-                        <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                            {quickFilterContent}
-                        </div>
-                    </div>
+                {/* Filters live in the global FilterDrawer (registered
+                    above via useQuickFilter), so the page body is a single column. */}
+                <div className="min-w-0">
+                    {isLoading ? (
+                        <SkeletonList />
+                    ) : filteredEntries.length === 0 ? (
+                        <EmptyState
+                            title={hasActiveFilters ? t("page.exchanges.noResult") : t("page.exchanges.noData")}
+                            description={hasActiveFilters ? t("page.exchanges.resetHint") : t("page.exchanges.noDataDescription")}
+                        />
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                {displayedEntries.map((entry) => (
+                                    <ExchangeCard key={entry.id} entry={entry} />
+                                ))}
+                            </div>
 
-                    <div className="min-w-0 flex-1">
-                        {isLoading ? (
-                            <SkeletonList />
-                        ) : filteredEntries.length === 0 ? (
-                            <EmptyState
-                                title={hasActiveFilters ? t("page.exchanges.noResult") : t("page.exchanges.noData")}
-                                description={hasActiveFilters ? t("page.exchanges.resetHint") : t("page.exchanges.noDataDescription")}
-                            />
-                        ) : (
-                            <>
-                                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                                    {displayedEntries.map((entry) => (
-                                        <ExchangeCard key={entry.id} entry={entry} />
-                                    ))}
+                            {displayedEntries.length < filteredEntries.length ? (
+                                <div className="mt-8 flex justify-center">
+                                    <button
+                                        onClick={loadMore}
+                                        data-shortcut-load-more="true"
+                                        className="rounded-xl bg-gradient-to-r from-miku to-miku-dark px-8 py-3 font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                                    >
+                                        {t("page.exchanges.loadMore")}
+                                        <span className="ml-2 text-sm opacity-80">
+                                            ({displayedEntries.length} / {filteredEntries.length})
+                                        </span>
+                                    </button>
                                 </div>
-
-                                {displayedEntries.length < filteredEntries.length ? (
-                                    <div className="mt-8 flex justify-center">
-                                        <button
-                                            onClick={loadMore}
-                                            data-shortcut-load-more="true"
-                                            className="rounded-xl bg-gradient-to-r from-miku to-miku-dark px-8 py-3 font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
-                                        >
-                                            {t("page.exchanges.loadMore")}
-                                            <span className="ml-2 text-sm opacity-80">
-                                                ({displayedEntries.length} / {filteredEntries.length})
-                                            </span>
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="mt-8 text-center text-sm text-slate-400">
-                                        {t("page.exchanges.allLoaded", { count: filteredEntries.length })}
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
+                            ) : (
+                                <div className="mt-8 text-center text-sm text-slate-400">
+                                    {t("page.exchanges.allLoaded", { count: filteredEntries.length })}
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
         </ExchangePageContext.Provider>

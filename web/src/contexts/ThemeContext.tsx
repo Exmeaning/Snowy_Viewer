@@ -26,6 +26,7 @@ import {
     type BackgroundAnimationBudget,
 } from "@/lib/backgroundAnimation";
 import { defaultContentRegionForPathname } from "@/lib/locale-routing";
+import { applyThemeCursors, clearThemeCursors } from "@/lib/themeCursor";
 
 export type { BackgroundAnimationBudget } from "@/lib/backgroundAnimation";
 
@@ -35,6 +36,17 @@ const DEFAULT_COLOR = "#33ccbb";
 const DEFAULT_COLOR_SCHEME_PREFERENCE: ColorSchemePreference = "system";
 const THEME_SWITCHING_CLASS = "theme-switching";
 const THEME_SWITCHING_DURATION_MS = 180;
+
+/**
+ * Theme-reactive cursors, on by default.
+ *
+ * Opt-out rather than opt-in because the cursors are part of how the theme
+ * color reads on desktop, and a feature nobody discovers is a feature nobody
+ * has. Only an explicit `"false"` in storage turns them off, so a corrupt or
+ * missing value lands on the intended default.
+ */
+const CUSTOM_CURSOR_STORAGE_KEY = "custom-cursor";
+const DEFAULT_CUSTOM_CURSOR_ENABLED = true;
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -122,6 +134,8 @@ interface ThemeContextType {
     setShowAds: (enabled: boolean) => void;
     backgroundAnimationBudget: BackgroundAnimationBudget;
     setBackgroundAnimationBudget: (budget: BackgroundAnimationBudget) => void;
+    customCursorEnabled: boolean;
+    setCustomCursorEnabled: (enabled: boolean) => void;
     serverSource: ServerSourceType;
     setServerSource: (source: ServerSourceType) => void;
 }
@@ -144,6 +158,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const [useLLMTranslationState, setUseLLMTranslationState] = useState(true); // Default ON
     const [showAdsState, setShowAdsState] = useState(DEFAULT_SHOW_ADS);
     const [backgroundAnimationBudgetState, setBackgroundAnimationBudgetState] = useState<BackgroundAnimationBudget>(DEFAULT_BACKGROUND_ANIMATION_BUDGET);
+    const [customCursorEnabledState, setCustomCursorEnabledState] = useState(DEFAULT_CUSTOM_CURSOR_ENABLED);
     const [serverSourceState, setServerSourceState] = useState<ServerSourceType>(DEFAULT_SERVER_SOURCE);
     const themeSwitchingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const effectiveShowAds = ADS_FEATURE_ENABLED && showAdsState;
@@ -206,6 +221,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
                 setBackgroundAnimationBudgetState(savedBackgroundAnimationBudget);
             }
             setDocumentBackgroundAnimationBudget(savedBackgroundAnimationBudget ?? DEFAULT_BACKGROUND_ANIMATION_BUDGET);
+            // Load theme cursor setting. Opt-out, so only an explicit "false" disables it.
+            if (localStorage.getItem(CUSTOM_CURSOR_STORAGE_KEY) === "false") {
+                setCustomCursorEnabledState(false);
+            }
             // Load server source setting
             const savedServerSource = localStorage.getItem("server-source");
             const loadedServerSource: ServerSourceType = (
@@ -312,6 +331,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         const darkColor = darkenColor(themeColor, 15);
         document.documentElement.style.setProperty("--color-miku-dark", darkColor);
 
+        // Regenerate the theme-reactive cursors for the new accent, or strip them
+        // so globals.css falls back to native pointers. Kept in this effect (not
+        // its own) because the cursors are a function of the same theme color:
+        // splitting them would mean two effects racing to describe one state.
+        if (customCursorEnabledState) {
+            applyThemeCursors(themeColor);
+        } else {
+            clearThemeCursors();
+        }
+        document.documentElement.dataset.themeCursor = customCursorEnabledState ? "on" : "off";
+
         // Update light variant for background (mix with 95% white)
         const lightColor = mixWithWhite(themeColor, 95);
         document.documentElement.style.setProperty("--theme-light", lightColor);
@@ -379,7 +409,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             const darkBodyEndHex = rgbToHex(darkBodyEndRgb.r, darkBodyEndRgb.g, darkBodyEndRgb.b);
             document.documentElement.style.setProperty("--theme-body-bg-end", darkBodyEndHex);
         }
-    }, [themeColor, hasHydratedThemeSettings]);
+    }, [themeColor, hasHydratedThemeSettings, customCursorEnabledState]);
 
     const setThemeCharacter = (charId: string) => {
         if (CHAR_COLORS[charId]) {
@@ -472,6 +502,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         }
     };
 
+    const setCustomCursorEnabled = (enabled: boolean) => {
+        // The cursors themselves are (re)applied by the theme-color effect, which
+        // already depends on this state — doing it here as well would paint twice.
+        setCustomCursorEnabledState(enabled);
+        try {
+            localStorage.setItem(CUSTOM_CURSOR_STORAGE_KEY, enabled ? "true" : "false");
+        } catch (e) {
+            console.error("Failed to save theme cursor setting to localStorage:", e);
+        }
+    };
+
     const setServerSource = (source: ServerSourceType) => {
         setServerSourceState(source);
         try {
@@ -482,7 +523,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     };
 
     return (
-        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, colorSchemePreference, resolvedColorScheme, setColorSchemePreference, isShowSpoiler, setShowSpoiler, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource, useLLMTranslation: useLLMTranslationState, setUseLLMTranslation, showAds: effectiveShowAds, setShowAds, backgroundAnimationBudget: backgroundAnimationBudgetState, setBackgroundAnimationBudget, serverSource: serverSourceState, setServerSource }}>
+        <ThemeContext.Provider value={{ themeCharId, themeColor, setThemeCharacter, colorSchemePreference, resolvedColorScheme, setColorSchemePreference, isShowSpoiler, setShowSpoiler, useTrainedThumbnail: useTrainedThumbnailState, setUseTrainedThumbnail, assetSource: assetSourceState, setAssetSource, useLLMTranslation: useLLMTranslationState, setUseLLMTranslation, showAds: effectiveShowAds, setShowAds, backgroundAnimationBudget: backgroundAnimationBudgetState, setBackgroundAnimationBudget, customCursorEnabled: customCursorEnabledState, setCustomCursorEnabled, serverSource: serverSourceState, setServerSource }}>
             {children}
         </ThemeContext.Provider>
     );

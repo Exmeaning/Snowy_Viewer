@@ -210,7 +210,7 @@ export default function BoardRow({
                         <div className="mt-1 flex flex-col items-center gap-0.5">
                             {currentHourChurn > 0 && (
                                 <span
-                                    className="sm:hidden inline-flex items-center justify-center rounded-full bg-miku/15 px-1.5 py-0.5 text-[9px] font-black text-miku tabular-nums dark:bg-miku/20"
+                                    className="sm:hidden inline-flex items-center justify-center rounded-full bg-miku/15 px-1.5 py-0.5 text-[9px] font-black text-miku tabular-nums dark:bg-miku/20 cursor-help"
                                     title={t("page.realtimeRanking.list.currentHourChurnTitle")}
                                 >
                                     {currentHourChurn}
@@ -355,7 +355,7 @@ export default function BoardRow({
                         {/* Desktop 1H bubble when collapsed */}
                         {canShowChurnDetails && !showChurn && currentHourChurn > 0 && (
                             <span
-                                className="hidden sm:inline-flex items-center justify-center rounded-full bg-miku/15 px-1.5 py-0.5 text-[9px] font-black text-miku tabular-nums dark:bg-miku/20"
+                                className="hidden sm:inline-flex items-center justify-center rounded-full bg-miku/15 px-1.5 py-0.5 text-[9px] font-black text-miku tabular-nums dark:bg-miku/20 cursor-help"
                                 title={t("page.realtimeRanking.list.currentHourChurnTitle")}
                             >
                                 {currentHourChurn}

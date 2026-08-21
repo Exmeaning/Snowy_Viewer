@@ -202,6 +202,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         setShowAds,
         backgroundAnimationBudget,
         setBackgroundAnimationBudget,
+        customCursorEnabled,
+        setCustomCursorEnabled,
         serverSource,
         setServerSource,
     } = useTheme();
@@ -455,6 +457,44 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                         );
                                                     })}
                                                 </div>
+                                            </div>
+
+                                            {/* Theme Cursor Segmented Control */}
+                                            <div>
+                                                <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    {t("settings.customCursor.sectionTitle")}
+                                                </div>
+                                                <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200/50 dark:border-slate-800/60 relative">
+                                                    {[
+                                                        { id: "on", labelKey: "settings.customCursor.on" },
+                                                        { id: "off", labelKey: "settings.customCursor.off" },
+                                                    ].map((option) => {
+                                                        const isSelected = (customCursorEnabled ? "on" : "off") === option.id;
+                                                        return (
+                                                            <button
+                                                                key={option.id}
+                                                                onClick={() => setCustomCursorEnabled(option.id === "on")}
+                                                                className={`relative flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors duration-150 select-none ${
+                                                                    isSelected
+                                                                        ? "text-white"
+                                                                        : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                                                                }`}
+                                                            >
+                                                                {isSelected && (
+                                                                    <motion.div
+                                                                        layoutId="activeCursorPill"
+                                                                        className="absolute inset-0 bg-miku rounded-lg shadow-sm"
+                                                                        transition={overlayTransition}
+                                                                    />
+                                                                )}
+                                                                <span className="relative z-10">{t(option.labelKey)}</span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                                <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">
+                                                    {t(customCursorEnabled ? "settings.customCursor.onDescription" : "settings.customCursor.offDescription")}
+                                                </p>
                                             </div>
 
                                             {/* Theme Color Dropdown */}

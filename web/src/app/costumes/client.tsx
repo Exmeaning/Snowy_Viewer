@@ -349,123 +349,115 @@ function CostumesContent() {
                 </div>
             )}
 
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filters - Side Panel */}
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            {/* Grid. Filters live in the global FilterDrawer (registered
+                above via useQuickFilter), so the page body is a single column. */}
+            <div className="min-w-0">
+                {isLoading ? (
+                    <div className="flex items-center justify-center min-h-[40vh]">
+                        <div className="loading-spinner loading-spinner-sm" />
                     </div>
-                </div>
-
-                {/* Grid */}
-                <div className="flex-1 min-w-0">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center min-h-[40vh]">
-                            <div className="loading-spinner loading-spinner-sm" />
-                        </div>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-                                {displayedGroups.map(costume => {
-                                    let assetName = "";
-                                    let repPart;
-                                    if (costume.parts["body"] && costume.parts["body"].length > 0) {
-                                        repPart = costume.parts["body"][0];
-                                    } else if (costume.parts["hair"] && costume.parts["hair"].length > 0) {
-                                        repPart = costume.parts["hair"][0];
-                                    } else if (costume.parts["head"] && costume.parts["head"].length > 0) {
-                                        repPart = costume.parts["head"][0];
-                                    } else {
-                                        const firstKey = Object.keys(costume.parts)[0];
-                                        if (firstKey && costume.parts[firstKey].length > 0) {
-                                            repPart = costume.parts[firstKey][0];
-                                        }
+                ) : (
+                    <>
+                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                            {displayedGroups.map(costume => {
+                                let assetName = "";
+                                let repPart;
+                                if (costume.parts["body"] && costume.parts["body"].length > 0) {
+                                    repPart = costume.parts["body"][0];
+                                } else if (costume.parts["hair"] && costume.parts["hair"].length > 0) {
+                                    repPart = costume.parts["hair"][0];
+                                } else if (costume.parts["head"] && costume.parts["head"].length > 0) {
+                                    repPart = costume.parts["head"][0];
+                                } else {
+                                    const firstKey = Object.keys(costume.parts)[0];
+                                    if (firstKey && costume.parts[firstKey].length > 0) {
+                                        repPart = costume.parts[firstKey][0];
                                     }
+                                }
 
-                                    if (repPart) {
-                                        assetName = repPart.assetbundleName;
-                                    }
+                                if (repPart) {
+                                    assetName = repPart.assetbundleName;
+                                }
 
-                                    const now = Date.now();
-                                    const isSpoiler = (costume.publishedAt || 0) > now;
+                                const now = Date.now();
+                                const isSpoiler = (costume.publishedAt || 0) > now;
 
-                                    return (
-                                        <Link
-                                            href={`/costumes/${costume.costumeNumber}`}
-                                            key={costume.costumeNumber}
-                                            data-shortcut-item="true"
-                                            className="pressable ios-glass-card ios-glass-card-interactive rounded-xl overflow-hidden p-3 flex flex-col h-full group"
-                                        >
-                                            <div className="relative aspect-square mb-2 bg-slate-50/70 dark:bg-slate-800/40 rounded-lg overflow-hidden">
-                                                <Image
-                                                    src={getCostumeThumbnailUrl(assetName, assetSource)}
-                                                    alt={costume.name}
-                                                    fill
-                                                    className="object-contain p-2 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)] group-hover:scale-105"
-                                                    unoptimized
-                                                />
-                                            </div>
-                                            <div className="flex-1 flex flex-col">
-                                                {isSpoiler && (
-                                                    <div className="mb-1">
-                                                        <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded leading-none">
-                                                            {tI18n("page.costumes.spoilerBadge")}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                <h3 className="type-title font-bold text-sm text-slate-800 mb-1 group-hover:text-miku" title={costume.name}>
-                                                    <TranslatedText
-                                                        original={costume.name}
-                                                        category="costumes"
-                                                        field="name"
-                                                        originalClassName="block"
-                                                        translationClassName="text-xs font-medium text-slate-400 block"
-                                                    />
-                                                </h3>
-                                                <div className="mt-auto flex flex-wrap gap-1">
-                                                    {costume.partTypes.map(pt => (
-                                                        <span key={pt} className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
-                                                            {translateWithFallback(PART_TYPE_LABEL_KEYS[pt], pt)}
-                                                        </span>
-                                                    ))}
-                                                    <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
-                                                        {translateWithFallback(SOURCE_LABEL_KEYS[costume.source], costume.source)}
+                                return (
+                                    <Link
+                                        href={`/costumes/${costume.costumeNumber}`}
+                                        key={costume.costumeNumber}
+                                        data-shortcut-item="true"
+                                        className="pressable ios-glass-card ios-glass-card-interactive rounded-xl overflow-hidden p-3 flex flex-col h-full group"
+                                    >
+                                        <div className="relative aspect-square mb-2 bg-slate-50/70 dark:bg-slate-800/40 rounded-lg overflow-hidden">
+                                            <Image
+                                                src={getCostumeThumbnailUrl(assetName, assetSource)}
+                                                alt={costume.name}
+                                                fill
+                                                className="object-contain p-2 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)] group-hover:scale-105"
+                                                unoptimized
+                                            />
+                                        </div>
+                                        <div className="flex-1 flex flex-col">
+                                            {isSpoiler && (
+                                                <div className="mb-1">
+                                                    <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded leading-none">
+                                                        {tI18n("page.costumes.spoilerBadge")}
                                                     </span>
                                                 </div>
+                                            )}
+                                            <h3 className="type-title font-bold text-sm text-slate-800 mb-1 group-hover:text-miku" title={costume.name}>
+                                                <TranslatedText
+                                                    original={costume.name}
+                                                    category="costumes"
+                                                    field="name"
+                                                    originalClassName="block"
+                                                    translationClassName="text-xs font-medium text-slate-400 block"
+                                                />
+                                            </h3>
+                                            <div className="mt-auto flex flex-wrap gap-1">
+                                                {costume.partTypes.map(pt => (
+                                                    <span key={pt} className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
+                                                        {translateWithFallback(PART_TYPE_LABEL_KEYS[pt], pt)}
+                                                    </span>
+                                                ))}
+                                                <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
+                                                    {translateWithFallback(SOURCE_LABEL_KEYS[costume.source], costume.source)}
+                                                </span>
                                             </div>
-                                        </Link>
-                                    );
-                                })}
+                                        </div>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+
+                        {/* Load More */}
+                        {displayedGroups.length < filteredCostumes.length && (
+                            <div className="mt-8 flex justify-center">
+                                <button
+                                    onClick={loadMore}
+                                    data-shortcut-load-more="true"
+                                    className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                >
+                                    {tI18n("page.costumes.loadMore")}
+                                    <span className="ml-2 text-sm opacity-80 type-caption">
+                                        ({displayedGroups.length} / {filteredCostumes.length})
+                                    </span>
+                                </button>
                             </div>
+                        )}
 
-                            {/* Load More */}
-                            {displayedGroups.length < filteredCostumes.length && (
-                                <div className="mt-8 flex justify-center">
-                                    <button
-                                        onClick={loadMore}
-                                        data-shortcut-load-more="true"
-                                        className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                                    >
-                                        {tI18n("page.costumes.loadMore")}
-                                        <span className="ml-2 text-sm opacity-80 type-caption">
-                                            ({displayedGroups.length} / {filteredCostumes.length})
-                                        </span>
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Empty State */}
-                            {!isLoading && filteredCostumes.length === 0 && (
-                                <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                                    <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <p>{tI18n("page.costumes.noResult")}</p>
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                        {/* Empty State */}
+                        {!isLoading && filteredCostumes.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                                <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p>{tI18n("page.costumes.noResult")}</p>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

@@ -175,6 +175,11 @@ export const koKRMessages = {
             collapse: "접으려면 클릭하세요.",
             expand: "필터를 확장하려면 클릭하세요.",
             openQuickFilter: "퀵 필터 열기",
+            drawerHintTitle: "필터가 화면 왼쪽으로 이동했습니다",
+            drawerHintTag: "왼쪽을 클릭하여 열기",
+            drawerHintBody: "필터 기능이 화면 왼쪽 가장자리로 통합되었습니다. 왼쪽의 '필터' 탭을 클릭하여 언제든지 열고 닫을 수 있으며, 넓은 화면에서는 자동으로 고정됩니다.",
+            drawerHintActionOpen: "지금 사용해보기",
+            drawerHintDismiss: "확인",
             unit: "그룹",
             character: "역할",
             all: "모두",
@@ -745,6 +750,13 @@ export const koKRMessages = {
             off: "끄기",
             onDescription: "배경 애니메이션 켜기: 떠다니는 조각들과 스크롤 효과 활성화",
             offDescription: "배경 애니메이션 끄기: 정적 테마 그라데이션 배경만 유지"
+        },
+        customCursor: {
+            sectionTitle: "테마 커서",
+            on: "켜기",
+            off: "끄기",
+            onDescription: "마우스 커서가 현재 캐릭터 테마 색상을 따르고 선명한 테두리를 유지하여 밝은 배경과 어두운 배경에서 모두 쉽게 알아볼 수 있습니다.",
+            offDescription: "시스템 기본 커서를 사용합니다. 터치 기기는 이 설정의 영향을 받지 않습니다."
         },
         contentDisplay: {
             sectionTitle: "콘텐츠 표시"

@@ -228,68 +228,59 @@ function GuidesContent() {
                 </div>
             )}
 
-            {/* Two Column Layout */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filters */}
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            {/* Filters live in the global FilterDrawer (registered above via
+                useQuickFilter), so the page body is a single column. */}
+            <div className="min-w-0">
+                {isLoading ? (
+                    <div className="flex items-center justify-center min-h-[40vh]">
+                        <div className="loading-spinner loading-spinner-sm" />
                     </div>
-                </div>
-
-                {/* Guide List */}
-                <div className="flex-1 min-w-0">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center min-h-[40vh]">
-                            <div className="loading-spinner loading-spinner-sm" />
+                ) : (
+                    <>
+                        <div className="space-y-4">
+                            {displayedGuides.map((guide) => (
+                                <GuideCard
+                                    key={guide.id}
+                                    guide={guide}
+                                    categoryLabel={categories[guide.category] ?? guide.category}
+                                />
+                            ))}
                         </div>
-                    ) : (
-                        <>
-                            <div className="space-y-4">
-                                {displayedGuides.map((guide) => (
-                                    <GuideCard
-                                        key={guide.id}
-                                        guide={guide}
-                                        categoryLabel={categories[guide.category] ?? guide.category}
-                                    />
-                                ))}
+
+                        {/* Empty State */}
+                        {filteredGuides.length === 0 && !isLoading && (
+                            <div className="text-center py-16 text-slate-400">
+                                <svg className="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                <p className="text-sm">{t("page.guides.noResult")}</p>
                             </div>
+                        )}
 
-                            {/* Empty State */}
-                            {filteredGuides.length === 0 && !isLoading && (
-                                <div className="text-center py-16 text-slate-400">
-                                    <svg className="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                    </svg>
-                                    <p className="text-sm">{t("page.guides.noResult")}</p>
-                                </div>
-                            )}
+                        {/* Load More */}
+                        {displayedGuides.length < filteredGuides.length && (
+                            <div className="mt-8 flex justify-center">
+                                <button
+                                    onClick={loadMore}
+                                    data-shortcut-load-more="true"
+                                    className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                >
+                                    {t("page.guides.loadMore")}
+                                    <span className="ml-2 text-sm opacity-80">
+                                        ({displayedGuides.length} / {filteredGuides.length})
+                                    </span>
+                                </button>
+                            </div>
+                        )}
 
-                            {/* Load More */}
-                            {displayedGuides.length < filteredGuides.length && (
-                                <div className="mt-8 flex justify-center">
-                                    <button
-                                        onClick={loadMore}
-                                        data-shortcut-load-more="true"
-                                        className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                                    >
-                                        {t("page.guides.loadMore")}
-                                        <span className="ml-2 text-sm opacity-80">
-                                            ({displayedGuides.length} / {filteredGuides.length})
-                                        </span>
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* All loaded */}
-                            {displayedGuides.length > 0 && displayedGuides.length >= filteredGuides.length && (
-                                <div className="mt-8 text-center text-slate-400 text-sm">
-                                    {t("page.guides.allLoaded", { count: filteredGuides.length })}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                        {/* All loaded */}
+                        {displayedGuides.length > 0 && displayedGuides.length >= filteredGuides.length && (
+                            <div className="mt-8 text-center text-slate-400 text-sm">
+                                {t("page.guides.allLoaded", { count: filteredGuides.length })}
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

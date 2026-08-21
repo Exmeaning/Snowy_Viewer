@@ -1,13 +1,40 @@
 import type { NextConfig } from "next";
+import os from "node:os";
 
 const internalApiBase = (process.env.INTERNAL_API_BASE_URL || "http://127.0.0.1:8080").replace(/\/+$/, "");
 const enableLocalHarukiProxy = process.env.NODE_ENV !== "production";
+
+function getAllowedDevOrigins(): string[] {
+  const origins = new Set<string>(["localhost", "127.0.0.1"]);
+
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const net of interfaces[name] || []) {
+        if (net.family === "IPv4" && !net.internal) {
+          origins.add(net.address);
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  if (process.env.ALLOWED_DEV_ORIGINS) {
+    process.env.ALLOWED_DEV_ORIGINS.split(",").forEach((item) => {
+      const trimmed = item.trim();
+      if (trimmed) origins.add(trimmed);
+    });
+  }
+
+  return Array.from(origins);
+}
 
 const nextConfig: NextConfig = {
   output: "standalone",
   cacheMaxMemorySize: 50 * 1024 * 1024,
   trailingSlash: true,
-  allowedDevOrigins: ["localhost", "127.0.0.1"],
+  allowedDevOrigins: getAllowedDevOrigins(),
   async redirects() {
     return [
       {

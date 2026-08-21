@@ -177,6 +177,11 @@ export const jaJPMessages = {
       collapse: 'タップして折りたたむ',
       expand: 'タップしてフィルターを展開',
       openQuickFilter: 'クイックフィルターを開く',
+      drawerHintTitle: 'フィルターが左側に新登場',
+      drawerHintTag: '左側をクリックして開く',
+      drawerHintBody: 'フィルター機能が画面左端に統合されました。左側の「フィルター」タブをクリックするといつでも開閉でき、ワイド画面では自動で常駐します。',
+      drawerHintActionOpen: '使ってみる',
+      drawerHintDismiss: '了解',
       unit: 'ユニット',
       character: 'キャラクター',
       all: 'すべて',
@@ -747,6 +752,13 @@ export const jaJPMessages = {
       off: 'オフ',
       onDescription: '背景アニメーションを有効化：浮遊する破片とスクロール視差。軽量で省電力です。',
       offDescription: '背景アニメーションを無効化：静的なグラデーション背景のみで、アニメーションや視差はありません。'
+    },
+    customCursor: {
+      sectionTitle: 'テーマカーソル',
+      on: 'オン',
+      off: 'オフ',
+      onDescription: 'マウスカーソルが現在のキャラクターのテーマカラーに合わせて変化し、はっきりした輪郭線を保つため、明るい背景でも暗い背景でも見つけやすくなります。',
+      offDescription: 'システム標準のカーソルを使用します。タッチデバイスはこの設定の影響を受けません。'
     },
     contentDisplay: {
       sectionTitle: 'コンテンツ表示'

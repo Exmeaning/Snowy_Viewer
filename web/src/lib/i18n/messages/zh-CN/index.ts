@@ -177,6 +177,11 @@ export const zhCNMessages = {
             collapse: "点击收起",
             expand: "点击展开筛选",
             openQuickFilter: "打开快捷筛选",
+            drawerHintTitle: "筛选器现已移至左侧",
+            drawerHintTag: "点击左侧打开",
+            drawerHintBody: "筛选功能已整合至页面左侧。点击左侧突出的“筛选”标签，即可随时滑出或收起筛选面板；宽屏时会自动常驻展示。",
+            drawerHintActionOpen: "立即体验",
+            drawerHintDismiss: "我知道了",
             unit: "团体",
             character: "角色",
             all: "全部",
@@ -747,6 +752,13 @@ export const zhCNMessages = {
             off: "关闭",
             onDescription: "开启背景动画：漂浮的三角形碎片与滚动视差，轻量省电。",
             offDescription: "关闭背景动画：仅保留静态主题渐变背景，无碎片、无动画、无视差。"
+        },
+        customCursor: {
+            sectionTitle: "主题光标",
+            on: "开启",
+            off: "关闭",
+            onDescription: "鼠标指针跟随当前角色主题色，并保留清晰描边，在浅色与深色背景下都易于辨认。",
+            offDescription: "使用系统默认指针。触屏设备不受此设置影响。"
         },
         contentDisplay: {
             sectionTitle: "内容显示",

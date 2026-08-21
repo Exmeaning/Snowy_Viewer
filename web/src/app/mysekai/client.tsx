@@ -402,90 +402,82 @@ function MysekaiContent() {
                 </div>
             )}
 
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filters - Side Panel */}
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            {/* Filters live in the global FilterDrawer (registered above via
+                useQuickFilter), so the page body is a single column. */}
+            <div className="min-w-0">
+                {isLoading ? (
+                    <div className="flex items-center justify-center min-h-[40vh]">
+                        <div className="loading-spinner loading-spinner-sm" />
                     </div>
-                </div>
-
-                {/* Grid */}
-                <div className="flex-1 min-w-0">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center min-h-[40vh]">
-                            <div className="loading-spinner loading-spinner-sm" />
-                        </div>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-                                {displayedFixtures.map(fixture => (
-                                    <Link
-                                        href={`/mysekai/${fixture.id}`}
-                                        key={fixture.id}
-                                        data-shortcut-item="true"
-                                        className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-3 flex flex-col h-full group"
-                                    >
-                                        <div className="relative aspect-square mb-2 bg-slate-50 rounded-lg overflow-hidden group-hover:bg-slate-100 transition-colors">
-                                            <Image
-                                                src={getMysekaiFixtureThumbnailUrl(fixture.assetbundleName, assetSource, fixture.mysekaiFixtureMainGenreId)}
-                                                alt={fixture.name}
-                                                fill
-                                                className="object-contain p-2"
-                                                unoptimized
+                ) : (
+                    <>
+                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                            {displayedFixtures.map(fixture => (
+                                <Link
+                                    href={`/mysekai/${fixture.id}`}
+                                    key={fixture.id}
+                                    data-shortcut-item="true"
+                                    className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-3 flex flex-col h-full group"
+                                >
+                                    <div className="relative aspect-square mb-2 bg-slate-50 rounded-lg overflow-hidden group-hover:bg-slate-100 transition-colors">
+                                        <Image
+                                            src={getMysekaiFixtureThumbnailUrl(fixture.assetbundleName, assetSource, fixture.mysekaiFixtureMainGenreId)}
+                                            alt={fixture.name}
+                                            fill
+                                            className="object-contain p-2"
+                                            unoptimized
+                                        />
+                                    </div>
+                                    <div className="flex-1 flex flex-col">
+                                        <h3 className="font-bold text-sm text-slate-800 mb-1 group-hover:text-miku transition-colors" title={fixture.name}>
+                                            <TranslatedText
+                                                original={fixture.name}
+                                                category="mysekai"
+                                                field="fixtureName"
+                                                originalClassName="block"
+                                                translationClassName="text-xs font-medium text-slate-400 block"
                                             />
+                                        </h3>
+                                        <div className="mt-auto flex flex-wrap gap-1">
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
+                                                ID: {fixture.id}
+                                            </span>
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
+                                                {getGenreName(fixture.mysekaiFixtureMainGenreId)}
+                                            </span>
                                         </div>
-                                        <div className="flex-1 flex flex-col">
-                                            <h3 className="font-bold text-sm text-slate-800 mb-1 group-hover:text-miku transition-colors" title={fixture.name}>
-                                                <TranslatedText
-                                                    original={fixture.name}
-                                                    category="mysekai"
-                                                    field="fixtureName"
-                                                    originalClassName="block"
-                                                    translationClassName="text-xs font-medium text-slate-400 block"
-                                                />
-                                            </h3>
-                                            <div className="mt-auto flex flex-wrap gap-1">
-                                                <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
-                                                    ID: {fixture.id}
-                                                </span>
-                                                <span className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
-                                                    {getGenreName(fixture.mysekaiFixtureMainGenreId)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))}
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+
+                        {/* Load More */}
+                        {displayedFixtures.length < filteredFixtures.length && (
+                            <div className="mt-8 flex justify-center">
+                                <button
+                                    onClick={loadMore}
+                                    data-shortcut-load-more="true"
+                                    className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                >
+                                    {t("page.mysekai.loadMore")}
+                                    <span className="ml-2 text-sm opacity-80">
+                                        ({displayedFixtures.length} / {filteredFixtures.length})
+                                    </span>
+                                </button>
                             </div>
+                        )}
 
-                            {/* Load More */}
-                            {displayedFixtures.length < filteredFixtures.length && (
-                                <div className="mt-8 flex justify-center">
-                                    <button
-                                        onClick={loadMore}
-                                        data-shortcut-load-more="true"
-                                        className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                                    >
-                                        {t("page.mysekai.loadMore")}
-                                        <span className="ml-2 text-sm opacity-80">
-                                            ({displayedFixtures.length} / {filteredFixtures.length})
-                                        </span>
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Empty State */}
-                            {!isLoading && filteredFixtures.length === 0 && (
-                                <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                                    <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <p>{t("page.mysekai.noResult")}</p>
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                        {/* Empty State */}
+                        {!isLoading && filteredFixtures.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                                <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p>{t("page.mysekai.noResult")}</p>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

@@ -129,7 +129,18 @@ export default function BaseFilters({
         setRootElement((current) => (current === node ? current : node));
     }, []);
 
-    const isInsideQuickFilter = !!rootElement?.closest(".quick-filter-modal-content");
+    /**
+     * Whether this panel is mounted inside the global filter drawer.
+     *
+     * The drawer already supplies a header with the panel's title and its own
+     * close affordance, so the collapse chrome below would be a second, slightly
+     * different way to do the same thing sitting two rows apart. Detection is by
+     * DOM ancestry rather than a prop because these panels are handed to the
+     * drawer as an opaque `ReactNode` — the call sites never learn where their
+     * content ends up, and threading a flag through every one of them would put
+     * the knowledge in twenty places instead of one.
+     */
+    const isInsideFilterDrawer = !!rootElement?.closest("[data-filter-drawer-body]");
 
     const toggleCollapsed = () => {
         setMobileCollapsed(prev => {
@@ -247,8 +258,8 @@ export default function BaseFilters({
                         </button>
                     )}
 
-                    {/* "Tap to collapse" bar — mobile only, hidden in quick filter modal */}
-                    {!isInsideQuickFilter && (
+                    {/* "Tap to collapse" bar — mobile only, redundant inside the drawer */}
+                    {!isInsideFilterDrawer && (
                     <div
                         data-filter-collapse-bar="true"
                         className="lg:hidden -mx-5 -mb-5 mt-5 flex items-center justify-center gap-1 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 cursor-pointer select-none text-xs text-slate-400 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors"

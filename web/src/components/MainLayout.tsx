@@ -5,13 +5,16 @@ import MainNavbar from "./MainNavbar";
 import Sidebar from "./Sidebar";
 import MainFooter from "./MainFooter";
 import ScrollToTop from "./ScrollToTop";
-import QuickFilterButton from "./QuickFilterButton";
+import FilterDrawer from "./FilterDrawer";
+import FilterTabHandle from "./FilterTabHandle";
+import FilterDrawerGuide from "./FilterDrawerGuide";
 import SekaiLoader from "./SekaiLoader";
 import BackgroundPattern from "./BackgroundPattern";
 import KeyboardShortcutsHelp from "./KeyboardShortcutsHelp";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { usePageListShortcuts } from "@/hooks/usePageListShortcuts";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useQuickFilterContext } from "@/contexts/QuickFilterContext";
 import { localizePathForBrowser } from "@/lib/localized-path";
 import DetailSeoSummary from "@/components/seo/DetailSeoSummary";
 import { useDetailSeoSummary } from "@/contexts/DetailSeoSummaryContext";
@@ -62,6 +65,16 @@ export default function MainLayout({
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
 
+    // Filter drawer state lives in QuickFilterContext (pages register their own
+    // filter panels into it); the layout only needs to know whether the drawer
+    // is currently taking horizontal space, and how to dismiss it.
+    const {
+        hasFilters,
+        isOpen: isFilterDrawerOpen,
+        isDocked: isFilterDrawerDocked,
+        close: closeFilterDrawer,
+    } = useQuickFilterContext();
+
     // Track whether we pushed a history entry for an overlay, so the mobile
     // back button closes the overlay instead of navigating away.
     const overlayHistoryRef = useRef(false);
@@ -70,6 +83,13 @@ export default function MainLayout({
     const skipNextOverlayHistoryCleanupRef = useRef(false);
 
     const anyOverlayOpen = isSearchOpen || isSettingsOpen || isShortcutsHelpOpen;
+
+    /**
+     * Whether the drawer is currently docked beside the content rather than
+     * floating over it. Only in that case does the page need to give up width —
+     * a floating drawer is an overlay and must not reflow the grid underneath.
+     */
+    const isFilterDrawerDockedOpen = Boolean(hasFilters && isFilterDrawerOpen && isFilterDrawerDocked);
 
     // Mark overlays on <html> so CSS can pause heavy background animations and
     // tone down backdrop blur on mobile while an overlay is present. This is the
@@ -145,6 +165,15 @@ export default function MainLayout({
                 setIsSearchOpen(false);
                 setIsSettingsOpen(false);
                 setIsShortcutsHelpOpen(false);
+                return;
+            }
+
+            // A floating filter drawer is modal, so Android's back gesture should
+            // dismiss it rather than leave the page. A docked drawer is ordinary
+            // page furniture and is left alone — closing it on back would be an
+            // invisible change on a wide screen and would swallow the navigation.
+            if (isFilterDrawerOpen && !isFilterDrawerDocked) {
+                closeFilterDrawer();
             }
         };
 
@@ -153,7 +182,7 @@ export default function MainLayout({
             cancelOverlayHistoryArm();
             window.removeEventListener("popstate", handlePopState);
         };
-    }, [cancelOverlayHistoryArm]);
+    }, [cancelOverlayHistoryArm, isFilterDrawerOpen, isFilterDrawerDocked, closeFilterDrawer]);
 
     useEffect(() => {
         if (!immersiveMode) return;
@@ -198,16 +227,59 @@ export default function MainLayout({
         };
     }, [immersiveMode, isScreenshotMode]);
 
-    const effectiveSidebarOpen = isScreenshotMode || immersiveMode ? false : isSidebarOpen;
+    /**
+     * Sidebar/drawer mutual exclusion, resolved at render rather than by writing
+     * state back.
+     *
+     * Below `lg` the sidebar and the filter drawer are both overlays competing
+     * for one narrow screen, and stacking them buries whichever lost. When the
+     * drawer is up, the sidebar therefore yields — treated as visually closed
+     * without touching `isSidebarOpen`, so the user's menu preference survives
+     * and the menu reappears the moment the drawer is dismissed.
+     *
+     * From `lg` up (`isFilterDrawerDocked`) the two are designed to sit side by
+     * side, so nothing yields.
+     */
+    const sidebarYieldsToDrawer = isFilterDrawerOpen && !isFilterDrawerDocked;
+    const effectiveSidebarOpen = isScreenshotMode || immersiveMode || sidebarYieldsToDrawer
+        ? false
+        : isSidebarOpen;
+
+    /**
+     * How far the content column is pushed right.
+     *
+     * Two independent rails can claim space: the navigation sidebar (from `md`)
+     * and a docked filter drawer (from `lg`). The offsets are declared per
+     * breakpoint rather than computed, because the drawer only docks at `lg` —
+     * reserving `--dual-rail-w` any earlier would indent the page against a
+     * drawer that is still floating, leaving a visibly empty gutter.
+     *
+     * Chrome is suppressed entirely in screenshot and immersive modes, so those
+     * paths keep the content flush left.
+     */
+    const railOffsetClass = effectiveSidebarOpen
+        ? (isFilterDrawerDockedOpen
+            ? "md:ml-[var(--sidebar-w)] lg:ml-[var(--dual-rail-w)]"
+            : "md:ml-[var(--sidebar-w)]")
+        : (isFilterDrawerDockedOpen
+            ? "md:ml-0 lg:ml-[var(--filter-drawer-w)]"
+            : "md:ml-0");
 
     const handleMenuToggle = useCallback(() => {
         if (isScreenshotMode || immersiveMode) return;
         setIsSidebarOpen(prev => {
             const newState = !prev;
             sessionStorage.setItem('sidebar_open', String(newState));
+            // Opening the menu on a narrow screen dismisses the filter drawer, so
+            // the two overlays never stack. The reverse direction needs no action
+            // here: `effectiveSidebarOpen` already treats the sidebar as closed
+            // while a floating drawer is up.
+            if (newState && isFilterDrawerOpen && !isFilterDrawerDocked) {
+                closeFilterDrawer();
+            }
             return newState;
         });
-    }, [immersiveMode, isScreenshotMode]);
+    }, [immersiveMode, isScreenshotMode, isFilterDrawerOpen, isFilterDrawerDocked, closeFilterDrawer]);
 
     const handleSidebarClose = useCallback(() => {
         setIsSidebarOpen(false);
@@ -318,8 +390,7 @@ export default function MainLayout({
                 )}
 
                 {/* Main content area */}
-                <div ref={pageContentRef} data-shortcut-page-root="true" className={`flex-grow relative z-10 w-full min-w-0 ${hasMounted ? 'transition-all duration-300' : ''} ${effectiveSidebarOpen ? 'md:ml-[18rem]' : 'md:ml-0'
-                    }`}>
+                <div ref={pageContentRef} data-shortcut-page-root="true" className={`flex-grow relative z-10 w-full min-w-0 ${hasMounted ? 'transition-all duration-300' : ''} ${railOffsetClass}`}>
                     {children}
                     {detailSeoSummary && (
                         <DetailSeoSummary
@@ -333,16 +404,23 @@ export default function MainLayout({
             {!immersiveMode && (
                 <>
                     {/* Footer */}
-                    <div className={`relative z-[5] ${hasMounted ? 'transition-all duration-300' : ''} ${effectiveSidebarOpen ? 'md:ml-[18rem]' : 'md:ml-0'
-                        }`}>
+                    <div className={`relative z-[5] ${hasMounted ? 'transition-all duration-300' : ''} ${railOffsetClass}`}>
                         <MainFooter />
                     </div>
 
                     {/* Scroll To Top */}
                     <ScrollToTop />
 
-                    {/* Quick Filter floating button + modal */}
-                    <QuickFilterButton />
+                    {/* Filter drawer: the single mount point for every page's
+                        filter panel, plus its pull tab and first-run coach mark.
+                        All three read the page's registered filters from
+                        QuickFilterContext and render nothing when a page has
+                        none, so they are safe to mount unconditionally here.
+                        They take `isRailOpen` because the drawer and its tab are
+                        anchored to the sidebar's trailing edge. */}
+                    <FilterDrawer isSidebarOpen={effectiveSidebarOpen} />
+                    <FilterTabHandle isSidebarOpen={effectiveSidebarOpen} />
+                    <FilterDrawerGuide />
 
                     {/* Keyboard Shortcuts Help */}
                     <KeyboardShortcutsHelp isOpen={isShortcutsHelpOpen} onClose={() => setIsShortcutsHelpOpen(false)} />

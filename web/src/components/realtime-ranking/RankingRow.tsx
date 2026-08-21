@@ -231,7 +231,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                             {/* Mobile: also show the 1H bubble in the rank column. */}
                             {currentHourChurn > 0 && (
                                 <span
-                                    className="sm:hidden inline-flex items-center justify-center rounded-full bg-miku/15 px-1.5 py-0.5 text-[9px] font-black text-miku tabular-nums dark:bg-miku/20"
+                                    className="sm:hidden inline-flex items-center justify-center rounded-full bg-miku/15 px-1.5 py-0.5 text-[9px] font-black text-miku tabular-nums dark:bg-miku/20 cursor-help"
                                     title={t("page.realtimeRanking.list.currentHourChurnTitle")}
                                 >
                                     {currentHourChurn}
@@ -385,7 +385,7 @@ export default function RankingRow({ entry, masterData, assetSource, secondsSinc
                         {/* Desktop: place the 1H bubble next to the score row when there is room. */}
                         {canShowChurnDetails && !showChurn && currentHourChurn > 0 && (
                             <span
-                                className="hidden sm:inline-flex items-center justify-center rounded-full bg-miku/15 px-1.5 py-0.5 text-[9px] font-black text-miku tabular-nums dark:bg-miku/20"
+                                className="hidden sm:inline-flex items-center justify-center rounded-full bg-miku/15 px-1.5 py-0.5 text-[9px] font-black text-miku tabular-nums dark:bg-miku/20 cursor-help"
                                 title={t("page.realtimeRanking.list.currentHourChurnTitle")}
                             >
                                 {currentHourChurn}

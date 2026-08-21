@@ -232,30 +232,25 @@ function StoryCardContent() {
                 </div>
             )}
 
-            <div className="flex flex-col lg:flex-row gap-6">
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            {/* Filters live in the global FilterDrawer (registered above via
+                useQuickFilter), so the page body is a single column. */}
+            <div className="min-w-0">
+                <CardGrid cards={displayedCards} isLoading={isLoading} hrefPrefix="/story/card" />
+                {!isLoading && displayedCards.length < filteredCards.length && (
+                    <div className="mt-8 flex justify-center">
+                        <button
+                            data-shortcut-load-more="true"
+                            onClick={loadMore}
+                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                        >
+                            {t("page.story.card.loadMore")}
+                            <span className="ml-2 text-sm opacity-80">({displayedCards.length} / {filteredCards.length})</span>
+                        </button>
                     </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                    <CardGrid cards={displayedCards} isLoading={isLoading} hrefPrefix="/story/card" />
-                    {!isLoading && displayedCards.length < filteredCards.length && (
-                        <div className="mt-8 flex justify-center">
-                            <button
-                                data-shortcut-load-more="true"
-                                onClick={loadMore}
-                                className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                            >
-                                {t("page.story.card.loadMore")}
-                                <span className="ml-2 text-sm opacity-80">({displayedCards.length} / {filteredCards.length})</span>
-                            </button>
-                        </div>
-                    )}
-                    {!isLoading && displayedCards.length > 0 && displayedCards.length >= filteredCards.length && (
-                        <div className="mt-8 text-center text-slate-400 text-sm">{t("page.story.card.allLoaded", { count: filteredCards.length })}</div>
-                    )}
-                </div>
+                )}
+                {!isLoading && displayedCards.length > 0 && displayedCards.length >= filteredCards.length && (
+                    <div className="mt-8 text-center text-slate-400 text-sm">{t("page.story.card.allLoaded", { count: filteredCards.length })}</div>
+                )}
             </div>
         </div>
     );

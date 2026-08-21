@@ -270,81 +270,76 @@ function LyricsContent() {
                 </div>
             )}
 
-            <div className="flex flex-col lg:flex-row gap-6">
-                    <aside className="w-full lg:w-80 lg:shrink-0">
-                        <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                            {quickFilterContent}
-                        </div>
-                    </aside>
-                    <section className="min-w-0 flex-1" aria-label={t("page.lyrics.title")}>
-                        {isLoading || waitingForAliasMatch ? (
-                            <div className={MUSIC_GRID_CLASS} aria-label={t("page.lyrics.loading")}>
-                                {Array.from({ length: 15 }).map((_, index) => (
-                                    <div key={index} className="animate-pulse">
-                                        <div className="overflow-hidden rounded-xl border border-slate-200/60 bg-white/60 dark:border-slate-700/60 dark:bg-slate-800/60">
-                                            <div className="aspect-square bg-slate-200 dark:bg-slate-700" />
-                                            <div className="space-y-2 p-3">
-                                                <div className="h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-700" />
-                                                <div className="h-3 w-1/2 rounded bg-slate-200 dark:bg-slate-700" />
-                                            </div>
-                                        </div>
+            {/* Filters live in the global FilterDrawer (registered above via
+                useQuickFilter), so the page body is a single column. */}
+            <section className="min-w-0" aria-label={t("page.lyrics.title")}>
+                {isLoading || waitingForAliasMatch ? (
+                    <div className={MUSIC_GRID_CLASS} aria-label={t("page.lyrics.loading")}>
+                        {Array.from({ length: 15 }).map((_, index) => (
+                            <div key={index} className="animate-pulse">
+                                <div className="overflow-hidden rounded-xl border border-slate-200/60 bg-white/60 dark:border-slate-700/60 dark:bg-slate-800/60">
+                                    <div className="aspect-square bg-slate-200 dark:bg-slate-700" />
+                                    <div className="space-y-2 p-3">
+                                        <div className="h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-700" />
+                                        <div className="h-3 w-1/2 rounded bg-slate-200 dark:bg-slate-700" />
                                     </div>
-                                ))}
+                                </div>
                             </div>
-                        ) : filteredMusics.length === 0 ? (
-                            <div className="py-16 text-center">
-                                <div className="mb-4 text-6xl" aria-hidden="true">🎼</div>
-                                <h3 className="mb-2 text-xl font-bold text-slate-600 dark:text-slate-300">{t("page.lyrics.empty")}</h3>
-                                <p className="text-slate-500 dark:text-slate-400">{t("page.lyrics.emptyHint")}</p>
+                        ))}
+                    </div>
+                ) : filteredMusics.length === 0 ? (
+                    <div className="py-16 text-center">
+                        <div className="mb-4 text-6xl" aria-hidden="true">🎼</div>
+                        <h3 className="mb-2 text-xl font-bold text-slate-600 dark:text-slate-300">{t("page.lyrics.empty")}</h3>
+                        <p className="text-slate-500 dark:text-slate-400">{t("page.lyrics.emptyHint")}</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className={MUSIC_GRID_CLASS}>
+                            {filteredMusics.slice(0, displayCount).map((music) => {
+                                const lyrics = lyricsByMusicId.get(music.id);
+                                const hasDetail = lyrics ? hasLyricsDetail(lyrics) : false;
+                                const versions = lyrics ? getLyricsAvailableVersions(lyrics) : [];
+                                const versionLabel = !hasDetail
+                                    ? "page.lyrics.inProgressBadge"
+                                    : versions.length === 1 && versions[0] === "game"
+                                        ? "page.lyrics.versionGame"
+                                        : versions.length === 2 ? "page.lyrics.versionFullAndGame" : "page.lyrics.versionFull";
+                                return (
+                                    <div key={music.id} className="min-w-0">
+                                        <MusicItem
+                                            music={music}
+                                            isSpoiler={music.publishedAt > now}
+                                            cnTitle={lyrics?.title["zh-CN"]}
+                                            enTitle={lyrics?.title["en-US"]}
+                                            hrefBase="/lyrics"
+                                            jacketTopLeftLabel={t(versionLabel)}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        {displayCount < filteredMusics.length ? (
+                            <div className="mt-8 flex justify-center">
+                                <button
+                                    onClick={loadMore}
+                                    data-shortcut-load-more="true"
+                                    className="pressable ios-glass-btn ios-glass-btn-primary rounded-full px-8 py-3 font-bold"
+                                >
+                                    {t("page.lyrics.loadMore")}
+                                    <span className="ml-2 text-sm opacity-80 type-caption">
+                                        ({Math.min(displayCount, filteredMusics.length)} / {filteredMusics.length})
+                                    </span>
+                                </button>
                             </div>
                         ) : (
-                            <>
-                                <div className={MUSIC_GRID_CLASS}>
-                                    {filteredMusics.slice(0, displayCount).map((music) => {
-                                        const lyrics = lyricsByMusicId.get(music.id);
-                                        const hasDetail = lyrics ? hasLyricsDetail(lyrics) : false;
-                                        const versions = lyrics ? getLyricsAvailableVersions(lyrics) : [];
-                                        const versionLabel = !hasDetail
-                                            ? "page.lyrics.inProgressBadge"
-                                            : versions.length === 1 && versions[0] === "game"
-                                                ? "page.lyrics.versionGame"
-                                                : versions.length === 2 ? "page.lyrics.versionFullAndGame" : "page.lyrics.versionFull";
-                                        return (
-                                            <div key={music.id} className="min-w-0">
-                                                <MusicItem
-                                                    music={music}
-                                                    isSpoiler={music.publishedAt > now}
-                                                    cnTitle={lyrics?.title["zh-CN"]}
-                                                    enTitle={lyrics?.title["en-US"]}
-                                                    hrefBase="/lyrics"
-                                                    jacketTopLeftLabel={t(versionLabel)}
-                                                />
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                {displayCount < filteredMusics.length ? (
-                                    <div className="mt-8 flex justify-center">
-                                        <button
-                                            onClick={loadMore}
-                                            data-shortcut-load-more="true"
-                                            className="pressable ios-glass-btn ios-glass-btn-primary rounded-full px-8 py-3 font-bold"
-                                        >
-                                            {t("page.lyrics.loadMore")}
-                                            <span className="ml-2 text-sm opacity-80 type-caption">
-                                                ({Math.min(displayCount, filteredMusics.length)} / {filteredMusics.length})
-                                            </span>
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="mt-8 text-center text-sm text-slate-400">
-                                        {t("page.lyrics.allLoaded", { count: String(filteredMusics.length) })}
-                                    </div>
-                                )}
-                            </>
+                            <div className="mt-8 text-center text-sm text-slate-400">
+                                {t("page.lyrics.allLoaded", { count: String(filteredMusics.length) })}
+                            </div>
                         )}
-                    </section>
-                </div>
+                    </>
+                )}
+            </section>
         </div>
     );
 }

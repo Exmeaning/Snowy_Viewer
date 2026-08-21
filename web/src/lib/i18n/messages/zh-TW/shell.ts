@@ -203,6 +203,13 @@ export const zhTWSettings = {
         onDescription: "啟用背景動畫：顯示漂浮的三角形碎片與捲動視差效果，兼顧輕量與省電。",
         offDescription: "停用背景動畫：僅保留靜態主題漸層背景，不顯示碎片、動畫或視差效果。",
     },
+    customCursor: {
+        sectionTitle: "主題游標",
+        on: "啟用",
+        off: "停用",
+        onDescription: "滑鼠游標會依目前角色的主題色變化，並保留清晰描邊，在淺色與深色背景下都容易辨識。",
+        offDescription: "使用系統預設游標。觸控裝置不受此設定影響。",
+    },
     contentDisplay: {
         sectionTitle: "內容顯示",
     },

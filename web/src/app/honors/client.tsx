@@ -568,185 +568,171 @@ function HonorsContent() {
 
             {/* ==================== Normal Tab ==================== */}
             {activeTab === "normal" && (
-                <div className="flex flex-col lg:flex-row gap-6">
-                    <div className="w-full lg:w-80 lg:shrink-0">
-                        <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                            {normalQuickFilterContent}
+                /* Normal Grid. Filters live in the global FilterDrawer (registered
+                   above via useQuickFilter), so the page body is a single column. */
+                <div className="min-w-0">
+                    {isLoading ? (
+                        <div className="flex items-center justify-center min-h-[40vh]">
+                            <div className="loading-spinner loading-spinner-sm" />
                         </div>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                        {isLoading ? (
-                            <div className="flex items-center justify-center min-h-[40vh]">
-                                <div className="loading-spinner loading-spinner-sm" />
-                            </div>
-                        ) : (
-                            <>
-                                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-                                    {displayedHonors.map(honor => {
-                                        const group = honorGroupMap.get(honor.groupId);
-                                        return (
-                                            <div
-                                                key={honor.id}
-                                                onClick={() => handleHonorClick(honor)}
-                                                onKeyDown={(event) => {
-                                                    if (event.key === "Enter" || event.key === " ") {
-                                                        event.preventDefault();
-                                                        handleHonorClick(honor);
-                                                    }
-                                                }}
-                                                data-shortcut-item="true"
-                                                tabIndex={0}
-                                                role="button"
-                                                className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-4 cursor-pointer group"
-                                            >
-                                                <div className="mb-3">
-                                                    <DegreeImage
-                                                        honor={honor}
-                                                        honorGroup={group}
-                                                        honorLevel={honor.levels.length > 0 ? honor.levels[0].level : undefined}
-                                                        source={assetSource}
-                                                    />
-                                                </div>
-                                                <h3 className="font-bold text-sm text-slate-800 group-hover:text-miku transition-colors mb-1">
-                                                    {honor.name}
-                                                </h3>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {group && (
-                                                        <span className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
-                                                            {getHonorTypeLabel(group.honorType, t)}
-                                                        </span>
-                                                    )}
-                                                    {honor.honorRarity && (
-                                                        <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
-                                                            {getHonorRarityLabel(honor.honorRarity, t)}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {displayedHonors.length < filteredHonors.length && (
-                                    <div className="mt-8 flex justify-center">
-                                        <button
-                                            onClick={loadMore}
-                                            data-shortcut-load-more="true"
-                                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                                {displayedHonors.map(honor => {
+                                    const group = honorGroupMap.get(honor.groupId);
+                                    return (
+                                        <div
+                                            key={honor.id}
+                                            onClick={() => handleHonorClick(honor)}
+                                            onKeyDown={(event) => {
+                                                if (event.key === "Enter" || event.key === " ") {
+                                                    event.preventDefault();
+                                                    handleHonorClick(honor);
+                                                }
+                                            }}
+                                            data-shortcut-item="true"
+                                            tabIndex={0}
+                                            role="button"
+                                            className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-4 cursor-pointer group"
                                         >
-                                            {t("page.honors.loadMore")}
-                                            <span className="ml-2 text-sm opacity-80">
-                                                ({displayedHonors.length} / {filteredHonors.length})
-                                            </span>
-                                        </button>
-                                    </div>
-                                )}
+                                            <div className="mb-3">
+                                                <DegreeImage
+                                                    honor={honor}
+                                                    honorGroup={group}
+                                                    honorLevel={honor.levels.length > 0 ? honor.levels[0].level : undefined}
+                                                    source={assetSource}
+                                                />
+                                            </div>
+                                            <h3 className="font-bold text-sm text-slate-800 group-hover:text-miku transition-colors mb-1">
+                                                {honor.name}
+                                            </h3>
+                                            <div className="flex flex-wrap gap-1">
+                                                {group && (
+                                                    <span className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
+                                                        {getHonorTypeLabel(group.honorType, t)}
+                                                    </span>
+                                                )}
+                                                {honor.honorRarity && (
+                                                    <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
+                                                        {getHonorRarityLabel(honor.honorRarity, t)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
 
-                                {!isLoading && filteredHonors.length === 0 && (
-                                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                                        <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <p>{t("page.honors.noResult.normal")}</p>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
+                            {displayedHonors.length < filteredHonors.length && (
+                                <div className="mt-8 flex justify-center">
+                                    <button
+                                        onClick={loadMore}
+                                        data-shortcut-load-more="true"
+                                        className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                    >
+                                        {t("page.honors.loadMore")}
+                                        <span className="ml-2 text-sm opacity-80">
+                                            ({displayedHonors.length} / {filteredHonors.length})
+                                        </span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {!isLoading && filteredHonors.length === 0 && (
+                                <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                                    <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <p>{t("page.honors.noResult.normal")}</p>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             )}
 
             {/* ==================== Bonds Tab ==================== */}
             {activeTab === "bonds" && (
-                <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Bonds Filters */}
-                    <div className="w-full lg:w-80 lg:shrink-0">
-                        <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                            {bondsQuickFilterContent}
+                /* Bonds Grid. Filters live in the global FilterDrawer (registered
+                   above via useQuickFilter), so the page body is a single column. */
+                <div className="min-w-0">
+                    {isBondsLoading ? (
+                        <div className="flex items-center justify-center min-h-[40vh]">
+                            <div className="loading-spinner loading-spinner-sm" />
                         </div>
-                    </div>
-
-                    {/* Bonds Grid */}
-                    <div className="flex-1 min-w-0">
-                        {isBondsLoading ? (
-                            <div className="flex items-center justify-center min-h-[40vh]">
-                                <div className="loading-spinner loading-spinner-sm" />
-                            </div>
-                        ) : (
-                            <>
-                                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-                                    {displayedBondsHonors.map(bh => {
-                                        const word = bondsWordMap.get(bh.bondsGroupId);
-                                        return (
-                                            <div
-                                                key={bh.id}
-                                                onClick={() => handleBondsHonorClick(bh)}
-                                                onKeyDown={(event) => {
-                                                    if (event.key === "Enter" || event.key === " ") {
-                                                        event.preventDefault();
-                                                        handleBondsHonorClick(bh);
-                                                    }
-                                                }}
-                                                data-shortcut-item="true"
-                                                tabIndex={0}
-                                                role="button"
-                                                className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-4 cursor-pointer group"
-                                            >
-                                                <div className="mb-3">
-                                                    <BondsDegreeImage
-                                                        bondsHonor={bh}
-                                                        gameCharaUnits={gameCharaUnits}
-                                                        bondsHonorWordAssetbundleName={word?.assetbundleName}
-                                                        viewType="normal"
-                                                        honorLevel={bh.levels.length > 0 ? bh.levels[0].level : undefined}
-                                                        source={assetSource}
-                                                    />
-                                                </div>
-                                                <h3 className="font-bold text-sm text-slate-800 group-hover:text-miku transition-colors mb-1">
-                                                    {bh.name}
-                                                </h3>
-                                                <div className="flex flex-wrap gap-1">
-                                                    <span className="text-[10px] px-1.5 py-0.5 bg-pink-50 text-pink-500 rounded font-medium">
-                                                        {t("page.honors.bondsBadge")}
-                                                    </span>
-                                                    {bh.honorRarity && (
-                                                        <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
-                                                            {getHonorRarityLabel(bh.honorRarity, t)}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {displayedBondsHonors.length < filteredBondsHonors.length && (
-                                    <div className="mt-8 flex justify-center">
-                                        <button
-                                            onClick={bondsLoadMore}
-                                            data-shortcut-load-more="true"
-                                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                                {displayedBondsHonors.map(bh => {
+                                    const word = bondsWordMap.get(bh.bondsGroupId);
+                                    return (
+                                        <div
+                                            key={bh.id}
+                                            onClick={() => handleBondsHonorClick(bh)}
+                                            onKeyDown={(event) => {
+                                                if (event.key === "Enter" || event.key === " ") {
+                                                    event.preventDefault();
+                                                    handleBondsHonorClick(bh);
+                                                }
+                                            }}
+                                            data-shortcut-item="true"
+                                            tabIndex={0}
+                                            role="button"
+                                            className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-4 cursor-pointer group"
                                         >
-                                            {t("page.honors.loadMore")}
-                                            <span className="ml-2 text-sm opacity-80">
-                                                ({displayedBondsHonors.length} / {filteredBondsHonors.length})
-                                            </span>
-                                        </button>
-                                    </div>
-                                )}
+                                            <div className="mb-3">
+                                                <BondsDegreeImage
+                                                    bondsHonor={bh}
+                                                    gameCharaUnits={gameCharaUnits}
+                                                    bondsHonorWordAssetbundleName={word?.assetbundleName}
+                                                    viewType="normal"
+                                                    honorLevel={bh.levels.length > 0 ? bh.levels[0].level : undefined}
+                                                    source={assetSource}
+                                                />
+                                            </div>
+                                            <h3 className="font-bold text-sm text-slate-800 group-hover:text-miku transition-colors mb-1">
+                                                {bh.name}
+                                            </h3>
+                                            <div className="flex flex-wrap gap-1">
+                                                <span className="text-[10px] px-1.5 py-0.5 bg-pink-50 text-pink-500 rounded font-medium">
+                                                    {t("page.honors.bondsBadge")}
+                                                </span>
+                                                {bh.honorRarity && (
+                                                    <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
+                                                        {getHonorRarityLabel(bh.honorRarity, t)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
 
-                                {!isBondsLoading && filteredBondsHonors.length === 0 && bondsDataLoaded && (
-                                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                                        <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <p>{t("page.honors.noResult.bonds")}</p>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
+                            {displayedBondsHonors.length < filteredBondsHonors.length && (
+                                <div className="mt-8 flex justify-center">
+                                    <button
+                                        onClick={bondsLoadMore}
+                                        data-shortcut-load-more="true"
+                                        className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                    >
+                                        {t("page.honors.loadMore")}
+                                        <span className="ml-2 text-sm opacity-80">
+                                            ({displayedBondsHonors.length} / {filteredBondsHonors.length})
+                                        </span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {!isBondsLoading && filteredBondsHonors.length === 0 && bondsDataLoaded && (
+                                <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                                    <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <p>{t("page.honors.noResult.bonds")}</p>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             )}
 

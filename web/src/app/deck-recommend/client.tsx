@@ -1415,7 +1415,7 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                                             <td className="py-1.5 px-1 text-right font-mono text-slate-600">{formatNumber(basePower)}</td>
                                             <td className="py-1.5 px-1 text-right text-miku font-bold">
                                                 <span>{card.skill?.scoreUp || 0}%</span>
-                                                {card.skill?.isPreTrainingSkill && <span className="ml-1 text-[9px] font-medium text-amber-500 bg-amber-50 px-1 py-[1px] rounded" title={t("page.deckRecommend.result.preTrainingTitle")}>{t("page.deckRecommend.result.preTrainingBadge")}</span>}
+                                                {card.skill?.isPreTrainingSkill && <span className="ml-1 text-[9px] font-medium text-amber-500 bg-amber-50 px-1 py-[1px] rounded cursor-help" title={t("page.deckRecommend.result.preTrainingTitle")}>{t("page.deckRecommend.result.preTrainingBadge")}</span>}
                                             </td>
                                             {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && (
                                                 <td className="py-1.5 px-1 text-right font-bold text-amber-600">

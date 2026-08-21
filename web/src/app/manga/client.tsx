@@ -125,90 +125,81 @@ function MangaContent() {
                 </div>
             )}
 
-            {/* Two Column Layout */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filters */}
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
+            {/* Grid. Filters live in the global FilterDrawer (registered
+                above via useQuickFilter), so the page body is a single column. */}
+            <div className="min-w-0">
+                {isLoading ? (
+                    <div className="flex items-center justify-center min-h-[40vh]">
+                        <div className="loading-spinner loading-spinner-sm" />
                     </div>
-                </div>
-
-                {/* Grid */}
-                <div className="flex-1 min-w-0">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center min-h-[40vh]">
-                            <div className="loading-spinner loading-spinner-sm" />
-                        </div>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
-                                {displayedMangas.map((manga) => (
-                                    <Link
-                                        key={manga.id}
-                                        href={`/manga/${manga.id}`}
-                                        data-shortcut-item="true"
-                                        className="group"
-                                    >
-                                        <div className="ios-glass-card ios-glass-card-interactive rounded-2xl overflow-hidden group">
-                                            {/* Thumbnail: crop top portion of vertical manga */}
-                                            <div className="relative aspect-square overflow-hidden bg-slate-100/50 dark:bg-slate-900/50">
-                                                <Image
-                                                    src={getMangaImageUrl(manga.id)}
-                                                    alt={manga.title}
-                                                    fill
-                                                    className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                                                    unoptimized
-                                                />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                ) : (
+                    <>
+                        <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
+                            {displayedMangas.map((manga) => (
+                                <Link
+                                    key={manga.id}
+                                    href={`/manga/${manga.id}`}
+                                    data-shortcut-item="true"
+                                    className="group"
+                                >
+                                    <div className="ios-glass-card ios-glass-card-interactive rounded-2xl overflow-hidden group">
+                                        {/* Thumbnail: crop top portion of vertical manga */}
+                                        <div className="relative aspect-square overflow-hidden bg-slate-100/50 dark:bg-slate-900/50">
+                                            <Image
+                                                src={getMangaImageUrl(manga.id)}
+                                                alt={manga.title}
+                                                fill
+                                                className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                                                unoptimized
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                                        </div>
+                                        <div className="p-4 border-t border-slate-200/20 dark:border-slate-800/20">
+                                            <div className="text-sm font-bold text-primary-text line-clamp-1 group-hover:text-miku transition-colors duration-300">
+                                                {manga.title}
                                             </div>
-                                            <div className="p-4 border-t border-slate-200/20 dark:border-slate-800/20">
-                                                <div className="text-sm font-bold text-primary-text line-clamp-1 group-hover:text-miku transition-colors duration-300">
-                                                    {manga.title}
-                                                </div>
-                                                <div className="flex items-center justify-between mt-3 text-[10px] text-slate-400 font-medium">
-                                                    <span className="text-miku bg-miku/10 dark:bg-miku/20 px-2 py-0.5 rounded-full border border-miku/20">
-                                                        {t("page.manga.episodeLabel", { id: manga.id })}
-                                                    </span>
-                                                    <span>
-                                                        {formatDate(manga.date * 1000, {
-                                                            year: "numeric",
-                                                            month: "2-digit",
-                                                            day: "2-digit",
-                                                        })}
-                                                    </span>
-                                                </div>
+                                            <div className="flex items-center justify-between mt-3 text-[10px] text-slate-400 font-medium">
+                                                <span className="text-miku bg-miku/10 dark:bg-miku/20 px-2 py-0.5 rounded-full border border-miku/20">
+                                                    {t("page.manga.episodeLabel", { id: manga.id })}
+                                                </span>
+                                                <span>
+                                                    {formatDate(manga.date * 1000, {
+                                                        year: "numeric",
+                                                        month: "2-digit",
+                                                        day: "2-digit",
+                                                    })}
+                                                </span>
                                             </div>
                                         </div>
-                                    </Link>
-                                ))}
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+
+                        {/* Load More */}
+                        {displayedMangas.length < filteredMangas.length && (
+                            <div className="mt-8 flex justify-center">
+                                <button
+                                    onClick={loadMore}
+                                    data-shortcut-load-more="true"
+                                    className="ios-glass-btn ios-glass-btn-primary px-8 py-3 font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+                                >
+                                    {t("page.manga.loadMore")}
+                                    <span className="text-xs font-semibold opacity-75 bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded-full">
+                                        {displayedMangas.length} / {filteredMangas.length}
+                                    </span>
+                                </button>
                             </div>
+                        )}
 
-                            {/* Load More */}
-                            {displayedMangas.length < filteredMangas.length && (
-                                <div className="mt-8 flex justify-center">
-                                    <button
-                                        onClick={loadMore}
-                                        data-shortcut-load-more="true"
-                                        className="ios-glass-btn ios-glass-btn-primary px-8 py-3 font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
-                                    >
-                                        {t("page.manga.loadMore")}
-                                        <span className="text-xs font-semibold opacity-75 bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded-full">
-                                            {displayedMangas.length} / {filteredMangas.length}
-                                        </span>
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* All loaded */}
-                            {displayedMangas.length > 0 && displayedMangas.length >= filteredMangas.length && (
-                                <div className="mt-8 text-center text-slate-400 text-sm font-medium">
-                                    {t("page.manga.allLoaded", { count: filteredMangas.length })}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                        {/* All loaded */}
+                        {displayedMangas.length > 0 && displayedMangas.length >= filteredMangas.length && (
+                            <div className="mt-8 text-center text-slate-400 text-sm font-medium">
+                                {t("page.manga.allLoaded", { count: filteredMangas.length })}
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

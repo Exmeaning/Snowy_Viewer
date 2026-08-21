@@ -65,6 +65,35 @@
     0 12px 40px 0 rgba(31, 38, 135, 0.10),
     0 4px 12px 0 rgba(31, 38, 135, 0.05),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.65);
+
+  /* ── Shell layout rails ──
+     Shared widths so Sidebar, MainLayout and FilterDrawer can offset content
+     against the same source of truth instead of repeating magic numbers.
+     --sidebar-w must stay in sync with the `md:ml-[18rem]` offsets that
+     MainLayout already applies to the page content. */
+  --sidebar-w: 18rem;
+  --filter-drawer-w: 20rem;
+
+  /* Where the sidebar island visually ends, which is NOT --sidebar-w.
+     The sidebar is a floating island: `left-4` (1rem) + `w-64` (16rem), so its
+     trailing edge sits at 17rem while the content offset is a rounder 18rem
+     that also buys a gutter. Anything that has to sit *beside* the island (the
+     filter drawer, its pull tab) must anchor to this edge instead, or it lands
+     1rem inside the island and overlaps it.
+
+     Note this is only ever used from `md` up, where the sidebar's own gutter is
+     already `left-4` — there is deliberately no narrower variant, because below
+     `md` the sidebar overlays the content rather than sitting beside anything. */
+  --sidebar-edge: 17rem;
+  /* Breathing room between two adjacent floating islands. Without it they touch
+     and read as one clipped panel. */
+  --island-gap: 0.75rem;
+  /* Left offset for a panel docked immediately right of the sidebar. */
+  --beside-sidebar: calc(var(--sidebar-edge) + var(--island-gap));
+
+  /* Total chrome width when sidebar and filter drawer are docked side by side
+     (>= lg). Used to reserve horizontal space for the grid area. */
+  --dual-rail-w: calc(var(--sidebar-w) + var(--filter-drawer-w));
 }
 
 :root[data-theme="dark"] {
@@ -218,6 +247,17 @@ body {
     0 25px 50px -12px rgba(0, 0, 0, 0.42),
     0 0 0 1px rgba(255, 255, 255, 0.05) inset,
     inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Filter drawer scrim — the dimming layer behind the floating (undocked)
+   filter drawer. Values intentionally mirror the Modal backdrop
+   (`bg-black/35 backdrop-blur-[8px]`) so overlay depth reads identically
+   whichever surface is on top; kept as a class instead of inline utilities so
+   the reduced-transparency override below can reach it. */
+.filter-scrim {
+  background-color: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* ==========================================
@@ -739,6 +779,13 @@ button.island-pill-hover {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
+
+  /* Without blur the scrim is the only separation left, so darken it. */
+  .filter-scrim {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 }
 
 @media (prefers-contrast: more) {
@@ -993,17 +1040,64 @@ button[data-shortcut-load-more="true"]::after {
   vertical-align: middle;
 }
 
-.quick-filter-modal-content [data-shortcut-filters="true"] > div:first-child {
+/* ==========================================
+   Filter panels inside the drawer
+
+   A panel rendered in the drawer is framed by the drawer itself, which supplies
+   the title row and the close control. Three pieces of the panel's standalone
+   chrome therefore have to stand down, or the user sees two titles and a
+   collapsed body inside an already-open drawer:
+
+   1. Its own header row is redundant with the drawer header.
+   2. The mobile collapse behaviour is redundant with opening/closing the drawer,
+      so the collapsible body is forced open — otherwise opening the drawer can
+      reveal nothing but a "tap to expand" strip.
+   3. The "tap to expand" pad has nothing left to toggle.
+   ========================================== */
+[data-filter-drawer-body] [data-shortcut-filters="true"] > div:first-child {
   display: none;
 }
 
-/* Force collapsible section to be visible inside quick filter modal */
-.quick-filter-modal-content [data-filter-collapsible="true"] {
+[data-filter-drawer-body] [data-filter-collapsible="true"] {
   display: block !important;
 }
 
-.quick-filter-modal-content [data-filter-collapse-pad="true"] {
+[data-filter-drawer-body] [data-filter-collapse-pad="true"] {
   display: none !important;
+}
+
+/* ==========================================
+   Filter drawer: mobile compositing cost
+
+   The floating drawer slides in over live page content, so on a phone every
+   frame of that transition costs a full-size backdrop blur for the panel *plus*
+   one for the scrim underneath. That is the same trap the settings panel hit
+   (see the data-overlay-open block above), and the same fix applies: keep the
+   full 32px glass on desktop, dial it down on coarse pointers where the panel
+   is nearly fullscreen and the blur is barely visible anyway.
+
+   The drawer also gets `will-change: transform` while it is on screen, so the
+   compositor promotes it once instead of re-rasterising the blurred layer on
+   each frame of the slide.
+   ========================================== */
+@media (hover: none) and (pointer: coarse) {
+  .filter-drawer-panel {
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+  }
+
+  /* The scrim's own blur is redundant once the panel covers most of the
+     viewport, and it is the more expensive of the two because it spans the
+     whole screen. */
+  .filter-scrim {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-color: rgba(0, 0, 0, 0.45);
+  }
+}
+
+.filter-drawer-panel {
+  will-change: transform;
 }
 
 
@@ -1022,31 +1116,12 @@ button[data-shortcut-load-more="true"]::after {
   }
 }
 
-@keyframes quick-filter-icon-tap {
-  0% {
-    transform: rotate(0deg) scale(1);
-  }
-
-  45% {
-    transform: rotate(6deg) scale(0.9);
-  }
-
-  100% {
-    transform: rotate(12deg) scale(1.08);
-  }
-}
-
 .scroll-top-icon-tap {
   animation: scroll-top-icon-tap 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.quick-filter-icon-tap {
-  animation: quick-filter-icon-tap 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .scroll-top-icon-tap,
-  .quick-filter-icon-tap {
+  .scroll-top-icon-tap {
     animation: none;
   }
 }
@@ -1146,5 +1221,128 @@ button[data-shortcut-load-more="true"]::after {
   :root[data-overlay-open="true"] .liquid-glass-modal {
     backdrop-filter: blur(12px) saturate(160%);
     -webkit-backdrop-filter: blur(12px) saturate(160%);
+  }
+}
+
+/* ==========================================================================
+   Theme cursors
+
+   `lib/themeCursor.ts` injects nine `--theme-cursor-*` custom properties onto
+   <html> whenever the theme color changes; this block is what binds them to
+   real selectors. Three things are load-bearing:
+
+   1. `@media (pointer: fine)` — a custom cursor is meaningless on a touch
+      screen, and asking a phone to decode nine data-URIs it will never draw is
+      pure waste.
+
+   2. `:root:not([data-theme-cursor="off"])` — the user-facing off switch. The
+      setting also removes the variables (see `clearThemeCursors`), so this
+      attribute is belt-and-braces: even a stale variable cannot resurrect a
+      cursor the user has declined.
+
+   3. Every declaration carries its native fallback inside the `var()`, so
+      before hydration (variables not yet injected) and after opt-out (variables
+      removed) the page still shows the correct system cursor rather than
+      falling back to `auto` and losing the text/pointer distinction.
+
+   Placed at the end of the file, outside `@layer`, so these rules beat
+   Tailwind's `cursor-*` utilities — which are themselves re-bound below, so
+   `cursor-pointer` and friends keep working as authors expect.
+   ========================================================================== */
+
+@media (pointer: fine) {
+  :root:not([data-theme-cursor="off"]) {
+    /* Baseline. `body` too: the root element does not always cover the
+       viewport once the layout is a flex column. */
+    &,
+    & body {
+      cursor: var(--theme-cursor-default, default);
+    }
+
+    /* Anything that activates on click. Includes the project's own
+       interactive primitives (`pressable`, `ios-glass-btn`, `island-chip`) so
+       filter chips and glass buttons are not left with the arrow. */
+    & a,
+    & button,
+    & summary,
+    & label[for],
+    & select,
+    & [role="button"],
+    & [role="link"],
+    & [role="tab"],
+    & [role="checkbox"],
+    & [role="switch"],
+    & [role="menuitem"],
+    & [role="option"],
+    & .cursor-pointer,
+    & .pressable,
+    & .ios-glass-btn,
+    & .island-chip,
+    & input[type="checkbox"],
+    & input[type="radio"],
+    & input[type="submit"],
+    & input[type="button"],
+    & input[type="reset"],
+    & input[type="file"],
+    & input[type="range"],
+    & input[type="color"] {
+      cursor: var(--theme-cursor-pointer, pointer);
+    }
+
+    /* Text entry. `input:not([type])` matters — an untyped input is a text
+       input, and it is common in hand-written markup. */
+    & input[type="text"],
+    & input[type="search"],
+    & input[type="password"],
+    & input[type="email"],
+    & input[type="number"],
+    & input[type="url"],
+    & input[type="tel"],
+    & input:not([type]),
+    & textarea,
+    & [contenteditable="true"],
+    & .cursor-text {
+      cursor: var(--theme-cursor-text, text);
+    }
+
+    & .cursor-grab,
+    & [data-draggable="true"] {
+      cursor: var(--theme-cursor-grab, grab);
+    }
+
+    & .cursor-grabbing,
+    & [data-dragging="true"],
+    & .cursor-grab:active,
+    & [data-draggable="true"]:active {
+      cursor: var(--theme-cursor-grabbing, grabbing);
+    }
+
+    & .cursor-help,
+    & [data-cursor="help"] {
+      cursor: var(--theme-cursor-help, help);
+    }
+
+    & .cursor-zoom-in {
+      cursor: var(--theme-cursor-zoom-in, zoom-in);
+    }
+
+    & .cursor-zoom-out {
+      cursor: var(--theme-cursor-zoom-out, zoom-out);
+    }
+
+    /* Explicit arrow. Kept after the pointer group so a `cursor-default` on a
+       button still wins. */
+    & .cursor-default {
+      cursor: var(--theme-cursor-default, default);
+    }
+
+    /* Refusal outranks everything above: a disabled button is usually also an
+       `a`/`button`/`.pressable`, so without `!important` it would keep the
+       hand and read as clickable. */
+    & :disabled,
+    & [aria-disabled="true"],
+    & .cursor-not-allowed {
+      cursor: var(--theme-cursor-not-allowed, not-allowed) !important;
+    }
   }
 }

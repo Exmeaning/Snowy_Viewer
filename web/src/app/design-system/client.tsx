@@ -894,8 +894,9 @@ export default function DesignSystemClient() {
                         <p className="text-slate-500 mb-6">
                             全局通用的快捷筛选器组件。页面通过{" "}
                             <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono text-slate-600">useQuickFilter()</code>{" "}
-                            注册筛选内容后，页面右下角会出现一个漏斗图标的浮动按钮（位于&quot;回到顶部&quot;按钮上方），
-                            点击后弹出 Modal 展示筛选面板。
+                            注册筛选内容后，屏幕左侧边缘会出现一个竖向拉手，点击即可拉开筛选抽屉。
+                            宽屏（≥1024px）下抽屉与列表并排常驻，正文自动让出空间；更窄的屏幕上抽屉改为浮层，
+                            带遮罩并支持 Esc 与返回键关闭。
                         </p>
 
                         <div className="flex flex-wrap gap-4 items-center mb-6">
@@ -903,7 +904,7 @@ export default function DesignSystemClient() {
                                 <svg className="w-5 h-5 text-miku" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                                 </svg>
-                                <span className="text-sm font-bold text-miku">← 请查看右下角的浮动筛选按钮</span>
+                                <span className="text-sm font-bold text-miku">← 请查看左侧边缘的筛选抽屉拉手</span>
                             </div>
 
                             {hasActiveFilters && (
@@ -929,9 +930,10 @@ export default function DesignSystemClient() {
                                     <ul className="text-sm text-slate-550 dark:text-slate-450 space-y-2 list-disc list-inside">
                                         <li>页面组件中调用 <code className="px-1 py-0.5 bg-white/20 rounded text-xs font-mono">useQuickFilter(title, content, deps)</code></li>
                                         <li>筛选器内容自动注册到全局 Context</li>
-                                        <li>右下角浮动按钮仅在有注册内容时显示</li>
+                                        <li>左侧拉手与抽屉仅在有注册内容时显示</li>
+                                        <li>≥1024px 抽屉与列表并排常驻，更窄屏幕改为浮层</li>
                                         <li>组件卸载时自动取消注册</li>
-                                        <li>BaseFilters 的所有功能均可在弹窗内使用</li>
+                                        <li>BaseFilters 的所有功能均可在抽屉内使用</li>
                                     </ul>
                                 </div>
 

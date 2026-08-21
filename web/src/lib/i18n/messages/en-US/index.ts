@@ -178,6 +178,11 @@ export const enUSMessages = {
             collapse: "Tap to collapse",
             expand: "Tap to expand filters",
             openQuickFilter: "Open quick filters",
+            drawerHintTitle: "Filters Moved to Left Side",
+            drawerHintTag: "Click left to open",
+            drawerHintBody: "Filters are now integrated into the left edge of the page. Click the vertical side tab anytime to slide out or close the filter drawer. On wide screens, it docks automatically.",
+            drawerHintActionOpen: "Try It Now",
+            drawerHintDismiss: "Got it",
             unit: "Unit",
             character: "Character",
             all: "All",
@@ -748,6 +753,13 @@ export const enUSMessages = {
             off: "Off",
             onDescription: "Enable background animation: floating shards with scroll parallax. Lightweight and battery-friendly.",
             offDescription: "Disable background animation: keeps only a static gradient background, with no shards, animation, or parallax."
+        },
+        customCursor: {
+            sectionTitle: "Theme cursor",
+            on: "On",
+            off: "Off",
+            onDescription: "The mouse cursor follows the current character theme color and keeps a crisp outline, staying easy to spot on both light and dark backgrounds.",
+            offDescription: "Use the system default cursor. Touch devices are unaffected by this setting."
         },
         contentDisplay: {
             sectionTitle: "Content display",

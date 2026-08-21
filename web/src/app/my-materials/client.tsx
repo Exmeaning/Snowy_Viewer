@@ -462,74 +462,65 @@ function MyMaterialsContent() {
                 </div>
             )}
 
-            {/* Two Column Layout: Filters + Grid */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filters (left sidebar) */}
-                <div className="w-full lg:w-80 lg:shrink-0">
-                    <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                        {quickFilterContent}
-                    </div>
-                </div>
-
-                {/* Grid (right content) */}
-                <div className="flex-1 min-w-0">
-                    {isLoading || isFetchingUser ? (
-                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                            {Array.from({ length: 12 }).map((_, i) => (
-                                <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-100 shadow-sm animate-pulse">
-                                    <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200" />
-                                    <div className="p-2 space-y-1.5">
-                                        <div className="h-3 bg-slate-200 rounded w-3/4" />
-                                        <div className="h-2.5 bg-slate-100 rounded w-1/2" />
-                                    </div>
+            {/* Filters live in the global FilterDrawer (registered above via
+                useQuickFilter), so the page body is a single column. */}
+            <div className="min-w-0">
+                {isLoading || isFetchingUser ? (
+                    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                        {Array.from({ length: 12 }).map((_, i) => (
+                            <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-100 shadow-sm animate-pulse">
+                                <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200" />
+                                <div className="p-2 space-y-1.5">
+                                    <div className="h-3 bg-slate-200 rounded w-3/4" />
+                                    <div className="h-2.5 bg-slate-100 rounded w-1/2" />
                                 </div>
-                            ))}
-                        </div>
-                    ) : currentItems.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
-                            <p className="text-slate-400 font-medium">
-                                {searchQuery ? t("page.myMaterials.noResult") : t("page.myMaterials.noData")}
+                            </div>
+                        ))}
+                    </div>
+                ) : currentItems.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        <p className="text-slate-400 font-medium">
+                            {searchQuery ? t("page.myMaterials.noResult") : t("page.myMaterials.noData")}
+                        </p>
+                        {!searchQuery && (
+                            <p className="text-slate-400 text-xs mt-1">
+                                {t("common.data.suiteUploadHint")}
                             </p>
-                            {!searchQuery && (
-                                <p className="text-slate-400 text-xs mt-1">
-                                    {t("common.data.suiteUploadHint")}
-                                </p>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                            {displayedItems.map((item) => (
-                                <MaterialCard key={item.id} item={item} />
-                            ))}
-                        </div>
-                    )}
+                        )}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                        {displayedItems.map((item) => (
+                            <MaterialCard key={item.id} item={item} />
+                        ))}
+                    </div>
+                )}
 
-                    {/* Load More */}
-                    {!isLoading && !isFetchingUser && displayedItems.length < currentItems.length && (
-                        <div className="mt-8 flex justify-center">
-                            <button
-                                onClick={loadMore}
-                                data-shortcut-load-more="true"
-                                className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
-                            >
-                                {t("page.myMaterials.loadMore")}
-                                <span className="ml-2 text-sm opacity-80">
-                                    ({displayedItems.length} / {currentItems.length})
-                                </span>
-                            </button>
-                        </div>
-                    )}
+                {/* Load More */}
+                {!isLoading && !isFetchingUser && displayedItems.length < currentItems.length && (
+                    <div className="mt-8 flex justify-center">
+                        <button
+                            onClick={loadMore}
+                            data-shortcut-load-more="true"
+                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                        >
+                            {t("page.myMaterials.loadMore")}
+                            <span className="ml-2 text-sm opacity-80">
+                                ({displayedItems.length} / {currentItems.length})
+                            </span>
+                        </button>
+                    </div>
+                )}
 
-                    {/* All loaded */}
-                    {!isLoading && !isFetchingUser && displayedItems.length > 0 && displayedItems.length >= currentItems.length && (
-                        <div className="mt-8 text-center text-slate-400 text-sm">
-                            {t("page.myMaterials.allLoaded", { count: currentItems.length })}
-                        </div>
-                    )}
-                </div>
+                {/* All loaded */}
+                {!isLoading && !isFetchingUser && displayedItems.length > 0 && displayedItems.length >= currentItems.length && (
+                    <div className="mt-8 text-center text-slate-400 text-sm">
+                        {t("page.myMaterials.allLoaded", { count: currentItems.length })}
+                    </div>
+                )}
             </div>
         </div>
     );
