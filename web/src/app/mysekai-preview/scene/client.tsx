@@ -159,7 +159,12 @@ function TurnstileBox({ onToken, resetSeed }: { onToken: (token: string) => void
 
         widgetIdRef.current = window.turnstile.render(hostRef.current, {
             sitekey: TURNSTILE_SITE_KEY,
-            theme: "light",
+            // "auto" lets the widget follow the OS color scheme. Hardcoding
+            // "light" left a bright block sitting in an otherwise dark page —
+            // the widget is third-party chrome, so this is the only lever we
+            // have over its surface. Safe to read here because render() only
+            // ever runs in an effect, never during SSR.
+            theme: "auto",
             size: "normal",
             callback: (token) => {
                 setMessage(t("page.mysekaiPreview.scene.turnstile.completed"));
