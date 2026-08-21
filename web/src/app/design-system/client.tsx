@@ -9,20 +9,369 @@ import Modal from "@/components/common/Modal";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import BaseFilters, { FilterSection, FilterButton, FilterToggle } from "@/components/common/BaseFilters";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { playHandheldSound, type HandheldSoundName } from "@/lib/handheld-sound";
+import type { ICardInfo } from "@/types/types";
+
+/**
+ * Handheld OS — living system reference.
+ *
+ * This route is the front door of the design system, so it is held to a rule the
+ * rest of the app is only asked to follow: every surface below is built from the
+ * same hh vocabulary it documents. A reference page rendered in the vocabulary it
+ * replaced is worse than no reference page, because it teaches the wrong thing to
+ * whoever reads it first.
+ *
+ * Copy here is deliberately hardcoded English rather than routed through the i18n
+ * dictionaries. This is a developer-only, noindex route documenting CSS class
+ * names and token identifiers that are themselves English and untranslatable, and
+ * scripts/scan-hardcoded-ui-text.mjs allowlists it for exactly that reason.
+ * Translating "border-color follows --hh-border" into three locales would triple
+ * the dictionary for zero reader benefit.
+ */
 
 const MysekaiScenePreview = dynamic(() => import("@/components/mysekai-preview/MysekaiScenePreview"), {
+    // Kept ssr:false: the previewer touches WebGL at module scope.
     ssr: false,
     loading: () => (
-        <div className="flex h-[560px] items-center justify-center rounded-3xl border border-slate-200 bg-slate-50 text-slate-400">
-            正在加载烤森预览器...
+        <div className="hh-well flex h-[560px] items-center justify-center text-[var(--hh-text-tertiary)]">
+            <span className="hh-spinner mr-3 h-5 w-5" />
+            Loading scene previewer...
         </div>
     ),
 });
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Shared local class recipes
+   ────────────────────────────────────────────────────────────────────────── */
+
+/** Inline identifier — token names, class names, file paths. */
+const CODE_CLASS =
+    "rounded-[var(--hh-radius-xs)] border border-[var(--hh-border)] bg-[var(--hh-surface-1)] " +
+    "px-1.5 py-0.5 font-mono text-[0.72rem] text-[var(--hh-text-primary)]";
+
+/** Demo action button. Padding stays at the call site so each row can size itself. */
+const DEMO_BTN_CLASS = "hh-btn hh-press hh-focusable text-sm";
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Token data
+   ────────────────────────────────────────────────────────────────────────── */
+
+interface TokenEntry {
+    readonly name: string;
+    readonly value: string;
+    readonly note: string;
+}
+
+/**
+ * The surface ramp is the load-bearing idea of the whole system: depth comes from
+ * lightness steps between opaque fills, never from translucency. Listing the rungs
+ * next to each other is the only way to see that the steps are even.
+ */
+const SURFACE_TOKENS: readonly TokenEntry[] = [
+    { name: "--hh-surface-0", value: "ground", note: "The room. Page background, always darker than the tiles on it." },
+    { name: "--hh-surface-1", value: "panel", note: "Structural chrome: top bar, side rail, sheet, section header strip." },
+    { name: "--hh-surface-2", value: "tile", note: "The default object. Cards, buttons, inputs, floating layers." },
+    { name: "--hh-surface-3", value: "raised", note: "Hover / selected state of a tile. One step brighter than rest." },
+    { name: "--hh-surface-sunken", value: "well", note: "Cut into the page: list wells, segmented troughs, empty states." },
+    { name: "--hh-surface-inset", value: "channel", note: "Deepest rung. Meter tracks and input troughs." },
+];
+
+const BORDER_TOKENS: readonly TokenEntry[] = [
+    { name: "--hh-border", value: "default ring", note: "The 1px outline every tile, panel and control wears." },
+    { name: "--hh-border-strong", value: "emphasis", note: "Hover borders and switch troughs, where the ring must read as hardware." },
+    { name: "--hh-border-hairline", value: "separator", note: "Alpha-based. Rows inside a container, where a full border would double up." },
+];
+
+const TEXT_TOKENS: readonly TokenEntry[] = [
+    { name: "--hh-text-primary", value: "body + headings", note: "Never lighter than weight 400 at body size." },
+    { name: "--hh-text-secondary", value: "supporting copy", note: "Descriptions, inactive segments, metadata." },
+    { name: "--hh-text-tertiary", value: "placeholder", note: "Placeholders, uppercase labels, disabled text." },
+    { name: "--hh-text-on-accent", value: "on accent fill", note: "The only correct foreground on an accent-filled slab." },
+];
+
+const ACCENT_TOKENS: readonly TokenEntry[] = [
+    { name: "--hh-accent", value: "follows theme", note: "Inherits --color-miku, so all 26 character themes drive it." },
+    { name: "--hh-accent-deep", value: "follows theme", note: "Darker pair for text on a light surface, where the raw accent fails contrast." },
+    { name: "--hh-accent-wash", value: "12% mix", note: "Mixed into the surface, not layered at low alpha. Survives the theme flip." },
+    { name: "--hh-accent-wash-strong", value: "20% mix", note: "Same idea, one step louder. Selected rows, active wells." },
+    { name: "--hh-accent-line", value: "55% alpha", note: "Accent-tinted border for a hovered or selected container." },
+    { name: "--hh-accent-alert", value: "fixed", note: "Destructive actions. Deliberately does NOT follow the character theme." },
+];
+
+interface RadiusEntry {
+    readonly name: string;
+    readonly px: string;
+    readonly use: string;
+}
+
+/**
+ * Which rung a component picks is a statement about what kind of object it is, so
+ * the picking rule is documented alongside the value. Everything the user presses
+ * sits one rung below the tile it lives on.
+ */
+const RADIUS_LADDER: readonly RadiusEntry[] = [
+    { name: "--hh-radius-xs", px: "3px", use: "Inline code, micro badges." },
+    { name: "--hh-radius-sm", px: "5px", use: "Segment items, keycaps, badges on media. One rung under a control." },
+    { name: "--hh-radius-md", px: "8px", use: "The interactive tonic: buttons, inputs, chips, nav rows." },
+    { name: "--hh-radius-lg", px: "12px", use: "Tiles and wells — the object rung." },
+    { name: "--hh-radius-xl", px: "16px", use: "Panels and floating layers — structural chrome." },
+    { name: "--hh-radius-2xl", px: "20px", use: "Full-bleed sheets and the largest containers only." },
+    { name: "--hh-radius-full", px: "999px", use: "Reserved for genuinely round things: switches, dock icons, avatars." },
+];
+
+const SHADOW_TOKENS: readonly TokenEntry[] = [
+    { name: "--hh-shadow-tile", value: "resting", note: "Barely there. A tile hovers a hair above the room, nothing more." },
+    { name: "--hh-shadow-raised", value: "hover / panel", note: "Panels at rest, tiles under the cursor." },
+    { name: "--hh-shadow-float", value: "overlay", note: "Dropdowns, popovers, dialogs. The only large blur radius in the system." },
+    { name: "--hh-shadow-inset", value: "trough", note: "Inward. Marks a channel cut into the surface." },
+];
+
+const MOTION_TOKENS: readonly TokenEntry[] = [
+    { name: "--hh-dur-press", value: "90ms", note: "Press acknowledgment. Must beat conscious perception." },
+    { name: "--hh-dur-fast", value: "160ms", note: "Hover, tint, small state changes." },
+    { name: "--hh-dur-cursor", value: "220ms", note: "Cursor travel. The only motion allowed to overshoot." },
+    { name: "--hh-dur-screen", value: "240ms", note: "Route and screen changes. Damped." },
+    { name: "--hh-dur-panel", value: "300ms", note: "Sheets and large panels. Damped. Nothing in the system is slower." },
+    { name: "--hh-ease-cursor", value: "cubic-bezier(.18,1.32,.38,1)", note: "Overshoots. Cursor only." },
+    { name: "--hh-ease-out", value: "cubic-bezier(.22,1,.36,1)", note: "The structural default. Arrives, never wobbles." },
+    { name: "--hh-ease-snap", value: "cubic-bezier(.3,.9,.25,1)", note: "Press transforms." },
+    { name: "--hh-press-scale", value: "0.965", note: "How far a pressed control sinks." },
+    { name: "--hh-select-scale", value: "1.045", note: "How far the tile under the cursor lifts." },
+];
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Architecture pitfalls
+   ────────────────────────────────────────────────────────────────────────── */
+
+interface Pitfall {
+    readonly title: string;
+    readonly symptom: string;
+    readonly rule: string;
+    readonly critical: boolean;
+}
+
+/**
+ * Every entry here cost at least one batch of the migration to discover, and most
+ * of them fail SILENTLY — they compile, they pass lint, they pass tsc, and then do
+ * nothing at runtime. That is the whole reason this section exists rather than
+ * living in a commit message nobody will read again.
+ */
+const PITFALLS: readonly Pitfall[] = [
+    {
+        title: "Cascade layers are not uniform across the stylesheet",
+        symptom:
+            "A utility written next to an hh class sometimes wins and sometimes does nothing, with no pattern visible from the call site.",
+        rule:
+            "The hh primitives live in @layer components, which the framework orders BEFORE utilities — so they are defaults and your utility wins. Four groups stay deliberately unlayered because they must DEFEAT utilities: the legacy vocabulary re-skin (it has to beat glassmorphism-era utilities still written at those call sites), the blur neutralization, focus rings and selection state (losing a focus ring is an accessibility defect, not a preference), and the transition on .hh-press (46 call sites also write transition-colors, which would otherwise drop transform and kill the 90ms press). Do not finish the job by wrapping those.",
+        critical: true,
+    },
+    {
+        title: ".hh-segment fills its container by default",
+        symptom:
+            "Dropped into a page header row, the control eats every spare pixel and shoves the title and actions to the edges.",
+        rule:
+            "The default is width:100% plus flex:1 1 auto, which is correct in the side rail and wrong everywhere else. Add .hh-segment-fit to shrink to content. Do not hand-write w-auto grow-0 shrink-0 — three call sites already did that independently, which is what earned the variant its name.",
+        critical: false,
+    },
+    {
+        title: "Blur utilities are globally neutralized",
+        symptom: "You write a blur utility, it compiles, and the surface renders perfectly sharp.",
+        rule:
+            "A global rule cancels backdrop-filter on anything whose class list contains a blur utility. That is intentional: those ~120 live compositor blurs were the scroll cost this redesign set out to remove. Where blur is FUNCTIONAL rather than decorative — spoiler shields, obscuring veils — opt the element or its subtree back in with .hh-allow-blur. Modal scrims are not such a case; they belong on the flat .hh-scrim.",
+        critical: true,
+    },
+    {
+        title: "Numbers need tabular figures",
+        symptom:
+            "Leaderboard ranks, timers and score deltas jitter horizontally as they tick, and columns fail to line up.",
+        rule:
+            "Put .hh-numeric on any element containing a number that changes or that sits in a column. Use .hh-numeric-slashed only for alphanumeric identifiers where 0-vs-O is genuinely ambiguous — asset paths, bundle names, hashes — never for plain digit runs.",
+        critical: false,
+    },
+    {
+        title: "Overshoot is a privilege, not a default",
+        symptom: "Everything springs, and the UI reads as toy-like and slower than it is.",
+        rule:
+            "Exactly one thing may overshoot: the selection cursor. Screens, panels, sheets and rails are critically damped (bounce: 0). Import the presets from lib/motion rather than hand-writing spring configs; the one legitimate exception is momentum handoff after a flick, where the user's own gesture supplied the energy.",
+        critical: false,
+    },
+    {
+        title: "Never branch variants on a reduced-motion hook during render",
+        symptom:
+            "Hydration mismatch warnings, and a first paint that disagrees with the client.",
+        rule:
+            "The server cannot know the user's motion preference, so reading it during render produces different markup on each side. The app has zero of these left and should stay at zero. Degradation is handled globally by the MotionConfig wrapper in layout, plus the prefers-reduced-motion block in CSS.",
+        critical: true,
+    },
+    {
+        title: "Skeuomorphic lift is retired",
+        symptom:
+            "A card floats upward on hover, scales up, or gains a colored glow — the vocabulary of the previous design.",
+        rule:
+            "No hover:-translate-y-*, no hover:scale-105, no colored shadow-miku/* halos. A console surface responds by brightening one surface rung and, under the cursor, by taking the ring. Presses sink inward via .hh-press. Motion in, not motion up.",
+        critical: false,
+    },
+];
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Sound
+   ────────────────────────────────────────────────────────────────────────── */
+
+interface SoundEntry {
+    readonly name: HandheldSoundName;
+    readonly meaning: string;
+    readonly when: string;
+}
+
+const SOUND_CATALOG: readonly SoundEntry[] = [
+    { name: "cursor", meaning: "Something moved.", when: "Cursor steps between targets. The most frequent sound, so the quietest and shortest." },
+    { name: "confirm", meaning: "Yes, taken.", when: "Selecting an entry, applying a filter, committing a dialog. Two notes stepping up." },
+    { name: "back", meaning: "Undone, dismissed.", when: "Closing a sheet, cancelling, navigating up. The confirm gesture inverted." },
+    { name: "toggle", meaning: "State flipped.", when: "Binary switches and checkboxes. Deliberately neutral so it fits both on and off." },
+    { name: "error", meaning: "Blocked.", when: "A rejected action or failed validation. Low and dull, never sharp." },
+    { name: "launch", meaning: "Entering.", when: "Route change or opening a large surface. A rising sweep." },
+];
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Demo data
+   ────────────────────────────────────────────────────────────────────────── */
+
+type DemoCardSeed = Pick<ICardInfo, "id" | "characterId" | "cardRarityType" | "attr" | "prefix" | "assetbundleName">;
+
+/**
+ * Fills in the ~15 fields the thumbnail never reads. Written as a factory rather
+ * than five inline literals because the noise-to-signal ratio of the literal form
+ * hid the four fields that actually differ between the examples.
+ */
+function demoCard(seed: DemoCardSeed): ICardInfo {
+    return {
+        seq: seed.id,
+        specialTrainingPower1BonusFixed: 0,
+        specialTrainingPower2BonusFixed: 0,
+        specialTrainingPower3BonusFixed: 0,
+        supportUnit: "none",
+        skillId: 1,
+        cardSkillName: "Skill",
+        gachaPhrase: "Phrase",
+        archiveDisplayType: "normal",
+        archivePublishedAt: 0,
+        cardParameters: { param1: [], param2: [], param3: [] },
+        specialTrainingCosts: [],
+        masterLessonAchieveResources: [],
+        releaseAt: 0,
+        cardSupplyId: 0,
+        cardSupplyType: "normal",
+        ...seed,
+    };
+}
+
+const THUMBNAIL_SIZES = [48, 64, 96] as const;
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Layout helpers
+   ────────────────────────────────────────────────────────────────────────── */
+
+function Section({ id, title, blurb, children }: {
+    id: string;
+    title: string;
+    blurb?: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <section id={id} className="mb-14 scroll-mt-24">
+            <div className="mb-5">
+                <h2 className="hh-title flex items-center gap-2.5 text-2xl text-[var(--hh-text-primary)]">
+                    <span className="h-6 w-1 rounded-[var(--hh-radius-full)] bg-[var(--hh-accent)]" />
+                    {title}
+                </h2>
+                {blurb !== undefined && (
+                    <p className="hh-body mt-2 max-w-3xl text-sm text-[var(--hh-text-secondary)]">{blurb}</p>
+                )}
+            </div>
+            {children}
+        </section>
+    );
+}
+
+/**
+ * One documented primitive: the live specimen on top, the identifier and the
+ * reason to reach for it underneath. Specimen first is deliberate — the name is
+ * only meaningful once you have seen what it renders as.
+ */
+function Spec({ name, purpose, children, wide }: {
+    name: string;
+    purpose: string;
+    children: React.ReactNode;
+    wide?: boolean;
+}) {
+    return (
+        <div className={`hh-tile hh-list ${wide === true ? "md:col-span-2" : ""}`}>
+            <div className="flex min-h-[104px] items-center justify-center p-5">
+                {children}
+            </div>
+            <div className="bg-[var(--hh-surface-1)] px-5 py-3">
+                <code className="block font-mono text-xs font-bold text-[var(--hh-accent-deep)]">{name}</code>
+                <p className="hh-body mt-1 text-xs text-[var(--hh-text-secondary)]">{purpose}</p>
+            </div>
+        </div>
+    );
+}
+
+function TokenTable({ rows }: { rows: readonly TokenEntry[] }) {
+    return (
+        <div className="hh-tile overflow-hidden">
+            <table className="hh-table">
+                <thead className="hh-table-head">
+                    <tr>
+                        <th className="hh-label px-4 py-2.5 text-left">Token</th>
+                        <th className="hh-label px-4 py-2.5 text-left">Role</th>
+                        <th className="hh-label hidden px-4 py-2.5 text-left sm:table-cell">Why</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map((row) => (
+                        <tr key={row.name} className="hh-table-row">
+                            <td className="px-4 py-2.5 align-top">
+                                <code className="font-mono text-xs text-[var(--hh-text-primary)]">{row.name}</code>
+                            </td>
+                            <td className="hh-numeric px-4 py-2.5 align-top text-xs text-[var(--hh-text-secondary)]">
+                                {row.value}
+                            </td>
+                            <td className="hh-body hidden px-4 py-2.5 align-top text-xs text-[var(--hh-text-tertiary)] sm:table-cell">
+                                {row.note}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+/** Custom properties are not in React's CSSProperties surface; this is the cast. */
+function tintStyle(color: string): React.CSSProperties {
+    return { "--hh-tint": color } as React.CSSProperties;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Page
+   ────────────────────────────────────────────────────────────────────────── */
+
 export default function DesignSystemClient() {
+    const { handheldSoundEnabled } = useTheme();
+
     const [modalSize, setModalSize] = useState<"sm" | "md" | "lg" | "xl">("md");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+    // Live primitive state.
+    const [segmentTab, setSegmentTab] = useState<"overview" | "details">("overview");
+    const [switchOn, setSwitchOn] = useState(true);
+    const [activeChip, setActiveChip] = useState("all");
+    // Remounts the animation demo so an entrance can be replayed on demand;
+    // CSS animations only run once per element instance.
+    const [replayKey, setReplayKey] = useState(0);
 
     // ===== Quick Filter demo state =====
     const [demoSearch, setDemoSearch] = useState("");
@@ -35,9 +384,9 @@ export default function DesignSystemClient() {
     const demoFilteredCount = demoSearch || demoCategory !== "all" || demoToggle ? 42 : 128;
 
     const demoSortOptions = [
-        { id: "name", label: "名称" },
-        { id: "date", label: "日期" },
-        { id: "level", label: "等级" },
+        { id: "name", label: "Name" },
+        { id: "date", label: "Date" },
+        { id: "level", label: "Level" },
     ];
 
     const hasActiveFilters = demoSearch !== "" || demoCategory !== "all" || demoToggle || demoSortBy !== "name";
@@ -50,16 +399,15 @@ export default function DesignSystemClient() {
         setDemoToggle(false);
     };
 
-    // Register quick filter content for this page
     const quickFilterContent = (
         <BaseFilters
-            title="快捷筛选器演示"
+            title="Quick filter demo"
             filteredCount={demoFilteredCount}
             totalCount={demoTotalCount}
-            countUnit="项"
+            countUnit="items"
             searchQuery={demoSearch}
             onSearchChange={setDemoSearch}
-            searchPlaceholder="搜索示例..."
+            searchPlaceholder="Search demo entries..."
             sortOptions={demoSortOptions}
             sortBy={demoSortBy}
             sortOrder={demoSortOrder}
@@ -67,7 +415,7 @@ export default function DesignSystemClient() {
             hasActiveFilters={hasActiveFilters}
             onReset={resetDemoFilters}
         >
-            <FilterSection label="分类">
+            <FilterSection label="Category">
                 <div className="grid grid-cols-3 gap-2">
                     {["all", "typeA", "typeB"].map(cat => (
                         <FilterButton
@@ -75,7 +423,7 @@ export default function DesignSystemClient() {
                             selected={demoCategory === cat}
                             onClick={() => setDemoCategory(cat)}
                         >
-                            {cat === "all" ? "全部" : cat === "typeA" ? "类型 A" : "类型 B"}
+                            {cat === "all" ? "All" : cat === "typeA" ? "Kind A" : "Kind B"}
                         </FilterButton>
                     ))}
                 </div>
@@ -83,15 +431,14 @@ export default function DesignSystemClient() {
             <FilterToggle
                 selected={demoToggle}
                 onClick={() => setDemoToggle(prev => !prev)}
-                label="仅显示已完成"
+                label="Completed only"
             />
         </BaseFilters>
     );
 
-    useQuickFilter("快捷筛选器演示", quickFilterContent, [
+    useQuickFilter("Quick filter demo", quickFilterContent, [
         demoSearch, demoSortBy, demoSortOrder, demoCategory, demoToggle,
     ]);
-
 
     const openModal = (size: "sm" | "md" | "lg" | "xl") => {
         setModalSize(size);
@@ -100,874 +447,810 @@ export default function DesignSystemClient() {
 
     return (
         <MainLayout>
-            <div className="container mx-auto px-6 py-12 max-w-6xl relative">
-                {/* iOS 26 Ambient Colorful Glowing Blobs */}
-                <div className="absolute top-1/4 left-10 w-72 h-72 rounded-full bg-miku/12 blur-[90px] pointer-events-none animate-float-blob-1 z-0"></div>
-                <div className="absolute bottom-1/3 right-10 w-96 h-96 rounded-full bg-luka/12 blur-[100px] pointer-events-none animate-float-blob-2 z-0"></div>
-                <div className="absolute top-2/3 left-1/3 w-80 h-80 rounded-full bg-purple-500/8 blur-[90px] pointer-events-none animate-float-blob-1 z-0"></div>
+            <div className="container relative mx-auto max-w-6xl px-6 py-12">
 
-                <div className="mb-12 relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 island-pill-active rounded-full mb-3">
-                        <span className="w-2 h-2 rounded-full bg-miku animate-pulse"></span>
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Floating Island · Apple Foundations</span>
+                {/* ── Masthead ─────────────────────────────────────────── */}
+                <header className="mb-12">
+                    <div className="hh-label mb-3 inline-flex items-center gap-2 rounded-[var(--hh-radius-md)] border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] px-3 py-1 text-[var(--hh-accent-deep)]">
+                        <span className="h-1.5 w-1.5 rounded-[var(--hh-radius-full)] bg-[var(--hh-accent)]" />
+                        Handheld OS Foundations
                     </div>
-                    <h1 className="text-4xl font-extrabold type-display bg-gradient-to-r from-miku via-miku-dark to-luka bg-clip-text text-transparent mb-4">
-                        Design System & Component Library
+                    <h1 className="hh-display mb-3 text-4xl text-[var(--hh-text-primary)]">
+                        MoeSekai Design System
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-lg type-body max-w-3xl">
-                        Floating Island chrome plus Apple-inspired foundations: critically-damped motion, material hierarchy, size-specific typography, instant press feedback, and reduced-motion / reduced-transparency / contrast support.
+                    <p className="hh-body max-w-3xl text-lg text-[var(--hh-text-secondary)]">
+                        A console-style handheld system UI, rebuilt as a web design layer. Three properties
+                        define it and everything below follows from one of them: surfaces are flat and opaque
+                        and separate by lightness alone; one selection cursor travels between targets instead of
+                        each target lighting up on its own; and presses snap in 90ms while structure settles
+                        without bounce.
                     </p>
-                </div>
 
-                {/* Apple Foundations */}
-                <section className="mb-16 relative z-10">
-                    <h2 className="text-2xl type-title text-primary-text mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-miku rounded-full"></span>
-                        Apple Foundations
-                    </h2>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                        <div className="island-panel rounded-3xl p-5">
-                            <div className="text-[10px] font-bold uppercase tracking-widest text-miku mb-2">Motion</div>
-                            <p className="text-sm text-slate-600 dark:text-slate-300 type-body mb-3">
-                                Default UI springs are critically damped (no bounce). Use momentum bounce only after flicks. Import from <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">@/lib/motion</code>.
-                            </p>
-                            <ul className="text-xs text-slate-500 space-y-1 font-mono">
-                                <li>springSnappy · bounce 0 · 0.32s</li>
-                                <li>springSoft · bounce 0 · 0.42s</li>
-                                <li>springSheet · bounce 0.15 · 0.36s</li>
-                                <li>springMomentum · bounce 0.2 · 0.4s</li>
-                            </ul>
-                        </div>
-
-                        <div className="island-panel rounded-3xl p-5">
-                            <div className="text-[10px] font-bold uppercase tracking-widest text-miku mb-2">Materials</div>
-                            <p className="text-sm text-slate-600 dark:text-slate-300 type-body mb-3">
-                                Heavier materials for structural chrome; lighter for interactive chips. Avoid stacking light glass on light glass.
-                            </p>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="material-thin rounded-2xl p-3 text-[11px] font-semibold type-on-glass">thin</div>
-                                <div className="material-regular rounded-2xl p-3 text-[11px] font-semibold type-on-glass">regular</div>
-                                <div className="material-thick rounded-2xl p-3 text-[11px] font-semibold type-on-glass">thick</div>
-                                <div className="material-chrome rounded-2xl p-3 text-[11px] font-semibold type-on-glass">chrome</div>
+                    <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        {[
+                            { k: "Flat and opaque", v: "Hierarchy comes from value steps between solid fills. No translucency, no blur." },
+                            { k: "The traveling cursor", v: "One ring physically moves between targets, with the only overshoot in the system." },
+                            { k: "Snap, then settle", v: "Acknowledge in 90ms. Nothing anywhere is slower than 300ms." },
+                        ].map(item => (
+                            <div key={item.k} className="hh-tile p-4">
+                                <div className="hh-label mb-1.5 text-[var(--hh-accent-deep)]">{item.k}</div>
+                                <p className="hh-body text-xs text-[var(--hh-text-secondary)]">{item.v}</p>
                             </div>
-                        </div>
-
-                        <div className="island-panel rounded-3xl p-5">
-                            <div className="text-[10px] font-bold uppercase tracking-widest text-miku mb-2">Response & A11y</div>
-                            <p className="text-sm text-slate-600 dark:text-slate-300 type-body mb-3">
-                                Feedback on pointer-down via <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">.pressable</code>. Respects reduced motion, reduced transparency, and more contrast.
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                                <button type="button" className="pressable px-4 py-2 rounded-full ios-glass-btn text-sm font-semibold">
-                                    Press me
-                                </button>
-                                <button type="button" className="pressable px-4 py-2 rounded-full ios-glass-btn ios-glass-btn-primary text-sm font-semibold">
-                                    Primary
-                                </button>
-                            </div>
-                        </div>
+                        ))}
                     </div>
+                </header>
 
-                    <div className="ios-glass-panel rounded-3xl p-5">
-                        <div className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">CSS tokens</div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono text-slate-500">
-                            <div>--ease-out-soft / --ease-spring</div>
-                            <div>--duration-instant|fast|base|slow</div>
-                            <div>--material-*-bg / blur</div>
-                            <div>--type-tracking-* / --type-leading-*</div>
-                            <div>--press-scale (0.97)</div>
-                            <div>projectMomentum() · rubberband()</div>
-                            <div>prefers-reduced-motion</div>
-                            <div>prefers-reduced-transparency · prefers-contrast</div>
+                {/* ── Surfaces ─────────────────────────────────────────── */}
+                <Section
+                    id="surfaces"
+                    title="Surface ladder"
+                    blurb="The core of the system. A grey room with white tiles in it, never white-on-white — keeping the page darker than its cards is what makes flat tiles read as objects without needing a shadow to separate them."
+                >
+                    <div className="hh-ground mb-5 rounded-[var(--hh-radius-xl)] border border-[var(--hh-border)] p-5">
+                        <div className="hh-label mb-3 text-[var(--hh-text-tertiary)]">
+                            The same six rungs, stacked so the steps are visible
                         </div>
-                    </div>
-                </section>
-
-                {/* Colors Section */}
-                <section className="mb-16 relative z-10">
-                    <h2 className="text-2xl font-bold text-primary-text mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-miku rounded-full"></span>
-                        Color Palette & Glassmorphism
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {/* Brand Colors */}
-                        <ColorCard name="Miku Green" variable="--color-miku" className="bg-miku text-white" hex="Dynamic (User Theme)" />
-                        <ColorCard name="Miku Dark" variable="--color-miku-dark" className="bg-miku-dark text-white" hex="Dynamic (Dark Variant)" />
-                        <ColorCard name="Luka Pink" variable="--color-luka" className="bg-luka text-white" hex="#ff6699" />
-                        <ColorCard name="Primary Text" variable="--color-primary-text" className="bg-primary-text text-white" hex="#334455" />
-
-                        {/* Floating Island Tokens */}
-                        <div className="rounded-2xl border border-slate-200/60 dark:border-slate-700/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-32 flex flex-col">
-                            <div className="flex-grow flex items-center justify-center" style={{ background: "var(--accent-soft)" }}>
-                                <span className="font-mono opacity-80 text-[var(--accent-deep)]">accent-soft</span>
-                            </div>
-                            <div className="p-3 bg-white dark:bg-slate-900/60">
-                                <div className="font-bold text-sm text-slate-800 dark:text-slate-200">Accent Soft</div>
-                                <div className="text-xs text-slate-400 font-mono mt-0.5">--accent-soft</div>
-                            </div>
-                        </div>
-                        <div className="rounded-2xl border border-slate-200/60 dark:border-slate-700/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-32 flex flex-col">
-                            <div className="flex-grow flex items-center justify-center bg-[var(--accent-deep)] text-white">
-                                <span className="font-mono opacity-90">accent-deep</span>
-                            </div>
-                            <div className="p-3 bg-white dark:bg-slate-900/60">
-                                <div className="font-bold text-sm text-slate-800 dark:text-slate-200">Accent Deep</div>
-                                <div className="text-xs text-slate-400 font-mono mt-0.5">--accent-deep</div>
-                            </div>
-                        </div>
-                        <div className="rounded-2xl border border-slate-200/60 dark:border-slate-700/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-32 flex flex-col">
-                            <div className="flex-grow flex items-center justify-center bg-[var(--cream-deep)]">
-                                <span className="font-mono opacity-70 text-slate-600 dark:text-slate-300">cream-deep</span>
-                            </div>
-                            <div className="p-3 bg-white dark:bg-slate-900/60">
-                                <div className="font-bold text-sm text-slate-800 dark:text-slate-200">Cream Deep</div>
-                                <div className="text-xs text-slate-400 font-mono mt-0.5">--cream-deep</div>
-                            </div>
-                        </div>
-                        <div className="rounded-2xl border border-slate-200/60 dark:border-slate-700/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-32 flex flex-col">
-                            <div className="flex-grow flex items-center justify-center" style={{ background: "var(--island-glass)", backdropFilter: "blur(8px)" }}>
-                                <span className="font-mono opacity-70 text-slate-600 dark:text-slate-300">island-glass</span>
-                            </div>
-                            <div className="p-3 bg-white dark:bg-slate-900/60">
-                                <div className="font-bold text-sm text-slate-800 dark:text-slate-200">Island Glass</div>
-                                <div className="text-xs text-slate-400 font-mono mt-0.5">--island-glass</div>
-                            </div>
-                        </div>
-
-                        {/* Glassmorphism Classes */}
-                        <div className="glass-card p-4 rounded-2xl flex flex-col justify-between h-32 relative overflow-hidden group">
-                            <span className="font-bold relative z-10 text-primary-text">Legacy Glass Card</span>
-                            <div className="text-xs opacity-70 relative z-10 text-primary-text">.glass-card</div>
-                            <div className="absolute inset-0 bg-white/10 dark:bg-slate-900/10"></div>
-                        </div>
-
-                        <div className="island-panel p-4 rounded-3xl flex flex-col justify-between h-32 relative overflow-hidden group cursor-pointer transition-transform hover:-translate-y-0.5">
-                            <span className="font-bold relative z-10 text-primary-text">Floating Island Panel</span>
-                            <div className="text-xs opacity-75 relative z-10 text-primary-text">.island-panel</div>
-                            <span className="text-[9px] bg-miku/15 text-miku px-2 py-0.5 rounded-full self-start font-extrabold relative z-10">NEW · 浮岛</span>
-                        </div>
-
-                        <div className="ios-glass-card p-4 rounded-3xl flex flex-col justify-between h-32 relative overflow-hidden group ios-glass-card-interactive cursor-pointer">
-                            <span className="font-bold relative z-10 text-primary-text">iOS 26 Glass Card</span>
-                            <div className="text-xs opacity-75 relative z-10 text-primary-text">.ios-glass-card</div>
-                            <span className="text-[9px] bg-purple-500/15 text-purple-500 px-2 py-0.5 rounded-full self-start font-extrabold relative z-10">.ios-glass-card</span>
-                        </div>
-
-                        <div className="ios-glass-panel p-4 rounded-3xl flex flex-col justify-between h-32 relative overflow-hidden group">
-                            <span className="font-bold relative z-10 text-primary-text">iOS 26 Glass Panel</span>
-                            <div className="text-xs opacity-75 relative z-10 text-primary-text">.ios-glass-panel</div>
-                            <span className="text-[9px] bg-sky-500/15 text-sky-500 px-2 py-0.5 rounded-full self-start font-extrabold relative z-10">.ios-glass-panel</span>
-                        </div>
-
-                        <div className="rounded-2xl p-4 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 h-32 flex flex-col justify-between">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">Surface / Slate 50</span>
-                            <div className="text-xs text-slate-500">bg-slate-50</div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Typography Section */}
-                <section className="mb-16 relative z-10">
-                    <h2 className="text-2xl type-title text-primary-text mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-luka rounded-full"></span>
-                        Typography
-                    </h2>
-
-                    <div className="ios-glass-card p-8 rounded-3xl space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
-                            <div className="text-sm text-slate-400 font-mono">Display / type-display</div>
-                            <div className="md:col-span-2">
-                                <h1 className="text-4xl type-display text-primary-text">The quick brown fox jumps over the lazy dog</h1>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
-                            <div className="text-sm text-slate-400 font-mono">Title / type-title</div>
-                            <div className="md:col-span-2">
-                                <h2 className="text-2xl type-title text-primary-text">The quick brown fox jumps over the lazy dog</h2>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
-                            <div className="text-sm text-slate-400 font-mono">H3 / xl / Bold</div>
-                            <div className="md:col-span-2">
-                                <h3 className="text-xl type-title text-primary-text">The quick brown fox jumps over the lazy dog</h3>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-b border-dashed border-slate-200/60 dark:border-slate-700/40 pb-8">
-                            <div className="text-sm text-slate-400 font-mono">Body / type-body</div>
-                            <div className="md:col-span-2">
-                                <p className="text-base type-body text-primary-text">
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-                            <div className="text-sm text-slate-400 font-mono">Caption / type-caption</div>
-                            <div className="md:col-span-2">
-                                <p className="text-sm type-caption text-slate-500">
-                                    Used for captions, timestamps, and secondary information. Slightly positive tracking for legibility at small sizes.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Components Section */}
-                <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-primary-text mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-amber-400 rounded-full"></span>
-                        Components
-                    </h2>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                        {/* Buttons */}
-                        <div className="ios-glass-card p-6 rounded-3xl">
-                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Buttons</h3>
-                            <div className="flex flex-wrap gap-4 items-center">
-                                {/* Primary */}
-                                <button className="pressable px-6 py-2.5 ios-glass-btn ios-glass-btn-primary rounded-full font-bold">
-                                    Primary Button
-                                </button>
-
-                                {/* Secondary */}
-                                <button className="pressable px-6 py-2.5 ios-glass-btn text-miku border-miku/30 rounded-full font-bold">
-                                    Secondary
-                                </button>
-
-                                {/* Ghost/Nav */}
-                                <button className="pressable px-4 py-2.5 text-slate-500 hover:text-miku ios-glass-btn rounded-full">
-                                    Ghost / Nav
-                                </button>
-
-                                {/* Island Pill Active (new) */}
-                                <button className="pressable px-6 py-2.5 island-pill-active rounded-full font-bold">
-                                    Island Pill Active
-                                </button>
-
-                                {/* Icon Layout */}
-                                <button className="pressable p-2.5 text-slate-400 hover:text-miku ios-glass-btn rounded-full">
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Inputs */}
-                        <div className="ios-glass-card p-6 rounded-3xl">
-                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Inputs</h3>
-                            <div className="space-y-4 max-w-sm">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Standard Input</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Type something..."
-                                        className="w-full ios-glass-input px-4 py-2 rounded-xl text-primary-text"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Input with Error</label>
-                                    <input
-                                        type="text"
-                                        defaultValue="Invalid input"
-                                        className="w-full ios-glass-input px-4 py-2 rounded-xl border-red-400 focus:border-red-400 focus:ring-red-200/20 text-red-600 dark:text-red-400"
-                                    />
-                                    <p className="mt-1 text-xs text-red-500">Please enter a valid value</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Badges & Tags */}
-                        <div className="ios-glass-card p-6 rounded-3xl">
-                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Badges & Tags</h3>
-                            <div className="flex flex-wrap gap-3">
-                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-miku text-white shadow-sm">
-                                    New Feature
-                                </span>
-                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-miku/10 text-miku border border-miku/20">
-                                    Version 1.0
-                                </span>
-                                <span className="px-3 py-1 rounded-full text-xs font-bold island-pill-active">
-                                    Accent Soft Badge
-                                </span>
-                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-white shadow-sm">
-                                    BETA
-                                </span>
-                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                                    Draft
-                                </span>
-                                <span className="px-3 py-1 rounded-full text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
-                                    Outline
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Loaders */}
-                        <div className="ios-glass-card p-6 rounded-3xl flex flex-col justify-center items-center gap-4">
-                            <h3 className="text-lg font-bold mb-2 text-slate-600 dark:text-slate-400 self-start">Loaders</h3>
-                            <div className="flex items-center gap-8">
-                                <div className="loading-spinner"></div>
-                                <div className="w-8 h-8 border-2 border-miku/30 border-t-miku rounded-full animate-spin"></div>
-                            </div>
-                        </div>
-
-                        {/* Tabs */}
-                        <div className="ios-glass-card p-6 rounded-3xl md:col-span-2">
-                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Tabs</h3>
-                            <div className="flex gap-2">
-                                <button className="flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm whitespace-nowrap transition-all duration-300 island-pill-active">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                    Active Tab
-                                </button>
-                                <button className="flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm whitespace-nowrap transition-all duration-300 island-pill-hover text-slate-600 dark:text-slate-400 hover:text-miku">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                                    Inactive Tab
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Dropdowns */}
-                        <div className="ios-glass-card p-6 rounded-3xl md:col-span-2">
-                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Dropdowns</h3>
-                            <div className="relative inline-block text-left w-64">
-                                <div className="ios-glass-dropdown rounded-2xl py-1.5">
-                                    <a href="#" className="block px-3 py-1.5 mx-1 text-sm font-medium transition-all rounded-lg island-pill-active">
-                                        Active Option
-                                    </a>
-                                    <a href="#" className="block px-3 py-1.5 mx-1 text-sm font-medium transition-all rounded-lg text-slate-600 dark:text-slate-300 hover:bg-miku/10 dark:hover:bg-miku/15 hover:text-miku">
-                                        Hover Option
-                                    </a>
-                                    <a href="#" className="block px-3 py-1.5 mx-1 text-sm font-medium transition-all rounded-lg text-slate-600 dark:text-slate-300 hover:bg-miku/10 dark:hover:bg-miku/15 hover:text-miku">
-                                        Standard Option
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </section>
-
-                {/* Complex Components Section */}
-                <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-primary-text mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-purple-400 rounded-full"></span>
-                        Complex Components
-                    </h2>
-
-                    <div className="space-y-12">
-                        {/* Page Title */}
-                        <div>
-                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Page Title (Overview Style)</h3>
-                            <div className="ios-glass-card p-8 rounded-3xl">
-                                <div className="text-center">
-                                    <div className="inline-flex items-center gap-2 px-4 py-2 island-pill-active rounded-full mb-4">
-                                        <span className="text-xs font-bold tracking-widest uppercase">PAGE CATEGORY</span>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                            {SURFACE_TOKENS.map(token => (
+                                <div
+                                    key={token.name}
+                                    className="rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] p-3"
+                                    style={{ backgroundColor: `var(${token.name})` }}
+                                >
+                                    <div className="hh-numeric text-[0.65rem] font-bold text-[var(--hh-text-primary)]">
+                                        {token.name.replace("--hh-surface-", "")}
                                     </div>
-                                    <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
-                                        Page <span className="text-miku">Title</span>
-                                    </h1>
-                                    <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-2xl mx-auto">
-                                        Page subtitle or description text goes here.
-                                    </p>
+                                    <div className="mt-6 text-[0.65rem] text-[var(--hh-text-tertiary)]">{token.value}</div>
                                 </div>
+                            ))}
+                        </div>
+                    </div>
+                    <TokenTable rows={SURFACE_TOKENS} />
+                </Section>
+
+                {/* ── Borders / text / accent ──────────────────────────── */}
+                <Section
+                    id="color"
+                    title="Borders, text and accent"
+                    blurb="Borders do the separating work that shadows are not allowed to do. The accent inherits from the character theme picker, so all 26 themes drive the cursor, the active slab and every wash without a single extra token."
+                >
+                    <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <div className="hh-tile p-5">
+                            <div className="hh-label mb-3">Border weights</div>
+                            <div className="space-y-2.5">
+                                {BORDER_TOKENS.map(token => (
+                                    <div key={token.name} className="flex items-center gap-3">
+                                        <span
+                                            className="h-9 w-24 shrink-0 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-2)]"
+                                            style={{ border: `1px solid var(${token.name})` }}
+                                        />
+                                        <code className="font-mono text-xs text-[var(--hh-text-secondary)]">{token.name}</code>
+                                    </div>
+                                ))}
                             </div>
                         </div>
-
-
-
-                        {/* Section Card (Related Events) */}
-                        <div>
-                            <h3 className="text-lg font-bold mb-4 text-slate-600 dark:text-slate-400">Section Card (e.g., Related Event)</h3>
-                            <div className="max-w-md ios-glass-card rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-miku/5 transition-all">
-                                <div className="px-5 py-4 border-b border-dashed border-slate-200/60 dark:border-slate-700/40 bg-gradient-to-r from-miku/10 to-transparent">
-                                    <h2 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-miku" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        Section Title
-                                    </h2>
-                                </div>
-                                <div className="p-0">
-                                    <div className="block group cursor-pointer">
-                                        <div className="relative aspect-[2/1] w-full bg-slate-200 dark:bg-slate-800">
-                                            <div className="absolute inset-0 flex items-center justify-center text-slate-400 dark:text-slate-500">
-                                                Banner Image Placeholder
-                                            </div>
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-                                            <div className="absolute bottom-0 left-0 w-full p-4">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-[10px] font-mono bg-white/20 text-white px-2 py-0.5 rounded backdrop-blur-sm">
-                                                        Tag #123
-                                                    </span>
-                                                </div>
-                                                <h3 className="text-white font-bold text-lg leading-tight truncate">
-                                                    Card Title / Event Name
-                                                    <span className="text-sm font-medium text-white/90 truncate block mt-0.5">
-                                                        Subtitle / Translation
-                                                    </span>
-                                                </h3>
-                                            </div>
+                        <div className="hh-tile p-5">
+                            <div className="hh-label mb-3">Accent ramp</div>
+                            <div className="grid grid-cols-3 gap-2">
+                                {ACCENT_TOKENS.map(token => (
+                                    <div key={token.name} className="overflow-hidden rounded-[var(--hh-radius-md)] border border-[var(--hh-border)]">
+                                        <div className="h-11" style={{ backgroundColor: `var(${token.name})` }} />
+                                        <div className="bg-[var(--hh-surface-1)] px-2 py-1.5 font-mono text-[0.6rem] text-[var(--hh-text-secondary)]">
+                                            {token.name.replace("--hh-accent", "accent") || "accent"}
                                         </div>
                                     </div>
-                                </div>
+                                ))}
                             </div>
                         </div>
                     </div>
 
-                </section>
-
-                {/* MySekai Preview Section */}
-                <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-primary-text mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-sky-400 rounded-full"></span>
-                        烤森预览（开发测试）
-                    </h2>
-                    <div className="ios-glass-card p-4 sm:p-6 rounded-3xl">
-                        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                            <div>
-                                <h3 className="text-lg font-bold text-slate-600 dark:text-slate-400">MySekai 3D 场景预览组件</h3>
-                                <p className="mt-1 text-sm text-slate-500">
-                                    使用本地 <code className="rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-xs">/data/mysekai-preview/testmysekai.json</code> 验证 OBJ 与纹理资源载入。
-                                </p>
-                            </div>
-                            <span className="text-xs font-medium text-slate-400">
-                                原作 / ルナ茶　部署 / StarMoe　转载请标明原作者
-                            </span>
-                        </div>
-                        <MysekaiScenePreview heightClassName="h-[560px] min-h-[480px]" compact />
-                    </div>
-                </section>
-
-                {/* Sekai Card Thumbnail Section */}
-                <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-primary-text mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-pink-400 rounded-full"></span>
-                        Sekai Card Thumbnail
-                    </h2>
-
-                    <div className="ios-glass-card p-8 rounded-3xl">
-                        <p className="text-slate-500 mb-6">
-                            New SVG-based component that reproduces the official in-game thumbnail layering logic.
-                        </p>
-
-                        <div className="flex flex-wrap gap-8">
-                            {/* Example 1: 4★ Normal */}
-                            <div className="flex flex-col items-center gap-2">
-                                <SekaiCardThumbnail
-                                    card={{
-                                        id: 1,
-                                        seq: 1,
-                                        characterId: 21, // Miku
-                                        cardRarityType: "rarity_4",
-                                        specialTrainingPower1BonusFixed: 0,
-                                        specialTrainingPower2BonusFixed: 0,
-                                        specialTrainingPower3BonusFixed: 0,
-                                        attr: "cool",
-                                        supportUnit: "none",
-                                        skillId: 1,
-                                        cardSkillName: "Skill",
-                                        prefix: "Always Singing",
-                                        assetbundleName: "res021_no018", // Example: 4* Miku
-                                        gachaPhrase: "Phrase",
-                                        archiveDisplayType: "normal",
-                                        archivePublishedAt: 0,
-                                        cardParameters: { param1: [], param2: [], param3: [] },
-                                        specialTrainingCosts: [],
-                                        masterLessonAchieveResources: [],
-                                        releaseAt: 0,
-                                        cardSupplyId: 0,
-                                        cardSupplyType: "normal",
-                                    }}
-                                    width={128}
-                                />
-                                <span className="text-xs text-slate-500 font-mono">4★ Normal</span>
-                            </div>
-
-                            {/* Example 2: 4★ Trained + Mastery 5 */}
-                            <div className="flex flex-col items-center gap-2">
-                                <SekaiCardThumbnail
-                                    card={{
-                                        id: 2,
-                                        seq: 2,
-                                        characterId: 21,
-                                        cardRarityType: "rarity_4",
-                                        specialTrainingPower1BonusFixed: 0,
-                                        specialTrainingPower2BonusFixed: 0,
-                                        specialTrainingPower3BonusFixed: 0,
-                                        attr: "cute",
-                                        supportUnit: "none",
-                                        skillId: 1,
-                                        cardSkillName: "Skill",
-                                        prefix: "Trained Miku",
-                                        assetbundleName: "res021_no018",
-                                        gachaPhrase: "Phrase",
-                                        archiveDisplayType: "normal",
-                                        archivePublishedAt: 0,
-                                        cardParameters: { param1: [], param2: [], param3: [] },
-                                        specialTrainingCosts: [],
-                                        masterLessonAchieveResources: [],
-                                        releaseAt: 0,
-                                        cardSupplyId: 0,
-                                        cardSupplyType: "normal",
-                                    }}
-                                    trained={true}
-                                    mastery={5}
-                                    width={128}
-                                />
-                                <span className="text-xs text-slate-500 font-mono">4★ Trained + M5</span>
-                            </div>
-
-                            {/* Example 3: Birthday */}
-                            <div className="flex flex-col items-center gap-2">
-                                <SekaiCardThumbnail
-                                    card={{
-                                        id: 3,
-                                        seq: 3,
-                                        characterId: 21,
-                                        cardRarityType: "rarity_birthday",
-                                        specialTrainingPower1BonusFixed: 0,
-                                        specialTrainingPower2BonusFixed: 0,
-                                        specialTrainingPower3BonusFixed: 0,
-                                        attr: "happy",
-                                        supportUnit: "none",
-                                        skillId: 1,
-                                        cardSkillName: "Skill",
-                                        prefix: "Happy Birthday",
-                                        assetbundleName: "birthday_miku_2023", // Hypothetical
-                                        gachaPhrase: "Phrase",
-                                        archiveDisplayType: "normal",
-                                        archivePublishedAt: 0,
-                                        cardParameters: { param1: [], param2: [], param3: [] },
-                                        specialTrainingCosts: [],
-                                        masterLessonAchieveResources: [],
-                                        releaseAt: 0,
-                                        cardSupplyId: 0,
-                                        cardSupplyType: "normal",
-                                    }}
-                                    width={128}
-                                />
-                                <span className="text-xs text-slate-500 font-mono">Birthday</span>
-                            </div>
-
-                            {/* Example 4: 2★ Normal */}
-                            <div className="flex flex-col items-center gap-2">
-                                <SekaiCardThumbnail
-                                    card={{
-                                        id: 4,
-                                        seq: 4,
-                                        characterId: 26, // Kaito
-                                        cardRarityType: "rarity_2",
-                                        specialTrainingPower1BonusFixed: 0,
-                                        specialTrainingPower2BonusFixed: 0,
-                                        specialTrainingPower3BonusFixed: 0,
-                                        attr: "mysterious",
-                                        supportUnit: "none",
-                                        skillId: 1,
-                                        cardSkillName: "Skill",
-                                        prefix: "KAITO",
-                                        assetbundleName: "res026_no002",
-                                        gachaPhrase: "Phrase",
-                                        archiveDisplayType: "normal",
-                                        archivePublishedAt: 0,
-                                        cardParameters: { param1: [], param2: [], param3: [] },
-                                        specialTrainingCosts: [],
-                                        masterLessonAchieveResources: [],
-                                        releaseAt: 0,
-                                        cardSupplyId: 0,
-                                        cardSupplyType: "normal",
-                                    }}
-                                    width={128}
-                                />
-                                <span className="text-xs text-slate-500 font-mono">2★ Normal</span>
-                            </div>
-                        </div>
-
-                        {/* Example 5: Scaled Sizes */}
-                        <div className="w-full mt-6 border-t border-slate-100 pt-6">
-                            <h4 className="text-sm font-bold text-slate-500 mb-4">Scalability (Different Sizes)</h4>
-                            <div className="flex items-end gap-4">
-                                {/* 48px */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <SekaiCardThumbnail
-                                        card={{
-                                            id: 5,
-                                            seq: 5,
-                                            characterId: 1, // Ichika
-                                            cardRarityType: "rarity_3",
-                                            specialTrainingPower1BonusFixed: 0,
-                                            specialTrainingPower2BonusFixed: 0,
-                                            specialTrainingPower3BonusFixed: 0,
-                                            attr: "pure",
-                                            supportUnit: "none",
-                                            skillId: 1,
-                                            cardSkillName: "Skill",
-                                            prefix: "Small",
-                                            assetbundleName: "res001_no007",
-                                            gachaPhrase: "Phrase",
-                                            archiveDisplayType: "normal",
-                                            archivePublishedAt: 0,
-                                            cardParameters: { param1: [], param2: [], param3: [] },
-                                            specialTrainingCosts: [],
-                                            masterLessonAchieveResources: [],
-                                            releaseAt: 0,
-                                            cardSupplyId: 0,
-                                            cardSupplyType: "normal",
-                                        }}
-                                        width={48}
-                                    />
-                                    <span className="text-[10px] text-slate-400 font-mono">48px</span>
-                                </div>
-
-                                {/* 64px */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <SekaiCardThumbnail
-                                        card={{
-                                            id: 5,
-                                            seq: 5,
-                                            characterId: 1,
-                                            cardRarityType: "rarity_3",
-                                            specialTrainingPower1BonusFixed: 0,
-                                            specialTrainingPower2BonusFixed: 0,
-                                            specialTrainingPower3BonusFixed: 0,
-                                            attr: "pure",
-                                            supportUnit: "none",
-                                            skillId: 1,
-                                            cardSkillName: "Skill",
-                                            prefix: "Medium",
-                                            assetbundleName: "res001_no007",
-                                            gachaPhrase: "Phrase",
-                                            archiveDisplayType: "normal",
-                                            archivePublishedAt: 0,
-                                            cardParameters: { param1: [], param2: [], param3: [] },
-                                            specialTrainingCosts: [],
-                                            masterLessonAchieveResources: [],
-                                            releaseAt: 0,
-                                            cardSupplyId: 0,
-                                            cardSupplyType: "normal",
-                                        }}
-                                        width={64}
-                                    />
-                                    <span className="text-[10px] text-slate-400 font-mono">64px</span>
-                                </div>
-
-                                {/* 96px */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <SekaiCardThumbnail
-                                        card={{
-                                            id: 5,
-                                            seq: 5,
-                                            characterId: 1,
-                                            cardRarityType: "rarity_3",
-                                            specialTrainingPower1BonusFixed: 0,
-                                            specialTrainingPower2BonusFixed: 0,
-                                            specialTrainingPower3BonusFixed: 0,
-                                            attr: "pure",
-                                            supportUnit: "none",
-                                            skillId: 1,
-                                            cardSkillName: "Skill",
-                                            prefix: "Large",
-                                            assetbundleName: "res001_no007",
-                                            gachaPhrase: "Phrase",
-                                            archiveDisplayType: "normal",
-                                            archivePublishedAt: 0,
-                                            cardParameters: { param1: [], param2: [], param3: [] },
-                                            specialTrainingCosts: [],
-                                            masterLessonAchieveResources: [],
-                                            releaseAt: 0,
-                                            cardSupplyId: 0,
-                                            cardSupplyType: "normal",
-                                        }}
-                                        width={96}
-                                    />
-                                    <span className="text-[10px] text-slate-400 font-mono">96px</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Modal / Dialog Section */}
-                <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-primary-text mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-sky-400 rounded-full"></span>
-                        Modal / Dialog
-                    </h2>
-
-                    <div className="ios-glass-card p-8 rounded-3xl">
-                        <p className="text-slate-500 mb-6">
-                            Generic modal component with theme-colored header, backdrop blur, and smooth framer-motion animations.
-                            Rendered via <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono text-slate-600">createPortal</code> to
-                            ensure viewport-centered positioning regardless of sidebar state.
-                        </p>
-
-                        <div className="flex flex-wrap gap-4 items-center">
-                            <button
-                                onClick={() => openModal("sm")}
-                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-full font-bold text-sm"
-                            >
-                                Small
-                            </button>
-                            <button
-                                onClick={() => openModal("md")}
-                                className="px-6 py-2 ios-glass-btn ios-glass-btn-primary rounded-full font-bold shadow-lg shadow-miku/20 text-sm"
-                            >
-                                Medium (Default)
-                            </button>
-                            <button
-                                onClick={() => openModal("lg")}
-                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-full font-bold text-sm"
-                            >
-                                Large
-                            </button>
-                            <button
-                                onClick={() => openModal("xl")}
-                                className="px-5 py-2 ios-glass-btn text-miku border-miku/30 rounded-full font-bold text-sm"
-                            >
-                                Extra Large
-                            </button>
-                            <button
-                                onClick={() => setIsImageModalOpen(true)}
-                                className="px-5 py-2 ios-glass-btn text-emerald-600 border-emerald-500/30 hover:border-emerald-500/50 rounded-full font-bold text-sm"
-                            >
-                                Image Preview
-                            </button>
-                        </div>
-
-                        <div className="mt-4 text-xs text-slate-400 font-mono">
-                            {`<Modal isOpen={…} onClose={…} title="弹出窗口标题" size="sm | md | lg | xl">{children}</Modal>`}
-                        </div>
-                        <div className="mt-2 text-xs text-slate-400 font-mono">
-                            {`<ImagePreviewModal isOpen={…} onClose={…} title="图片预览" imageUrl="..." fileName="example.png" />`}
-                        </div>
-                    </div>
-
-                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="弹出窗口示例" size={modalSize}>
-                        <div className="space-y-4">
-                            <p className="text-slate-600 dark:text-slate-350 text-sm leading-relaxed">
-                                这是一个通用弹出窗口组件的演示。它会始终在视口中央显示，不受侧边栏和顶栏的影响。
+                    <div className="mb-5 hh-tile p-5">
+                        <div className="hh-label mb-3">Text ramp</div>
+                        <div className="space-y-1.5">
+                            <p className="hh-body text-base text-[var(--hh-text-primary)]">
+                                Primary — the quick brown fox jumps over the lazy dog
                             </p>
-                            <div className="p-4 ios-glass-panel rounded-2xl">
-                                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">特性</h3>
-                                <ul className="text-sm text-slate-550 dark:text-slate-400 space-y-1.5 list-disc list-inside">
-                                    <li>使用 createPortal 渲染，避免 z-index 层级问题</li>
-                                    <li>framer-motion 入场/出场动画</li>
-                                    <li>ESC 键关闭 / 点击遮罩关闭</li>
-                                    <li>打开时禁用背景滚动</li>
-                                    <li>支持 sm / md / lg / xl 四种尺寸</li>
-                                    <li>应用主题色（miku）作为标题栏装饰</li>
-                                </ul>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-miku/10 text-miku border border-miku/20">
-                                    当前尺寸: {modalSize}
-                                </span>
-                            </div>
+                            <p className="hh-body text-sm text-[var(--hh-text-secondary)]">
+                                Secondary — the quick brown fox jumps over the lazy dog
+                            </p>
+                            <p className="hh-body text-sm text-[var(--hh-text-tertiary)]">
+                                Tertiary — the quick brown fox jumps over the lazy dog
+                            </p>
+                            <p className="hh-body inline-block rounded-[var(--hh-radius-md)] bg-[var(--hh-accent)] px-3 py-1 text-sm text-[var(--hh-text-on-accent)]">
+                                On accent — the quick brown fox
+                            </p>
                         </div>
-                    </Modal>
+                    </div>
 
-                    <ImagePreviewModal
-                        isOpen={isImageModalOpen}
-                        onClose={() => setIsImageModalOpen(false)}
-                        title="图片预览弹窗示例"
-                        imageUrl="/sticker-maker/img/ichika/ichika1.png"
-                        alt="Image Preview Demo"
-                        fileName="design_system_image_preview.png"
-                    />
-                </section>
+                    <TokenTable rows={[...TEXT_TOKENS, ...ACCENT_TOKENS]} />
+                </Section>
 
-                {/* Quick Filter Section */}
-                <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-primary-text mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-8 bg-emerald-400 rounded-full"></span>
-                        Quick Filter (快捷筛选器)
-                    </h2>
+                {/* ── Radii ────────────────────────────────────────────── */}
+                <Section
+                    id="radii"
+                    title="Radius ladder"
+                    blurb="Console geometry is crisp, not pill-soft. Which rung a component picks is a statement about what kind of object it is: structure climbs, and everything the user presses sits one rung below the tile it lives on. Fully-round is reserved for things that are genuinely round."
+                >
+                    <div className="mb-5 flex flex-wrap items-end gap-4">
+                        {RADIUS_LADDER.map(entry => (
+                            <div key={entry.name} className="flex flex-col items-center gap-2">
+                                <div
+                                    className="h-16 w-16 border border-[var(--hh-border-strong)] bg-[var(--hh-surface-2)]"
+                                    style={{ borderRadius: `var(${entry.name})` }}
+                                />
+                                <span className="hh-numeric text-[0.65rem] text-[var(--hh-text-tertiary)]">{entry.px}</span>
+                            </div>
+                        ))}
+                    </div>
 
-                    <div className="ios-glass-card p-8 rounded-3xl">
-                        <p className="text-slate-500 mb-6">
-                            全局通用的快捷筛选器组件。页面通过{" "}
-                            <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono text-slate-600">useQuickFilter()</code>{" "}
-                            注册筛选内容后，页面右下角会出现一个漏斗图标的浮动按钮（位于&quot;回到顶部&quot;按钮上方），
-                            点击后弹出 Modal 展示筛选面板。
+                    <div className="hh-tile overflow-hidden">
+                        <table className="hh-table">
+                            <thead className="hh-table-head">
+                                <tr>
+                                    <th className="hh-label px-4 py-2.5 text-left">Token</th>
+                                    <th className="hh-label px-4 py-2.5 text-left">Value</th>
+                                    <th className="hh-label px-4 py-2.5 text-left">Pick it for</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {RADIUS_LADDER.map(entry => (
+                                    <tr key={entry.name} className="hh-table-row">
+                                        <td className="px-4 py-2.5">
+                                            <code className="font-mono text-xs text-[var(--hh-text-primary)]">{entry.name}</code>
+                                        </td>
+                                        <td className="hh-numeric px-4 py-2.5 text-xs text-[var(--hh-text-secondary)]">{entry.px}</td>
+                                        <td className="hh-body px-4 py-2.5 text-xs text-[var(--hh-text-tertiary)]">{entry.use}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="hh-tile hh-tile-tint mt-4 p-4" style={tintStyle("var(--hh-accent)")}>
+                        <p className="hh-body text-xs text-[var(--hh-text-secondary)]">
+                            Write the rung explicitly — <code className={CODE_CLASS}>rounded-[var(--hh-radius-lg)]</code> —
+                            rather than a numbered utility. The utility scale is retuned to match the ladder, but naming the
+                            rung is what records the intent, and it survives a future retune of the scale.
+                            Nested boxes step down by exactly one rung: an inner radius equals the outer radius minus the gap
+                            between them, or the arcs stop being concentric and the trough visibly pinches at the corners.
                         </p>
+                    </div>
+                </Section>
 
-                        <div className="flex flex-wrap gap-4 items-center mb-6">
-                            <div className="flex items-center gap-3 px-4 py-2 bg-miku/5 border border-miku/20 rounded-2xl">
-                                <svg className="w-5 h-5 text-miku" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                                </svg>
-                                <span className="text-sm font-bold text-miku">← 请查看右下角的浮动筛选按钮</span>
+                {/* ── Elevation ────────────────────────────────────────── */}
+                <Section
+                    id="elevation"
+                    title="Elevation"
+                    blurb="Small, tight, low-opacity. A large soft shadow immediately reads as a phone OS instead of a console, so the blur radii stay deliberately short — separation is the borders' job, not the shadows'."
+                >
+                    <div className="hh-ground mb-5 grid grid-cols-2 gap-6 rounded-[var(--hh-radius-xl)] border border-[var(--hh-border)] p-8 lg:grid-cols-4">
+                        {SHADOW_TOKENS.map(token => (
+                            <div key={token.name} className="flex flex-col items-center gap-3">
+                                <div
+                                    className="flex h-20 w-full items-center justify-center rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] bg-[var(--hh-surface-2)] text-xs text-[var(--hh-text-tertiary)]"
+                                    style={{ boxShadow: `var(${token.name})` }}
+                                >
+                                    {token.value}
+                                </div>
+                                <code className="font-mono text-[0.65rem] text-[var(--hh-text-secondary)]">{token.name}</code>
                             </div>
+                        ))}
+                    </div>
+                    <TokenTable rows={SHADOW_TOKENS} />
+                </Section>
 
-                            {hasActiveFilters && (
-                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-white animate-pulse shadow-sm">
-                                    筛选器已激活
-                                </span>
-                            )}
+                {/* ── Motion ───────────────────────────────────────────── */}
+                <Section
+                    id="motion"
+                    title="Motion"
+                    blurb="Overshoot is a privilege, not a default. Exactly one thing in the system may spring past its target and settle back — the selection cursor. Everything structural is critically damped and simply arrives. Stiffness is usually misdiagnosed as too little animation when the real cause is too much duration."
+                >
+                    <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                        <div className="hh-tile p-5 lg:col-span-2">
+                            <div className="hh-label mb-3">Entrance animations</div>
+                            <div key={replayKey} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                {[
+                                    { cls: "hh-animate-screen-in", label: "screen-in" },
+                                    { cls: "hh-animate-sheet-in", label: "sheet-in" },
+                                    { cls: "hh-animate-rail-in", label: "rail-in" },
+                                    { cls: "hh-animate-tile-in", label: "tile-in" },
+                                ].map(item => (
+                                    <div
+                                        key={item.cls}
+                                        className={`${item.cls} flex h-16 items-center justify-center rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] bg-[var(--hh-surface-1)] font-mono text-[0.65rem] text-[var(--hh-text-secondary)]`}
+                                    >
+                                        {item.label}
+                                    </div>
+                                ))}
+                            </div>
+                            <button
+                                type="button"
+                                className={`${DEMO_BTN_CLASS} mt-3 px-4 py-1.5 text-xs`}
+                                onClick={() => setReplayKey(k => k + 1)}
+                            >
+                                Replay
+                            </button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Inline preview */}
-                            <div>
-                                <h4 className="text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">内嵌预览</h4>
-                                <div className="max-w-sm">
-                                    {quickFilterContent}
+                        <div className="hh-tile p-5">
+                            <div className="hh-label mb-3">Presets in lib/motion</div>
+                            <ul className="hh-numeric space-y-1 font-mono text-[0.68rem] text-[var(--hh-text-secondary)]">
+                                <li>hhSpringCursor · bounce 0.28</li>
+                                <li>hhSpringSelect · bounce 0.22</li>
+                                <li>hhSpringPress · bounce 0</li>
+                                <li>hhSpringPanel · bounce 0</li>
+                                <li>hhTweenScreen · bounce 0</li>
+                                <li>springMomentum · bounce 0.2</li>
+                            </ul>
+                            <p className="hh-body mt-3 text-[0.68rem] text-[var(--hh-text-tertiary)]">
+                                Only the first two and the momentum handoff carry bounce. Everything else is furniture.
+                            </p>
+                        </div>
+                    </div>
+
+                    <TokenTable rows={MOTION_TOKENS} />
+                </Section>
+
+                {/* ── Primitives ───────────────────────────────────────── */}
+                <Section
+                    id="primitives"
+                    title="Primitives"
+                    blurb="The base vocabulary. Everything in this layer supplies DEFAULTS — a utility written on the same element is meant to win, so never reach for !important to force one through."
+                >
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+                        <Spec name=".hh-tile" purpose="The default object: a card, a home-menu square. Surface-2, 1px ring, 12px corner, resting shadow.">
+                            <div className="hh-tile flex h-20 w-full items-center justify-center text-xs text-[var(--hh-text-tertiary)]">tile</div>
+                        </Spec>
+
+                        <Spec name=".hh-panel" purpose="Structural chrome — top bar, side rail, sheet. One step flatter than a tile so tiles can sit on top without shadow collisions.">
+                            <div className="hh-panel flex h-20 w-full items-center justify-center text-xs text-[var(--hh-text-tertiary)]">panel</div>
+                        </Spec>
+
+                        <Spec name=".hh-float" purpose="A floating layer — dropdown, popover, dialog. The only rung allowed a large shadow.">
+                            <div className="hh-float flex h-20 w-full items-center justify-center text-xs text-[var(--hh-text-tertiary)]">float</div>
+                        </Spec>
+
+                        <Spec name=".hh-well" purpose="A sunken area cut into the page: list backgrounds, input troughs, empty states.">
+                            <div className="hh-well flex h-20 w-full items-center justify-center text-xs text-[var(--hh-text-tertiary)]">well</div>
+                        </Spec>
+
+                        <Spec name=".hh-scrim" purpose="Modal backdrop. Opaque-dark rather than blurred, consistent with dropping backdrop-filter everywhere else.">
+                            <div className="relative h-20 w-full overflow-hidden rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)] bg-[var(--hh-surface-3)]">
+                                <div className="hh-scrim absolute inset-0 flex items-center justify-center text-xs text-white">scrim</div>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-divider" purpose="An edge-to-edge hairline. Rows are separated by a line, not by gaps.">
+                            <div className="w-full space-y-2.5 text-xs text-[var(--hh-text-secondary)]">
+                                <div>Row one</div>
+                                <hr className="hh-divider" />
+                                <div>Row two</div>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-btn / -primary / -danger" purpose="A slab, not a pill. Padding is a default: write your own px/py and it wins." wide>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <button type="button" className={`${DEMO_BTN_CLASS} px-5 py-2`}>Default</button>
+                                <button type="button" className={`${DEMO_BTN_CLASS} hh-btn-primary px-5 py-2`}>Primary</button>
+                                <button type="button" className={`${DEMO_BTN_CLASS} hh-btn-danger px-5 py-2`}>Danger</button>
+                                <button type="button" className={`${DEMO_BTN_CLASS} px-5 py-2`} disabled>Disabled</button>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-input" purpose="Trough treatment plus an accent focus ring. Focus replaces the border colour rather than adding a glow.">
+                            <div className="w-full space-y-2">
+                                <input type="text" placeholder="Search..." className="hh-input w-full px-3 py-2 text-sm" />
+                                <input type="text" defaultValue="Invalid value" className="hh-input w-full border-[var(--hh-accent-alert)] px-3 py-2 text-sm text-[var(--hh-accent-alert)]" />
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-chip / -active" purpose="Filter chips on every list page. 8px, not a capsule — the capsule belongs to the vocabulary this replaced.">
+                            <div className="flex flex-wrap gap-2">
+                                {["all", "cool", "cute", "pure"].map(chip => (
+                                    <button
+                                        key={chip}
+                                        type="button"
+                                        className={`hh-chip hh-press hh-focusable ${activeChip === chip ? "hh-chip-active" : ""}`}
+                                        onClick={() => { setActiveChip(chip); playHandheldSound("cursor"); }}
+                                    >
+                                        {chip}
+                                    </button>
+                                ))}
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-segment / -item" purpose="Segmented control. Fills its container by default; the active segment is a solid slab above a sunken trough." wide>
+                            <div className="w-full space-y-3">
+                                <div className="hh-segment">
+                                    {(["overview", "details"] as const).map(tab => (
+                                        <button
+                                            key={tab}
+                                            type="button"
+                                            className="hh-segment-item hh-focusable"
+                                            data-selected={segmentTab === tab}
+                                            aria-pressed={segmentTab === tab}
+                                            onClick={() => { setSegmentTab(tab); playHandheldSound("cursor"); }}
+                                        >
+                                            {tab === "overview" ? "Overview" : "Details"}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="hh-body shrink-0 text-xs text-[var(--hh-text-tertiary)]">In a header row:</span>
+                                    <div className="hh-segment hh-segment-fit">
+                                        <button type="button" className="hh-segment-item" data-selected aria-pressed>Fit</button>
+                                        <button type="button" className="hh-segment-item">Content</button>
+                                    </div>
+                                    <span className="hh-body truncate text-xs text-[var(--hh-text-tertiary)]">neighbours keep their space</span>
                                 </div>
                             </div>
+                        </Spec>
 
-                            {/* Usage guide */}
-                            <div>
-                                <h4 className="text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">使用方式</h4>
-                                <div className="p-4 ios-glass-panel rounded-2xl">
-                                    <ul className="text-sm text-slate-550 dark:text-slate-450 space-y-2 list-disc list-inside">
-                                        <li>页面组件中调用 <code className="px-1 py-0.5 bg-white/20 rounded text-xs font-mono">useQuickFilter(title, content, deps)</code></li>
-                                        <li>筛选器内容自动注册到全局 Context</li>
-                                        <li>右下角浮动按钮仅在有注册内容时显示</li>
-                                        <li>组件卸载时自动取消注册</li>
-                                        <li>BaseFilters 的所有功能均可在弹窗内使用</li>
-                                    </ul>
+                        <Spec name=".hh-switch / -thumb" purpose="Binary switch. One of the few genuinely capsule-shaped elements in the system, which is why it keeps the full radius.">
+                            <button
+                                type="button"
+                                className={`hh-switch hh-focusable ${switchOn ? "hh-switch-active" : ""}`}
+                                role="switch"
+                                aria-checked={switchOn}
+                                aria-label="Demo switch"
+                                onClick={() => { setSwitchOn(v => !v); playHandheldSound("toggle"); }}
+                            >
+                                <span className="hh-switch-thumb" />
+                            </button>
+                        </Spec>
+
+                        <Spec name=".hh-press" purpose="Press acknowledgment: sinks to 96.5% in 90ms on pointer-down. Also carries touch-action and tap-highlight hygiene.">
+                            <button type="button" className={`${DEMO_BTN_CLASS} px-6 py-3`}>Press and hold</button>
+                        </Spec>
+
+                        <Spec name=".hh-focusable" purpose="Keyboard-only cursor ring. Pointer users never see it; keyboard and gamepad users always do. Tab to it.">
+                            <button type="button" className="hh-focusable hh-tile px-5 py-2.5 text-sm text-[var(--hh-text-primary)]">Tab here</button>
+                        </Spec>
+
+                        <Spec name=".hh-selected / -outline" purpose="Where the cursor is (lifts and brightens) versus statically selected items (holds still). Use -outline in grids: a spread ring does not participate in layout, so toggling it cannot nudge neighbours.">
+                            <div className="flex items-center gap-4">
+                                <div className="hh-tile hh-selected flex h-14 w-14 items-center justify-center text-[0.6rem] text-[var(--hh-text-tertiary)]">cursor</div>
+                                <div className="hh-tile hh-selected-outline flex h-14 w-14 items-center justify-center text-[0.6rem] text-[var(--hh-text-tertiary)]">picked</div>
+                                <div className="hh-tile flex h-14 w-14 items-center justify-center text-[0.6rem] text-[var(--hh-text-tertiary)]">idle</div>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-label" purpose="Uppercase micro-heading with positive tracking. Section captions and table headers.">
+                            <span className="hh-label">Section label</span>
+                        </Spec>
+
+                        <Spec name=".hh-display / -title / -body" purpose="The type scale. Console text is tight and even-weight, and never light-weight at body size." wide>
+                            <div className="w-full space-y-2">
+                                <p className="hh-display text-3xl text-[var(--hh-text-primary)]">Display · tight leading</p>
+                                <p className="hh-title text-xl text-[var(--hh-text-primary)]">Title · headings and card names</p>
+                                <p className="hh-body text-sm text-[var(--hh-text-secondary)]">Body · 1.55 leading, weight 400, never lighter</p>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-numeric" purpose="Tabular figures. Mandatory on any number that ticks or sits in a column — without it the digits change width and the row jitters." wide>
+                            <div className="grid w-full grid-cols-2 gap-6 text-sm">
+                                <div>
+                                    <div className="hh-label mb-1.5 text-[var(--hh-accent-alert)]">Without</div>
+                                    <div className="text-[var(--hh-text-secondary)]">1,204,880</div>
+                                    <div className="text-[var(--hh-text-secondary)]">1,111,111</div>
+                                    <div className="text-[var(--hh-text-secondary)]">9,000,009</div>
                                 </div>
+                                <div>
+                                    <div className="hh-label mb-1.5 text-[var(--hh-accent-deep)]">With</div>
+                                    <div className="hh-numeric text-[var(--hh-text-primary)]">1,204,880</div>
+                                    <div className="hh-numeric text-[var(--hh-text-primary)]">1,111,111</div>
+                                    <div className="hh-numeric text-[var(--hh-text-primary)]">9,000,009</div>
+                                </div>
+                            </div>
+                        </Spec>
 
-                                <div className="mt-4 p-4 ios-glass-panel rounded-2xl">
-                                    <h5 className="text-xs font-bold text-slate-650 dark:text-slate-350 uppercase tracking-wider mb-2">当前筛选状态</h5>
-                                    <div className="text-xs text-slate-500 font-mono space-y-1">
-                                        <div>search: &quot;{demoSearch || "(空)"}&quot;</div>
+                    </div>
+                </Section>
+
+                {/* ── Sedimented utilities ─────────────────────────────── */}
+                <Section
+                    id="patterns"
+                    title="Sedimented patterns"
+                    blurb="Recipes that were being hand-assembled from the same four to six utilities over and over. Each was measured at the call sites before being named, and each is named for what it IS rather than what it looks like, so a later retune of the ramp moves them together."
+                >
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+                        <Spec name=".hh-section-header" purpose="The header strip inside a tile. 31 hand-written copies. Draws only the bottom border — the tile already owns the other three edges.">
+                            <div className="hh-tile hh-list w-full">
+                                <div className="hh-section-header hh-title text-sm text-[var(--hh-text-primary)]">Header strip</div>
+                                <div className="hh-body p-4 text-xs text-[var(--hh-text-secondary)]">Body sits on the brighter rung.</div>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-list" purpose="Rows, not cards. Composes with a tile — write hh-tile hh-list. The separator sits between rows only, so nothing lands on the container border.">
+                            <div className="hh-tile hh-list w-full text-xs text-[var(--hh-text-secondary)]">
+                                {["First row", "Second row", "Third row"].map(row => (
+                                    <div key={row} className="px-4 py-2.5">{row}</div>
+                                ))}
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-table / -head / -row" purpose="Table vocabulary. Deliberately does not set display, so it works on real tables and on div grids alike. Rows are transparent, so zebra striping stays opt-in.">
+                            <table className="hh-table text-xs">
+                                <thead className="hh-table-head">
+                                    <tr><th className="hh-label px-3 py-2 text-left">Rank</th><th className="hh-label px-3 py-2 text-left">Score</th></tr>
+                                </thead>
+                                <tbody>
+                                    {[[1, "1,204,880"], [2, "1,180,004"]].map(([rank, score]) => (
+                                        <tr key={rank} className="hh-table-row">
+                                            <td className="hh-numeric px-3 py-2 text-[var(--hh-text-secondary)]">{rank}</td>
+                                            <td className="hh-numeric px-3 py-2 text-[var(--hh-text-primary)]">{score}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </Spec>
+
+                        <Spec name=".hh-scrim-media + .hh-badge-on-media" purpose="Text on a photograph. Both hardcode black on purpose: they darken artwork that looks identical in both themes, so a theme-following scrim would invert in dark mode and stop protecting the white text.">
+                            <div className="relative h-24 w-full overflow-hidden rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)]">
+                                <img src="/miku.webp" alt="Media scrim demo" className="h-full w-full object-cover" />
+                                <div className="hh-scrim-media absolute inset-0" />
+                                <span className="hh-badge-on-media hh-numeric absolute left-2 top-2 px-1.5 py-0.5 text-[0.6rem]">02:41</span>
+                                <span className="absolute bottom-2 left-2 text-xs font-bold text-white">Legible over anything</span>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-spinner / -on-accent" purpose="Ring loader, ~50 hand-rolled copies in three inconsistent spellings. Inherits its size from the box and its colour from the accent, so it works inline in a button and centred in a panel.">
+                            <div className="flex items-center gap-5">
+                                <span className="hh-spinner h-5 w-5" />
+                                <span className="hh-spinner h-8 w-8" />
+                                <span className="hh-btn hh-btn-primary px-4 py-2 text-sm">
+                                    <span className="hh-spinner hh-spinner-on-accent h-4 w-4" />
+                                    Loading
+                                </span>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-meter / -fill" purpose="Progress and range. The track uses the inset rung because a meter reads as a channel cut into the surface. Width of the fill is the caller's job — it is the data.">
+                            <div className="w-full space-y-2">
+                                {[72, 38].map(pct => (
+                                    <div key={pct} className="flex items-center gap-3">
+                                        <div className="hh-meter">
+                                            <div className="hh-meter-fill" style={{ width: `${pct}%` }} />
+                                        </div>
+                                        <span className="hh-numeric w-9 shrink-0 text-right text-[0.65rem] text-[var(--hh-text-tertiary)]">{pct}%</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-kbd" purpose="Keycap. 8 copies across the shortcut help, command palette, settings and navbar. min-width plus centring is what keeps a row of single-character caps optically even.">
+                            <div className="flex items-center gap-2 text-xs text-[var(--hh-text-tertiary)]">
+                                <kbd className="hh-kbd">Ctrl</kbd>
+                                <span>+</span>
+                                <kbd className="hh-kbd">K</kbd>
+                                <span className="mx-1.5">/</span>
+                                <kbd className="hh-kbd">↑</kbd>
+                                <kbd className="hh-kbd">↓</kbd>
+                                <kbd className="hh-kbd">⏎</kbd>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-checker" purpose="Transparency backdrop in the asset viewer. Functional, not decorative: without it a transparent PNG and a white PNG are indistinguishable. --hh-checker-size tunes the pitch.">
+                            <div className="hh-checker flex h-20 w-full items-center justify-center rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)]">
+                                <span className="rounded-[var(--hh-radius-sm)] bg-[var(--hh-accent)] px-3 py-1.5 text-[0.65rem] text-[var(--hh-text-on-accent)]">
+                                    alpha asset
+                                </span>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-tile-tint" purpose="Semantic notice card. Takes one --hh-tint and derives fill, border and text from it, so the four advisory variants stop being four unrelated colour triplets. Mixes against the surface, so it survives the theme flip.">
+                            <div className="w-full space-y-2">
+                                {[
+                                    { tint: "var(--hh-accent-alert)", label: "Destructive / spoiler" },
+                                    { tint: "var(--hh-accent)", label: "Informational" },
+                                ].map(item => (
+                                    <div key={item.label} className="hh-tile hh-tile-tint px-3 py-2 text-xs text-[var(--hh-text-secondary)]" style={tintStyle(item.tint)}>
+                                        {item.label}
+                                    </div>
+                                ))}
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-segment-fit" purpose="Shrink-to-fit escape from the segmented control's full-width default. All three of width:auto, flex-grow:0 and flex-shrink:0 are required; the last is what stops labels collapsing into ellipsis on a tight row.">
+                            <div className="hh-segment hh-segment-fit">
+                                <button type="button" className="hh-segment-item" data-selected aria-pressed>Fit</button>
+                                <button type="button" className="hh-segment-item">Wide</button>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-selected-outline" purpose="Selected, but stays put. For grids where several items are selected at once and none of them is where the cursor is — scaling them all up just makes the grid jitter.">
+                            <div className="flex gap-3">
+                                <div className="hh-tile hh-selected-outline h-14 w-14" />
+                                <div className="hh-tile hh-selected-outline h-14 w-14" />
+                                <div className="hh-tile h-14 w-14" />
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-numeric-slashed" purpose="Opt-in slashed zero. Only for alphanumeric identifiers where 0-vs-O is genuinely ambiguous — never for plain digit runs, which have no O to confuse.">
+                            <div className="space-y-1 font-mono text-xs">
+                                <div className="hh-numeric-slashed text-[var(--hh-text-primary)]">res021_no018</div>
+                                <div className="hh-numeric-slashed text-[var(--hh-text-primary)]">v0.10.0-B0OT</div>
+                            </div>
+                        </Spec>
+
+                        <Spec name=".hh-allow-blur" purpose="The escape hatch from global blur neutralization. For overlays that obscure content functionally — spoiler shields, loading veils — where flattening would leak the thing they exist to cover. Not a way to reintroduce glass." wide>
+                            <div className="hh-allow-blur relative h-24 w-full overflow-hidden rounded-[var(--hh-radius-lg)] border border-[var(--hh-border)]">
+                                <div className="absolute inset-0 flex items-center justify-center bg-[var(--hh-surface-3)] text-sm font-bold text-[var(--hh-text-primary)]">
+                                    Spoiler content behind the shield
+                                </div>
+                                {/*
+                                  The shield is written as an inline filter rather than as the utility this
+                                  page documents. Both routes reach the same rendered result, but the utility
+                                  form would leave a live blur class in the migrated codebase for a grep to
+                                  trip over; the mechanism itself is described in the pitfalls section.
+                                */}
+                                <div
+                                    className="absolute inset-0 flex items-center justify-center bg-[rgba(24,26,30,0.28)]"
+                                    style={{ backdropFilter: "blur(7px)", WebkitBackdropFilter: "blur(7px)" }}
+                                >
+                                    <span className="hh-badge-on-media px-2.5 py-1 text-xs font-bold">Tap to reveal</span>
+                                </div>
+                            </div>
+                        </Spec>
+
+                    </div>
+                </Section>
+
+                {/* ── Pitfalls ─────────────────────────────────────────── */}
+                <Section
+                    id="pitfalls"
+                    title="Architecture pitfalls"
+                    blurb="The most valuable part of this page. Every entry below cost at least one batch of the migration to find, and most of them fail silently — they compile, they pass lint, they pass the type checker, and then do nothing at runtime."
+                >
+                    <div className="space-y-4">
+                        {PITFALLS.map((pitfall, index) => (
+                            <div
+                                key={pitfall.title}
+                                className="hh-tile hh-tile-tint p-5"
+                                style={tintStyle(pitfall.critical ? "var(--hh-accent-alert)" : "var(--hh-accent)")}
+                            >
+                                <div className="flex items-start gap-3">
+                                    <span className="hh-numeric mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-1)] text-xs font-bold text-[var(--hh-text-secondary)]">
+                                        {index + 1}
+                                    </span>
+                                    <div className="min-w-0">
+                                        <h3 className="hh-title flex flex-wrap items-center gap-2 text-base text-[var(--hh-text-primary)]">
+                                            {pitfall.title}
+                                            {pitfall.critical && (
+                                                <span className="hh-label rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent-alert)] px-1.5 py-0.5 text-white">
+                                                    silent failure
+                                                </span>
+                                            )}
+                                        </h3>
+                                        <p className="hh-body mt-2 text-sm text-[var(--hh-text-secondary)]">
+                                            <span className="hh-label mr-2 text-[var(--hh-text-tertiary)]">Symptom</span>
+                                            {pitfall.symptom}
+                                        </p>
+                                        <p className="hh-body mt-2 text-sm text-[var(--hh-text-secondary)]">
+                                            <span className="hh-label mr-2 text-[var(--hh-accent-deep)]">Rule</span>
+                                            {pitfall.rule}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </Section>
+
+                {/* ── Sound ────────────────────────────────────────────── */}
+                <Section
+                    id="sound"
+                    title="Sound"
+                    blurb="Six UI ticks, synthesized from oscillators at play time — no audio file is ever downloaded, so nothing lands in the bundle or on the network waterfall. All six are short and dry on purpose: a UI tick that rings is worse than silence."
+                >
+                    {!handheldSoundEnabled && (
+                        <div className="hh-tile hh-tile-tint mb-4 p-4" style={tintStyle("var(--hh-accent-alert)")}>
+                            <p className="hh-body text-sm text-[var(--hh-text-secondary)]">
+                                <span className="font-bold text-[var(--hh-text-primary)]">Sound is currently off.</span>{" "}
+                                It is off by default and stays off until the user asks for it — a site that starts making
+                                noise on its own is hostile, especially with headphones on or in a background tab. Turn it on
+                                under Settings to audition the buttons below. Note that the engine deliberately does NOT
+                                consult the reduced-motion preference: sound is not motion, and treating it as motion silently
+                                muted the whole engine for anyone with that setting while the switch still read as on.
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {SOUND_CATALOG.map(sound => (
+                            <div key={sound.name} className="hh-tile hh-list">
+                                <div className="p-4">
+                                    <button
+                                        type="button"
+                                        className={`${DEMO_BTN_CLASS} w-full px-4 py-2.5`}
+                                        onClick={() => playHandheldSound(sound.name)}
+                                    >
+                                        Play {sound.name}
+                                    </button>
+                                </div>
+                                <div className="bg-[var(--hh-surface-1)] px-4 py-3">
+                                    <code className="block font-mono text-xs font-bold text-[var(--hh-accent-deep)]">
+                                        playHandheldSound(&quot;{sound.name}&quot;)
+                                    </code>
+                                    <p className="hh-body mt-1 text-xs font-semibold text-[var(--hh-text-primary)]">{sound.meaning}</p>
+                                    <p className="hh-body mt-0.5 text-xs text-[var(--hh-text-secondary)]">{sound.when}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="hh-tile mt-4 p-5">
+                        <div className="hh-label mb-2">Integration notes</div>
+                        <ul className="hh-body list-inside list-disc space-y-1.5 text-xs text-[var(--hh-text-secondary)]">
+                            <li>Import from <code className={CODE_CLASS}>@/lib/handheld-sound</code>. The module is SSR-safe: nothing touches the audio API at module scope.</li>
+                            <li>Repeats of the same sound inside a 30ms window are dropped, so key-repeat and fast cursor sweeps cannot stack into a buzz.</li>
+                            <li>Audio is unlocked on the first real user gesture regardless of the preference, so the first sound after switching it on is the toggle blip rather than silence.</li>
+                            <li>Every call is wrapped: a broken blip is never allowed to break a page.</li>
+                        </ul>
+                    </div>
+                </Section>
+
+                {/* ── Composite components ─────────────────────────────── */}
+                <Section
+                    id="components"
+                    title="Composite components"
+                    blurb="Shared components assembled from the primitives above. Prefer these over rebuilding the pattern locally — every one of them was factored out after the same layout appeared in five or more places."
+                >
+                    <div className="mb-4 hh-tile hh-list">
+                        <div className="hh-section-header hh-title text-sm text-[var(--hh-text-primary)]">Modal / dialog</div>
+                        <div className="p-5">
+                            <p className="hh-body mb-4 text-sm text-[var(--hh-text-secondary)]">
+                                Rendered through <code className={CODE_CLASS}>createPortal</code> so it is centred in the
+                                viewport regardless of rail state, with a flat <code className={CODE_CLASS}>.hh-scrim</code>{" "}
+                                backdrop, escape-to-close, background scroll lock and four width presets.
+                            </p>
+                            <div className="flex flex-wrap items-center gap-3">
+                                {(["sm", "md", "lg", "xl"] as const).map(size => (
+                                    <button
+                                        key={size}
+                                        type="button"
+                                        onClick={() => openModal(size)}
+                                        className={`${DEMO_BTN_CLASS} ${size === "md" ? "hh-btn-primary" : ""} px-5 py-2`}
+                                    >
+                                        {size}
+                                    </button>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsImageModalOpen(true)}
+                                    className={`${DEMO_BTN_CLASS} px-5 py-2`}
+                                >
+                                    Image preview
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mb-4 hh-tile hh-list">
+                        <div className="hh-section-header hh-title text-sm text-[var(--hh-text-primary)]">Quick filter</div>
+                        <div className="p-5">
+                            <p className="hh-body mb-4 text-sm text-[var(--hh-text-secondary)]">
+                                A page registers its filter panel through <code className={CODE_CLASS}>useQuickFilter(title, content, deps)</code>{" "}
+                                and a floating funnel button appears at the bottom right, above the back-to-top control. The button
+                                only renders when something is registered, and registration is dropped on unmount. This page has one
+                                registered right now — open it from the corner.
+                            </p>
+                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                <div>
+                                    <div className="hh-label mb-2">Inline preview</div>
+                                    <div className="max-w-sm">{quickFilterContent}</div>
+                                </div>
+                                <div>
+                                    <div className="hh-label mb-2">Live state</div>
+                                    <div className="hh-well p-4 font-mono text-xs text-[var(--hh-text-secondary)]">
+                                        <div>search: &quot;{demoSearch || "(empty)"}&quot;</div>
                                         <div>sortBy: &quot;{demoSortBy}&quot; / order: &quot;{demoSortOrder}&quot;</div>
                                         <div>category: &quot;{demoCategory}&quot;</div>
                                         <div>toggle: {demoToggle ? "true" : "false"}</div>
-                                        <div>filtered: {demoFilteredCount} / {demoTotalCount}</div>
+                                        <div className="hh-numeric">filtered: {demoFilteredCount} / {demoTotalCount}</div>
                                     </div>
+                                    {hasActiveFilters && (
+                                        <span className="hh-chip hh-chip-active mt-3">Filters active</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div className="mt-6 text-xs text-slate-400 font-mono">
-                            {`useQuickFilter("筛选标题", <BaseFilters ...>{children}</BaseFilters>, [deps])`}
+                    <div className="hh-tile hh-list">
+                        <div className="hh-section-header hh-title text-sm text-[var(--hh-text-primary)]">Card thumbnail</div>
+                        <div className="p-5">
+                            <p className="hh-body mb-5 text-sm text-[var(--hh-text-secondary)]">
+                                SVG-based component reproducing the official in-game thumbnail layering — frame, attribute,
+                                rarity and mastery stars — so it stays crisp at any width.
+                            </p>
+                            <div className="flex flex-wrap gap-6">
+                                {[
+                                    { card: demoCard({ id: 1, characterId: 21, cardRarityType: "rarity_4", attr: "cool", prefix: "Always Singing", assetbundleName: "res021_no018" }), label: "4★ normal", trained: false, mastery: 0 },
+                                    { card: demoCard({ id: 2, characterId: 21, cardRarityType: "rarity_4", attr: "cute", prefix: "Trained", assetbundleName: "res021_no018" }), label: "4★ trained + M5", trained: true, mastery: 5 },
+                                    { card: demoCard({ id: 3, characterId: 21, cardRarityType: "rarity_birthday", attr: "happy", prefix: "Birthday", assetbundleName: "birthday_miku_2023" }), label: "birthday", trained: false, mastery: 0 },
+                                    { card: demoCard({ id: 4, characterId: 26, cardRarityType: "rarity_2", attr: "mysterious", prefix: "KAITO", assetbundleName: "res026_no002" }), label: "2★ normal", trained: false, mastery: 0 },
+                                ].map(item => (
+                                    <div key={item.card.id} className="flex flex-col items-center gap-2">
+                                        <SekaiCardThumbnail card={item.card} trained={item.trained} mastery={item.mastery} width={128} />
+                                        <span className="hh-numeric text-xs text-[var(--hh-text-tertiary)]">{item.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <hr className="hh-divider my-5" />
+
+                            <div className="hh-label mb-3">Scales without raster artefacts</div>
+                            <div className="flex items-end gap-4">
+                                {THUMBNAIL_SIZES.map(size => (
+                                    <div key={size} className="flex flex-col items-center gap-1.5">
+                                        <SekaiCardThumbnail
+                                            card={demoCard({ id: 5, characterId: 1, cardRarityType: "rarity_3", attr: "pure", prefix: "Scaled", assetbundleName: "res001_no007" })}
+                                            width={size}
+                                        />
+                                        <span className="hh-numeric text-[0.65rem] text-[var(--hh-text-tertiary)]">{size}px</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </section>
-            </div >
-        </MainLayout >
-    );
-}
+                </Section>
 
-function ColorCard({ name, variable, className, hex }: { name: string, variable?: string, className: string, hex?: string }) {
-    return (
-        <div className="flex flex-col h-32 rounded-2xl border border-slate-200/60 dark:border-slate-700/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className={`flex-grow ${className} flex items-center justify-center`}>
-                {hex && <span className="font-mono opacity-80">{hex}</span>}
+                {/* ── Scene previewer ──────────────────────────────────── */}
+                <Section
+                    id="scene-preview"
+                    title="MySekai scene previewer"
+                    blurb="Development harness for the 3D scene component. Loads a local fixture to verify OBJ and texture resolution without hitting the live asset host."
+                >
+                    <div className="hh-tile hh-list">
+                        <div className="hh-section-header flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 className="hh-title text-sm text-[var(--hh-text-primary)]">MysekaiScenePreview</h3>
+                                <p className="hh-body mt-0.5 text-xs text-[var(--hh-text-secondary)]">
+                                    Fixture: <code className={CODE_CLASS}>/data/mysekai-preview/testmysekai.json</code>
+                                </p>
+                            </div>
+                            <span className="hh-body text-xs text-[var(--hh-text-tertiary)]">
+                                Original / ルナ茶 · Deployment / StarMoe · credit the original author when redistributing
+                            </span>
+                        </div>
+                        <div className="p-4 sm:p-5">
+                            <MysekaiScenePreview heightClassName="h-[560px] min-h-[480px]" compact />
+                        </div>
+                    </div>
+                </Section>
+
+                <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Dialog example" size={modalSize}>
+                    <div className="space-y-4">
+                        <p className="hh-body text-sm text-[var(--hh-text-secondary)]">
+                            A shared dialog rendered into a portal, so it is always centred in the viewport regardless of
+                            the navigation rail and top bar.
+                        </p>
+                        <div className="hh-well p-4">
+                            <div className="hh-label mb-2">Behaviour</div>
+                            <ul className="hh-body list-inside list-disc space-y-1.5 text-sm text-[var(--hh-text-secondary)]">
+                                <li>Portal-rendered, so stacking context never has to be reasoned about</li>
+                                <li>Damped enter and exit transitions — a sheet is furniture and does not bounce</li>
+                                <li>Escape to close, click the flat scrim to close</li>
+                                <li>Background scroll is locked while open</li>
+                                <li>Four width presets, and the accent follows the character theme</li>
+                            </ul>
+                        </div>
+                        <span className="hh-chip hh-chip-active hh-numeric">size: {modalSize}</span>
+                    </div>
+                </Modal>
+
+                <ImagePreviewModal
+                    isOpen={isImageModalOpen}
+                    onClose={() => setIsImageModalOpen(false)}
+                    title="Image preview example"
+                    imageUrl="/miku.webp"
+                    alt="Image preview demo"
+                    fileName="design_system_image_preview.webp"
+                />
             </div>
-            <div className="p-3 bg-white dark:bg-slate-900/60">
-                <div className="font-bold text-sm text-slate-800 dark:text-slate-200">{name}</div>
-                {variable && <div className="text-xs text-slate-400 font-mono mt-0.5">{variable}</div>}
-            </div>
-        </div>
+        </MainLayout>
     );
 }
