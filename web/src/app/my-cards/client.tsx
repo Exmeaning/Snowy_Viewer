@@ -9,7 +9,7 @@ import PageHeader from "@/components/common/PageHeader";
 import ExternalLink from "@/components/ExternalLink";
 import CardFilters from "@/components/cards/CardFilters";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
-import { TranslatedText } from "@/components/common/TranslatedText";
+import { useTranslatedText } from "@/components/common/TranslatedText";
 import {
     ICardInfo,
     CardRarityType,
@@ -620,11 +620,17 @@ function MyCardsContent() {
                 {isLoading || isFetchingUser ? (
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
                         {Array.from({ length: 12 }).map((_, i) => (
-                            <div key={i} className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden animate-pulse">
+                            <div key={i} className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden animate-pulse flex flex-col">
                                 <div className="aspect-square bg-[var(--hh-surface-sunken)]" />
-                                <div className="p-2 space-y-1.5">
-                                    <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4" />
-                                    <div className="h-2.5 bg-[var(--hh-surface-1)] rounded-[var(--hh-radius-xs)] w-1/2" />
+                                <div className="p-2 space-y-1.5 flex-1 flex flex-col justify-between min-h-[50px]">
+                                    <div className="space-y-1">
+                                        <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4" />
+                                        <div className="h-2.5 bg-[var(--hh-surface-1)] rounded-[var(--hh-radius-xs)] w-1/2" />
+                                    </div>
+                                    <div className="flex justify-between items-center pt-1">
+                                        <div className="h-2.5 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-1/3" />
+                                        <div className="h-2.5 bg-[var(--hh-surface-1)] rounded-[var(--hh-radius-xs)] w-1/4" />
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -705,64 +711,65 @@ function MyCardItem({ card, userCard }: MyCardItemProps) {
     const isOwned = !!userCard;
     const isTrained = userCard?.specialTrainingStatus === "done";
     const showTrained = isTrained && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday";
+    const translatedPrefix = useTranslatedText(card.prefix, "cards", "prefix");
 
     return (
-        <Link href={`/cards/${card.id}`} className="group block" data-shortcut-item="true">
-            <div className={`hh-press relative cursor-pointer rounded-[var(--hh-radius-lg)] overflow-hidden bg-[var(--hh-surface-2)] ring-1 ${isOwned
-                ? "ring-[var(--hh-border)] hover:ring-[var(--hh-accent)]"
-                : "ring-[var(--hh-border-hairline)] opacity-50 grayscale hover:opacity-70 hover:grayscale-0"
-                }`}>
-                {/* Card Thumbnail */}
-                <div className="w-full relative">
-                    <SekaiCardThumbnail
-                        card={card}
-                        trained={showTrained}
-                        mastery={userCard?.masterRank || 0}
-                        className="w-full"
-                    />
+        <Link
+            href={`/cards/${card.id}`}
+            className={`hh-card-item block h-full flex flex-col select-none cursor-pointer overflow-hidden group ${
+                isOwned ? "" : "opacity-50 grayscale hover:opacity-75 hover:grayscale-0"
+            }`}
+            data-shortcut-item="true"
+        >
+            {/* Card Thumbnail */}
+            <div className="w-full relative shrink-0">
+                <SekaiCardThumbnail
+                    card={card}
+                    trained={showTrained}
+                    mastery={userCard?.masterRank || 0}
+                    className="w-full"
+                />
 
-                    {/* Skill Level Badge. Opaque indigo rather than /90 + blur: the
-                        blur was what lifted it off the illustration, so the plate has
-                        to carry that contrast on its own now. */}
-                    {isOwned && userCard && (
-                        <div className="absolute top-0 right-0 m-0.5">
-                            <span className="hh-numeric inline-block px-1 py-0.5 bg-indigo-500 text-white text-[8px] font-bold rounded-[var(--hh-radius-xs)] leading-none">
-                                Sk.{userCard.skillLevel}
-                            </span>
-                        </div>
-                    )}
+                {/* Skill Level Badge */}
+                {isOwned && userCard && (
+                    <div className="absolute top-1.5 right-1.5 z-10 pointer-events-none">
+                        <span className="hh-numeric inline-block px-1 py-0.5 bg-indigo-500 text-white text-[8px] font-bold rounded-[var(--hh-radius-xs)] leading-none shadow-sm">
+                            Sk.{userCard.skillLevel}
+                        </span>
+                    </div>
+                )}
 
-                    {/* Not Owned Overlay */}
-                    {!isOwned && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="hh-badge-on-media px-2 py-1 text-[10px] font-bold">
-                                {t("common.progress.notOwned")}
-                            </span>
-                        </div>
-                    )}
+                {/* Not Owned Overlay */}
+                {!isOwned && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="hh-badge-on-media px-2 py-1 text-[10px] font-bold">
+                            {t("common.progress.notOwned")}
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* Card Info Footer with uniform fixed-height text slot */}
+            <div className="hh-card-footer px-2 py-1.5 flex flex-col justify-between flex-1 min-h-[50px]">
+                <div className="h-[27px] flex flex-col justify-start mb-0.5 overflow-hidden">
+                    <span className="hh-card-title text-[var(--hh-text-primary)] text-[10px] font-bold truncate leading-tight block">
+                        {card.prefix}
+                    </span>
+                    {translatedPrefix ? (
+                        <span className="hh-body text-[var(--hh-text-tertiary)] text-[9px] truncate leading-tight block">
+                            {translatedPrefix}
+                        </span>
+                    ) : null}
                 </div>
-
-                {/* Card Info Footer */}
-                <div className="px-2 py-1.5 bg-[var(--hh-surface-2)] border-t border-[var(--hh-border-hairline)]">
-                    <div className="mb-0.5">
-                        <TranslatedText
-                            original={card.prefix}
-                            category="cards"
-                            field="prefix"
-                            originalClassName="text-[var(--hh-text-primary)] text-[10px] font-bold truncate leading-tight group-hover:text-miku transition-colors block"
-                            translationClassName="text-[var(--hh-text-tertiary)] text-[9px] truncate leading-tight block"
-                        />
-                    </div>
-                    <div className="flex items-center justify-between gap-1">
-                        <p className="text-[var(--hh-text-tertiary)] text-[9px] truncate leading-tight flex-1">
-                            {getCharacterName(t, card.characterId)}
-                        </p>
-                        {isOwned && userCard && (
-                            <span className="hh-numeric flex-shrink-0 text-[8px] text-miku bg-[var(--hh-accent-wash-strong)] px-1 py-0.5 rounded-[var(--hh-radius-xs)] leading-none">
-                                Lv.{userCard.level}
-                            </span>
-                        )}
-                    </div>
+                <div className="flex items-center justify-between gap-1 mt-auto">
+                    <p className="hh-body text-[var(--hh-text-tertiary)] text-[9px] truncate leading-tight flex-1">
+                        {getCharacterName(t, card.characterId)}
+                    </p>
+                    {isOwned && userCard && (
+                        <span className="hh-numeric flex-shrink-0 text-[8px] text-[var(--hh-accent)] bg-[var(--hh-accent-wash-strong)] px-1 py-0.5 rounded-[var(--hh-radius-xs)] leading-none transition-colors">
+                            Lv.{userCard.level}
+                        </span>
+                    )}
                 </div>
             </div>
         </Link>

@@ -14,11 +14,17 @@ interface CardGridProps {
 // Loading skeleton component
 function CardSkeleton() {
     return (
-        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden animate-pulse">
-            <div className="aspect-[4/5] bg-[var(--hh-surface-sunken)]" />
-            <div className="p-3 space-y-2">
-                <div className="h-4 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4" />
-                <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-1/2" />
+        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden animate-pulse flex flex-col">
+            <div className="aspect-square bg-[var(--hh-surface-sunken)]" />
+            <div className="p-2 space-y-1.5 flex-1 flex flex-col justify-between min-h-[50px]">
+                <div className="space-y-1">
+                    <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4" />
+                    <div className="h-2.5 bg-[var(--hh-surface-1)] rounded-[var(--hh-radius-xs)] w-1/2" />
+                </div>
+                <div className="flex justify-between items-center pt-1">
+                    <div className="h-2.5 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-1/3" />
+                    <div className="h-2.5 bg-[var(--hh-surface-1)] rounded-[var(--hh-radius-xs)] w-1/4" />
+                </div>
             </div>
         </div>
     );

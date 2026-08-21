@@ -16,15 +16,9 @@ const EXPLORE_LINKS = [
 ];
 
 /**
- * The footer is permanent chrome, so it uses the same flat recipe as the status
- * bar and the side rail: --hh-surface-1 fill, one --hh-border hairline, no
- * translucency. Matching those three is what keeps the shell reading as one
- * piece of hardware instead of three separately-styled regions.
+ * The footer is permanent chrome, rendered as a full-width flat bottom bar:
+ * --hh-surface-1 fill, top hairline border, seamlessly anchored to the page bottom.
  */
-const FOOTER_SHELL_CLASS =
-    "bg-[var(--hh-surface-1)] border border-[var(--hh-border)] rounded-[var(--hh-radius-xl)] py-10 px-6 sm:px-8";
-
-/** Column heading — the uppercase label plus its accent tick. */
 const COLUMN_HEADING_CLASS =
     "hh-label text-xs flex items-center gap-1.5";
 const COLUMN_TICK_CLASS = "w-1 h-3 bg-[var(--hh-accent)] rounded-[var(--hh-radius-xs)]";
@@ -42,8 +36,8 @@ const FOOTER_LINK_ARROW_CLASS =
 export default function MainFooter() {
     const { t } = useI18n();
     return (
-        <footer className="w-full mt-auto px-3 sm:px-4 pb-4 sm:pb-6 relative z-[5]">
-            <div className={FOOTER_SHELL_CLASS}>
+        <footer className="w-full mt-auto bg-[var(--hh-surface-1)] border-t border-[var(--hh-border-hairline)] relative z-[5]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12">
                     {/* Column 1: Brand & Description */}
                     <div className="lg:col-span-4 space-y-3">

@@ -9,11 +9,8 @@ import { playHandheldSound, type HandheldSoundName } from "@/lib/handheld-sound"
 /**
  * One declarative button in the dialog's action bar.
  *
- * A console dialog answers with buttons, not with a corner glyph, so this is
- * the shape the action bar is authored in rather than raw JSX: the variant
- * decides both the slab treatment and the sound, which is what keeps "confirm"
- * and "cancel" audibly distinct across every dialog in the app without each
- * call site remembering to wire it.
+ * The variant decides both the button treatment and the sound, which is what keeps
+ * "confirm" and "cancel" audibly distinct across dialogs.
  */
 export interface ModalAction {
     label: string;
@@ -194,23 +191,19 @@ export default function Modal({
                         onClick={dismiss}
                     />
 
-                    {/* Dialog — one opaque slab. hhSheetVariants is critically
-                        damped, so it arrives without the wobble that made the
-                        old scale: 0.96 spring read as a web modal. */}
+                    {/* Dialog — unified single-ground shell on Surface-1 */}
                     <motion.div
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby={titleId}
-                        className={`relative w-full ${sizeClasses[size]} transform-gpu will-change-transform hh-float overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[85vh]`}
+                        className={`relative w-full ${sizeClasses[size]} transform-gpu will-change-transform bg-[var(--hh-surface-1)] border border-[var(--hh-border)] rounded-[var(--hh-radius-xl)] shadow-[var(--hh-shadow-float)] overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[85vh]`}
                         variants={hhSheetVariants}
                         initial="initial"
                         animate="animate"
                         exit="exit"
                     >
-                        {/* Title bar — one step darker than the body so the
-                            chrome reads as a separate strip without a gradient
-                            wash doing the work. */}
-                        <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] flex-shrink-0">
+                        {/* Title bar — integrated with Surface-1 baseplate and hairline separator */}
+                        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-[var(--hh-border-hairline)] bg-[var(--hh-surface-1)] flex-shrink-0">
                             <h2
                                 id={titleId}
                                 className="hh-title text-sm sm:text-base text-[var(--hh-text-primary)] flex items-center gap-2 min-w-0"
@@ -242,16 +235,14 @@ export default function Modal({
                             </div>
                         </div>
 
-                        {/* Body — scrollable */}
-                        <div className="flex-1 overflow-y-auto p-5 text-[var(--hh-text-primary)]">
+                        {/* Body — scrollable on unified Surface-1 background */}
+                        <div className="flex-1 overflow-y-auto hh-scrollbar p-5 text-[var(--hh-text-primary)] bg-[var(--hh-surface-1)]">
                             {children}
                         </div>
 
-                        {/* Action bar — only mounted when a caller asks for one,
-                            which is what keeps the ~20 display-only dialogs
-                            byte-identical in layout. */}
+                        {/* Action bar — rendered with hairline separator */}
                         {hasActionBar && (
-                            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-t border-[var(--hh-border)] bg-[var(--hh-surface-1)] flex-shrink-0">
+                            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-t border-[var(--hh-border-hairline)] bg-[var(--hh-surface-1)] flex-shrink-0">
                                 {/* Rendered only when supplied: an always-present
                                     empty div would still be a flex child and
                                     would push the buttons off the trailing edge

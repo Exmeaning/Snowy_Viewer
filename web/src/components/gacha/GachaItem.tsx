@@ -27,11 +27,11 @@ export default function GachaItem({ gacha }: GachaItemProps) {
     });
 
     return (
-        <Link href={`/gacha/${gacha.id}`} className="group hh-press block" data-shortcut-item="true">
-            {/* Tile semantics: hover recolors the border rather than lifting. */}
-            <div className="relative rounded-[var(--hh-radius-lg)] overflow-hidden hh-tile transition-colors hover:border-[var(--hh-accent-line)]">
+        <Link href={`/gacha/${gacha.id}`} className="group block select-none" data-shortcut-item="true">
+            {/* Interactive Gacha Card with full accent mask on hover and snappy spring physics */}
+            <div className="hh-card-item relative cursor-pointer overflow-hidden">
                 {/* Logo Image */}
-                <div className="relative aspect-[16/9] bg-[var(--hh-surface-sunken)]">
+                <div className="relative aspect-[16/9] bg-[var(--hh-surface-sunken)] overflow-hidden">
                     <Image
                         src={logoUrl}
                         alt={gacha.name}
@@ -48,18 +48,18 @@ export default function GachaItem({ gacha }: GachaItemProps) {
                         semantic status colors and stay. */}
                     <div className="absolute top-2 right-2 flex flex-col gap-1">
                         {isUnreleased && isShowSpoiler && (
-                            <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-[var(--hh-radius-sm)]">
+                            <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-[var(--hh-radius-xs)] shadow-sm">
                                 {t("common.badge.spoiler")}
                             </span>
                         )}
                         {isOngoing && (
-                            <span className="px-2 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded-[var(--hh-radius-sm)] animate-pulse">
+                            <span className="px-2 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded-[var(--hh-radius-xs)] shadow-sm">
                                 {t("common.badge.ongoing")}
                             </span>
                         )}
                     </div>
 
-                    {/* ID Badge — opaque plate replaces the blurred /50 tint. */}
+                    {/* ID Badge */}
                     <div className="absolute bottom-2 left-2">
                         <span className="hh-badge-on-media hh-numeric px-2 py-0.5 text-[10px]">
                             #{gacha.id}
@@ -67,19 +67,19 @@ export default function GachaItem({ gacha }: GachaItemProps) {
                     </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-3">
-                    <h3 className="hh-title text-sm font-bold text-[var(--hh-text-primary)] group-hover:text-miku transition-colors">
+                {/* Content Footer with Full Accent Mask */}
+                <div className="hh-card-footer p-2.5 sm:p-3">
+                    <h3 className="hh-title text-xs sm:text-sm font-bold text-[var(--hh-text-primary)] leading-snug">
                         <TranslatedText
                             original={gacha.name}
                             category="gacha"
                             field="name"
-                            originalClassName="block"
-                            translationClassName="text-xs font-medium text-[var(--hh-text-tertiary)] block"
+                            originalClassName="hh-card-title block truncate"
+                            translationClassName="hh-body text-[10px] sm:text-xs font-medium text-[var(--hh-text-tertiary)] mt-0.5 block truncate"
                         />
                     </h3>
-                    <div className="hh-numeric mt-1 text-xs text-[var(--hh-text-tertiary)] space-y-0.5">
-                        <p>{formatDate(gacha.startAt)} ~ {formatDate(gacha.endAt)}</p>
+                    <div className="hh-body hh-numeric mt-1 text-[10px] sm:text-xs text-[var(--hh-text-secondary)] space-y-0.5">
+                        <p className="truncate">{formatDate(gacha.startAt)} ~ {formatDate(gacha.endAt)}</p>
                     </div>
                 </div>
             </div>

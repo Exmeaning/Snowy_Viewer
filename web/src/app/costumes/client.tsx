@@ -382,7 +382,7 @@ function CostumesContent() {
                                         href={`/costumes/${costume.costumeNumber}`}
                                         key={costume.costumeNumber}
                                         data-shortcut-item="true"
-                                        className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden hover:border-[var(--hh-accent)] p-3 flex flex-col h-full group"
+                                        className="hh-card-item hh-full-mask rounded-[var(--hh-radius-lg)] overflow-hidden p-3 flex flex-col h-full group select-none"
                                     >
                                         <div className="relative aspect-square mb-2 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] overflow-hidden">
                                             <Image
@@ -396,28 +396,24 @@ function CostumesContent() {
                                         <div className="flex-1 flex flex-col">
                                             {isSpoiler && (
                                                 <div className="mb-1">
-                                                    <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded-[var(--hh-radius-xs)] leading-none">
+                                                    <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded-[var(--hh-radius-xs)] leading-none shadow-sm">
                                                         {tI18n("page.costumes.spoilerBadge")}
                                                     </span>
                                                 </div>
                                             )}
-                                            <h3 className="hh-title text-sm text-[var(--hh-text-primary)] mb-1 group-hover:text-miku" title={costume.name}>
+                                            <h3 className="hh-title text-sm text-[var(--hh-text-primary)] mb-1" title={costume.name}>
                                                 <TranslatedText
                                                     original={costume.name}
                                                     category="costumes"
                                                     field="name"
-                                                    originalClassName="block"
-                                                    translationClassName="text-xs font-medium text-[var(--hh-text-tertiary)] block"
+                                                    originalClassName="block truncate"
+                                                    translationClassName="hh-body text-xs font-medium text-[var(--hh-text-tertiary)] block truncate"
                                                 />
                                             </h3>
-                                            <div className="mt-auto flex flex-wrap gap-1">
-                                                {costume.partTypes.map(pt => (
-                                                    <span key={pt} className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-accent-wash-strong)] text-miku rounded-[var(--hh-radius-xs)] font-medium">
-                                                        {translateWithFallback(PART_TYPE_LABEL_KEYS[pt], pt)}
-                                                    </span>
-                                                ))}
-                                                <span className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-medium">
-                                                    {translateWithFallback(SOURCE_LABEL_KEYS[costume.source], costume.source)}
+                                            <div className="mt-auto flex items-center justify-between text-xs text-[var(--hh-text-secondary)]">
+                                                <span className="hh-body truncate">{getCharacterName(tI18n, costume.characterId)}</span>
+                                                <span className="hh-numeric shrink-0 text-[10px] text-[var(--hh-text-tertiary)] bg-[var(--hh-surface-sunken)] px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] leading-none font-mono">
+                                                    #{costume.costumeNumber}
                                                 </span>
                                             </div>
                                         </div>

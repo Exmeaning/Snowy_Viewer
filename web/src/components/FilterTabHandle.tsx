@@ -66,7 +66,7 @@ export default function FilterTabHandle({ isRailOpen }: FilterTabHandleProps) {
                     aria-controls={FILTER_DRAWER_ID}
                     aria-expanded={isOpen}
                     title={shortcutLabel}
-                    className={`fixed top-32 ${leftPositionClass} z-[70] touch-manipulation flex flex-col items-center gap-1.5 py-3 px-1.5 rounded-r-[var(--hh-radius-md)] border border-l-0 bg-[var(--hh-surface-1)] border-[var(--hh-border)] shadow-sm hover:bg-[var(--hh-surface-sunken)] hover:border-[var(--hh-border-strong)] cursor-pointer transition-all duration-[var(--hh-dur-panel)] ease-[var(--hh-ease-out)] select-none group`}
+                    className={`fixed top-32 ${leftPositionClass} z-[70] hh-press hh-focusable touch-manipulation flex flex-col items-center gap-1.5 py-3 px-1.5 rounded-r-[var(--hh-radius-md)] border border-l-0 bg-[var(--hh-surface-1)] border-[var(--hh-border)] shadow-sm hover:bg-[var(--hh-surface-sunken)] hover:border-[var(--hh-border-strong)] cursor-pointer transition-all duration-[var(--hh-dur-panel)] ease-[var(--hh-ease-out)] select-none group`}
                 >
                     {/* Theme-colored Funnel glyph */}
                     <svg

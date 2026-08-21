@@ -47,7 +47,7 @@ const STATUS_BAR_VARIANTS: Variants = {
  * the redesign exists to remove.
  */
 const ICON_BUTTON_CLASS =
-    "hh-press flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--hh-radius-md)] " +
+    "hh-press hh-focusable flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--hh-radius-md)] " +
     "border border-[var(--hh-border)] bg-[var(--hh-surface-2)] " +
     "text-[var(--hh-text-secondary)] hover:text-[var(--hh-accent-deep)] " +
     "hover:border-[var(--hh-border-strong)] hover:bg-[var(--hh-surface-3)]";
@@ -126,7 +126,7 @@ export default function MainNavbar({
                         </motion.button>
 
                         {/* Logo */}
-                        <Link href="/" className="flex items-center gap-1.5 shrink-0" title="Moesekai">
+                        <Link href="/" className="hh-press hh-focusable flex items-center gap-1.5 shrink-0 rounded-[var(--hh-radius-sm)]" title="Moesekai">
                             <motion.span
                                 whileHover={{ scale: 1.04, transition: hhSpringPress }}
                                 whileTap={tapGesture}

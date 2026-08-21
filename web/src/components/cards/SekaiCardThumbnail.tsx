@@ -130,15 +130,9 @@ export default function SekaiCardThumbnail({
                 width="100%"
                 height="100%"
                 xmlns="http://www.w3.org/2000/svg"
-                className="drop-shadow-sm"
+                className="w-full h-full block"
             >
                 {/* 1. Card Image */}
-                {/* Use a mask or clipPath if needed, but usually the frame covers edges. 
-                    Official implementation might mask it. For now, simple image. */}
-                {/* 
-                    Note: Safari/iOS sometimes has issues with <image> inside <svg> if not handled carefully with href/xlinkHref. 
-                    React handles this usually.
-                 */}
                 <defs>
                     <clipPath id="cardClip">
                         <rect x="2" y="2" width="152" height="152" rx="10" ry="10" />
@@ -146,7 +140,7 @@ export default function SekaiCardThumbnail({
                 </defs>
 
                 {/* Background placeholder */}
-                <rect width="156" height="156" fill="#f0f0f0" rx="12" />
+                <rect width="156" height="156" className="fill-[var(--hh-surface-sunken,#1f2024)]" rx="12" />
 
                 <image
                     href={imageError ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f0f0f0' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999'%3E...%3C/text%3E%3C/svg%3E" : cardImageUrl}

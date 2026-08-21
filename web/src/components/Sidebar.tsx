@@ -753,7 +753,7 @@ export default function Sidebar({
     // focused row no longer borrows the active row's fill the way it used to.
     const rowClassName = (active: boolean, focused: boolean) =>
         [
-            "hh-press relative flex items-center gap-3 px-3 py-2 text-sm rounded-[var(--hh-radius-md)]",
+            "hh-press hh-focusable relative flex items-center gap-3 px-3 py-2 text-sm rounded-[var(--hh-radius-md)]",
             active
                 ? "bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] font-semibold"
                 : focused
@@ -793,7 +793,7 @@ export default function Sidebar({
                 {/* Navigation groups - scrollable area */}
                 <nav
                     ref={navRef}
-                    className="flex-grow overflow-y-auto px-2 py-2"
+                    className="flex-grow overflow-y-auto hh-scrollbar px-2 py-2"
                 >
                     <motion.div
                         variants={hhStaggerContainer}
@@ -838,7 +838,7 @@ export default function Sidebar({
                                         // text: .hh-label is unlayered CSS and therefore outranks
                                         // Tailwind's layered hover:text-* utility, so a text-color
                                         // hover would silently do nothing here.
-                                        className="hh-press w-full flex items-center justify-between px-3 py-1.5 text-xs font-bold hh-label rounded-[var(--hh-radius-sm)] hover:bg-[var(--hh-surface-sunken)] transition-colors"
+                                        className="hh-press hh-focusable w-full flex items-center justify-between px-3 py-1.5 text-xs font-bold hh-label rounded-[var(--hh-radius-sm)] hover:bg-[var(--hh-surface-sunken)] transition-colors"
                                     >
                                         {getGroupLabel(group.id)}
                                         <svg
@@ -892,7 +892,7 @@ export default function Sidebar({
                         href="/profile"
                         prefetch={false}
                         onClick={handleNavClick}
-                        className="hh-press group flex items-center gap-3 p-2 rounded-[var(--hh-radius-md)] border border-transparent hover:border-[var(--hh-border)] hover:bg-[var(--hh-surface-2)]"
+                        className="hh-press hh-focusable group flex items-center gap-3 p-2 rounded-[var(--hh-radius-md)] border border-transparent hover:border-[var(--hh-border)] hover:bg-[var(--hh-surface-2)]"
                     >
                         {/* Avatar */}
                         <div className="w-9 h-9 rounded-[var(--hh-radius-sm)] bg-[var(--hh-accent)] flex items-center justify-center flex-shrink-0 overflow-hidden border border-[var(--hh-border)]">

@@ -2,7 +2,14 @@
 import React, { useRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { useTheme, CHAR_COLORS } from "@/contexts/ThemeContext";
+import {
+    useTheme,
+    CHAR_COLORS,
+    type ColorSchemePreference,
+    type BackgroundAnimationBudget,
+    type ServerSourceType,
+    type AssetSourceType,
+} from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { HH_DURATION, hhPopoverVariants, hhSheetVariants, hhSpringPanel, springSnappy } from "@/lib/motion";
 import { UNIT_DATA, UNIT_ID_LABEL_KEYS } from "@/types/types";
@@ -18,6 +25,8 @@ import {
     parseShortcutCombos,
 } from "@/lib/shortcuts";
 import { getCharacterName, SUPPORTED_UI_LOCALES, UI_LOCALE_LABELS } from "@/lib/i18n";
+import CursorRing from "@/components/handheld/CursorRing";
+
 interface SettingsPanelProps {
     isOpen: boolean;
     onClose: () => void;
@@ -26,7 +35,12 @@ interface SettingsPanelProps {
 type SettingsTab = "visual" | "content" | "data" | "about";
 
 // Group characters by unit for better organization (derived from UNIT_DATA)
-const unitGroups = UNIT_DATA.map(u => ({ id: u.id, labelKey: UNIT_ID_LABEL_KEYS[u.id] ?? `common.units.${u.id}`, charIds: u.charIds, color: u.color }));
+const unitGroups = UNIT_DATA.map((u) => ({
+    id: u.id,
+    labelKey: UNIT_ID_LABEL_KEYS[u.id] ?? `common.units.${u.id}`,
+    charIds: u.charIds,
+    color: u.color,
+}));
 
 const SETTINGS_TOGGLE_COMBO = parseShortcutCombos(
     getShortcutById("toggle-settings")?.combos ?? []
@@ -53,18 +67,18 @@ const uiSoundOptions = [
     { id: "off", labelKey: "settings.uiSound.off" },
 ] as const;
 
-const serverSourceRegions = ["en", "jp", "cn", "tw", "kr"] as const;
+const serverSourceRegions: readonly ServerSourceType[] = ["jp", "cn", "en", "tw", "kr"];
 
 const assetLineOptions = [
     {
         key: "main",
         labelKey: "settings.assetSource.main",
-        value: "main",
+        value: "main" as AssetSourceType,
     },
     {
         key: "overseas",
         labelKey: "settings.assetSource.overseas",
-        value: "overseas",
+        value: "overseas" as AssetSourceType,
     },
 ] as const;
 
@@ -240,9 +254,13 @@ function SegmentedSetting({
                     return (
                         <button
                             key={option.id}
+                            type="button"
                             role="tab"
                             aria-selected={isSelected}
-                            onClick={() => onSelect(option.id)}
+                            onClick={() => {
+                                playHandheldSound("toggle");
+                                onSelect(option.id);
+                            }}
                             className={`hh-segment-item relative cursor-pointer ${
                                 isSelected
                                     ? "text-[var(--hh-text-on-accent)]"
@@ -276,25 +294,24 @@ function DropdownSettingRow({
     isExpanded,
     onToggle,
     swatchColor,
-    ariaHasPopup,
+    ariaHasPopup = false,
     children,
 }: {
     sectionTitle: string;
     valueLabel: string;
     isExpanded: boolean;
     onToggle: (event: React.MouseEvent<HTMLButtonElement>) => void;
-    /** Solid colour dot for the theme picker; omitted rows get the accent ring. */
     swatchColor?: string;
     ariaHasPopup?: boolean;
-    /** Extra content below the trigger, e.g. the machine-translation notice. */
     children?: React.ReactNode;
 }) {
     return (
         <div>
             <div className="hh-label mb-2">{sectionTitle}</div>
             <button
+                type="button"
                 onClick={onToggle}
-                className="hh-press w-full px-3 py-2 bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)] rounded-[var(--hh-radius-md)] flex items-center justify-between hover:border-[var(--hh-border-strong)]"
+                className="hh-press w-full px-3 py-2 bg-[var(--hh-surface-2)] border border-[var(--hh-border)] rounded-[var(--hh-radius-md)] shadow-[var(--hh-shadow-tile)] flex items-center justify-between hover:border-[var(--hh-border-strong)] transition-colors"
                 aria-haspopup={ariaHasPopup ? "listbox" : undefined}
                 aria-expanded={isExpanded}
             >
@@ -442,6 +459,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     const panelRef = useRef<HTMLDivElement>(null);
 
     const [mounted, setMounted] = useState(false);
+    const prevIsOpenRef = useRef(isOpen);
 
     useEffect(() => {
         const raf = requestAnimationFrame(() => {
@@ -449,6 +467,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         });
         return () => cancelAnimationFrame(raf);
     }, []);
+
+    // Play launch sound when modal opens
+    useEffect(() => {
+        if (isOpen && !prevIsOpenRef.current) {
+            playHandheldSound("launch");
+        }
+        prevIsOpenRef.current = isOpen;
+    }, [isOpen]);
 
     // Prevent body scroll while preserving any existing overflow override.
     useEffect(() => {
@@ -531,7 +557,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         onClick={handleCloseWithSound}
                     />
 
-                    {/* Dialog — auto-fits the active tab's height. */}
+                    {/* Dialog — unified single-ground shell on Surface-1 */}
                     <motion.div
                         id="settings-panel-content"
                         ref={panelRef}
@@ -539,14 +565,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         aria-modal="true"
                         aria-labelledby="settings-panel-title"
                         onClick={(e) => e.stopPropagation()}
-                        className="relative w-full max-w-md transform-gpu will-change-transform hh-float overflow-hidden flex flex-col my-auto z-10"
+                        className="relative w-full max-w-md transform-gpu will-change-transform bg-[var(--hh-surface-1)] border border-[var(--hh-border)] rounded-[var(--hh-radius-xl)] shadow-[var(--hh-shadow-float)] overflow-hidden flex flex-col my-auto z-10"
                         variants={hhSheetVariants}
                         initial="initial"
                         animate="animate"
                         exit="exit"
                     >
                         {/* Title bar */}
-                        <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] shrink-0">
+                        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-[var(--hh-border-hairline)] bg-[var(--hh-surface-1)] shrink-0">
                             <h3
                                 id="settings-panel-title"
                                 className="hh-title text-[var(--hh-text-primary)] flex items-center gap-2 text-sm sm:text-base"
@@ -608,8 +634,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                     >
                                         {isActive && (
                                             <motion.div
-                                                layoutId="activeSettingsTabPill"
-                                                className="absolute inset-0 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-2)] shadow-[var(--hh-shadow-tile)]"
+                                                layoutId="activeSettingsTab"
+                                                className="absolute inset-0 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-2)] border border-[var(--hh-border-hairline)] shadow-[var(--hh-shadow-tile)]"
                                                 transition={springSnappy}
                                             />
                                         )}
@@ -630,7 +656,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
                         {/* Tab body — auto-heights to the active tab so the panel
                             never carries a dead gap under a short tab. */}
-                        <div className="p-5 overflow-y-auto max-h-[60vh] min-h-[220px]">
+                        <div className="p-5 overflow-y-auto hh-scrollbar max-h-[60vh] min-h-[220px] bg-[var(--hh-surface-1)]">
                             <AnimatePresence mode="wait" initial={false}>
                                 <motion.div
                                     key={activeTab}
@@ -643,155 +669,185 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                     {/* TAB 1: VISUAL */}
                                     {activeTab === "visual" && (
                                         <div className="space-y-4">
+                                            {/* Appearance Mode */}
                                             <SegmentedSetting
                                                 sectionTitle={t("settings.appearance.sectionTitle")}
                                                 options={appearanceOptions}
                                                 selectedId={colorSchemePreference}
-                                                layoutId="activeAppearancePill"
-                                                onSelect={(id) => {
-                                                    playHandheldSound("toggle");
-                                                    setColorSchemePreference(id as typeof colorSchemePreference);
-                                                }}
+                                                onSelect={(id) => setColorSchemePreference(id as ColorSchemePreference)}
+                                                layoutId="segmented-appearance"
                                             />
 
+                                            {/* Background Animation */}
                                             <SegmentedSetting
                                                 sectionTitle={t("settings.backgroundAnimationBudget.sectionTitle")}
                                                 options={backgroundAnimationOptions}
                                                 selectedId={backgroundAnimationBudget}
-                                                layoutId="activeBgAnimPill"
-                                                onSelect={(id) => {
-                                                    playHandheldSound("toggle");
-                                                    setBackgroundAnimationBudget(id as "on" | "off");
-                                                }}
+                                                onSelect={(id) => setBackgroundAnimationBudget(id as BackgroundAnimationBudget)}
+                                                layoutId="segmented-bg-anim"
                                             />
 
-                                            <div>
-                                                <SegmentedSetting
-                                                    sectionTitle={t("settings.uiSound.sectionTitle")}
-                                                    options={uiSoundOptions}
-                                                    selectedId={handheldSoundEnabled ? "on" : "off"}
-                                                    layoutId="activeUiSoundPill"
-                                                    onSelect={(id) => {
-                                                        const nextEnabled = id === "on";
-                                                        setHandheldSoundEnabled(nextEnabled);
-                                                        // Let the user hear what they just turned on.
-                                                        if (nextEnabled) playHandheldSound("toggle");
-                                                    }}
-                                                />
-                                                <p className="hh-body mt-2 text-[11px] text-[var(--hh-text-secondary)]">
-                                                    {handheldSoundEnabled
-                                                        ? t("settings.uiSound.onDescription")
-                                                        : t("settings.uiSound.offDescription")}
-                                                </p>
+                                            {/* UI Sound */}
+                                            <SegmentedSetting
+                                                sectionTitle={t("settings.uiSound.sectionTitle")}
+                                                options={uiSoundOptions}
+                                                selectedId={handheldSoundEnabled ? "on" : "off"}
+                                                onSelect={(id) => setHandheldSoundEnabled(id === "on")}
+                                                layoutId="segmented-sound"
+                                            />
+
+                                            {/* 26-Character Theme Palette Grid */}
+                                            <div className="space-y-2">
+                                                <div className="hh-label">{t("settings.themeColor.sectionTitle")}</div>
+                                                <div className="space-y-3 bg-[var(--hh-surface-2)] border border-[var(--hh-border)] rounded-[var(--hh-radius-md)] p-3 shadow-[var(--hh-shadow-tile)]">
+                                                    {unitGroups.map((unit) => (
+                                                        <div key={unit.id} className="space-y-1.5">
+                                                            <div className="flex items-center gap-1.5 px-0.5">
+                                                                <span
+                                                                    className="w-2 h-2 rounded-full shrink-0"
+                                                                    style={{ backgroundColor: unit.color }}
+                                                                />
+                                                                <span className="text-[11px] font-semibold text-[var(--hh-text-secondary)]">
+                                                                    {t(unit.labelKey)}
+                                                                </span>
+                                                            </div>
+                                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                                                {unit.charIds.map((charId) => {
+                                                                    const charIdStr = String(charId);
+                                                                    const isSelected = themeCharId === charIdStr;
+                                                                    const charColor = CHAR_COLORS[charIdStr];
+                                                                    const charName = getCharacterName(t, charId, "short");
+                                                                    return (
+                                                                        <button
+                                                                            key={charId}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                playHandheldSound("confirm");
+                                                                                setThemeCharacter(charIdStr);
+                                                                            }}
+                                                                            className={`hh-press relative flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--hh-radius-md)] border text-left transition-colors cursor-pointer overflow-hidden ${
+                                                                                isSelected
+                                                                                    ? "bg-[var(--hh-surface-1)] border-[var(--hh-accent)] shadow-[var(--hh-shadow-tile)]"
+                                                                                    : "bg-[var(--hh-surface-1)] border-[var(--hh-border-hairline)] hover:border-[var(--hh-border-strong)]"
+                                                                            }`}
+                                                                            title={charName}
+                                                                        >
+                                                                            <span
+                                                                                className="w-3 h-3 rounded-full shrink-0 border border-[var(--hh-border-hairline)]"
+                                                                                style={{ backgroundColor: charColor }}
+                                                                            />
+                                                                            <span className="text-xs font-medium text-[var(--hh-text-primary)] truncate">
+                                                                                {charName}
+                                                                            </span>
+                                                                            {isSelected && (
+                                                                                <CursorRing groupId="settings-theme-swatches" />
+                                                                            )}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
 
-                                            <DropdownSettingRow
-                                                sectionTitle={t("settings.themeColor.sectionTitle")}
-                                                valueLabel={getCharacterName(t, Number(themeCharId), "short")}
-                                                isExpanded={expandedDropdown === "theme"}
-                                                onToggle={(e) => handleToggleDropdown("theme", e)}
-                                                swatchColor={CHAR_COLORS[themeCharId] || "#33CCBB"}
-                                            />
-
+                                            {/* UI Language Dropdown */}
                                             <DropdownSettingRow
                                                 sectionTitle={t("settings.uiLanguage.sectionTitle")}
                                                 valueLabel={currentLanguageLabel}
                                                 isExpanded={expandedDropdown === "language"}
                                                 onToggle={(e) => handleToggleDropdown("language", e)}
-                                                ariaHasPopup
-                                            >
-                                                {locale !== "zh-CN" && (
-                                                    // Advisory, not destructive: the alert accent is a fixed
-                                                    // structural constant, so a wash of it reads as a caution
-                                                    // strip without needing its own amber palette.
-                                                    <p className="hh-body mt-1.5 flex items-start gap-1.5 rounded-[var(--hh-radius-sm)] bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)] px-2 py-1.5 text-[10px] text-[var(--hh-text-secondary)]">
-                                                        <span className="mt-0.5 inline-flex h-3 w-3 shrink-0 items-center justify-center rounded-[var(--hh-radius-full)] bg-[var(--hh-accent-alert)] text-[8px] font-bold text-white">!</span>
-                                                        <span>{t("settings.uiLanguage.machineTranslationNotice")}</span>
-                                                    </p>
-                                                )}
-                                            </DropdownSettingRow>
+                                                ariaHasPopup={true}
+                                            />
                                         </div>
                                     )}
 
                                     {/* TAB 2: CONTENT */}
                                     {activeTab === "content" && (
                                         <div className="space-y-4">
-                                            <ToggleSettingRow
-                                                label={t("settings.showSpoiler.label")}
-                                                checked={isShowSpoiler}
-                                                onChange={() => setShowSpoiler(!isShowSpoiler)}
-                                                icon={
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                                    </svg>
-                                                }
+                                            {/* Server Source Dropdown */}
+                                            <DropdownSettingRow
+                                                sectionTitle={t("settings.serverSource.sectionTitle")}
+                                                valueLabel={t(`settings.serverSource.${serverSource}`)}
+                                                isExpanded={expandedDropdown === "serverSource"}
+                                                onToggle={(e) => handleToggleDropdown("serverSource", e)}
+                                                ariaHasPopup={true}
                                             />
 
-                                            <ToggleSettingRow
-                                                label={t("settings.trainedThumbnail.label")}
-                                                checked={useTrainedThumbnail}
-                                                onChange={() => setUseTrainedThumbnail(!useTrainedThumbnail)}
-                                                shortcutHint="]"
-                                                icon={
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                }
+                                            {/* Asset Source Dropdown */}
+                                            <DropdownSettingRow
+                                                sectionTitle={t("settings.assetSource.sectionTitle")}
+                                                valueLabel={t(currentAssetLabel)}
+                                                isExpanded={expandedDropdown === "asset"}
+                                                onToggle={(e) => handleToggleDropdown("asset", e)}
+                                                ariaHasPopup={true}
                                             />
 
-                                            <ToggleSettingRow
-                                                label={t("settings.translation.label")}
-                                                checked={useLLMTranslation}
-                                                onChange={() => setUseLLMTranslation(!useLLMTranslation)}
-                                                // The ads row below is conditional, so this one keeps its
-                                                // hairline only while something follows it.
-                                                withDivider={ADS_SETTINGS_VISIBLE}
-                                                icon={
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                                                    </svg>
-                                                }
-                                            />
+                                            {/* Feature Toggles Card */}
+                                            <div className="space-y-2">
+                                                <div className="hh-label">{t("settings.contentDisplay.sectionTitle")}</div>
+                                                <div className="bg-[var(--hh-surface-2)] border border-[var(--hh-border)] rounded-[var(--hh-radius-md)] shadow-[var(--hh-shadow-tile)] px-3.5 py-1">
+                                                    <ToggleSettingRow
+                                                        label={t("settings.showSpoiler.label")}
+                                                        checked={isShowSpoiler}
+                                                        onChange={() => setShowSpoiler(!isShowSpoiler)}
+                                                        icon={
+                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                            </svg>
+                                                        }
+                                                    />
 
-                                            {ADS_SETTINGS_VISIBLE && (
-                                                <ToggleSettingRow
-                                                    label={t("settings.ads.label")}
-                                                    checked={showAds}
-                                                    onChange={() => setShowAds(!showAds)}
-                                                    withDivider={false}
-                                                    icon={
-                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                                                        </svg>
-                                                    }
-                                                />
-                                            )}
+                                                    <ToggleSettingRow
+                                                        label={t("settings.trainedThumbnail.label")}
+                                                        checked={useTrainedThumbnail}
+                                                        onChange={() => setUseTrainedThumbnail(!useTrainedThumbnail)}
+                                                        shortcutHint="]"
+                                                        icon={
+                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                        }
+                                                    />
+
+                                                    <ToggleSettingRow
+                                                        label={t("settings.translation.label")}
+                                                        checked={useLLMTranslation}
+                                                        onChange={() => setUseLLMTranslation(!useLLMTranslation)}
+                                                        withDivider={ADS_SETTINGS_VISIBLE}
+                                                        icon={
+                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                                                            </svg>
+                                                        }
+                                                    />
+
+                                                    {ADS_SETTINGS_VISIBLE && (
+                                                        <ToggleSettingRow
+                                                            label={t("settings.ads.label")}
+                                                            checked={showAds}
+                                                            onChange={() => setShowAds(!showAds)}
+                                                            withDivider={false}
+                                                            icon={
+                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                                                                </svg>
+                                                            }
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
 
                                     {/* TAB 3: DATA */}
                                     {activeTab === "data" && (
                                         <div className="space-y-4">
-                                            <DropdownSettingRow
-                                                sectionTitle={t("settings.serverSource.sectionTitle")}
-                                                valueLabel={t(`settings.serverSource.${serverSource}`)}
-                                                isExpanded={expandedDropdown === "serverSource"}
-                                                onToggle={(e) => handleToggleDropdown("serverSource", e)}
-                                            />
-
-                                            <DropdownSettingRow
-                                                sectionTitle={t("settings.assetSource.sectionTitle")}
-                                                valueLabel={t(currentAssetLabel)}
-                                                isExpanded={expandedDropdown === "asset"}
-                                                onToggle={(e) => handleToggleDropdown("asset", e)}
-                                            />
-
-                                            {/* Data Version & Refresh */}
-                                            <div>
-                                                <div className="hh-label mb-2">
+                                            <div className="space-y-2">
+                                                <div className="hh-label">
                                                     {t("settings.dataVersion.sectionTitle")}
                                                 </div>
-                                                <div className="space-y-2.5">
+                                                <div className="bg-[var(--hh-surface-2)] border border-[var(--hh-border)] rounded-[var(--hh-radius-md)] shadow-[var(--hh-shadow-tile)] p-3 space-y-3">
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-xs text-[var(--hh-text-secondary)]">{t("settings.dataVersion.cloudVersion")}:</span>
                                                         <span className="hh-numeric text-xs font-mono text-[var(--hh-text-primary)]">
@@ -800,8 +856,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                     </div>
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-xs text-[var(--hh-text-secondary)]">{t("settings.dataVersion.localCacheVersion")}:</span>
-                                                        {/* A stale cache is the one state worth colouring: it
-                                                            is the reason the refresh button below exists. */}
                                                         <span className={`hh-numeric text-xs font-mono ${(localVersion && localVersion !== cloudVersion) ? "text-[var(--hh-accent-alert)] font-bold" : "text-[var(--hh-text-primary)]"}`}>
                                                             {localVersion ? (
                                                                 localVersion === cloudVersion ? (
@@ -816,16 +870,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                         </span>
                                                     </div>
 
-                                                    {/* The one committing action in the whole panel, so it
-                                                        is the one primary slab. .hh-press already handles
-                                                        the disabled dim, so no disabled: palette is needed. */}
                                                     <button
+                                                        type="button"
                                                         onClick={() => {
                                                             playHandheldSound("confirm");
                                                             forceRefreshData();
                                                         }}
                                                         disabled={isRefreshing || isLoading}
-                                                        className="hh-btn hh-btn-primary hh-press w-full text-xs"
+                                                        className="hh-btn hh-btn-primary hh-press w-full text-xs cursor-pointer flex items-center justify-center gap-1.5"
                                                     >
                                                         {isRefreshing ? (
                                                             <>
@@ -852,7 +904,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                     {/* TAB 4: ABOUT */}
                                     {activeTab === "about" && (
                                         <div className="space-y-4">
-                                            <div className="hh-well p-5 flex flex-col items-center text-center space-y-3">
+                                            <div className="bg-[var(--hh-surface-2)] border border-[var(--hh-border)] rounded-[var(--hh-radius-md)] shadow-[var(--hh-shadow-tile)] p-5 flex flex-col items-center text-center space-y-3">
                                                 {/* Dynamic Theme Mapped SVG Logo & Title as Hyperlink */}
                                                 <a
                                                     href="/about"
@@ -860,7 +912,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                     className="group flex flex-col items-center cursor-pointer"
                                                 >
                                                     <div
-                                                        className="h-9 w-32 bg-miku transition-transform duration-200 group-hover:scale-105 my-1"
+                                                        className="h-9 w-32 bg-[var(--hh-accent)] transition-transform duration-200 group-hover:scale-105 my-1"
                                                         style={{
                                                             maskImage: `url(${MOE_LOGO_URL})`,
                                                             maskSize: "contain",
@@ -874,25 +926,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                         role="img"
                                                         aria-label="Moesekai Logo"
                                                     />
-                                                    <h4 className="hh-title text-base text-[var(--hh-text-primary)] group-hover:text-[var(--hh-accent)] transition-colors mt-1">
-                                                        Moesekai Viewer
-                                                    </h4>
+                                                    <span className="hh-caption font-medium text-[var(--hh-accent)] transition-colors group-hover:underline">
+                                                        {t("settings.about.viewDetails")}
+                                                    </span>
                                                 </a>
 
-                                                <p className="hh-body text-xs text-[var(--hh-text-secondary)]">
+                                                <p className="text-xs text-[var(--hh-text-secondary)] leading-relaxed">
                                                     {t("settings.about.projectDescription")}
                                                 </p>
-
-                                                <a
-                                                    href="/about"
-                                                    onClick={handleNavigateAbout}
-                                                    className="hh-btn hh-btn-primary hh-press w-full text-xs mt-2 cursor-pointer"
-                                                >
-                                                    <span>{t("settings.about.viewDetails")}</span>
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                    </svg>
-                                                </a>
                                             </div>
                                         </div>
                                     )}
@@ -900,10 +941,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                             </AnimatePresence>
                         </div>
 
-                        {/* Status strip — the panel's bottom chrome, matching the
-                            title bar's surface so the body reads as inset between
-                            two rails. */}
-                        <div className="border-t border-[var(--hh-border)] bg-[var(--hh-surface-1)] px-4 py-2.5 shrink-0">
+                        {/* Status bar */}
+                        <div className="px-4 py-2.5 border-t border-[var(--hh-border-hairline)] bg-[var(--hh-surface-1)] shrink-0">
                             <div className="flex items-center justify-center">
                                 <span className="text-[10px] font-medium text-[var(--hh-text-tertiary)]">
                                     {t("settings.footer.version")}
@@ -912,42 +951,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         </div>
                     </motion.div>
 
-                    {/* PORTAL DROPDOWNS: Rendered completely outside modal at z-[300] to eliminate any clipping */}
-                    <FloatingDropdown
-                        isOpen={expandedDropdown === "theme"}
-                        triggerRect={triggerRect}
-                        onClose={() => setExpandedDropdown(null)}
-                        maxHeight={260}
-                    >
-                        <div className="space-y-3">
-                            {unitGroups.map((unit) => (
-                                <div key={unit.id}>
-                                    <div className="hh-label px-2 pt-1 pb-1">
-                                        {t(unit.labelKey)}
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-1">
-                                        {unit.charIds.map((charId) => (
-                                            // The character's own colour is the swatch, which is
-                                            // the one place a non-token colour is the content
-                                            // rather than decoration.
-                                            <DropdownOptionRow
-                                                key={charId}
-                                                isSelected={themeCharId === String(charId)}
-                                                swatchColor={CHAR_COLORS[String(charId)]}
-                                                label={getCharacterName(t, charId, "short")}
-                                                onClick={() => {
-                                                    playHandheldSound("confirm");
-                                                    setThemeCharacter(String(charId));
-                                                    setExpandedDropdown(null);
-                                                }}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </FloatingDropdown>
-
+                    {/* PORTAL DROPDOWNS */}
                     <FloatingDropdown
                         isOpen={expandedDropdown === "language"}
                         triggerRect={triggerRect}
@@ -993,7 +997,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                             setServerSource(region);
                                             setTimeout(() => {
                                                 const url = new URL(window.location.href);
-                                                url.searchParams.set('_refresh', Date.now().toString());
+                                                url.searchParams.set("_refresh", Date.now().toString());
                                                 window.location.href = url.toString();
                                             }, 100);
                                         }
@@ -1024,7 +1028,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                 setAssetSource(optionValue);
                                                 setTimeout(() => {
                                                     const url = new URL(window.location.href);
-                                                    url.searchParams.set('_refresh', Date.now().toString());
+                                                    url.searchParams.set("_refresh", Date.now().toString());
                                                     window.location.href = url.toString();
                                                 }, 100);
                                             }

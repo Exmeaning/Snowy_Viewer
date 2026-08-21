@@ -10,7 +10,7 @@ import { ICardInfo, CardRarityType, CardAttribute, isTrainableCard, getRarityNum
 import { useCardSupplyTypeMapping, ICardSupply } from "@/hooks/useCardSupplyType";
 import { useSkillMapping } from "@/hooks/useSkillMapping";
 import { useTheme } from "@/contexts/ThemeContext";
-import { TranslatedText } from "@/components/common/TranslatedText";
+import { useTranslatedText } from "@/components/common/TranslatedText";
 import { useI18n } from "@/contexts/I18nContext";
 import { getCharacterName } from "@/lib/i18n";
 import { fetchMasterData } from "@/lib/fetch";
@@ -433,106 +433,145 @@ export default function CardSelectorModal({
                                 isTrainableCard(item.card) &&
                                 item.card.cardRarityType !== "rarity_birthday");
                         const characterName = getCharacterName(t, item.card.characterId);
-
                         const isSelected = selectedCardIds ? selectedCardIds.includes(item.card.id) : false;
-
-                        const cardContent = (
-                            // A filled slot is an opaque tile. Selection and pickup are
-                            // expressed as accent / pink borders rather than a glow, and
-                            // pickup pink is kept because it is the game's UP marker.
-                            <div
-                                className={`hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden relative transition-colors duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] ${
-                                    isSelected
-                                        ? "border-[var(--hh-accent)] ring-1 ring-[var(--hh-accent)]"
-                                        : item.isPickup
-                                        ? "border-pink-400 ring-1 ring-pink-400"
-                                        : "hover:border-[var(--hh-accent-line)]"
-                                }`}
-                            >
-                                {/* Card Image Container */}
-                                <div className="w-full relative">
-                                    <SekaiCardThumbnail card={item.card} trained={showTrained} className="w-full" />
-                                    {isSelected ? (
-                                        <div className="absolute top-1 right-1 z-10 px-1.5 py-0.5 bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] text-[8px] font-bold rounded-[var(--hh-radius-xs)]">
-                                            ✓ {t("page.gacha.selected")}
-                                        </div>
-                                    ) : item.isPickup ? (
-                                        <div className="absolute top-1 right-1 z-10 px-1.5 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-[var(--hh-radius-xs)]">
-                                            {t("page.gacha.upLabel")}
-                                        </div>
-                                    ) : null}
-                                </div>
-
-                                {/* Card Info - Persistent Footer matching /cards */}
-                                <div className="px-2 py-1.5 bg-[var(--hh-surface-1)] border-t border-[var(--hh-border)]">
-                                    <div className="mb-0.5">
-                                        <TranslatedText
-                                            original={item.card.prefix}
-                                            category="cards"
-                                            field="prefix"
-                                            originalClassName="text-[var(--hh-text-primary)] text-[10px] font-bold truncate leading-tight group-hover:text-miku block"
-                                            translationClassName="text-[var(--hh-text-tertiary)] text-[9px] truncate leading-tight block"
-                                        />
-                                    </div>
-                                    <div className="flex items-center justify-between gap-1">
-                                        <p className="text-[var(--hh-text-secondary)] text-[9px] truncate leading-tight flex-1">
-                                            {characterName}
-                                        </p>
-                                        {item.actualRate > 0 && (
-                                            <span className="hh-numeric shrink-0 text-[8px] font-bold text-[var(--hh-text-secondary)] bg-[var(--hh-surface-sunken)] px-1 py-0.5 rounded-[var(--hh-radius-xs)] leading-none font-mono">
-                                                {item.actualRate >= 0.1 ? `${item.actualRate.toFixed(1)}%` : `${item.actualRate.toFixed(2)}%`}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        );
-
-                        if (onToggleCardSelect) {
-                            const canSelectMore = maxSelectCount && selectedCardIds ? selectedCardIds.length < maxSelectCount : true;
-                            const isDisabled = !isSelected && !canSelectMore;
-
-                            return (
-                                <button
-                                    key={item.card.id}
-                                    type="button"
-                                    disabled={isDisabled}
-                                    aria-pressed={isSelected}
-                                    onClick={() => {
-                                        if (isDisabled) return;
-                                        onToggleCardSelect(item.card);
-                                    }}
-                                    className={`hh-press hh-focusable group block text-left w-full rounded-[var(--hh-radius-lg)] ${isDisabled ? "opacity-40 cursor-not-allowed" : ""}`}
-                                >
-                                    {cardContent}
-                                </button>
-                            );
-                        }
-
-                        if (onSelectCard) {
-                            return (
-                                <button
-                                    key={item.card.id}
-                                    type="button"
-                                    onClick={() => {
-                                        onSelectCard(item.card);
-                                        onClose();
-                                    }}
-                                    className="hh-press hh-focusable group block text-left w-full rounded-[var(--hh-radius-lg)]"
-                                >
-                                    {cardContent}
-                                </button>
-                            );
-                        }
+                        const canSelectMore = maxSelectCount && selectedCardIds ? selectedCardIds.length < maxSelectCount : true;
+                        const isDisabled = !!onToggleCardSelect && !isSelected && !canSelectMore;
 
                         return (
-                            <Link key={item.card.id} href={`/cards/${item.card.id}`} className="hh-press hh-focusable group block rounded-[var(--hh-radius-lg)]">
-                                {cardContent}
-                            </Link>
+                            <SelectorCardItem
+                                key={item.card.id}
+                                item={item}
+                                showTrained={showTrained}
+                                characterName={characterName}
+                                isSelected={isSelected}
+                                isDisabled={isDisabled}
+                                onToggleCardSelect={onToggleCardSelect}
+                                onSelectCard={onSelectCard}
+                                onClose={onClose}
+                            />
                         );
                     })}
                 </div>
             </div>
         </Modal>
+    );
+}
+
+interface SelectorCardItemProps {
+    item: {
+        card: ICardInfo;
+        detail?: IGachaDetail;
+        rarity: string;
+        isPickup: boolean;
+        actualRate: number;
+    };
+    showTrained: boolean;
+    characterName: string;
+    isSelected: boolean;
+    isDisabled: boolean;
+    onToggleCardSelect?: (card: ICardInfo) => void;
+    onSelectCard?: (card: ICardInfo) => void;
+    onClose: () => void;
+}
+
+function SelectorCardItem({
+    item,
+    showTrained,
+    characterName,
+    isSelected,
+    isDisabled,
+    onToggleCardSelect,
+    onSelectCard,
+    onClose,
+}: SelectorCardItemProps) {
+    const { t } = useI18n();
+    const translatedPrefix = useTranslatedText(item.card.prefix, "cards", "prefix");
+
+    const innerContent = (
+        <>
+            {/* Card Image Container */}
+            <div className="w-full relative shrink-0">
+                <SekaiCardThumbnail card={item.card} trained={showTrained} className="w-full" />
+                {isSelected ? (
+                    <div className="absolute top-1.5 right-1.5 z-10 pointer-events-none px-1.5 py-0.5 bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] text-[8px] font-bold rounded-[var(--hh-radius-xs)] shadow-sm">
+                        ✓ {t("page.gacha.selected")}
+                    </div>
+                ) : item.isPickup ? (
+                    <div className="absolute top-1.5 right-1.5 z-10 pointer-events-none px-1.5 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-[var(--hh-radius-xs)] shadow-sm">
+                        {t("page.gacha.upLabel")}
+                    </div>
+                ) : null}
+            </div>
+
+            {/* Card Info - Persistent Footer matching /cards */}
+            <div className="hh-card-footer px-2 py-1.5 flex flex-col justify-between flex-1 min-h-[50px]">
+                <div className="h-[27px] flex flex-col justify-start mb-0.5 overflow-hidden">
+                    <span className="hh-card-title text-[var(--hh-text-primary)] text-[10px] font-bold truncate leading-tight block">
+                        {item.card.prefix}
+                    </span>
+                    {translatedPrefix ? (
+                        <span className="hh-body text-[var(--hh-text-tertiary)] text-[9px] truncate leading-tight block">
+                            {translatedPrefix}
+                        </span>
+                    ) : null}
+                </div>
+                <div className="flex items-center justify-between gap-1 mt-auto">
+                    <p className="hh-body text-[var(--hh-text-secondary)] text-[9px] truncate leading-tight flex-1">
+                        {characterName}
+                    </p>
+                    {item.actualRate > 0 && (
+                        <span className="hh-numeric shrink-0 text-[8px] font-bold text-[var(--hh-text-secondary)] bg-[var(--hh-surface-sunken)] px-1 py-0.5 rounded-[var(--hh-radius-xs)] leading-none">
+                            {item.actualRate >= 0.1 ? `${item.actualRate.toFixed(1)}%` : `${item.actualRate.toFixed(2)}%`}
+                        </span>
+                    )}
+                </div>
+            </div>
+        </>
+    );
+
+    const baseClassName = `hh-card-item block w-full h-full flex flex-col text-left select-none cursor-pointer overflow-hidden group ${
+        isSelected
+            ? "border-[var(--hh-accent)] ring-1 ring-[var(--hh-accent)]"
+            : item.isPickup
+            ? "border-pink-400"
+            : ""
+    } ${isDisabled ? "opacity-40 cursor-not-allowed pointer-events-none" : ""}`;
+
+    if (onToggleCardSelect) {
+        return (
+            <button
+                type="button"
+                disabled={isDisabled}
+                aria-pressed={isSelected}
+                onClick={() => {
+                    if (isDisabled) return;
+                    onToggleCardSelect(item.card);
+                }}
+                className={baseClassName}
+            >
+                {innerContent}
+            </button>
+        );
+    }
+
+    if (onSelectCard) {
+        return (
+            <button
+                type="button"
+                onClick={() => {
+                    onSelectCard(item.card);
+                    onClose();
+                }}
+                className={baseClassName}
+            >
+                {innerContent}
+            </button>
+        );
+    }
+
+    return (
+        <Link href={`/cards/${item.card.id}`} className={baseClassName}>
+            {innerContent}
+        </Link>
     );
 }

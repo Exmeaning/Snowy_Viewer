@@ -34,11 +34,9 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
     const itemHref = href ?? `${hrefBase}/${music.id}`;
 
     return (
-        <Link href={itemHref} className="group hh-press block [content-visibility:auto] [contain-intrinsic-size:auto_320px]" data-shortcut-item="true">
-            {/* Tile, not a lifting card: the hover signal is the border. The jacket
-                also no longer zooms — scaling an image inside a clipped tile
-                repaints the whole cell, and this grid renders hundreds at once. */}
-            <div className="relative rounded-[var(--hh-radius-lg)] overflow-hidden hh-tile transition-colors hover:border-[var(--hh-accent-line)]">
+        <Link href={itemHref} className="group block select-none [content-visibility:auto] [contain-intrinsic-size:auto_320px]" data-shortcut-item="true">
+            {/* Interactive Music Item with full accent mask on hover and snappy spring physics */}
+            <div className="hh-card-item relative cursor-pointer overflow-hidden">
                 {/* Jacket Image */}
                 <div className="relative aspect-square overflow-hidden">
                     <Image
@@ -57,7 +55,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                         {Array.from(new Set(music.categories)).map((cat) => (
                             <span
                                 key={cat}
-                                className="px-1.5 py-0.5 text-[10px] font-bold rounded-[var(--hh-radius-xs)] text-white"
+                                className="px-1.5 py-0.5 text-[10px] font-bold rounded-[var(--hh-radius-xs)] text-white shadow-sm"
                                 style={{ backgroundColor: MUSIC_CATEGORY_COLORS[cat as MusicCategoryType] }}
                             >
                                 {t(`common.musicCategories.${cat}`)}
@@ -70,10 +68,9 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                         #{music.id}
                     </div>
 
-                    {/* Constant Badge - bottom right. Opaque accent: the previous
-                        /80 tint relied on a blur to stay readable on the jacket. */}
+                    {/* Constant Badge - bottom right */}
                     {constant !== undefined && (
-                        <div className="hh-numeric absolute bottom-2 right-2 px-1.5 py-0.5 bg-miku rounded-[var(--hh-radius-xs)] text-[10px] text-white font-bold">
+                        <div className="absolute bottom-2 right-2 z-10 px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] bg-[var(--hh-accent)] text-[var(--hh-text-on-accent)] font-bold text-[10px] shadow-sm">
                             {constant.toFixed(1)}
                         </div>
                     )}
@@ -87,7 +84,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                                 </span>
                             )}
                             {isSpoiler && (
-                                <span className="rounded-[var(--hh-radius-xs)] bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-white">
+                                <span className="rounded-[var(--hh-radius-xs)] bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-white shadow-sm">
                                     {t("common.badge.spoiler")}
                                 </span>
                             )}
@@ -95,17 +92,17 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                     )}
                 </div>
 
-                {/* Info */}
-                <div className="p-3">
-                    <h3 className="text-sm hh-title font-bold text-[var(--hh-text-primary)] group-hover:text-miku">
+                {/* Info Footer with Full Accent Mask */}
+                <div className="hh-card-footer p-2.5 sm:p-3">
+                    <h3 className="hh-title text-xs sm:text-sm font-bold text-[var(--hh-text-primary)] leading-tight">
                         <span className="flex flex-col">
-                            <span className="block">{music.title}</span>
+                            <span className="hh-card-title block truncate">{music.title}</span>
                             {translatedTitle && (
-                                <span className="hh-body text-xs font-medium text-[var(--hh-text-tertiary)] block">{translatedTitle}</span>
+                                <span className="hh-body text-[10px] sm:text-xs font-medium text-[var(--hh-text-tertiary)] block truncate mt-0.5">{translatedTitle}</span>
                             )}
                         </span>
                     </h3>
-                    <p className="hh-body text-xs text-[var(--hh-text-secondary)] mt-1">
+                    <p className="hh-body text-[10px] sm:text-xs text-[var(--hh-text-secondary)] mt-1 truncate">
                         {music.composer}
                         {music.composer !== music.arranger && music.arranger !== "-" && ` / ${music.arranger}`}
                     </p>
@@ -117,7 +114,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                                 return (
                                     <span
                                         key={diff}
-                                        className="hh-numeric text-[10px] font-bold text-white min-w-[1.25rem] text-center py-0.5 rounded-[var(--hh-radius-xs)]"
+                                        className="hh-numeric text-[10px] font-bold text-white min-w-[1.25rem] text-center py-0.5 rounded-[var(--hh-radius-xs)] shadow-xs"
                                         style={{ backgroundColor: DIFFICULTY_COLORS[diff] }}
                                     >
                                         {level}

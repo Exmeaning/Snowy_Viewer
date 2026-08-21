@@ -65,7 +65,7 @@ export function getFilterChipStateClasses(
     unselectedClassName?: string
 ): string {
     const selectedState = selectedClassName ?? "hh-chip hh-chip-active font-semibold shadow-none";
-    const unselectedState = unselectedClassName ?? "hh-chip font-medium";
+    const unselectedState = unselectedClassName ?? "hh-chip font-medium hover:border-[var(--hh-border-strong)]";
 
     return selected ? selectedState : unselectedState;
 }
@@ -79,7 +79,7 @@ export function getFilterIconStateClasses(
     unselectedClassName?: string
 ): string {
     const selectedState = selectedClassName ?? "hh-chip hh-chip-active ring-2 ring-[var(--hh-accent-line)] scale-[1.03]";
-    const unselectedState = unselectedClassName ?? "hh-chip";
+    const unselectedState = unselectedClassName ?? "hh-chip hover:border-[var(--hh-border-strong)]";
 
     return selected ? selectedState : unselectedState;
 }
@@ -90,7 +90,7 @@ export function getFilterIconStateClasses(
 export function getFilterToggleStateClasses(selected: boolean): string {
     return selected
         ? "bg-[var(--hh-accent-wash)] border-[var(--hh-accent-line)] text-[var(--hh-accent-deep)]"
-        : "bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)]";
+        : "bg-[var(--hh-surface-2)] border-[var(--hh-border)] text-[var(--hh-text-primary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)] hover:border-[var(--hh-border-strong)]";
 }
 
 // ============================================================================
@@ -176,7 +176,7 @@ export default function BaseFilters({
                     <button
                         type="button"
                         onClick={handleReset}
-                        className="hh-press text-xs font-sans font-medium text-[var(--hh-accent)] hover:underline flex items-center gap-1 cursor-pointer"
+                        className="hh-press hh-focusable text-xs font-sans font-medium text-[var(--hh-accent)] hover:underline flex items-center gap-1 cursor-pointer rounded-[var(--hh-radius-xs)]"
                     >
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -209,7 +209,7 @@ export default function BaseFilters({
                         <button
                             type="button"
                             onClick={handleClearSearch}
-                            className="hh-press absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] cursor-pointer"
+                            className="hh-press hh-focusable absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] cursor-pointer rounded-[var(--hh-radius-xs)]"
                         >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -233,7 +233,7 @@ export default function BaseFilters({
                                     key={opt.id}
                                     type="button"
                                     onClick={() => handleSortClick(opt.id)}
-                                    className={`hh-press px-2 py-1.5 flex items-center justify-center gap-1 cursor-pointer ${getFilterChipStateClasses(isSelected)}`}
+                                    className={`hh-press hh-focusable px-2 py-1.5 flex items-center justify-center gap-1 cursor-pointer ${getFilterChipStateClasses(isSelected)}`}
                                 >
                                     <span className="truncate">{opt.label}</span>
                                     {isSelected && (
@@ -261,7 +261,7 @@ export default function BaseFilters({
                 <button
                     type="button"
                     onClick={handleReset}
-                    className="hh-press hh-btn w-full py-2 rounded-[var(--hh-radius-md)] text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)] border border-[var(--hh-border)]"
+                    className="hh-press hh-focusable hh-btn w-full py-2 rounded-[var(--hh-radius-md)] text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer bg-[var(--hh-surface-2)] text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-3)] border border-[var(--hh-border)] hover:border-[var(--hh-border-strong)]"
                 >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -315,7 +315,7 @@ export function FilterButton({ selected, onClick, children, className = "", styl
         <button
             type="button"
             onClick={handleClick}
-            className={`hh-press cursor-pointer ${getFilterChipStateClasses(selected)} ${className}`}
+            className={`hh-press hh-focusable cursor-pointer ${getFilterChipStateClasses(selected)} ${className}`}
             style={style}
         >
             {children}
@@ -341,7 +341,7 @@ export function FilterToggle({ selected, onClick, label }: FilterToggleProps) {
             role="switch"
             aria-checked={selected}
             onClick={handleClick}
-            className="hh-press w-full flex items-center justify-between px-3 py-2 rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-2)] hover:bg-[var(--hh-surface-3)] border border-[var(--hh-border)] cursor-pointer text-[var(--hh-text-primary)] transition-colors duration-[var(--hh-dur-fast)]"
+            className={`hh-press hh-focusable w-full flex items-center justify-between px-3 py-2 rounded-[var(--hh-radius-md)] border cursor-pointer transition-colors duration-[var(--hh-dur-fast)] ${getFilterToggleStateClasses(selected)}`}
         >
             <span className="text-sm font-medium">
                 {label}
