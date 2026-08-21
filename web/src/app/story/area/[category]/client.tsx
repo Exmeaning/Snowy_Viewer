@@ -117,7 +117,7 @@ export default function StoryAreaDetailClient() {
     return (
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
-                <Link href="/story/area" className="inline-flex items-center gap-2 text-slate-500 hover:text-miku transition-colors mb-6">
+                <Link href="/story/area" className="inline-flex items-center gap-2 text-[var(--hh-text-secondary)] hover:text-miku transition-colors mb-6">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
@@ -125,15 +125,18 @@ export default function StoryAreaDetailClient() {
                 </Link>
 
                 <div className="mb-6">
-                    <h1 className="text-xl font-black text-primary-text">{pageTitle}</h1>
-                    {!isLoading && !error && <p className="text-sm text-slate-500 mt-1">{t("page.story.area.dialogueCount", { count: actions.length })}</p>}
+                    <h1 className="hh-display text-xl text-primary-text">{pageTitle}</h1>
+                    {!isLoading && !error && <p className="hh-numeric text-sm text-[var(--hh-text-secondary)] mt-1">{t("page.story.area.dialogueCount", { count: actions.length })}</p>}
                 </div>
 
-                {isLoading && <div className="flex justify-center py-16"><div className="w-10 h-10 border-4 border-miku/30 border-t-miku rounded-full animate-spin" /></div>}
+                {isLoading && <div className="flex justify-center py-16"><div className="hh-spinner w-10 h-10" /></div>}
                 {error && <div className="text-red-500 text-center py-8">{error}</div>}
 
                 {!isLoading && !error && (
-                    <div className="space-y-2">
+                    /* Rows separated by a hairline instead of one tile per row: this list
+                       runs to dozens of dialogues, and a shadow on every row turns a
+                       scan-able index into a stack of floating cards. */
+                    <div className="hh-tile hh-list">
                         {actions.map((action, idx) => {
                             const area = areaMap.get(action.areaId);
                             const areaName = area ? (area.subName ? `${area.name} - ${area.subName}` : area.name) : t("page.story.area.areaFallback", { id: action.areaId });
@@ -150,7 +153,7 @@ export default function StoryAreaDetailClient() {
                                 <Link
                                     key={action.id}
                                     href={`/story/area/${encodeURIComponent(areaIdParam)}/${encodeURIComponent(action.scenarioId ?? "")}`}
-                                    className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-sm transition-all group"
+                                    className="flex items-center justify-between p-4 hover:bg-[var(--hh-surface-sunken)] transition-colors group"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
                                         {/* Character avatars */}
@@ -161,24 +164,24 @@ export default function StoryAreaDetailClient() {
                                                         key={charaId}
                                                         src={getCharacterIconUrl(charaId)}
                                                         alt=""
-                                                        className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 object-cover"
+                                                        className="w-8 h-8 rounded-full border-2 border-[var(--hh-surface-2)] object-cover"
                                                     />
                                                 ))}
                                             </div>
                                         ) : (
-                                            <span className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                                            <span className="hh-numeric shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500/12 text-emerald-600 text-xs font-bold">
                                                 {idx + 1}
                                             </span>
                                         )}
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-miku transition-colors">{areaName}</span>
-                                                {typeLabel && <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 rounded">{typeLabel}</span>}
+                                                <span className="text-sm font-medium text-[var(--hh-text-primary)] group-hover:text-miku transition-colors">{areaName}</span>
+                                                {typeLabel && <span className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)]">{typeLabel}</span>}
                                             </div>
-                                            <p className="text-xs text-slate-400 mt-0.5">ID: {action.id}:{action.scenarioId}</p>
+                                            <p className="hh-numeric text-xs text-[var(--hh-text-tertiary)] mt-0.5">ID: {action.id}:{action.scenarioId}</p>
                                         </div>
                                     </div>
-                                    <svg className="w-4 h-4 text-slate-300 group-hover:text-miku transition-colors shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-4 h-4 text-[var(--hh-text-tertiary)] group-hover:text-miku transition-colors shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                     </svg>
                                 </Link>

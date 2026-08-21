@@ -142,21 +142,21 @@ export default function PredictionChart({ data, height, className }: PredictionC
 
     return (
         <div
-            className={`w-full bg-white rounded-xl border border-slate-100 p-4 flex flex-col ${className || ''}`}
+            className={`hh-tile w-full p-4 flex flex-col ${className || ''}`}
             style={height ? { height: `${height}px` } : undefined}
         >
             <div className="flex-none flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    <span className="text-2xl font-bold text-miku">T{data.Rank}</span>
+                    <span className="hh-numeric text-2xl font-bold text-miku">T{data.Rank}</span>
                     <div className="text-sm">
-                        <div className="text-slate-500">{t("page.prediction.table.currentScore")}</div>
-                        <div className="font-bold text-slate-700">{formatNumber(data.CurrentScore)}</div>
+                        <div className="text-[var(--hh-text-secondary)]">{t("page.prediction.table.currentScore")}</div>
+                        <div className="hh-numeric font-bold text-[var(--hh-text-primary)]">{formatNumber(data.CurrentScore)}</div>
                     </div>
                 </div>
                 {showPrediction && (
                     <div className="text-right">
-                        <div className="text-sm text-slate-500">{t("page.prediction.table.predictedScore")}</div>
-                        <div className="text-lg font-bold text-amber-500">{formatNumber(data.PredictedScore)}</div>
+                        <div className="text-sm text-[var(--hh-text-secondary)]">{t("page.prediction.table.predictedScore")}</div>
+                        <div className="hh-numeric text-lg font-bold text-amber-500">{formatNumber(data.PredictedScore)}</div>
                     </div>
                 )}
             </div>

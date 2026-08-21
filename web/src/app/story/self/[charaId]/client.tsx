@@ -85,43 +85,43 @@ export default function StorySelfReaderClient() {
                     {t("page.story.self.backToCharacters")}
                 </Link>
 
-                <div className="flex items-center gap-4 mb-8 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                    {chara && <img src={getCharacterIconUrl(chara.id)} alt={charaName} className="w-16 h-16 rounded-full object-cover border-2 border-miku/30 shrink-0" />}
+                <div className="hh-tile flex items-center gap-4 mb-8 p-4">
+                    {chara && <img src={getCharacterIconUrl(chara.id)} alt={charaName} className="w-16 h-16 rounded-full object-cover border-2 border-[var(--hh-accent-line)] shrink-0" />}
                     <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                            <h1 className="text-xl font-black text-slate-900 dark:text-slate-100">{charaName}</h1>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                            <h1 className="hh-display text-xl text-[var(--hh-text-primary)]">{charaName}</h1>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] border ${
                                 serverSource === "cn"
-                                    ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50"
-                                    : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50"
+                                    ? "bg-rose-500/12 text-rose-600 border-rose-500/30"
+                                    : "bg-blue-500/12 text-blue-600 border-blue-500/30"
                             }`}>{t(`page.story.serverSource.${serverSource}`)}</span>
                         </div>
-                        <p className="text-sm text-slate-500">{t("page.story.self.subtitle")}</p>
+                        <p className="hh-body text-sm text-[var(--hh-text-secondary)]">{t("page.story.self.subtitle")}</p>
                     </div>
                 </div>
 
                 {isLoading && (
                     <div className="flex flex-col items-center justify-center py-16">
-                        <div className="w-12 h-12 border-4 border-miku/30 border-t-miku rounded-full animate-spin mb-4" />
-                        <p className="text-slate-500">{t("page.story.self.loading")}</p>
+                        <div className="hh-spinner w-12 h-12 mb-4" />
+                        <p className="text-[var(--hh-text-secondary)]">{t("page.story.self.loading")}</p>
                     </div>
                 )}
 
                 {!isLoading && (
                     <div className="max-w-4xl mx-auto">
-                        <div className="mb-6 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <div className="hh-tile mb-6 p-3">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm text-slate-500 mr-2">{t("page.story.self.tableOfContents")}</span>
+                                <span className="text-sm text-[var(--hh-text-secondary)] mr-2">{t("page.story.self.tableOfContents")}</span>
                                 <button
                                     onClick={() => document.getElementById("part-year2")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                                    className="px-3 py-1.5 text-sm font-medium text-miku hover:bg-miku/10 rounded-lg transition-colors"
+                                    className="hh-press hh-focusable px-3 py-1.5 text-sm font-medium text-miku hover:bg-[var(--hh-accent-wash-strong)] rounded-[var(--hh-radius-md)]"
                                 >
                                     {t("page.story.self.year2")}
                                 </button>
-                                <span className="text-slate-300 dark:text-slate-600">|</span>
+                                <span className="text-[var(--hh-text-tertiary)]">|</span>
                                 <button
                                     onClick={() => document.getElementById("part-year1")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                                    className="px-3 py-1.5 text-sm font-medium text-miku hover:bg-miku/10 rounded-lg transition-colors"
+                                    className="hh-press hh-focusable px-3 py-1.5 text-sm font-medium text-miku hover:bg-[var(--hh-accent-wash-strong)] rounded-[var(--hh-radius-md)]"
                                 >
                                     {t("page.story.self.year1")}
                                 </button>
@@ -135,7 +135,7 @@ export default function StorySelfReaderClient() {
                             ].map(({ key, label, data, missing, err }) => (
                                 <div key={key} id={`part-${key}`} className="scroll-mt-32">
                                     <div className="flex items-center gap-3 mb-4">
-                                        <span className="px-3 py-1 bg-miku/10 text-miku text-sm font-bold rounded-full border border-miku/20">{label}</span>
+                                        <span className="hh-numeric px-3 py-1 bg-[var(--hh-accent-wash-strong)] text-miku text-sm font-bold rounded-[var(--hh-radius-sm)] border border-[var(--hh-accent-line)]">{label}</span>
                                     </div>
                                     <StoryReader
                                         scenarioData={data}

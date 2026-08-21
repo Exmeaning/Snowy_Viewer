@@ -30,16 +30,16 @@ function LeavePageContent() {
     if (!target) {
         return (
             <div className="min-h-[80vh] flex flex-col items-center justify-center p-4">
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg max-w-md w-full text-center border border-gray-100 dark:border-gray-700">
-                    <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+                <div className="hh-panel p-8 max-w-md w-full text-center">
+                    <h1 className="hh-title text-xl text-[var(--hh-text-primary)] mb-4">
                         {t("page.leave.missingTitle")}
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-300 mb-6">
+                    <p className="hh-body text-[var(--hh-text-secondary)] mb-6">
                         {t("page.leave.missingDescription")}
                     </p>
                     <Link
                         href="/"
-                        className="px-6 py-2 bg-theme-primary text-white rounded-lg hover:opacity-90 transition-opacity inline-block"
+                        className="hh-btn hh-btn-primary hh-press hh-focusable px-6 py-2 inline-block"
                     >
                         {t("page.leave.backHome")}
                     </Link>
@@ -49,16 +49,17 @@ function LeavePageContent() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-900/50">
-            <div className="bg-white dark:bg-gray-800 p-8 md:p-10 rounded-3xl shadow-xl max-w-lg w-full border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+        <div className="hh-ground min-h-screen flex flex-col items-center justify-center p-4">
+            <div className="hh-panel p-8 md:p-10 max-w-lg w-full relative overflow-hidden">
 
-                {/* Decorative background element */}
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-miku to-teal-200"></div>
+                {/* Accent rule along the top edge. Flat fill: the old two-stop
+                    gradient read as decoration, this reads as the panel's header rule. */}
+                <div className="absolute top-0 left-0 w-full h-2 bg-[var(--hh-accent)]"></div>
 
                 <div className="flex flex-col items-center text-center">
 
                     {/* Logo Section */}
-                    <div className="flex items-center gap-2 mb-8 scale-110">
+                    <div className="flex items-center gap-2 mb-8">
                         <div
                             className="h-8 w-[5rem] bg-miku"
                             style={{
@@ -72,32 +73,35 @@ function LeavePageContent() {
                                 WebkitMaskRepeat: "no-repeat",
                             }}
                         />
-                        <div className="flex items-center gap-1.5 h-full border-l border-slate-300 pl-2 ml-1">
-                            <span className="text-sm text-slate-500 font-bold tracking-widest uppercase leading-none">
+                        <div className="flex items-center gap-1.5 h-full border-l border-[var(--hh-border)] pl-2 ml-1">
+                            <span className="hh-label text-sm leading-none">
                                 {t("page.leave.badge")}
                             </span>
                         </div>
                     </div>
 
-                    <div className="w-20 h-20 bg-yellow-50 dark:bg-yellow-900/20 rounded-full flex items-center justify-center mb-6 text-yellow-500 ring-8 ring-yellow-50/50">
+                    {/* Caution mark. Amber is the semantic signal for "leaving the
+                        site", so the hue stays; only the flat 50-tint becomes a
+                        theme-safe overlay. */}
+                    <div className="w-20 h-20 bg-amber-500/12 rounded-full flex items-center justify-center mb-6 text-amber-500 ring-8 ring-amber-500/10">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
 
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-gray-100 mb-3">
+                    <h2 className="hh-display text-2xl text-[var(--hh-text-primary)] mb-3">
                         {t("page.leave.title")}
                     </h2>
 
-                    <p className="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+                    <p className="hh-body text-[var(--hh-text-secondary)] mb-6">
                         {t("page.leave.description")}
                     </p>
 
-                    <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl w-full mb-6 break-all text-sm text-miku font-mono border border-slate-200 dark:border-slate-700 bg-opacity-50">
+                    <div className="hh-well p-4 w-full mb-6 break-all text-sm text-miku font-mono">
                         {target}
                     </div>
 
-                    <p className="text-slate-500 dark:text-slate-400 text-xs mb-8 bg-slate-100 dark:bg-slate-800/50 p-3 rounded-lg">
+                    <p className="hh-well hh-body text-[var(--hh-text-secondary)] text-xs mb-8 p-3">
                         {t("page.leave.warningLine1")}
                         <br />
                         {t("page.leave.warningLine2")}
@@ -107,14 +111,14 @@ function LeavePageContent() {
                         <a
                             href={target}
                             rel="noopener noreferrer"
-                            className="w-full py-3.5 bg-miku hover:bg-miku-dark text-white rounded-xl shadow-lg shadow-miku/20 hover:shadow-xl hover:shadow-miku/30 transition-all font-bold text-center active:scale-[0.98]"
+                            className="hh-btn hh-btn-primary hh-press hh-focusable w-full py-3.5 font-bold text-center"
                         >
                             {t("page.leave.continue")}
                         </a>
 
                         <button
                             onClick={handleClose}
-                            className="w-full py-3.5 bg-white border-2 border-slate-100 text-slate-600 rounded-xl hover:bg-slate-50 hover:border-slate-200 transition-all font-bold active:scale-[0.98]"
+                            className="hh-btn hh-press hh-focusable w-full py-3.5 font-bold"
                         >
                             {canClose ? t("page.leave.closePage") : t("page.leave.backHome")}
                         </button>

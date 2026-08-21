@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type CSSProperties } from "react";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import {
@@ -85,7 +85,7 @@ export default function UpcomingLiveTab() {
         return (
             <div className="space-y-3">
                 {[1, 2].map(i => (
-                    <div key={i} className="animate-pulse h-20 w-full rounded-xl bg-slate-100" />
+                    <div key={i} className="animate-pulse h-20 w-full rounded-[var(--hh-radius-lg)] bg-[var(--hh-surface-sunken)]" />
                 ))}
             </div>
         );
@@ -93,7 +93,10 @@ export default function UpcomingLiveTab() {
 
     if (error) {
         return (
-            <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm text-center">
+            <div
+                className="hh-tile hh-tile-tint p-6 rounded-[var(--hh-radius-lg)] text-red-600 text-sm text-center"
+                style={{ "--hh-tint": "var(--hh-accent-alert)" } as CSSProperties}
+            >
                 <p className="font-bold">{t("page.home.upcomingLive.loadFailedTitle")}</p>
                 <p>{error}</p>
             </div>
@@ -102,7 +105,7 @@ export default function UpcomingLiveTab() {
 
     if (displayLives.length === 0) {
         return (
-            <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
+            <div className="hh-well p-8 text-center text-[var(--hh-text-tertiary)]">
                 <p className="font-medium">{t("page.home.upcomingLive.noData")}</p>
             </div>
         );
@@ -120,15 +123,15 @@ export default function UpcomingLiveTab() {
                     const nextSchedule = getNextSchedule(vl);
 
                     return (
-                        <Link key={vl.id} href={`/live/${vl.id}`} className="block group">
-                            <div className="relative flex h-20 sm:h-24 rounded-xl overflow-hidden glass-card border border-white/40 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 bg-white">
+                        <Link key={vl.id} href={`/live/${vl.id}`} className="block group hh-press">
+                            <div className="hh-tile relative flex h-20 sm:h-24 rounded-[var(--hh-radius-lg)] overflow-hidden transition-colors hover:border-[var(--hh-accent-line)]">
                                 {/* Left: Banner (35%) */}
                                 <div className="w-[35%] relative overflow-hidden">
                                     <Image
                                         src={getVirtualLiveBannerUrl(vl.assetbundleName, assetSource)}
                                         alt={vl.name}
                                         fill
-                                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                        className="object-cover"
                                         unoptimized
                                     />
                                     <div className="absolute inset-0 bg-black/30" />
@@ -136,16 +139,16 @@ export default function UpcomingLiveTab() {
 
                                 {/* Right: Info (65%) */}
                                 <div className="w-[65%] flex flex-col justify-center p-3 sm:p-4 gap-1">
-                                    {/* Badges */}
+                                    {/* Badges — status and live-type colors are semantic. */}
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                         <span
-                                            className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded text-white"
+                                            className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] text-white"
                                             style={{ backgroundColor: statusDisplay.color }}
                                         >
                                             {t(`common.status.${status}`)}
                                         </span>
                                         <span
-                                            className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded text-white"
+                                            className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] text-white"
                                             style={{ backgroundColor: typeColor }}
                                         >
                                             {typeName}
@@ -153,18 +156,18 @@ export default function UpcomingLiveTab() {
                                     </div>
 
                                     {/* Title */}
-                                    <h3 className="font-bold text-primary-text text-xs sm:text-sm leading-tight line-clamp-1 group-hover:text-miku transition-colors">
+                                    <h3 className="hh-title font-bold text-[var(--hh-text-primary)] text-xs sm:text-sm leading-tight line-clamp-1 group-hover:text-miku transition-colors">
                                         <TranslatedText
                                             original={vl.name}
                                             category="virtualLive"
                                             field="name"
                                             originalClassName="line-clamp-1"
-                                            translationClassName="text-[10px] text-slate-400 line-clamp-1 font-normal"
+                                            translationClassName="text-[10px] text-[var(--hh-text-tertiary)] line-clamp-1 font-normal"
                                         />
                                     </h3>
 
                                     {/* Schedule info */}
-                                    <div className="text-[10px] sm:text-xs text-slate-400 font-mono">
+                                    <div className="hh-numeric text-[10px] sm:text-xs text-[var(--hh-text-tertiary)]">
                                         {nextSchedule ? (
                                             <span>
                                                 {t("page.home.upcomingLive.nextSchedule", { date: formatDate(nextSchedule.startAt) })}

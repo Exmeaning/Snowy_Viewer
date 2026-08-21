@@ -39,24 +39,26 @@ interface SearchIndexItem {
 
 // Level Separator Card Component
 function LevelSeparatorCard({ level, difficulty }: { level: number; difficulty: string }) {
+    // Difficulty hue is semantic and stays; only the two-stop gradient collapses
+    // to the flat fill the rest of the system uses.
     const difficultyColors: Record<string, string> = {
-        EASY: "from-green-400 to-green-500",
-        NORMAL: "from-blue-400 to-blue-500",
-        HARD: "from-yellow-400 to-yellow-500",
-        EXPERT: "from-red-400 to-red-500",
-        MASTER: "from-purple-500 to-purple-600",
-        APPEND: "from-pink-500 to-pink-600",
+        EASY: "bg-green-500",
+        NORMAL: "bg-blue-500",
+        HARD: "bg-yellow-500",
+        EXPERT: "bg-red-500",
+        MASTER: "bg-purple-500",
+        APPEND: "bg-pink-500",
     };
 
-    const gradientClass = difficultyColors[difficulty] || "from-slate-400 to-slate-500";
+    const fillClass = difficultyColors[difficulty] || "bg-[var(--hh-surface-3)]";
 
     return (
-        <div className={`aspect-square rounded-xl bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center shadow-lg`}>
+        <div className={`aspect-square rounded-[var(--hh-radius-lg)] ${fillClass} flex flex-col items-center justify-center`}>
             <div className="text-white text-center px-2">
                 <div className="text-[10px] sm:text-xs font-bold opacity-90 mb-0.5">
                     {difficulty}
                 </div>
-                <div className="text-2xl sm:text-3xl md:text-4xl font-black">
+                <div className="hh-numeric hh-display text-2xl sm:text-3xl md:text-4xl">
                     {level}
                 </div>
             </div>
@@ -476,25 +478,25 @@ function MusicContent() {
         <div className="container mx-auto px-4 sm:px-6 py-8">
             {/* Page Header */}
             <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">
+                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                    <span className="hh-label text-miku">
                         {t("page.music.badge")}
                     </span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                     {t("page.music.title")} <span className="text-miku">{t("page.music.titleHighlight")}</span>
                 </h1>
-                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                     {t("page.music.description")}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-[var(--hh-text-tertiary)] mt-1">
                     {t("page.music.aliasHint")}<a href="https://github.com/Team-Haruki" target="_blank" rel="noopener noreferrer" className="text-miku hover:underline">{t("page.music.aliasSource")}</a>{t("page.music.aliasDisclaimer")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-red-500/12 border border-red-500/30 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{error}</p>
                     <button
@@ -512,11 +514,11 @@ function MusicContent() {
                     <div className={MUSIC_GRID_CLASS}>
                         {Array.from({ length: 15 }).map((_, i) => (
                             <div key={i} className="animate-pulse">
-                                <div className="rounded-xl overflow-hidden bg-white/60 border border-slate-200/60">
-                                    <div className="aspect-square bg-slate-200"></div>
+                                <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                                    <div className="aspect-square bg-[var(--hh-surface-sunken)]"></div>
                                     <div className="p-3 space-y-2">
-                                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                                        <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                                        <div className="h-4 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4"></div>
+                                        <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-1/2"></div>
                                     </div>
                                 </div>
                             </div>
@@ -525,10 +527,10 @@ function MusicContent() {
                 ) : displayedMusicsWithSeparators.filter(item => item.type === 'music').length === 0 ? (
                     <div className="text-center py-16">
                         <div className="text-6xl mb-4">🎵</div>
-                        <h3 className="text-xl font-bold text-slate-600 mb-2">
+                        <h3 className="hh-title text-xl text-[var(--hh-text-secondary)] mb-2">
                             {t("page.music.noResult")}
                         </h3>
-                        <p className="text-slate-500">
+                        <p className="hh-body text-[var(--hh-text-secondary)]">
                             {t("page.music.noResultHint")}
                         </p>
                     </div>
@@ -561,10 +563,10 @@ function MusicContent() {
                         <button
                             onClick={loadMore}
                             data-shortcut-load-more="true"
-                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                            className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3 font-bold"
                         >
                             {t("page.music.loadMore")}
-                            <span className="ml-2 text-sm opacity-80 type-caption">
+                            <span className="hh-numeric ml-2 text-sm opacity-80">
                                 ({displayedMusicsWithSeparators.filter(item => item.type === 'music').length} / {filteredMusics.length})
                             </span>
                         </button>
@@ -575,7 +577,7 @@ function MusicContent() {
                 {!isLoading &&
                     displayedMusicsWithSeparators.filter(item => item.type === 'music').length > 0 &&
                     displayedMusicsWithSeparators.filter(item => item.type === 'music').length >= filteredMusics.length && (
-                        <div className="mt-8 text-center text-slate-400 text-sm">
+                        <div className="mt-8 text-center text-[var(--hh-text-tertiary)] text-sm">
                             {t("page.music.allLoaded", { count: String(filteredMusics.length) })}
                         </div>
                     )}
@@ -587,7 +589,7 @@ function MusicContent() {
 export default function MusicClient() {
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">Loading music...</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">Loading music...</div>}>
                 <MusicContent />
             </Suspense>
         </MainLayout>

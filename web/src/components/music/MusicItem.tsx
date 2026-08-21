@@ -7,7 +7,9 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useTranslation } from "@/contexts/TranslationContext";
 
 const ALL_DIFFICULTIES: MusicDifficultyType[] = ["easy", "normal", "hard", "expert", "master", "append"];
-const JACKET_OVERLAY_BADGE_CLASS = "inline-flex h-5 items-center rounded bg-black/60 px-1.5 font-mono text-[10px] font-normal leading-4 text-white shadow-sm backdrop-blur-sm";
+// The blur here was what separated the badge from a busy jacket; .hh-badge-on-media
+// carries that contrast in an opaque plate instead, so no live compositor blur.
+const JACKET_OVERLAY_BADGE_CLASS = "hh-badge-on-media hh-numeric inline-flex h-5 items-center px-1.5 text-[10px] font-normal leading-4";
 
 interface MusicItemProps {
     music: IMusicInfo;
@@ -32,8 +34,11 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
     const itemHref = href ?? `${hrefBase}/${music.id}`;
 
     return (
-        <Link href={itemHref} className="group pressable block [content-visibility:auto] [contain-intrinsic-size:auto_320px]" data-shortcut-item="true">
-            <div className="relative rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive">
+        <Link href={itemHref} className="group hh-press block [content-visibility:auto] [contain-intrinsic-size:auto_320px]" data-shortcut-item="true">
+            {/* Tile, not a lifting card: the hover signal is the border. The jacket
+                also no longer zooms — scaling an image inside a clipped tile
+                repaints the whole cell, and this grid renders hundreds at once. */}
+            <div className="relative rounded-[var(--hh-radius-lg)] overflow-hidden hh-tile transition-colors hover:border-[var(--hh-accent-line)]">
                 {/* Jacket Image */}
                 <div className="relative aspect-square overflow-hidden">
                     <Image
@@ -41,18 +46,18 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                         alt={music.title}
                         fill
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)]"
+                        className="object-cover"
                         unoptimized
                         loading="lazy"
                         decoding="async"
                     />
 
-                    {/* Category Tags Overlay */}
+                    {/* Category Tags Overlay — category colors are semantic. */}
                     <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
                         {Array.from(new Set(music.categories)).map((cat) => (
                             <span
                                 key={cat}
-                                className="px-1.5 py-0.5 text-[10px] font-bold rounded text-white shadow-sm"
+                                className="px-1.5 py-0.5 text-[10px] font-bold rounded-[var(--hh-radius-xs)] text-white"
                                 style={{ backgroundColor: MUSIC_CATEGORY_COLORS[cat as MusicCategoryType] }}
                             >
                                 {t(`common.musicCategories.${cat}`)}
@@ -65,9 +70,10 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                         #{music.id}
                     </div>
 
-                    {/* Constant Badge - bottom right */}
+                    {/* Constant Badge - bottom right. Opaque accent: the previous
+                        /80 tint relied on a blur to stay readable on the jacket. */}
                     {constant !== undefined && (
-                        <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-miku/80 backdrop-blur-sm rounded text-[10px] text-white font-bold shadow-sm">
+                        <div className="hh-numeric absolute bottom-2 right-2 px-1.5 py-0.5 bg-miku rounded-[var(--hh-radius-xs)] text-[10px] text-white font-bold">
                             {constant.toFixed(1)}
                         </div>
                     )}
@@ -81,7 +87,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                                 </span>
                             )}
                             {isSpoiler && (
-                                <span className="rounded bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-white shadow-sm">
+                                <span className="rounded-[var(--hh-radius-xs)] bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-white">
                                     {t("common.badge.spoiler")}
                                 </span>
                             )}
@@ -91,15 +97,15 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
 
                 {/* Info */}
                 <div className="p-3">
-                    <h3 className="text-sm type-title font-bold text-primary-text group-hover:text-miku">
+                    <h3 className="text-sm hh-title font-bold text-[var(--hh-text-primary)] group-hover:text-miku">
                         <span className="flex flex-col">
                             <span className="block">{music.title}</span>
                             {translatedTitle && (
-                                <span className="text-xs type-caption font-medium text-slate-400 block">{translatedTitle}</span>
+                                <span className="hh-body text-xs font-medium text-[var(--hh-text-tertiary)] block">{translatedTitle}</span>
                             )}
                         </span>
                     </h3>
-                    <p className="text-xs type-caption text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="hh-body text-xs text-[var(--hh-text-secondary)] mt-1">
                         {music.composer}
                         {music.composer !== music.arranger && music.arranger !== "-" && ` / ${music.arranger}`}
                     </p>
@@ -111,7 +117,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                                 return (
                                     <span
                                         key={diff}
-                                        className="text-[10px] font-bold text-white min-w-[1.25rem] text-center py-0.5 rounded"
+                                        className="hh-numeric text-[10px] font-bold text-white min-w-[1.25rem] text-center py-0.5 rounded-[var(--hh-radius-xs)]"
                                         style={{ backgroundColor: DIFFICULTY_COLORS[diff] }}
                                     >
                                         {level}

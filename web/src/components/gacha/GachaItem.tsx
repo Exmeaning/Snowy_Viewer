@@ -27,10 +27,11 @@ export default function GachaItem({ gacha }: GachaItemProps) {
     });
 
     return (
-        <Link href={`/gacha/${gacha.id}`} className="group pressable block" data-shortcut-item="true">
-            <div className="relative rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive">
+        <Link href={`/gacha/${gacha.id}`} className="group hh-press block" data-shortcut-item="true">
+            {/* Tile semantics: hover recolors the border rather than lifting. */}
+            <div className="relative rounded-[var(--hh-radius-lg)] overflow-hidden hh-tile transition-colors hover:border-[var(--hh-accent-line)]">
                 {/* Logo Image */}
-                <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-slate-100">
+                <div className="relative aspect-[16/9] bg-[var(--hh-surface-sunken)]">
                     <Image
                         src={logoUrl}
                         alt={gacha.name}
@@ -43,23 +44,24 @@ export default function GachaItem({ gacha }: GachaItemProps) {
                         }}
                     />
 
-                    {/* Status Badges */}
+                    {/* Status Badges — amber "upcoming" / green "ongoing" are
+                        semantic status colors and stay. */}
                     <div className="absolute top-2 right-2 flex flex-col gap-1">
                         {isUnreleased && isShowSpoiler && (
-                            <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full">
+                            <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-[var(--hh-radius-sm)]">
                                 {t("common.badge.spoiler")}
                             </span>
                         )}
                         {isOngoing && (
-                            <span className="px-2 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded-full animate-pulse">
+                            <span className="px-2 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded-[var(--hh-radius-sm)] animate-pulse">
                                 {t("common.badge.ongoing")}
                             </span>
                         )}
                     </div>
 
-                    {/* ID Badge */}
+                    {/* ID Badge — opaque plate replaces the blurred /50 tint. */}
                     <div className="absolute bottom-2 left-2">
-                        <span className="px-2 py-0.5 text-[10px] font-mono bg-black/50 text-white rounded-full backdrop-blur-sm">
+                        <span className="hh-badge-on-media hh-numeric px-2 py-0.5 text-[10px]">
                             #{gacha.id}
                         </span>
                     </div>
@@ -67,16 +69,16 @@ export default function GachaItem({ gacha }: GachaItemProps) {
 
                 {/* Content */}
                 <div className="p-3">
-                    <h3 className="text-sm font-bold text-primary-text group-hover:text-miku transition-colors">
+                    <h3 className="hh-title text-sm font-bold text-[var(--hh-text-primary)] group-hover:text-miku transition-colors">
                         <TranslatedText
                             original={gacha.name}
                             category="gacha"
                             field="name"
                             originalClassName="block"
-                            translationClassName="text-xs font-medium text-slate-400 block"
+                            translationClassName="text-xs font-medium text-[var(--hh-text-tertiary)] block"
                         />
                     </h3>
-                    <div className="mt-1 text-xs text-slate-400 space-y-0.5">
+                    <div className="hh-numeric mt-1 text-xs text-[var(--hh-text-tertiary)] space-y-0.5">
                         <p>{formatDate(gacha.startAt)} ~ {formatDate(gacha.endAt)}</p>
                     </div>
                 </div>

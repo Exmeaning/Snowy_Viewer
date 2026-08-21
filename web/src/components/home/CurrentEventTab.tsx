@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type CSSProperties } from "react";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import { IEventInfo, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
@@ -70,13 +70,16 @@ export default function CurrentEventTab() {
 
     if (isLoading) {
         return (
-            <div className="animate-pulse h-32 w-full rounded-2xl bg-slate-100" />
+            <div className="animate-pulse h-32 w-full rounded-[var(--hh-radius-lg)] bg-[var(--hh-surface-sunken)]" />
         );
     }
 
     if (error) {
         return (
-            <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm text-center">
+            <div
+                className="hh-tile hh-tile-tint p-6 rounded-[var(--hh-radius-lg)] text-red-600 text-sm text-center"
+                style={{ "--hh-tint": "var(--hh-accent-alert)" } as CSSProperties}
+            >
                 <p className="font-bold">{t("page.home.currentEvent.loadFailedTitle")}</p>
                 <p>{error}</p>
             </div>
@@ -85,7 +88,7 @@ export default function CurrentEventTab() {
 
     if (!currentEvent) {
         return (
-            <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
+            <div className="hh-well p-8 text-center text-[var(--hh-text-tertiary)]">
                 <p className="font-medium">{t("page.home.currentEvent.noActiveEvent")}</p>
             </div>
         );
@@ -115,8 +118,11 @@ export default function CurrentEventTab() {
 
     return (
         <div>
-            <Link href={`/events/${currentEvent.id}`} className="block group">
-                <div className="relative flex h-32 md:h-36 rounded-2xl overflow-hidden glass-card border border-white/40 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
+            <Link href={`/events/${currentEvent.id}`} className="block group hh-press">
+                {/* Tile, not a lifting card: hover recolors the border. The banner's
+                    hover zoom is gone with it — a 110% scale on a 36px-tall strip
+                    was mostly motion for its own sake. */}
+                <div className="hh-tile relative flex h-32 md:h-36 rounded-[var(--hh-radius-lg)] overflow-hidden transition-colors hover:border-[var(--hh-accent-line)]">
 
                     {/* Left Side: Background & Logo (45%) */}
                     <div className="w-[45%] relative overflow-hidden">
@@ -126,10 +132,12 @@ export default function CurrentEventTab() {
                                 src={getEventBannerUrl(currentEvent.assetbundleName, assetSource)}
                                 alt={currentEvent.name}
                                 fill
-                                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                className="object-cover"
                                 unoptimized
                             />
-                            {/* Dark Overlay Mask */}
+                            {/* Functional scrim: the logo above is light artwork and
+                                needs a darkened plate behind it to stay readable on
+                                any banner. */}
                             <div className="absolute inset-0 bg-black/50" />
                         </div>
 
@@ -169,12 +177,12 @@ export default function CurrentEventTab() {
                             {/* Status Badge */}
                             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                                 <span
-                                    className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded text-white shadow-sm"
+                                    className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-[var(--hh-radius-sm)] text-white"
                                     style={{ backgroundColor: statusDisplay.color }}
                                 >
                                     {statusLabel}
                                 </span>
-                                <span className="text-[10px] font-bold text-slate-400">
+                                <span className="text-[10px] font-bold text-[var(--hh-text-tertiary)]">
                                     {eventTypeName}
                                 </span>
                                 {staminaReserve && (() => {
@@ -188,7 +196,7 @@ export default function CurrentEventTab() {
                                     if (!label) return null;
                                     return (
                                         <span
-                                            className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-miku/10 text-miku cursor-help"
+                                            className="text-[10px] font-bold px-1.5 py-0.5 rounded-[var(--hh-radius-sm)] bg-[var(--hh-accent-wash-strong)] text-[var(--hh-accent-deep)] cursor-help"
                                             title={
                                                 staminaReserve.normalReserve > 0 && staminaReserve.passReserve > 0
                                                     ? t("page.home.stamina.detailBoth", { normal: staminaReserve.normalReserve, pass: staminaReserve.passReserve })
@@ -204,17 +212,17 @@ export default function CurrentEventTab() {
                             </div>
 
                             {/* Title (JP Priority) */}
-                            <h3 className="font-bold text-primary-text text-sm sm:text-base leading-tight line-clamp-1 group-hover:text-miku transition-colors" title={currentEvent.name}>
+                            <h3 className="hh-title font-bold text-[var(--hh-text-primary)] text-sm sm:text-base leading-tight line-clamp-1 group-hover:text-miku transition-colors" title={currentEvent.name}>
                                 {currentEvent.name}
                             </h3>
 
                             {/* Title (CN - Second Line) */}
-                            <p className="text-xs text-slate-500 line-clamp-1 h-4">
+                            <p className="hh-body text-xs text-[var(--hh-text-secondary)] line-clamp-1 h-4">
                                 {translatedName !== currentEvent.name ? translatedName : ""}
                             </p>
 
                             {/* Date Range & Time */}
-                            <div className="pt-2 text-[10px] sm:text-xs text-slate-400 font-mono flex flex-col sm:flex-row sm:gap-2">
+                            <div className="hh-numeric pt-2 text-[10px] sm:text-xs text-[var(--hh-text-tertiary)] flex flex-col sm:flex-row sm:gap-2">
                                 <span>{formatDate(currentEvent.startAt)}</span>
                                 <span className="hidden sm:inline">-</span>
                                 <span>{formatDate(currentEvent.aggregateAt)}</span>
@@ -224,7 +232,7 @@ export default function CurrentEventTab() {
                         {/* Big Percentage (Bottom Right) */}
                         {status === "ongoing" && (
                             <div
-                                className="absolute bottom-0 right-2 text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 select-none z-10 tracking-tighter"
+                                className="hh-numeric hh-display absolute bottom-0 right-2 text-4xl sm:text-5xl font-black text-[var(--hh-text-primary)] select-none z-10 tracking-tighter"
                             >
                                 {Math.floor(progressPercent)}<span className="text-2xl ml-1">%</span>
                             </div>

@@ -330,20 +330,20 @@ function CostumesContent() {
         <div className="container mx-auto px-4 sm:px-6 py-8">
             {/* Page Header */}
             <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{tI18n("page.costumes.badge")}</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                    <span className="hh-label text-miku">{tI18n("page.costumes.badge")}</span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                     {tI18n("page.costumes.title")} <span className="text-miku">{tI18n("page.costumes.titleHighlight")}</span>
                 </h1>
-                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                     {tI18n("page.costumes.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-red-500/12 border border-red-500/30 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{tI18n("page.costumes.loadFailed")}</p>
                     <p>{error}</p>
                 </div>
@@ -386,41 +386,41 @@ function CostumesContent() {
                                         href={`/costumes/${costume.costumeNumber}`}
                                         key={costume.costumeNumber}
                                         data-shortcut-item="true"
-                                        className="pressable ios-glass-card ios-glass-card-interactive rounded-xl overflow-hidden p-3 flex flex-col h-full group"
+                                        className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden hover:border-[var(--hh-accent)] p-3 flex flex-col h-full group"
                                     >
-                                        <div className="relative aspect-square mb-2 bg-slate-50/70 dark:bg-slate-800/40 rounded-lg overflow-hidden">
+                                        <div className="relative aspect-square mb-2 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] overflow-hidden">
                                             <Image
                                                 src={getCostumeThumbnailUrl(assetName, assetSource)}
                                                 alt={costume.name}
                                                 fill
-                                                className="object-contain p-2 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)] group-hover:scale-105"
+                                                className="object-contain p-2"
                                                 unoptimized
                                             />
                                         </div>
                                         <div className="flex-1 flex flex-col">
                                             {isSpoiler && (
                                                 <div className="mb-1">
-                                                    <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded leading-none">
+                                                    <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded-[var(--hh-radius-xs)] leading-none">
                                                         {tI18n("page.costumes.spoilerBadge")}
                                                     </span>
                                                 </div>
                                             )}
-                                            <h3 className="type-title font-bold text-sm text-slate-800 mb-1 group-hover:text-miku" title={costume.name}>
+                                            <h3 className="hh-title text-sm text-[var(--hh-text-primary)] mb-1 group-hover:text-miku" title={costume.name}>
                                                 <TranslatedText
                                                     original={costume.name}
                                                     category="costumes"
                                                     field="name"
                                                     originalClassName="block"
-                                                    translationClassName="text-xs font-medium text-slate-400 block"
+                                                    translationClassName="text-xs font-medium text-[var(--hh-text-tertiary)] block"
                                                 />
                                             </h3>
                                             <div className="mt-auto flex flex-wrap gap-1">
                                                 {costume.partTypes.map(pt => (
-                                                    <span key={pt} className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
+                                                    <span key={pt} className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-accent-wash-strong)] text-miku rounded-[var(--hh-radius-xs)] font-medium">
                                                         {translateWithFallback(PART_TYPE_LABEL_KEYS[pt], pt)}
                                                     </span>
                                                 ))}
-                                                <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
+                                                <span className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-medium">
                                                     {translateWithFallback(SOURCE_LABEL_KEYS[costume.source], costume.source)}
                                                 </span>
                                             </div>
@@ -436,10 +436,10 @@ function CostumesContent() {
                                 <button
                                     onClick={loadMore}
                                     data-shortcut-load-more="true"
-                                    className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                    className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3 font-bold"
                                 >
                                     {tI18n("page.costumes.loadMore")}
-                                    <span className="ml-2 text-sm opacity-80 type-caption">
+                                    <span className="hh-numeric ml-2 text-sm opacity-80">
                                         ({displayedGroups.length} / {filteredCostumes.length})
                                     </span>
                                 </button>
@@ -448,7 +448,7 @@ function CostumesContent() {
 
                         {/* Empty State */}
                         {!isLoading && filteredCostumes.length === 0 && (
-                            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                            <div className="flex flex-col items-center justify-center py-20 text-[var(--hh-text-tertiary)]">
                                 <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -474,7 +474,7 @@ export default function CostumesClient() {
 function CostumesLoadingFallback() {
     const { t } = useI18n();
     return (
-        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+        <div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">
             {t("page.costumes.loadingFallback")}
         </div>
     );

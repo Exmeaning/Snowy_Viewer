@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import Link from "@/components/LocalizedLink";
 import { ICardInfo } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -45,8 +45,8 @@ export default function LatestCardsTab() {
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                 {Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="animate-pulse">
-                        <div className="aspect-square rounded-xl bg-slate-100" />
-                        <div className="mt-2 h-3 bg-slate-100 rounded w-3/4" />
+                        <div className="aspect-square rounded-[var(--hh-radius-lg)] bg-[var(--hh-surface-sunken)]" />
+                        <div className="mt-2 h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4" />
                     </div>
                 ))}
             </div>
@@ -55,7 +55,10 @@ export default function LatestCardsTab() {
 
     if (error) {
         return (
-            <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm text-center">
+            <div
+                className="hh-tile hh-tile-tint p-6 rounded-[var(--hh-radius-lg)] text-red-600 text-sm text-center"
+                style={{ "--hh-tint": "var(--hh-accent-alert)" } as CSSProperties}
+            >
                 <p className="font-bold">{t("page.home.latestCards.loadFailedTitle")}</p>
                 <p>{error}</p>
             </div>
@@ -64,7 +67,7 @@ export default function LatestCardsTab() {
 
     if (cards.length === 0) {
         return (
-            <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
+            <div className="hh-well p-8 text-center text-[var(--hh-text-tertiary)]">
                 <p className="font-medium">{t("page.home.latestCards.noData")}</p>
             </div>
         );

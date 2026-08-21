@@ -73,10 +73,11 @@ export default function VirtualLiveFilters({
                         <button
                             key={type}
                             onClick={() => toggleType(type)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedTypes.includes(type)
-                                ? "text-white shadow-md ring-1 ring-white/30 dark:ring-white/10"
+                            className={`hh-press px-3 py-1.5 rounded-[var(--hh-radius-md)] text-xs font-bold cursor-pointer ${selectedTypes.includes(type)
+                                ? "text-white border border-black/20"
                                 : getFilterChipStateClasses(false)
                                 }`}
+                            // Selected fill is the live type's own semantic color.
                             style={selectedTypes.includes(type) ? { backgroundColor: VIRTUAL_LIVE_TYPE_COLORS[type] } : {}}
                         >
                             {t(`common.virtualLiveTypes.${type}`)}

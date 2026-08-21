@@ -78,7 +78,7 @@ function segmentStyle(performers: PerformerDescriptor[]): { className: string; s
             },
         };
     }
-    return { className: "text-primary-text" };
+    return { className: "text-[var(--hh-text-primary)]" };
 }
 
 function RubyText({ spans }: { spans: ILyricsRubySpan[] }) {
@@ -86,7 +86,7 @@ function RubyText({ spans }: { spans: ILyricsRubySpan[] }) {
         <ruby key={`${index}-${span.text}`} className="ruby-annotation">
             {span.text}
             <rp>(</rp>
-            <rt className="text-[0.55em] font-normal text-slate-500 dark:text-slate-400">{span.reading}</rt>
+            <rt className="text-[0.55em] font-normal text-[var(--hh-text-secondary)]">{span.reading}</rt>
             <rp>)</rp>
         </ruby>
     ) : (
@@ -148,7 +148,7 @@ export default function LyricText({
         : [];
 
     return (
-        <p className="min-w-0 max-w-full whitespace-pre-wrap break-words font-medium leading-relaxed text-primary-text [overflow-wrap:anywhere]">
+        <p className="hh-body min-w-0 max-w-full whitespace-pre-wrap break-words font-medium leading-relaxed text-[var(--hh-text-primary)] [overflow-wrap:anywhere]">
             {displaySegments.map((segment, index) => {
                 const performers = segment.performerIds
                     .map(performer)
@@ -171,9 +171,12 @@ export default function LyricText({
                                 aria-label={names}
                             >
                                 {group.map((item) => item.avatarUrl ? (
+                                    /* The 2px surface-colored ring is what keeps overlapping
+                                       avatars readable as separate discs, so it is structural
+                                       rather than decoration. */
                                     <span
                                         key={String(item.id)}
-                                        className="relative inline-flex h-6 w-6 shrink-0 overflow-hidden rounded-full border-2 border-white bg-slate-100 shadow-sm ring-1 ring-slate-900/10 dark:border-slate-900 dark:bg-slate-800 dark:ring-white/15"
+                                        className="relative inline-flex h-6 w-6 shrink-0 overflow-hidden rounded-full border-2 border-[var(--hh-surface-2)] bg-[var(--hh-surface-sunken)] ring-1 ring-[var(--hh-border)]"
                                         aria-hidden="true"
                                     >
                                         <Image
@@ -188,7 +191,7 @@ export default function LyricText({
                                 ) : (
                                     <span
                                         key={String(item.id)}
-                                        className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-1.5 text-[9px] font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                        className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-[var(--hh-border)] bg-[var(--hh-surface-1)] px-1.5 text-[9px] font-bold text-[var(--hh-text-secondary)]"
                                         aria-hidden="true"
                                     >
                                         {item.name.slice(0, 2)}

@@ -53,9 +53,13 @@ export default function PGAIChart({ globalKline, height: _height = 300 }: PGAICh
                 formatter: (params: TooltipParam[]) => {
                     const idx = params[0].dataIndex;
                     const item = globalKline[idx];
+                    // Colors are inline hex rather than slate-* utilities on purpose:
+                    // the tooltip plate above is a hardcoded white, while globals.css
+                    // remaps .text-slate-* under [data-theme="dark"] — so a utility
+                    // here would turn light-on-white and become unreadable.
                     return `
-             <div class="font-bold text-slate-700 mb-1">${times[idx]}</div>
-             <div class="text-xs text-slate-500">
+             <div style="font-weight:700;color:#334155;margin-bottom:0.25rem">${times[idx]}</div>
+             <div style="font-size:0.75rem;color:#64748b">
                ${t("page.prediction.pgai.tooltipOpen")}: ${formatNumber(item.o)} <br/>
                ${t("page.prediction.pgai.tooltipClose")}: ${formatNumber(item.c)} <br/>
                ${t("page.prediction.pgai.tooltipHigh")}: ${formatNumber(item.h)} <br/>
@@ -150,20 +154,20 @@ export default function PGAIChart({ globalKline, height: _height = 300 }: PGAICh
     }, [formatNumber, globalKline, t]);
 
     return (
-        <div className="bg-white rounded-xl border border-slate-100 p-6 h-full flex flex-col">
+        <div className="hh-tile p-6 h-full flex flex-col">
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                    <h3 className="hh-title text-xl font-black text-[var(--hh-text-primary)] flex items-center gap-2">
                         {t("page.prediction.pgai.title")}
-                        <span className="bg-red-50 text-red-500 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">beta</span>
+                        <span className="bg-red-500/12 text-red-500 text-[10px] px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] font-bold uppercase">beta</span>
                     </h3>
-                    <p className="text-xs text-slate-400 mt-1">{t("page.prediction.pgai.subtitle")}</p>
+                    <p className="hh-body text-xs text-[var(--hh-text-tertiary)] mt-1">{t("page.prediction.pgai.subtitle")}</p>
                 </div>
                 <div className="text-right">
-                    <div className={`text-4xl font-black ${changePct >= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                    <div className={`hh-numeric hh-display text-4xl font-black ${changePct >= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                         {formatNumber(currentIndex)}
                     </div>
-                    <div className={`text-sm font-bold flex items-center justify-end gap-1 ${changePct >= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                    <div className={`hh-numeric text-sm font-bold flex items-center justify-end gap-1 ${changePct >= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                         <span>{changePct >= 0 ? '▲' : '▼'}</span>
                         {Math.abs(changePct).toFixed(2)}%
                     </div>

@@ -250,13 +250,13 @@ function ChartImageInner() {
     const difficultyColor = DIFFICULTY_COLORS[difficulty] ?? "#9ca3af";
 
     return (
-        <div className="fixed inset-0 flex flex-col bg-white text-slate-700">
+        <div className="fixed inset-0 flex flex-col bg-[var(--hh-surface-1)] text-[var(--hh-text-primary)]">
             {/* Toolbar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 sm:px-5">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--hh-border)] bg-[var(--hh-surface-1)] px-3 py-2 sm:px-5">
                 <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                    <h1 className="truncate text-sm font-bold sm:text-base">{musicTitle || `#${musicId}`}</h1>
+                    <h1 className="hh-title truncate text-sm sm:text-base">{musicTitle || `#${musicId}`}</h1>
                     <span
-                        className="rounded-full px-2.5 py-0.5 text-xs font-bold text-white"
+                        className="hh-numeric rounded-[var(--hh-radius-sm)] px-2.5 py-0.5 text-xs font-bold text-white"
                         style={{ backgroundColor: difficultyColor }}
                     >
                         {DIFFICULTY_NAMES[difficulty] ?? difficulty.toUpperCase()}
@@ -266,7 +266,7 @@ function ChartImageInner() {
                 <div className="flex items-center gap-1 sm:gap-2">
                     <button
                         type="button"
-                        className="h-8 w-8 rounded-lg text-lg font-bold hover:bg-slate-100 disabled:opacity-40"
+                        className="hh-press hh-focusable h-8 w-8 rounded-[var(--hh-radius-md)] text-lg font-bold hover:bg-[var(--hh-surface-sunken)] disabled:opacity-40"
                         title={t("page.chartImage.zoomOut")}
                         aria-label={t("page.chartImage.zoomOut")}
                         disabled={state.status !== "ready"}
@@ -274,10 +274,10 @@ function ChartImageInner() {
                     >
                         −
                     </button>
-                    <span className="w-12 text-center font-mono text-xs tabular-nums">{Math.round(zoom * 100)}%</span>
+                    <span className="hh-numeric w-12 text-center text-xs">{Math.round(zoom * 100)}%</span>
                     <button
                         type="button"
-                        className="h-8 w-8 rounded-lg text-lg font-bold hover:bg-slate-100 disabled:opacity-40"
+                        className="hh-press hh-focusable h-8 w-8 rounded-[var(--hh-radius-md)] text-lg font-bold hover:bg-[var(--hh-surface-sunken)] disabled:opacity-40"
                         title={t("page.chartImage.zoomIn")}
                         aria-label={t("page.chartImage.zoomIn")}
                         disabled={state.status !== "ready"}
@@ -287,7 +287,7 @@ function ChartImageInner() {
                     </button>
                     <button
                         type="button"
-                        className="h-8 rounded-lg px-2 text-xs font-medium hover:bg-slate-100 disabled:opacity-40"
+                        className="hh-press hh-focusable h-8 rounded-[var(--hh-radius-md)] px-2 text-xs font-medium hover:bg-[var(--hh-surface-sunken)] disabled:opacity-40"
                         disabled={state.status !== "ready"}
                         onClick={() => state.status === "ready" && applyFitZoom(state.height)}
                     >
@@ -295,16 +295,16 @@ function ChartImageInner() {
                     </button>
                     <button
                         type="button"
-                        className="h-8 rounded-lg px-2 text-xs font-medium hover:bg-slate-100 disabled:opacity-40"
+                        className="hh-press hh-focusable h-8 rounded-[var(--hh-radius-md)] px-2 text-xs font-medium hover:bg-[var(--hh-surface-sunken)] disabled:opacity-40"
                         disabled={state.status !== "ready"}
                         onClick={() => setZoom(1)}
                     >
                         {t("page.chartImage.zoomReset")}
                     </button>
-                    <div className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
+                    <div className="mx-1 hidden h-5 w-px bg-[var(--hh-border)] sm:block" />
                     <button
                         type="button"
-                        className="h-8 rounded-lg border border-slate-300 px-3 text-xs font-medium hover:bg-slate-100 disabled:opacity-40"
+                        className="hh-btn hh-press hh-focusable h-8 px-3 text-xs font-medium disabled:opacity-40"
                         disabled={state.status !== "ready" || isDownloading}
                         onClick={downloadPng}
                     >
@@ -313,11 +313,13 @@ function ChartImageInner() {
                 </div>
             </div>
 
-            {/* Canvas */}
-            <div ref={containerRef} className="flex-1 overflow-auto bg-white p-2">
+            {/* Canvas. Sunken rather than a plain surface: the rendered chart is a
+                white sheet in both themes, so it needs a trough to sit in rather
+                than a same-value backdrop it would disappear against. */}
+            <div ref={containerRef} className="flex-1 overflow-auto bg-[var(--hh-surface-sunken)] p-2">
                 {state.status === "loading" && (
-                    <div className="flex h-full flex-col items-center justify-center gap-3 text-slate-500">
-                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+                    <div className="flex h-full flex-col items-center justify-center gap-3 text-[var(--hh-text-secondary)]">
+                        <div className="hh-spinner h-8 w-8" />
                         <p className="text-sm">{t("page.chartImage.generating")}</p>
                     </div>
                 )}
@@ -328,7 +330,7 @@ function ChartImageInner() {
                         <div className="flex items-center gap-3">
                             <button
                                 type="button"
-                                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-100"
+                                className="hh-btn hh-press hh-focusable px-4 py-2 text-sm font-medium"
                                 onClick={() => setReloadToken((token) => token + 1)}
                             >
                                 {t("common.action.retry")}

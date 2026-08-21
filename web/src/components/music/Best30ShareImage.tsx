@@ -67,6 +67,12 @@ function hexToRgba(hex: string, alpha: number): string {
 }
 
 function getCanvasTheme(themeColor: string) {
+    // Deliberately hardcoded, and NOT --hh-* tokens. These values are passed to
+    // Canvas 2D `fillStyle`, which cannot resolve CSS custom properties, and the
+    // result is an image the user downloads and shares — it must look the same
+    // regardless of which theme happened to be active when it was generated.
+    // Only the accent follows the character theme picker, which is existing
+    // intended behavior.
     return {
         bg: "#f8fafb",
         bgSubtle: "#f0f4f6",
@@ -678,7 +684,7 @@ export default function Best30ShareImage({
             <button
                 onClick={handleCopy}
                 disabled={isGenerating}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                className="hh-press p-1.5 text-[var(--hh-text-tertiary)] hover:text-[var(--hh-text-primary)] hover:bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] disabled:opacity-50"
                 aria-label={t("page.best30Share.copyImage")}
                 title={copied ? t("page.best30Share.copied") : t("page.best30Share.copyImage")}
             >
@@ -704,7 +710,7 @@ export default function Best30ShareImage({
             <button
                 onClick={handleDownload}
                 disabled={isGenerating}
-                className="p-1.5 text-slate-400 hover:text-miku hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                className="hh-press p-1.5 text-[var(--hh-text-tertiary)] hover:text-miku hover:bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] disabled:opacity-50"
                 aria-label={t("page.best30Share.saveImage")}
                 title={saveSuccess ? t("page.best30Share.saved") : t("page.best30Share.saveImage")}
             >
@@ -740,35 +746,37 @@ export default function Best30ShareImage({
             headerActions={headerActions}
         >
             <div className="space-y-4">
-                <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-4">
+                {/* Preview trough. This chrome follows the theme; the canvas inside
+                    it does not, by design — see getCanvasTheme. */}
+                <div className="relative hh-well p-4">
                     <div className="overflow-auto max-h-[68vh] flex items-start justify-center">
                         {isGenerating && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10 rounded-xl">
+                            <div className="absolute inset-0 flex items-center justify-center bg-[var(--hh-surface-1)] z-10 rounded-[var(--hh-radius-lg)]">
                                 <div className="flex flex-col items-center gap-4 w-64">
-                                    <div className="w-10 h-10 border-3 border-slate-200 border-t-miku rounded-full animate-spin" />
+                                    <div className="hh-spinner w-10 h-10" />
                                     <div className="w-full">
                                         <div className="flex items-center justify-between mb-1.5">
-                                            <span className="text-slate-500 text-xs font-medium">{progressText}</span>
-                                            <span className="text-miku text-xs font-bold">{progress}%</span>
+                                            <span className="text-[var(--hh-text-secondary)] text-xs font-medium">{progressText}</span>
+                                            <span className="hh-numeric text-miku text-xs font-bold">{progress}%</span>
                                         </div>
-                                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="hh-meter h-2">
                                             <div
-                                                className="h-full bg-gradient-to-r from-miku to-miku-dark rounded-full transition-all duration-500 ease-out"
+                                                className="hh-meter-fill"
                                                 style={{ width: `${progress}%` }}
                                             />
                                         </div>
                                     </div>
-                                    <span className="text-slate-400 text-[10px]">{t("page.best30Share.generatingTitle")}</span>
+                                    <span className="text-[var(--hh-text-tertiary)] text-[10px]">{t("page.best30Share.generatingTitle")}</span>
                                 </div>
                             </div>
                         )}
                         {error && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10 rounded-xl">
+                            <div className="absolute inset-0 flex items-center justify-center bg-[var(--hh-surface-1)] z-10 rounded-[var(--hh-radius-lg)]">
                                 <div className="text-center">
                                     <p className="text-red-500 text-sm font-medium mb-2">{error}</p>
                                     <button
                                         onClick={generateImage}
-                                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded-lg transition-colors"
+                                        className="hh-btn hh-press px-4 py-2 text-xs"
                                     >
                                         {t("page.best30Share.regenerate")}
                                     </button>
@@ -777,7 +785,7 @@ export default function Best30ShareImage({
                         )}
                         <canvas
                             ref={canvasCallbackRef}
-                            className="rounded-lg shadow-lg"
+                            className="rounded-[var(--hh-radius-md)] border border-[var(--hh-border)]"
                             style={{ maxWidth: "100%", height: "auto" }}
                         />
                     </div>

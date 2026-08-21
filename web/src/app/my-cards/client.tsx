@@ -544,13 +544,13 @@ function MyCardsContent() {
 
             {/* User Error */}
             {userError && (
-                <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200/50">
+                <div className="mb-4 p-3 rounded-[var(--hh-radius-lg)] bg-red-500/12 border border-red-500/30">
                     <div className="flex items-start gap-2">
                         <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <div>
-                            <p className="text-xs font-medium text-red-700">
+                            <p className="text-xs font-medium text-red-600">
                                 {t(getUserErrorMessageKey(userError))}
                             </p>
                             <ExternalLink
@@ -566,24 +566,26 @@ function MyCardsContent() {
 
             {/* Progress Bar */}
             {!isLoading && !isFetchingUser && userCards.size > 0 && (
-                <div className="mb-6 glass-card p-4 rounded-2xl">
+                <div className="mb-6 hh-tile p-4">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
                             <span className="text-sm font-bold text-primary-text">{t("common.progress.collectionProgress")}</span>
                             {uploadTime && (
-                                <span className="text-[11px] text-slate-400" title={t("common.data.uploadTimeTitle")}>
+                                <span className="hh-numeric text-[11px] text-[var(--hh-text-tertiary)]" title={t("common.data.uploadTimeTitle")}>
                                     {t("common.data.dataTime", { time: formatDate(parseUploadTimeToDate(uploadTime) ?? uploadTime, { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) })}
                                 </span>
                             )}
                         </div>
-                        <span className="text-sm font-mono font-bold text-miku">
+                        <span className="hh-numeric text-sm font-bold text-miku">
                             {progressStats.owned} / {progressStats.total}
-                            <span className="ml-2 text-xs text-slate-400">({progressStats.pct}%)</span>
+                            <span className="ml-2 text-xs text-[var(--hh-text-tertiary)]">({progressStats.pct}%)</span>
                         </span>
                     </div>
-                    <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                    {/* h-3 overrides .hh-meter's 6px default: this is the page's headline
+                        statistic, not an inline row meter. */}
+                    <div className="hh-meter h-3">
                         <div
-                            className="h-full bg-gradient-to-r from-miku to-miku-dark rounded-full transition-all duration-500"
+                            className="hh-meter-fill"
                             style={{ width: `${progressStats.pct}%` }}
                         />
                     </div>
@@ -592,9 +594,9 @@ function MyCardsContent() {
                             <button
                                 key={f}
                                 onClick={() => setOwnershipFilter(f)}
-                                className={`text-xs font-medium px-2 py-1 rounded-lg transition-all ${ownershipFilter === f
-                                    ? "bg-miku/10 text-miku"
-                                    : "text-slate-500 hover:text-slate-700"
+                                className={`hh-press hh-focusable text-xs font-medium px-2 py-1 rounded-[var(--hh-radius-sm)] ${ownershipFilter === f
+                                    ? "bg-[var(--hh-accent-wash-strong)] text-miku"
+                                    : "text-[var(--hh-text-secondary)] hover:text-[var(--hh-text-primary)]"
                                     }`}
                             >
                                 {t(`common.progress.${f}`)}
@@ -606,7 +608,7 @@ function MyCardsContent() {
 
             {/* Error */}
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-red-500/12 border border-red-500/30 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{error}</p>
                 </div>
@@ -617,21 +619,21 @@ function MyCardsContent() {
                 {isLoading || isFetchingUser ? (
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
                         {Array.from({ length: 12 }).map((_, i) => (
-                            <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-100 shadow-sm animate-pulse">
-                                <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200" />
+                            <div key={i} className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden animate-pulse">
+                                <div className="aspect-square bg-[var(--hh-surface-sunken)]" />
                                 <div className="p-2 space-y-1.5">
-                                    <div className="h-3 bg-slate-200 rounded w-3/4" />
-                                    <div className="h-2.5 bg-slate-100 rounded w-1/2" />
+                                    <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4" />
+                                    <div className="h-2.5 bg-[var(--hh-surface-1)] rounded-[var(--hh-radius-xs)] w-1/2" />
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : filteredCards.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-16 h-16 text-[var(--hh-text-tertiary)] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
-                        <p className="text-slate-400 font-medium">{t("page.myCards.noResult")}</p>
+                        <p className="text-[var(--hh-text-tertiary)] font-medium">{t("page.myCards.noResult")}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
@@ -654,10 +656,10 @@ function MyCardsContent() {
                         <button
                             onClick={loadMore}
                             data-shortcut-load-more="true"
-                            className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                            className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3 font-bold"
                         >
                             {t("page.myCards.loadMore")}
-                            <span className="ml-2 text-sm opacity-80">
+                            <span className="hh-numeric ml-2 text-sm opacity-80">
                                 ({displayedCards.length} / {filteredCards.length})
                             </span>
                         </button>
@@ -666,7 +668,7 @@ function MyCardsContent() {
 
                 {/* All loaded indicator */}
                 {!isLoading && displayedCards.length > 0 && displayedCards.length >= filteredCards.length && (
-                    <div className="mt-8 text-center text-slate-400 text-sm">
+                    <div className="mt-8 text-center text-[var(--hh-text-tertiary)] text-sm">
                         {t("page.myCards.allLoaded", { count: filteredCards.length })}
                     </div>
                 )}
@@ -681,13 +683,13 @@ function PageHeader() {
     const { t } = useI18n();
     return (
         <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.myCards.badge")}</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                <span className="hh-label text-miku">{t("page.myCards.badge")}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+            <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                 {t("page.myCards.title")}<span className="text-miku">{t("page.myCards.titleHighlight")}</span>
             </h1>
-            <p className="text-slate-500 mt-2 text-sm">
+            <p className="hh-body text-[var(--hh-text-secondary)] mt-2 text-sm">
                 {t("page.myCards.description")}
             </p>
         </div>
@@ -707,9 +709,9 @@ function MyCardItem({ card, userCard }: MyCardItemProps) {
 
     return (
         <Link href={`/cards/${card.id}`} className="group block" data-shortcut-item="true">
-            <div className={`relative cursor-pointer rounded-xl overflow-hidden transition-all bg-white ring-1 ${isOwned
-                ? "ring-slate-200 hover:ring-miku hover:shadow-xl hover:-translate-y-1"
-                : "ring-slate-100 opacity-50 grayscale hover:opacity-70 hover:grayscale-0"
+            <div className={`hh-press relative cursor-pointer rounded-[var(--hh-radius-lg)] overflow-hidden bg-[var(--hh-surface-2)] ring-1 ${isOwned
+                ? "ring-[var(--hh-border)] hover:ring-[var(--hh-accent)]"
+                : "ring-[var(--hh-border-hairline)] opacity-50 grayscale hover:opacity-70 hover:grayscale-0"
                 }`}>
                 {/* Card Thumbnail */}
                 <div className="w-full relative">
@@ -720,10 +722,12 @@ function MyCardItem({ card, userCard }: MyCardItemProps) {
                         className="w-full"
                     />
 
-                    {/* Skill Level Badge */}
+                    {/* Skill Level Badge. Opaque indigo rather than /90 + blur: the
+                        blur was what lifted it off the illustration, so the plate has
+                        to carry that contrast on its own now. */}
                     {isOwned && userCard && (
                         <div className="absolute top-0 right-0 m-0.5">
-                            <span className="inline-block px-1 py-0.5 bg-indigo-500/90 text-white text-[8px] font-bold rounded leading-none backdrop-blur-sm">
+                            <span className="hh-numeric inline-block px-1 py-0.5 bg-indigo-500 text-white text-[8px] font-bold rounded-[var(--hh-radius-xs)] leading-none">
                                 Sk.{userCard.skillLevel}
                             </span>
                         </div>
@@ -732,7 +736,7 @@ function MyCardItem({ card, userCard }: MyCardItemProps) {
                     {/* Not Owned Overlay */}
                     {!isOwned && (
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="px-2 py-1 bg-black/50 text-white text-[10px] font-bold rounded-lg backdrop-blur-sm">
+                            <span className="hh-badge-on-media px-2 py-1 text-[10px] font-bold">
                                 {t("common.progress.notOwned")}
                             </span>
                         </div>
@@ -740,22 +744,22 @@ function MyCardItem({ card, userCard }: MyCardItemProps) {
                 </div>
 
                 {/* Card Info Footer */}
-                <div className="px-2 py-1.5 bg-white border-t border-slate-100">
+                <div className="px-2 py-1.5 bg-[var(--hh-surface-2)] border-t border-[var(--hh-border-hairline)]">
                     <div className="mb-0.5">
                         <TranslatedText
                             original={card.prefix}
                             category="cards"
                             field="prefix"
-                            originalClassName="text-slate-800 text-[10px] font-bold truncate leading-tight group-hover:text-miku transition-colors block"
-                            translationClassName="text-slate-400 text-[9px] truncate leading-tight block"
+                            originalClassName="text-[var(--hh-text-primary)] text-[10px] font-bold truncate leading-tight group-hover:text-miku transition-colors block"
+                            translationClassName="text-[var(--hh-text-tertiary)] text-[9px] truncate leading-tight block"
                         />
                     </div>
                     <div className="flex items-center justify-between gap-1">
-                        <p className="text-slate-400 text-[9px] truncate leading-tight flex-1">
+                        <p className="text-[var(--hh-text-tertiary)] text-[9px] truncate leading-tight flex-1">
                             {getCharacterName(t, card.characterId)}
                         </p>
                         {isOwned && userCard && (
-                            <span className="flex-shrink-0 text-[8px] text-miku bg-miku/10 px-1 py-0.5 rounded leading-none font-mono">
+                            <span className="hh-numeric flex-shrink-0 text-[8px] text-miku bg-[var(--hh-accent-wash-strong)] px-1 py-0.5 rounded-[var(--hh-radius-xs)] leading-none">
                                 Lv.{userCard.level}
                             </span>
                         )}
@@ -771,7 +775,7 @@ function MyCardItem({ card, userCard }: MyCardItemProps) {
 
 function MyCardsLoadingFallback() {
     const { t } = useI18n();
-    return <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("common.state.loading")}</div>;
+    return <div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("common.state.loading")}</div>;
 }
 
 export default function MyCardsClient() {

@@ -13,11 +13,11 @@ interface MusicGridProps {
 function MusicSkeleton() {
     return (
         <div className="animate-pulse">
-            <div className="rounded-xl overflow-hidden bg-white/60 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
-                <div className="aspect-square bg-slate-200 dark:bg-slate-700"></div>
+            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden">
+                <div className="aspect-square bg-[var(--hh-surface-sunken)]"></div>
                 <div className="p-3 space-y-2">
-                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
-                    <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                    <div className="h-4 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4"></div>
+                    <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-1/2"></div>
                 </div>
             </div>
         </div>
@@ -42,10 +42,10 @@ export default function MusicGrid({ musics, isLoading }: MusicGridProps) {
         return (
             <div className="text-center py-16">
                 <div className="text-6xl mb-4">🎵</div>
-                <h3 className="text-xl font-bold text-slate-600 dark:text-slate-400 mb-2">
+                <h3 className="hh-title text-xl font-bold text-[var(--hh-text-primary)] mb-2">
                     {t("page.music.noResult")}
                 </h3>
-                <p className="text-slate-500 dark:text-slate-500">
+                <p className="hh-body text-[var(--hh-text-secondary)]">
                     {t("page.music.noResultHint")}
                 </p>
             </div>

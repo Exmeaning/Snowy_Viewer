@@ -310,7 +310,7 @@ function MysekaiContent() {
 
             <FilterSection label={t("page.mysekai.sectionLabel.mainGenre")}>
                 <select
-                    className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
+                    className="hh-input hh-focusable w-full p-2 text-sm"
                     value={selectedGenre || ""}
                     onChange={(e) => {
                         const val = e.target.value ? Number(e.target.value) : null;
@@ -328,7 +328,7 @@ function MysekaiContent() {
             {selectedGenre && (
                 <FilterSection label={t("page.mysekai.sectionLabel.subGenre")}>
                     <select
-                        className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
+                        className="hh-input hh-focusable w-full p-2 text-sm"
                         value={selectedSubGenre || ""}
                         onChange={(e) => setSelectedSubGenre(e.target.value ? Number(e.target.value) : null)}
                     >
@@ -345,7 +345,7 @@ function MysekaiContent() {
 
             <FilterSection label={t("page.mysekai.sectionLabel.tag")}>
                 <select
-                    className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-miku/50"
+                    className="hh-input hh-focusable w-full p-2 text-sm"
                     value={selectedTag || ""}
                     onChange={(e) => setSelectedTag(e.target.value ? Number(e.target.value) : null)}
                 >
@@ -383,20 +383,20 @@ function MysekaiContent() {
         <div className="container mx-auto px-4 sm:px-6 py-8">
             {/* Page Header */}
             <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.mysekai.badge")}</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                    <span className="hh-label text-miku">{t("page.mysekai.badge")}</span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                     {t("page.mysekai.title")} <span className="text-miku">{t("page.mysekai.titleHighlight")}</span>
                 </h1>
-                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                     {t("page.mysekai.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-red-500/12 border border-red-500/30 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{t("page.mysekai.loadFailed")}</p>
                     <p>{error}</p>
                 </div>
@@ -416,9 +416,9 @@ function MysekaiContent() {
                                     href={`/mysekai/${fixture.id}`}
                                     key={fixture.id}
                                     data-shortcut-item="true"
-                                    className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-3 flex flex-col h-full group"
+                                    className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden hover:border-[var(--hh-accent)] p-3 flex flex-col h-full group"
                                 >
-                                    <div className="relative aspect-square mb-2 bg-slate-50 rounded-lg overflow-hidden group-hover:bg-slate-100 transition-colors">
+                                    <div className="relative aspect-square mb-2 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] overflow-hidden">
                                         <Image
                                             src={getMysekaiFixtureThumbnailUrl(fixture.assetbundleName, assetSource, fixture.mysekaiFixtureMainGenreId)}
                                             alt={fixture.name}
@@ -428,20 +428,20 @@ function MysekaiContent() {
                                         />
                                     </div>
                                     <div className="flex-1 flex flex-col">
-                                        <h3 className="font-bold text-sm text-slate-800 mb-1 group-hover:text-miku transition-colors" title={fixture.name}>
+                                        <h3 className="hh-title text-sm text-[var(--hh-text-primary)] mb-1 group-hover:text-miku transition-colors" title={fixture.name}>
                                             <TranslatedText
                                                 original={fixture.name}
                                                 category="mysekai"
                                                 field="fixtureName"
                                                 originalClassName="block"
-                                                translationClassName="text-xs font-medium text-slate-400 block"
+                                                translationClassName="text-xs font-medium text-[var(--hh-text-tertiary)] block"
                                             />
                                         </h3>
                                         <div className="mt-auto flex flex-wrap gap-1">
-                                            <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
+                                            <span className="hh-numeric text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-medium">
                                                 ID: {fixture.id}
                                             </span>
-                                            <span className="text-[10px] px-1.5 py-0.5 bg-miku/10 text-miku rounded font-medium">
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-accent-wash-strong)] text-miku rounded-[var(--hh-radius-xs)] font-medium">
                                                 {getGenreName(fixture.mysekaiFixtureMainGenreId)}
                                             </span>
                                         </div>
@@ -456,10 +456,10 @@ function MysekaiContent() {
                                 <button
                                     onClick={loadMore}
                                     data-shortcut-load-more="true"
-                                    className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                    className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3 font-bold"
                                 >
                                     {t("page.mysekai.loadMore")}
-                                    <span className="ml-2 text-sm opacity-80">
+                                    <span className="hh-numeric ml-2 text-sm opacity-80">
                                         ({displayedFixtures.length} / {filteredFixtures.length})
                                     </span>
                                 </button>
@@ -468,7 +468,7 @@ function MysekaiContent() {
 
                         {/* Empty State */}
                         {!isLoading && filteredFixtures.length === 0 && (
-                            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                            <div className="flex flex-col items-center justify-center py-20 text-[var(--hh-text-tertiary)]">
                                 <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -487,7 +487,7 @@ export default function MysekaiClient() {
 
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.mysekai.loadingFallback")}</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("page.mysekai.loadingFallback")}</div>}>
                 <MysekaiContent />
             </Suspense>
         </MainLayout>

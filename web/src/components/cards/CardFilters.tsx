@@ -260,13 +260,15 @@ export default function CardFilters({
                     <button
                         key={`vs-subunit-${unitId}`}
                         onClick={() => toggleVirtualSingerUnitTag(supportUnit)}
+                        // Matches CharacterFilter's own avatar selection treatment so the
+                        // two rows of circular icons read as one control.
                         className={`relative transition-all ${isSelected
-                            ? "ring-2 ring-miku scale-110 z-10 rounded-full shadow-lg"
-                            : "ring-2 ring-transparent hover:ring-slate-200 dark:hover:ring-slate-600 rounded-full opacity-80 hover:opacity-100"
+                            ? "ring-2 ring-[var(--hh-accent)] scale-105 z-10 rounded-full"
+                            : "ring-1 ring-transparent hover:ring-[var(--hh-border-strong)] rounded-full opacity-80 hover:opacity-100"
                             }`}
                         title={t("common.virtualSingerWithUnit", { unit: getSupportUnitLabel(supportUnit) })}
                     >
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 p-1.5">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--hh-surface-sunken)] p-1.5">
                             <div className="w-full h-full relative">
                                 <Image
                                     src={`/data/icon/${UNIT_ICON_FILES.vs}`}
@@ -277,7 +279,7 @@ export default function CardFilters({
                                 />
                             </div>
                         </div>
-                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center">
+                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[var(--hh-surface-2)] border border-[var(--hh-border)] flex items-center justify-center">
                             <Image
                                 src={`/data/icon/${UNIT_ICON_FILES[unitId]}`}
                                 alt=""
@@ -314,7 +316,7 @@ export default function CardFilters({
                                 <button
                                     key={unit}
                                     onClick={() => toggleSupportUnit(unit)}
-                                    className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(isSelected)}`}
+                                    className={`hh-press p-1.5 rounded-[var(--hh-radius-md)] cursor-pointer ${getFilterIconStateClasses(isSelected)}`}
                                     title={getSupportUnitLabel(unit)}
                                 >
                                     <div className="w-8 h-8 relative">

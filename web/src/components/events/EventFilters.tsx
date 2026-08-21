@@ -148,7 +148,7 @@ export default function EventFilters({
                             <button
                                 key={unit.id}
                                 onClick={() => toggleEventUnit(unit.id)}
-                                className={`p-1.5 rounded-xl transition-all ${getFilterIconStateClasses(selectedEventUnits.includes(unit.id))}`}
+                                className={`hh-press p-1.5 rounded-[var(--hh-radius-md)] cursor-pointer ${getFilterIconStateClasses(selectedEventUnits.includes(unit.id))}`}
                                 title={getEventUnitName(unit)}
                             >
                                 {unit.icon ? (
@@ -162,8 +162,8 @@ export default function EventFilters({
                                         />
                                     </div>
                                 ) : (
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedEventUnits.includes(unit.id) ? "bg-miku/12 dark:bg-miku/20" : "bg-slate-100 dark:bg-slate-800"}`}>
-                                        <span className={`text-xs font-bold ${selectedEventUnits.includes(unit.id) ? "text-miku dark:text-slate-100" : "text-slate-500 dark:text-slate-300"}`}>{t("common.badge.mixed")}</span>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedEventUnits.includes(unit.id) ? "bg-[var(--hh-accent-wash-strong)]" : "bg-[var(--hh-surface-sunken)]"}`}>
+                                        <span className={`text-xs font-bold ${selectedEventUnits.includes(unit.id) ? "text-[var(--hh-accent-deep)]" : "text-[var(--hh-text-secondary)]"}`}>{t("common.badge.mixed")}</span>
                                     </div>
                                 )}
                             </button>
@@ -191,8 +191,8 @@ export default function EventFilters({
                         <button
                             key={type}
                             onClick={() => toggleType(type)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedTypes.includes(type)
-                                ? "text-white shadow-md ring-1 ring-white/30 dark:ring-white/10"
+                            className={`hh-press px-3 py-1.5 rounded-[var(--hh-radius-md)] text-xs font-bold cursor-pointer ${selectedTypes.includes(type)
+                                ? "text-white border border-black/20"
                                 : getFilterChipStateClasses(false)
                                 }`}
                             style={selectedTypes.includes(type) ? { backgroundColor: EVENT_TYPE_COLORS[type] } : {}}
@@ -222,7 +222,10 @@ export default function EventFilters({
                             <button
                                 key={attr}
                                 onClick={() => onBonusAttrChange(selectedBonusAttr === attr ? null : attr)}
-                                className={`p-1.5 rounded-xl transition-all flex items-center gap-1.5 ${getFilterIconStateClasses(selectedBonusAttr === attr, "shadow-lg bg-white border border-transparent dark:bg-miku/12 dark:border-miku/40", "bg-slate-50 border border-transparent hover:bg-slate-100 dark:bg-slate-800/80 dark:border-slate-700 dark:hover:bg-slate-700/80 dark:hover:border-slate-600")}`}
+                                className={`hh-press p-1.5 rounded-[var(--hh-radius-md)] cursor-pointer flex items-center gap-1.5 ${getFilterIconStateClasses(selectedBonusAttr === attr, "bg-[var(--hh-surface-2)] border border-[var(--hh-border)]", "bg-[var(--hh-surface-1)] border border-[var(--hh-border)] hover:bg-[var(--hh-surface-3)]")}`}
+                                // The selected ring carries the attribute's own semantic
+                                // color (flower/fire/water/thunder/moon), so it stays an
+                                // inline value rather than moving to the accent.
                                 style={selectedBonusAttr === attr ? { boxShadow: `0 0 0 2px ${ATTR_COLORS[attr]}` } : {}}
                                 title={ATTR_NAMES[attr]}
                             >

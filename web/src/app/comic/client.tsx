@@ -131,20 +131,20 @@ function ComicContent() {
 
             {/* Page Header */}
             <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 ios-glass-card border-miku/30 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.comic.badge")}</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                    <span className="hh-label text-miku">{t("page.comic.badge")}</span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                     {t("page.comic.title")} <span className="text-miku">{t("page.comic.titleHighlight")}</span>
                 </h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-2xl mx-auto font-light">
+                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                     {t("page.comic.description")}
                 </p>
             </div>
 
             {/* Error State */}
             {error && (
-                <div className="mb-6 p-4 ios-glass-card border-red-500/20 bg-red-500/5 text-red-500 rounded-xl text-sm">
+                <div className="mb-6 p-4 bg-red-500/12 border border-red-500/30 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{t("page.comic.loadFailed")}</p>
                     <p>{error}</p>
                 </div>
@@ -174,31 +174,30 @@ function ComicContent() {
                                     role="button"
                                     className="group cursor-pointer"
                                 >
-                                    <div className="ios-glass-card ios-glass-card-interactive rounded-2xl overflow-hidden group">
-                                        <div className="relative aspect-[4/3] bg-slate-100/50 dark:bg-slate-900/50">
+                                    <div className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden group-hover:border-[var(--hh-accent)]">
+                                        <div className="relative aspect-[4/3] bg-[var(--hh-surface-sunken)]">
                                             <Image
                                                 src={getComicUrl(comic.assetbundleName!, assetSource)}
                                                 alt={comic.title}
                                                 fill
-                                                className="object-contain group-hover:scale-105 transition-transform duration-500"
+                                                className="object-contain"
                                                 unoptimized
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                                         </div>
-                                        <div className="p-4 border-t border-slate-200/20 dark:border-slate-800/20">
-                                            <div className="text-sm font-bold text-primary-text line-clamp-1 group-hover:text-miku transition-colors duration-300">
+                                        <div className="p-4 border-t border-[var(--hh-border-hairline)]">
+                                            <div className="hh-title text-sm text-primary-text line-clamp-1 group-hover:text-miku transition-colors">
                                                 <TranslatedText
                                                     original={comic.title}
                                                     category="comic"
                                                     field="title"
                                                     originalClassName="block truncate"
-                                                    translationClassName="text-xs font-medium text-slate-400 dark:text-slate-500 block truncate mt-0.5"
+                                                    translationClassName="text-xs font-medium text-[var(--hh-text-tertiary)] block truncate mt-0.5"
                                                 />
                                             </div>
                                             <div className="flex items-center justify-between mt-3">
-                                                <span className="text-[10px] font-bold text-miku bg-miku/10 dark:bg-miku/20 px-2.5 py-0.5 rounded-full border border-miku/20">#{comic.id}</span>
+                                                <span className="hh-numeric text-[10px] font-bold text-miku bg-[var(--hh-accent-wash-strong)] px-2.5 py-0.5 rounded-[var(--hh-radius-sm)] border border-[var(--hh-accent-line)]">#{comic.id}</span>
                                                 {comic.fromUserRank !== undefined && (
-                                                    <span className="text-[10px] text-slate-400 font-medium">Rank {comic.fromUserRank}</span>
+                                                    <span className="hh-numeric text-[10px] text-[var(--hh-text-tertiary)] font-medium">Rank {comic.fromUserRank}</span>
                                                 )}
                                             </div>
                                         </div>
@@ -213,10 +212,10 @@ function ComicContent() {
                                 <button
                                     onClick={loadMore}
                                     data-shortcut-load-more="true"
-                                    className="ios-glass-btn ios-glass-btn-primary px-8 py-3 font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+                                    className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3 font-bold flex items-center gap-2"
                                 >
                                     {t("page.comic.loadMore")}
-                                    <span className="text-xs font-semibold opacity-75 bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded-full">
+                                    <span className="hh-numeric text-xs font-semibold opacity-75 bg-black/10 px-2 py-0.5 rounded-[var(--hh-radius-sm)]">
                                         {displayedComics.length} / {filteredComics.length}
                                     </span>
                                 </button>
@@ -225,7 +224,7 @@ function ComicContent() {
 
                         {/* All loaded */}
                         {displayedComics.length > 0 && displayedComics.length >= filteredComics.length && (
-                            <div className="mt-8 text-center text-slate-400 text-sm font-medium">
+                            <div className="mt-8 text-center text-[var(--hh-text-tertiary)] text-sm font-medium">
                                 {t("page.comic.allLoaded", { count: filteredComics.length })}
                             </div>
                         )}
@@ -241,7 +240,7 @@ export default function ComicClient() {
 
     return (
         <MainLayout>
-            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-slate-500">{t("page.comic.loadingFallback")}</div>}>
+            <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">{t("page.comic.loadingFallback")}</div>}>
                 <ComicContent />
             </Suspense>
         </MainLayout>

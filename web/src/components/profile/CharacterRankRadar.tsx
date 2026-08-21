@@ -120,9 +120,9 @@ export default function CharacterRankRadar({ characterRanks }: Props) {
     }, [chartData, orderedIds, unit, mobile]);
 
     return (
-        <div id="profile-character-related" className="scroll-mt-20 glass-card p-5 sm:p-6 rounded-2xl h-full">
+        <div id="profile-character-related" className="scroll-mt-20 hh-tile p-5 sm:p-6 h-full">
             <div className="mb-4">
-                <h2 className="text-lg font-bold text-primary-text flex items-center gap-2">
+                <h2 className="hh-title text-lg font-bold text-[var(--hh-text-primary)] flex items-center gap-2">
                     <span className="w-1.5 h-6 rounded-full" style={{ backgroundColor: themeColor }}></span>
                     {t("page.profile.stats.characterRank")}
                 </h2>
@@ -136,10 +136,12 @@ export default function CharacterRankRadar({ characterRanks }: Props) {
                             <button
                                 key={k}
                                 onClick={() => setUnit(k)}
-                                className={`${mobile ? "p-1 rounded-lg min-w-0" : "p-1.5 rounded-xl shrink-0 snap-start"} border flex items-center justify-center transition-all ${active
-                                    ? "bg-white"
-                                    : "bg-white/70 border-slate-200 text-slate-500 hover:border-slate-300"
+                                className={`hh-press ${mobile ? "p-1 rounded-[var(--hh-radius-md)] min-w-0" : "p-1.5 rounded-[var(--hh-radius-md)] shrink-0 snap-start"} border flex items-center justify-center ${active
+                                    ? "bg-[var(--hh-surface-2)]"
+                                    : "bg-[var(--hh-surface-1)] border-[var(--hh-border)] text-[var(--hh-text-secondary)] hover:border-[var(--hh-border-strong)]"
                                     }`}
+                                // The active outline carries the chosen character theme
+                                // color, so it stays an inline value.
                                 style={active
                                     ? {
                                         color: themeColor,

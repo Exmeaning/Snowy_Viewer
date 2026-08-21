@@ -91,23 +91,23 @@ export default function StoryCardReaderClient() {
         <MainLayout>
             <div className="container mx-auto px-4 sm:px-6 py-8">
                 {card && (
-                    <Link href={`/cards/${card.id}`} className="flex items-center gap-4 mb-8 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-miku/50 hover:shadow-sm transition-all group">
-                        <img src={getCardThumbnailUrl(card.characterId, card.assetbundleName, false, assetSource)} alt={card.prefix} className="w-24 h-12 object-cover rounded-lg shrink-0" />
+                    <Link href={`/cards/${card.id}`} className="hh-tile hh-press flex items-center gap-4 mb-8 p-4 hover:border-[var(--hh-accent)] group">
+                        <img src={getCardThumbnailUrl(card.characterId, card.assetbundleName, false, assetSource)} alt={card.prefix} className="w-24 h-12 object-cover rounded-[var(--hh-radius-md)] shrink-0" />
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm text-slate-500">{charaName}</p>
+                            <p className="text-sm text-[var(--hh-text-secondary)]">{charaName}</p>
                             <div className="flex items-center gap-2 flex-wrap">
-                                <h1 className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-miku transition-colors">{card.prefix}</h1>
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                                <h1 className="hh-title text-[var(--hh-text-primary)] group-hover:text-miku transition-colors">{card.prefix}</h1>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] border ${
                                     serverSource === "cn"
-                                        ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50"
-                                        : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50"
+                                        ? "bg-rose-500/12 text-rose-600 border-rose-500/30"
+                                        : "bg-blue-500/12 text-blue-600 border-blue-500/30"
                                 }`}>{t(`page.story.serverSource.${serverSource}`)}</span>
                             </div>
                             {card.gachaPhrase && card.gachaPhrase !== "-" && (
-                                <p className="text-xs text-slate-400 mt-1 italic">「{card.gachaPhrase}」</p>
+                                <p className="text-xs text-[var(--hh-text-tertiary)] mt-1 italic">「{card.gachaPhrase}」</p>
                             )}
                         </div>
-                        <svg className="w-5 h-5 text-slate-300 group-hover:text-miku transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-[var(--hh-text-tertiary)] group-hover:text-miku transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                     </Link>
@@ -115,26 +115,26 @@ export default function StoryCardReaderClient() {
 
                 {isLoading && (
                     <div className="flex flex-col items-center justify-center py-16">
-                        <div className="w-12 h-12 border-4 border-miku/30 border-t-miku rounded-full animate-spin mb-4" />
-                        <p className="text-slate-500">{t("page.story.reader.loading")}</p>
+                        <div className="hh-spinner w-12 h-12 mb-4" />
+                        <p className="text-[var(--hh-text-secondary)]">{t("page.story.reader.loading")}</p>
                     </div>
                 )}
 
                 {!isLoading && (
                     <div className="max-w-4xl mx-auto">
-                        <div className="mb-6 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <div className="hh-tile mb-6 p-3">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm text-slate-500 mr-2">{t("page.story.card.tableOfContents")}</span>
+                                <span className="text-sm text-[var(--hh-text-secondary)] mr-2">{t("page.story.card.tableOfContents")}</span>
                                 <button
                                     onClick={() => document.getElementById("part-episode-1")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                                    className="px-3 py-1.5 text-sm font-medium text-miku hover:bg-miku/10 rounded-lg transition-colors"
+                                    className="hh-press hh-focusable px-3 py-1.5 text-sm font-medium text-miku hover:bg-[var(--hh-accent-wash-strong)] rounded-[var(--hh-radius-md)]"
                                 >
                                     {t("page.story.card.part1")}
                                 </button>
-                                <span className="text-slate-300 dark:text-slate-600">|</span>
+                                <span className="text-[var(--hh-text-tertiary)]">|</span>
                                 <button
                                     onClick={() => document.getElementById("part-episode-2")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                                    className="px-3 py-1.5 text-sm font-medium text-miku hover:bg-miku/10 rounded-lg transition-colors"
+                                    className="hh-press hh-focusable px-3 py-1.5 text-sm font-medium text-miku hover:bg-[var(--hh-accent-wash-strong)] rounded-[var(--hh-radius-md)]"
                                 >
                                     {t("page.story.card.part2")}
                                 </button>
@@ -148,8 +148,8 @@ export default function StoryCardReaderClient() {
                             ].map(({ id, label, title, data, missing, err }) => (
                                 <div key={id} id={`part-${id}`} className="scroll-mt-32">
                                     <div className="flex items-center gap-3 mb-4">
-                                        <span className="px-3 py-1 bg-miku/10 text-miku text-sm font-bold rounded-full border border-miku/20">{label}</span>
-                                        {title && <h2 className="font-bold text-slate-800 dark:text-slate-200">{title}</h2>}
+                                        <span className="hh-numeric px-3 py-1 bg-[var(--hh-accent-wash-strong)] text-miku text-sm font-bold rounded-[var(--hh-radius-sm)] border border-[var(--hh-accent-line)]">{label}</span>
+                                        {title && <h2 className="hh-title text-[var(--hh-text-primary)]">{title}</h2>}
                                     </div>
                                     <StoryReader
                                         scenarioData={data}

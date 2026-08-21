@@ -12,12 +12,12 @@ interface VirtualLiveGridProps {
 // Skeleton loading component
 function VirtualLiveSkeleton() {
     return (
-        <div className="bg-white rounded-2xl shadow-lg ring-1 ring-slate-200 overflow-hidden animate-pulse">
-            <div className="aspect-[16/5] bg-slate-200" />
+        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden animate-pulse">
+            <div className="aspect-[16/5] bg-[var(--hh-surface-sunken)]" />
             <div className="p-4 space-y-3">
-                <div className="h-4 bg-slate-200 rounded w-16" />
-                <div className="h-4 bg-slate-200 rounded w-3/4" />
-                <div className="h-3 bg-slate-200 rounded w-1/2" />
+                <div className="h-4 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-16" />
+                <div className="h-4 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4" />
+                <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-1/2" />
             </div>
         </div>
     );
@@ -42,13 +42,13 @@ export default function VirtualLiveGrid({ virtualLives, isLoading = false }: Vir
     if (virtualLives.length === 0) {
         return (
             <div className="text-center py-16">
-                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-slate-100 flex items-center justify-center">
-                    <svg className="w-12 h-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-[var(--hh-surface-sunken)] flex items-center justify-center">
+                    <svg className="w-12 h-12 text-[var(--hh-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                     </svg>
                 </div>
-                <h3 className="text-lg font-bold text-slate-600 mb-2">{t("page.live.noResult")}</h3>
-                <p className="text-slate-500 text-sm">{t("page.live.noResultHint")}</p>
+                <h3 className="hh-title text-lg font-bold text-[var(--hh-text-primary)] mb-2">{t("page.live.noResult")}</h3>
+                <p className="hh-body text-[var(--hh-text-secondary)] text-sm">{t("page.live.noResultHint")}</p>
             </div>
         );
     }

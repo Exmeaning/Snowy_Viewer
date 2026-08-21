@@ -10,13 +10,15 @@ import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { fetchGuidesIndex, type GuideEntry, type GuidesIndex } from "@/lib/guides";
 
-// Category badge color mapping
+// Category badge color mapping. The hue is the semantic signal, so each keeps
+// its own color; only the flat 100/700 pair collapses onto the tinted overlay
+// so the badges stay legible in both themes.
 const categoryColors: Record<string, string> = {
-    gacha: "bg-amber-100 text-amber-700 border-amber-200",
-    event: "bg-blue-100 text-blue-700 border-blue-200",
-    team: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    beginner: "bg-purple-100 text-purple-700 border-purple-200",
-    system: "bg-slate-100 text-slate-600 border-slate-200",
+    gacha: "bg-amber-500/12 text-amber-600 border-amber-500/30",
+    event: "bg-blue-500/12 text-blue-600 border-blue-500/30",
+    team: "bg-emerald-500/12 text-emerald-600 border-emerald-500/30",
+    beginner: "bg-purple-500/12 text-purple-600 border-purple-500/30",
+    system: "bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] border-[var(--hh-border)]",
 };
 
 function GuidesContent() {
@@ -177,17 +179,17 @@ function GuidesContent() {
         <div className="container mx-auto px-4 sm:px-6 py-8">
             {/* Page Header */}
             <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.guides.badge")}</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                    <span className="hh-label text-miku">{t("page.guides.badge")}</span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                     {t("page.guides.title")} <span className="text-miku">{t("page.guides.titleHighlight")}</span>
                 </h1>
-                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">
                     {t("page.guides.description")}
                 </p>
-                <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-500 bg-amber-500/5 border border-amber-500/10 dark:border-amber-500/20 rounded-xl px-3 py-1.5 mx-auto">
-                    <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-550/10 dark:bg-amber-500/10 text-[9px] font-bold">!</span>
+                <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-amber-600 bg-amber-500/12 border border-amber-500/30 rounded-[var(--hh-radius-md)] px-3 py-1.5 mx-auto">
+                    <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500/20 text-[9px] font-bold">!</span>
                     <span>{t("page.guides.machineTranslationNotice")}</span>
                 </div>
             </div>
@@ -196,10 +198,10 @@ function GuidesContent() {
             <div className="mb-8 max-w-2xl mx-auto">
                 <ExternalLink
                     href="https://sekaitools.exmeaning.com/"
-                    className="block p-4 rounded-xl bg-gradient-to-r from-miku/5 to-luka/5 border border-miku/20 hover:border-miku/40 hover:shadow-lg transition-all group"
+                    className="hh-tile hh-press block p-4 hover:border-[var(--hh-accent)] group"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-miku to-miku-dark flex items-center justify-center text-white flex-shrink-0">
+                        <div className="w-10 h-10 rounded-[var(--hh-radius-md)] bg-[var(--hh-accent)] flex items-center justify-center text-[var(--hh-text-on-accent)] flex-shrink-0">
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -209,11 +211,11 @@ function GuidesContent() {
                             <div className="text-sm font-bold text-primary-text group-hover:text-miku transition-colors">
                                 {t("page.guides.toolSiteTitle")}
                             </div>
-                            <div className="text-xs text-slate-400">
+                            <div className="text-xs text-[var(--hh-text-tertiary)]">
                                 {t("page.guides.toolSiteDescription")}
                             </div>
                         </div>
-                        <svg className="w-5 h-5 text-slate-300 group-hover:text-miku transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-[var(--hh-text-tertiary)] group-hover:text-miku transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                     </div>
@@ -222,7 +224,7 @@ function GuidesContent() {
 
             {/* Error State */}
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-red-500/12 border border-red-500/30 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{t("page.guides.loadFailed")}</p>
                     <p>{error}</p>
                 </div>
@@ -247,7 +249,7 @@ function GuidesContent() {
 
                         {/* Empty State */}
                         {filteredGuides.length === 0 && !isLoading && (
-                            <div className="text-center py-16 text-slate-400">
+                            <div className="text-center py-16 text-[var(--hh-text-tertiary)]">
                                 <svg className="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                 </svg>
@@ -261,10 +263,10 @@ function GuidesContent() {
                                 <button
                                     onClick={loadMore}
                                     data-shortcut-load-more="true"
-                                    className="pressable px-8 py-3 ios-glass-btn ios-glass-btn-primary rounded-full font-bold"
+                                    className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3 font-bold"
                                 >
                                     {t("page.guides.loadMore")}
-                                    <span className="ml-2 text-sm opacity-80">
+                                    <span className="hh-numeric ml-2 text-sm opacity-80">
                                         ({displayedGuides.length} / {filteredGuides.length})
                                     </span>
                                 </button>
@@ -273,7 +275,7 @@ function GuidesContent() {
 
                         {/* All loaded */}
                         {displayedGuides.length > 0 && displayedGuides.length >= filteredGuides.length && (
-                            <div className="mt-8 text-center text-slate-400 text-sm">
+                            <div className="mt-8 text-center text-[var(--hh-text-tertiary)] text-sm">
                                 {t("page.guides.allLoaded", { count: filteredGuides.length })}
                             </div>
                         )}
@@ -285,7 +287,7 @@ function GuidesContent() {
 }
 
 function GuideCard({ guide, categoryLabel }: { guide: GuideEntry; categoryLabel: string }) {
-    const colorClass = categoryColors[guide.category] ?? "bg-slate-100 text-slate-600 border-slate-200";
+    const colorClass = categoryColors[guide.category] ?? categoryColors.system;
 
     return (
         <Link
@@ -293,19 +295,19 @@ function GuideCard({ guide, categoryLabel }: { guide: GuideEntry; categoryLabel:
             data-shortcut-item="true"
             className="block group"
         >
-            <div className="bg-white rounded-xl shadow ring-1 ring-slate-200 overflow-hidden hover:ring-miku hover:shadow-lg transition-all p-5">
+            <div className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden group-hover:border-[var(--hh-accent)] p-5">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                         {/* Category + Date */}
                         <div className="flex items-center gap-2 mb-2">
-                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${colorClass}`}>
+                            <span className={`px-2 py-0.5 rounded-[var(--hh-radius-sm)] text-[11px] font-bold border ${colorClass}`}>
                                 {categoryLabel}
                             </span>
-                            <span className="text-xs text-slate-400">{guide.date}</span>
+                            <span className="hh-numeric text-xs text-[var(--hh-text-tertiary)]">{guide.date}</span>
                         </div>
 
                         {/* Title */}
-                        <h3 className="text-base font-bold text-slate-700 group-hover:text-miku transition-colors line-clamp-2">
+                        <h3 className="hh-title text-base text-[var(--hh-text-primary)] group-hover:text-miku transition-colors line-clamp-2">
                             {guide.title}
                         </h3>
 
@@ -314,19 +316,19 @@ function GuideCard({ guide, categoryLabel }: { guide: GuideEntry; categoryLabel:
                             {guide.tags.slice(0, 4).map((tag) => (
                                 <span
                                     key={tag}
-                                    className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-50 text-slate-400 border border-slate-100"
+                                    className="px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] text-[10px] font-medium bg-[var(--hh-surface-1)] text-[var(--hh-text-tertiary)] border border-[var(--hh-border-hairline)]"
                                 >
                                     {tag}
                                 </span>
                             ))}
-                            <span className="text-[11px] text-slate-400 ml-auto flex-shrink-0">
+                            <span className="text-[11px] text-[var(--hh-text-tertiary)] ml-auto flex-shrink-0">
                                 {guide.author.group}
                             </span>
                         </div>
                     </div>
 
                     {/* Arrow */}
-                    <svg className="w-5 h-5 text-slate-300 group-hover:text-miku transition-colors flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-5 h-5 text-[var(--hh-text-tertiary)] group-hover:text-miku transition-colors flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                 </div>
@@ -339,7 +341,7 @@ function GuidesLoadingFallback() {
     const { t } = useI18n();
 
     return (
-        <div className="flex h-[50vh] w-full items-center justify-center text-slate-500">
+        <div className="flex h-[50vh] w-full items-center justify-center text-[var(--hh-text-secondary)]">
             {t("page.guides.loadingFallback")}
         </div>
     );

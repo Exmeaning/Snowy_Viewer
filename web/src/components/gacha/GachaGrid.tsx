@@ -12,11 +12,11 @@ interface GachaGridProps {
 // Skeleton component for loading state
 function GachaSkeleton() {
     return (
-        <div className="rounded-xl overflow-hidden bg-white border border-slate-100 animate-pulse">
-            <div className="aspect-[16/9] bg-slate-100" />
+        <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden animate-pulse">
+            <div className="aspect-[16/9] bg-[var(--hh-surface-sunken)]" />
             <div className="p-3 space-y-2">
-                <div className="h-4 bg-slate-100 rounded w-3/4" />
-                <div className="h-3 bg-slate-100 rounded w-1/2" />
+                <div className="h-4 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-3/4" />
+                <div className="h-3 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-xs)] w-1/2" />
             </div>
         </div>
     );
@@ -37,7 +37,7 @@ export default function GachaGrid({ gachas, isLoading = false }: GachaGridProps)
 
     if (gachas.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+            <div className="flex flex-col items-center justify-center py-16 text-[var(--hh-text-tertiary)]">
                 <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>

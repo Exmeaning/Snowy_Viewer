@@ -27,8 +27,12 @@ export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: Car
     const showTrainedThumbnail = isTrainedOnlyCard || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
 
     return (
-        <Link href={`${hrefPrefix}/${card.id}`} className="group pressable block" data-shortcut-item="true">
-            <div className="relative cursor-pointer rounded-xl overflow-hidden ios-glass-card ios-glass-card-interactive">
+        <Link href={`${hrefPrefix}/${card.id}`} className="group hh-press block" data-shortcut-item="true">
+            {/* A tile, not a floating card: hover recolors the border instead of
+                lifting the item. Hundreds of these paint at once in the grid, so a
+                per-item shadow/transform transition is both visually noisy and the
+                most expensive thing on the page while scrolling. */}
+            <div className="relative cursor-pointer rounded-[var(--hh-radius-lg)] overflow-hidden hh-tile transition-colors hover:border-[var(--hh-accent-line)]">
                 {/* Card Image Container */}
                 <div className="w-full relative">
                     <SekaiCardThumbnail
@@ -39,11 +43,11 @@ export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: Car
                 </div>
 
                 {/* Card Info - Persistent Footer */}
-                <div className="px-2 py-1.5 bg-slate-50/30 dark:bg-slate-900/30 border-t border-slate-200/50 dark:border-slate-800">
+                <div className="px-2 py-1.5 bg-[var(--hh-surface-1)] border-t border-[var(--hh-border)]">
                     {/* Spoiler Badge - inline in footer */}
                     {isSpoiler && (
                         <div className="mb-0.5">
-                            <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded leading-none">
+                            <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded-[var(--hh-radius-xs)] leading-none">
                                 {t("common.badge.spoiler")}
                             </span>
                         </div>
@@ -53,13 +57,13 @@ export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: Car
                             original={card.prefix}
                             category="cards"
                             field="prefix"
-                            originalClassName="text-slate-800 dark:text-slate-200 text-[10px] type-on-glass font-bold truncate leading-tight group-hover:text-miku block"
-                            translationClassName="text-slate-400 dark:text-slate-500 text-[9px] type-caption truncate leading-tight block"
+                            originalClassName="text-[var(--hh-text-primary)] text-[10px] font-bold truncate leading-tight group-hover:text-miku block"
+                            translationClassName="hh-body text-[var(--hh-text-tertiary)] text-[9px] truncate leading-tight block"
                         />
                     </div>
                     <div className="flex items-center justify-between gap-1">
-                        <p className="text-slate-400 dark:text-slate-500 text-[9px] type-caption truncate leading-tight flex-1">{characterName}</p>
-                        <span className="flex-shrink-0 text-[8px] text-slate-400 bg-slate-100/50 dark:bg-slate-800/50 ios-glass-tab px-1 py-0.5 rounded leading-none font-mono">
+                        <p className="hh-body text-[var(--hh-text-tertiary)] text-[9px] truncate leading-tight flex-1">{characterName}</p>
+                        <span className="hh-numeric flex-shrink-0 text-[8px] text-[var(--hh-text-tertiary)] bg-[var(--hh-surface-sunken)] px-1 py-0.5 rounded-[var(--hh-radius-xs)] leading-none">
                             ID:{card.id}
                         </span>
                     </div>

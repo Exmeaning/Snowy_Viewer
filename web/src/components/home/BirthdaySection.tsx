@@ -22,7 +22,7 @@ export default function BirthdaySection() {
             <div>
                 <div className="flex items-center gap-2 mb-4">
                     <div className="h-6 w-1 rounded-full bg-miku"></div>
-                    <h2 className="text-xl font-bold text-primary-text opacity-80">{t("page.home.sections.upcomingBirthdays")}</h2>
+                    <h2 className="hh-title text-xl font-bold text-[var(--hh-text-primary)]">{t("page.home.sections.upcomingBirthdays")}</h2>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -30,17 +30,19 @@ export default function BirthdaySection() {
                         <Link
                             key={birthday.id}
                             href={`/character/${birthday.id}`}
+                            // Today's birthday gets an accent-filled tile; the rest are
+                            // plain tiles that tint their border on hover. No lift and no
+                            // icon zoom — these sit in a grid and should stay put.
                             className={`
-                                group relative p-3 rounded-xl transition-all duration-300 flex flex-col items-center gap-2
-                                border backdrop-blur-sm
+                                hh-tile hh-press group relative p-3 rounded-[var(--hh-radius-lg)] transition-colors flex flex-col items-center gap-2
                                 ${birthday.isToday
-                                    ? "bg-gradient-to-br from-miku/10 to-white/80 border-miku/40 shadow-miku/20 shadow-md transform hover:-translate-y-1"
-                                    : "bg-white/40 hover:bg-white/70 border-white/50 hover:border-miku/30 transform hover:-translate-y-1 hover:shadow-lg"
+                                    ? "bg-[var(--hh-accent-wash)] border-[var(--hh-accent-line)]"
+                                    : "hover:border-[var(--hh-accent-line)]"
                                 }
-                                ${index < 2 ? "flex" : (index < 3 ? "hidden sm:flex" : "hidden lg:flex")} 
+                                ${index < 2 ? "flex" : (index < 3 ? "hidden sm:flex" : "hidden lg:flex")}
                             `}
                         >
-                            <div className="relative w-14 h-14 transition-transform duration-300 group-hover:scale-110">
+                            <div className="relative w-14 h-14">
                                 <Image
                                     src={getCharacterIconUrl(birthday.id)}
                                     alt={birthday.name}
@@ -49,16 +51,16 @@ export default function BirthdaySection() {
                                     unoptimized
                                 />
                                 {birthday.isToday && (
-                                    <div className="absolute -top-1 -right-1 bg-miku text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse z-10">
+                                    <div className="absolute -top-1 -right-1 bg-miku text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[var(--hh-radius-sm)] animate-pulse z-10">
                                         {t("page.home.birthdays.today")}
                                     </div>
                                 )}
                             </div>
                             <div className="text-center w-full">
-                                <div className={`text-sm font-bold truncate ${birthday.isToday ? "text-miku" : "text-slate-700 group-hover:text-miku"}`}>
+                                <div className={`text-sm font-bold truncate ${birthday.isToday ? "text-miku" : "text-[var(--hh-text-primary)] group-hover:text-miku"}`}>
                                     {birthday.name}
                                 </div>
-                                <div className={`text-xs mt-0.5 ${birthday.isToday ? "text-miku/80 font-bold" : "text-slate-400"}`}>
+                                <div className={`hh-numeric text-xs mt-0.5 ${birthday.isToday ? "text-miku font-bold" : "text-[var(--hh-text-tertiary)]"}`}>
                                     {formatDate(new Date(2000, birthday.month - 1, birthday.day), { month: "long", day: "numeric" })}
                                 </div>
                             </div>

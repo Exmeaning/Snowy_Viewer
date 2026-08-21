@@ -251,20 +251,20 @@ function LyricsContent() {
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
             <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
-                    <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.lyrics.badge")}</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--hh-accent-line)] bg-[var(--hh-accent-wash)] rounded-[var(--hh-radius-md)] mb-4">
+                    <span className="hh-label text-miku">{t("page.lyrics.badge")}</span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                <h1 className="hh-display text-3xl sm:text-4xl text-primary-text">
                     {t("page.lyrics.title")} <span className="text-miku">{t("page.lyrics.titleHighlight")}</span>
                 </h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-2xl mx-auto">{t("page.lyrics.description")}</p>
+                <p className="hh-body text-[var(--hh-text-secondary)] mt-2 max-w-2xl mx-auto">{t("page.lyrics.description")}</p>
             </div>
 
             {error && (
-                <div role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm dark:bg-red-950/30 dark:border-red-900/60 dark:text-red-300">
+                <div role="alert" className="mb-6 p-4 bg-red-500/12 border border-red-500/30 rounded-[var(--hh-radius-lg)] text-red-600 text-sm">
                     <p className="font-bold">{t("common.state.loadingFailed")}</p>
                     <p>{error}</p>
-                    <button onClick={() => window.location.reload()} className="mt-2 text-red-500 underline hover:no-underline dark:text-red-300">
+                    <button onClick={() => window.location.reload()} className="mt-2 text-red-500 underline hover:no-underline">
                         {t("common.action.retry")}
                     </button>
                 </div>
@@ -275,11 +275,11 @@ function LyricsContent() {
                     <div className={MUSIC_GRID_CLASS} aria-label={t("page.lyrics.loading")}>
                         {Array.from({ length: 15 }).map((_, index) => (
                             <div key={index} className="animate-pulse">
-                                <div className="overflow-hidden rounded-xl border border-slate-200/60 bg-white/60 dark:border-slate-700/60 dark:bg-slate-800/60">
-                                    <div className="aspect-square bg-slate-200 dark:bg-slate-700" />
+                                <div className="hh-tile overflow-hidden rounded-[var(--hh-radius-lg)]">
+                                    <div className="aspect-square bg-[var(--hh-surface-sunken)]" />
                                     <div className="space-y-2 p-3">
-                                        <div className="h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-700" />
-                                        <div className="h-3 w-1/2 rounded bg-slate-200 dark:bg-slate-700" />
+                                        <div className="h-4 w-3/4 rounded-[var(--hh-radius-xs)] bg-[var(--hh-surface-sunken)]" />
+                                        <div className="h-3 w-1/2 rounded-[var(--hh-radius-xs)] bg-[var(--hh-surface-sunken)]" />
                                     </div>
                                 </div>
                             </div>
@@ -288,8 +288,8 @@ function LyricsContent() {
                 ) : filteredMusics.length === 0 ? (
                     <div className="py-16 text-center">
                         <div className="mb-4 text-6xl" aria-hidden="true">🎼</div>
-                        <h3 className="mb-2 text-xl font-bold text-slate-600 dark:text-slate-300">{t("page.lyrics.empty")}</h3>
-                        <p className="text-slate-500 dark:text-slate-400">{t("page.lyrics.emptyHint")}</p>
+                        <h3 className="hh-title mb-2 text-xl text-[var(--hh-text-secondary)]">{t("page.lyrics.empty")}</h3>
+                        <p className="hh-body text-[var(--hh-text-secondary)]">{t("page.lyrics.emptyHint")}</p>
                     </div>
                 ) : (
                     <>
@@ -322,16 +322,16 @@ function LyricsContent() {
                                 <button
                                     onClick={loadMore}
                                     data-shortcut-load-more="true"
-                                    className="pressable ios-glass-btn ios-glass-btn-primary rounded-full px-8 py-3 font-bold"
+                                    className="hh-btn hh-btn-primary hh-press hh-focusable px-8 py-3 font-bold"
                                 >
                                     {t("page.lyrics.loadMore")}
-                                    <span className="ml-2 text-sm opacity-80 type-caption">
+                                    <span className="hh-numeric ml-2 text-sm opacity-80">
                                         ({Math.min(displayCount, filteredMusics.length)} / {filteredMusics.length})
                                     </span>
                                 </button>
                             </div>
                         ) : (
-                            <div className="mt-8 text-center text-sm text-slate-400">
+                            <div className="mt-8 text-center text-sm text-[var(--hh-text-tertiary)]">
                                 {t("page.lyrics.allLoaded", { count: String(filteredMusics.length) })}
                             </div>
                         )}

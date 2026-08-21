@@ -40,29 +40,32 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
     });
 
     return (
-        <Link href={`${basePath}/${event.id}`} className="group pressable block" data-shortcut-item="true">
-            <div className="ios-glass-card ios-glass-card-interactive rounded-2xl overflow-hidden cursor-pointer">
+        <Link href={`${basePath}/${event.id}`} className="group hh-press block" data-shortcut-item="true">
+            {/* Tile semantics: the hover signal is the border, not a lift. The
+                banner also no longer scales on hover — a zooming image inside a
+                clipped tile forces a repaint of the whole grid cell. */}
+            <div className="hh-tile rounded-[var(--hh-radius-lg)] overflow-hidden cursor-pointer transition-colors hover:border-[var(--hh-accent-line)]">
                 {/* Event Logo */}
-                <div className="relative aspect-[16/9] bg-slate-100/50 dark:bg-slate-800/40 overflow-hidden">
+                <div className="relative aspect-[16/9] bg-[var(--hh-surface-sunken)] overflow-hidden">
                     <Image
                         src={thumbnailUrl}
                         alt={event.name}
                         fill
-                        className={`object-contain transition-transform duration-[var(--duration-base)] ease-[var(--ease-out-soft)] group-hover:scale-105 ${hasEventStoryBanner ? "" : "p-4"}`}
+                        className={`object-contain ${hasEventStoryBanner ? "" : "p-4"}`}
                         unoptimized
                     />
 
-                    {/* Status Badge */}
+                    {/* Status Badge — status color is semantic and stays as-is. */}
                     <div
-                        className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white shadow-sm"
+                        className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 sm:px-2 py-0.5 rounded-[var(--hh-radius-sm)] text-[10px] sm:text-xs font-bold text-white"
                         style={{ backgroundColor: statusDisplay.color }}
                     >
                         {t(`common.status.${status}`)}
                     </div>
 
-                    {/* Event Type Badge */}
+                    {/* Event Type Badge — event-type color is semantic and stays. */}
                     <div
-                        className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold text-white shadow-sm"
+                        className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 rounded-[var(--hh-radius-sm)] text-[10px] sm:text-xs font-bold text-white"
                         style={{ backgroundColor: EVENT_TYPE_COLORS[event.eventType as EventType] }}
                     >
                         {t(`common.eventTypes.${event.eventType}`)}
@@ -70,7 +73,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
 
                     {/* Spoiler Badge - Bottom Right */}
                     {isSpoiler && (
-                        <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-orange-500 rounded-full text-[10px] sm:text-xs font-bold text-white shadow-sm animate-pulse">
+                        <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-orange-500 rounded-[var(--hh-radius-sm)] text-[10px] sm:text-xs font-bold text-white animate-pulse">
                             {t("common.badge.spoiler")}
                         </div>
                     )}
@@ -80,12 +83,12 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                 <div className="p-2.5 sm:p-4">
                     {/* ID Badge + Unit Badge */}
                     <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                        <span className="px-1.5 sm:px-2 py-0.5 ios-glass-tab text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-mono rounded-full">
+                        <span className="hh-numeric px-1.5 sm:px-2 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] text-[10px] sm:text-xs rounded-[var(--hh-radius-sm)]">
                             #{event.id}
                         </span>
                         {unitType && (
                             EVENT_UNIT_ICON[unitType] ? (
-                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center" title={t(EVENT_UNIT_ICON[unitType].labelKey)}>
+                                <div className="w-5 h-5 rounded-full bg-[var(--hh-surface-sunken)] flex items-center justify-center" title={t(EVENT_UNIT_ICON[unitType].labelKey)}>
                                     <Image
                                         src={`/data/icon/${EVENT_UNIT_ICON[unitType].icon}`}
                                         alt={t(EVENT_UNIT_ICON[unitType].labelKey)}
@@ -96,7 +99,7 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                                     />
                                 </div>
                             ) : (
-                                <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full" title={t("common.badge.mixed")}>{t("common.badge.mixed")}</span>
+                                <span className="px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] text-[10px] font-bold rounded-[var(--hh-radius-sm)]" title={t("common.badge.mixed")}>{t("common.badge.mixed")}</span>
                             )
                         )}
                         {bonusAttr && ATTR_ICON_PATHS[bonusAttr as keyof typeof ATTR_ICON_PATHS] && (
@@ -114,25 +117,25 @@ export default function EventItem({ event, isSpoiler, basePath = "/events", unit
                     </div>
 
                     {/* Event Name */}
-                    <h3 className="type-title font-bold text-slate-800 text-xs sm:text-sm mb-1.5 sm:mb-2 group-hover:text-miku">
+                    <h3 className="hh-title font-bold text-[var(--hh-text-primary)] text-xs sm:text-sm mb-1.5 sm:mb-2 group-hover:text-miku">
                         <TranslatedText
                             original={event.name}
                             category="events"
                             field="name"
                             originalClassName=""
-                            translationClassName="text-xs type-caption font-medium text-slate-400 mt-0.5"
+                            translationClassName="hh-body text-xs font-medium text-[var(--hh-text-tertiary)] mt-0.5"
                         />
                     </h3>
 
                     {/* Date Range */}
-                    <div className="text-[10px] sm:text-xs type-caption text-slate-500 space-y-0.5 hidden sm:block">
+                    <div className="hh-body text-[10px] sm:text-xs text-[var(--hh-text-secondary)] space-y-0.5 hidden sm:block">
                         <div className="flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span>{formatDate(event.startAt)}</span>
+                            <span className="hh-numeric">{formatDate(event.startAt)}</span>
                             <span>~</span>
-                            <span>{formatDate(event.aggregateAt)}</span>
+                            <span className="hh-numeric">{formatDate(event.aggregateAt)}</span>
                         </div>
                     </div>
                 </div>

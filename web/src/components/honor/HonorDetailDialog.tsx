@@ -67,20 +67,20 @@ export default function HonorDetailDialog({
 
                     {honor.levels.length > 0 && (
                         <div>
-                            <h3 className="mb-3 text-sm font-bold text-slate-700">{t("common.field.levelDetails")}</h3>
+                            <h3 className="hh-title mb-3 text-sm font-bold text-[var(--hh-text-primary)]">{t("common.field.levelDetails")}</h3>
                             <div className="space-y-4">
                                 {honor.levels.map(level => (
-                                    <div key={level.level} className="rounded-xl bg-slate-50 p-4 space-y-2">
+                                    <div key={level.level} className="hh-well p-4 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-bold text-miku">Lv.{level.level}</span>
+                                            <span className="hh-numeric text-xs font-bold text-miku">Lv.{level.level}</span>
                                             {level.honorRarity && (
-                                                <span className="rounded-full bg-miku/10 px-2 py-0.5 text-xs font-medium text-miku">
+                                                <span className="rounded-[var(--hh-radius-sm)] bg-[var(--hh-accent-wash-strong)] px-2 py-0.5 text-xs font-medium text-[var(--hh-accent-deep)]">
                                                     {t(`common.honor.rarities.${level.honorRarity}`) === `common.honor.rarities.${level.honorRarity}` ? level.honorRarity : t(`common.honor.rarities.${level.honorRarity}`)}
                                                 </span>
                                             )}
                                         </div>
                                         {level.description && (
-                                            <p className="text-sm text-slate-600">{level.description}</p>
+                                            <p className="hh-body text-sm text-[var(--hh-text-secondary)]">{level.description}</p>
                                         )}
                                         {level.assetbundleName && (
                                             <div className="mt-2">
@@ -107,9 +107,9 @@ export default function HonorDetailDialog({
 
 function InfoRow({ label, value }: { label: string; value: string }) {
     return (
-        <div className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
-            <span className="text-sm font-bold text-slate-600">{label}</span>
-            <span className="text-sm text-slate-800 text-right max-w-[60%]">{value}</span>
+        <div className="flex items-center justify-between py-2.5 border-b border-[var(--hh-border-hairline)] last:border-0">
+            <span className="text-sm font-bold text-[var(--hh-text-secondary)]">{label}</span>
+            <span className="text-sm text-[var(--hh-text-primary)] text-right max-w-[60%]">{value}</span>
         </div>
     );
 }
