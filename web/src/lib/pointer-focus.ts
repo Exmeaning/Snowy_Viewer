@@ -37,6 +37,9 @@ const CURSOR_SOUND_THROTTLE_MS = 100;
 /** Interactive selector query for elements that participate in cursor focus. */
 const FOCUSABLE_SELECTOR = [
     ".hh-tile",
+    ".hh-card-item",
+    ".hh-interactive-card",
+    "[data-shortcut-item='true']",
     ".hh-btn",
     ".hh-chip",
     ".hh-segment-item",

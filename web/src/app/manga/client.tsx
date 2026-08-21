@@ -134,35 +134,35 @@ function MangaContent() {
                                     key={manga.id}
                                     href={`/manga/${manga.id}`}
                                     data-shortcut-item="true"
-                                    className="group"
+                                    className="hh-card-item relative cursor-pointer overflow-hidden flex flex-col group select-none"
                                 >
-                                    <div className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden group-hover:border-[var(--hh-accent)]">
-                                        {/* Thumbnail: crop top portion of vertical manga */}
-                                        <div className="relative aspect-square overflow-hidden bg-[var(--hh-surface-sunken)]">
-                                            <Image
-                                                src={getMangaImageUrl(manga.id)}
-                                                alt={manga.title}
-                                                fill
-                                                className="object-cover object-top"
-                                                unoptimized
-                                            />
-                                        </div>
-                                        <div className="p-4 border-t border-[var(--hh-border-hairline)]">
-                                            <div className="hh-title text-sm text-primary-text line-clamp-1 group-hover:text-miku transition-colors">
+                                    {/* Thumbnail: crop top portion of vertical manga */}
+                                    <div className="relative aspect-square overflow-hidden bg-[var(--hh-surface-sunken)]">
+                                        <Image
+                                            src={getMangaImageUrl(manga.id)}
+                                            alt={manga.title}
+                                            fill
+                                            className="object-cover object-top"
+                                            unoptimized
+                                        />
+                                    </div>
+                                    <div className="hh-card-footer p-3 sm:p-3.5 flex-1 flex flex-col justify-between">
+                                        <div className="min-h-[2.5rem] flex flex-col justify-center">
+                                            <h3 className="hh-title text-xs sm:text-sm font-medium text-[var(--hh-text-primary)] leading-snug line-clamp-2" title={manga.title}>
                                                 {manga.title}
-                                            </div>
-                                            <div className="flex items-center justify-between mt-3 text-[10px] text-[var(--hh-text-tertiary)] font-medium">
-                                                <span className="hh-numeric text-miku bg-[var(--hh-accent-wash-strong)] px-2 py-0.5 rounded-[var(--hh-radius-sm)] border border-[var(--hh-accent-line)]">
-                                                    {t("page.manga.episodeLabel", { id: manga.id })}
-                                                </span>
-                                                <span className="hh-numeric">
-                                                    {formatDate(manga.date * 1000, {
-                                                        year: "numeric",
-                                                        month: "2-digit",
-                                                        day: "2-digit",
-                                                    })}
-                                                </span>
-                                            </div>
+                                            </h3>
+                                        </div>
+                                        <div className="mt-2 flex items-center justify-between text-[10px] sm:text-xs text-[var(--hh-text-tertiary)] font-medium">
+                                            <span className="hh-numeric px-2 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-bold">
+                                                {t("page.manga.episodeLabel", { id: manga.id })}
+                                            </span>
+                                            <span className="hh-body hh-numeric">
+                                                {formatDate(manga.date * 1000, {
+                                                    year: "numeric",
+                                                    month: "2-digit",
+                                                    day: "2-digit",
+                                                })}
+                                            </span>
                                         </div>
                                     </div>
                                 </Link>

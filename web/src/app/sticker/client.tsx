@@ -303,27 +303,27 @@ function StickerContent() {
                                     key={stamp.id}
                                     onClick={() => setSelectedStamp(stamp)}
                                     data-shortcut-item="true"
-                                    className="group block w-full text-left"
+                                    className="hh-card-item relative cursor-pointer overflow-hidden flex flex-col group select-none w-full text-left"
                                 >
-                                    <div className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden group-hover:border-[var(--hh-accent)] p-2">
-                                        <div className="relative aspect-square">
-                                            <Image
-                                                src={getStampUrl(stamp.assetbundleName, assetSource)}
-                                                alt={stamp.name}
-                                                fill
-                                                className="object-contain"
-                                                unoptimized
-                                            />
-                                        </div>
-                                        <div className="mt-1 text-[10px] text-[var(--hh-text-secondary)] text-center">
+                                    <div className="relative aspect-square bg-[var(--hh-surface-sunken)] overflow-hidden shrink-0">
+                                        <Image
+                                            src={getStampUrl(stamp.assetbundleName, assetSource)}
+                                            alt={stamp.name}
+                                            fill
+                                            className="object-contain p-1"
+                                            unoptimized
+                                        />
+                                    </div>
+                                    <div className="hh-card-footer px-1.5 py-1.5 min-h-[2rem] flex flex-col justify-center text-center">
+                                        <h3 className="hh-title text-[10px] font-bold text-[var(--hh-text-primary)] leading-tight line-clamp-2" title={stamp.name}>
                                             <TranslatedText
                                                 original={stamp.name}
                                                 category="sticker"
                                                 field="name"
                                                 originalClassName="truncate block"
-                                                translationClassName="text-[9px] text-[var(--hh-text-tertiary)] truncate block"
+                                                translationClassName="hh-body text-[9px] text-[var(--hh-text-tertiary)] truncate block"
                                             />
-                                        </div>
+                                        </h3>
                                     </div>
                                 </button>
                             ))}

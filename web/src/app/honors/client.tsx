@@ -587,9 +587,9 @@ function HonorsContent() {
                                             data-shortcut-item="true"
                                             tabIndex={0}
                                             role="button"
-                                            className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden hover:border-[var(--hh-accent-line)] p-4 cursor-pointer group"
+                                            className="hh-card-item relative cursor-pointer overflow-hidden group select-none flex flex-col justify-between"
                                         >
-                                            <div className="mb-3">
+                                            <div className="p-3 sm:p-4 flex items-center justify-center">
                                                 <DegreeImage
                                                     honor={honor}
                                                     honorGroup={group}
@@ -597,20 +597,22 @@ function HonorsContent() {
                                                     source={assetSource}
                                                 />
                                             </div>
-                                            <h3 className="hh-title text-sm text-[var(--hh-text-primary)] group-hover:text-miku transition-colors mb-1">
-                                                {honor.name}
-                                            </h3>
-                                            <div className="flex flex-wrap gap-1">
-                                                {group && (
-                                                    <span className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-accent-wash)] text-miku rounded-[var(--hh-radius-xs)] font-medium">
-                                                        {getHonorTypeLabel(group.honorType, t)}
-                                                    </span>
-                                                )}
-                                                {honor.honorRarity && (
-                                                    <span className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-medium">
-                                                        {getHonorRarityLabel(honor.honorRarity, t)}
-                                                    </span>
-                                                )}
+                                            <div className="hh-card-footer p-3 sm:p-3.5 flex-1 flex flex-col justify-between">
+                                                <h3 className="hh-title text-sm font-bold text-[var(--hh-text-primary)] transition-colors mb-1 line-clamp-1">
+                                                    {honor.name}
+                                                </h3>
+                                                <div className="flex flex-wrap gap-1 mt-auto pt-1">
+                                                    {group && (
+                                                        <span className="hh-body text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-medium">
+                                                            {getHonorTypeLabel(group.honorType, t)}
+                                                        </span>
+                                                    )}
+                                                    {honor.honorRarity && (
+                                                        <span className="hh-body text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-medium">
+                                                            {getHonorRarityLabel(honor.honorRarity, t)}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -671,9 +673,9 @@ function HonorsContent() {
                                             data-shortcut-item="true"
                                             tabIndex={0}
                                             role="button"
-                                            className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden hover:border-[var(--hh-accent-line)] p-4 cursor-pointer group"
+                                            className="hh-card-item relative cursor-pointer overflow-hidden group select-none flex flex-col justify-between"
                                         >
-                                            <div className="mb-3">
+                                            <div className="p-3 sm:p-4 flex items-center justify-center">
                                                 <BondsDegreeImage
                                                     bondsHonor={bh}
                                                     gameCharaUnits={gameCharaUnits}
@@ -683,18 +685,20 @@ function HonorsContent() {
                                                     source={assetSource}
                                                 />
                                             </div>
-                                            <h3 className="hh-title text-sm text-[var(--hh-text-primary)] group-hover:text-miku transition-colors mb-1">
-                                                {bh.name}
-                                            </h3>
-                                            <div className="flex flex-wrap gap-1">
-                                                <span className="text-[10px] px-1.5 py-0.5 bg-pink-500/12 text-pink-500 rounded-[var(--hh-radius-xs)] font-medium">
-                                                    {t("page.honors.bondsBadge")}
-                                                </span>
-                                                {bh.honorRarity && (
-                                                    <span className="text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-medium">
-                                                        {getHonorRarityLabel(bh.honorRarity, t)}
+                                            <div className="hh-card-footer p-3 sm:p-3.5 flex-1 flex flex-col justify-between">
+                                                <h3 className="hh-title text-sm font-bold text-[var(--hh-text-primary)] transition-colors mb-1 line-clamp-1">
+                                                    {bh.name}
+                                                </h3>
+                                                <div className="flex flex-wrap gap-1 mt-auto pt-1">
+                                                    <span className="hh-body text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-medium">
+                                                        {t("page.honors.bondsBadge")}
                                                     </span>
-                                                )}
+                                                    {bh.honorRarity && (
+                                                        <span className="hh-body text-[10px] px-1.5 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-medium">
+                                                            {getHonorRarityLabel(bh.honorRarity, t)}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     );

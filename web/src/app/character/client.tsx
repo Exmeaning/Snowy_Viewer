@@ -167,11 +167,8 @@ function CharacterListContent() {
                                                 <Link
                                                     key={chara.id}
                                                     href={`/character/${chara.id}`}
-                                                    /* The portrait sits in a sunken well rather than on a
-                                                       raised card: the artwork is the object here, and a
-                                                       second tile inside the unit tile would stack two
-                                                       identical surfaces with nothing between them. */
-                                                    className="hh-press hh-focusable group relative h-[160px] sm:h-[220px] md:h-[280px] lg:h-[320px] rounded-[var(--hh-radius-md)] overflow-hidden bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)] hover:border-[var(--hh-accent)] transition-colors duration-[var(--hh-dur-fast)] ease-[var(--hh-ease-out)] flex items-center justify-center p-1 sm:p-2"
+                                                    data-shortcut-item="true"
+                                                    className="hh-card-item hh-press hh-focusable group relative h-[160px] sm:h-[220px] md:h-[280px] lg:h-[320px] rounded-[var(--hh-radius-md)] overflow-hidden bg-[var(--hh-surface-sunken)] border border-[var(--hh-border)] flex items-center justify-center p-1 sm:p-2 select-none cursor-pointer"
                                                 >
                                                     <div className="relative w-full h-full">
                                                         <Image
@@ -182,9 +179,8 @@ function CharacterListContent() {
                                                             unoptimized
                                                         />
                                                     </div>
-                                                    {/* Name overlay. The dark ramp is functional: it is white
-                                                        text over character key art of unknown brightness. */}
-                                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {/* Name overlay */}
+                                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">
                                                         <p className="text-white text-xs font-bold text-center truncate">
                                                             {characterName}
                                                         </p>

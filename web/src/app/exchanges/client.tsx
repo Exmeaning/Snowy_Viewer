@@ -323,59 +323,62 @@ function ExchangeCard({ entry }: { entry: FlattenedMaterialExchange }) {
     const hiddenRewardCount = Math.max(0, entry.rewardDetails.length - 8);
     const visibleCosts = entry.costs.slice(0, 8);
     const hiddenCostCount = Math.max(0, entry.costs.length - 8);
-
     return (
         <Link
             href={`/exchanges/${entry.id}`}
             data-shortcut-item="true"
-            className="hh-tile hh-press group block rounded-[var(--hh-radius-lg)] p-4 hover:border-[var(--hh-accent-line)]"
+            className="hh-card-item hh-press group flex flex-col justify-between rounded-[var(--hh-radius-lg)] p-4 select-none cursor-pointer overflow-hidden"
         >
-            <div className="mb-2 flex flex-wrap gap-1.5">
-                <Badge label={getExchangeStatusLabel(entry.status, t)} tone={getStatusTone(entry.status)} />
-                <Badge label={getExchangeCategoryLabel(entry.exchangeCategory, t)} tone="violet" />
-                <Badge label={getExchangeTypeLabel(entry.materialExchangeType, t)} tone="amber" />
-                {typeof entry.exchangeLimit === "number" ? <Badge label={t("page.exchanges.limitTimes", { count: entry.exchangeLimit })} tone="rose" /> : null}
+            <div>
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                    <Badge label={getExchangeStatusLabel(entry.status, t)} tone={getStatusTone(entry.status)} />
+                    <Badge label={getExchangeCategoryLabel(entry.exchangeCategory, t)} tone="violet" />
+                    <Badge label={getExchangeTypeLabel(entry.materialExchangeType, t)} tone="amber" />
+                    {typeof entry.exchangeLimit === "number" ? <Badge label={t("page.exchanges.limitTimes", { count: entry.exchangeLimit })} tone="rose" /> : null}
+                </div>
+
+                <div className="min-h-[2.5rem] mb-3 flex flex-col justify-center">
+                    <h2 className="hh-title text-sm font-bold text-[var(--hh-text-primary)] transition-colors line-clamp-2 leading-snug">
+                        {entry.resolvedTitle}
+                    </h2>
+                </div>
+
+                <div className="flex gap-4 mb-3">
+                    {visibleRewards.length > 0 && (
+                        <div className="flex-1 min-w-0">
+                            <ScrollRow label={t("page.exchanges.rewards")}>
+                                {visibleRewards.map((detail, i) => (
+                                    <RewardThumbnail key={`r-${entry.id}-${i}`} detail={detail} />
+                                ))}
+                                {hiddenRewardCount > 0 && (
+                                    <div className="hh-numeric shrink-0 flex h-9 w-9 items-center justify-center rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] text-[10px] font-bold text-[var(--hh-text-tertiary)]">
+                                        +{hiddenRewardCount}
+                                    </div>
+                                )}
+                            </ScrollRow>
+                        </div>
+                    )}
+
+                    {visibleCosts.length > 0 && (
+                        <div className="flex-1 min-w-0">
+                            <ScrollRow label={t("page.exchanges.costs")}>
+                                {visibleCosts.map((cost, i) => (
+                                    <CostThumbnail key={`c-${entry.id}-${i}`} cost={cost} />
+                                ))}
+                                {hiddenCostCount > 0 && (
+                                    <div className="hh-numeric shrink-0 flex h-7 w-7 items-center justify-center rounded-[var(--hh-radius-xs)] bg-[var(--hh-surface-sunken)] text-[8px] font-bold text-[var(--hh-text-tertiary)]">
+                                        +{hiddenCostCount}
+                                    </div>
+                                )}
+                            </ScrollRow>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            <h2 className="hh-title text-sm text-[var(--hh-text-primary)] transition-colors group-hover:text-miku mb-3 line-clamp-2">
-                {entry.resolvedTitle}
-            </h2>
-
-            <div className="flex gap-4">
-                {visibleRewards.length > 0 && (
-                    <div className="flex-1 min-w-0">
-                        <ScrollRow label={t("page.exchanges.rewards")}>
-                            {visibleRewards.map((detail, i) => (
-                                <RewardThumbnail key={`r-${entry.id}-${i}`} detail={detail} />
-                            ))}
-                            {hiddenRewardCount > 0 && (
-                                <div className="hh-numeric shrink-0 flex h-9 w-9 items-center justify-center rounded-[var(--hh-radius-md)] bg-[var(--hh-surface-sunken)] text-[10px] font-bold text-[var(--hh-text-tertiary)]">
-                                    +{hiddenRewardCount}
-                                </div>
-                            )}
-                        </ScrollRow>
-                    </div>
-                )}
-
-                {visibleCosts.length > 0 && (
-                    <div className="flex-1 min-w-0">
-                        <ScrollRow label={t("page.exchanges.costs")}>
-                            {visibleCosts.map((cost, i) => (
-                                <CostThumbnail key={`c-${entry.id}-${i}`} cost={cost} />
-                            ))}
-                            {hiddenCostCount > 0 && (
-                                <div className="hh-numeric shrink-0 flex h-7 w-7 items-center justify-center rounded-[var(--hh-radius-xs)] bg-[var(--hh-surface-sunken)] text-[8px] font-bold text-[var(--hh-text-tertiary)]">
-                                    +{hiddenCostCount}
-                                </div>
-                            )}
-                        </ScrollRow>
-                    </div>
-                )}
-            </div>
-
-            <div className="flex items-center justify-between text-xs">
+            <div className="mt-auto pt-2 flex items-center justify-between text-xs border-t border-[var(--hh-border-hairline)]">
                 <span className="hh-numeric text-[var(--hh-text-tertiary)]">{formatExchangeTime(getExchangeLastModified(entry), formatDate)}</span>
-                <span className="font-bold text-miku transition-transform group-hover:translate-x-0.5 inline-flex items-center gap-1">
+                <span className="font-bold text-[var(--hh-accent-deep)] transition-transform group-hover:translate-x-0.5 inline-flex items-center gap-1">
                     {t("page.exchanges.detailLink")}
                     <HandheldMark type="chevron" size="xs" />
                 </span>

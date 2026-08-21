@@ -492,17 +492,22 @@
 .hh-interactive-card:hover,
 .hh-interactive-card:focus-visible,
 .hh-interactive-card[data-hh-focused],
-.hh-interactive-card[data-shortcut-focused="true"] {
-    transform: translateY(-3px) scale(1.035);
+.hh-interactive-card[data-shortcut-focused="true"],
+[data-shortcut-item="true"]:hover,
+[data-shortcut-item="true"]:focus-visible,
+[data-shortcut-item="true"][data-hh-focused],
+[data-shortcut-item="true"][data-shortcut-focused="true"] {
+    transform: translateY(-4px) scale(1.025) !important;
     border-color: var(--hh-accent-line, var(--hh-accent)) !important;
-    box-shadow: var(--hh-shadow-lift), 0 0 18px color-mix(in srgb, var(--hh-accent) 40%, transparent);
-    z-index: 10;
+    box-shadow: var(--hh-shadow-lift), 0 0 0 2px var(--hh-accent), var(--hh-cursor-glow) !important;
+    z-index: 20 !important;
 }
 
 .hh-card-item:active,
-.hh-interactive-card:active {
-    transform: translateY(0px) scale(var(--hh-press-scale, 0.965));
-    transition-duration: var(--hh-dur-press, 90ms);
+.hh-interactive-card:active,
+[data-shortcut-item="true"]:active {
+    transform: translateY(0px) scale(var(--hh-press-scale, 0.965)) !important;
+    transition: transform var(--hh-dur-press, 90ms) var(--hh-ease-out) !important;
 }
 
 /* Integrated Card Footer - smooth surface merge and full mask on hover */
@@ -566,80 +571,176 @@
     color: #ffffff !important;
 }
 
-/* Card subtext / secondary info / translation turn semi-transparent white */
+/* Card subtext / secondary info / translation / dates turn semi-transparent white */
 .hh-card-item:hover .hh-card-footer .hh-body,
 .hh-card-item:hover .hh-card-footer .hh-subtext,
 .hh-card-item:hover .hh-card-footer .hh-caption,
+.hh-card-item:hover .hh-card-footer .hh-numeric,
 .hh-card-item:hover .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
 .hh-card-item:hover .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
 .hh-card-item:hover .hh-card-footer p,
 .hh-card-item:focus-visible .hh-card-footer .hh-body,
 .hh-card-item:focus-visible .hh-card-footer .hh-subtext,
 .hh-card-item:focus-visible .hh-card-footer .hh-caption,
+.hh-card-item:focus-visible .hh-card-footer .hh-numeric,
 .hh-card-item:focus-visible .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
 .hh-card-item:focus-visible .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
 .hh-card-item:focus-visible .hh-card-footer p,
 .hh-card-item[data-hh-focused] .hh-card-footer .hh-body,
 .hh-card-item[data-hh-focused] .hh-card-footer .hh-subtext,
 .hh-card-item[data-hh-focused] .hh-card-footer .hh-caption,
+.hh-card-item[data-hh-focused] .hh-card-footer .hh-numeric,
 .hh-card-item[data-hh-focused] .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
 .hh-card-item[data-hh-focused] .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
 .hh-card-item[data-hh-focused] .hh-card-footer p,
 .hh-card-item[data-shortcut-focused="true"] .hh-card-footer .hh-body,
 .hh-card-item[data-shortcut-focused="true"] .hh-card-footer .hh-subtext,
 .hh-card-item[data-shortcut-focused="true"] .hh-card-footer .hh-caption,
+.hh-card-item[data-shortcut-focused="true"] .hh-card-footer .hh-numeric,
 .hh-card-item[data-shortcut-focused="true"] .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
 .hh-card-item[data-shortcut-focused="true"] .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
 .hh-card-item[data-shortcut-focused="true"] .hh-card-footer p,
 .group:hover .hh-card-footer .hh-body,
+.group:hover .hh-card-footer .hh-subtext,
+.group:hover .hh-card-footer .hh-caption,
+.group:hover .hh-card-footer .hh-numeric,
 .group:hover .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
 .group:hover .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
 .group:hover .hh-card-footer p,
 .group:focus-visible .hh-card-footer .hh-body,
+.group:focus-visible .hh-card-footer .hh-subtext,
+.group:focus-visible .hh-card-footer .hh-caption,
+.group:focus-visible .hh-card-footer .hh-numeric,
 .group:focus-visible .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
 .group:focus-visible .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
 .group:focus-visible .hh-card-footer p,
 .group[data-hh-focused] .hh-card-footer .hh-body,
+.group[data-hh-focused] .hh-card-footer .hh-subtext,
+.group[data-hh-focused] .hh-card-footer .hh-caption,
+.group[data-hh-focused] .hh-card-footer .hh-numeric,
 .group[data-hh-focused] .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
 .group[data-hh-focused] .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
 .group[data-hh-focused] .hh-card-footer p,
 .group[data-shortcut-focused="true"] .hh-card-footer .hh-body,
+.group[data-shortcut-focused="true"] .hh-card-footer .hh-subtext,
+.group[data-shortcut-focused="true"] .hh-card-footer .hh-caption,
+.group[data-shortcut-focused="true"] .hh-card-footer .hh-numeric,
 .group[data-shortcut-focused="true"] .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
 .group[data-shortcut-focused="true"] .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
 .group[data-shortcut-focused="true"] .hh-card-footer p,
 .hh-interactive-card:hover .hh-card-footer .hh-body,
-.hh-interactive-card:focus-visible .hh-card-footer .hh-body {
+.hh-interactive-card:hover .hh-card-footer .hh-subtext,
+.hh-interactive-card:hover .hh-card-footer .hh-caption,
+.hh-interactive-card:hover .hh-card-footer .hh-numeric,
+.hh-interactive-card:hover .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
+.hh-interactive-card:hover .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
+.hh-interactive-card:hover .hh-card-footer p,
+.hh-interactive-card:focus-visible .hh-card-footer .hh-body,
+.hh-interactive-card:focus-visible .hh-card-footer .hh-subtext,
+.hh-interactive-card:focus-visible .hh-card-footer .hh-caption,
+.hh-interactive-card:focus-visible .hh-card-footer .hh-numeric,
+.hh-interactive-card:focus-visible .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
+.hh-interactive-card:focus-visible .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
+.hh-interactive-card:focus-visible .hh-card-footer p,
+.hh-interactive-card[data-hh-focused] .hh-card-footer .hh-body,
+.hh-interactive-card[data-hh-focused] .hh-card-footer .hh-subtext,
+.hh-interactive-card[data-hh-focused] .hh-card-footer .hh-caption,
+.hh-interactive-card[data-hh-focused] .hh-card-footer .hh-numeric,
+.hh-interactive-card[data-hh-focused] .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
+.hh-interactive-card[data-hh-focused] .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
+.hh-interactive-card[data-hh-focused] .hh-card-footer p,
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer .hh-body,
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer .hh-subtext,
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer .hh-caption,
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer .hh-numeric,
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer [class*="text-[var(--hh-text-secondary)]"],
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer [class*="text-[var(--hh-text-tertiary)]"],
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer p {
     color: rgba(255, 255, 255, 0.88) !important;
 }
 
+/* Card footer icons (calendar, clock, arrows) */
+.hh-card-item:hover .hh-card-footer svg,
+.hh-card-item:focus-visible .hh-card-footer svg,
+.hh-card-item[data-hh-focused] .hh-card-footer svg,
+.hh-card-item[data-shortcut-focused="true"] .hh-card-footer svg,
+.group:hover .hh-card-footer svg,
+.group:focus-visible .hh-card-footer svg,
+.group[data-hh-focused] .hh-card-footer svg,
+.group[data-shortcut-focused="true"] .hh-card-footer svg,
+.hh-interactive-card:hover .hh-card-footer svg,
+.hh-interactive-card:focus-visible .hh-card-footer svg,
+.hh-interactive-card[data-hh-focused] .hh-card-footer svg,
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer svg {
+    color: #ffffff !important;
+    stroke: currentColor;
+}
+
+.hh-card-item:hover .hh-card-footer svg:not([fill="none"]),
+.hh-card-item:focus-visible .hh-card-footer svg:not([fill="none"]),
+.hh-card-item[data-hh-focused] .hh-card-footer svg:not([fill="none"]),
+.hh-card-item[data-shortcut-focused="true"] .hh-card-footer svg:not([fill="none"]),
+.group:hover .hh-card-footer svg:not([fill="none"]),
+.group:focus-visible .hh-card-footer svg:not([fill="none"]),
+.group[data-hh-focused] .hh-card-footer svg:not([fill="none"]),
+.group[data-shortcut-focused="true"] .hh-card-footer svg:not([fill="none"]),
+.hh-interactive-card:hover .hh-card-footer svg:not([fill="none"]),
+.hh-interactive-card:focus-visible .hh-card-footer svg:not([fill="none"]),
+.hh-interactive-card[data-hh-focused] .hh-card-footer svg:not([fill="none"]),
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer svg:not([fill="none"]) {
+    fill: currentColor;
+}
+
 /* In-card small badges (ID badge, Lv badge, Sk badge) contrast adaptation */
-.hh-card-item:hover .hh-card-footer .hh-numeric,
 .hh-card-item:hover .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.hh-card-item:hover .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
 .hh-card-item:hover .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
-.hh-card-item:focus-visible .hh-card-footer .hh-numeric,
+.hh-card-item:hover .hh-card-footer .hh-badge,
 .hh-card-item:focus-visible .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.hh-card-item:focus-visible .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
 .hh-card-item:focus-visible .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
-.hh-card-item[data-hh-focused] .hh-card-footer .hh-numeric,
+.hh-card-item:focus-visible .hh-card-footer .hh-badge,
 .hh-card-item[data-hh-focused] .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.hh-card-item[data-hh-focused] .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
 .hh-card-item[data-hh-focused] .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
-.hh-card-item[data-shortcut-focused="true"] .hh-card-footer .hh-numeric,
+.hh-card-item[data-hh-focused] .hh-card-footer .hh-badge,
 .hh-card-item[data-shortcut-focused="true"] .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.hh-card-item[data-shortcut-focused="true"] .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
 .hh-card-item[data-shortcut-focused="true"] .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
-.group:hover .hh-card-footer .hh-numeric,
+.hh-card-item[data-shortcut-focused="true"] .hh-card-footer .hh-badge,
 .group:hover .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.group:hover .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
 .group:hover .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
-.group:focus-visible .hh-card-footer .hh-numeric,
+.group:hover .hh-card-footer .hh-badge,
 .group:focus-visible .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.group:focus-visible .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
 .group:focus-visible .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
-.group[data-hh-focused] .hh-card-footer .hh-numeric,
+.group:focus-visible .hh-card-footer .hh-badge,
 .group[data-hh-focused] .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.group[data-hh-focused] .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
 .group[data-hh-focused] .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
-.group[data-shortcut-focused="true"] .hh-card-footer .hh-numeric,
+.group[data-hh-focused] .hh-card-footer .hh-badge,
 .group[data-shortcut-focused="true"] .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.group[data-shortcut-focused="true"] .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
 .group[data-shortcut-focused="true"] .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
-.hh-interactive-card:hover .hh-card-footer .hh-numeric,
-.hh-interactive-card:focus-visible .hh-card-footer .hh-numeric {
-    background-color: rgba(0, 0, 0, 0.22) !important;
+.group[data-shortcut-focused="true"] .hh-card-footer .hh-badge,
+.hh-interactive-card:hover .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.hh-interactive-card:hover .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
+.hh-interactive-card:hover .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
+.hh-interactive-card:hover .hh-card-footer .hh-badge,
+.hh-interactive-card:focus-visible .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.hh-interactive-card:focus-visible .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
+.hh-interactive-card:focus-visible .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
+.hh-interactive-card:focus-visible .hh-card-footer .hh-badge,
+.hh-interactive-card[data-hh-focused] .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.hh-interactive-card[data-hh-focused] .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
+.hh-interactive-card[data-hh-focused] .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
+.hh-interactive-card[data-hh-focused] .hh-card-footer .hh-badge,
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer [class*="bg-[var(--hh-surface-sunken)]"],
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer span[class*="bg-[var(--hh-accent-wash"],
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer [class*="bg-[var(--hh-accent-wash-strong)]"],
+.hh-interactive-card[data-shortcut-focused="true"] .hh-card-footer .hh-badge {
+    background-color: rgba(0, 0, 0, 0.16) !important;
     color: #ffffff !important;
 }
 
@@ -718,12 +819,21 @@
 }
 
 .hh-card-item[data-shortcut-focused="true"],
-.hh-interactive-card[data-shortcut-focused="true"] {
+.hh-interactive-card[data-shortcut-focused="true"],
+.hh-card-item[data-hh-focused],
+.hh-interactive-card[data-hh-focused],
+[data-shortcut-item="true"][data-shortcut-focused="true"],
+[data-shortcut-item="true"][data-hh-focused] {
     outline: none !important;
-    transform: translateY(-3px) scale(1.035);
-    border-color: var(--hh-accent) !important;
-    box-shadow: var(--hh-shadow-lift), 0 0 0 var(--hh-cursor-width) var(--hh-accent), var(--hh-cursor-glow) !important;
-    z-index: 10;
+    transform: translateY(-4px) scale(1.025) !important;
+    border-color: var(--hh-accent-line, var(--hh-accent)) !important;
+    box-shadow: var(--hh-shadow-lift), 0 0 0 2px var(--hh-accent), var(--hh-cursor-glow) !important;
+    transition:
+        transform var(--hh-dur-cursor) var(--hh-ease-spring),
+        box-shadow var(--hh-dur-cursor) var(--hh-ease-spring),
+        border-color var(--hh-dur-fast) var(--hh-ease-out),
+        background-color var(--hh-dur-fast) var(--hh-ease-out);
+    z-index: 20 !important;
 }
 
 /* Pointer & touch cursor focus state.
@@ -734,7 +844,7 @@
    
    Unlayered so it reliably outranks .hh-tile's component border and any local
    border utility without fighting !important. */
-[data-hh-focused] {
+[data-hh-focused]:not(.hh-card-item):not(.hh-interactive-card):not([data-shortcut-item="true"]) {
     outline: none !important;
     border-color: var(--hh-accent);
     box-shadow:
@@ -749,12 +859,22 @@
     z-index: 1;
 }
 
-[data-hh-focused]:active {
+[data-hh-focused]:not(.hh-card-item):not(.hh-interactive-card):not([data-shortcut-item="true"]):active {
     transform: translateY(0) scale(var(--hh-press-scale));
     transition:
         transform var(--hh-dur-press) var(--hh-ease-snap),
         border-color var(--hh-dur-fast) var(--hh-ease-out),
         box-shadow var(--hh-dur-fast) var(--hh-ease-out);
+}
+
+.hh-card-item[data-hh-focused]:active,
+.hh-interactive-card[data-hh-focused]:active,
+.hh-card-item[data-shortcut-focused="true"]:active,
+.hh-interactive-card[data-shortcut-focused="true"]:active,
+[data-shortcut-item="true"][data-hh-focused]:active,
+[data-shortcut-item="true"][data-shortcut-focused="true"]:active {
+    transform: translateY(0px) scale(var(--hh-press-scale, 0.965)) !important;
+    transition: transform var(--hh-dur-press, 90ms) var(--hh-ease-out) !important;
 }
 
 /* ==========================================================================

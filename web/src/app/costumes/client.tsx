@@ -14,8 +14,6 @@ import { getCostumeThumbnailUrl } from "@/lib/assets";
 import {
     ICostumeInfo,
     IMoeCostumeData,
-    PART_TYPE_LABEL_KEYS,
-    SOURCE_LABEL_KEYS,
 } from "@/types/costume";
 import { ICardInfo } from "@/types/types"; // Import ICardInfo
 import { fetchMasterData } from "@/lib/fetch";
@@ -23,6 +21,7 @@ import { TranslatedText } from "@/components/common/TranslatedText";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import HandheldEmptyState from "@/components/handheld/HandheldEmptyState";
+import { getCharacterName } from "@/lib/i18n";
 
 // ... imports remain the same
 
@@ -33,11 +32,6 @@ function CostumesContent() {
     const { assetSource, isShowSpoiler } = useTheme();
     const { t } = useTranslation();
     const { t: tI18n } = useI18n();
-    const translateWithFallback = (key: string | undefined, fallback: string) => {
-        if (!key) return fallback;
-        const label = tI18n(key);
-        return label === key ? fallback : label;
-    };
 
     const [costumes, setCostumes] = useState<ICostumeInfo[]>([]);
     const [allCards, setAllCards] = useState<ICardInfo[]>([]); // Store all cards
@@ -382,9 +376,9 @@ function CostumesContent() {
                                         href={`/costumes/${costume.costumeNumber}`}
                                         key={costume.costumeNumber}
                                         data-shortcut-item="true"
-                                        className="hh-card-item hh-full-mask rounded-[var(--hh-radius-lg)] overflow-hidden p-3 flex flex-col h-full group select-none"
+                                        className="hh-card-item block h-full flex flex-col select-none cursor-pointer overflow-hidden group"
                                     >
-                                        <div className="relative aspect-square mb-2 bg-[var(--hh-surface-sunken)] rounded-[var(--hh-radius-md)] overflow-hidden">
+                                        <div className="relative aspect-square bg-[var(--hh-surface-sunken)] overflow-hidden shrink-0">
                                             <Image
                                                 src={getCostumeThumbnailUrl(assetName, assetSource)}
                                                 alt={costume.name}
@@ -392,26 +386,36 @@ function CostumesContent() {
                                                 className="object-contain p-2"
                                                 unoptimized
                                             />
-                                        </div>
-                                        <div className="flex-1 flex flex-col">
                                             {isSpoiler && (
-                                                <div className="mb-1">
+                                                <div className="absolute top-1.5 right-1.5">
                                                     <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded-[var(--hh-radius-xs)] leading-none shadow-sm">
                                                         {tI18n("page.costumes.spoilerBadge")}
                                                     </span>
                                                 </div>
                                             )}
-                                            <h3 className="hh-title text-sm text-[var(--hh-text-primary)] mb-1" title={costume.name}>
-                                                <TranslatedText
-                                                    original={costume.name}
-                                                    category="costumes"
-                                                    field="name"
-                                                    originalClassName="block truncate"
-                                                    translationClassName="hh-body text-xs font-medium text-[var(--hh-text-tertiary)] block truncate"
-                                                />
-                                            </h3>
-                                            <div className="mt-auto flex items-center justify-between text-xs text-[var(--hh-text-secondary)]">
-                                                <span className="hh-body truncate">{getCharacterName(tI18n, costume.characterId)}</span>
+                                        </div>
+                                        <div className="hh-card-footer p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
+                                            <div className="min-h-[2.5rem] mb-1 flex flex-col justify-center">
+                                                <h3 className="hh-title text-xs sm:text-sm font-bold text-[var(--hh-text-primary)] leading-snug line-clamp-2" title={costume.name}>
+                                                    <TranslatedText
+                                                        original={costume.name}
+                                                        category="costumes"
+                                                        field="name"
+                                                        originalClassName="block truncate"
+                                                        translationClassName="hh-body text-xs font-medium text-[var(--hh-text-tertiary)] block truncate"
+                                                    />
+                                                </h3>
+                                            </div>
+                                            <div className="mt-auto flex items-center justify-between text-xs text-[var(--hh-text-secondary)] pt-1">
+                                                <span className="hh-body text-xs font-medium text-[var(--hh-text-secondary)] truncate">
+                                                    {costume.characterIds && costume.characterIds.length === 1
+                                                        ? getCharacterName(tI18n, costume.characterIds[0])
+                                                        : costume.gender === "female"
+                                                            ? tI18n("common.costume.genders.female")
+                                                            : costume.gender === "male"
+                                                                ? tI18n("common.costume.genders.male")
+                                                                : ""}
+                                                </span>
                                                 <span className="hh-numeric shrink-0 text-[10px] text-[var(--hh-text-tertiary)] bg-[var(--hh-surface-sunken)] px-1.5 py-0.5 rounded-[var(--hh-radius-xs)] leading-none font-mono">
                                                     #{costume.costumeNumber}
                                                 </span>

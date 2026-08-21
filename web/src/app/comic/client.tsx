@@ -167,34 +167,38 @@ function ComicContent() {
                                     data-shortcut-item="true"
                                     tabIndex={0}
                                     role="button"
-                                    className="group cursor-pointer"
+                                    className="hh-card-item relative cursor-pointer overflow-hidden flex flex-col group select-none"
                                 >
-                                    <div className="hh-tile hh-press rounded-[var(--hh-radius-lg)] overflow-hidden group-hover:border-[var(--hh-accent)]">
-                                        <div className="relative aspect-[4/3] bg-[var(--hh-surface-sunken)]">
-                                            <Image
-                                                src={getComicUrl(comic.assetbundleName!, assetSource)}
-                                                alt={comic.title}
-                                                fill
-                                                className="object-contain"
-                                                unoptimized
-                                            />
-                                        </div>
-                                        <div className="p-4 border-t border-[var(--hh-border-hairline)]">
-                                            <div className="hh-title text-sm text-primary-text line-clamp-1 group-hover:text-miku transition-colors">
+                                    <div className="relative aspect-[4/3] bg-[var(--hh-surface-sunken)] overflow-hidden">
+                                        <Image
+                                            src={getComicUrl(comic.assetbundleName!, assetSource)}
+                                            alt={comic.title}
+                                            fill
+                                            className="object-contain"
+                                            unoptimized
+                                        />
+                                    </div>
+                                    <div className="hh-card-footer p-3 sm:p-3.5 flex-1 flex flex-col justify-between">
+                                        <div className="min-h-[2.5rem] flex flex-col justify-center">
+                                            <h3 className="hh-title text-xs sm:text-sm font-medium text-[var(--hh-text-primary)] leading-snug line-clamp-2" title={comic.title}>
                                                 <TranslatedText
                                                     original={comic.title}
                                                     category="comic"
                                                     field="title"
                                                     originalClassName="block truncate"
-                                                    translationClassName="text-xs font-medium text-[var(--hh-text-tertiary)] block truncate mt-0.5"
+                                                    translationClassName="hh-body text-xs font-medium text-[var(--hh-text-tertiary)] block truncate mt-0.5"
                                                 />
-                                            </div>
-                                            <div className="flex items-center justify-between mt-3">
-                                                <span className="hh-numeric text-[10px] font-bold text-miku bg-[var(--hh-accent-wash-strong)] px-2.5 py-0.5 rounded-[var(--hh-radius-sm)] border border-[var(--hh-accent-line)]">#{comic.id}</span>
-                                                {comic.fromUserRank !== undefined && (
-                                                    <span className="hh-numeric text-[10px] text-[var(--hh-text-tertiary)] font-medium">Rank {comic.fromUserRank}</span>
-                                                )}
-                                            </div>
+                                            </h3>
+                                        </div>
+                                        <div className="mt-2 flex items-center justify-between text-[10px] sm:text-xs">
+                                            <span className="hh-numeric px-2 py-0.5 bg-[var(--hh-surface-sunken)] text-[var(--hh-text-secondary)] rounded-[var(--hh-radius-xs)] font-bold">
+                                                #{comic.id}
+                                            </span>
+                                            {comic.fromUserRank !== undefined && (
+                                                <span className="hh-body hh-numeric text-[var(--hh-text-tertiary)] font-medium">
+                                                    Rank {comic.fromUserRank}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

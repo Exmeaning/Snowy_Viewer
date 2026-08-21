@@ -25,7 +25,6 @@ import {
     parseShortcutCombos,
 } from "@/lib/shortcuts";
 import { getCharacterName, SUPPORTED_UI_LOCALES, UI_LOCALE_LABELS } from "@/lib/i18n";
-import CursorRing from "@/components/handheld/CursorRing";
 
 interface SettingsPanelProps {
     isOpen: boolean;
@@ -565,7 +564,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         aria-modal="true"
                         aria-labelledby="settings-panel-title"
                         onClick={(e) => e.stopPropagation()}
-                        className="relative w-full max-w-md transform-gpu will-change-transform bg-[var(--hh-surface-1)] border border-[var(--hh-border)] rounded-[var(--hh-radius-xl)] shadow-[var(--hh-shadow-float)] overflow-hidden flex flex-col my-auto z-10"
+                        className="relative w-full max-w-md transform-gpu will-change-transform bg-[var(--hh-surface-1)] border border-[var(--hh-border)] rounded-[var(--hh-radius-xl)] shadow-[var(--hh-shadow-float)] overflow-hidden flex flex-col my-auto mx-auto z-10"
                         variants={hhSheetVariants}
                         initial="initial"
                         animate="animate"
@@ -656,7 +655,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
                         {/* Tab body — auto-heights to the active tab so the panel
                             never carries a dead gap under a short tab. */}
-                        <div className="p-5 overflow-y-auto hh-scrollbar max-h-[60vh] min-h-[220px] bg-[var(--hh-surface-1)]">
+                        <div className="p-4 overflow-y-auto hh-scrollbar max-h-[60vh] min-h-[220px] bg-[var(--hh-surface-1)]">
                             <AnimatePresence mode="wait" initial={false}>
                                 <motion.div
                                     key={activeTab}
@@ -696,60 +695,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                 layoutId="segmented-sound"
                                             />
 
-                                            {/* 26-Character Theme Palette Grid */}
-                                            <div className="space-y-2">
-                                                <div className="hh-label">{t("settings.themeColor.sectionTitle")}</div>
-                                                <div className="space-y-3 bg-[var(--hh-surface-2)] border border-[var(--hh-border)] rounded-[var(--hh-radius-md)] p-3 shadow-[var(--hh-shadow-tile)]">
-                                                    {unitGroups.map((unit) => (
-                                                        <div key={unit.id} className="space-y-1.5">
-                                                            <div className="flex items-center gap-1.5 px-0.5">
-                                                                <span
-                                                                    className="w-2 h-2 rounded-full shrink-0"
-                                                                    style={{ backgroundColor: unit.color }}
-                                                                />
-                                                                <span className="text-[11px] font-semibold text-[var(--hh-text-secondary)]">
-                                                                    {t(unit.labelKey)}
-                                                                </span>
-                                                            </div>
-                                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                                                                {unit.charIds.map((charId) => {
-                                                                    const charIdStr = String(charId);
-                                                                    const isSelected = themeCharId === charIdStr;
-                                                                    const charColor = CHAR_COLORS[charIdStr];
-                                                                    const charName = getCharacterName(t, charId, "short");
-                                                                    return (
-                                                                        <button
-                                                                            key={charId}
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                playHandheldSound("confirm");
-                                                                                setThemeCharacter(charIdStr);
-                                                                            }}
-                                                                            className={`hh-press relative flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--hh-radius-md)] border text-left transition-colors cursor-pointer overflow-hidden ${
-                                                                                isSelected
-                                                                                    ? "bg-[var(--hh-surface-1)] border-[var(--hh-accent)] shadow-[var(--hh-shadow-tile)]"
-                                                                                    : "bg-[var(--hh-surface-1)] border-[var(--hh-border-hairline)] hover:border-[var(--hh-border-strong)]"
-                                                                            }`}
-                                                                            title={charName}
-                                                                        >
-                                                                            <span
-                                                                                className="w-3 h-3 rounded-full shrink-0 border border-[var(--hh-border-hairline)]"
-                                                                                style={{ backgroundColor: charColor }}
-                                                                            />
-                                                                            <span className="text-xs font-medium text-[var(--hh-text-primary)] truncate">
-                                                                                {charName}
-                                                                            </span>
-                                                                            {isSelected && (
-                                                                                <CursorRing groupId="settings-theme-swatches" />
-                                                                            )}
-                                                                        </button>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
+                                            {/* Theme Color Dropdown */}
+                                            <DropdownSettingRow
+                                                sectionTitle={t("settings.themeColor.sectionTitle")}
+                                                valueLabel={getCharacterName(t, Number(themeCharId), "short")}
+                                                isExpanded={expandedDropdown === "theme"}
+                                                onToggle={(e) => handleToggleDropdown("theme", e)}
+                                                swatchColor={CHAR_COLORS[themeCharId] || "#33CCBB"}
+                                            />
 
                                             {/* UI Language Dropdown */}
                                             <DropdownSettingRow
@@ -802,7 +755,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                                         label={t("settings.trainedThumbnail.label")}
                                                         checked={useTrainedThumbnail}
                                                         onChange={() => setUseTrainedThumbnail(!useTrainedThumbnail)}
-                                                        shortcutHint="]"
                                                         icon={
                                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -951,7 +903,39 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         </div>
                     </motion.div>
 
-                    {/* PORTAL DROPDOWNS */}
+                    {/* PORTAL DROPDOWNS: Rendered completely outside modal at z-[300] to eliminate any clipping */}
+                    <FloatingDropdown
+                        isOpen={expandedDropdown === "theme"}
+                        triggerRect={triggerRect}
+                        onClose={() => setExpandedDropdown(null)}
+                        maxHeight={260}
+                    >
+                        <div className="space-y-3">
+                            {unitGroups.map((unit) => (
+                                <div key={unit.id}>
+                                    <div className="hh-label px-2 pt-1 pb-1">
+                                        {t(unit.labelKey)}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-1">
+                                        {unit.charIds.map((charId) => (
+                                            <DropdownOptionRow
+                                                key={charId}
+                                                isSelected={themeCharId === String(charId)}
+                                                swatchColor={CHAR_COLORS[String(charId)]}
+                                                label={getCharacterName(t, charId, "short")}
+                                                onClick={() => {
+                                                    playHandheldSound("confirm");
+                                                    setThemeCharacter(String(charId));
+                                                    setExpandedDropdown(null);
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </FloatingDropdown>
+
                     <FloatingDropdown
                         isOpen={expandedDropdown === "language"}
                         triggerRect={triggerRect}

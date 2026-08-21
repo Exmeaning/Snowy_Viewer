@@ -34,6 +34,7 @@ import {
 import { defaultContentRegionForPathname } from "@/lib/locale-routing";
 
 export type { BackgroundAnimationBudget } from "@/lib/backgroundAnimation";
+export type { ColorSchemePreference, ResolvedColorScheme } from "@/lib/colorScheme";
 
 // Default theme color (Miku)
 const DEFAULT_THEME_CHAR = "21";

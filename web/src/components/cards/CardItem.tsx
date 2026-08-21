@@ -43,7 +43,7 @@ export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: Car
 
                 {/* Spoiler Badge Overlay */}
                 {isSpoiler && (
-                    <div className="absolute top-1.5 left-1.5 z-10 pointer-events-none">
+                    <div className="absolute top-1.5 right-1.5 z-10 pointer-events-none">
                         <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded-[var(--hh-radius-xs)] shadow-sm leading-none">
                             {t("common.badge.spoiler")}
                         </span>

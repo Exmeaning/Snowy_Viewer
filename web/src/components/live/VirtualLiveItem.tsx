@@ -27,66 +27,67 @@ export default function VirtualLiveItem({ virtualLive, isSpoiler }: VirtualLiveI
     });
 
     return (
-        <Link href={`/live/${virtualLive.id}`} className="group block select-none" data-shortcut-item="true">
-            {/* Interactive Virtual Live Card with full accent mask on hover and snappy spring physics */}
-            <div className="hh-card-item relative cursor-pointer overflow-hidden">
-                {/* Banner Image */}
-                <div className="relative aspect-[16/7] bg-[var(--hh-surface-sunken)] overflow-hidden">
-                    <Image
-                        src={bannerUrl}
-                        alt={virtualLive.name}
-                        fill
-                        className="object-contain"
-                        unoptimized
-                    />
+        <Link
+            href={`/live/${virtualLive.id}`}
+            className="hh-card-item block h-full flex flex-col select-none cursor-pointer overflow-hidden group"
+            data-shortcut-item="true"
+        >
+            {/* Banner Image */}
+            <div className="relative aspect-[16/7] bg-[var(--hh-surface-sunken)] overflow-hidden shrink-0">
+                <Image
+                    src={bannerUrl}
+                    alt={virtualLive.name}
+                    fill
+                    className="object-contain"
+                    unoptimized
+                />
 
-                    {/* Status Badge — status color is semantic and stays as-is. */}
-                    <div
-                        className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 sm:px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-[10px] sm:text-xs font-bold text-white shadow-sm"
-                        style={{ backgroundColor: statusDisplay.color }}
-                    >
-                        {t(`common.status.${status}`)}
-                    </div>
-
-                    {/* Type Badge — live-type color is semantic and stays as-is. */}
-                    <div
-                        className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-[10px] sm:text-xs font-bold text-white shadow-sm"
-                        style={{ backgroundColor: VIRTUAL_LIVE_TYPE_COLORS[virtualLive.virtualLiveType as VirtualLiveType] || "#9E9E9E" }}
-                    >
-                        {t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`)}
-                    </div>
-
-                    {/* Spoiler Badge */}
-                    {isSpoiler && (
-                        <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-orange-500 rounded-[var(--hh-radius-xs)] text-[10px] sm:text-xs font-bold text-white shadow-sm">
-                            {t("common.badge.spoiler")}
-                        </div>
-                    )}
+                {/* Status Badge — status color is semantic and stays as-is. */}
+                <div
+                    className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 sm:px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-[10px] sm:text-xs font-bold text-white shadow-sm"
+                    style={{ backgroundColor: statusDisplay.color }}
+                >
+                    {t(`common.status.${status}`)}
                 </div>
 
-                {/* Info Footer with Full Accent Mask */}
-                <div className="hh-card-footer p-2.5 sm:p-3">
-                    {/* Live Name */}
-                    <h3 className="hh-title text-xs sm:text-sm font-bold text-[var(--hh-text-primary)] leading-snug">
-                        <TranslatedText
-                            original={virtualLive.name}
-                            category="virtualLive"
-                            field="name"
-                            originalClassName="hh-card-title block truncate"
-                            translationClassName="hh-body text-[10px] sm:text-xs font-medium text-[var(--hh-text-tertiary)] mt-0.5 block truncate"
-                        />
-                    </h3>
+                {/* Type Badge — live-type color is semantic and stays as-is. */}
+                <div
+                    className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 rounded-[var(--hh-radius-xs)] text-[10px] sm:text-xs font-bold text-white shadow-sm"
+                    style={{ backgroundColor: VIRTUAL_LIVE_TYPE_COLORS[virtualLive.virtualLiveType as VirtualLiveType] || "#9E9E9E" }}
+                >
+                    {t(`common.virtualLiveTypes.${virtualLive.virtualLiveType}`)}
+                </div>
 
-                    {/* Date Range */}
-                    <div className="hh-body text-[10px] sm:text-xs text-[var(--hh-text-secondary)] space-y-0.5 mt-1 hidden sm:block">
-                        <div className="flex items-center gap-1">
-                            <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span className="hh-numeric">{formatDate(virtualLive.startAt)}</span>
-                            <span>~</span>
-                            <span className="hh-numeric">{formatDate(virtualLive.endAt)}</span>
-                        </div>
+                {/* Spoiler Badge */}
+                {isSpoiler && (
+                    <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 sm:px-2 py-0.5 bg-orange-500 rounded-[var(--hh-radius-xs)] text-[10px] sm:text-xs font-bold text-white shadow-sm">
+                        {t("common.badge.spoiler")}
+                    </div>
+                )}
+            </div>
+
+            {/* Info Footer with Full Accent Mask */}
+            <div className="hh-card-footer p-2.5 sm:p-3 flex flex-col justify-between flex-1">
+                {/* Live Name */}
+                <h3 className="hh-title text-xs sm:text-sm font-bold text-[var(--hh-text-primary)] leading-snug min-h-[2.5rem] flex flex-col justify-start overflow-hidden">
+                    <TranslatedText
+                        original={virtualLive.name}
+                        category="virtualLive"
+                        field="name"
+                        originalClassName="hh-card-title block truncate"
+                        translationClassName="hh-body text-[10px] sm:text-xs font-medium text-[var(--hh-text-tertiary)] mt-0.5 block truncate"
+                    />
+                </h3>
+
+                {/* Date Range */}
+                <div className="hh-body text-[10px] sm:text-xs text-[var(--hh-text-secondary)] space-y-0.5 mt-auto pt-1 hidden sm:block">
+                    <div className="flex items-center gap-1">
+                        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="hh-numeric">{formatDate(virtualLive.startAt)}</span>
+                        <span>~</span>
+                        <span className="hh-numeric">{formatDate(virtualLive.endAt)}</span>
                     </div>
                 </div>
             </div>
