@@ -1042,22 +1042,7 @@ button[data-shortcut-load-more="true"]::after {
 
 /* ==========================================
    Filter panels inside the drawer
-
-   A panel rendered in the drawer is framed by the drawer itself, which supplies
-   the title row and the close control. Three pieces of the panel's standalone
-   chrome therefore have to stand down, or the user sees two titles and a
-   collapsed body inside an already-open drawer:
-
-   1. Its own header row is redundant with the drawer header.
-   2. The mobile collapse behaviour is redundant with opening/closing the drawer,
-      so the collapsible body is forced open — otherwise opening the drawer can
-      reveal nothing but a "tap to expand" strip.
-   3. The "tap to expand" pad has nothing left to toggle.
    ========================================== */
-[data-filter-drawer-body] [data-shortcut-filters="true"] > div:first-child {
-  display: none;
-}
-
 [data-filter-drawer-body] [data-filter-collapsible="true"] {
   display: block !important;
 }

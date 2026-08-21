@@ -235,6 +235,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     // Prevent body scroll while preserving any existing overflow override.
     useEffect(() => {
         if (!isOpen) return;
+        // Skip locking on touch devices to avoid page reflow and viewport flicker
+        if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+            return;
+        }
         const previousBodyOverflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
         return () => {
@@ -290,10 +294,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[200] isolate flex items-center justify-center p-3 sm:p-4">
+                <div className="fixed inset-0 z-[200] isolate flex items-center justify-center p-3 sm:p-4 touch-none">
                     {/* Backdrop */}
                     <motion.div
-                        className="absolute inset-0 transform-gpu bg-black/45 backdrop-blur-[8px]"
+                        className="absolute inset-0 transform-gpu bg-black/45 backdrop-blur-[8px] will-change-[opacity]"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -379,16 +383,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         </div>
 
                         {/* Tab Content Body - Auto content height without giant empty bottom gap */}
-                        <div className="p-5 overflow-y-auto max-h-[60vh] min-h-[220px]">
-                            <AnimatePresence mode="wait" initial={false}>
-                                <motion.div
-                                    key={activeTab}
-                                    initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
-                                    animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                                    exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
-                                    transition={overlayTransition}
-                                    className="space-y-4"
-                                >
+                        <div className="p-5 overflow-y-auto max-h-[60vh] min-h-[260px]">
+                            <motion.div
+                                key={activeTab}
+                                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.15, ease: "easeOut" }}
+                                className="space-y-4"
+                            >
                                     {/* TAB 1: VISUAL */}
                                     {activeTab === "visual" && (
                                         <div className="space-y-4">
@@ -807,7 +809,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                                         </div>
                                     )}
                                 </motion.div>
-                            </AnimatePresence>
                         </div>
 
                         {/* Footer with version - Fixed at bottom */}

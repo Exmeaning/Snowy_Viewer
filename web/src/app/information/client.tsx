@@ -406,6 +406,7 @@ export default function InformationClient() {
                 <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)]">
                     <aside className="lg:sticky lg:top-24 lg:self-start">
                         <BaseFilters
+                            variant="card"
                             title={t("page.information.filterTitle")}
                             filteredCount={filteredItems.length}
                             totalCount={items.length}

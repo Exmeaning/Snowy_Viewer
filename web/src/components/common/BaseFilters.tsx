@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/contexts/I18nContext";
 
@@ -13,6 +13,8 @@ export interface SortOption {
 }
 
 export interface BaseFiltersProps {
+    /** Visual style variant: "card" (standalone panel with own header/card) or "plain" (flat content for drawer/modal, default: "plain") */
+    variant?: "card" | "plain";
     /** Title shown in the header (default: t("common.filter.title")) */
     title?: string;
     /** Count display format: "filtered / total" or just "total" */
@@ -83,11 +85,14 @@ export function getFilterToggleStateClasses(selected: boolean) {
         : "island-pill-hover text-slate-600 dark:text-slate-400 hover:text-miku";
 }
 
+export const FilterDrawerContext = React.createContext<boolean>(false);
+
 // ============================================================================
 // Component
 // ============================================================================
 
 export default function BaseFilters({
+    variant,
     title,
     filteredCount,
     totalCount,
@@ -104,15 +109,17 @@ export default function BaseFilters({
     onReset,
     children,
 }: BaseFiltersProps) {
+    const isInsideDrawer = React.useContext(FilterDrawerContext);
+    const resolvedVariant = variant ?? (isInsideDrawer ? "plain" : "card");
     const { t } = useI18n();
     const resolvedTitle = title ?? t("common.filter.title");
     const resolvedSearchPlaceholder = searchPlaceholder ?? t("common.filter.search") + "...";
     const pathname = usePathname();
     const STORAGE_KEY = `filters_collapsed:${pathname}`;
-    const [rootElement, setRootElement] = useState<HTMLDivElement | null>(null);
     const [mobileCollapsed, setMobileCollapsed] = useState(true);
 
     useEffect(() => {
+        if (resolvedVariant !== "card") return;
         const frameId = window.requestAnimationFrame(() => {
             try {
                 const saved = localStorage.getItem(STORAGE_KEY);
@@ -123,24 +130,7 @@ export default function BaseFilters({
         });
 
         return () => window.cancelAnimationFrame(frameId);
-    }, [STORAGE_KEY]);
-
-    const rootRef = useCallback((node: HTMLDivElement | null) => {
-        setRootElement((current) => (current === node ? current : node));
-    }, []);
-
-    /**
-     * Whether this panel is mounted inside the global filter drawer.
-     *
-     * The drawer already supplies a header with the panel's title and its own
-     * close affordance, so the collapse chrome below would be a second, slightly
-     * different way to do the same thing sitting two rows apart. Detection is by
-     * DOM ancestry rather than a prop because these panels are handed to the
-     * drawer as an opaque `ReactNode` — the call sites never learn where their
-     * content ends up, and threading a flag through every one of them would put
-     * the knowledge in twenty places instead of one.
-     */
-    const isInsideFilterDrawer = !!rootElement?.closest("[data-filter-drawer-body]");
+    }, [STORAGE_KEY, resolvedVariant]);
 
     const toggleCollapsed = () => {
         setMobileCollapsed(prev => {
@@ -152,13 +142,111 @@ export default function BaseFilters({
 
     const handleSortClick = (optionId: string) => {
         if (!onSortChange) return;
-        // Toggle order if clicking same option, otherwise default to desc
         const newOrder = sortBy === optionId && sortOrder === "desc" ? "asc" : "desc";
         onSortChange(optionId, newOrder);
     };
 
+    // Shared filter inner content (Search, Sort, Custom sections, Reset)
+    const filterControls = (
+        <div className="space-y-4">
+            {/* Filter item count summary if provided */}
+            {totalCount > 0 && (
+                <div className="flex items-center justify-between text-xs type-caption text-slate-500 dark:text-slate-400 px-0.5">
+                    <span>
+                        {filteredCount === totalCount
+                            ? `${totalCount}${countUnit ? ` ${countUnit}` : ""}`
+                            : `${filteredCount} / ${totalCount}${countUnit ? ` ${countUnit}` : ""}`}
+                    </span>
+                    {hasActiveFilters && onReset && (
+                        <button
+                            type="button"
+                            onClick={onReset}
+                            className="pressable text-xs font-semibold text-miku hover:underline cursor-pointer"
+                        >
+                            {t("common.filter.reset")}
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {/* Search */}
+            {showSearch && onSearchChange && (
+                <div>
+                    <label className="block text-xs font-bold type-caption text-slate-600 dark:text-slate-350 uppercase tracking-wider mb-1.5">
+                        {t("common.filter.search")}
+                    </label>
+                    <div className="relative">
+                        <input
+                            data-shortcut-search="true"
+                            type="text"
+                            placeholder={resolvedSearchPlaceholder}
+                            value={searchQuery}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                            className="w-full ios-glass-input material-thin px-3.5 py-2.5 pr-10 rounded-xl text-sm type-body text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                        />
+                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+            )}
+
+            {/* Sort Options */}
+            {sortOptions && sortOptions.length > 0 && onSortChange && (
+                <div>
+                    <label className="block text-xs font-bold type-caption text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                        {t("common.filter.sort")}
+                    </label>
+                    <div className={`grid gap-2 ${sortOptions.length <= 2 ? "grid-cols-2" : sortOptions.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+                        {sortOptions.map((opt) => (
+                            <button
+                                key={opt.id}
+                                onClick={() => handleSortClick(opt.id)}
+                                className={`pressable px-2 py-2 flex items-center justify-center gap-1 ${getFilterChipStateClasses(sortBy === opt.id)}`}
+                            >
+                                {opt.label}
+                                {sortBy === opt.id && (
+                                    <svg className={`w-3 h-3 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${sortOrder === "asc" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Filter Sections */}
+            {children}
+
+            {/* Reset Button */}
+            {hasActiveFilters && onReset && (
+                <button
+                    type="button"
+                    onClick={onReset}
+                    className="pressable w-full py-2.5 border border-slate-200 dark:border-slate-700 rounded-full text-sm text-slate-600 dark:text-slate-300 font-medium material-thin hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-2"
+                >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {t("common.filter.reset")}
+                </button>
+            )}
+        </div>
+    );
+
+    // 1. Plain flat variant (Used seamlessly inside FilterDrawer without nested card container)
+    if (resolvedVariant === "plain") {
+        return (
+            <div data-shortcut-filters="true" className="w-full">
+                {filterControls}
+            </div>
+        );
+    }
+
+    // 2. Standalone Card variant (For in-page static layouts like Information page)
     return (
-        <div ref={rootRef} data-shortcut-filters="true" className="ios-glass-card material-regular rounded-3xl overflow-hidden">
+        <div data-shortcut-filters="true" className="ios-glass-card material-regular rounded-3xl overflow-hidden">
             {/* Header — clickable on mobile to toggle collapse */}
             <div
                 className="px-5 py-4 border-b border-dashed border-slate-200/60 dark:border-slate-700/40 bg-gradient-to-r from-miku/10 to-transparent dark:from-miku/15 dark:to-slate-900/10 flex items-center justify-between lg:cursor-default cursor-pointer select-none"
@@ -169,7 +257,6 @@ export default function BaseFilters({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
                     {resolvedTitle}
-                    {/* Active filter indicator dot — mobile only, shown when collapsed with active filters */}
                     {hasActiveFilters && mobileCollapsed && (
                         <span className="lg:hidden w-2 h-2 rounded-full bg-miku animate-pulse" />
                     )}
@@ -180,7 +267,6 @@ export default function BaseFilters({
                             ? `${totalCount}${countUnit ? ` ${countUnit}` : ""}`
                             : `${filteredCount} / ${totalCount}`}
                     </span>
-                    {/* Collapse chevron — mobile only */}
                     <svg
                         className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] lg:hidden ${mobileCollapsed ? "" : "rotate-180"}`}
                         fill="none"
@@ -192,85 +278,10 @@ export default function BaseFilters({
                 </div>
             </div>
 
-            {/* Search — always visible */}
-            {showSearch && onSearchChange && (
-                <div className="px-5 pt-5">
-                    <label className="block text-xs font-bold type-caption text-slate-600 dark:text-slate-350 uppercase tracking-wider mb-2">
-                        {t("common.filter.search")}
-                    </label>
-                    <div className="relative">
-                        <input
-                            data-shortcut-search="true"
-                            type="text"
-                            placeholder={resolvedSearchPlaceholder}
-                            value={searchQuery}
-                            onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full ios-glass-input material-thin px-4 py-2.5 pr-10 rounded-xl text-sm type-body text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                        />
-                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                </div>
-            )}
-
-            {/* Collapsible section — collapsed on mobile by default, always visible on lg+ */}
+            {/* Collapsible section */}
             <div data-filter-collapsible="true" className={`${mobileCollapsed ? "hidden" : "block"} lg:!block`}>
-                <div className="p-5 space-y-5">
-                    {/* Sort Options */}
-                    {sortOptions && sortOptions.length > 0 && onSortChange && (
-                        <div>
-                            <label className="block text-xs font-bold type-caption text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
-                                {t("common.filter.sort")}
-                            </label>
-                            <div className={`grid gap-2 ${sortOptions.length <= 2 ? "grid-cols-2" : sortOptions.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
-                                {sortOptions.map((opt) => (
-                                    <button
-                                        key={opt.id}
-                                        onClick={() => handleSortClick(opt.id)}
-                                        className={`pressable px-2 py-2 flex items-center justify-center gap-1 ${getFilterChipStateClasses(sortBy === opt.id)}`}
-                                    >
-                                        {opt.label}
-                                        {sortBy === opt.id && (
-                                            <svg className={`w-3 h-3 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] ${sortOrder === "asc" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Custom Filter Sections (children) */}
-                    {children}
-
-                    {/* Reset Button */}
-                    {hasActiveFilters && onReset && (
-                        <button
-                            onClick={onReset}
-                            className="pressable w-full py-2.5 border border-slate-200 dark:border-slate-700 rounded-full text-sm text-slate-600 dark:text-slate-300 font-medium material-thin hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-2"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            {t("common.filter.reset")}
-                        </button>
-                    )}
-
-                    {/* "Tap to collapse" bar — mobile only, redundant inside the drawer */}
-                    {!isInsideFilterDrawer && (
-                    <div
-                        data-filter-collapse-bar="true"
-                        className="lg:hidden -mx-5 -mb-5 mt-5 flex items-center justify-center gap-1 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 cursor-pointer select-none text-xs text-slate-400 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors"
-                        onClick={toggleCollapsed}
-                    >
-                        <svg className="w-3.5 h-3.5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                        {t("common.filter.collapse")}
-                    </div>
-                    )}
+                <div className="p-5">
+                    {filterControls}
                 </div>
             </div>
 

@@ -93,7 +93,7 @@ export default function FilterTabHandle({ isSidebarOpen }: FilterTabHandleProps)
                     aria-controls={FILTER_DRAWER_ID}
                     aria-expanded={isOpen}
                     title={shortcutLabel}
-                    className={`fixed ${verticalPositionClass} ${leftPositionClass} z-[70] pressable touch-manipulation flex-col items-center justify-center gap-1.5 py-4 px-2.5 min-h-[44px] material-thick rounded-r-2xl border-l-0 cursor-pointer select-none group`}
+                    className={`fixed ${verticalPositionClass} ${leftPositionClass} z-[70] pressable touch-manipulation flex-col items-center justify-center gap-1.5 py-4 px-2.5 min-h-[44px] material-thick rounded-r-2xl border-l-0 cursor-pointer select-none group transform-gpu`}
                 >
                     {/* Accent funnel glyph */}
                     <svg

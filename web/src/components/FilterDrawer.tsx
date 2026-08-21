@@ -6,6 +6,7 @@ import { stripRouteLocale } from "@/lib/localized-path";
 import { useQuickFilterContext } from "@/contexts/QuickFilterContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { filterDrawerVariants } from "@/lib/motion";
+import { FilterDrawerContext } from "@/components/common/BaseFilters";
 
 /**
  * Stable id shared by the trigger's `aria-controls` and the drawer's `id`.
@@ -81,8 +82,8 @@ export default function FilterDrawer({ isSidebarOpen }: FilterDrawerProps) {
     // screen. Bottom values match Sidebar's `h-[calc(100vh-6rem/8rem)]`, whose
     // trailing gutter is the same as its leading one.
     const drawerVerticalClass = isHome
-        ? "bottom-4 sm:bottom-4 md:bottom-auto md:max-h-[calc(100vh-6rem)]"
-        : "bottom-4 sm:bottom-4 md:bottom-auto md:max-h-[calc(100vh-8rem)]";
+        ? "h-[calc(100vh-6rem)] sm:h-[calc(100vh-6.5rem)]"
+        : "h-[calc(100vh-8rem)] sm:h-[calc(100vh-6.5rem)]";
 
     // Horizontal placement.
     //
@@ -156,12 +157,52 @@ export default function FilterDrawer({ isSidebarOpen }: FilterDrawerProps) {
     // Background scroll lock, floating mode only.
     useEffect(() => {
         if (!isModal) return;
+        // Skip locking body overflow on touch devices to prevent full-page layout reflow and viewport flicker.
+        // The modal scrim and drawer content with `overscroll-contain` already prevent background scrolling natively.
+        if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+            return;
+        }
         const previousOverflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
         return () => {
             document.body.style.overflow = previousOverflow;
         };
     }, [isModal]);
+
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const hasRestoredRef = useRef(false);
+    // Scroll restoration for the filter drawer per route.
+    const cleanPathname = stripRouteLocale(pathname);
+    const scrollStorageKey = `filter_drawer_scroll:${cleanPathname}`;
+
+    // Restore scroll position when drawer opens and content is mounted (once per open)
+    useEffect(() => {
+        if (!isOpen) {
+            hasRestoredRef.current = false;
+            return;
+        }
+
+        if (hasRestoredRef.current || !filterContent) return;
+
+        const saved = sessionStorage.getItem(scrollStorageKey);
+        if (saved) {
+            const top = parseInt(saved, 10);
+            if (!Number.isNaN(top) && top > 0) {
+                requestAnimationFrame(() => {
+                    if (scrollRef.current) {
+                        scrollRef.current.scrollTop = top;
+                    }
+                });
+            }
+        }
+        hasRestoredRef.current = true;
+    }, [isOpen, scrollStorageKey, filterContent]);
+
+    // Save scroll position on user scrolling
+    const handleBodyScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+        const top = e.currentTarget.scrollTop;
+        sessionStorage.setItem(scrollStorageKey, String(top));
+    }, [scrollStorageKey]);
 
     const scrimPointerDownRef = useRef(false);
 
@@ -197,7 +238,7 @@ export default function FilterDrawer({ isSidebarOpen }: FilterDrawerProps) {
                 {isModal && (
                     <motion.div
                         key="filter-drawer-scrim"
-                        className="fixed inset-0 filter-scrim z-[75]"
+                        className="fixed inset-0 filter-scrim z-[75] transform-gpu will-change-[opacity] touch-none"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -224,7 +265,7 @@ export default function FilterDrawer({ isSidebarOpen }: FilterDrawerProps) {
                         role={isModal ? "dialog" : "complementary"}
                         aria-modal={isModal ? true : undefined}
                         aria-labelledby={titleId}
-                        className={`fixed ${drawerTopClass} sm:top-[5.5rem] ${drawerVerticalClass} ${drawerLeftClass} ${drawerWidthClass} ${isModal ? "z-[80]" : "z-[58]"} filter-drawer-panel material-thick rounded-3xl overflow-hidden flex flex-col`}
+                        className={`fixed ${drawerTopClass} sm:top-[5.5rem] ${drawerVerticalClass} ${drawerLeftClass} ${drawerWidthClass} ${isModal ? "z-[80]" : "z-[58]"} filter-drawer-panel material-thick rounded-3xl overflow-hidden flex flex-col transform-gpu will-change-transform`}
                     >
                         <div
                             ref={panelRef}
@@ -260,12 +301,16 @@ export default function FilterDrawer({ isSidebarOpen }: FilterDrawerProps) {
                                 `data-filter-drawer-body` is the hook BaseFilters
                                 uses to detect it is inside the drawer and drop its
                                 own redundant collapse chrome. */}
-                            <div
-                                data-filter-drawer-body="true"
-                                className="flex-grow min-h-0 overflow-y-auto overscroll-contain px-3 py-3"
-                            >
-                                {filterContent}
-                            </div>
+                            <FilterDrawerContext.Provider value={true}>
+                                <div
+                                    ref={scrollRef}
+                                    data-filter-drawer-body="true"
+                                    onScroll={handleBodyScroll}
+                                    className="flex-grow min-h-0 overflow-y-auto overscroll-contain p-4"
+                                >
+                                    {filterContent}
+                                </div>
+                            </FilterDrawerContext.Provider>
                         </div>
                     </motion.aside>
                 )}
