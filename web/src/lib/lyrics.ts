@@ -270,6 +270,16 @@ export class LyricsLoadError extends Error {
     }
 }
 
+// A detail document that disagrees with the index publication is usually an
+// in-flight CDN rollout rather than corrupt content. It is reported separately
+// so the loader can re-resolve the publication instead of failing the page.
+class LyricsPublicationMismatchError extends LyricsLoadError {
+    constructor() {
+        super("Invalid lyrics document");
+        this.name = "LyricsPublicationMismatchError";
+    }
+}
+
 export function isLyricsUnavailableError(error: unknown): error is LyricsLoadError {
     return error instanceof LyricsLoadError && error.status === HTTP_NOT_FOUND;
 }
@@ -281,6 +291,7 @@ interface CachedLyricsDocument {
 
 const LYRICS_INDEX_FILENAME = "index.json";
 const LYRICS_DOCUMENT_FILENAME_PREFIX = "music_";
+const LYRICS_DOCUMENT_REVISION_PARAM = "rev";
 const MIN_LYRICS_ENTITY_ID = 1;
 const MIN_LYRICS_LINE_ORDER = 0;
 const MAX_LYRICS_INDEX_ENTRIES = 100_000;
@@ -312,6 +323,12 @@ const LYRICS_DETAIL_CACHE_LIMIT = 24;
 const LYRICS_SOURCE_CHANGE_RETRY_LIMIT = MIN_LYRICS_ENTITY_ID;
 const LYRICS_FETCH_RETRY_LIMIT = 2;
 const LYRICS_FETCH_RETRY_DELAY_MS = 250;
+// A CDN expires index.json and music_<id>.json independently, so a publication
+// can be announced by the index seconds before the matching detail is evicted.
+// Re-resolving the publication and retrying keeps that window from surfacing as
+// a page-level failure; a genuinely mismatched artifact still fails closed.
+const LYRICS_REVISION_MISMATCH_RETRY_LIMIT = 3;
+const LYRICS_REVISION_MISMATCH_RETRY_DELAY_MS = 700;
 const LYRICS_CACHE_TTL_MS = 60 * 1000;
 const LYRICS_FETCH_TIMEOUT_MS = 10 * 1000;
 const MAX_LYRICS_ARTIFACT_BYTES = 4 * 1024 * 1024;
@@ -1253,11 +1270,15 @@ function validateDocument(value: unknown, publication: ILyricsIndexEntry, indexV
     if (
         value.version !== indexVersion && !isLegacyDetailUnderV3Index
         || value.musicId !== publication.musicId
-        || value.revision !== publication.revision
+    ) {
+        throw new LyricsLoadError("Invalid lyrics document");
+    }
+    if (
+        value.revision !== publication.revision
         || !isDateTime(value.updatedAt)
         || value.updatedAt !== publication.updatedAt
     ) {
-        throw new LyricsLoadError("Invalid lyrics document");
+        throw new LyricsPublicationMismatchError();
     }
     if (indexVersion === LYRICS_SCHEMA_VERSION_V4) return validateDocumentV4(value, publication);
     if (indexVersion === LYRICS_SCHEMA_VERSION_V3 && !isLegacyDetailUnderV3Index) return validateDocumentV3(value, publication);
@@ -1512,6 +1533,16 @@ export async function getPublishedLyricsIndexEntry(musicId: number, signal?: Abo
     return index.songs.find((song) => song.musicId === musicId) ?? null;
 }
 
+// Expire the index snapshot without touching validated detail documents so the
+// next read re-resolves publications from the origin.
+function invalidateLyricsIndexCache(): void {
+    indexCache = null;
+    indexCacheSourceUrl = "";
+    indexCachedAt = 0;
+    indexRequest = null;
+    indexRequestSourceUrl = "";
+}
+
 function isCurrentPublicationSnapshot(
     baseUrl: string,
     indexVersion: ILyricsIndex["version"],
@@ -1528,8 +1559,30 @@ function isCurrentPublicationSnapshot(
         && sameAvailableVersions(getLyricsAvailableVersions(current), getLyricsAvailableVersions(publication));
 }
 
+// The published revision is appended as a query parameter so every revision
+// occupies its own CDN cache key. An edge node holding the previous detail for
+// an unexpired TTL therefore cannot answer a request for the new revision.
+function lyricsDocumentUrl(baseUrl: string, musicId: number, revision: number): string {
+    const path = `${baseUrl}/${LYRICS_DOCUMENT_FILENAME_PREFIX}${musicId}.json`;
+    if (!Number.isSafeInteger(revision) || revision < MIN_LYRICS_ENTITY_ID) return path;
+    return `${path}?${LYRICS_DOCUMENT_REVISION_PARAM}=${revision}`;
+}
+
 export async function fetchLyricsDocument(musicId: number, signal?: AbortSignal): Promise<ILyricsDocument> {
-    return fetchLyricsDocumentFromCurrentSource(musicId, signal, LYRICS_SOURCE_CHANGE_RETRY_LIMIT);
+    for (let attempt = 0; ; attempt += 1) {
+        try {
+            return await fetchLyricsDocumentFromCurrentSource(musicId, signal, LYRICS_SOURCE_CHANGE_RETRY_LIMIT);
+        } catch (error) {
+            if (!(error instanceof LyricsPublicationMismatchError) || attempt >= LYRICS_REVISION_MISMATCH_RETRY_LIMIT) {
+                throw error;
+            }
+            // Drop the cached index so the retry re-resolves the publication, then
+            // wait out the remainder of the artifact TTL skew.
+            invalidateLyricsIndexCache();
+            await waitForRetry(LYRICS_REVISION_MISMATCH_RETRY_DELAY_MS * (attempt + MIN_LYRICS_ENTITY_ID));
+            if (signal?.aborted) throw callerAbortReason(signal);
+        }
+    }
 }
 
 async function fetchLyricsDocumentFromCurrentSource(
@@ -1566,7 +1619,7 @@ async function fetchLyricsDocumentFromCurrentSource(
     let request = detailRequests.get(cacheKey);
     if (!request) {
         const staleDocument = cached?.document ?? null;
-        const createdRequest = fetchPublishedJson(`${baseUrl}/${LYRICS_DOCUMENT_FILENAME_PREFIX}${musicId}.json`)
+        const createdRequest = fetchPublishedJson(lyricsDocumentUrl(baseUrl, musicId, publication.revision))
             .then((value) => validateDocument(value, publication, index.version))
             .then((document) => {
                 if (!isCurrentPublicationSnapshot(baseUrl, index.version, publication)) return document;

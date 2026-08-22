@@ -700,9 +700,9 @@ test("lyrics source changes invalidate source-scoped index and detail caches", {
 
     assert.deepEqual(requests, [
       `${SOURCE_BASE_URL}/index.json`,
-      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json`,
+      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json?rev=${fixture.document.revision}`,
       `${alternateBaseUrl}/index.json`,
-      `${alternateBaseUrl}/music_${fixture.document.musicId}.json`,
+      `${alternateBaseUrl}/music_${fixture.document.musicId}.json?rev=${fixture.document.revision}`,
     ]);
   } finally {
     globalThis.fetch = previousFetch;
@@ -736,7 +736,7 @@ test("lyrics loaders consume only the configured index and published detail arti
     assert.equal(index.songs.find((song) => song.musicId === document.musicId)?.updatedAt, document.updatedAt);
     assert.deepEqual(requests.map(({ url }) => url), [
       `${SOURCE_BASE_URL}/index.json`,
-      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json`,
+      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json?rev=${fixture.document.revision}`,
     ]);
     assert.ok(requests.every(({ options }) => options.cache === "no-store" && options.signal instanceof AbortSignal));
 
@@ -847,7 +847,7 @@ test("database-overlaid legacy v1 details validate under the reviewed v3 index",
     const staleDetail = structuredClone(v1Detail);
     staleDetail.updatedAt = "2026-08-15T09:24:07Z";
     globalThis.fetch = async (url) => jsonResponse(
-      String(url).endsWith("/index.json") ? v3Index : staleDetail,
+      String(url).includes("/index.json") ? v3Index : staleDetail,
     );
     const staleLyrics = await importLyrics();
     await assert.rejects(
@@ -855,6 +855,76 @@ test("database-overlaid legacy v1 details validate under the reviewed v3 index",
       /Invalid lyrics document/,
       "a legacy detail that drifts from the index publication must still fail closed",
     );
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
+test("transient index and detail publication mismatches retry and recover without failing the caller", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  try {
+    const freshIndex = {
+      version: 3,
+      songs: [{
+        musicId: UNPUBLISHED_MUSIC_ID,
+        revision: 3,
+        updatedAt: "2026-08-22T12:00:00Z",
+        state: "complete",
+        title: { "ja-JP": "Transient Song", "zh-CN": "过渡歌曲" },
+        availableVersions: ["full"],
+      }],
+    };
+    const staleDetail = {
+      version: 1,
+      musicId: UNPUBLISHED_MUSIC_ID,
+      revision: 2,
+      updatedAt: "2026-08-22T11:00:00Z",
+      attribution: "雪莹ちゃん",
+      lines: [{
+        id: "line-1",
+        order: 0,
+        japanese: "古い歌詞",
+        "zh-CN": "",
+        "en-US": "",
+        segments: [{ text: "古い歌詞", performerIds: [21] }],
+      }],
+    };
+    const freshDetail = {
+      version: 1,
+      musicId: UNPUBLISHED_MUSIC_ID,
+      revision: 3,
+      updatedAt: "2026-08-22T12:00:00Z",
+      attribution: "雪莹ちゃん",
+      lines: [{
+        id: "line-1",
+        order: 0,
+        japanese: "新しい歌詞",
+        "zh-CN": "新歌词",
+        "en-US": "",
+        segments: [{ text: "新しい歌詞", performerIds: [21] }],
+      }],
+    };
+    let detailAttempts = 0;
+    const requestedUrls = [];
+    globalThis.fetch = async (url) => {
+      const href = String(url);
+      requestedUrls.push(href);
+      if (href.includes("/index.json")) return jsonResponse(freshIndex);
+      detailAttempts += 1;
+      if (detailAttempts === 1) return jsonResponse(staleDetail);
+      return jsonResponse(freshDetail);
+    };
+
+    const lyrics = await importLyrics();
+    const document = await lyrics.fetchLyricsDocument(UNPUBLISHED_MUSIC_ID);
+    assert.equal(document.revision, 3);
+    assert.equal(document.lines[0].japanese, "新しい歌詞");
+    assert.equal(detailAttempts, 2, "must have retried detail once after mismatch");
+    assert.ok(requestedUrls.some((u) => u.includes(`music_${UNPUBLISHED_MUSIC_ID}.json?rev=3`)));
   } finally {
     globalThis.fetch = previousFetch;
     if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
@@ -935,10 +1005,10 @@ test("Public Lyrics v2 loads complete and explicit Game-only details while text-
   try {
     globalThis.fetch = async (url) => {
       const requestUrl = String(url);
-      if (requestUrl.endsWith("/index.json")) return jsonResponse(structuredClone(fixtureV2.index));
-      if (requestUrl.endsWith(`/music_${fixtureV2.document.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.document));
-      if (requestUrl.endsWith(`/music_${fixtureV2.fullOnlyDocument.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.fullOnlyDocument));
-      if (requestUrl.endsWith(`/music_${fixtureV2.gameOnlyDocument.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.gameOnlyDocument));
+      if (requestUrl.includes("/index.json")) return jsonResponse(structuredClone(fixtureV2.index));
+      if (requestUrl.includes(`/music_${fixtureV2.document.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.document));
+      if (requestUrl.includes(`/music_${fixtureV2.fullOnlyDocument.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.fullOnlyDocument));
+      if (requestUrl.includes(`/music_${fixtureV2.gameOnlyDocument.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.gameOnlyDocument));
       return new Response(null, { status: HTTP_NOT_FOUND });
     };
     const lyrics = await importLyrics();
@@ -1561,9 +1631,9 @@ test("detail fetch retries against a changed source instead of returning old-sou
     assert.equal(document.attribution, "Alternate synthetic attribution");
     assert.deepEqual(requests, [
       `${SOURCE_BASE_URL}/index.json`,
-      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json`,
+      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json?rev=${fixture.document.revision}`,
       `${alternateBaseUrl}/index.json`,
-      `${alternateBaseUrl}/music_${fixture.document.musicId}.json`,
+      `${alternateBaseUrl}/music_${fixture.document.musicId}.json?rev=${fixture.document.revision}`,
     ]);
   } finally {
     globalThis.fetch = previousFetch;
@@ -1587,6 +1657,8 @@ test("public lyrics fetches enforce named timeout and artifact byte limits witho
     assert.match(source, /const LYRICS_CACHE_TTL_MS =/);
     assert.match(source, /const LYRICS_FETCH_RETRY_LIMIT =/);
     assert.match(source, /const LYRICS_FETCH_RETRY_DELAY_MS =/);
+    assert.match(source, /const LYRICS_REVISION_MISMATCH_RETRY_LIMIT =/);
+    assert.match(source, /const LYRICS_REVISION_MISMATCH_RETRY_DELAY_MS =/);
     assert.match(source, /const LYRICS_FETCH_TIMEOUT_MS =/);
     assert.match(source, /const MAX_LYRICS_ARTIFACT_BYTES =/);
     assert.match(source, /parseStrictJson/);
@@ -3222,10 +3294,14 @@ test("lyrics detail cache is revision-keyed, TTL-bounded, and rejects unsynchron
 
     now += cacheTtlMs + SINGLE_INCREMENT;
     revision += SINGLE_INCREMENT;
+    // A persistent mismatch retries LYRICS_REVISION_MISMATCH_RETRY_LIMIT times before failing closed.
     await assert.rejects(lyrics.fetchLyricsDocument(fixture.document.musicId), /Invalid lyrics document/);
     detailRevision = revision;
     assert.equal((await lyrics.fetchLyricsDocument(fixture.document.musicId)).revision, revision);
-    const revisionChangeFetches = SINGLE_INCREMENT * 3;
+    const ttlRevalidateFetches = 1;
+    const persistentMismatchFetches = 4;
+    const recoveredFetch = 1;
+    const revisionChangeFetches = ttlRevalidateFetches + persistentMismatchFetches + recoveredFetch;
     assert.equal(detailFetches, initialDetailFetches + revisionChangeFetches, "revision mismatch is not cached and remains retryable");
   } finally {
     Date.now = originalNow;
