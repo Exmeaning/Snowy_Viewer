@@ -3634,6 +3634,79 @@ test("resetting lyrics filters cancels a delayed scroll restoration", async () =
   }
 });
 
+test("bounded scroll restoration caps the restored count without capping load more", async () => {
+  const dom = new JSDOM("<!doctype html><html><body><div id=\"root\"></div></body></html>", {
+    url: "https://example.test/lyrics",
+    pretendToBeVisual: true,
+  });
+  const previousGlobals = {
+    window: globalThis.window,
+    document: globalThis.document,
+    sessionStorage: globalThis.sessionStorage,
+    requestAnimationFrame: globalThis.requestAnimationFrame,
+    cancelAnimationFrame: globalThis.cancelAnimationFrame,
+  };
+  dom.window.scrollTo = () => {};
+  dom.window.requestAnimationFrame = (callback) => dom.window.setTimeout(() => callback(Date.now()), 0);
+  dom.window.cancelAnimationFrame = (handle) => dom.window.clearTimeout(handle);
+  Object.assign(globalThis, {
+    window: dom.window,
+    document: dom.window.document,
+    sessionStorage: dom.window.sessionStorage,
+    requestAnimationFrame: dom.window.requestAnimationFrame,
+    cancelAnimationFrame: dom.window.cancelAnimationFrame,
+  });
+  sessionStorage.setItem("lyrics_displayCount", "300");
+  globalThis.__scrollRestoreRuntimeTest = { React };
+  const { useScrollRestore } = await importWebTypeScript("src/hooks/useScrollRestore.ts", [[
+    'import { useState, useEffect, useCallback, useRef } from "react";',
+    "const { useState, useEffect, useCallback, useRef } = globalThis.__scrollRestoreRuntimeTest.React;",
+  ]]);
+  const Harness = () => {
+    const controls = useScrollRestore({
+      storageKey: "lyrics",
+      defaultDisplayCount: 30,
+      increment: 30,
+      maxRestoredDisplayCount: 90,
+      isReady: true,
+    });
+    return React.createElement("button", {
+      type: "button",
+      "data-count": controls.displayCount,
+      onClick: controls.loadMore,
+    }, "load more");
+  };
+  const container = document.getElementById("root");
+  const element = React.createElement(Harness);
+  container.innerHTML = renderToString(element);
+  let root;
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  try {
+    await act(async () => {
+      root = hydrateRoot(container, element);
+      await new Promise((resolve) => setImmediate(resolve));
+    });
+    const button = container.querySelector("button");
+    assert.equal(button.getAttribute("data-count"), "90", "restored count stays bounded");
+    for (const expected of ["120", "150", "180"]) {
+      await act(async () => {
+        button.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+      });
+      assert.equal(button.getAttribute("data-count"), expected, "load more must keep growing past the restore bound");
+    }
+    assert.equal(sessionStorage.getItem("lyrics_displayCount"), "180");
+  } finally {
+    if (root) await act(async () => root.unmount());
+    dom.window.close();
+    sessionStorage.removeItem("lyrics_displayCount");
+    for (const [key, value] of Object.entries(previousGlobals)) {
+      if (value === undefined) delete globalThis[key];
+      else globalThis[key] = value;
+    }
+    delete globalThis.__scrollRestoreRuntimeTest;
+  }
+});
+
 test("lyrics alias index accepts only stable music-ID aliases and degrades closed", () => {
   assert.equal(
     LYRICS_ALIAS_INDEX_URL,

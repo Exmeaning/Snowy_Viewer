@@ -6,7 +6,7 @@ interface UseScrollRestoreOptions {
     defaultDisplayCount: number;  // Default display count
     increment: number;            // Increment amount for load more
     isReady?: boolean;            // Whether content is ready to restore scroll (optional, default true)
-    maxDisplayCount?: number;     // Upper bound for restored/loaded counts (optional)
+    maxRestoredDisplayCount?: number; // Upper bound for the count restored from sessionStorage (optional)
 }
 
 interface UseScrollRestoreReturn {
@@ -23,7 +23,7 @@ interface UseScrollRestoreReturn {
  * 
  * Key features:
  * - Saves scroll position and displayCount to sessionStorage
- * - Restores displayCount immediately on mount
+ * - Restores displayCount immediately on mount, optionally bounded by maxRestoredDisplayCount
  * - Waits for isReady=true before restoring scroll position
  * - Uses ref to track scroll position for SPA navigation (where window.scrollY is 0 on cleanup)
  * 
@@ -42,12 +42,12 @@ export function useScrollRestore({
     defaultDisplayCount,
     increment,
     isReady = true, // Default to true for backward compatibility
-    maxDisplayCount,
+    maxRestoredDisplayCount,
 }: UseScrollRestoreOptions): UseScrollRestoreReturn {
     const SCROLL_KEY = `${storageKey}_scroll`;
     const COUNT_KEY = `${storageKey}_displayCount`;
-    const clampCount = (count: number) => (
-        maxDisplayCount !== undefined && count > maxDisplayCount ? maxDisplayCount : count
+    const clampRestoredCount = (count: number) => (
+        maxRestoredDisplayCount !== undefined && count > maxRestoredDisplayCount ? maxRestoredDisplayCount : count
     );
 
     // Initialize displayCount from sessionStorage or use default
@@ -58,7 +58,7 @@ export function useScrollRestore({
             if (saved) {
                 const count = parseInt(saved, 10);
                 if (!isNaN(count) && count >= defaultDisplayCount) {
-                    return clampCount(count);
+                    return clampRestoredCount(count);
                 }
             }
         } catch {
@@ -207,12 +207,11 @@ export function useScrollRestore({
     }, [isReady]);
 
     // Load more handler
+    // Not clamped by maxRestoredDisplayCount: that bound only limits how much is
+    // re-mounted when restoring a saved scroll position, never explicit loading.
     const loadMore = useCallback(() => {
-        setDisplayCount(prev => {
-            const next = prev + increment;
-            return maxDisplayCount !== undefined && next > maxDisplayCount ? maxDisplayCount : next;
-        });
-    }, [increment, maxDisplayCount]);
+        setDisplayCount(prev => prev + increment);
+    }, [increment]);
 
     // Reset handler
     const resetDisplayCount = useCallback(() => {

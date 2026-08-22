@@ -100,7 +100,7 @@ function MusicContent() {
         storageKey: "music",
         defaultDisplayCount: 30,
         increment: 30,
-        maxDisplayCount: 90,
+        maxRestoredDisplayCount: 90,
         isReady: !isLoading,
     });
 
