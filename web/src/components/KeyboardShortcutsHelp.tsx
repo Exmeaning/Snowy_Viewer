@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { getDisplayCombos, SHORTCUT_GROUP_ORDER, SHORTCUTS } from "@/lib/shortcuts";
 import { useI18n } from "@/contexts/I18nContext";
 import { getMotionTransition } from "@/lib/motion";
+import { isKeyboardEventComposing } from "@/lib/shortcuts";
 
 interface KeyboardShortcutsHelpProps {
     isOpen: boolean;
@@ -59,7 +60,7 @@ export default function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShort
         document.body.style.overflow = "hidden";
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
+            if (e.key === "Escape" && !e.defaultPrevented && !isKeyboardEventComposing(e)) {
                 e.preventDefault();
                 onClose();
             }
