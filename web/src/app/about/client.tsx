@@ -231,6 +231,10 @@ export default function AboutClient() {
                                 {renderMemberText(t("page.about.teams.translationMembers"))}
                             </div>
                             <div>
+                                <span className="font-bold text-primary-text">{t("page.about.teams.artLabel")}</span>
+                                {renderMemberText(t("page.about.teams.artMembers"))}
+                            </div>
+                            <div>
                                 <span className="font-bold text-primary-text">{t("page.about.teams.guideLabel")}</span>
                                 {renderMemberText(t("page.about.teams.guideMembers"))}
                             </div>

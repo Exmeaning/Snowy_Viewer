@@ -204,6 +204,8 @@ export const zhTWPagePrimary = {
                 literatureMembers: "@惜花 @郁郁蔥蔥 @明日天気に @Aya @櫻風 @荇荼 @性價比 @芒果冰沙拌玻璃渣 @luoxia @東雪 @魁靈 @茶椿 @Hakuchumu @瑞希 @幽靈塑料袋 @羽月",
                 translationLabel: "Moesekai 漢化組：",
                 translationMembers: "翻譯/校對 @雪莹ちゃん @爱死天流",
+                artLabel: "Moesekai 美工組：",
+                artMembers: "@岓诚",
                 guideLabel: "Moesekai 攻略組：",
                 guideMembers: "@Pizza @Misto @火狐mzk",
                 joinPrefix: "如果你想幫助我們，可以加入",

@@ -1058,6 +1058,8 @@ export const zhCNMessages = {
                 literatureMembers: "@惜花 @郁郁葱葱 @明日天気に @Aya @樱风 @荇荼 @性价比 @芒果冰沙拌玻璃渣 @luoxia @東雪 @魁灵 @茶椿 @Hakuchumu @瑞希 @幽灵塑料袋 @羽月",
                 translationLabel: "Moesekai 汉化组：",
                 translationMembers: "翻译/校对 @雪莹ちゃん @爱死天流",
+                artLabel: "Moesekai 美工组：",
+                artMembers: "@岓诚",
                 guideLabel: "Moesekai 攻略组：",
                 guideMembers: "@Pizza @Misto @火狐mzk",
                 joinPrefix: "如果你想帮助我们，可以加入",
