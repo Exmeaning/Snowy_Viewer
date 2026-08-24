@@ -228,6 +228,8 @@ export function applyLiveSyncToPrediction(
     server: ServerType,
     eventStartAt?: number,
     eventEndAt?: number,
+    eventType?: string,
+    bonusPercent?: number,
 ): PredictionData {
     if (!currentData || !currentData.data || !Array.isArray(currentData.data.charts)) {
         return currentData;
@@ -259,7 +261,7 @@ export function applyLiveSyncToPrediction(
         }
 
         // Fast in-memory Bayesian-Kalman prediction calculation
-        let predictedScore = tierUpdate.prediction ?? chart.PredictedScore;
+        let predictedScore = chart.PredictedScore;
         let predictedScoreP10 = chart.PredictedScoreP10;
         let predictedScoreP90 = chart.PredictedScoreP90;
         let predictPoints = chart.PredictPoints;
@@ -274,6 +276,8 @@ export function applyLiveSyncToPrediction(
                 startAt,
                 endAt,
                 historyPoints: nextHistory,
+                eventType,
+                bonusPercent,
             });
 
             predictedScore = engineResult.predictedScore;

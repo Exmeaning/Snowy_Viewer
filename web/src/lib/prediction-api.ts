@@ -167,6 +167,12 @@ export async function fetchPredictionData(eventId: number, server: ServerType): 
             eventEndAt = eventStartAt + (9 * 24 * 3600000);
         }
 
+        const isWorldLinkEvent = eventMeta?.event_type === 'world_bloom'
+            || (eventMeta?.name?.includes('WORLD LINK') ?? false)
+            || (eventMeta?.name?.includes('ワールドリンク') ?? false);
+        const eventType = isWorldLinkEvent ? 'world_bloom' : (eventMeta?.event_type || 'marathon');
+        const bonusPercent = isWorldLinkEvent ? 990 : 475;
+
         // ── Build charts from latest + history + high-order prediction engine ───
         const charts = latest.items.map(item => {
             const rankHistory = historyByRank.get(item.rank) ?? [];
@@ -187,6 +193,8 @@ export async function fetchPredictionData(eventId: number, server: ServerType): 
                     startAt: eventStartAt,
                     endAt: eventEndAt,
                     historyPoints: HistoryPoints,
+                    eventType,
+                    bonusPercent,
                 });
 
                 predictedScore = result.predictedScore;

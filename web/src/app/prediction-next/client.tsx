@@ -367,7 +367,7 @@ export default function PredictionNextClient() {
                         tierScores,
                         source: "prediction-next",
                     };
-                    setPredictionData(prev => prev ? applyLiveSyncToPrediction(prev, syncPayload, server, s, e) : prev);
+                    setPredictionData(prev => prev ? applyLiveSyncToPrediction(prev, syncPayload, server, s, e, isWorldBloomEvent ? "world_bloom" : undefined, isWorldBloomEvent ? 990 : 475) : prev);
                     publishRankingSync(syncPayload);
                 }
 
@@ -392,7 +392,58 @@ export default function PredictionNextClient() {
     // Compute active prediction data based on selected WL chapter vs overall
     const activePredictionData = useMemo<PredictionData | null>(() => {
         if (!predictionData) return null;
+
+        const predEvent = events.find(e => e.id === selectedEventId);
+        const masterEvent = masterEvents.find(e => e.id === selectedEventId);
+        const eventStart = predEvent?.start_at ? (predEvent.start_at < 10000000000 ? predEvent.start_at * 1000 : predEvent.start_at) : (masterEvent?.startAt || Date.now());
+        const eventEnd = predEvent?.end_at ? (predEvent.end_at < 10000000000 ? predEvent.end_at * 1000 : predEvent.end_at) : (masterEvent?.aggregateAt || (eventStart + 9 * 24 * 3600000));
+
         if (!isWorldBloomEvent || selectedWlChapter === 'overall') {
+            if (isWorldBloomEvent && predictionData.data?.charts) {
+                const enhancedCharts: RankChart[] = predictionData.data.charts.map(chart => {
+                    if (chart.Rank > 10000 || !chart.HistoryPoints || chart.HistoryPoints.length === 0) return chart;
+                    const res = calculateEventPrediction({
+                        server,
+                        rank: chart.Rank,
+                        startAt: eventStart,
+                        endAt: eventEnd,
+                        historyPoints: chart.HistoryPoints,
+                        eventType: "world_bloom",
+                        bonusPercent: 990,
+                    });
+                    return {
+                        ...chart,
+                        PredictedScore: res.predictedScore,
+                        PredictedScoreP10: res.predictedScoreP10,
+                        PredictedScoreP90: res.predictedScoreP90,
+                        PredictPoints: res.predictPoints,
+                    };
+                });
+                const enhancedKlines: TierKLine[] = (predictionData.data.tier_klines || []).map(tk => {
+                    const ch = enhancedCharts.find(c => c.Rank === tk.Rank);
+                    const engineRes = ch && ch.HistoryPoints?.length > 0 ? calculateEventPrediction({
+                        server,
+                        rank: tk.Rank,
+                        startAt: eventStart,
+                        endAt: eventEnd,
+                        historyPoints: ch.HistoryPoints,
+                        eventType: "world_bloom",
+                        bonusPercent: 990,
+                    }) : undefined;
+                    return {
+                        ...tk,
+                        Speed: engineRes?.effectiveHourlySpeed ?? tk.Speed,
+                    };
+                });
+                return {
+                    ...predictionData,
+                    data: {
+                        ...predictionData.data,
+                        charts: enhancedCharts,
+                        tier_klines: enhancedKlines,
+                    },
+                };
+            }
             return predictionData;
         }
 
@@ -504,7 +555,7 @@ export default function PredictionNextClient() {
         }
 
         return predictionData;
-    }, [predictionData, isWorldBloomEvent, selectedWlChapter, worldLinkSnapshot, activeWlChapter, now, server, chapterTierSeries]);
+    }, [predictionData, isWorldBloomEvent, selectedWlChapter, worldLinkSnapshot, activeWlChapter, now, server, chapterTierSeries, events, masterEvents, selectedEventId]);
 
     // Process chart data (trim 1% from start/end) - Replacing original currentChart definition
     const currentChart = useMemo(() => {
