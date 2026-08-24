@@ -11,6 +11,8 @@ export interface RankChart {
     Rank: number;
     CurrentScore: number;
     PredictedScore: number;
+    PredictedScoreP10?: number;
+    PredictedScoreP90?: number;
     HistoryPoints: TimePoint[];
     PredictPoints: TimePoint[];
 }
@@ -52,6 +54,7 @@ export interface EventListItem {
     end_at?: number;
     is_active?: boolean;
     has_data?: boolean;
+    event_type?: string;
 }
 
 export type ServerType = 'cn' | 'jp';

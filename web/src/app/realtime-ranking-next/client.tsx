@@ -41,13 +41,31 @@ const EMPTY_MASTER_DATA: RealtimeRankingMasterData = {
 
 function RealtimeRankingNextContent() {
     const { t } = useI18n();
-    const { themeColor } = useTheme();
+    const { themeColor, serverSource } = useTheme();
     const searchParams = useSearchParams();
+    const hasManualRegionOverride = useRef(false);
 
     const [region, setRegion] = useState<RealtimeRankingRegion>(() => {
         const fromUrl = searchParams.get("region");
-        return isRealtimeRankingRegion(fromUrl) ? fromUrl : DEFAULT_REGION;
+        if (isRealtimeRankingRegion(fromUrl)) return fromUrl;
+        return isRealtimeRankingRegion(serverSource) ? serverSource : DEFAULT_REGION;
     });
+
+    useEffect(() => {
+        const fromUrl = searchParams.get("region");
+        if (isRealtimeRankingRegion(fromUrl)) {
+            setRegion(fromUrl);
+            return;
+        }
+        if (!hasManualRegionOverride.current && isRealtimeRankingRegion(serverSource)) {
+            setRegion(serverSource);
+        }
+    }, [searchParams, serverSource]);
+
+    const handleRegionChange = useCallback((newRegion: RealtimeRankingRegion) => {
+        hasManualRegionOverride.current = true;
+        setRegion(newRegion);
+    }, []);
     const line = useRealtimeRankingLine();
     const [boardMode, setBoardMode] = useState<RealtimeRankingNextBoardMode>("overall");
     const [masterData, setMasterData] = useState<RealtimeRankingMasterData>(EMPTY_MASTER_DATA);
@@ -170,7 +188,7 @@ function RealtimeRankingNextContent() {
             <div className="container mx-auto px-4 py-8 sm:px-6">
                 <BoardHeader
                     region={region}
-                    onRegionChange={setRegion}
+                    onRegionChange={handleRegionChange}
                     line={line}
                     onLineChange={setRealtimeRankingLine}
                     updatedAt={board.activeGroup ? board.activeGroup.updatedAt : board.snapshot?.updatedAt}

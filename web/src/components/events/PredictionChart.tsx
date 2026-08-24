@@ -17,13 +17,32 @@ export default function PredictionChart({ data, height, className }: PredictionC
     const predictedScoreLabel = t("page.prediction.chart.predictedScore");
 
     const option = useMemo(() => {
-        const historyTimes = data.HistoryPoints.map(p => {
-            const date = new Date(p.t);
+        const formatTime = (isoString: string) => {
+            const date = new Date(isoString);
             return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:00`;
+        };
+
+        // Combine history and future prediction timestamps chronologically
+        const timeMap = new Map<string, { history: number | null; predict: number | null }>();
+
+        data.HistoryPoints.forEach(p => {
+            const tKey = formatTime(p.t);
+            timeMap.set(tKey, { history: p.y, predict: null });
         });
 
-        const historyScores = data.HistoryPoints.map(p => p.y);
-        const predictScores = data.PredictPoints.map(p => p.y);
+        // If prediction points exist, merge them
+        if (data.PredictPoints && data.PredictPoints.length > 0) {
+            data.PredictPoints.forEach(p => {
+                const tKey = formatTime(p.t);
+                const existing = timeMap.get(tKey) || { history: null, predict: null };
+                existing.predict = p.y;
+                timeMap.set(tKey, existing);
+            });
+        }
+
+        const allTimes = Array.from(timeMap.keys());
+        const historyScores = allTimes.map(t => timeMap.get(t)?.history ?? null);
+        const predictScores = allTimes.map(t => timeMap.get(t)?.predict ?? null);
 
         return {
             tooltip: {
@@ -32,9 +51,10 @@ export default function PredictionChart({ data, height, className }: PredictionC
                 borderColor: '#e2e8f0',
                 borderWidth: 1,
                 textStyle: { color: '#334155' },
-                formatter: (params: { seriesName: string; value: number; axisValue: string }[]) => {
+                formatter: (params: { seriesName: string; value: number | null; axisValue: string }[]) => {
                     let result = `<div style="font-weight: 600; margin-bottom: 4px;">${params[0]?.axisValue}</div>`;
                     params.forEach(p => {
+                        if (p.value == null) return;
                         const color = p.seriesName === actualScoreLabel ? '#33CCBB' : '#f59e0b';
                         result += `<div style="display: flex; align-items: center; gap: 6px;">
               <span style="width: 8px; height: 8px; border-radius: 50%; background: ${color};"></span>
@@ -58,7 +78,7 @@ export default function PredictionChart({ data, height, className }: PredictionC
             },
             xAxis: {
                 type: 'category',
-                data: historyTimes,
+                data: allTimes,
                 axisLine: { lineStyle: { color: '#e2e8f0' } },
                 axisLabel: {
                     color: '#94a3b8',
@@ -104,6 +124,7 @@ export default function PredictionChart({ data, height, className }: PredictionC
                     name: actualScoreLabel,
                     type: 'line',
                     data: historyScores,
+                    connectNulls: false,
                     smooth: true,
                     symbol: 'none',
                     lineStyle: { color: '#33CCBB', width: 2 },
@@ -122,15 +143,16 @@ export default function PredictionChart({ data, height, className }: PredictionC
                     name: predictedScoreLabel,
                     type: 'line' as const,
                     data: predictScores,
+                    connectNulls: true,
                     smooth: true,
                     symbol: 'none',
-                    lineStyle: { color: '#f59e0b', width: 2, type: 'dashed' },
+                    lineStyle: { color: '#f59e0b', width: 2, type: 'dashed' as const },
                     areaStyle: {
                         color: {
                             type: 'linear',
                             x: 0, y: 0, x2: 0, y2: 1,
                             colorStops: [
-                                { offset: 0, color: 'rgba(245, 158, 11, 0.2)' },
+                                { offset: 0, color: 'rgba(245, 158, 11, 0.15)' },
                                 { offset: 1, color: 'rgba(245, 158, 11, 0)' }
                             ]
                         }
@@ -156,7 +178,14 @@ export default function PredictionChart({ data, height, className }: PredictionC
                 {showPrediction && (
                     <div className="text-right">
                         <div className="text-sm text-slate-500">{t("page.prediction.table.predictedScore")}</div>
-                        <div className="text-lg font-bold text-amber-500">{formatNumber(data.PredictedScore)}</div>
+                        <div className="text-lg font-bold text-amber-500">
+                            {data.PredictedScore > 0 ? formatNumber(data.PredictedScore) : '-'}
+                        </div>
+                        {data.PredictedScoreP10 != null && data.PredictedScoreP90 != null && (
+                            <div className="text-[10px] text-slate-400 font-mono">
+                                90% CI: {formatNumber(data.PredictedScoreP10)} ~ {formatNumber(data.PredictedScoreP90)}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

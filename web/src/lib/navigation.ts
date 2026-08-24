@@ -275,6 +275,7 @@ export const NAV_ITEM_LABEL_KEYS: Record<string, string> = {
     "/gacha": "layout.nav.items.gacha",
     "/live": "layout.nav.items.live",
     "/prediction": "layout.nav.items.prediction",
+    "/prediction-next": "layout.nav.items.predictionNext",
     "/realtime-ranking": "layout.nav.items.realtimeRanking",
     "/realtime-ranking-next": "layout.nav.items.realtimeRankingNext",
     "/mysekai-preview": "layout.nav.items.mysekaiPreview",

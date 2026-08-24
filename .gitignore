@@ -48,6 +48,7 @@ nul
 .claude/settings.local.json
 .narrafork/
 .codeartsdoer
+.codegraph/
 
 # Python
 __pycache__
