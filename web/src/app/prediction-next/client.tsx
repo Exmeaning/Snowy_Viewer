@@ -367,7 +367,21 @@ export default function PredictionNextClient() {
                         tierScores,
                         source: "prediction-next",
                     };
-                    setPredictionData(prev => prev ? applyLiveSyncToPrediction(prev, syncPayload, server, s, e, isWorldBloomEvent ? "world_bloom" : undefined, isWorldBloomEvent ? 990 : 475) : prev);
+                    setPredictionData(prev => {
+                        if (prev) {
+                            return applyLiveSyncToPrediction(
+                                prev,
+                                syncPayload,
+                                server,
+                                s,
+                                e,
+                                isWorldBloomEvent ? "world_bloom" : undefined,
+                                isWorldBloomEvent ? 990 : 475,
+                            );
+                        }
+                        return prev;
+                    });
+                    setError(null);
                     publishRankingSync(syncPayload);
                 }
 
@@ -385,6 +399,8 @@ export default function PredictionNextClient() {
             }
         };
 
+        // Fire initial tick immediately and schedule every 10s
+        pollTick();
         const interval = setInterval(pollTick, POLL_INTERVAL);
         return () => clearInterval(interval);
     }, [selectedEventId, server, events, masterEvents, isWorldBloomEvent]);

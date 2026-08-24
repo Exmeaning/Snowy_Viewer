@@ -14,6 +14,7 @@
 import {
     PredictionData,
     RankChart,
+    TierKLine,
     ServerType,
     RkTimelineResponse,
     RkKlineResponse,
@@ -297,12 +298,27 @@ export function applyLiveSyncToPrediction(
         };
     });
 
+    const elapsedHours = eventStartAt ? Math.max(0.1, (syncPayload.updatedAt - eventStartAt) / 3600000) : 1;
+    const existingTierKlines = currentData.data.tier_klines || [];
+    const updatedTierKlines: TierKLine[] = updatedCharts.map((chart) => {
+        const existing = existingTierKlines.find(t => t.Rank === chart.Rank);
+        const speed = existing?.Speed ?? (elapsedHours > 0 ? Math.round(chart.CurrentScore / elapsedHours) : 0);
+        return {
+            Rank: chart.Rank,
+            Data: existing?.Data || [],
+            CurrentIndex: chart.CurrentScore,
+            Speed: speed,
+            ChangePct: existing?.ChangePct ?? 0,
+        };
+    });
+
     return {
         ...currentData,
         timestamp: syncPayload.updatedAt,
         data: {
             ...currentData.data,
             charts: updatedCharts,
+            tier_klines: updatedTierKlines,
         },
     };
 }

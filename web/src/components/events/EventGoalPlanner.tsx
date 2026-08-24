@@ -20,7 +20,7 @@ interface EventGoalPlannerProps {
 }
 
 const TIER_OPTIONS = [50, 100, 200, 300, 400, 500, 1000, 2000, 3000, 5000, 10000];
-const MARATHON_BONUS_OPTIONS = [475, 435, 385, 250];
+const MARATHON_BONUS_OPTIONS = [475, 450, 420, 380, 320, 250];
 const WL_BONUS_OPTIONS = [990, 960, 900, 850, 750, 650];
 const FIRE_OPTIONS = [10, 7, 5, 3, 2, 1];
 
@@ -461,13 +461,22 @@ export default function EventGoalPlanner({
                             </span>
                         </div>
 
-                        {/* Daily Manual Hours */}
+                        {/* Daily / Remaining Manual Hours */}
                         <div className={`p-3.5 rounded-xl border ${feasibilityStyle.bgCardClass}`}>
                             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wider mb-1">
-                                {t("page.prediction.planner.results.manualHours")}
+                                {plan.isShortTimeframe
+                                    ? t("page.prediction.planner.results.manualHoursShort")
+                                    : t("page.prediction.planner.results.manualHours")}
                             </span>
                             <span className={`text-base sm:text-lg font-black font-mono ${feasibilityStyle.textClass}`}>
-                                {t("page.prediction.planner.results.hoursPerDay", { hours: plan.requiredManualHoursDaily })}
+                                {plan.isShortTimeframe
+                                    ? t("page.prediction.planner.results.hoursTotalShort", {
+                                        hours: plan.totalManualHoursNeeded,
+                                        total: plan.remainingHoursTotal
+                                    })
+                                    : t("page.prediction.planner.results.hoursPerDay", {
+                                        hours: plan.requiredManualHoursDaily
+                                    })}
                             </span>
                         </div>
 

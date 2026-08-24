@@ -775,6 +775,8 @@ export interface GoalPlannerResult {
     requiredDailyScore: number;
     hourlyManualSpeed: number;
     requiredManualHoursDaily: number;
+    totalManualHoursNeeded: number;
+    isShortTimeframe: boolean;
     requiredAutoRunsDaily: number;
     totalFiresNeeded: number;
     totalLargeDrinks: number;
@@ -847,22 +849,40 @@ export function calculateGoalStrategy(input: GoalPlannerInput): GoalPlannerResul
         : 0;
 
     const totalSongsManual = Math.ceil(scoreDeficit / Math.max(1, baseSongPoints));
+    const totalManualHoursNeeded = playsPerHour > 0
+        ? Math.round((totalSongsManual / playsPerHour) * 10) / 10
+        : 0;
+    const isShortTimeframe = remainingHoursTotal < 24;
+
     const totalFiresNeeded = totalSongsManual * fireMultiplier;
     const totalLargeDrinks = Math.ceil(totalFiresNeeded / 10);
     const totalCrystals = totalLargeDrinks * 100;
 
     const maxDailyManualHours = isJp ? 18.0 : 23.5;
-    const maxPhysicalDailyCap = Math.round(maxDailyManualHours * hourlyManualSpeed + maxDailyAutoPoints);
-    const isExceedingFatigueLimit = isJp && requiredManualHoursDaily > 18.0;
+    const maxPhysicalDailyCap = isShortTimeframe
+        ? Math.round(Math.min(remainingHoursTotal, maxDailyManualHours) * hourlyManualSpeed + (dailyAutoBudget * autoSongPoints))
+        : Math.round(maxDailyManualHours * hourlyManualSpeed + maxDailyAutoPoints);
+    const isExceedingFatigueLimit = isJp && (isShortTimeframe ? totalManualHoursNeeded > Math.min(18.0, remainingHoursTotal) : requiredManualHoursDaily > 18.0);
 
     let feasibility: FeasibilityLevel;
     if (scoreDeficit <= 0) {
         feasibility = 'comfortable';
-    } else if (requiredDailyGross > maxPhysicalDailyCap || (isJp && requiredManualHoursDaily > 18.0) || requiredManualHoursDaily > 23.5) {
+    } else if (
+        (isShortTimeframe && totalManualHoursNeeded > remainingHoursTotal) ||
+        (!isShortTimeframe && requiredDailyGross > maxPhysicalDailyCap) ||
+        (isJp && !isShortTimeframe && requiredManualHoursDaily > 18.0) ||
+        (!isShortTimeframe && requiredManualHoursDaily > 23.5)
+    ) {
         feasibility = 'impossible';
-    } else if (requiredManualHoursDaily > dailyAvailableHours || requiredManualHoursDaily >= 12.0) {
+    } else if (
+        (isShortTimeframe && totalManualHoursNeeded > remainingHoursTotal * 0.75) ||
+        (!isShortTimeframe && (requiredManualHoursDaily > dailyAvailableHours || requiredManualHoursDaily >= 12.0))
+    ) {
         feasibility = 'hard';
-    } else if (requiredManualHoursDaily <= dailyAvailableHours * 0.7 && requiredManualHoursDaily <= 5.0) {
+    } else if (
+        (isShortTimeframe && totalManualHoursNeeded <= remainingHoursTotal * 0.4) ||
+        (!isShortTimeframe && (requiredManualHoursDaily <= dailyAvailableHours * 0.7 && requiredManualHoursDaily <= 5.0))
+    ) {
         feasibility = 'comfortable';
     } else {
         feasibility = 'achievable';
@@ -875,6 +895,8 @@ export function calculateGoalStrategy(input: GoalPlannerInput): GoalPlannerResul
         requiredDailyScore: Math.round(requiredDailyGross),
         hourlyManualSpeed,
         requiredManualHoursDaily,
+        totalManualHoursNeeded,
+        isShortTimeframe,
         requiredAutoRunsDaily,
         totalFiresNeeded,
         totalLargeDrinks,
