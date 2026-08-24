@@ -9,6 +9,7 @@ import MainLayout from "@/components/MainLayout";
 import LyricText from "@/components/lyrics/LyricText";
 import TranslationEditionSelect from "@/components/lyrics/TranslationEditionSelect";
 import Link from "@/components/LocalizedLink";
+import { renderMemberText } from "@/components/MemberText";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useI18n } from "@/contexts/I18nContext";
@@ -618,7 +619,7 @@ export default function LyricsDetailClient() {
                                                 <div className="space-y-1">
                                                     <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
                                                     <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                        {lyrics.attribution}
+                                                        {renderMemberText(lyrics.attribution)}
                                                     </dd>
                                                 </div>
                                             </dl>
@@ -633,7 +634,7 @@ export default function LyricsDetailClient() {
                                                 <div className="space-y-1">
                                                     <dt className="font-bold text-primary-text">{t("page.lyrics.translationAndProofreading")}</dt>
                                                     <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                        {sharedTranslationCredit}
+                                                        {renderMemberText(sharedTranslationCredit)}
                                                     </dd>
                                                 </div>
                                             ) : (
@@ -642,7 +643,7 @@ export default function LyricsDetailClient() {
                                                         <div className="space-y-1">
                                                             <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
                                                             <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                                {translationCredit}
+                                                                {renderMemberText(translationCredit)}
                                                             </dd>
                                                         </div>
                                                     )}
@@ -650,7 +651,7 @@ export default function LyricsDetailClient() {
                                                         <div className="space-y-1">
                                                             <dt className="font-bold text-primary-text">{t("page.lyrics.proofreading")}</dt>
                                                             <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                                {proofreadingCredit}
+                                                                {renderMemberText(proofreadingCredit)}
                                                             </dd>
                                                         </div>
                                                     )}

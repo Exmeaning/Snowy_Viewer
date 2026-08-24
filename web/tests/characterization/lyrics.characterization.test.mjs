@@ -464,7 +464,8 @@ async function importLyricsDetailClient(lyrics) {
       getCharacterIconUrl, getCharacterName, getLyricsDisplayLines, getLyricsDisplaySegments, getLyricsRendition, getLyricsRenditions,
       getLyricsSelectedTranslationCredits, getLyricsTargetLocale, getLyricsTranslationEditions, getMusicVocalAudioUrl,
       hasFullLyricsVersion, hasGameLyricsVersion, isLyricsUnavailableError, replaceCurrentUrlSearchParams,
-      resolveLyricsTranslationEdition, getPublishedLyricsIndexEntry, getMusicJacketUrl, MUSIC_CATEGORY_COLORS } = dependencies;
+      resolveLyricsTranslationEdition, getPublishedLyricsIndexEntry, getMusicJacketUrl, MUSIC_CATEGORY_COLORS,
+      renderMemberText } = dependencies;
   `;
   const transpiled = ts.transpileModule(`${prelude}\n${source}`, {
     compilerOptions: {
@@ -521,6 +522,7 @@ async function importLyricsDetailClient(lyrics) {
       onClick: () => onChange(option.key),
     }, option.label))),
     Link: ({ children, ...props }) => React.createElement("a", props, children),
+    renderMemberText: (text) => text,
     useI18n: function useI18n() {
       return { locale: state.locale, t: translate, formatDate: (value) => String(value) };
     },

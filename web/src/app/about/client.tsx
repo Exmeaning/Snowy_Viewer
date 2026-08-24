@@ -6,7 +6,7 @@ import Link from "@/components/LocalizedLink";
 import ExternalLink from "@/components/ExternalLink";
 import MainLayout from "@/components/MainLayout";
 import { useI18n } from "@/contexts/I18nContext";
-import { MEMBER_LINKS } from "@/lib/team-links";
+import { renderMemberText } from "@/components/MemberText";
 
 const techStack = [
     { name: "Golang", color: "bg-blue-100 text-blue-600" },
@@ -16,26 +16,6 @@ const techStack = [
     { name: "Tailwind CSS", color: "bg-sky-100 text-sky-600" },
     { name: "Cloudflare", color: "bg-orange-100 text-orange-600" },
 ];
-
-function renderMemberText(text: string) {
-    const tokens = text.split(/(@[^\s@]+)/g);
-    return tokens.map((token, index) => {
-        const link = MEMBER_LINKS[token];
-        if (link) {
-            return (
-                <ExternalLink
-                    key={index}
-                    href={link}
-                    target="_blank"
-                    className="text-miku hover:underline font-medium transition-colors"
-                >
-                    {token}
-                </ExternalLink>
-            );
-        }
-        return token;
-    });
-}
 
 export default function AboutClient() {
     const { t } = useI18n();
