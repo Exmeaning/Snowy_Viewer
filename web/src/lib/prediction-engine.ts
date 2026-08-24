@@ -59,38 +59,38 @@ const UNIT_HEAT_MAP: Record<string, number> = {
 };
 
 export const CHARACTER_HEAT_MAP: Record<number, number> = {
-    // 25-ji (Nightcord at 25:00)
-    19: 1.16, // Ena
-    20: 1.22, // Mizuki
-    21: 1.18, // Kanade
-    22: 1.18, // Mafuyu
-    // Vivid BAD SQUAD
-    11: 1.18, // Akito
-    12: 1.16, // Toya
-    9:  1.05, // Kohane
-    10: 1.08, // An
-    // Wonderlands x Showtime
-    16: 1.20, // Tsukasa
-    17: 1.20, // Rui
-    15: 1.04, // Nene
-    14: 1.06, // Emu
-    // Leo/need
+    // Leo/need (1..4)
     1:  0.90, // Ichika
     2:  1.02, // Saki
     3:  0.88, // Honami
     4:  0.92, // Shiho
-    // MORE MORE JUMP!
+    // MORE MORE JUMP! (5..8)
     5:  0.92, // Minori
     6:  0.95, // Haruka
     7:  1.04, // Airi
     8:  0.95, // Shizuku
-    // Virtual Singers
+    // Vivid BAD SQUAD (9..12)
+    9:  1.05, // Kohane
+    10: 1.08, // An
+    11: 1.18, // Akito
+    12: 1.16, // Toya
+    // Wonderlands x Showtime (13..16)
+    13: 1.20, // Tsukasa
+    14: 1.06, // Emu
+    15: 1.04, // Nene
+    16: 1.20, // Rui
+    // 25-ji, Nightcord de. (17..20)
+    17: 1.18, // Kanade
+    18: 1.18, // Mafuyu
+    19: 1.16, // Ena
+    20: 1.22, // Mizuki
+    // Virtual Singers (21..26)
+    21: 1.05, // Miku
+    22: 0.90, // Rin
+    23: 0.88, // Len
+    24: 0.85, // Luka
     25: 0.78, // MEIKO
     26: 0.95, // KAITO
-    23: 1.05, // Miku
-    24: 0.90, // Rin
-    27: 0.88, // Len
-    28: 0.85, // Luka
 };
 
 const BONUS_SCALE_MAP: Record<number, number> = {

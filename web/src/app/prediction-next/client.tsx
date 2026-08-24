@@ -217,7 +217,23 @@ export default function PredictionNextClient() {
             .sort((a, b) => a.chapterNo - b.chapterNo);
         if (matched.length > 0) return matched;
 
-        // 2. Check live worldLinkSnapshot groups
+        // 2. Event 214 (Again And Again Ambition! - WL3 Shuffle) canonical chapter roster
+        if (selectedEventId === 214) {
+            const s = predEvent?.start_at ? (predEvent.start_at < 10000000000 ? predEvent.start_at * 1000 : predEvent.start_at) : (masterEvent?.startAt || Date.now());
+            const duration = 48 * 3600000;
+            const roster = [11, 15, 25, 19, 7]; // Ch1: Akito, Ch2: Nene, Ch3: MEIKO, Ch4: Ena, Ch5: Airi
+            return roster.map((charId, idx) => ({
+                id: selectedEventId * 100 + idx + 1,
+                eventId: selectedEventId,
+                gameCharacterId: charId,
+                chapterNo: idx + 1,
+                chapterStartAt: s + idx * duration,
+                aggregateAt: s + (idx + 1) * duration,
+                chapterEndAt: s + (idx + 1) * duration,
+            }));
+        }
+
+        // 3. Check live worldLinkSnapshot groups
         if (worldLinkSnapshot && Array.isArray(worldLinkSnapshot.groups) && worldLinkSnapshot.groups.length > 0) {
             const validGroups = worldLinkSnapshot.groups.filter(g => !g.isWorldBloomChapterAggregate && g.gameCharacterId > 0);
             if (validGroups.length > 0) {
@@ -464,9 +480,11 @@ export default function PredictionNextClient() {
         }
 
         const group = worldLinkSnapshot?.groups?.find(g => g.gameCharacterId === selectedWlChapter);
-        const chapter = activeWlChapter;
-        const s = chapter?.chapterStartAt || (group?.startAt && group.startAt !== worldLinkSnapshot?.startAt ? group.startAt : (predictionData.data.charts[0]?.HistoryPoints[0] ? new Date(predictionData.data.charts[0].HistoryPoints[0].t).getTime() : Date.now()));
-        const e = chapter?.aggregateAt || (group?.endAt && group.endAt !== worldLinkSnapshot?.endAt ? group.endAt : (s + 48 * 3600000));
+        const chapter = activeWlChapter || eventWorldBlooms.find(wb => wb.gameCharacterId === selectedWlChapter);
+        const chapterIndex = eventWorldBlooms.findIndex(wb => wb.gameCharacterId === selectedWlChapter);
+        const fallbackDuration = 48 * 3600000;
+        const s = chapter?.chapterStartAt || (eventStart + Math.max(0, chapterIndex) * fallbackDuration);
+        const e = chapter?.aggregateAt || (s + fallbackDuration);
 
         if (group && Array.isArray(group.entries) && group.entries.length > 0) {
             const calculatedResults: Record<number, ReturnType<typeof calculateEventPrediction>> = {};
@@ -571,7 +589,7 @@ export default function PredictionNextClient() {
         }
 
         return predictionData;
-    }, [predictionData, isWorldBloomEvent, selectedWlChapter, worldLinkSnapshot, activeWlChapter, now, server, chapterTierSeries, events, masterEvents, selectedEventId]);
+    }, [predictionData, isWorldBloomEvent, selectedWlChapter, worldLinkSnapshot, activeWlChapter, eventWorldBlooms, now, server, chapterTierSeries, events, masterEvents, selectedEventId]);
 
     // Process chart data (trim 1% from start/end) - Replacing original currentChart definition
     const currentChart = useMemo(() => {
