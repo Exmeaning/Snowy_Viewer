@@ -32,6 +32,14 @@ export default function PredictionChart({ data, height, className }: PredictionC
 
         // If prediction points exist, merge them
         if (data.PredictPoints && data.PredictPoints.length > 0) {
+            if (data.HistoryPoints.length > 0) {
+                const lastHistory = data.HistoryPoints[data.HistoryPoints.length - 1];
+                const lastKey = formatTime(lastHistory.t);
+                const existing = timeMap.get(lastKey) || { history: lastHistory.y, predict: null };
+                existing.predict = lastHistory.y;
+                timeMap.set(lastKey, existing);
+            }
+
             data.PredictPoints.forEach(p => {
                 const tKey = formatTime(p.t);
                 const existing = timeMap.get(tKey) || { history: null, predict: null };

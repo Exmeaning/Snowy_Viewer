@@ -17,15 +17,15 @@ import {
     LiveRankingSyncPayload,
     publishRankingSync,
 } from "@/lib/ranking-sync";
-import { PredictionData, EventListItem, ServerType, TierKLine, RankChart } from "@/types/prediction";
+import { PredictionData, EventListItem, ServerType, TierKLine, RankChart, KLinePoint } from "@/types/prediction";
 import { IEventInfo, EventType, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import { getEventBannerUrl, getEventLogoUrl, getCharacterIconUrl } from "@/lib/assets";
 import { getCharacterName } from "@/lib/i18n";
 import { getWl3SimulationGroupByEventId } from "@/lib/world-bloom-simulation";
-import { fetchLatestV2, fetchWorldLinkLatestV2 } from "@/lib/realtime-ranking-next-api";
-import { WorldLinkSnapshotV2 } from "@/types/realtime-ranking-next";
+import { fetchLatestV2, fetchWorldLinkLatestV2, fetchWorldLinkTierSeriesV2 } from "@/lib/realtime-ranking-next-api";
+import { WorldLinkSnapshotV2, SeriesPoint } from "@/types/realtime-ranking-next";
 import { calculateEventPrediction } from "@/lib/prediction-engine";
 
 interface WorldBloomChapter {
@@ -68,6 +68,7 @@ export default function PredictionNextClient() {
     const [worldBlooms, setWorldBlooms] = useState<WorldBloomChapter[]>([]);
     const [selectedWlChapter, setSelectedWlChapter] = useState<'overall' | number>('overall');
     const [worldLinkSnapshot, setWorldLinkSnapshot] = useState<WorldLinkSnapshotV2 | null>(null);
+    const [chapterTierSeries, setChapterTierSeries] = useState<Record<string, SeriesPoint[]> | null>(null);
 
     // Live Clock for relative time & progress
     const [now, setNow] = useState(() => Date.now());
@@ -321,6 +322,24 @@ export default function PredictionNextClient() {
             .catch(console.error);
     }, [selectedEventId, server, isWorldBloomEvent]);
 
+    // Fetch detailed chapter tier series when a single WL character chapter is selected
+    useEffect(() => {
+        if (!selectedEventId || !isWorldBloomEvent || typeof selectedWlChapter !== 'number') {
+            setChapterTierSeries(null);
+            return;
+        }
+        fetchWorldLinkTierSeriesV2(server, {
+            gameCharacterId: selectedWlChapter,
+            tiers: RANK_TIERS,
+        })
+            .then(series => {
+                setChapterTierSeries(series);
+            })
+            .catch(() => {
+                setChapterTierSeries(null);
+            });
+    }, [selectedEventId, server, isWorldBloomEvent, selectedWlChapter]);
+
     // 10s Live Background Polling: Fetch fresh realtime board cutoffs and update in-memory predictions
     useEffect(() => {
         if (!selectedEventId) return;
@@ -389,23 +408,18 @@ export default function PredictionNextClient() {
                 const entry = group.entries.find(item => item.rank === rank);
                 const currentScore = entry?.score || 0;
 
-                const baseChart = predictionData.data.charts.find(c => c.Rank === rank);
                 let historyPoints: { t: string; y: number }[] = [];
 
-                if (baseChart && Array.isArray(baseChart.HistoryPoints)) {
-                    const inRange = baseChart.HistoryPoints.filter(pt => {
-                        const tMs = new Date(pt.t).getTime();
-                        return tMs >= s && tMs <= Math.min(now, e);
-                    });
-                    if (inRange.length > 0) {
-                        const baseOffset = inRange[0].y;
-                        historyPoints = inRange.map(pt => ({
-                            t: pt.t,
-                            y: Math.max(0, pt.y - baseOffset),
-                        }));
-                    }
+                // 1. Prefer true World Link chapter tier series from real-time API
+                const seriesForRank = chapterTierSeries ? (chapterTierSeries[String(rank)] || (chapterTierSeries as Record<string, SeriesPoint[]>)[String(rank)]) : undefined;
+                if (Array.isArray(seriesForRank) && seriesForRank.length > 0) {
+                    historyPoints = seriesForRank.map(pt => ({
+                        t: new Date(pt.t).toISOString(),
+                        y: pt.s,
+                    }));
                 }
 
+                // 2. Ensure current score point is synced
                 const effectiveNow = Math.min(now, e);
                 const nowIso = new Date(effectiveNow).toISOString();
                 if (historyPoints.length === 0) {
@@ -429,7 +443,7 @@ export default function PredictionNextClient() {
                     endAt: e,
                     historyPoints,
                     characterId: typeof selectedWlChapter === 'number' ? selectedWlChapter : undefined,
-                    bonusPercent: isWorldBloomEvent ? 1000 : 475,
+                    bonusPercent: isWorldBloomEvent ? 990 : 475,
                 });
 
                 calculatedResults[rank] = engineResult;
@@ -452,13 +466,24 @@ export default function PredictionNextClient() {
                 const entry = group.entries.find(item => item.rank === rank);
                 const score = entry?.score || 0;
                 const engineRes = calculatedResults[rank];
+                const chart = chapterCharts.find(c => c.Rank === rank);
+
                 const speed = isChapterEnded
                     ? 0
                     : (engineRes?.effectiveHourlySpeed || (elapsedHours > 0 ? Math.round(score / elapsedHours) : 0));
 
+                const sparklineData: KLinePoint[] = (chart?.HistoryPoints || []).map(pt => ({
+                    t: pt.t,
+                    o: pt.y,
+                    c: pt.y,
+                    l: pt.y,
+                    h: pt.y,
+                    v: 0,
+                }));
+
                 return {
                     Rank: rank,
-                    Data: [],
+                    Data: sparklineData,
                     CurrentIndex: score,
                     Speed: speed,
                     ChangePct: 0,
@@ -476,7 +501,7 @@ export default function PredictionNextClient() {
         }
 
         return predictionData;
-    }, [predictionData, isWorldBloomEvent, selectedWlChapter, worldLinkSnapshot, activeWlChapter, server, now]);
+    }, [predictionData, isWorldBloomEvent, selectedWlChapter, worldLinkSnapshot, activeWlChapter, now, server, chapterTierSeries]);
 
     // Process chart data (trim 1% from start/end) - Replacing original currentChart definition
     const currentChart = useMemo(() => {
@@ -967,13 +992,8 @@ export default function PredictionNextClient() {
                                                                 }
                                                                 : undefined);
 
-                                                        const totalLen = chart.HistoryPoints.length;
-                                                        const trimCount = Math.floor(totalLen * 0.01);
-                                                        const historyData = chart.HistoryPoints.slice(trimCount, totalLen - trimCount).map(p => p.y);
-
-                                                        const predLen = chart.PredictPoints?.length || 0;
-                                                        const predTrim = Math.floor(predLen * 0.01);
-                                                        const predictData = chart.PredictPoints?.slice(predTrim, predLen - predTrim).map(p => p.y) || [];
+                                                        const historyData = chart.HistoryPoints.map(p => p.y);
+                                                        const predictData = (chart.PredictPoints || []).map(p => p.y);
 
                                                         // Determine colors
                                                         const trendColor = tierStats && tierStats.ChangePct < 0 ? '#10b981' : '#ef4444';
