@@ -455,7 +455,7 @@ export function calculateEventPrediction(input: PredictionEngineInput): Predicti
     const priorTotalFinalScore = priorDailyScore * daysTotal;
     const remainingProgressFraction = Math.max(0, 1 - getStandardProgress(progress));
     const priorRemainingScore = priorTotalFinalScore * remainingProgressFraction;
-    const priorEstimate = currentScore + priorRemainingScore;
+    const priorHourlyRate = priorDailyScore / 24;
 
     // ── Layer 2: Filtered Velocity & Deseasonalization ────────────────────────
     const velPoints = extractFilteredVelocities(historyPoints);
@@ -479,17 +479,24 @@ export function calculateEventPrediction(input: PredictionEngineInput): Predicti
     const diurnalFactor = getDiurnalFactor(currentHourLocal);
     const deseasonalizedSpeed = speed6h / Math.max(0.4, diurnalFactor);
 
+    // If recent velocity has decayed or stalled (e.g. completed chapter), scale down prior expectation
+    const recentVelocityRatio = priorHourlyRate > 0 ? Math.min(1.5, Math.max(0.02, speed24h / priorHourlyRate)) : 1.0;
+    const effectivePriorRemaining = priorRemainingScore * (progress < 0.2 ? 1.0 : Math.min(1.0, Math.max(0.05, recentVelocityRatio)));
+    const priorEstimate = currentScore + effectivePriorRemaining;
+
     // ── Layer 3: Server Fatigue Dynamics Envelope ───────────────────────────
     const baseCruisingSpeed = 0.65 * speed24h + 0.35 * deseasonalizedSpeed;
-    const priorHourlyRate = priorDailyScore / 24;
 
     let cruisingSpeed: number;
     if (progress < 0.15) {
         cruisingSpeed = 0.55 * baseCruisingSpeed + 0.45 * priorHourlyRate;
     } else if (progress < 0.40) {
         cruisingSpeed = 0.75 * baseCruisingSpeed + 0.25 * priorHourlyRate;
+    } else if (speed24h < 0.2 * priorHourlyRate) {
+        // If line has stalled or past peak chapter, stick strictly to observed cruising speed
+        cruisingSpeed = baseCruisingSpeed;
     } else {
-        cruisingSpeed = 0.88 * baseCruisingSpeed + 0.12 * priorHourlyRate;
+        cruisingSpeed = 0.90 * baseCruisingSpeed + 0.10 * priorHourlyRate;
     }
 
     let effectiveSpeed: number;

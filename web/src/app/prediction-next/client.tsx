@@ -9,8 +9,14 @@ import Sparkline from "@/components/events/Sparkline";
 import ActivityStats from "@/components/events/ActivityStats";
 import EventGoalPlanner from "@/components/events/EventGoalPlanner";
 import { useI18n } from "@/contexts/I18nContext";
-import { fetchPredictionData, fetchPredictionLatest, fetchEventList } from "@/lib/prediction-api";
-import { subscribeRankingSync, getLatestRankingSync, applyLiveSyncToPrediction } from "@/lib/ranking-sync";
+import { fetchPredictionData, fetchEventList } from "@/lib/prediction-api";
+import {
+    subscribeRankingSync,
+    applyLiveSyncToPrediction,
+    extractTierScoresFromEntries,
+    LiveRankingSyncPayload,
+    publishRankingSync,
+} from "@/lib/ranking-sync";
 import { PredictionData, EventListItem, ServerType, TierKLine, RankChart } from "@/types/prediction";
 import { IEventInfo, EventType, getEventStatus, EVENT_STATUS_DISPLAY } from "@/types/events";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -18,7 +24,7 @@ import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
 import { getEventBannerUrl, getEventLogoUrl, getCharacterIconUrl } from "@/lib/assets";
 import { getCharacterName } from "@/lib/i18n";
 import { getWl3SimulationGroupByEventId } from "@/lib/world-bloom-simulation";
-import { fetchWorldLinkLatestV2 } from "@/lib/realtime-ranking-next-api";
+import { fetchLatestV2, fetchWorldLinkLatestV2 } from "@/lib/realtime-ranking-next-api";
 import { WorldLinkSnapshotV2 } from "@/types/realtime-ranking-next";
 import { calculateEventPrediction } from "@/lib/prediction-engine";
 
@@ -315,38 +321,54 @@ export default function PredictionNextClient() {
             .catch(console.error);
     }, [selectedEventId, server, isWorldBloomEvent]);
 
-    // 10s Silent Background Polling: Synchronized with realtime-ranking interval when active event is ongoing
+    // 10s Live Background Polling: Fetch fresh realtime board cutoffs and update in-memory predictions
     useEffect(() => {
         if (!selectedEventId) return;
-        const activeEvent = events.find(e => e.id === selectedEventId);
-        if (!activeEvent?.is_active) return;
+
+        const predEvent = events.find(e => e.id === selectedEventId);
+        const masterEvent = masterEvents.find(e => e.id === selectedEventId);
+        const s = predEvent?.start_at ? (predEvent.start_at < 10000000000 ? predEvent.start_at * 1000 : predEvent.start_at) : masterEvent?.startAt;
+        const e = predEvent?.end_at ? (predEvent.end_at < 10000000000 ? predEvent.end_at * 1000 : predEvent.end_at) : masterEvent?.aggregateAt;
 
         const POLL_INTERVAL = 10_000;
-        const interval = setInterval(async () => {
-            // If realtime ranking is already polling and pushed updates recently (< 12s), skip duplicate network request
-            const lastSync = getLatestRankingSync(server, selectedEventId);
-            const nowMs = Date.now();
-            if (lastSync && (nowMs - lastSync.updatedAt < 12_000) && lastSync.source !== 'prediction') {
-                return;
-            }
+        let isPolling = false;
 
+        const pollTick = async () => {
+            if (isPolling) return;
+            isPolling = true;
             try {
-                await fetchPredictionLatest(selectedEventId, server);
-                if (isWorldBloomEvent) {
-                    fetchWorldLinkLatestV2(server).then(data => {
-                        if (data && (!data.eventId || data.eventId === selectedEventId)) {
-                            setWorldLinkSnapshot(data);
-                        }
-                    }).catch(() => {});
+                // 1. Fetch fresh standard realtime ranking snapshot
+                const freshSnapshot = await fetchLatestV2(server);
+                if (freshSnapshot && Array.isArray(freshSnapshot.entries) && freshSnapshot.entries.length > 0) {
+                    const tierScores = extractTierScoresFromEntries(freshSnapshot.entries);
+                    const syncPayload: LiveRankingSyncPayload = {
+                        region: server,
+                        eventId: freshSnapshot.eventId || selectedEventId,
+                        updatedAt: freshSnapshot.updatedAt || Date.now(),
+                        tierScores,
+                        source: "prediction-next",
+                    };
+                    setPredictionData(prev => prev ? applyLiveSyncToPrediction(prev, syncPayload, server, s, e) : prev);
+                    publishRankingSync(syncPayload);
                 }
-            } catch (err) {
-                // Silent fail during background polling
-                console.warn('[Prediction] Live sync poll failed:', err);
-            }
-        }, POLL_INTERVAL);
 
+                // 2. Fetch fresh World Link snapshot if World Link event
+                if (isWorldBloomEvent) {
+                    const freshWl = await fetchWorldLinkLatestV2(server);
+                    if (freshWl && Array.isArray(freshWl.groups) && freshWl.groups.length > 0) {
+                        setWorldLinkSnapshot(freshWl);
+                    }
+                }
+            } catch (_err) {
+                // Silent fail during background polling
+            } finally {
+                isPolling = false;
+            }
+        };
+
+        const interval = setInterval(pollTick, POLL_INTERVAL);
         return () => clearInterval(interval);
-    }, [selectedEventId, server, events, isWorldBloomEvent]);
+    }, [selectedEventId, server, events, masterEvents, isWorldBloomEvent]);
 
     // Compute active prediction data based on selected WL chapter vs overall
     const activePredictionData = useMemo<PredictionData | null>(() => {
@@ -707,15 +729,15 @@ export default function PredictionNextClient() {
                 {/* Main Content */}
                 {!loading && activePredictionData && (
                     <div className="space-y-6">
-                        {/* World Link Chapter Selector */}
+                        {/* World Link Chapter Selector - Sticky docked beneath MainNavbar */}
                         {isWorldBloomEvent && eventWorldBlooms.length > 0 && (
-                            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 p-3 shadow-sm">
+                            <div className="sticky top-[58px] z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200/90 dark:border-slate-700/90 p-3 shadow-md mb-6 transition-all">
                                 <div className="flex items-center justify-between mb-2.5 px-1">
-                                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                                         <span>🌸</span>
                                         <span>{t("page.prediction.wl.chapters")}</span>
                                     </span>
-                                    <span className="text-[11px] text-slate-400 font-mono">
+                                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                                         {selectedWlChapter === 'overall'
                                             ? t("page.prediction.wl.overall")
                                             : activeWlChapter

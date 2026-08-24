@@ -174,7 +174,7 @@ export async function fetchPredictionData(eventId: number, server: ServerType): 
                 .filter(h => h.prediction != null)
                 .map(h => ({ t: h.t, y: h.prediction! }));
 
-            // If upstream prediction is null and event is active, run the Bayesian-Kalman engine
+            // Run the AkiYome v2.0.0-Tori Bayesian-Kalman engine
             if (isActive && HistoryPoints.length > 0 && item.rank <= 10000) {
                 const result = calculateEventPrediction({
                     server,
@@ -184,15 +184,10 @@ export async function fetchPredictionData(eventId: number, server: ServerType): 
                     historyPoints: HistoryPoints,
                 });
 
-                if (predictedScore <= 0) {
-                    predictedScore = result.predictedScore;
-                }
+                predictedScore = result.predictedScore;
                 predictedScoreP10 = result.predictedScoreP10;
                 predictedScoreP90 = result.predictedScoreP90;
-
-                if (PredictPoints.length === 0 && result.predictPoints.length > 0) {
-                    PredictPoints = result.predictPoints;
-                }
+                PredictPoints = result.predictPoints;
             }
 
             return {

@@ -360,30 +360,90 @@ export default function EventGoalPlanner({
                     {/* Daily Available Time & Auto */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
-                                {t("page.prediction.planner.inputs.dailyHours")}
-                            </label>
-                            <input
-                                type="number"
-                                min={1}
-                                max={server === 'jp' ? 18 : 24}
-                                value={dailyAvailableHours}
-                                onChange={(e) => setDailyAvailableHours(Math.max(1, Number(e.target.value)))}
-                                className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-700 dark:text-slate-200"
-                            />
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                                    {t("page.prediction.planner.inputs.dailyHours")}
+                                </label>
+                                <span className="text-[10px] font-mono text-miku font-bold">
+                                    {t("page.prediction.planner.inputs.dailyHoursUnit", { hours: dailyAvailableHours })}
+                                </span>
+                            </div>
+                            <div className="relative mb-1.5">
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={server === 'jp' ? 18 : 24}
+                                    value={dailyAvailableHours}
+                                    onChange={(e) => setDailyAvailableHours(Math.max(1, Number(e.target.value)))}
+                                    className="w-full pl-3 pr-14 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-700 dark:text-slate-200"
+                                />
+                                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">
+                                    {t("page.prediction.planner.inputs.hoursSuffix")}
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                                {[2, 4, 6, 8, 12].map((h) => (
+                                    <button
+                                        key={h}
+                                        type="button"
+                                        onClick={() => setDailyAvailableHours(h)}
+                                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${
+                                            dailyAvailableHours === h
+                                                ? 'bg-miku/20 text-miku font-bold border border-miku/40'
+                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                        }`}
+                                    >
+                                        {h}h
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="mt-1 text-[10px] text-slate-400 leading-tight">
+                                {t("page.prediction.planner.inputs.dailyHoursHint")}
+                            </p>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
-                                {t("page.prediction.planner.inputs.dailyAuto")}
-                            </label>
-                            <input
-                                type="number"
-                                min={0}
-                                max={99}
-                                value={dailyAutoBudget}
-                                onChange={(e) => setDailyAutoBudget(Math.max(0, Number(e.target.value)))}
-                                className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-700 dark:text-slate-200"
-                            />
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                                    {t("page.prediction.planner.inputs.dailyAuto")}
+                                </label>
+                                <span className="text-[10px] font-mono text-miku font-bold">
+                                    {t("page.prediction.planner.inputs.dailyAutoUnit", { count: dailyAutoBudget })}
+                                </span>
+                            </div>
+                            <div className="relative mb-1.5">
+                                <input
+                                    type="number"
+                                    min={0}
+                                    max={99}
+                                    value={dailyAutoBudget}
+                                    onChange={(e) => setDailyAutoBudget(Math.max(0, Number(e.target.value)))}
+                                    className="w-full pl-3 pr-12 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-700 dark:text-slate-200"
+                                />
+                                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">
+                                    {t("page.prediction.planner.inputs.runsSuffix")}
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                                {[0, 10, 30, 99].map((cnt) => (
+                                    <button
+                                        key={cnt}
+                                        type="button"
+                                        onClick={() => setDailyAutoBudget(cnt)}
+                                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${
+                                            dailyAutoBudget === cnt
+                                                ? 'bg-miku/20 text-miku font-bold border border-miku/40'
+                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                        }`}
+                                    >
+                                        {cnt === 10
+                                            ? t("page.prediction.planner.inputs.runsChipFree", { count: cnt })
+                                            : t("page.prediction.planner.inputs.runsChip", { count: cnt })}
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="mt-1 text-[10px] text-slate-400 leading-tight">
+                                {t("page.prediction.planner.inputs.dailyAutoHint")}
+                            </p>
                         </div>
                     </div>
                 </div>
