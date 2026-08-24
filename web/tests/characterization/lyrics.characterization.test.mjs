@@ -2931,6 +2931,35 @@ test("Public Lyrics v4 loads canonical multi-edition translations without cross-
   }
 });
 
+test("Public Lyrics v4 multi-edition details validate and load under a v3 index", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  try {
+    const document = structuredClone(fixtureV4.document);
+    const publication = structuredClone(fixtureV4Publication);
+    const v3Index = {
+      version: 3,
+      songs: [publication],
+    };
+    globalThis.fetch = async (url) => jsonResponse(
+      String(url).endsWith("/index.json") ? v3Index : document,
+    );
+    const lyrics = await importLyrics();
+    const loaded = await lyrics.fetchLyricsDocument(document.musicId);
+    assert.equal(loaded.version, 4);
+    assert.equal(loaded.defaultTranslationEditionKey, "official");
+    assert.deepEqual(
+      loaded.translationEditions.map((edition) => edition.key),
+      ["community", "official"],
+    );
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
 test("Public Lyrics v4 rejects open shapes, noncanonical editions, incomplete side coverage, and invalid exact projections", async () => {
   const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
   const previousFetch = globalThis.fetch;
