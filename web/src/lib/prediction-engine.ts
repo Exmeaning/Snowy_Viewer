@@ -102,11 +102,11 @@ const BONUS_SCALE_MAP: Record<number, number> = {
 
 /**
  * Standard cumulative progress curve Phi(p), where p in [0, 1].
- * Captures the empirical S-curve of PJSK events (opening rush, mid lull, weekend & final sprint).
+ * Captures the empirical S-curve of PJSK events (opening rush, steady cruising, final sprint).
  */
 function getStandardProgress(p: number): number {
     const clamped = Math.max(0, Math.min(1, p));
-    return 0.15 * clamped + 0.55 * Math.pow(clamped, 2) + 0.30 * Math.pow(clamped, 3);
+    return 0.82 * clamped + 0.18 * Math.pow(clamped, 2);
 }
 
 // ─── 2. Diurnal Seasonality Table (Hour of Day in Local Time) ────────────────
@@ -132,9 +132,13 @@ interface TierParameters {
     sigmaRatio: number;
 }
 
-function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = false): TierParameters {
-    if (isWlChapter) {
-        // Calibrated from World Link (48h chapter sprint with 28~30 plays/h physical limit)
+function getTierParameters(
+    rank: number,
+    isJp: boolean,
+    mode: 'wl_chapter' | 'wl_overall' | 'standard' = 'standard'
+): TierParameters {
+    if (mode === 'wl_chapter') {
+        // Calibrated from World Link (48h single-chapter sprint with 28~30 plays/h physical limit)
         if (rank <= 10) {
             return {
                 expectedManualHours: 18.0,
@@ -241,6 +245,119 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
             autoCapacityRatio: 0.55,
             sprintMultiplier: 1.12,
             baseDailyMedian: 1_800_000,
+            maxHourly: 240_000,
+            sigmaRatio: 0.25,
+        };
+    }
+
+    if (mode === 'wl_overall') {
+        // Calibrated from World Link Total Overall Ranking across all chapters (9~10 days)
+        if (rank <= 10) {
+            return {
+                expectedManualHours: 18.0,
+                autoCapacityRatio: 0.28,
+                sprintMultiplier: 1.35,
+                baseDailyMedian: 55_000_000,
+                maxHourly: 3_800_000,
+                sigmaRatio: 0.08,
+            };
+        }
+        if (rank <= 50) {
+            return {
+                expectedManualHours: 17.5,
+                autoCapacityRatio: 0.28,
+                sprintMultiplier: 1.32,
+                baseDailyMedian: 40_000_000,
+                maxHourly: 3_500_000,
+                sigmaRatio: 0.10,
+            };
+        }
+        if (rank <= 100) {
+            return {
+                expectedManualHours: 16.5,
+                autoCapacityRatio: 0.28,
+                sprintMultiplier: 1.30,
+                baseDailyMedian: 32_000_000,
+                maxHourly: 3_350_000,
+                sigmaRatio: 0.11,
+            };
+        }
+        if (rank <= 200) {
+            return {
+                expectedManualHours: 15.0,
+                autoCapacityRatio: 0.30,
+                sprintMultiplier: 1.25,
+                baseDailyMedian: 25_000_000,
+                maxHourly: 2_600_000,
+                sigmaRatio: 0.14,
+            };
+        }
+        if (rank <= 300) {
+            return {
+                expectedManualHours: 13.5,
+                autoCapacityRatio: 0.32,
+                sprintMultiplier: 1.24,
+                baseDailyMedian: 20_000_000,
+                maxHourly: 2_200_000,
+                sigmaRatio: 0.15,
+            };
+        }
+        if (rank <= 500) {
+            return {
+                expectedManualHours: 12.0,
+                autoCapacityRatio: 0.35,
+                sprintMultiplier: 1.22,
+                baseDailyMedian: 15_000_000,
+                maxHourly: 1_750_000,
+                sigmaRatio: 0.16,
+            };
+        }
+        if (rank <= 1000) {
+            return {
+                expectedManualHours: 9.0,
+                autoCapacityRatio: 0.40,
+                sprintMultiplier: 1.20,
+                baseDailyMedian: 10_500_000,
+                maxHourly: 1_350_000,
+                sigmaRatio: 0.18,
+            };
+        }
+        if (rank <= 2000) {
+            return {
+                expectedManualHours: 6.0,
+                autoCapacityRatio: 0.45,
+                sprintMultiplier: 1.18,
+                baseDailyMedian: 5_500_000,
+                maxHourly: 800_000,
+                sigmaRatio: 0.20,
+            };
+        }
+        if (rank <= 3000) {
+            return {
+                expectedManualHours: 4.5,
+                autoCapacityRatio: 0.48,
+                sprintMultiplier: 1.16,
+                baseDailyMedian: 3_800_000,
+                maxHourly: 550_000,
+                sigmaRatio: 0.21,
+            };
+        }
+        if (rank <= 5000) {
+            return {
+                expectedManualHours: 3.0,
+                autoCapacityRatio: 0.50,
+                sprintMultiplier: 1.15,
+                baseDailyMedian: 2_400_000,
+                maxHourly: 380_000,
+                sigmaRatio: 0.22,
+            };
+        }
+        // 10000+
+        return {
+            expectedManualHours: 1.8,
+            autoCapacityRatio: 0.55,
+            sprintMultiplier: 1.12,
+            baseDailyMedian: 1_400_000,
             maxHourly: 240_000,
             sigmaRatio: 0.25,
         };
@@ -397,6 +514,7 @@ export function calculateEventPrediction(input: PredictionEngineInput): Predicti
         historyPoints,
         unit,
         characterId,
+        eventType,
         bonusPercent = 475,
     } = input;
 
@@ -441,14 +559,17 @@ export function calculateEventPrediction(input: PredictionEngineInput): Predicti
         };
     }
 
-    const isWlChapter = totalDurationHours <= 72 || bonusPercent >= 700;
-    const tierParams = getTierParameters(rank, isJp, isWlChapter);
+    const isWlEvent = eventType === 'world_bloom' || bonusPercent >= 600 || (unit && unit.toLowerCase().includes('world'));
+    const isWlChapter = isWlEvent ? (totalDurationHours <= 72 || characterId != null) : (totalDurationHours <= 72);
+    const isWlOverall = isWlEvent && !isWlChapter;
+    const mode: 'wl_chapter' | 'wl_overall' | 'standard' = isWlChapter ? 'wl_chapter' : (isWlOverall ? 'wl_overall' : 'standard');
+    const tierParams = getTierParameters(rank, isJp, mode);
 
     // ── Layer 1: Feature Priors ──────────────────────────────────────────────
     const unitNormalized = unit ? unit.toLowerCase() : '';
     const unitHeat = unitNormalized ? (UNIT_HEAT_MAP[unitNormalized] || 1.0) : 1.0;
     const charHeat = (characterId ? CHARACTER_HEAT_MAP[characterId] : undefined) ?? unitHeat;
-    const bonusMultiplier = isWlChapter ? 1.0 : (BONUS_SCALE_MAP[bonusPercent] ?? ((100 + bonusPercent) / 485));
+    const bonusMultiplier = (isWlChapter || isWlOverall) ? 1.0 : (BONUS_SCALE_MAP[bonusPercent] ?? ((100 + bonusPercent) / 485));
     const daysTotal = totalDurationHours / 24;
 
     const priorDailyScore = tierParams.baseDailyMedian * charHeat * bonusMultiplier;

@@ -589,6 +589,7 @@ export default function PredictionClient() {
                                                                                 <Sparkline
                                                                                     data={historyData}
                                                                                     prediction={(predictData.length > 0 && chart.Rank <= 10000) ? predictData : undefined}
+                                                                                    progress={Math.max(0.05, Math.min(0.95, (banner.progressPercent || 50) / 100))}
                                                                                     color={trendColor}
                                                                                     width={100}
                                                                                     height={30}

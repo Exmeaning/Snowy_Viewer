@@ -847,7 +847,7 @@ export default function PredictionNextClient() {
                             return (
                                 <>
                                     <Link href={`/events/${banner.mockEvent.id}`} className="block group mb-6">
-                                        <div className="relative flex h-32 md:h-36 rounded-2xl overflow-hidden glass-card border border-white/40 bg-white shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99] hover:shadow-md cursor-pointer">
+                                        <div className="relative flex min-h-[136px] h-auto md:h-36 rounded-2xl overflow-hidden glass-card border border-white/40 bg-white shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99] hover:shadow-md cursor-pointer">
                                             {/* Link wrapper could be added here if needed */}
 
                                             {/* Left Side: Background & Logo */}
@@ -897,7 +897,7 @@ export default function PredictionNextClient() {
                                                     />
                                                 )}
 
-                                                <div className="space-y-1 relative z-20">
+                                                <div className="space-y-1 relative z-20 pr-12 sm:pr-16">
                                                     <div className="flex items-center gap-2 mb-1.5">
                                                         <span
                                                             className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded text-white shadow-sm"
@@ -912,7 +912,7 @@ export default function PredictionNextClient() {
                                                     <h3 className="font-bold text-primary-text text-sm sm:text-base leading-tight line-clamp-1" title={banner.mockEvent.name}>
                                                         {banner.mockEvent.name}
                                                     </h3>
-                                                    <div className="pt-2 text-[10px] sm:text-xs text-slate-400 font-mono flex flex-col sm:flex-row sm:gap-2">
+                                                    <div className="pt-1.5 text-[10px] sm:text-xs text-slate-400 font-mono flex flex-col sm:flex-row sm:gap-2">
                                                         <span>{banner.formatEventDate(banner.mockEvent.startAt)}</span>
                                                         <span className="hidden sm:inline">-</span>
                                                         <span>{banner.formatEventDate(banner.mockEvent.aggregateAt)}</span>
@@ -925,8 +925,8 @@ export default function PredictionNextClient() {
                                                 </div>
 
                                                 {banner.status === "ongoing" && (
-                                                    <div className="absolute bottom-0 right-2 text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 select-none z-10 tracking-tighter">
-                                                        {Math.floor(banner.progressPercent)}<span className="text-2xl ml-1">%</span>
+                                                    <div className="absolute bottom-1 right-2 text-2xl sm:text-3xl md:text-4xl font-black text-slate-800/25 dark:text-slate-100/25 select-none z-10 tracking-tighter leading-none pointer-events-none">
+                                                        {Math.floor(banner.progressPercent)}<span className="text-sm sm:text-base md:text-lg ml-0.5">%</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -936,8 +936,8 @@ export default function PredictionNextClient() {
 
                                     {/* Row 1: PGAI + Activity Stats (Only if Active) */}
                                     {isActive && (
-                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[320px] mb-6">
-                                            <div className="lg:col-span-2 h-[320px] lg:h-full">
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[320px] mb-6">
+                                            <div className="lg:col-span-2 min-h-[300px] lg:min-h-[320px] h-full">
                                                 {activePredictionData.data.global_kline && (
                                                     <PGAIChart
                                                         globalKline={activePredictionData.data.global_kline}
@@ -945,7 +945,7 @@ export default function PredictionNextClient() {
                                                     />
                                                 )}
                                             </div>
-                                            <div className="h-auto lg:h-full">
+                                            <div className="min-h-[300px] lg:min-h-[320px] h-full">
                                                 {activePredictionData.data.tier_klines && (
                                                     <ActivityStats tiers={activePredictionData.data.tier_klines} />
                                                 )}
@@ -1035,6 +1035,7 @@ export default function PredictionNextClient() {
                                                                                 <Sparkline
                                                                                     data={historyData}
                                                                                     prediction={(predictData.length > 0 && chart.Rank <= 10000) ? predictData : undefined}
+                                                                                    progress={Math.max(0.05, Math.min(0.95, (banner.progressPercent || 50) / 100))}
                                                                                     color={trendColor}
                                                                                     width={100}
                                                                                     height={30}
