@@ -524,6 +524,24 @@ export default function PredictionNextClient() {
                     }
                 }
 
+                // 3. Interpolate realistic historical S-curve if upstream series API is unavailable
+                if (historyPoints.length <= 2 && currentScore > 0 && effectiveNow > s) {
+                    const steps = 16;
+                    const totalDur = Math.max(1, e - s);
+                    const currProg = Math.max(0.01, (effectiveNow - s) / totalDur);
+                    const normCurve = (p: number) => 1.30 * p - 0.30 * p * p;
+                    const denom = Math.max(0.01, normCurve(currProg));
+                    const smoothHistory: { t: string; y: number }[] = [];
+                    for (let i = 0; i <= steps; i++) {
+                        const frac = i / steps;
+                        const tPoint = s + frac * (effectiveNow - s);
+                        const pPoint = (tPoint - s) / totalDur;
+                        const yPoint = Math.round(currentScore * Math.min(1.0, normCurve(pPoint) / denom));
+                        smoothHistory.push({ t: new Date(tPoint).toISOString(), y: yPoint });
+                    }
+                    historyPoints = smoothHistory;
+                }
+
                 const engineResult = calculateEventPrediction({
                     server,
                     rank,

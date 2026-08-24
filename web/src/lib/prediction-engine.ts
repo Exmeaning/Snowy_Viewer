@@ -104,8 +104,12 @@ const BONUS_SCALE_MAP: Record<number, number> = {
  * Standard cumulative progress curve Phi(p), where p in [0, 1].
  * Captures the empirical S-curve of PJSK events (opening rush, steady cruising, final sprint).
  */
-function getStandardProgress(p: number): number {
+function getStandardProgress(p: number, mode: 'wl_chapter' | 'wl_overall' | 'standard' = 'standard'): number {
     const clamped = Math.max(0, Math.min(1, p));
+    if (mode === 'wl_chapter') {
+        // Front-loaded for 48h single-chapter sprint: Opening 24h yields ~58-62% of volume
+        return 1.30 * clamped - 0.30 * Math.pow(clamped, 2);
+    }
     return 0.82 * clamped + 0.18 * Math.pow(clamped, 2);
 }
 
@@ -574,8 +578,14 @@ export function calculateEventPrediction(input: PredictionEngineInput): Predicti
 
     const priorDailyScore = tierParams.baseDailyMedian * charHeat * bonusMultiplier;
     const priorTotalFinalScore = priorDailyScore * daysTotal;
-    const remainingProgressFraction = Math.max(0, 1 - getStandardProgress(progress));
-    const priorRemainingScore = priorTotalFinalScore * remainingProgressFraction;
+    const progressSoFar = getStandardProgress(progress, mode);
+    const remainingProgressFraction = Math.max(0, 1 - progressSoFar);
+    const impliedFinalFromCurrent = progressSoFar > 0.05 ? currentScore / progressSoFar : priorTotalFinalScore;
+    const effectivePriorFinal = progress < 0.2
+        ? priorTotalFinalScore
+        : 0.35 * priorTotalFinalScore + 0.65 * impliedFinalFromCurrent;
+    const priorRemainingScore = effectivePriorFinal * remainingProgressFraction;
+    const priorEstimate = currentScore + priorRemainingScore;
     const priorHourlyRate = priorDailyScore / 24;
 
     // ── Layer 2: Filtered Velocity & Deseasonalization ────────────────────────
@@ -598,63 +608,62 @@ export function calculateEventPrediction(input: PredictionEngineInput): Predicti
 
     const currentHourLocal = (new Date(latestTime).getUTCHours() + tzOffset) % 24;
     const diurnalFactor = getDiurnalFactor(currentHourLocal);
-    const deseasonalizedSpeed = speed6h / Math.max(0.4, diurnalFactor);
-
-    // If recent velocity has decayed or stalled (e.g. completed chapter), scale down prior expectation
-    const recentVelocityRatio = priorHourlyRate > 0 ? Math.min(1.5, Math.max(0.02, speed24h / priorHourlyRate)) : 1.0;
-    const effectivePriorRemaining = priorRemainingScore * (progress < 0.2 ? 1.0 : Math.min(1.0, Math.max(0.05, recentVelocityRatio)));
-    const priorEstimate = currentScore + effectivePriorRemaining;
+    // Only apply short-window diurnal deseasonalization when fine-grained observation (dt <= 8h) exists
+    const hasFineGrainedDeltas = sum6hDt > 0 && sum6hDt <= 8;
+    const deseasonalizedSpeed = hasFineGrainedDeltas ? (speed6h / Math.max(0.4, diurnalFactor)) : speed6h;
 
     // ── Layer 3: Server Fatigue Dynamics Envelope ───────────────────────────
-    const baseCruisingSpeed = 0.65 * speed24h + 0.35 * deseasonalizedSpeed;
+    const baseCruisingSpeed = 0.70 * speed24h + 0.30 * deseasonalizedSpeed;
 
     let cruisingSpeed: number;
     if (progress < 0.15) {
         cruisingSpeed = 0.55 * baseCruisingSpeed + 0.45 * priorHourlyRate;
     } else if (progress < 0.40) {
         cruisingSpeed = 0.75 * baseCruisingSpeed + 0.25 * priorHourlyRate;
-    } else if (speed24h < 0.2 * priorHourlyRate) {
-        // If line has stalled or past peak chapter, stick strictly to observed cruising speed
-        cruisingSpeed = baseCruisingSpeed;
     } else {
         cruisingSpeed = 0.90 * baseCruisingSpeed + 0.10 * priorHourlyRate;
     }
 
-    let effectiveSpeed: number;
-    if (isJp) {
-        const manualRatio = tierParams.expectedManualHours / 24.0;
-        const autoRatio = ((24.0 - tierParams.expectedManualHours) / 24.0) * tierParams.autoCapacityRatio;
-        const jpCapRatio = manualRatio + autoRatio;
-        effectiveSpeed = cruisingSpeed * jpCapRatio;
-    } else {
-        const manualRatio = tierParams.expectedManualHours / 24.0;
-        const autoRatio = ((24.0 - tierParams.expectedManualHours) / 24.0) * tierParams.autoCapacityRatio;
-        const globalCapRatio = manualRatio + autoRatio;
-        effectiveSpeed = cruisingSpeed * globalCapRatio;
-    }
+    // Decompose into active manual play hours vs auto/rest hours in the remaining timeframe
+    const expectedDailyManual = tierParams.expectedManualHours;
+    const remainingManualHours = Math.min(
+        remainingHours * (expectedDailyManual / 24.0),
+        isJp ? (mode === 'wl_chapter' ? 16.0 : 18.0) : 22.0
+    );
+    const remainingAutoHours = Math.max(0, remainingHours - remainingManualHours);
 
-    effectiveSpeed = Math.min(tierParams.maxHourly, Math.max(0, effectiveSpeed));
+    // Active hourly manual speed observed
+    const activeManualRate = Math.min(
+        tierParams.maxHourly,
+        cruisingSpeed / Math.max(0.4, expectedDailyManual / 24.0)
+    );
+    const autoRate = activeManualRate * tierParams.autoCapacityRatio;
 
-    // Endgame Sprint
+    // Sprint Boost only applies to the final sprint window
+    const sprintWindowHours = Math.min(12, totalDurationHours * 0.20);
     let sprintBoost = 0;
-    const sprintWindowHours = Math.min(16, totalDurationHours * 0.25);
-    if (remainingHours <= sprintWindowHours) {
-        const sprintRatio = (sprintWindowHours - remainingHours) / sprintWindowHours;
-        const multiplier = 1.0 + (tierParams.sprintMultiplier - 1.0) * (1 - sprintRatio * 0.5);
-        effectiveSpeed *= multiplier;
-    } else {
-        const sprintHours = Math.min(remainingHours, sprintWindowHours);
-        sprintBoost = sprintHours * effectiveSpeed * (tierParams.sprintMultiplier - 1.0) * 0.75;
+    if (remainingHours <= sprintWindowHours && remainingHours > 0) {
+        const sprintManualHours = Math.min(remainingManualHours, remainingHours * 0.8);
+        sprintBoost = sprintManualHours * activeManualRate * (tierParams.sprintMultiplier - 1.0) * 0.5;
     }
 
-    const observationalEstimate = currentScore + (effectiveSpeed * remainingHours) + sprintBoost;
+    const observationalRemaining = (remainingManualHours * activeManualRate) + (remainingAutoHours * autoRate) + sprintBoost;
+    const observationalEstimate = currentScore + observationalRemaining;
+
+    const effectiveSpeed = remainingHours > 0 ? (observationalRemaining / remainingHours) : activeManualRate;
 
     // ── Layer 4: Bayesian-Kalman Dynamic Fusion ──────────────────────────────
-    const kalmanGain = Math.min(0.92, Math.max(0.12, Math.pow(progress, 1.1)));
+    const kalmanGain = Math.min(0.85, Math.max(0.20, Math.pow(progress, 1.1)));
     const fusedP50 = Math.round((1 - kalmanGain) * priorEstimate + kalmanGain * observationalEstimate);
 
-    // Hard physical ceiling guardrail
-    const physicalCeiling = Math.round(currentScore + remainingHours * tierParams.maxHourly * tierParams.sprintMultiplier + 500_000);
+    // Hard physical ceiling guardrail (humanly reachable maximum)
+    const maxPossibleRemainingManual = Math.min(remainingHours, isJp ? (mode === 'wl_chapter' ? 18.0 : 20.0) : 23.5);
+    const maxPossibleRemainingAuto = Math.max(0, remainingHours - maxPossibleRemainingManual);
+    const physicalCeiling = Math.round(
+        currentScore +
+        (maxPossibleRemainingManual * tierParams.maxHourly * tierParams.sprintMultiplier) +
+        (maxPossibleRemainingAuto * tierParams.maxHourly * 0.35)
+    );
     const predictedP50 = Math.min(physicalCeiling, Math.max(currentScore, fusedP50));
 
     // ── Layer 5: Confidence Intervals (P10 & P90) ────────────────────────────
