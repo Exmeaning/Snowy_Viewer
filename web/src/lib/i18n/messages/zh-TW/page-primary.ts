@@ -1345,11 +1345,13 @@ export const zhTWPagePrimary = {
                     ended: "已結束",
                     upcoming: "未開啟",
                 },
+                upcomingNotice: "本章節尚未開啟（預計 {time} 開啟），目前展示模型基準先驗預測。開榜後將自動同步即時榜線與時速。",
             },
             stopPredictionNotice: "活動結束前數小時 Moesekai 停止預測",
             loading: "載入預測資料...",
             table: {
                 activeTitle: "各榜線預測一覽",
+                upcomingTitle: "開榜前預測基準一覽",
                 finalTitle: "活動最終結榜分數",
                 detailHint: "按一下行可檢視底部詳細資訊",
                 tier: "榜線",

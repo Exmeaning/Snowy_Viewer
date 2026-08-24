@@ -2217,11 +2217,13 @@ export const koKRMessages = {
                     ended: "종료",
                     upcoming: "시작 전",
                 },
+                upcomingNotice: "이 챕터는 아직 시작되지 않았습니다({time} 시작 예정). 사전 예측 기준을 표시 중입니다. 챕터 시작 후 실시간 점수와 시속이 자동으로 동기화됩니다.",
             },
             stopPredictionNotice: "Moesekai는 이벤트가 끝나기 몇 시간 전에 예측을 중단합니다.",
             loading: "예측 데이터 로드...",
             table: {
                 activeTitle: "각 순위선에 대한 예측 목록",
+                upcomingTitle: "시작 전 예측 기준 목록",
                 finalTitle: "해당 이벤트의 최종 점수",
                 detailHint: "행을 클릭하면 하단에서 세부정보를 볼 수 있습니다.",
                 tier: "목록 라인",

@@ -485,16 +485,17 @@ export default function PredictionNextClient() {
         const fallbackDuration = 48 * 3600000;
         const s = chapter?.chapterStartAt || (eventStart + Math.max(0, chapterIndex) * fallbackDuration);
         const e = chapter?.aggregateAt || (s + fallbackDuration);
+        const isChapterUnstarted = now < s;
 
-        if (group && Array.isArray(group.entries) && group.entries.length > 0) {
-            const calculatedResults: Record<number, ReturnType<typeof calculateEventPrediction>> = {};
+        const calculatedResults: Record<number, ReturnType<typeof calculateEventPrediction>> = {};
 
-            const chapterCharts: RankChart[] = RANK_TIERS.map(rank => {
-                const entry = group.entries.find(item => item.rank === rank);
-                const currentScore = entry?.score || 0;
+        const chapterCharts: RankChart[] = RANK_TIERS.map(rank => {
+            const entry = group?.entries?.find(item => item.rank === rank);
+            const currentScore = isChapterUnstarted ? 0 : (entry?.score || 0);
 
-                let historyPoints: { t: string; y: number }[] = [];
+            let historyPoints: { t: string; y: number }[] = [];
 
+            if (!isChapterUnstarted) {
                 // 1. Prefer true World Link chapter tier series from real-time API
                 const seriesForRank = chapterTierSeries ? (chapterTierSeries[String(rank)] || (chapterTierSeries as Record<string, SeriesPoint[]>)[String(rank)]) : undefined;
                 if (Array.isArray(seriesForRank) && seriesForRank.length > 0) {
@@ -541,72 +542,73 @@ export default function PredictionNextClient() {
                     }
                     historyPoints = smoothHistory;
                 }
+            } else {
+                // Chapter is unstarted: single anchor at chapter start
+                historyPoints = [{ t: new Date(s).toISOString(), y: 0 }];
+            }
 
-                const engineResult = calculateEventPrediction({
-                    server,
-                    rank,
-                    startAt: s,
-                    endAt: e,
-                    historyPoints,
-                    characterId: typeof selectedWlChapter === 'number' ? selectedWlChapter : undefined,
-                    bonusPercent: isWorldBloomEvent ? 990 : 475,
-                });
-
-                calculatedResults[rank] = engineResult;
-
-                return {
-                    Rank: rank,
-                    CurrentScore: currentScore,
-                    PredictedScore: engineResult.predictedScore,
-                    PredictedScoreP10: engineResult.predictedScoreP10,
-                    PredictedScoreP90: engineResult.predictedScoreP90,
-                    HistoryPoints: historyPoints,
-                    PredictPoints: engineResult.predictPoints,
-                };
+            const engineResult = calculateEventPrediction({
+                server,
+                rank,
+                startAt: s,
+                endAt: e,
+                historyPoints,
+                characterId: typeof selectedWlChapter === 'number' ? selectedWlChapter : undefined,
+                bonusPercent: isWorldBloomEvent ? 990 : 475,
             });
 
-            const isChapterEnded = now >= e;
-            const elapsedHours = Math.max(0.1, (Math.min(now, e) - s) / 3600000);
-
-            const tier_klines: TierKLine[] = RANK_TIERS.map(rank => {
-                const entry = group.entries.find(item => item.rank === rank);
-                const score = entry?.score || 0;
-                const engineRes = calculatedResults[rank];
-                const chart = chapterCharts.find(c => c.Rank === rank);
-
-                const speed = isChapterEnded
-                    ? 0
-                    : (engineRes?.effectiveHourlySpeed || (elapsedHours > 0 ? Math.round(score / elapsedHours) : 0));
-
-                const sparklineData: KLinePoint[] = (chart?.HistoryPoints || []).map(pt => ({
-                    t: pt.t,
-                    o: pt.y,
-                    c: pt.y,
-                    l: pt.y,
-                    h: pt.y,
-                    v: 0,
-                }));
-
-                return {
-                    Rank: rank,
-                    Data: sparklineData,
-                    CurrentIndex: score,
-                    Speed: speed,
-                    ChangePct: 0,
-                };
-            });
+            calculatedResults[rank] = engineResult;
 
             return {
-                ...predictionData,
-                data: {
-                    ...predictionData.data,
-                    charts: chapterCharts,
-                    tier_klines,
-                },
+                Rank: rank,
+                CurrentScore: currentScore,
+                PredictedScore: engineResult.predictedScore,
+                PredictedScoreP10: engineResult.predictedScoreP10,
+                PredictedScoreP90: engineResult.predictedScoreP90,
+                HistoryPoints: historyPoints,
+                PredictPoints: engineResult.predictPoints,
             };
-        }
+        });
 
-        return predictionData;
+        const isChapterEnded = now >= e;
+        const elapsedHours = Math.max(0.1, (Math.min(now, e) - s) / 3600000);
+
+        const tier_klines: TierKLine[] = RANK_TIERS.map(rank => {
+            const entry = group?.entries?.find(item => item.rank === rank);
+            const score = isChapterUnstarted ? 0 : (entry?.score || 0);
+            const engineRes = calculatedResults[rank];
+            const chart = chapterCharts.find(c => c.Rank === rank);
+
+            const speed = (isChapterEnded || isChapterUnstarted)
+                ? 0
+                : (engineRes?.effectiveHourlySpeed || (elapsedHours > 0 ? Math.round(score / elapsedHours) : 0));
+
+            const sparklineData: KLinePoint[] = (chart?.HistoryPoints || []).map(pt => ({
+                t: pt.t,
+                o: pt.y,
+                c: pt.y,
+                l: pt.y,
+                h: pt.y,
+                v: 0,
+            }));
+
+            return {
+                Rank: rank,
+                Data: sparklineData,
+                CurrentIndex: score,
+                Speed: speed,
+                ChangePct: 0,
+            };
+        });
+
+        return {
+            ...predictionData,
+            data: {
+                ...predictionData.data,
+                charts: chapterCharts,
+                tier_klines,
+            },
+        };
     }, [predictionData, isWorldBloomEvent, selectedWlChapter, worldLinkSnapshot, activeWlChapter, eventWorldBlooms, now, server, chapterTierSeries, events, masterEvents, selectedEventId]);
 
     // Process chart data (trim 1% from start/end) - Replacing original currentChart definition
@@ -944,6 +946,9 @@ export default function PredictionNextClient() {
                         {/* Event Banner */}
                         {eventState && (() => {
                             const { banner, isActive } = eventState;
+                            const isUpcoming = banner.status === "upcoming";
+                            const isEnded = banner.status === "ended";
+                            const showPredictionColumns = isActive || isUpcoming;
                             const statusLabel = t(`common.status.${banner.status}`);
                             const fallbackStatusLabel = t(banner.statusDisplay.labelKey);
                             const resolvedStatusLabel = statusLabel === `common.status.${banner.status}` ? fallbackStatusLabel : statusLabel;
@@ -1036,7 +1041,6 @@ export default function PredictionNextClient() {
                                         </div>
                                     </Link>
 
-
                                     {/* Row 1: PGAI + Activity Stats (Only if Active) */}
                                     {isActive && (
                                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[320px] mb-6">
@@ -1056,13 +1060,25 @@ export default function PredictionNextClient() {
                                         </div>
                                     )}
 
+                                    {/* Upcoming Chapter / Event Notice Banner */}
+                                    {isUpcoming && (
+                                        <div className="flex items-center gap-2.5 p-4 mb-6 rounded-xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-800/40 text-blue-700 dark:text-blue-300 text-xs sm:text-sm">
+                                            <svg className="w-4 h-4 shrink-0 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span>{t("page.prediction.wl.upcomingNotice", { time: banner.formatEventDate(banner.mockEvent.startAt) })}</span>
+                                        </div>
+                                    )}
+
                                     {/* Row 2: Prediction List / Table */}
                                     <div className="bg-white rounded-xl border border-slate-100 overflow-hidden mb-6">
                                         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
                                             <h3 className="font-bold text-slate-700">
-                                                {isActive ? t("page.prediction.table.activeTitle") : t("page.prediction.table.finalTitle")}
+                                                {isUpcoming
+                                                    ? t("page.prediction.table.upcomingTitle")
+                                                    : (isActive ? t("page.prediction.table.activeTitle") : t("page.prediction.table.finalTitle"))}
                                             </h3>
-                                            {isActive && <span className="text-xs text-slate-400">{t("page.prediction.table.detailHint")}</span>}
+                                            {showPredictionColumns && <span className="text-xs text-slate-400">{t("page.prediction.table.detailHint")}</span>}
                                         </div>
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-sm">
@@ -1070,12 +1086,12 @@ export default function PredictionNextClient() {
                                                     <tr>
                                                         <th className="px-4 py-3 text-left text-slate-500 font-medium w-24">{t("page.prediction.table.tier")}</th>
                                                         <th className="px-4 py-3 text-right text-slate-500 font-medium">
-                                                            {isActive ? t("page.prediction.table.currentScore") : t("page.prediction.table.finalScore")}
+                                                            {isEnded ? t("page.prediction.table.finalScore") : t("page.prediction.table.currentScore")}
                                                         </th>
-                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.predictedScore")}</th>}
-                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.gap")}</th>}
-                                                        {isActive && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.speed")}</th>}
-                                                        {isActive && <th className="px-4 py-3 text-center text-slate-500 font-medium w-32">{t("page.prediction.table.trend")}</th>}
+                                                        {showPredictionColumns && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.predictedScore")}</th>}
+                                                        {showPredictionColumns && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.gap")}</th>}
+                                                        {showPredictionColumns && <th className="px-4 py-3 text-right text-slate-500 font-medium">{t("page.prediction.table.speed")}</th>}
+                                                        {showPredictionColumns && <th className="px-4 py-3 text-center text-slate-500 font-medium w-32">{t("page.prediction.table.trend")}</th>}
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1107,30 +1123,34 @@ export default function PredictionNextClient() {
                                                         return (
                                                             <tr
                                                                 key={chart.Rank}
-                                                                className={`border-t border-slate-50 hover:bg-slate-50/50 cursor-pointer transition-colors ${isActive && chart.Rank === selectedRank ? 'bg-miku/5' : ''
+                                                                className={`border-t border-slate-50 hover:bg-slate-50/50 cursor-pointer transition-colors ${showPredictionColumns && chart.Rank === selectedRank ? 'bg-miku/5' : ''
                                                                     }`}
-                                                                onClick={() => isActive && setSelectedRank(chart.Rank)}
+                                                                onClick={() => showPredictionColumns && setSelectedRank(chart.Rank)}
                                                             >
                                                                 <td className="px-4 py-3 font-bold text-miku">T{chart.Rank}</td>
                                                                 <td className="px-4 py-3 text-right text-slate-700 font-mono font-bold">
                                                                     {formatNumber(chart.CurrentScore)}
                                                                 </td>
-                                                                {isActive && (
+                                                                {showPredictionColumns && (
                                                                     <>
                                                                         <td className="px-4 py-3 text-right text-amber-600 font-mono font-bold">
                                                                             {chart.Rank > 10000 ? '-' : formatNumber(chart.PredictedScore)}
                                                                         </td>
                                                                         <td className="px-4 py-3 text-right text-slate-500 font-mono">
-                                                                            {chart.Rank > 10000 ? '-' : `+${formatNumber(chart.PredictedScore - chart.CurrentScore)}`}
+                                                                            {chart.Rank > 10000 ? '-' : (isUpcoming ? `+${formatNumber(chart.PredictedScore)}` : `+${formatNumber(chart.PredictedScore - chart.CurrentScore)}`)}
                                                                         </td>
                                                                         <td className="px-4 py-3 text-right font-mono">
                                                                             {tierStats ? (
-                                                                                <div className="flex flex-col items-end">
-                                                                                    <span className="text-slate-700">{tierStats.Speed != null ? formatNumber(tierStats.Speed) : '-'} /h</span>
-                                                                                    <span className={`text-[10px] ${tierStats.ChangePct >= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                                                                                        {tierStats.ChangePct >= 0 ? '+' : ''}{tierStats.ChangePct?.toFixed(1) ?? '0'}%
-                                                                                    </span>
-                                                                                </div>
+                                                                                isUpcoming ? (
+                                                                                    <span className="text-slate-400">0 /h</span>
+                                                                                ) : (
+                                                                                    <div className="flex flex-col items-end">
+                                                                                        <span className="text-slate-700">{tierStats.Speed != null ? formatNumber(tierStats.Speed) : '-'} /h</span>
+                                                                                        <span className={`text-[10px] ${tierStats.ChangePct >= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                                                                            {tierStats.ChangePct >= 0 ? '+' : ''}{tierStats.ChangePct?.toFixed(1) ?? '0'}%
+                                                                                        </span>
+                                                                                    </div>
+                                                                                )
                                                                             ) : '-'}
                                                                         </td>
                                                                         <td className="px-4 py-3 text-center">
@@ -1138,7 +1158,7 @@ export default function PredictionNextClient() {
                                                                                 <Sparkline
                                                                                     data={historyData}
                                                                                     prediction={(predictData.length > 0 && chart.Rank <= 10000) ? predictData : undefined}
-                                                                                    progress={Math.max(0.05, Math.min(0.95, (banner.progressPercent || 50) / 100))}
+                                                                                    progress={isUpcoming ? 0.05 : Math.max(0.05, Math.min(0.95, (banner.progressPercent || 50) / 100))}
                                                                                     color={trendColor}
                                                                                     width={100}
                                                                                     height={30}
@@ -1155,8 +1175,8 @@ export default function PredictionNextClient() {
                                         </div>
                                     </div>
 
-                                    {/* Row 3: Goal Strategy Planner (When Event is Active) */}
-                                    {isActive && (
+                                    {/* Row 3: Goal Strategy Planner (When Event is Active or Upcoming) */}
+                                    {showPredictionColumns && (
                                         <EventGoalPlanner
                                             server={server}
                                             charts={activePredictionData.data.charts || []}
@@ -1167,8 +1187,8 @@ export default function PredictionNextClient() {
                                         />
                                     )}
 
-                                    {/* Row 4: Large Detailed Chart (Only if Active) */}
-                                    {isActive && (
+                                    {/* Row 4: Large Detailed Chart (When Event is Active or Upcoming) */}
+                                    {showPredictionColumns && (
                                         <div id="detailed-chart" className="scroll-mt-24 mb-6">
                                             <div className="bg-white rounded-xl border border-slate-200 p-6">
                                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -1202,6 +1222,7 @@ export default function PredictionNextClient() {
                                             </div>
                                         </div>
                                     )}
+
                                     {/* Footer Sources */}
                                     <div className="text-center text-xs text-slate-400 pb-8 space-y-1">
                                         <p>{t("page.prediction.sources.tier")}</p>

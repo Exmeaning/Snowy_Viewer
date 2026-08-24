@@ -2219,11 +2219,13 @@ export const jaJPMessages = {
           ended: '終了',
           upcoming: '開始前',
         },
+        upcomingNotice: 'このチャプターはまだ開始されていません（{time} 開始予定）。モデルの事前予測基準を表示しています。開始後にリアルタイムボーダーと時速が自動同期されます。',
       },
       stopPredictionNotice: 'Moesekai stops prediction a few hours before the event ends',
       loading: 'Loading prediction data...',
       table: {
         activeTitle: 'Tier Prediction Overview',
+        upcomingTitle: '開始前予測基準一覧',
         finalTitle: 'Final Event Scores',
         detailHint: 'Click a row to view details below',
         tier: 'Tier',

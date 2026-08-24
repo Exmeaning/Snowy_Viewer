@@ -2195,11 +2195,13 @@ export const zhCNMessages = {
                     ended: "已结束",
                     upcoming: "未开启",
                 },
+                upcomingNotice: "本章节尚未开启（预计 {time} 开启），当前展示模型基准先验预测。开榜后将自动同步实时榜线与时速。",
             },
             stopPredictionNotice: "活动结束前数小时 Moesekai 停止预测",
             loading: "加载预测数据...",
             table: {
                 activeTitle: "各榜线预测一览",
+                upcomingTitle: "开榜前预测基准一览",
                 finalTitle: "活动最终结榜分数",
                 detailHint: "点击行可查看底部详情",
                 tier: "榜线",

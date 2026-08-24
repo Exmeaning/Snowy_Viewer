@@ -2196,11 +2196,13 @@ export const enUSMessages = {
                     ended: "Ended",
                     upcoming: "Upcoming",
                 },
+                upcomingNotice: "This chapter has not started yet (scheduled for {time}). Displaying baseline prior predictions. Real-time scores and speed will sync automatically once the chapter begins.",
             },
             stopPredictionNotice: "Moesekai stops prediction a few hours before the event ends",
             loading: "Loading prediction data...",
             table: {
                 activeTitle: "Tier Prediction Overview",
+                upcomingTitle: "Pre-Event Prediction Baselines",
                 finalTitle: "Final Event Scores",
                 detailHint: "Click a row to view details below",
                 tier: "Tier",
