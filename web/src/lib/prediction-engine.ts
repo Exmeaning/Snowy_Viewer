@@ -81,8 +81,8 @@ export const CHARACTER_HEAT_MAP: Record<number, number> = {
     4:  0.92, // Shiho
     // MORE MORE JUMP!
     5:  0.92, // Minori
-    6:  1.02, // Airi
-    7:  0.95, // Haruka
+    6:  0.95, // Haruka
+    7:  1.04, // Airi
     8:  0.95, // Shizuku
     // Virtual Singers
     25: 0.78, // MEIKO
