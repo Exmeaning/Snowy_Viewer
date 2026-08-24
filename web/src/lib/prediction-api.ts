@@ -156,7 +156,12 @@ export async function fetchPredictionData(eventId: number, server: ServerType): 
         const tlEntries = timeline.timeline ?? [];
         let eventStartAt = 0;
         let eventEndAt = 0;
-        if (tlEntries.length > 0) {
+        const cachedList = getCachedEventList(server);
+        const eventMeta = cachedList?.find(e => e.id === eventId);
+        if (eventMeta?.start_at && eventMeta?.end_at) {
+            eventStartAt = eventMeta.start_at < 10000000000 ? eventMeta.start_at * 1000 : eventMeta.start_at;
+            eventEndAt = eventMeta.end_at < 10000000000 ? eventMeta.end_at * 1000 : eventMeta.end_at;
+        } else if (tlEntries.length > 0) {
             eventStartAt = new Date(tlEntries[0].collect_time).getTime();
             // Standard event duration is 9 days (777,600,000 ms)
             eventEndAt = eventStartAt + (9 * 24 * 3600000);

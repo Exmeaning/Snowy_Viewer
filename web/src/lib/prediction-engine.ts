@@ -140,8 +140,8 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
                 expectedManualHours: 18.0,
                 autoCapacityRatio: 0.28,
                 sprintMultiplier: 1.35,
-                baseDailyMedian: 64_000_000,
-                maxHourly: 3_550_000,
+                baseDailyMedian: 68_000_000,
+                maxHourly: 3_800_000,
                 sigmaRatio: 0.08,
             };
         }
@@ -150,8 +150,8 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
                 expectedManualHours: 17.5,
                 autoCapacityRatio: 0.28,
                 sprintMultiplier: 1.32,
-                baseDailyMedian: 56_000_000,
-                maxHourly: 3_400_000,
+                baseDailyMedian: 58_000_000,
+                maxHourly: 3_500_000,
                 sigmaRatio: 0.10,
             };
         }
@@ -160,8 +160,8 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
                 expectedManualHours: 16.5,
                 autoCapacityRatio: 0.28,
                 sprintMultiplier: 1.30,
-                baseDailyMedian: 50_000_000,
-                maxHourly: 3_250_000,
+                baseDailyMedian: 52_000_000,
+                maxHourly: 3_350_000,
                 sigmaRatio: 0.11,
             };
         }
@@ -170,8 +170,8 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
                 expectedManualHours: 15.0,
                 autoCapacityRatio: 0.30,
                 sprintMultiplier: 1.25,
-                baseDailyMedian: 32_000_000,
-                maxHourly: 2_400_000,
+                baseDailyMedian: 38_000_000,
+                maxHourly: 2_600_000,
                 sigmaRatio: 0.14,
             };
         }
@@ -180,8 +180,8 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
                 expectedManualHours: 13.5,
                 autoCapacityRatio: 0.32,
                 sprintMultiplier: 1.24,
-                baseDailyMedian: 24_000_000,
-                maxHourly: 2_000_000,
+                baseDailyMedian: 30_000_000,
+                maxHourly: 2_200_000,
                 sigmaRatio: 0.15,
             };
         }
@@ -190,8 +190,8 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
                 expectedManualHours: 12.0,
                 autoCapacityRatio: 0.35,
                 sprintMultiplier: 1.22,
-                baseDailyMedian: 18_000_000,
-                maxHourly: 1_650_000,
+                baseDailyMedian: 22_000_000,
+                maxHourly: 1_750_000,
                 sigmaRatio: 0.16,
             };
         }
@@ -200,8 +200,8 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
                 expectedManualHours: 9.0,
                 autoCapacityRatio: 0.40,
                 sprintMultiplier: 1.20,
-                baseDailyMedian: 12_000_000,
-                maxHourly: 1_300_000,
+                baseDailyMedian: 15_000_000,
+                maxHourly: 1_350_000,
                 sigmaRatio: 0.18,
             };
         }
@@ -210,8 +210,8 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
                 expectedManualHours: 6.0,
                 autoCapacityRatio: 0.45,
                 sprintMultiplier: 1.18,
-                baseDailyMedian: 5_500_000,
-                maxHourly: 750_000,
+                baseDailyMedian: 7_500_000,
+                maxHourly: 800_000,
                 sigmaRatio: 0.20,
             };
         }
@@ -220,8 +220,8 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
                 expectedManualHours: 4.5,
                 autoCapacityRatio: 0.48,
                 sprintMultiplier: 1.16,
-                baseDailyMedian: 3_800_000,
-                maxHourly: 500_000,
+                baseDailyMedian: 5_000_000,
+                maxHourly: 550_000,
                 sigmaRatio: 0.21,
             };
         }
@@ -230,8 +230,8 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
                 expectedManualHours: 3.0,
                 autoCapacityRatio: 0.50,
                 sprintMultiplier: 1.15,
-                baseDailyMedian: 2_200_000,
-                maxHourly: 350_000,
+                baseDailyMedian: 3_200_000,
+                maxHourly: 380_000,
                 sigmaRatio: 0.22,
             };
         }
@@ -240,8 +240,8 @@ function getTierParameters(rank: number, isJp: boolean, isWlChapter: boolean = f
             expectedManualHours: 1.8,
             autoCapacityRatio: 0.55,
             sprintMultiplier: 1.12,
-            baseDailyMedian: 1_200_000,
-            maxHourly: 220_000,
+            baseDailyMedian: 1_800_000,
+            maxHourly: 240_000,
             sigmaRatio: 0.25,
         };
     }
@@ -504,12 +504,12 @@ export function calculateEventPrediction(input: PredictionEngineInput): Predicti
         const manualRatio = tierParams.expectedManualHours / 24.0;
         const autoRatio = ((24.0 - tierParams.expectedManualHours) / 24.0) * tierParams.autoCapacityRatio;
         const jpCapRatio = manualRatio + autoRatio;
-        effectiveSpeed = cruisingSpeed * Math.min(1.0, jpCapRatio / (tierParams.expectedManualHours / 24.0));
+        effectiveSpeed = cruisingSpeed * jpCapRatio;
     } else {
         const manualRatio = tierParams.expectedManualHours / 24.0;
         const autoRatio = ((24.0 - tierParams.expectedManualHours) / 24.0) * tierParams.autoCapacityRatio;
         const globalCapRatio = manualRatio + autoRatio;
-        effectiveSpeed = cruisingSpeed * Math.min(1.0, globalCapRatio / (tierParams.expectedManualHours / 24.0));
+        effectiveSpeed = cruisingSpeed * globalCapRatio;
     }
 
     effectiveSpeed = Math.min(tierParams.maxHourly, Math.max(0, effectiveSpeed));

@@ -276,9 +276,7 @@ export function applyLiveSyncToPrediction(
                 historyPoints: nextHistory,
             });
 
-            predictedScore = tierUpdate.prediction && tierUpdate.prediction > 0
-                ? tierUpdate.prediction
-                : engineResult.predictedScore;
+            predictedScore = engineResult.predictedScore;
             predictedScoreP10 = engineResult.predictedScoreP10;
             predictedScoreP90 = engineResult.predictedScoreP90;
             predictPoints = engineResult.predictPoints;

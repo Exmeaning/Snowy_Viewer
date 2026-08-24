@@ -419,14 +419,17 @@ export default function PredictionNextClient() {
                     }));
                 }
 
+                // Ensure history starts cleanly from chapter start (t = s, y = 0)
+                const startIso = new Date(s).toISOString();
+                if (historyPoints.length === 0 || new Date(historyPoints[0].t).getTime() > s + 3600000) {
+                    historyPoints.unshift({ t: startIso, y: 0 });
+                }
+
                 // 2. Ensure current score point is synced
                 const effectiveNow = Math.min(now, e);
                 const nowIso = new Date(effectiveNow).toISOString();
-                if (historyPoints.length === 0) {
-                    historyPoints = [
-                        { t: new Date(s).toISOString(), y: 0 },
-                        { t: nowIso, y: currentScore },
-                    ];
+                if (historyPoints.length === 1) {
+                    historyPoints.push({ t: nowIso, y: currentScore });
                 } else {
                     const lastPt = historyPoints[historyPoints.length - 1];
                     if (effectiveNow > new Date(lastPt.t).getTime() + 60_000) {
