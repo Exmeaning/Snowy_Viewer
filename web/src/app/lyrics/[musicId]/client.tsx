@@ -622,7 +622,7 @@ export default function LyricsDetailClient() {
                                                 <div className="space-y-1">
                                                     <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
                                                     <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                        {renderMemberText(lyrics.attribution)}
+                                                        {renderMemberText(lyrics.attribution, undefined, { stripAtPrefix: true })}
                                                     </dd>
                                                 </div>
                                             </dl>
@@ -637,7 +637,7 @@ export default function LyricsDetailClient() {
                                                 <div className="space-y-1">
                                                     <dt className="font-bold text-primary-text">{t("page.lyrics.translationAndProofreading")}</dt>
                                                     <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                        {renderMemberText(sharedTranslationCredit)}
+                                                        {renderMemberText(sharedTranslationCredit, undefined, { stripAtPrefix: true })}
                                                     </dd>
                                                 </div>
                                             ) : (
@@ -646,7 +646,7 @@ export default function LyricsDetailClient() {
                                                         <div className="space-y-1">
                                                             <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
                                                             <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                                {renderMemberText(translationCredit)}
+                                                                {renderMemberText(translationCredit, undefined, { stripAtPrefix: true })}
                                                             </dd>
                                                         </div>
                                                     )}
@@ -654,7 +654,7 @@ export default function LyricsDetailClient() {
                                                         <div className="space-y-1">
                                                             <dt className="font-bold text-primary-text">{t("page.lyrics.proofreading")}</dt>
                                                             <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                                {renderMemberText(proofreadingCredit)}
+                                                                {renderMemberText(proofreadingCredit, undefined, { stripAtPrefix: true })}
                                                             </dd>
                                                         </div>
                                                     )}

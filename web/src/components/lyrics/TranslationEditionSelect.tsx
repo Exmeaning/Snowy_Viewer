@@ -87,7 +87,7 @@ export default function TranslationEditionSelect({
     onChange,
     label,
     currentLabel,
-    defaultLabel,
+    defaultLabel: _defaultLabel,
     listLabel,
     className = "",
 }: TranslationEditionSelectProps) {

@@ -8,6 +8,10 @@ export const MEMBER_LINKS: Record<string, string> = {
     "爱死天流": "https://space.bilibili.com/475778265",
     "@岓诚": "https://space.bilibili.com/319146217",
     "岓诚": "https://space.bilibili.com/319146217",
+    "@阿木": "https://space.bilibili.com/376479549",
+    "阿木": "https://space.bilibili.com/376479549",
+    "@虐酱": "https://space.bilibili.com/545144078",
+    "虐酱": "https://space.bilibili.com/545144078",
 };
 
 
