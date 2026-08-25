@@ -377,14 +377,23 @@ export function getLyricsAvailableVersions(
 }
 
 export function getLyricsRenditions(document: ILyricsDocument): readonly ILyricsDisplayRendition[] {
-    return document.version === LYRICS_SCHEMA_VERSION_V3 || document.version === LYRICS_SCHEMA_VERSION_V4
-        ? document.renditions
-        : [];
+    if (document.version !== LYRICS_SCHEMA_VERSION_V3 && document.version !== LYRICS_SCHEMA_VERSION_V4) return [];
+    const renditions = [...document.renditions];
+    renditions.sort((left, right) => {
+        if (left.key === "sekai" || left.kind === "sekai") return -1;
+        if (right.key === "sekai" || right.kind === "sekai") return 1;
+        return 0;
+    });
+    return renditions;
 }
 
 export function getLyricsRendition(document: ILyricsDocument, renditionKey?: string | null): ILyricsDisplayRendition | null {
     if (document.version !== LYRICS_SCHEMA_VERSION_V3 && document.version !== LYRICS_SCHEMA_VERSION_V4) return null;
-    return document.renditions.find((rendition) => rendition.key === renditionKey) ?? document.renditions[0] ?? null;
+    const renditions = getLyricsRenditions(document);
+    return renditions.find((rendition) => rendition.key === renditionKey)
+        ?? renditions.find((rendition) => rendition.key === "sekai" || rendition.kind === "sekai")
+        ?? renditions[0]
+        ?? null;
 }
 
 export function getLyricsTranslationEditions(

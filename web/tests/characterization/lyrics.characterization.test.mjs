@@ -3470,8 +3470,8 @@ test("lyric segments keep solid and gradient colors with deduplicated line-end a
   assert.doesNotMatch(`${source}\n${lyricsSource}\n${clientSource}`, /\b(?:romaji|romanized|romanization)\b/i);
 
   const performers = await importWebTypeScript("src/lib/lyrics-performers.ts");
-  assert.deepEqual(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.id), [1001, 1002, 1003, 1004, 1006, 1007, 1008, 1009, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019]);
-  assert.equal(new Set(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.sourceId)).size, 17);
+  assert.deepEqual(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.id), [1001, 1002, 1003, 1004, 1006, 1007, 1008, 1009, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1030, 1031]);
+  assert.equal(new Set(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.sourceId)).size, 19);
   assert.equal(performers.getExternalLyricsPerformerBySourceId("外部歌唱者-03")?.name, "flower");
   assert.equal(performers.getExternalLyricsPerformerBySourceId("外部歌唱者-13")?.name, "Adachi Rei");
   assert.equal(performers.getExternalLyricsPerformer(1004)?.avatarUrl, undefined);
