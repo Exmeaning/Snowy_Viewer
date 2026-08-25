@@ -511,31 +511,31 @@ export default function PredictionNextClient() {
                     historyPoints.unshift({ t: startIso, y: 0 });
                 }
 
-                // 2. Ensure current score point is synced
-                const effectiveNow = Math.min(now, e);
-                const nowIso = new Date(effectiveNow).toISOString();
+                // 2. Ensure current score point is synced to the data snapshot timestamp (avoid client clock drift)
+                const dataTime = Math.min(e, Math.max(s, worldLinkSnapshot?.updatedAt || predictionData.timestamp || s));
+                const dataIso = new Date(dataTime).toISOString();
                 if (historyPoints.length === 1) {
-                    historyPoints.push({ t: nowIso, y: currentScore });
+                    historyPoints.push({ t: dataIso, y: currentScore });
                 } else {
                     const lastPt = historyPoints[historyPoints.length - 1];
-                    if (effectiveNow > new Date(lastPt.t).getTime() + 60_000) {
-                        historyPoints.push({ t: nowIso, y: currentScore });
+                    if (dataTime > new Date(lastPt.t).getTime() + 60_000) {
+                        historyPoints.push({ t: dataIso, y: currentScore });
                     } else {
-                        historyPoints[historyPoints.length - 1] = { t: nowIso, y: currentScore };
+                        historyPoints[historyPoints.length - 1] = { t: dataIso, y: currentScore };
                     }
                 }
 
                 // 3. Interpolate realistic historical S-curve if upstream series API is unavailable
-                if (historyPoints.length <= 2 && currentScore > 0 && effectiveNow > s) {
+                if (historyPoints.length <= 2 && currentScore > 0 && dataTime > s) {
                     const steps = 16;
                     const totalDur = Math.max(1, e - s);
-                    const currProg = Math.max(0.01, (effectiveNow - s) / totalDur);
+                    const currProg = Math.max(0.01, (dataTime - s) / totalDur);
                     const normCurve = (p: number) => 1.30 * p - 0.30 * p * p;
                     const denom = Math.max(0.01, normCurve(currProg));
                     const smoothHistory: { t: string; y: number }[] = [];
                     for (let i = 0; i <= steps; i++) {
                         const frac = i / steps;
-                        const tPoint = s + frac * (effectiveNow - s);
+                        const tPoint = s + frac * (dataTime - s);
                         const pPoint = (tPoint - s) / totalDur;
                         const yPoint = Math.round(currentScore * Math.min(1.0, normCurve(pPoint) / denom));
                         smoothHistory.push({ t: new Date(tPoint).toISOString(), y: yPoint });
@@ -570,8 +570,9 @@ export default function PredictionNextClient() {
             };
         });
 
-        const isChapterEnded = now >= e;
-        const elapsedHours = Math.max(0.1, (Math.min(now, e) - s) / 3600000);
+        const dataTimeForChapter = Math.min(e, Math.max(s, worldLinkSnapshot?.updatedAt || predictionData.timestamp || s));
+        const isChapterEnded = dataTimeForChapter >= e || now >= e;
+        const elapsedHours = Math.max(0.1, (dataTimeForChapter - s) / 3600000);
 
         const tier_klines: TierKLine[] = RANK_TIERS.map(rank => {
             const entry = group?.entries?.find(item => item.rank === rank);
