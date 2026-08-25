@@ -29,6 +29,8 @@ export const EXTERNAL_LYRICS_PERFORMERS = [
     { id: 1017, sourceId: "外部歌唱者-17", name: "SOLARIA", color: "#B86D46", avatarUrl: "/images/lyrics-performers/solaria.webp" },
     { id: 1018, sourceId: "外部歌唱者-18", name: "Kotonoha Aoi", color: "#4D8FCC", avatarUrl: "/images/lyrics-performers/kotonoha-aoi.webp" },
     { id: 1019, sourceId: "外部歌唱者-19", name: "Kotonoha Akane", color: "#D75C58", avatarUrl: "/images/lyrics-performers/kotonoha-akane.webp" },
+    { id: 1030, sourceId: "外部歌唱者-30", name: "HARU", color: "#8EC31F", avatarUrl: "/images/lyrics-performers/haru.webp" },
+    { id: 1031, sourceId: "外部歌唱者-31", name: "COKO", color: "#00A3E0", avatarUrl: "/images/lyrics-performers/coko.webp" },
 ] as const satisfies readonly ExternalLyricsPerformer[];
 
 const EXTERNAL_LYRICS_PERFORMER_BY_ID = new Map<number, ExternalLyricsPerformer>(
@@ -89,6 +91,11 @@ const OUTSIDE_CHARACTER_NAME_AVATAR_MAP: Record<string, string> = {
     "kotonoha akane": "/images/lyrics-performers/kotonoha-akane.webp",
     "琴葉 茜": "/images/lyrics-performers/kotonoha-akane.webp",
     "琴葉茜": "/images/lyrics-performers/kotonoha-akane.webp",
+    "coko": "/images/lyrics-performers/coko.webp",
+    "狐子": "/images/lyrics-performers/coko.webp",
+    "koko": "/images/lyrics-performers/coko.webp",
+    "haru": "/images/lyrics-performers/haru.webp",
+    "羽累": "/images/lyrics-performers/haru.webp",
 };
 
 export function getOutsideCharacterAvatarUrl(name?: string | null): string | null {

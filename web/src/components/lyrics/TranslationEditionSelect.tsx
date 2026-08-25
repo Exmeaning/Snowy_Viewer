@@ -15,7 +15,7 @@ interface TranslationEditionSelectProps {
     onChange: (key: string) => void;
     label: string;
     currentLabel: string;
-    defaultLabel: string;
+    defaultLabel?: string;
     listLabel: string;
     className?: string;
 }
@@ -277,9 +277,6 @@ export default function TranslationEditionSelect({
                     <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</span>
                     <span className="mt-0.5 flex min-w-0 items-baseline gap-2">
                         <span className="truncate text-sm font-bold text-primary-text">{selectedOption?.label}</span>
-                        {selectedOption?.isDefault && (
-                            <span className="shrink-0 text-[10px] font-bold text-miku">{defaultLabel}</span>
-                        )}
                     </span>
                 </span>
                 <svg
@@ -329,9 +326,6 @@ export default function TranslationEditionSelect({
                                 }`}
                             >
                                 <span className="min-w-0 flex-1 truncate">{option.label}</span>
-                                {option.isDefault && (
-                                    <span className="shrink-0 text-[10px] font-bold text-slate-400 dark:text-slate-500">{defaultLabel}</span>
-                                )}
                                 <svg
                                     aria-hidden="true"
                                     className={`h-4 w-4 shrink-0 text-miku ${isSelected ? "opacity-100" : "opacity-0"}`}
