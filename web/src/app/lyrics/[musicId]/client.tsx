@@ -16,6 +16,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useTheme, AssetSourceType } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl, getMusicVocalAudioUrl } from "@/lib/assets";
+import { getOutsideCharacterAvatarUrl } from "@/lib/lyrics-performers";
 import { getCharacterName } from "@/lib/i18n";
 import {
     fetchLyricsDocument,
@@ -186,17 +187,19 @@ function VocalPlayer({
                             const charName = isGameChar
                                 ? getCharacterLabel(chara.characterId)
                                 : outsideCharacters[chara.characterId] || `Guest ${chara.characterId}`;
-                            const hasIcon = isGameChar && chara.characterId <= 26;
+                            const externalAvatar = !isGameChar ? getOutsideCharacterAvatarUrl(charName) : null;
+                            const hasIcon = (isGameChar && chara.characterId <= 26) || Boolean(externalAvatar);
+                            const avatarUrl = isGameChar ? getCharacterIconUrl(chara.characterId) : externalAvatar;
 
-                            return hasIcon ? (
+                            return hasIcon && avatarUrl ? (
                                 <div
                                     key={chara.id}
                                     className="w-6 h-6 rounded-full overflow-hidden bg-slate-100 ring-1 ring-white dark:ring-slate-800"
                                     title={charName}
                                 >
                                     <Image
-                                        src={getCharacterIconUrl(chara.characterId)}
-                                        alt=""
+                                        src={avatarUrl}
+                                        alt={charName}
                                         width={24}
                                         height={24}
                                         className="w-full h-full object-cover"

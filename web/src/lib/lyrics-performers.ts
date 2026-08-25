@@ -52,3 +52,47 @@ export function getLyricsCharacterIdBySourceId(sourceId: string): number | null 
     const characterId = Number(match[1]);
     return Number.isSafeInteger(characterId) && characterId >= 1 && characterId <= 26 ? characterId : null;
 }
+
+const OUTSIDE_CHARACTER_NAME_AVATAR_MAP: Record<string, string> = {
+    "gumi": "/images/lyrics-performers/gumi.webp",
+    "kasane teto": "/images/lyrics-performers/teto.webp",
+    "重音テト": "/images/lyrics-performers/teto.webp",
+    "teto": "/images/lyrics-performers/teto.webp",
+    "flower": "/images/lyrics-performers/flower.webp",
+    "v flower": "/images/lyrics-performers/flower.webp",
+    "kamui gakupo": "/images/lyrics-performers/gakupo.webp",
+    "神威がくぽ": "/images/lyrics-performers/gakupo.webp",
+    "gakupo": "/images/lyrics-performers/gakupo.webp",
+    "kafu": "/images/lyrics-performers/kafu.webp",
+    "可不": "/images/lyrics-performers/kafu.webp",
+    "gekiyaku": "/images/lyrics-performers/gekiyaku.webp",
+    "ゲキヤク": "/images/lyrics-performers/gekiyaku.webp",
+    "sekai": "/images/lyrics-performers/sekai.webp",
+    "星界": "/images/lyrics-performers/sekai.webp",
+    "zundamon": "/images/lyrics-performers/zundamon.webp",
+    "ずんだもん": "/images/lyrics-performers/zundamon.webp",
+    "kaai yuki": "/images/lyrics-performers/yuki.webp",
+    "歌愛ユキ": "/images/lyrics-performers/yuki.webp",
+    "yuki": "/images/lyrics-performers/yuki.webp",
+    "adachi rei": "/images/lyrics-performers/adachi-rei.webp",
+    "足立レイ": "/images/lyrics-performers/adachi-rei.webp",
+    "rime": "/images/lyrics-performers/rime.webp",
+    "裏命": "/images/lyrics-performers/rime.webp",
+    "hanakuma chifuyu": "/images/lyrics-performers/chifuyu.webp",
+    "花隈千冬": "/images/lyrics-performers/chifuyu.webp",
+    "chifuyu": "/images/lyrics-performers/chifuyu.webp",
+    "vy1": "/images/lyrics-performers/vy1.webp",
+    "solaria": "/images/lyrics-performers/solaria.webp",
+    "kotonoha aoi": "/images/lyrics-performers/kotonoha-aoi.webp",
+    "琴葉 葵": "/images/lyrics-performers/kotonoha-aoi.webp",
+    "琴葉葵": "/images/lyrics-performers/kotonoha-aoi.webp",
+    "kotonoha akane": "/images/lyrics-performers/kotonoha-akane.webp",
+    "琴葉 茜": "/images/lyrics-performers/kotonoha-akane.webp",
+    "琴葉茜": "/images/lyrics-performers/kotonoha-akane.webp",
+};
+
+export function getOutsideCharacterAvatarUrl(name?: string | null): string | null {
+    if (!name) return null;
+    const normalized = name.trim().toLowerCase();
+    return OUTSIDE_CHARACTER_NAME_AVATAR_MAP[normalized] ?? null;
+}
