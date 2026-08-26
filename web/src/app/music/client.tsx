@@ -26,6 +26,7 @@ import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
 import { useQuickFilter } from "@/contexts/QuickFilterContext";
 import { fetchMusicAliases } from "@/lib/musicAliases";
+import { fetchMusicBpmMap, MusicBpmEntry } from "@/lib/musicBpm";
 import { useI18n } from "@/contexts/I18nContext";
 
 // Search index item (from search-index.json)
@@ -80,6 +81,7 @@ function MusicContent() {
     const [filtersInitialized, setFiltersInitialized] = useState(false);
     const [songConstantsMap, setSongConstantsMap] = useState<Record<number, Record<string, number>>>({});
     const [musicAliasesMap, setMusicAliasesMap] = useState<Map<number, string[]>>(new Map());
+    const [musicBpmMap, setMusicBpmMap] = useState<Map<number, MusicBpmEntry>>(new Map());
 
 
     // Filter states
@@ -89,10 +91,11 @@ function MusicContent() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDifficulty, setSelectedDifficulty] = useState<string>("master");
     const [showDifficulty, setShowDifficulty] = useState(true);
+    const [showBpm, setShowBpm] = useState(true);
     const deferredSearchQuery = useDeferredValue(searchQuery);
 
     // Sort states
-    const [sortBy, setSortBy] = useState<"publishedAt" | "id" | "level" | "constant">("publishedAt");
+    const [sortBy, setSortBy] = useState<"publishedAt" | "id" | "level" | "constant" | "bpm">("publishedAt");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
     // Pagination with scroll restore
@@ -116,17 +119,19 @@ function MusicContent() {
         const sort = searchParams.get("sortBy");
         const order = searchParams.get("sortOrder");
         const showDiff = searchParams.get("showDifficulty");
+        const showBpmParam = searchParams.get("showBpm");
 
-        const hasUrlParams = tag || categories || eventOnly || search || sort || order || showDiff;
+        const hasUrlParams = tag || categories || eventOnly || search || sort || order || showDiff || showBpmParam;
 
         if (hasUrlParams) {
             if (tag) setSelectedTag(tag as MusicTagType);
             if (categories) setSelectedCategories(categories.split(",") as MusicCategoryType[]);
             if (eventOnly === "true") setHasEventOnly(true);
             if (search) setSearchQuery(search);
-            if (sort) setSortBy(sort as "publishedAt" | "id" | "level" | "constant");
+            if (sort) setSortBy(sort as "publishedAt" | "id" | "level" | "constant" | "bpm");
             if (order) setSortOrder(order as "asc" | "desc");
             if (showDiff === "false") setShowDifficulty(false);
+            if (showBpmParam === "false") setShowBpm(false);
         } else {
             try {
                 const saved = sessionStorage.getItem(STORAGE_KEY);
@@ -139,6 +144,7 @@ function MusicContent() {
                     if (filters.sortBy) setSortBy(filters.sortBy);
                     if (filters.sortOrder) setSortOrder(filters.sortOrder);
                     if (filters.showDifficulty === false) setShowDifficulty(false);
+                    if (filters.showBpm === false) setShowBpm(false);
                 }
             } catch {
                 console.log("Could not restore filters from sessionStorage");
@@ -160,6 +166,7 @@ function MusicContent() {
             sortBy,
             sortOrder,
             showDifficulty,
+            showBpm,
         };
         try {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
@@ -175,8 +182,9 @@ function MusicContent() {
         if (sortBy !== "publishedAt") params.set("sortBy", sortBy);
         if (sortOrder !== "desc") params.set("sortOrder", sortOrder);
         if (!showDifficulty) params.set("showDifficulty", "false");
+        if (!showBpm) params.set("showBpm", "false");
         replaceCurrentUrlSearchParams(params);
-    }, [selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, showDifficulty, filtersInitialized]);
+    }, [selectedTag, selectedCategories, hasEventOnly, searchQuery, sortBy, sortOrder, showDifficulty, showBpm, filtersInitialized]);
 
     // Fetch data
     useEffect(() => {
@@ -238,6 +246,13 @@ function MusicContent() {
                     setMusicAliasesMap(aliasesMap);
                 }).catch(err => {
                     console.warn("Failed to load music aliases:", err);
+                });
+
+                // Fetch music BPM data (non-blocking, only needed for BPM sorting)
+                fetchMusicBpmMap().then(bpmMap => {
+                    setMusicBpmMap(bpmMap);
+                }).catch(err => {
+                    console.warn("Failed to load music BPM:", err);
                 });
 
             } catch (err) {
@@ -364,12 +379,18 @@ function MusicContent() {
                     comparison = constA - constB;
                     if (comparison === 0) comparison = a.publishedAt - b.publishedAt;
                     break;
+                case "bpm":
+                    const bpmA = musicBpmMap.get(a.id)?.bpm || 0;
+                    const bpmB = musicBpmMap.get(b.id)?.bpm || 0;
+                    comparison = bpmA - bpmB;
+                    if (comparison === 0) comparison = a.publishedAt - b.publishedAt;
+                    break;
             }
             return sortOrder === "asc" ? comparison : -comparison;
         });
 
         return result;
-    }, [musics, musicTags, eventMusicIds, selectedTag, selectedCategories, hasEventOnly, deferredSearchQuery, sortBy, sortOrder, isShowSpoiler, musicCnMap, musicEnMap, musicDifficultiesMap, selectedDifficulty, songConstantsMap, musicAliasesMap]);
+    }, [musics, musicTags, eventMusicIds, selectedTag, selectedCategories, hasEventOnly, deferredSearchQuery, sortBy, sortOrder, isShowSpoiler, musicCnMap, musicEnMap, musicDifficultiesMap, selectedDifficulty, songConstantsMap, musicAliasesMap, musicBpmMap]);
 
     // Displayed musics with level separators (only when sorting by level)
     const displayedMusicsWithSeparators = useMemo(() => {
@@ -415,12 +436,13 @@ function MusicContent() {
         setSortBy("publishedAt");
         setSortOrder("desc");
         setShowDifficulty(true);
+        setShowBpm(true);
         resetDisplayCount();
     }, [resetDisplayCount]);
 
     // Sort change handler
     const handleSortChange = useCallback(
-        (newSortBy: "publishedAt" | "id" | "level" | "constant", newSortOrder: "asc" | "desc") => {
+        (newSortBy: "publishedAt" | "id" | "level" | "constant" | "bpm", newSortOrder: "asc" | "desc") => {
             setSortBy(newSortBy);
             setSortOrder(newSortOrder);
             resetDisplayCount();
@@ -450,6 +472,8 @@ function MusicContent() {
             onDifficultyChange={setSelectedDifficulty}
             showDifficulty={showDifficulty}
             onShowDifficultyChange={setShowDifficulty}
+            showBpm={showBpm}
+            onShowBpmChange={setShowBpm}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={handleSortChange}
@@ -466,6 +490,7 @@ function MusicContent() {
         searchQuery,
         selectedDifficulty,
         showDifficulty,
+        showBpm,
         sortBy,
         sortOrder,
         musics.length,
@@ -550,7 +575,7 @@ function MusicContent() {
                                 const now = Date.now();
                                 const isSpoiler = music.publishedAt > now;
                                 const musicConstant = showDifficulty ? undefined : songConstantsMap[music.id]?.[selectedDifficulty];
-                                return <MusicItem key={music.id} music={music} isSpoiler={isSpoiler} constant={musicConstant} difficulties={musicDifficultiesMap[music.id]} showDifficulty={showDifficulty} cnTitle={musicCnMap.get(music.id)} enTitle={musicEnMap.get(music.id)} />;
+                                return <MusicItem key={music.id} music={music} isSpoiler={isSpoiler} constant={musicConstant} difficulties={musicDifficultiesMap[music.id]} showDifficulty={showDifficulty} bpm={showBpm ? musicBpmMap.get(music.id)?.bpm : undefined} cnTitle={musicCnMap.get(music.id)} enTitle={musicEnMap.get(music.id)} />;
                             }
                         })}
                     </div>

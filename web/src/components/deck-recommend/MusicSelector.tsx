@@ -425,7 +425,8 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
                             sortOrder={sortOrder}
                             onSortChange={(nextSortBy, nextSortOrder) => {
                                 if (nextSortBy === "level" || nextSortBy === "constant") return;
-                                setSortBy(nextSortBy);
+                                // customSortOptions only exposes id/publishedAt here
+                                setSortBy(nextSortBy as "id" | "publishedAt");
                                 setSortOrder(nextSortOrder);
                             }}
                             customSortOptions={selectorSortOptions}

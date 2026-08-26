@@ -30,6 +30,7 @@ import { TranslatedText } from "@/components/common/TranslatedText";
 import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
 import { getPublishedLyricsIndexEntry, hasLyricsDetail } from "@/lib/lyrics";
 import { LYRICS_ENTRY_VISIBLE } from "@/lib/lyrics-visibility";
+import { fetchMusicBpmMap, getMusicBpm, formatBpmValue, formatBarValue, MusicBpmEntry } from "@/lib/musicBpm";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import { useI18n } from "@/contexts/I18nContext";
 
@@ -127,6 +128,10 @@ export default function MusicDetailPage() {
     const [musicDuration, setMusicDuration] = useState<number | null>(null);
     const [rankings, setRankings] = useState<MusicRankings | null>(null);
     const [selectedRankingCategory, setSelectedRankingCategory] = useState<RankingCategoryKey>("pt_per_hour_multi");
+
+    // BPM states
+    const [bpmEntry, setBpmEntry] = useState<MusicBpmEntry | null>(null);
+    const [bpmListOpen, setBpmListOpen] = useState(false);
 
     // View states
     const [selectedDifficulty, setSelectedDifficulty] = useState<MusicDifficultyType>("master");
@@ -298,6 +303,18 @@ export default function MusicDetailPage() {
                     }
                 } catch (err) {
                     console.warn("Failed to fetch ranking:", err);
+                }
+
+                try {
+                    const bpmMap = await fetchMusicBpmMap();
+                    const entry = getMusicBpm(musicId, bpmMap);
+                    if (entry) {
+                        setBpmEntry(entry);
+                        // Only offer the expandable list when the song actually has BPM changes
+                        setBpmListOpen(false);
+                    }
+                } catch (err) {
+                    console.warn("Failed to fetch music BPM:", err);
                 }
             }
 
@@ -523,6 +540,54 @@ export default function MusicDetailPage() {
                                         label={t("page.music.fields.duration")}
                                         value={`${Math.floor(musicDuration / 60)}:${Math.floor(musicDuration % 60).toString().padStart(2, "0")}`}
                                     />
+                                )}
+                                {/* BPM */}
+                                {bpmEntry && (
+                                    <>
+                                        <InfoRow
+                                            label={t("page.music.fields.bpm")}
+                                            value={
+                                                bpmEntry.bpm_segments.length > 1 ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setBpmListOpen(v => !v)}
+                                                        className="inline-flex items-center gap-1 text-slate-800 font-bold hover:text-miku transition-colors"
+                                                        aria-expanded={bpmListOpen}
+                                                        title={t("page.music.bpmListToggle")}
+                                                    >
+                                                        {formatBpmValue(bpmEntry.bpm)}
+                                                        <svg
+                                                            className={`w-3.5 h-3.5 transition-transform duration-200 ${bpmListOpen ? "rotate-180" : ""}`}
+                                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                        >
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+                                                ) : (
+                                                    formatBpmValue(bpmEntry.bpm)
+                                                )
+                                            }
+                                        />
+                                        {bpmListOpen && bpmEntry.bpm_segments.length > 1 && (
+                                            <div className="px-5 py-3 border-t border-slate-100">
+                                                <div className="bg-slate-50 rounded-xl px-3 py-1 max-h-56 overflow-y-auto custom-scrollbar">
+                                                    {bpmEntry.bpm_segments.map((segment, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className="flex items-center justify-between py-1.5 text-xs border-b border-slate-100 last:border-0"
+                                                        >
+                                                            <span className="font-mono font-bold text-slate-700">
+                                                                {formatBpmValue(segment.bpm)}
+                                                            </span>
+                                                            <span className="font-mono text-slate-400">
+                                                                {formatBarValue(segment.start_bar)} → {formatBarValue(segment.end_bar)}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                                 <InfoRow
                                     label={t("page.music.fields.publishedAt")}
