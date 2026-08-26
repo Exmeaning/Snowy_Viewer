@@ -36,10 +36,13 @@ interface MusicFiltersProps {
     // Show difficulty toggle
     showDifficulty?: boolean;
     onShowDifficultyChange?: (checked: boolean) => void;
+    // Show BPM toggle
+    showBpm?: boolean;
+    onShowBpmChange?: (checked: boolean) => void;
     // Sort
-    sortBy: "publishedAt" | "id" | "level" | "constant";
+    sortBy: "publishedAt" | "id" | "level" | "constant" | "bpm";
     sortOrder: "asc" | "desc";
-    onSortChange: (sortBy: "publishedAt" | "id" | "level" | "constant", sortOrder: "asc" | "desc") => void;
+    onSortChange: (sortBy: "publishedAt" | "id" | "level" | "constant" | "bpm", sortOrder: "asc" | "desc") => void;
     /** Override default sort options (e.g. to hide level/constant in contexts without difficulty) */
     customSortOptions?: { id: string; label: string }[];
     // Reset
@@ -64,6 +67,7 @@ const SORT_OPTIONS_BASE = [
     { id: "id", labelKey: "common.filter.sortById" },
     { id: "level", labelKey: "common.filter.sortByLevel" },
     { id: "constant", labelKey: "common.filter.sortByConstant" },
+    { id: "bpm", labelKey: "common.filter.sortByBpm" },
 ];
 
 const DIFFICULTY_OPTIONS = [
@@ -91,6 +95,8 @@ export default function MusicFilters({
     onDifficultyChange,
     showDifficulty,
     onShowDifficultyChange,
+    showBpm,
+    onShowBpmChange,
     sortBy,
     sortOrder,
     onSortChange,
@@ -132,7 +138,7 @@ export default function MusicFilters({
             sortOptions={customSortOptions || SORT_OPTIONS}
             sortBy={sortBy}
             sortOrder={sortOrder}
-            onSortChange={(id, order) => onSortChange(id as "publishedAt" | "id" | "level" | "constant", order)}
+            onSortChange={(id, order) => onSortChange(id as "publishedAt" | "id" | "level" | "constant" | "bpm", order)}
             hasActiveFilters={hasActiveFilters}
             onReset={onReset}
         >
@@ -249,6 +255,13 @@ export default function MusicFilters({
                             selected={!!showDifficulty}
                             onClick={() => onShowDifficultyChange(!showDifficulty)}
                             label={t("common.filter.showDifficulty")}
+                        />
+                    )}
+                    {onShowBpmChange && (
+                        <FilterToggle
+                            selected={!!showBpm}
+                            onClick={() => onShowBpmChange(!showBpm)}
+                            label={t("common.filter.showBpm")}
                         />
                     )}
                 </div>
