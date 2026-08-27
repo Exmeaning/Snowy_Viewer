@@ -34,7 +34,9 @@ export default function EventGoalPlanner({
 }: EventGoalPlannerProps) {
     const { t, formatNumber } = useI18n();
 
+    const isJp = server === 'jp';
     const bonusOptions = isWorldBloom ? WL_BONUS_OPTIONS : MARATHON_BONUS_OPTIONS;
+    const dailyHourOptions = isJp ? [2, 4, 6, 8, 12, 18] : [4, 8, 12, 16, 24];
 
     // Form states
     const [currentScoreInput, setCurrentScoreInput] = useState<string>('0');
@@ -52,8 +54,15 @@ export default function EventGoalPlanner({
     const [fireMultiplier, setFireMultiplier] = useState<number>(10);
     const [selectedSong, setSelectedSong] = useState<MetaSongKey>('envy');
     const [liveMode, setLiveMode] = useState<LiveMode>('multi');
-    const [dailyAvailableHours, setDailyAvailableHours] = useState<number>(6);
-    const [dailyAutoBudget, setDailyAutoBudget] = useState<number>(30);
+    const [dailyAvailableHours, setDailyAvailableHours] = useState<number>(() => (isJp ? 6 : 8));
+    const [dailyAutoBudget, setDailyAutoBudget] = useState<number>(() => (isJp ? 30 : 10));
+
+    // Clamp dailyAvailableHours when switching to JP
+    React.useEffect(() => {
+        if (isJp && dailyAvailableHours > 18) {
+            setDailyAvailableHours(18);
+        }
+    }, [isJp, dailyAvailableHours]);
 
     // Derive target score
     const targetScore = useMemo(() => {
@@ -372,7 +381,7 @@ export default function EventGoalPlanner({
                                 <input
                                     type="number"
                                     min={1}
-                                    max={server === 'jp' ? 18 : 24}
+                                    max={isJp ? 18 : 24}
                                     value={dailyAvailableHours}
                                     onChange={(e) => setDailyAvailableHours(Math.max(1, Number(e.target.value)))}
                                     className="w-full pl-3 pr-14 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-700 dark:text-slate-200"
@@ -382,7 +391,7 @@ export default function EventGoalPlanner({
                                 </span>
                             </div>
                             <div className="flex flex-wrap gap-1">
-                                {[2, 4, 6, 8, 12].map((h) => (
+                                {dailyHourOptions.map((h) => (
                                     <button
                                         key={h}
                                         type="button"
@@ -398,7 +407,7 @@ export default function EventGoalPlanner({
                                 ))}
                             </div>
                             <p className="mt-1 text-[10px] text-slate-400 leading-tight">
-                                {t("page.prediction.planner.inputs.dailyHoursHint")}
+                                {isJp ? t("page.prediction.planner.inputs.dailyHoursHintJp") : t("page.prediction.planner.inputs.dailyHoursHint")}
                             </p>
                         </div>
                         <div>
@@ -442,7 +451,7 @@ export default function EventGoalPlanner({
                                 ))}
                             </div>
                             <p className="mt-1 text-[10px] text-slate-400 leading-tight">
-                                {t("page.prediction.planner.inputs.dailyAutoHint")}
+                                {isJp ? t("page.prediction.planner.inputs.dailyAutoHintJp") : t("page.prediction.planner.inputs.dailyAutoHint")}
                             </p>
                         </div>
                     </div>
@@ -521,13 +530,13 @@ export default function EventGoalPlanner({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
                             </svg>
                             <span>
-                                {server === 'jp' && (plan.feasibility === 'impossible' || plan.feasibility === 'hard')
+                                {isJp && (plan.feasibility === 'impossible' || plan.feasibility === 'hard')
                                     ? t(`page.prediction.planner.results.tips.${plan.feasibility}Jp`)
                                     : t(`page.prediction.planner.results.tips.${plan.feasibility}`)}
                             </span>
                         </div>
 
-                        {server === 'jp' && (
+                        {isJp && (
                             <div className="text-[11px] text-slate-500 dark:text-slate-400 pl-6">
                                 💡 {t("page.prediction.planner.results.tips.jpFatigueNote")}
                             </div>
@@ -537,17 +546,23 @@ export default function EventGoalPlanner({
                         {plan.scoreDeficit > 0 && selectedSong === 'envy' && (
                             <div className="text-[11px] text-blue-600 dark:text-blue-400 pl-6">
                                 🔄 {t("page.prediction.planner.results.comparison.switchToLostAndFound", {
-                                    drinks: plan.totalLargeDrinks - altPlan.totalLargeDrinks,
-                                    crystals: formatNumber((plan.totalLargeDrinks - altPlan.totalLargeDrinks) * 100),
-                                    hours: Math.max(0, (altPlan.requiredManualHoursDaily - plan.requiredManualHoursDaily)).toFixed(1)
+                                    drinks: Math.max(0, plan.totalLargeDrinks - altPlan.totalLargeDrinks),
+                                    crystals: formatNumber(Math.max(0, (plan.totalLargeDrinks - altPlan.totalLargeDrinks) * 100)),
+                                    hours: Math.max(0, plan.isShortTimeframe
+                                        ? (altPlan.totalManualHoursNeeded - plan.totalManualHoursNeeded)
+                                        : (altPlan.requiredManualHoursDaily - plan.requiredManualHoursDaily)
+                                    ).toFixed(1)
                                 })}
                             </div>
                         )}
                         {plan.scoreDeficit > 0 && selectedSong === 'lost_and_found' && (
                             <div className="text-[11px] text-amber-600 dark:text-amber-400 pl-6">
                                 ⚡ {t("page.prediction.planner.results.comparison.switchToEnvy", {
-                                    drinks: altPlan.totalLargeDrinks - plan.totalLargeDrinks,
-                                    hours: Math.max(0, (plan.requiredManualHoursDaily - altPlan.requiredManualHoursDaily)).toFixed(1)
+                                    drinks: Math.max(0, altPlan.totalLargeDrinks - plan.totalLargeDrinks),
+                                    hours: Math.max(0, plan.isShortTimeframe
+                                        ? (plan.totalManualHoursNeeded - altPlan.totalManualHoursNeeded)
+                                        : (plan.requiredManualHoursDaily - altPlan.requiredManualHoursDaily)
+                                    ).toFixed(1)
                                 })}
                             </div>
                         )}

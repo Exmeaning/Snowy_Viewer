@@ -861,13 +861,14 @@ export function calculateGoalStrategy(input: GoalPlannerInput): GoalPlannerResul
     const totalManualHoursNeeded = playsPerHour > 0
         ? Math.round((totalSongsManual / playsPerHour) * 10) / 10
         : 0;
-    const isShortTimeframe = remainingHoursTotal < 24;
+
+    const maxDailyManualHours = isJp ? 18.0 : 23.5;
+    const isShortTimeframe = remainingHoursTotal <= 48 || requiredManualHoursDaily > maxDailyManualHours || totalManualHoursNeeded > remainingHoursTotal;
 
     const totalFiresNeeded = totalSongsManual * fireMultiplier;
     const totalLargeDrinks = Math.ceil(totalFiresNeeded / 10);
     const totalCrystals = totalLargeDrinks * 100;
 
-    const maxDailyManualHours = isJp ? 18.0 : 23.5;
     const maxPhysicalDailyCap = isShortTimeframe
         ? Math.round(Math.min(remainingHoursTotal, maxDailyManualHours) * hourlyManualSpeed + (dailyAutoBudget * autoSongPoints))
         : Math.round(maxDailyManualHours * hourlyManualSpeed + maxDailyAutoPoints);
@@ -877,20 +878,19 @@ export function calculateGoalStrategy(input: GoalPlannerInput): GoalPlannerResul
     if (scoreDeficit <= 0) {
         feasibility = 'comfortable';
     } else if (
-        (isShortTimeframe && totalManualHoursNeeded > remainingHoursTotal) ||
-        (!isShortTimeframe && requiredDailyGross > maxPhysicalDailyCap) ||
-        (isJp && !isShortTimeframe && requiredManualHoursDaily > 18.0) ||
-        (!isShortTimeframe && requiredManualHoursDaily > 23.5)
+        totalManualHoursNeeded > remainingHoursTotal ||
+        requiredManualHoursDaily > maxDailyManualHours ||
+        (!isShortTimeframe && requiredDailyGross > maxPhysicalDailyCap)
     ) {
         feasibility = 'impossible';
     } else if (
         (isShortTimeframe && totalManualHoursNeeded > remainingHoursTotal * 0.75) ||
-        (!isShortTimeframe && (requiredManualHoursDaily > dailyAvailableHours || requiredManualHoursDaily >= 12.0))
+        (!isShortTimeframe && (requiredManualHoursDaily > dailyAvailableHours || (isJp ? requiredManualHoursDaily >= 12.0 : requiredManualHoursDaily >= 16.0)))
     ) {
         feasibility = 'hard';
     } else if (
         (isShortTimeframe && totalManualHoursNeeded <= remainingHoursTotal * 0.4) ||
-        (!isShortTimeframe && (requiredManualHoursDaily <= dailyAvailableHours * 0.7 && requiredManualHoursDaily <= 5.0))
+        (!isShortTimeframe && (requiredManualHoursDaily <= dailyAvailableHours * 0.7 && (isJp ? requiredManualHoursDaily <= 5.0 : requiredManualHoursDaily <= 7.0)))
     ) {
         feasibility = 'comfortable';
     } else {
