@@ -27,6 +27,7 @@ import { getWl3SimulationGroupByEventId } from "@/lib/world-bloom-simulation";
 import { fetchLatestV2, fetchWorldLinkLatestV2, fetchWorldLinkTierSeriesV2 } from "@/lib/realtime-ranking-next-api";
 import { WorldLinkSnapshotV2, SeriesPoint } from "@/types/realtime-ranking-next";
 import { calculateEventPrediction } from "@/lib/prediction-engine";
+import { saveWorldLinkSnapshotToStorage, fetchWorldLinkArchive } from "@/lib/world-link-archive";
 
 interface WorldBloomChapter {
     id: number;
@@ -323,19 +324,41 @@ export default function PredictionNextClient() {
             || eventWorldBlooms.length > 0;
     }, [selectedEventId, events, masterEvents, eventWorldBlooms]);
 
-    // Fetch live World Link snapshot when viewing a WL event
+    // Fetch World Link snapshot (live or fallback to client/static archive)
     useEffect(() => {
         if (!selectedEventId || !isWorldBloomEvent) {
             setWorldLinkSnapshot(null);
             return;
         }
+        let isCancelled = false;
+
         fetchWorldLinkLatestV2(server)
-            .then(data => {
-                if (data && (!data.eventId || data.eventId === selectedEventId)) {
+            .then(async data => {
+                if (isCancelled) return;
+                const hasActiveData = data && Array.isArray(data.groups) && data.groups.some(g => g.entries?.some(e => e.score > 0));
+                if (hasActiveData && (!data.eventId || data.eventId === selectedEventId)) {
                     setWorldLinkSnapshot(data);
+                    saveWorldLinkSnapshotToStorage(server, selectedEventId, data);
+                } else {
+                    // Try archived or cached snapshot
+                    const archived = await fetchWorldLinkArchive(server, selectedEventId);
+                    if (!isCancelled && archived) {
+                        setWorldLinkSnapshot(archived);
+                    }
                 }
             })
-            .catch(console.error);
+            .catch(async () => {
+                if (!isCancelled) {
+                    const archived = await fetchWorldLinkArchive(server, selectedEventId);
+                    if (!isCancelled && archived) {
+                        setWorldLinkSnapshot(archived);
+                    }
+                }
+            });
+
+        return () => {
+            isCancelled = true;
+        };
     }, [selectedEventId, server, isWorldBloomEvent]);
 
     // Fetch detailed chapter tier series when a single WL character chapter is selected
@@ -406,6 +429,7 @@ export default function PredictionNextClient() {
                     const freshWl = await fetchWorldLinkLatestV2(server);
                     if (freshWl && Array.isArray(freshWl.groups) && freshWl.groups.length > 0) {
                         setWorldLinkSnapshot(freshWl);
+                        saveWorldLinkSnapshotToStorage(server, selectedEventId, freshWl);
                     }
                 }
             } catch (_err) {
@@ -950,6 +974,10 @@ export default function PredictionNextClient() {
                             const isUpcoming = banner.status === "upcoming";
                             const isEnded = banner.status === "ended";
                             const showPredictionColumns = isActive || isUpcoming;
+                            const isChapterView = isWorldBloomEvent && selectedWlChapter !== 'overall';
+                            const currentChapterGroup = isChapterView ? worldLinkSnapshot?.groups?.find(g => g.gameCharacterId === selectedWlChapter) : undefined;
+                            const hasChapterScores = isChapterView ? (!!currentChapterGroup && Array.isArray(currentChapterGroup.entries) && currentChapterGroup.entries.some(e => e.score > 0)) : true;
+                            const isChapterUnarchived = isEnded && isChapterView && !hasChapterScores;
                             const statusLabel = t(`common.status.${banner.status}`);
                             const fallbackStatusLabel = t(banner.statusDisplay.labelKey);
                             const resolvedStatusLabel = statusLabel === `common.status.${banner.status}` ? fallbackStatusLabel : statusLabel;
@@ -1071,6 +1099,25 @@ export default function PredictionNextClient() {
                                         </div>
                                     )}
 
+                                    {/* Unarchived Ended Chapter Notice Banner */}
+                                    {isChapterUnarchived && (
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 mb-6 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/40 text-amber-800 dark:text-amber-200 text-xs sm:text-sm">
+                                            <div className="flex items-start sm:items-center gap-2.5">
+                                                <svg className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                </svg>
+                                                <span>{t("page.prediction.wl.unarchivedChapterNotice")}</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedWlChapter('overall')}
+                                                className="self-start sm:self-auto shrink-0 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs transition-colors shadow-sm cursor-pointer"
+                                            >
+                                                {t("page.prediction.wl.switchToOverall")}
+                                            </button>
+                                        </div>
+                                    )}
+
                                     {/* Row 2: Prediction List / Table */}
                                     <div className="bg-white rounded-xl border border-slate-100 overflow-hidden mb-6">
                                         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
@@ -1130,7 +1177,11 @@ export default function PredictionNextClient() {
                                                             >
                                                                 <td className="px-4 py-3 font-bold text-miku">T{chart.Rank}</td>
                                                                 <td className="px-4 py-3 text-right text-slate-700 font-mono font-bold">
-                                                                    {formatNumber(chart.CurrentScore)}
+                                                                    {isChapterUnarchived ? (
+                                                                        <span className="text-slate-400 font-normal select-none">-</span>
+                                                                    ) : (
+                                                                        formatNumber(chart.CurrentScore)
+                                                                    )}
                                                                 </td>
                                                                 {showPredictionColumns && (
                                                                     <>

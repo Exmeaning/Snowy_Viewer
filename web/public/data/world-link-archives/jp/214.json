@@ -1,0 +1,44 @@
+{
+  "eventId": 214,
+  "region": "jp",
+  "startAt": 1786964400000,
+  "endAt": 1787828399000,
+  "updatedAt": 1787828399000,
+  "groups": [
+    {
+      "gameCharacterId": 11,
+      "chapterNo": 1,
+      "startAt": 1786964400000,
+      "aggregateAt": 1787137199000,
+      "entries": []
+    },
+    {
+      "gameCharacterId": 15,
+      "chapterNo": 2,
+      "startAt": 1787137200000,
+      "aggregateAt": 1787309999000,
+      "entries": []
+    },
+    {
+      "gameCharacterId": 25,
+      "chapterNo": 3,
+      "startAt": 1787310000000,
+      "aggregateAt": 1787482799000,
+      "entries": []
+    },
+    {
+      "gameCharacterId": 19,
+      "chapterNo": 4,
+      "startAt": 1787482800000,
+      "aggregateAt": 1787655599000,
+      "entries": []
+    },
+    {
+      "gameCharacterId": 7,
+      "chapterNo": 5,
+      "startAt": 1787655600000,
+      "aggregateAt": 1787828399000,
+      "entries": []
+    }
+  ]
+}
