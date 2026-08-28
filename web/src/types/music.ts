@@ -52,8 +52,11 @@ export interface IMusicCategoryInfo {
 export type RawMusicCategory = MusicCategoryType | { musicCategoryName: MusicCategoryType };
 
 export function buildMusicCategoriesMap(
-    categoriesData?: readonly IMusicCategoryInfo[] | null
-): Map<number, MusicCategoryType[]> {
+    categoriesData?: readonly IMusicCategoryInfo[] | ReadonlyMap<number, MusicCategoryType[]> | null
+): ReadonlyMap<number, MusicCategoryType[]> {
+    if (categoriesData && "has" in categoriesData && typeof categoriesData.has === "function") {
+        return categoriesData as ReadonlyMap<number, MusicCategoryType[]>;
+    }
     const map = new Map<number, MusicCategoryType[]>();
     if (!categoriesData || !Array.isArray(categoriesData)) return map;
     for (const item of categoriesData) {
@@ -92,9 +95,7 @@ export function normalizeMusicsData(
     musics: readonly IMusicInfo[],
     categoriesData?: readonly IMusicCategoryInfo[] | ReadonlyMap<number, MusicCategoryType[]> | null
 ): IMusicInfo[] {
-    const map = categoriesData instanceof Map
-        ? categoriesData
-        : buildMusicCategoriesMap(categoriesData);
+    const map = buildMusicCategoriesMap(categoriesData);
     return musics.map((m) => normalizeMusicItem(m, map));
 }
 

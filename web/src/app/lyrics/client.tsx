@@ -147,7 +147,7 @@ function LyricsContent() {
             result = result.filter((music) => matchingIds.has(music.id));
         }
         if (selectedCategories.length) {
-            result = result.filter((music) => selectedCategories.every((category) => music.categories.includes(category)));
+            result = result.filter((music) => selectedCategories.every((category) => (music.categories ?? []).includes(category)));
         }
         if (hasEventOnly) result = result.filter((music) => eventMusicIds.has(music.id));
         if (deferredSearchQuery.trim()) {
