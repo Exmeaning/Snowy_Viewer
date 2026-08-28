@@ -32,6 +32,9 @@ import {
     MusicTagType,
     MusicCategoryType,
     IMusicTagInfo,
+    IMusicCategoryInfo,
+    IMusicInfo,
+    normalizeMusicsData,
 } from "@/types/music";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
@@ -49,8 +52,6 @@ interface Music {
     pronunciation: string;
     categories: string[];
 }
-
-type RawMusicCategory = string | { musicCategoryName: string };
 
 interface MusicDifficulty {
     musicId: number;
@@ -434,8 +435,9 @@ function MyMusicsContent() {
             try {
                 const server = activeAccount!.server;
 
-                const [musicsData, difficultiesData, tagsData, translationsData] = await Promise.all([
+                const [musicsData, categoriesData, difficultiesData, tagsData, translationsData] = await Promise.all([
                     fetchMasterDataForServer<Music[]>(server, "musics.json"),
+                    fetchMasterDataForServer<IMusicCategoryInfo[]>(server, "musicCategories.json").catch(() => [] as IMusicCategoryInfo[]),
                     fetchMasterDataForServer<MusicDifficulty[]>(server, "musicDifficulties.json"),
                     fetchMasterDataForServer<IMusicTagInfo[]>(server, "musicTags.json"),
                     loadTranslations(),
@@ -443,14 +445,7 @@ function MyMusicsContent() {
 
                 if (cancelled) return;
 
-                const normalizedMusicsData = (musicsData as Music[]).map((music) => ({
-                    ...music,
-                    categories: (music.categories as unknown as RawMusicCategory[]).map((cat) =>
-                        typeof cat === "object" && cat !== null && "musicCategoryName" in cat
-                            ? cat.musicCategoryName
-                            : cat
-                    ),
-                }));
+                const normalizedMusicsData = normalizeMusicsData(musicsData as unknown as IMusicInfo[], categoriesData) as unknown as Music[];
 
                 setAllMusics(normalizedMusicsData);
                 setMusicDifficulties(difficultiesData);
@@ -578,7 +573,7 @@ function MyMusicsContent() {
         // Category filter
         if (selectedCategories.length > 0) {
             result = result.filter((m) =>
-                selectedCategories.every((cat) => m.categories.includes(cat))
+                selectedCategories.every((cat) => (m.categories ?? []).includes(cat))
             );
         }
 

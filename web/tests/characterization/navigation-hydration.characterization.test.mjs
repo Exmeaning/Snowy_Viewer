@@ -173,7 +173,15 @@ async function getComponentHarness() {
       MainNavbar: () => null,
       MainFooter: () => null,
       ScrollToTop: () => null,
-      QuickFilterButton: () => null,
+      FilterDrawer: () => null,
+      FilterTabHandle: () => null,
+      FilterDrawerGuide: () => null,
+      useQuickFilterContext: () => ({
+        hasFilters: false,
+        isOpen: false,
+        isDocked: false,
+        close: () => {},
+      }),
       SekaiLoader: () => null,
       BackgroundPattern: () => null,
       KeyboardShortcutsHelp: () => null,
@@ -192,7 +200,8 @@ async function getComponentHarness() {
       const React = dependencies.React;
       const { useState, useEffect, useCallback, useMemo, useRef, Suspense } = React;
       const { useRouter, useSearchParams, MainNavbar, Sidebar, MainFooter,
-        ScrollToTop, QuickFilterButton, SekaiLoader, BackgroundPattern,
+        ScrollToTop, FilterDrawer, FilterTabHandle, FilterDrawerGuide,
+        useQuickFilterContext, SekaiLoader, BackgroundPattern,
         KeyboardShortcutsHelp, useKeyboardShortcuts, usePageListShortcuts,
         localizePathForBrowser, DetailSeoSummary, useDetailSeoSummary } = dependencies;
       const useTheme = dependencies.useMainLayoutTheme;

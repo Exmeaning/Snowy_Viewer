@@ -177,7 +177,7 @@ export const koKRMessages = {
             openQuickFilter: "퀵 필터 열기",
             drawerHintTitle: "필터가 화면 왼쪽으로 이동했습니다",
             drawerHintTag: "왼쪽을 클릭하여 열기",
-            drawerHintBody: "필터 기능이 화면 왼쪽 가장자리로 통합되었습니다. 왼쪽의 '필터' 탭을 클릭하여 언제든지 열고 닫을 수 있으며, 넓은 화면에서는 자동으로 고정됩니다.",
+            drawerHintBody: "필터 기능이 화면 왼쪽으로 통합되었습니다. 새로운 버전을 경험해 보세요.",
             drawerHintActionOpen: "지금 사용해보기",
             drawerHintDismiss: "확인",
             unit: "그룹",

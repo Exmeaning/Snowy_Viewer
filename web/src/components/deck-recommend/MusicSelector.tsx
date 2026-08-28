@@ -1,7 +1,15 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { IMusicInfo, MusicTagType, MusicCategoryType, IMusicTagInfo, IMusicMeta } from "@/types/music";
+import {
+    IMusicInfo,
+    IMusicCategoryInfo,
+    MusicTagType,
+    MusicCategoryType,
+    IMusicTagInfo,
+    IMusicMeta,
+    normalizeMusicsData,
+} from "@/types/music";
 import { fetchMasterData } from "@/lib/fetch";
 import { getMusicJacketUrl, MOE_MUSIC_META_URL } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -11,8 +19,6 @@ import SelectorModal from "./SelectorModal";
 import MusicFilters from "@/components/music/MusicFilters";
 
 const MUSIC_META_API = MOE_MUSIC_META_URL;
-
-type RawMusicCategory = MusicCategoryType | { musicCategoryName: MusicCategoryType };
 
 /** Sort options for MusicSelector (no level/constant since there's no difficulty context) */
 const SELECTOR_SORT_OPTION_IDS = ["publishedAt", "id"] as const;
@@ -74,6 +80,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
     useEffect(() => {
         const fetches: Promise<unknown>[] = [
             fetchMasterData<IMusicInfo[]>("musics.json"),
+            fetchMasterData<IMusicCategoryInfo[]>("musicCategories.json").catch(() => [] as IMusicCategoryInfo[]),
             fetchMasterData<IMusicTagInfo[]>("musicTags.json"),
             loadTranslations(),
         ];
@@ -87,16 +94,10 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
             );
         }
         Promise.all(fetches)
-            .then(([musicsData, tagsData, translationsData, metasData]) => {
+            .then(([musicsData, categoriesData, tagsData, translationsData, metasData]) => {
                 const rawMusics = musicsData as IMusicInfo[];
-                const normalizedMusics = rawMusics.map((music) => ({
-                    ...music,
-                    categories: (music.categories as unknown as RawMusicCategory[]).map((cat) =>
-                        typeof cat === "object" && cat !== null && "musicCategoryName" in cat
-                            ? cat.musicCategoryName
-                            : cat
-                    ),
-                }));
+                const rawCats = categoriesData as IMusicCategoryInfo[];
+                const normalizedMusics = normalizeMusicsData(rawMusics, rawCats);
                 setMusics(normalizedMusics);
                 setMusicTags(tagsData as IMusicTagInfo[]);
                 setTranslations(translationsData as TranslationData);
@@ -202,7 +203,7 @@ export default function MusicSelector({ selectedMusicId, onSelect, showRecommend
         // Category filter
         if (selectedCategories.length > 0) {
             result = result.filter(m =>
-                m.categories.some(cat => selectedCategories.includes(cat))
+                (m.categories ?? []).some(cat => selectedCategories.includes(cat))
             );
         }
 
@@ -492,10 +493,10 @@ function MusicSelectionItem({ music, translations }: { music: IMusicInfo, transl
                     </div>
                     {/* Categories Badges */}
                     <div className="flex gap-1">
-                        {music.categories.includes("mv") && (
+                        {(music.categories ?? []).includes("mv") && (
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-400" title="3D MV" />
                         )}
-                        {music.categories.includes("mv_2d") && (
+                        {(music.categories ?? []).includes("mv_2d") && (
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="2D MV" />
                         )}
                     </div>

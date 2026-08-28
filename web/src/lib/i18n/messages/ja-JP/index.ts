@@ -179,7 +179,7 @@ export const jaJPMessages = {
       openQuickFilter: 'クイックフィルターを開く',
       drawerHintTitle: 'フィルターが左側に新登場',
       drawerHintTag: '左側をクリックして開く',
-      drawerHintBody: 'フィルター機能が画面左端に統合されました。左側の「フィルター」タブをクリックするといつでも開閉でき、ワイド画面では自動で常駐します。',
+      drawerHintBody: 'フィルター機能が画面左側に統合されました。ぜひ新機能をお試しください。',
       drawerHintActionOpen: '使ってみる',
       drawerHintDismiss: '了解',
       unit: 'ユニット',

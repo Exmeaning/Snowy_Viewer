@@ -24,7 +24,7 @@ export interface IMusicInfo {
     id: number;
     seq: number;
     releaseConditionId: number;
-    categories: MusicCategoryType[];
+    categories?: MusicCategoryType[];
     title: string;
     pronunciation: string;
     creatorArtistId: number;
@@ -41,6 +41,61 @@ export interface IMusicInfo {
     fillerSec: number;
     isNewlyWrittenMusic: boolean;
     isFullLength: boolean;
+}
+
+export interface IMusicCategoryInfo {
+    id: number;
+    musicId: number;
+    musicCategoryName: MusicCategoryType;
+}
+
+export type RawMusicCategory = MusicCategoryType | { musicCategoryName: MusicCategoryType };
+
+export function buildMusicCategoriesMap(
+    categoriesData?: readonly IMusicCategoryInfo[] | null
+): Map<number, MusicCategoryType[]> {
+    const map = new Map<number, MusicCategoryType[]>();
+    if (!categoriesData || !Array.isArray(categoriesData)) return map;
+    for (const item of categoriesData) {
+        if (!item || !item.musicId || !item.musicCategoryName) continue;
+        const list = map.get(item.musicId);
+        if (list) {
+            list.push(item.musicCategoryName);
+        } else {
+            map.set(item.musicId, [item.musicCategoryName]);
+        }
+    }
+    return map;
+}
+
+export function normalizeMusicItem(
+    music: IMusicInfo,
+    categoriesMap?: ReadonlyMap<number, MusicCategoryType[]>
+): IMusicInfo {
+    let categories: MusicCategoryType[] = [];
+    if (Array.isArray(music.categories) && music.categories.length > 0) {
+        categories = (music.categories as unknown as RawMusicCategory[]).map((cat) =>
+            typeof cat === "object" && cat !== null && "musicCategoryName" in cat
+                ? cat.musicCategoryName
+                : (cat as MusicCategoryType)
+        );
+    } else if (categoriesMap && categoriesMap.has(music.id)) {
+        categories = categoriesMap.get(music.id) ?? [];
+    }
+    return {
+        ...music,
+        categories,
+    };
+}
+
+export function normalizeMusicsData(
+    musics: readonly IMusicInfo[],
+    categoriesData?: readonly IMusicCategoryInfo[] | ReadonlyMap<number, MusicCategoryType[]> | null
+): IMusicInfo[] {
+    const map = categoriesData instanceof Map
+        ? categoriesData
+        : buildMusicCategoriesMap(categoriesData);
+    return musics.map((m) => normalizeMusicItem(m, map));
 }
 
 export interface IMusicTagInfo {

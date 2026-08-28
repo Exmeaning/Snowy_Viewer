@@ -8,9 +8,11 @@ import MusicItem from "@/components/music/MusicItem";
 import { MUSIC_GRID_CLASS } from "@/components/music/music-layout";
 import {
     IMusicInfo,
+    IMusicCategoryInfo,
     IMusicTagInfo,
     MusicTagType,
     MusicCategoryType,
+    normalizeMusicsData,
 } from "@/types/music";
 
 interface MusicDifficulty {
@@ -18,8 +20,6 @@ interface MusicDifficulty {
     musicDifficulty: string;
     playLevel: number;
 }
-
-type RawMusicCategory = MusicCategoryType | { musicCategoryName: MusicCategoryType };
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
@@ -185,22 +185,16 @@ function MusicContent() {
                 setIsLoading(true);
 
                 // Fetch essential list data first. Search translations load independently.
-                const [musicsData, tagsData, difficultiesData, eventMusicsData] = await Promise.all([
+                const [musicsData, categoriesData, tagsData, difficultiesData, eventMusicsData] = await Promise.all([
                     fetchMasterData<IMusicInfo[]>("musics.json"),
+                    fetchMasterData<IMusicCategoryInfo[]>("musicCategories.json").catch(() => [] as IMusicCategoryInfo[]),
                     fetchMasterData<IMusicTagInfo[]>("musicTags.json"),
                     fetchMasterData<MusicDifficulty[]>("musicDifficulties.json"),
                     fetchMasterData<{ musicId: number }[]>("eventMusics.json"),
                 ]);
 
-                // Normalize musics data (CN server returns categories as objects)
-                const normalizedMusics = musicsData.map((music) => ({
-                    ...music,
-                    categories: (music.categories as unknown as RawMusicCategory[]).map((cat) =>
-                        typeof cat === "object" && cat !== null && "musicCategoryName" in cat
-                            ? cat.musicCategoryName
-                            : cat
-                    ),
-                }));
+                // Normalize musics data (supports upstream musicCategories.json and inline categories)
+                const normalizedMusics = normalizeMusicsData(musicsData, categoriesData);
 
                 setMusics(normalizedMusics);
                 setMusicTags(tagsData);
@@ -301,7 +295,7 @@ function MusicContent() {
         // Apply category filter (all selected categories must be present)
         if (selectedCategories.length > 0) {
             result = result.filter((m) =>
-                selectedCategories.every((cat) => m.categories.includes(cat))
+                selectedCategories.every((cat) => (m.categories ?? []).includes(cat))
             );
         }
 

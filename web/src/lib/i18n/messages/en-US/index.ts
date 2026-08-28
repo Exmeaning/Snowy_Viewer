@@ -180,7 +180,7 @@ export const enUSMessages = {
             openQuickFilter: "Open quick filters",
             drawerHintTitle: "Filters Moved to Left Side",
             drawerHintTag: "Click left to open",
-            drawerHintBody: "Filters are now integrated into the left edge of the page. Click the vertical side tab anytime to slide out or close the filter drawer. On wide screens, it docks automatically.",
+            drawerHintBody: "Filters are now integrated into the left side. Welcome to try the new version!",
             drawerHintActionOpen: "Try It Now",
             drawerHintDismiss: "Got it",
             unit: "Unit",

@@ -178,7 +178,7 @@ export const zhTWCommon = {
         openQuickFilter: "開啟快速篩選",
         drawerHintTitle: "篩選器現已移至左側",
         drawerHintTag: "點擊左側開啟",
-        drawerHintBody: "篩選功能已整合至頁面左側。點選左側突出的「篩選」標籤，即可隨時滑出或收合篩選面板；寬螢幕時會自動常駐展示。",
+        drawerHintBody: "篩選功能已整合至頁面左側，歡迎體驗新版。",
         drawerHintActionOpen: "立即體驗",
         drawerHintDismiss: "我知道了",
         unit: "團體",

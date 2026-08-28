@@ -179,7 +179,7 @@ export const zhCNMessages = {
             openQuickFilter: "打开快捷筛选",
             drawerHintTitle: "筛选器现已移至左侧",
             drawerHintTag: "点击左侧打开",
-            drawerHintBody: "筛选功能已整合至页面左侧。点击左侧突出的“筛选”标签，即可随时滑出或收起筛选面板；宽屏时会自动常驻展示。",
+            drawerHintBody: "筛选功能已整合至页面左侧，欢迎体验新版。",
             drawerHintActionOpen: "立即体验",
             drawerHintDismiss: "我知道了",
             unit: "团体",

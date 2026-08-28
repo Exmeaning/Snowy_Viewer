@@ -85,7 +85,7 @@ const navigationGroups: NavGroup[] = [
                 href: "/lyrics",
                 icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 18V5l11-2v13M9 9l11-2M9 18a3 3 0 11-3-3h3v3zm11-2a3 3 0 11-3-3h3v3z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                     </svg>
                 ),
             }] : []),

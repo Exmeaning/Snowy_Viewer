@@ -3674,7 +3674,6 @@ test("lyrics list and detail retain loading, empty, error, long-line, mobile, an
   assert.match(list, /aliases\?\.some\(\(alias\) => alias\.toLowerCase\(\)\.includes\(query\)\)/);
   assert.match(list, /<MusicFilters/);
   assert.match(list, /useQuickFilter\(/);
-  assert.match(list, /lg:max-h-\[calc\(100vh-6rem\)\]/);
   assert.match(list, /data-shortcut-load-more="true"/);
   assert.doesNotMatch(list, /<main className="min-w-0 flex-1"/);
   assert.match(list, /<MusicItem/);

@@ -420,7 +420,7 @@ export default function MainLayout({
                         anchored to the sidebar's trailing edge. */}
                     <FilterDrawer isSidebarOpen={effectiveSidebarOpen} />
                     <FilterTabHandle isSidebarOpen={effectiveSidebarOpen} />
-                    <FilterDrawerGuide />
+                    <FilterDrawerGuide isSidebarOpen={effectiveSidebarOpen} />
 
                     {/* Keyboard Shortcuts Help */}
                     <KeyboardShortcutsHelp isOpen={isShortcutsHelpOpen} onClose={() => setIsShortcutsHelpOpen(false)} />

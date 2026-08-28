@@ -49,7 +49,7 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
 
                     {/* Category Tags Overlay */}
                     <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
-                        {Array.from(new Set(music.categories)).map((cat) => (
+                        {Array.from(new Set(music.categories ?? [])).map((cat) => (
                             <span
                                 key={cat}
                                 className="px-1.5 py-0.5 text-[10px] font-bold rounded text-white shadow-sm"

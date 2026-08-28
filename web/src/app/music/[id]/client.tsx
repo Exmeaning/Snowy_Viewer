@@ -9,6 +9,7 @@ import DetailPageAdCard from "@/components/DetailPageAdCard";
 import {
     IlimitedTimeMusicsInfo,
     IMusicInfo,
+    IMusicCategoryInfo,
     IMusicTagInfo,
     IMusicDifficultyInfo,
     IMusicVocalInfo,
@@ -20,6 +21,8 @@ import {
     DIFFICULTY_NAMES,
     DIFFICULTY_COLORS,
     MusicCategoryType,
+    normalizeMusicItem,
+    buildMusicCategoriesMap,
 } from "@/types/music";
 import { getCharacterName } from "@/lib/i18n";
 import { useTheme, AssetSourceType } from "@/contexts/ThemeContext";
@@ -38,8 +41,6 @@ const DIFFICULTY_ORDER: MusicDifficultyType[] = ["easy", "normal", "hard", "expe
 // External data URLs
 const MUSIC_META_API = MOE_MUSIC_META_URL;
 const RANKINGS_API = MOE_RANKINGS_URL;
-
-type RawMusicCategory = MusicCategoryType | { musicCategoryName: MusicCategoryType };
 
 // Music meta data structure
 interface MusicMetaData {
@@ -169,8 +170,9 @@ export default function MusicDetailPage() {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const [musicsData, tagsData, diffisData, vocalsData, eventsData, eventMusicsData, limitedTimeMusicsData, outsideCharsData] = await Promise.all([
+                const [musicsData, categoriesData, tagsData, diffisData, vocalsData, eventsData, eventMusicsData, limitedTimeMusicsData, outsideCharsData] = await Promise.all([
                     fetchMasterData<IMusicInfo[]>("musics.json"),
+                    fetchMasterData<IMusicCategoryInfo[]>("musicCategories.json").catch(() => [] as IMusicCategoryInfo[]),
                     fetchMasterData<IMusicTagInfo[]>("musicTags.json"),
                     fetchMasterData<IMusicDifficultyInfo[]>("musicDifficulties.json"),
                     fetchMasterData<IMusicVocalInfo[]>("musicVocals.json"),
@@ -185,15 +187,8 @@ export default function MusicDetailPage() {
                     throw new Error(`Music ${musicId} not found`);
                 }
 
-                // Normalize categories (CN server returns categories as objects)
-                const normalizedMusic = {
-                    ...foundMusic,
-                    categories: (foundMusic.categories as unknown as RawMusicCategory[]).map((cat) =>
-                        typeof cat === "object" && cat !== null && "musicCategoryName" in cat
-                            ? cat.musicCategoryName
-                            : cat
-                    ),
-                };
+                const categoriesMap = buildMusicCategoriesMap(categoriesData);
+                const normalizedMusic = normalizeMusicItem(foundMusic, categoriesMap);
 
                 setMusic(normalizedMusic);
                 document.title = `Moesekai - ${normalizedMusic.title}`;
@@ -407,7 +402,7 @@ export default function MusicDetailPage() {
                         </span>
                         {/* Category Tags */}
                         <div className="flex items-center gap-2 flex-wrap">
-                            {Array.from(new Set(music.categories)).map((cat) => {
+                            {Array.from(new Set(music.categories ?? [])).map((cat) => {
                                 const categoryKey = `common.musicCategories.${cat}`;
                                 const categoryLabel = t(categoryKey);
 
